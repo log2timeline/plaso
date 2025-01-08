@@ -51,7 +51,7 @@ class EventObjectFilterTest(test_lib.FilterTestCase):
     event = events.EventObject()
     event.timestamp = 1608735600000000
 
-    result = test_filter.Match(event, None, None, None)
+    result = test_filter.Match(event, None, None, None, None)
     self.assertTrue(result)
 
     test_filter = event_filter.EventObjectFilter()
@@ -60,12 +60,12 @@ class EventObjectFilterTest(test_lib.FilterTestCase):
     event_data = events.EventData()
     event_data.filename = '/usr/local/etc/issue'
 
-    result = test_filter.Match(None, event_data, None, None)
+    result = test_filter.Match(None, event_data, None, None, None)
     self.assertTrue(result)
 
     event_data.filename = '/etc/issue.net'
 
-    result = test_filter.Match(None, event_data, None, None)
+    result = test_filter.Match(None, event_data, None, None, None)
     self.assertFalse(result)
 
 

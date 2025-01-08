@@ -15,7 +15,7 @@ Time|Source|Host|User|Description
 1416273343|LOG|:|-|2014-11-18T01:15:43+00:00; Content Modification Time; [---] last message repeated 5 times ---
 1416299420|LOG|-|-|2014-11-18T08:30:20+00:00; Content Modification Time; [kernel] [997.390602] sda2: rw=0, want=65, limit=2
 1416299480|LOG|victoria|-|2014-11-18T08:31:20+00:00; Content Modification Time; [kernel] [998.390602] sda2: rw=0, want=66, limit=2
-1679888823|FILE|-|-|2023-03-27T03:47:03.767380870+00:00; Content Modification Time; OS:/tmp/test/test_data/syslog Type: file Owner identifier: 1000 Group identifier: 1000 Mode: 0o644 Number of links: 1
-1679888823|FILE|-|-|2023-03-27T03:47:03.767380870+00:00; Metadata Modification Time; OS:/tmp/test/test_data/syslog Type: file Owner identifier: 1000 Group identifier: 1000 Mode: 0o644 Number of links: 1
-1679888825|FILE|-|-|2023-03-27T03:47:05.830382781+00:00; Last Access Time; OS:/tmp/test/test_data/syslog Type: file Owner identifier: 1000 Group identifier: 1000 Mode: 0o644 Number of links: 1
-1679888828|FILE|-|-|2023-03-27T03:47:08.884385609+00:00; Last Access Time; OS:/tmp/test/test_data/syslog Type: file Owner identifier: 1000 Group identifier: 1000 Mode: 0o644 Number of links: 1
+1711612474|FILE|-|-|2024-03-28T07:54:34.785375326+00:00; Content Modification Time; OS:/tmp/test/test_data/syslog/syslog Type: file Owner identifier: 1000 Group identifier: 1000 Mode: 0o644 Number of links: 1
+1711612474|FILE|-|-|2024-03-28T07:54:34.785375326+00:00; Metadata Modification Time; OS:/tmp/test/test_data/syslog/syslog Type: file Owner identifier: 1000 Group identifier: 1000 Mode: 0o644 Number of links: 1
+1711612476|FILE|-|-|2024-03-28T07:54:36.751357520+00:00; Last Access Time; OS:/tmp/test/test_data/syslog/syslog Type: file Owner identifier: 1000 Group identifier: 1000 Mode: 0o644 Number of links: 1
+1711612480|FILE|-|-|2024-03-28T07:54:40.393324534+00:00; Last Access Time; OS:/tmp/test/test_data/syslog/syslog Type: file Owner identifier: 1000 Group identifier: 1000 Mode: 0o644 Number of links: 1

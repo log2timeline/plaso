@@ -24,6 +24,10 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
     # windows:lnk:link 33
     # windows:distributed_link_tracking:creation: 44
 
+    number_of_containers = storage_writer.GetNumberOfAttributeContainers(
+        'windows_shortcut')
+    self.assertEqual(number_of_containers, 11)
+
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
     self.assertEqual(number_of_event_data, 55)
@@ -37,7 +41,7 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
     self.assertEqual(number_of_warnings, 0)
 
     # Check a AutomaticDestinationsDestListEntryEvent.
-    expected_event_values = {
+    expected_event_data = {
         'birth_droid_file_identifier': '{63eea867-7b85-11e1-8950-005056a50b40}',
         'birth_droid_volume_identifier': (
             '{cf6619c2-66a8-44a6-8849-1582fcd3a338}'),
@@ -52,13 +56,12 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
         'pin_status': -1}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 4)
-    self.CheckEventData(event_data, expected_event_values)
+    self.CheckEventData(event_data, expected_event_data)
 
     # Check a WinLnkLinkEvent.
     expected_event_values = {
         'access_time': '2010-11-10T07:51:23.1085000+00:00',
         'creation_time': '2010-11-10T07:51:16.7491250+00:00',
-        'data_type': 'windows:lnk:link',
         'drive_serial_number': 0x24ba718b,
         'drive_type': 3,
         'file_attribute_flags': 0x00002020,
@@ -69,11 +72,18 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
             'Windows\\\\Libraries\\\\Documents.library-ms'),
         'modification_time': '2010-11-10T07:51:23.1085000+00:00'}
 
+    event_values = storage_writer.GetAttributeContainerByIndex(
+        'windows_shortcut', 0)
+    self.CheckEventValues(event_values, expected_event_values)
+
+    expected_event_data = {
+        'data_type': 'windows:lnk:link'}
+
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
-    self.CheckEventData(event_data, expected_event_values)
+    self.CheckEventData(event_data, expected_event_data)
 
     # Check a WindowsDistributedLinkTrackingCreationEvent.
-    expected_event_values = {
+    expected_event_data = {
         'creation_time': '2012-03-31T23:01:03.5277415+00:00',
         'data_type': 'windows:distributed_link_tracking:creation',
         'mac_address': '00:50:56:a5:0b:40',
@@ -81,7 +91,7 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
         'uuid': '63eea867-7b85-11e1-8950-005056a50b40'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 3)
-    self.CheckEventData(event_data, expected_event_values)
+    self.CheckEventData(event_data, expected_event_data)
 
   def testProcessVersion3(self):
     """Tests the Process function on version 3 .automaticDestinations-ms."""
@@ -93,6 +103,10 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
     # Event data types:
     # olecf:dest_list:entry: 2
     # windows:lnk:link 2
+
+    number_of_containers = storage_writer.GetNumberOfAttributeContainers(
+        'windows_shortcut')
+    self.assertEqual(number_of_containers, 2)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -107,7 +121,7 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
     self.assertEqual(number_of_warnings, 0)
 
     # Check a AutomaticDestinationsDestListEntryEvent.
-    expected_event_values = {
+    expected_event_data = {
         'birth_droid_file_identifier': '{00000000-0000-0000-0000-000000000000}',
         'birth_droid_volume_identifier': (
             '{00000000-0000-0000-0000-000000000000}'),
@@ -122,13 +136,12 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
         'pin_status': -1}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 1)
-    self.CheckEventData(event_data, expected_event_values)
+    self.CheckEventData(event_data, expected_event_data)
 
     # Check a WinLnkLinkEvent.
     expected_event_values = {
         'access_time': None,
         'creation_time': None,
-        'data_type': 'windows:lnk:link',
         'drive_serial_number': None,
         'drive_type': None,
         'file_attribute_flags': 0,
@@ -137,8 +150,15 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
         'local_path': None,
         'modification_time': None}
 
+    event_values = storage_writer.GetAttributeContainerByIndex(
+        'windows_shortcut', 0)
+    self.CheckEventValues(event_values, expected_event_values)
+
+    expected_event_data = {
+        'data_type': 'windows:lnk:link'}
+
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
-    self.CheckEventData(event_data, expected_event_values)
+    self.CheckEventData(event_data, expected_event_data)
 
 
 if __name__ == '__main__':
