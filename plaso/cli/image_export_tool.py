@@ -122,11 +122,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     return hasher_object.GetStringDigest()
 
   def _CreateSanitizedDestination(
-          self,
-          source_file_entry,
-          file_system_path_spec,
-          source_data_stream_name,
-          destination_path):
+      self, source_file_entry, file_system_path_spec, source_data_stream_name,
+      destination_path):
     """Creates a sanitized path of both destination directory and filename.
 
     This function replaces non-printable and other characters defined in
