@@ -66,7 +66,7 @@ class ArtifactsTrie(object):
     if path_separator not in node.children:
       node.children[path_separator] = TrieNode(path_separator=path_separator)
     node = node.children[path_separator]
-    # Handle handle the case when the input path is equal to the path_separator
+    # Handle the case when the input path is equal to the path_separator
     if path == path_separator:
       node.artifacts_names.append(artifact_name)
       return
@@ -97,7 +97,7 @@ class ArtifactsTrie(object):
       return []
 
     sub_root_node = self.root.children[path_separator]
-    # Handle handle the case when the input path is equal to the path_separator
+    # Handle the case when the input path is equal to the path_separator
     if path == path_separator:
       matching_artifacts = set()
       if sub_root_node.artifacts_names:
