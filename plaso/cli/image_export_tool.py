@@ -229,7 +229,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
           f'exists.'))
       return
 
-    # Generate a map between artifacts and extracted paths
+    # Generate a map between artifacts and extracted paths.
     if self._enable_artifacts_map:
       for artifact_name in self._filter_collection.GetMatchingArtifacts(
               path, os.sep):
