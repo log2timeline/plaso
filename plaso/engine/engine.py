@@ -211,7 +211,7 @@ class BaseEngine(object):
             environment_variables=environment_variables,
             user_accounts=user_accounts,
             enable_artifacts_map=enable_artifacts_map,
-            original_registery_artifact_filter_names=(
+            original_registry_artifact_filter_names=(
                 filters_helper.registry_find_specs_artifact_names))
 
       if not filters_helper.file_system_find_specs:
