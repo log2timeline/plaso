@@ -347,8 +347,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
           f'Unable to build collection filters with error: {exception!s}')
 
     if self._enable_artifacts_map:
-      self._filter_collection.SetArtifactsTrie(
-          extraction_engine.GetArtifactsTrie())
+      atrifacts_trie = extraction_engine.GetArtifactsTrie()
+      self._filter_collection.SetArtifactsTrie(atrifacts_trie)
 
     excluded_find_specs = extraction_engine.GetCollectionExcludedFindSpecs()
     included_find_specs = extraction_engine.GetCollectionIncludedFindSpecs()
@@ -804,10 +804,10 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     try:
       self.ScanSource(self._source_path)
       if self._source_type not in self._SOURCE_TYPES_TO_PREPROCESS:
-        self._output_writer.Write(
-            (
-                f'Input must be in {list(self._SOURCE_TYPES_TO_PREPROCESS)} '
-                f'the "{self._source_type}" type is not supported.\n'))
+        source_types = ', '.join(self._SOURCE_TYPES_TO_PREPROCESS)
+        self._output_writer.Write((
+            f'Input must be in "{source_types:s}" the type: '
+            f'"{self._source_type}" is not supported.\n'))
         return
     except dfvfs_errors.UserAbort as exception:
       raise errors.UserAbort(exception)
