@@ -76,10 +76,12 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     self._abort = False
     self._artifact_definitions_path = None
     self._artifact_filters = None
+    self._artifacts_paths_map = collections.defaultdict(list)
     self._artifacts_registry = None
     self._custom_artifacts_path = None
     self._destination_path = None
     self._digests = {}
+    self._enable_artifacts_map = False
     self._filter_collection = file_entry_filters.FileEntryFilterCollection()
     self._filter_file = None
     self._no_hashes = False
@@ -91,8 +93,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     self.has_filters = False
     self.list_signature_identifiers = False
-    self._enable_artifacts_map = False
-    self._artifacts_paths_map = collections.defaultdict(list)
 
   def _CalculateDigestHash(self, file_entry, data_stream_name):
     """Calculates a SHA-256 digest of the contents of the file entry.
