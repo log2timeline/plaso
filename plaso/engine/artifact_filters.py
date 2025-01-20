@@ -2,15 +2,16 @@
 """Helper to create filters based on forensic artifact definitions."""
 
 import os
+
 from artifacts import definitions as artifact_types
 
 from dfvfs.helpers import file_system_searcher as dfvfs_file_system_searcher
 
 from dfwinreg import registry_searcher as dfwinreg_registry_searcher
 
+from plaso.engine import artifacts_trie
 from plaso.engine import logger
 from plaso.engine import path_helper
-from plaso.engine import artifacts_trie
 
 
 class ArtifactDefinitionsFiltersHelper(object):
@@ -30,10 +31,10 @@ class ArtifactDefinitionsFiltersHelper(object):
         generated Windows Registry find specifications.
     registry_find_specs (list[dfwinreg.FindSpec]): Windows Registry find
         specifications.
-    registry_find_specs_artifact_names (list[]str): Windows Registry artifact
+    registry_find_specs_artifact_names (list[str]): Windows Registry artifact
         names corresponding to the find specifications.
     artifacts_trie (ArtifactsTrie): Trie structure for storing artifact
-        definitionpaths.
+        definition paths.
   """
 
   _COMPATIBLE_REGISTRY_KEY_PATH_PREFIXES = frozenset([
@@ -62,12 +63,9 @@ class ArtifactDefinitionsFiltersHelper(object):
     self.artifacts_trie = artifacts_trie.ArtifactsTrie()
 
   def _BuildFindSpecsFromArtifact(
-          self,
-          definition,
-          environment_variables,
-          user_accounts,
+          self, definition, environment_variables, user_accounts,
           enable_artifacts_map=False,
-          original_registery_artifact_filter_names=None):
+          original_registry_artifact_filter_names=None):
     """Builds find specifications from an artifact definition.
 
     Args:
@@ -77,8 +75,8 @@ class ArtifactDefinitionsFiltersHelper(object):
       user_accounts (list[UserAccountArtifact]): user accounts.
       enable_artifacts_map (Optional[bool]): True if the artifacts path map
           should be generated. Defaults to False.
-      original_registery_artifact_filter_names (Optional[set[str]]): Set of
-          original registery filter names, used in case registery hive files
+      original_registry_artifact_filter_names (Optional[set[str]]): Set of
+          original registry filter names, used in case Windows Registry hive files
           are being requested as a result of a previous filter.
 
     Returns:
@@ -96,8 +94,8 @@ class ArtifactDefinitionsFiltersHelper(object):
               environment_variables,
               user_accounts,
               enable_artifacts_map=enable_artifacts_map,
-              original_registery_artifact_filter_names=(
-                  original_registery_artifact_filter_names))
+              original_registry_artifact_filter_names=(
+                  original_registry_artifact_filter_names))
           find_specs.extend(specifications)
           self.file_system_artifact_names.add(definition.name)
 
@@ -136,8 +134,8 @@ class ArtifactDefinitionsFiltersHelper(object):
               environment_variables,
               user_accounts,
               enable_artifacts_map=enable_artifacts_map,
-              original_registery_artifact_filter_names=(
-                  original_registery_artifact_filter_names))
+              original_registry_artifact_filter_names=(
+                  original_registry_artifact_filter_names))
           find_specs.extend(specifications)
 
       else:
@@ -153,7 +151,7 @@ class ArtifactDefinitionsFiltersHelper(object):
           environment_variables,
           user_accounts,
           enable_artifacts_map=False,
-          original_registery_artifact_filter_names=None):
+          original_registry_artifact_filter_names=None):
     """Builds find specifications from a artifact group name.
 
     Args:
@@ -163,8 +161,8 @@ class ArtifactDefinitionsFiltersHelper(object):
       user_accounts (list[UserAccountArtifact]): user accounts.
       enable_artifacts_map (Optional[bool]): True if the artifacts path map
           should be generated. Defaults to False.
-      original_registery_artifact_filter_names (Optional[set[str]]): Set of
-          original registery filter names, used in case registery hive files
+      original_registry_artifact_filter_names (Optional[set[str]]): Set of
+          original registry filter names, used in case registry hive files
           are being requested as a result of a previous filter.
 
     Returns:
@@ -182,8 +180,8 @@ class ArtifactDefinitionsFiltersHelper(object):
         environment_variables,
         user_accounts,
         enable_artifacts_map=enable_artifacts_map,
-        original_registery_artifact_filter_names=(
-            original_registery_artifact_filter_names))
+        original_registry_artifact_filter_names=(
+            original_registry_artifact_filter_names))
 
   def _BuildFindSpecsFromRegistrySourceKey(self, key_path):
     """Build find specifications from a Windows Registry source type.
@@ -224,7 +222,7 @@ class ArtifactDefinitionsFiltersHelper(object):
           environment_variables,
           user_accounts,
           enable_artifacts_map=False,
-          original_registery_artifact_filter_names=None):
+          original_registry_artifact_filter_names=None):
     """Builds find specifications from a file source type.
 
     Args:
@@ -236,8 +234,8 @@ class ArtifactDefinitionsFiltersHelper(object):
       user_accounts (list[UserAccountArtifact]): user accounts.
       enable_artifacts_map (Optional[bool]): True if the artifacts path map
           should be generated. Defaults to False.
-      original_registery_artifact_filter_names (Optional[set[str]]): Set of
-          original registery filter names, used in case registery hive files
+      original_registry_artifact_filter_names (Optional[set[str]]): Set of
+          original registry filter names, used in case registry hive files
           are being requested as a result of a previous filter.
 
     Returns:
@@ -266,7 +264,7 @@ class ArtifactDefinitionsFiltersHelper(object):
         if enable_artifacts_map:
           self._AddToArtifactsTrie(artifact_name,
                                    expanded_path,
-                                   original_registery_artifact_filter_names,
+                                   original_registry_artifact_filter_names,
                                    path_separator)
 
     return find_specs
@@ -275,21 +273,21 @@ class ArtifactDefinitionsFiltersHelper(object):
           self,
           artifact_name,
           path,
-          original_registery_artifact_filter_names,
+          original_registry_artifact_filter_names,
           path_separator):
     """Adds a path to the artifacts trie.
 
     Args:
         artifact_name (str): artifact name.
         path (str): file system path.
-        original_registery_artifact_filter_names (Optional[set[str]]): Set of
-            original registery filter names.
+        original_registry_artifact_filter_names (Optional[set[str]]): Set of
+            original registry filter names.
         path_separator (str): path separator.
     """
     normalized_path = path.replace(path_separator, os.sep)
     self.artifacts_trie.AddPath(artifact_name, normalized_path, os.sep)
-    if original_registery_artifact_filter_names:
-      for name in original_registery_artifact_filter_names:
+    if original_registry_artifact_filter_names:
+      for name in original_registry_artifact_filter_names:
         self.artifacts_trie.AddPath(name, normalized_path, os.sep)
 
   def _ExpandPathVariables(self, path, environment_variables, path_separator):
@@ -345,7 +343,7 @@ class ArtifactDefinitionsFiltersHelper(object):
           environment_variables=None,
           user_accounts=None,
           enable_artifacts_map=False,
-          original_registery_artifact_filter_names=None):
+          original_registry_artifact_filter_names=None):
     """Builds find specifications from artifact definitions.
 
     Args:
@@ -356,8 +354,8 @@ class ArtifactDefinitionsFiltersHelper(object):
       user_accounts (Optional[list[UserAccountArtifact]]): user accounts.
       enable_artifacts_map (Optional[bool]): True if the artifacts path map
           should be generated. Defaults to False.
-      original_registery_artifact_filter_names (Optional[set[str]]): Set of
-          original registery filter names, used in case registery hive files
+      original_registry_artifact_filter_names (Optional[set[str]]): Set of
+          original registry filter names, used in case registry hive files
           are being requested as a result of a previous filter.
     """
     find_specs = {}
@@ -375,8 +373,8 @@ class ArtifactDefinitionsFiltersHelper(object):
           environment_variables,
           user_accounts,
           enable_artifacts_map=enable_artifacts_map,
-          original_registery_artifact_filter_names=(
-              original_registery_artifact_filter_names))
+          original_registry_artifact_filter_names=(
+              original_registry_artifact_filter_names))
       find_specs.setdefault(name, []).extend(artifact_find_specs)
 
     for name, find_spec_values in find_specs.items():
@@ -386,7 +384,7 @@ class ArtifactDefinitionsFiltersHelper(object):
 
         elif isinstance(find_spec, dfwinreg_registry_searcher.FindSpec):
           self.registry_find_specs.append(find_spec)
-          # Artifact names ordered similar to registery find specs
+          # Artifact names ordered similar to registry find specs
           self.registry_find_specs_artifact_names.append(name)
         else:
           type_string = type(find_spec)
