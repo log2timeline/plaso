@@ -76,8 +76,8 @@ class ArtifactDefinitionsFiltersHelper(object):
       enable_artifacts_map (Optional[bool]): True if the artifacts path map
           should be generated. Defaults to False.
       original_registry_artifact_filter_names (Optional[set[str]]): Set of
-          original registry filter names, used in case Windows Registry hive files
-          are being requested as a result of a previous filter.
+          original registry filter names, used in case Windows Registry hive
+          files are being requested as a result of a previous filter.
 
     Returns:
       list[dfvfs.FindSpec|dfwinreg.FindSpec]: dfVFS or dfWinReg find
