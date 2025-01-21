@@ -233,8 +233,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     if self._enable_artifacts_map:
       for artifact_name in self._filter_collection.GetMatchingArtifacts(
               path, os.sep):
-        self._artifacts_paths_map.setdefault(
-            artifact_name, []).append(path)
+        path_list = self._artifacts_paths_map.setdefault(artifact_name, [])
+        path_list.append(path)
 
     try:
       self._WriteFileEntry(file_entry, data_stream_name, target_path)
