@@ -63,9 +63,9 @@ class ArtifactDefinitionsFiltersHelper(object):
     self.artifacts_trie = artifacts_trie.ArtifactsTrie()
 
   def _BuildFindSpecsFromArtifact(
-          self, definition, environment_variables, user_accounts,
-          enable_artifacts_map=False,
-          original_registry_artifact_filter_names=None):
+      self, definition, environment_variables, user_accounts,
+      enable_artifacts_map=False,
+      original_registry_artifact_filter_names=None):
     """Builds find specifications from an artifact definition.
 
     Args:
@@ -88,11 +88,8 @@ class ArtifactDefinitionsFiltersHelper(object):
       if source.type_indicator == artifact_types.TYPE_INDICATOR_FILE:
         for path_entry in set(source.paths):
           specifications = self._BuildFindSpecsFromFileSourcePath(
-              definition.name,
-              path_entry,
-              source.separator,
-              environment_variables,
-              user_accounts,
+              definition.name, path_entry, source.separator,
+              environment_variables, user_accounts,
               enable_artifacts_map=enable_artifacts_map,
               original_registry_artifact_filter_names=(
                   original_registry_artifact_filter_names))
@@ -130,9 +127,7 @@ class ArtifactDefinitionsFiltersHelper(object):
             artifact_types.TYPE_INDICATOR_ARTIFACT_GROUP):
         for name in source.names:
           specifications = self._BuildFindSpecsFromGroupName(
-              name,
-              environment_variables,
-              user_accounts,
+              name, environment_variables, user_accounts,
               enable_artifacts_map=enable_artifacts_map,
               original_registry_artifact_filter_names=(
                   original_registry_artifact_filter_names))
@@ -146,12 +141,9 @@ class ArtifactDefinitionsFiltersHelper(object):
     return find_specs
 
   def _BuildFindSpecsFromGroupName(
-          self,
-          group_name,
-          environment_variables,
-          user_accounts,
-          enable_artifacts_map=False,
-          original_registry_artifact_filter_names=None):
+      self, group_name, environment_variables, user_accounts,
+      enable_artifacts_map=False,
+      original_registry_artifact_filter_names=None):
     """Builds find specifications from a artifact group name.
 
     Args:
@@ -176,9 +168,7 @@ class ArtifactDefinitionsFiltersHelper(object):
       return None
 
     return self._BuildFindSpecsFromArtifact(
-        definition,
-        environment_variables,
-        user_accounts,
+        definition, environment_variables, user_accounts,
         enable_artifacts_map=enable_artifacts_map,
         original_registry_artifact_filter_names=(
             original_registry_artifact_filter_names))
@@ -215,12 +205,8 @@ class ArtifactDefinitionsFiltersHelper(object):
     return find_specs
 
   def _BuildFindSpecsFromFileSourcePath(
-          self,
-          artifact_name,
-          source_path,
-          path_separator,
-          environment_variables,
-          user_accounts,
+      self, artifact_name, source_path, path_separator,
+          environment_variables, user_accounts,
           enable_artifacts_map=False,
           original_registry_artifact_filter_names=None):
     """Builds find specifications from a file source type.
@@ -262,19 +248,17 @@ class ArtifactDefinitionsFiltersHelper(object):
         find_specs.append(find_spec)
 
         if enable_artifacts_map:
-          self._AddToArtifactsTrie(artifact_name,
-                                   expanded_path,
-                                   original_registry_artifact_filter_names,
-                                   path_separator)
+          self._AddToArtifactsTrie(
+              artifact_name, expanded_path,
+              original_registry_artifact_filter_names,
+              path_separator)
 
     return find_specs
 
   def _AddToArtifactsTrie(
-          self,
-          artifact_name,
-          path,
-          original_registry_artifact_filter_names,
-          path_separator):
+      self, artifact_name, path,
+      original_registry_artifact_filter_names,
+      path_separator):
     """Adds a path to the artifacts trie.
 
     Args:
@@ -322,7 +306,6 @@ class ArtifactDefinitionsFiltersHelper(object):
       path (str): Path to match.
       path_separator (str): file system path segment separator.
 
-
     Returns:
         dfvfs.FindSpec: a find specification or None if one cannot be created.
     """
@@ -338,12 +321,9 @@ class ArtifactDefinitionsFiltersHelper(object):
       return None
 
   def BuildFindSpecs(
-          self,
-          artifact_filter_names,
-          environment_variables=None,
-          user_accounts=None,
-          enable_artifacts_map=False,
-          original_registry_artifact_filter_names=None):
+      self, artifact_filter_names, environment_variables=None,
+      user_accounts=None, enable_artifacts_map=False,
+      original_registry_artifact_filter_names=None):
     """Builds find specifications from artifact definitions.
 
     Args:
