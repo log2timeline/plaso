@@ -58,7 +58,8 @@ class ArtifactsTrie(object):
       path_separator (str): path separator.
     """
     logger.debug(f'Adding path: "{path:s}" to artifact: "{artifact_name:s}"')
-    self.artifacts_paths.setdefault(artifact_name, []).append(path)
+    path_list = self.artifacts_paths.setdefault(artifact_name, [])
+    path_list.append(path)
 
     # Start at the root
     node = self.root
@@ -229,7 +230,8 @@ class ArtifactsTrie(object):
       """
       if node.artifacts_names:
         for artifact_name in node.artifacts_names:
-          artifacts.setdefault(artifact_name, []).append(current_path)
+          path_list = artifacts.setdefault(artifact_name, [])
+          path_list.append(current_path)
 
       for segment, child_node in node.children.items():
         # Ensure the path_separator attribute exists.
