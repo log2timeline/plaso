@@ -284,7 +284,7 @@ class ArtifactDefinitionsFiltersHelper(object):
       path_separator (str): file system path segment separator.
 
     Returns:
-      str: expanded path, or None if the path is invalid
+      str: expanded path, or None if the path is invalid.
     """
     if '%' in path:
       path = path_helper.PathHelper.ExpandWindowsPath(
