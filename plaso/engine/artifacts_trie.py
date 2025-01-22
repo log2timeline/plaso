@@ -13,10 +13,10 @@ class TrieNode(object):
   """Represents a node in the Trie.
 
   Attributes:
-    children (dict[str, TrieNode]): Child nodes, keyed by path segment.
     artifacts_names (list[str]): Names of artifacts associated with this node.
-    path_separator (str): Path separator used in the Trie.
+    children (dict[str, TrieNode]): Child nodes, keyed by path segment.
     is_root (bool): True if this is the root node.
+    path_separator (str): Path separator used in the Trie.
   """
 
   def __init__(self, path_separator=None, is_root=False):
@@ -28,26 +28,26 @@ class TrieNode(object):
       is_root (bool): True if this node is the root node.
     """
     super(TrieNode, self).__init__()
-    self.children = {}
     self.artifacts_names = []
-    self.path_separator = path_separator
+    self.children = {}
     self.is_root = is_root
+    self.path_separator = path_separator
 
 
 class ArtifactsTrie(object):
   """Trie structure for storing artifact paths.
 
   Attributes:
-    root (TrieNode): Root node of the Trie.
     artifacts_paths (dict[str, list[str]]): Artifact paths for glob expansion,
         keyed by artifact name.
+    root (TrieNode): Root node of the Trie.
   """
 
   def __init__(self):
     """Initializes an artifact trie object."""
     super(ArtifactsTrie, self).__init__()
+    self.artifacts_paths = {}
     self.root = TrieNode(is_root=True)
-    self.artifacts_paths = {}  # Store artifact paths for glob expansion
 
   def AddPath(self, artifact_name, path, path_separator):
     """Adds a path from an artifact definition to the Trie.
