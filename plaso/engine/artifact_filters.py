@@ -23,6 +23,8 @@ class ArtifactDefinitionsFiltersHelper(object):
   https://github.com/ForensicArtifacts/artifacts/blob/main/docs/Artifacts%20definition%20format%20and%20style%20guide.asciidoc
 
   Attributes:
+    artifacts_trie (ArtifactsTrie): Trie structure for storing artifact
+        definition paths.
     file_system_artifact_names (set[str]): names of artifacts definitions that
         generated file system find specifications.
     file_system_find_specs (list[dfvfs.FindSpec]): file system find
@@ -33,8 +35,6 @@ class ArtifactDefinitionsFiltersHelper(object):
         specifications.
     registry_find_specs_artifact_names (list[str]): Windows Registry artifact
         names corresponding to the find specifications.
-    artifacts_trie (ArtifactsTrie): Trie structure for storing artifact
-        definition paths.
   """
 
   _COMPATIBLE_REGISTRY_KEY_PATH_PREFIXES = frozenset([
@@ -55,12 +55,12 @@ class ArtifactDefinitionsFiltersHelper(object):
     super(ArtifactDefinitionsFiltersHelper, self).__init__()
     self._artifacts_registry = artifacts_registry
 
+    self.artifacts_trie = artifacts_trie.ArtifactsTrie()
     self.file_system_artifact_names = set()
     self.file_system_find_specs = []
     self.registry_artifact_names = set()
     self.registry_find_specs = []
     self.registry_find_specs_artifact_names = []
-    self.artifacts_trie = artifacts_trie.ArtifactsTrie()
 
   def _BuildFindSpecsFromArtifact(
       self, definition, environment_variables, user_accounts,
@@ -206,9 +206,9 @@ class ArtifactDefinitionsFiltersHelper(object):
 
   def _BuildFindSpecsFromFileSourcePath(
       self, artifact_name, source_path, path_separator,
-          environment_variables, user_accounts,
-          enable_artifacts_map=False,
-          original_registry_artifact_filter_names=None):
+      environment_variables, user_accounts,
+      enable_artifacts_map=False,
+      original_registry_artifact_filter_names=None):
     """Builds find specifications from a file source type.
 
     Args:
@@ -221,8 +221,8 @@ class ArtifactDefinitionsFiltersHelper(object):
       enable_artifacts_map (Optional[bool]): True if the artifacts path map
           should be generated. Defaults to False.
       original_registry_artifact_filter_names (Optional[set[str]]): Set of
-          original registry filter names, used in case registry hive files
-          are being requested as a result of a previous filter.
+          original registry filter names, used in case Windows Registry hive
+          files are being requested as a result of a previous filter.
 
     Returns:
       list[dfvfs.FindSpec]: find specifications for the file source type.
@@ -286,7 +286,6 @@ class ArtifactDefinitionsFiltersHelper(object):
     Returns:
       str: expanded path, or None if the path is invalid
     """
-
     if '%' in path:
       path = path_helper.PathHelper.ExpandWindowsPath(
           path, environment_variables)
@@ -307,7 +306,7 @@ class ArtifactDefinitionsFiltersHelper(object):
       path_separator (str): file system path segment separator.
 
     Returns:
-        dfvfs.FindSpec: a find specification or None if one cannot be created.
+      dfvfs.FindSpec: a find specification or None if one cannot be created.
     """
     try:
       find_spec = dfvfs_file_system_searcher.FindSpec(
@@ -349,13 +348,12 @@ class ArtifactDefinitionsFiltersHelper(object):
 
       logger.debug(f'building find spec from artifact definition: {name:s}')
       artifact_find_specs = self._BuildFindSpecsFromArtifact(
-          definition,
-          environment_variables,
-          user_accounts,
+          definition, environment_variables, user_accounts,
           enable_artifacts_map=enable_artifacts_map,
           original_registry_artifact_filter_names=(
               original_registry_artifact_filter_names))
-      find_specs.setdefault(name, []).extend(artifact_find_specs)
+      find_spec_list = find_specs.setdefault(name, [])
+      find_spec_list.extend(artifact_find_specs)
 
     for name, find_spec_values in find_specs.items():
       for find_spec in find_spec_values:
@@ -364,7 +362,7 @@ class ArtifactDefinitionsFiltersHelper(object):
 
         elif isinstance(find_spec, dfwinreg_registry_searcher.FindSpec):
           self.registry_find_specs.append(find_spec)
-          # Artifact names ordered similar to registry find specs
+          # Artifact names ordered similar to registry find specs.
           self.registry_find_specs_artifact_names.append(name)
         else:
           type_string = type(find_spec)
