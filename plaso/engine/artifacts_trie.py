@@ -168,34 +168,29 @@ class ArtifactsTrie(object):
     return list(matching_artifacts)
 
   def _ComparePathIfSanitized(
-          self,
-          current_path,
-          path_separator,
-          artifact_path,
-          atrifact_path_seperator):
+      self, current_path, path_separator, artifact_path,
+      artifact_path_seperator):
     """Compares a current path with an artifact path, handling sanitization.
 
     This method checks if the current_path matches the artifact_path,
     considering that the artifact_path might have been sanitized.
 
     Args:
-        current_path (str): The current path being checked.
-        path_separator (str): Path separator for the current path.
-        artifact_path (str): The artifact path to compare against.
-        atrifact_path_seperator (str): Path separator for the artifact path.
+      current_path (str): The current path being checked.
+      path_separator (str): Path separator for the current path.
+      artifact_path (str): The artifact path to compare against.
+      artifact_path_seperator (str): Path separator for the artifact path.
 
     Returns:
-        bool: True if the current path matches the artifact path (or its
-            sanitized version), False otherwise.
+      bool: True if the current path matches the artifact path or its
+          sanitized version, False otherwise.
     """
-    atrifact_path_segments = self._GetNonEmptyPathSegments(
-        artifact_path, atrifact_path_seperator)
-    return self._GetNonEmptyPathSegments(
-        current_path, path_separator) in [
-        atrifact_path_segments,
-            path_helper.PathHelper.SanitizePathSegments(
-                atrifact_path_segments)
-    ]
+    artifact_path_segments = self._GetNonEmptyPathSegments(
+        artifact_path, artifact_path_seperator)
+    sanitized_path_segments = path_helper.PathHelper.SanitizePathSegments(
+        artifact_path_segments)
+    return self._GetNonEmptyPathSegments(current_path, path_separator) in [
+        artifact_path_segments, sanitized_path_segments]
 
   def _GetNonEmptyPathSegments(self, path, separator):
     """Splits a path into segments and remove non-empty segments.
