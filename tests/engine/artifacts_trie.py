@@ -15,9 +15,7 @@ class TrieNodeTest(unittest.TestCase):
     self.assertIsNotNone(node)
     self.assertEqual(node.children, {})
     self.assertEqual(node.artifacts_names, [])
-    self.assertIsNone(node.path_separator)
-
-  # You can add more tests for TrieNode if needed, but it's a simple class.
+    self.assertEqual(node.path_separator, '/')
 
 
 class ArtifactsTrieTest(unittest.TestCase):
