@@ -61,13 +61,14 @@ class ArtifactsTrie(object):
     path_list = self.artifacts_paths.setdefault(artifact_name, [])
     path_list.append(path)
 
-    # Start at the root
     node = self.root
-    # Add a path separator node if this is a new separator
+    
+    # Add a path separator node if this is a new separator.
     if path_separator not in node.children:
       node.children[path_separator] = TrieNode(path_separator=path_separator)
     node = node.children[path_separator]
-    # Handle the case when the input path is equal to the path_separator
+    
+    # Handle the case when the input path is equal to the path_separator.
     if path == path_separator:
       node.artifacts_names.append(artifact_name)
       return
@@ -93,12 +94,13 @@ class ArtifactsTrie(object):
     Returns:
       list[str]: artifact names that match the path.
     """
-    # Start at the root's child that matches the path_separator
+    # Start at the root's child that matches the path_separator.
     if path_separator not in self.root.children:
       return []
 
     sub_root_node = self.root.children[path_separator]
-    # Handle the case when the input path is equal to the path_separator
+    
+    # Handle the case when the input path is equal to the path_separator.
     if path == path_separator:
       matching_artifacts = set()
       if sub_root_node.artifacts_names:
@@ -121,14 +123,12 @@ class ArtifactsTrie(object):
         for artifact_name in node.artifacts_names:
           for artifact_path in self.artifacts_paths.get(artifact_name, []):
             if self._ComparePathIfSanitized(
-                    current_path,
-                    path_separator,
-                    artifact_path,
-                    node.path_separator):
+                current_path, path_separator, artifact_path,
+                node.path_separator):
               matching_artifacts.add(artifact_name)
             elif glob.has_magic(artifact_path):
               if self._MatchesGlobPattern(
-                      artifact_path, current_path, node.path_separator):
+                  artifact_path, current_path, node.path_separator):
                 matching_artifacts.add(artifact_name)
 
       if not segments:
