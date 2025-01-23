@@ -265,6 +265,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     for data_stream in file_entry.data_streams:
       if self._abort:
         break
+
       self._ExtractDataStream(
           file_entry, data_stream.name, destination_path,
           skip_duplicates=skip_duplicates)
@@ -337,8 +338,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     try:
       extraction_engine.BuildCollectionFilters(
-          environment_variables,
-          user_accounts,
+          environment_variables, user_accounts,
           artifact_filter_names=artifact_filters,
           filter_file_path=filter_file,
           enable_artifacts_map=self._enable_artifacts_map)
