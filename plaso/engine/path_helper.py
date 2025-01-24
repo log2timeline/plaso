@@ -439,18 +439,16 @@ class PathHelper(object):
 
   @classmethod
   def GetRelativePath(
-          cls,
-          target_directory,
-          target_filename,
-          destination_path):
+      cls, target_directory, target_filename, destination_path):
     """Retrieves the relative path from the destination path.
 
     Args:
-        target_directory (str): path of the target directory.
-        target_filename (str): name of the target file.
-        destination_path (str): destination path for the collected files.
+      target_directory (str): path of the target directory.
+      target_filename (str): name of the target file.
+      destination_path (str): destination path for the collected files.
+      
     Returns:
-        str: normalized path or None.
+      str: normalized path or None.
     """
 
     if not destination_path.endswith(os.path.sep):
