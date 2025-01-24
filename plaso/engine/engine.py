@@ -167,12 +167,9 @@ class BaseEngine(object):
     self._artifacts_registry = registry
 
   def BuildCollectionFilters(
-          self,
-          environment_variables,
-          user_accounts,
-          artifact_filter_names=None,
-          filter_file_path=None,
-          enable_artifacts_map=False):
+      self, environment_variables, user_accounts,
+      artifact_filter_names=None, filter_file_path=None,
+      enable_artifacts_map=False):
     """Builds collection filters from artifacts or filter file if available.
 
     Args:
