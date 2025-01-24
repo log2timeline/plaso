@@ -596,8 +596,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
       self.assertEqual(json_data, expected_json_data)
 
   def testProcessSourceEnableArtifactsMap(self):
-    """Tests the ProcessSource function with a artifacts filter file and
-    enable_artifacts_map flag.
+    """Tests the ProcessSource function with atrifacts map enabled.
 
     This test uses plaso/test_data/image.qcow2 which has directories matching
     artifact filters: [TestGroupExport, TestFiles3, TestFiles4,
