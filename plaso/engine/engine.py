@@ -195,8 +195,7 @@ class BaseEngine(object):
       filters_helper = artifact_filters.ArtifactDefinitionsFiltersHelper(
           self._artifacts_registry)
       filters_helper.BuildFindSpecs(
-          artifact_filter_names,
-          environment_variables=environment_variables,
+          artifact_filter_names, environment_variables=environment_variables,
           user_accounts=user_accounts,
           enable_artifacts_map=enable_artifacts_map)
 
@@ -275,6 +274,14 @@ class BaseEngine(object):
 
     return session
 
+  def GetArtifactsTrie(self):
+    """Retrieves the artifacts trie.
+
+    Returns:
+      ArtifactsTrie: artifacts trie.
+    """
+    return self._artifacts_trie
+  
   def GetCollectionExcludedFindSpecs(self):
     """Retrieves find specifications to exclude from collection.
 
@@ -399,11 +406,3 @@ class BaseEngine(object):
       status_update_interval (float): status update interval.
     """
     self._status_update_interval = status_update_interval
-
-  def GetArtifactsTrie(self):
-    """Retrieves the artifacts trie.
-
-    Returns:
-        ArtifactsTrie: artifacts trie.
-    """
-    return self._artifacts_trie
