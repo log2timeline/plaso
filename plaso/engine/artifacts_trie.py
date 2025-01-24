@@ -151,26 +151,27 @@ class ArtifactsTrie(object):
       # the tree to the path segment from to the tool output as it
       # sanitizes path segments before writing data to disk.
       sanitized_child_segment = path_helper.PathHelper.SanitizePathSegments(
-              [child_segment]).pop()
+          [child_segment]).pop()
+
+      # If the child is an exact match, continue traversal.
       if segment in (child_segment, sanitized_child_segment):
-        # If the child is an exact match, continue traversal.
-        self._SearchTrie(child_node, self._CustomPathJoin(
-            path_separator,
-            current_path, child_segment), remaining_segments, path_separator,
+        custom_path = _CustomPathJoin(
+            path_separator, current_path, child_segment)
+        self._SearchTrie(
+            child_node, custom_path, remaining_segments, path_separator,
             matching_artifacts)
+        
       # If the child is a glob, see if it matches.
       elif glob.has_magic(child_segment):
         if self._MatchesGlobPattern(
                 child_segment, segment, child_node.path_separator):
-          self._SearchTrie(child_node, self._CustomPathJoin(
-              path_separator,
-              current_path, segment), remaining_segments, path_separator,
+          custom_path = _CustomPathJoin(
+              path_separator, current_path, segment)
+          self._SearchTrie(
+              child_node, custom_path, remaining_segments, path_separator,
               matching_artifacts)
           self._SearchTrie(
-              node,
-              self._CustomPathJoin(
-                  path_separator,
-                  current_path, segment), remaining_segments, path_separator,
+              node, custom_path, remaining_segments, path_separator,
               matching_artifacts)
 
   def _ComparePathIfSanitized(
