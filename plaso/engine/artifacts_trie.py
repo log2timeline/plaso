@@ -203,11 +203,11 @@ class ArtifactsTrie(object):
     """Splits a path into segments and remove non-empty segments.
 
     Args:
-        path (str): The path string to be split.
-        separator (str): The path separator.
+      path (str): The path string to be split.
+      separator (str): The path separator.
 
     Returns:
-        list[str]: A list of non-empty path segments.
+      list[str]: A list of non-empty path segments.
     """
     return [s for s in path.split(separator) if s]
 
@@ -226,9 +226,9 @@ class ArtifactsTrie(object):
       """Collects paths from the trie.
 
       Args:
-          node (TrieNode): current node.
-          current_path (str): path leading to this node.
-          artifacts (dict): dictionary to store artifact paths.
+        node (TrieNode): current node.
+        current_path (str): path leading to this node.
+        artifacts (dict): dictionary to store artifact paths.
       """
       if node.artifacts_names:
         for artifact_name in node.artifacts_names:
