@@ -378,7 +378,7 @@ class FileEntryFilterCollection(object):
       return []
 
     return self._artifacts_trie.GetMatchingArtifacts(path, path_separator)
-  
+
   def HasFilters(self):
     """Determines if filters are defined.
 

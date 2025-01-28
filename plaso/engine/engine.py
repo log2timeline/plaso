@@ -281,7 +281,7 @@ class BaseEngine(object):
       ArtifactsTrie: artifacts trie.
     """
     return self._artifacts_trie
-  
+
   def GetCollectionExcludedFindSpecs(self):
     """Retrieves find specifications to exclude from collection.
 

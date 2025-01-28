@@ -446,7 +446,7 @@ class PathHelper(object):
       target_directory (str): path of the target directory.
       target_filename (str): name of the target file.
       destination_path (str): destination path for the collected files.
-      
+
     Returns:
       str: normalized path or None.
     """
