@@ -155,17 +155,16 @@ class ArtifactsTrie(object):
 
       # If the child is an exact match, continue traversal.
       if segment in (child_segment, sanitized_child_segment):
-        custom_path = _CustomPathJoin(
+        custom_path = self._CustomPathJoin(
             path_separator, current_path, child_segment)
         self._SearchTrie(
             child_node, custom_path, remaining_segments, path_separator,
             matching_artifacts)
-        
       # If the child is a glob, see if it matches.
       elif glob.has_magic(child_segment):
         if self._MatchesGlobPattern(
                 child_segment, segment, child_node.path_separator):
-          custom_path = _CustomPathJoin(
+          custom_path = self._CustomPathJoin(
               path_separator, current_path, segment)
           self._SearchTrie(
               child_node, custom_path, remaining_segments, path_separator,
@@ -221,36 +220,35 @@ class ArtifactsTrie(object):
         dict: dictionary mapping artifact names to their paths.
     """
     artifacts_paths = {}
-
-    def _collect_paths(node, current_path, artifacts):
-      """Collects paths from the trie.
-
-      Args:
-        node (TrieNode): current node.
-        current_path (str): path leading to this node.
-        artifacts (dict): dictionary to store artifact paths.
-      """
-      if node.artifacts_names:
-        for artifact_name in node.artifacts_names:
-          path_list = artifacts.setdefault(artifact_name, [])
-          path_list.append(current_path)
-
-      for segment, child_node in node.children.items():
-        # Ensure the path_separator attribute exists.
-        if not hasattr(child_node, 'path_separator'):
-          child_node.path_separator = node.path_separator
-
-        # Construct the next path segment.
-        if current_path == child_node.path_separator:
-          # Means it is the root folder, i.e. `/`
-          next_path = current_path + segment
-        else:
-          next_path = current_path + child_node.path_separator + segment
-
-        _collect_paths(child_node, next_path, artifacts)
-
-    _collect_paths(node, '', artifacts_paths)
+    self._collect_paths(node, '', artifacts_paths)
     return artifacts_paths
+
+  def _collect_paths(self, node, current_path, artifacts):
+    """Collects paths from the trie.
+
+    Args:
+      node (TrieNode): current node.
+      current_path (str): path leading to this node.
+      artifacts (dict): dictionary to store artifact paths.
+    """
+    if node.artifacts_names:
+      for artifact_name in node.artifacts_names:
+        path_list = artifacts.setdefault(artifact_name, [])
+        path_list.append(current_path)
+
+    for segment, child_node in node.children.items():
+      # Ensure the path_separator attribute exists.
+      if not hasattr(child_node, 'path_separator'):
+        child_node.path_separator = node.path_separator
+
+      # Construct the next path segment.
+      if current_path == child_node.path_separator:
+        # Means it is the root folder, i.e. `/`
+        next_path = current_path + segment
+      else:
+        next_path = current_path + child_node.path_separator + segment
+
+      self._collect_paths(child_node, next_path, artifacts)
 
   def _CustomPathJoin(self, separator, current_path, new_segment):
     """Joins path components using a custom separator, replacing os.sep.
@@ -271,9 +269,9 @@ class ArtifactsTrie(object):
     """Checks if a path matches a given glob pattern.
 
     Args:
-      glob_pattern: The glob pattern to match against.
-      path: The path to check.
-      path_separator: The path separator used in the glob pattern.
+      glob_pattern (str): The glob pattern to match against.
+      path (str): The path to check.
+      path_separator (str): The path separator used in the glob pattern.
 
     Returns:
       True if the path matches the glob pattern, False otherwise.
