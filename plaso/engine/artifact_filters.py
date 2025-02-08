@@ -262,11 +262,11 @@ class ArtifactDefinitionsFiltersHelper(object):
     """Adds a path to the artifacts trie.
 
     Args:
-        artifact_name (str): artifact name.
-        path (str): file system path.
-        original_registry_artifact_filter_names (Optional[set[str]]): Set of
-            original registry filter names.
-        path_separator (str): path separator.
+      artifact_name (str): artifact name.
+      path (str): file system path.
+      original_registry_artifact_filter_names (Optional[set[str]]): Set of
+          original registry filter names.
+      path_separator (str): path separator.
     """
     normalized_path = path.replace(path_separator, os.sep)
     self.artifacts_trie.AddPath(artifact_name, normalized_path, os.sep)
