@@ -221,8 +221,7 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
         separator,
         environment_variable,
         test_user_accounts,
-        enable_artifacts_map=True
-    )
+        enable_artifacts_map=True)
 
     # Should build 1 find_spec.
     self.assertEqual(len(find_specs), 1)
@@ -244,8 +243,7 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
         separator,
         environment_variable,
         test_user_accounts,
-        enable_artifacts_map=True
-    )
+        enable_artifacts_map=True)
 
     # Glob expansion should by default recurse ten levels.
     self.assertEqual(len(find_specs), 10)
@@ -277,8 +275,7 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
         separator,
         environment_variable,
         test_user_accounts,
-        enable_artifacts_map=True
-    )
+        enable_artifacts_map=True)
 
     # 6 find specs should be created for testuser1 and testuser2.
     self.assertEqual(len(find_specs), 6)
@@ -307,8 +304,7 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
         separator,
         environment_variable,
         test_user_accounts,
-        enable_artifacts_map=True
-    )
+        enable_artifacts_map=True)
 
     # 8 find specs should be created for testuser1 and testuser2.
     self.assertEqual(len(find_specs), 8)
@@ -327,8 +323,7 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
         separator,
         environment_variable,
         test_user_accounts,
-        enable_artifacts_map=True
-    )
+        enable_artifacts_map=True)
 
     # 16 find specs should be created for testuser1 and testuser2.
     self.assertEqual(len(find_specs), 16)
@@ -365,8 +360,8 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
     self.assertEqual(
         path_trie_node.children['test_data']
         .children['*'].artifacts_names,
-        [artifact_name]
-    )
+        [artifact_name])
+    
     self.assertEqual(
         len(path_trie_node.children['test_data'].children['*'].children), 1)
     self.assertIn(
