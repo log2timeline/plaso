@@ -644,11 +644,9 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
               f'a_directory{os.sep}another_file',
               f'a_directory{os.sep}a_file'],
           'TestFiles4':
-              [f'a_directory{os.sep}another_file', 'passwords.txt']
-      }
+              [f'a_directory{os.sep}another_file', 'passwords.txt']}
 
       extracted_files = self._RecursiveList(temp_directory)
-
       self.assertEqual(sorted(extracted_files), expected_extracted_files)
 
       # Verify content of artifacts_map.json
