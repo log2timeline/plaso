@@ -69,7 +69,7 @@ class ArtifactsTrie(object):
           path_separator=path_separator)
     current_node = current_node.children[path_separator]
 
-    # Handle the case when the input path is equal to the path_separator.
+    # Handle the case when the input path is equal to the path separator.
     if path == path_separator:
       current_node.artifacts_names.append(artifact_name)
       return
