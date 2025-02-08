@@ -699,9 +699,8 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
       # Verify that no files were extracted.
       # Only artifacts_map.json and hashes.json should exist.
       self.assertEqual(
-          sorted(os.listdir(temp_directory)), sorted(
-              ['hashes.json', 'artifacts_map.json'])
-      )
+          sorted(os.listdir(temp_directory)),
+          sorted(['hashes.json', 'artifacts_map.json']))
 
       # Verify that the trie has no matching paths for image.qcow2.
       self.assertIsNotNone(test_tool._filter_collection._artifacts_trie)
@@ -711,8 +710,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
 
       # Verify that artifacts_map.json is created but empty
       artifacts_map_file_path = os.path.join(
-          temp_directory, "artifacts_map.json"
-      )
+          temp_directory, "artifacts_map.json")
       with open(
           artifacts_map_file_path, "r", encoding="utf-8"
       ) as file_object:
