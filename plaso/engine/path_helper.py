@@ -450,7 +450,6 @@ class PathHelper(object):
     Returns:
       str: normalized path or None.
     """
-
     if not destination_path.endswith(os.path.sep):
       destination_path = destination_path + os.path.sep
     target_path = os.path.join(target_directory, target_filename)
