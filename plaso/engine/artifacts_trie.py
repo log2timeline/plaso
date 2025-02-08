@@ -130,6 +130,9 @@ class ArtifactsTrie(object):
     if node.artifacts_names:
       for artifact_name in node.artifacts_names:
         for artifact_path in self.artifacts_paths.get(artifact_name, []):
+          # Note that the sanitized path is used here to ensure consistency
+          # with the exported path.
+          # TODO: consider moving path sanitation out of engine.
           if self._ComparePathIfSanitized(
               current_path, path_separator, artifact_path,
               node.path_separator):
