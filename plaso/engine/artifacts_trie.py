@@ -25,7 +25,7 @@ class TrieNode(object):
     Args:
       path_separator (Optional[str]): the path separator used in paths stored
           in the Trie, default is '/'.
-      is_root (bool): True if this node is the root node.
+      is_root (Optional[bool]): True if this node is the root node.
     """
     super(TrieNode, self).__init__()
     self.artifacts_names = []
