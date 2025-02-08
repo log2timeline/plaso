@@ -220,7 +220,7 @@ class ArtifactsTrie(object):
       node (TrieNode): current trie node being traversed.
 
     Returns:
-        dict: dictionary mapping artifact names to their paths.
+      dict: dictionary mapping artifact names to their paths.
     """
     artifacts_paths = {}
     self._collect_paths(node, '', artifacts_paths)
