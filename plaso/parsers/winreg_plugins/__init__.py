@@ -31,3 +31,4 @@ from plaso.parsers.winreg_plugins import usbstor
 from plaso.parsers.winreg_plugins import winlogon
 from plaso.parsers.winreg_plugins import winrar
 from plaso.parsers.winreg_plugins import windows_version
+from plaso.parsers.winreg_plugins import motherboard_info
