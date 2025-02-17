@@ -1027,7 +1027,7 @@ short_source: 'REG'
 source: 'WinRAR History Registry Key'
 ---
 type: 'basic'
-data_type: 'windows:registry:installation'
+data_type: 'windows:registry:motherboard_info'
 message:
 - 'Motherboard Manufacturer: {motherboard_manufacturer}'
 - 'Motherboard Model: {motherboard_model}'
