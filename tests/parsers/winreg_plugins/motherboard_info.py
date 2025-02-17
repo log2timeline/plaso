@@ -78,7 +78,7 @@ class BackgroundActivityModeratorWindowsRegistryPluginTest(
       'motherboard_model': 'Virtual Machine',
       'bios_release_date': '05/13/2024',
       'bios_version': 'Hyper-V UEFI Release v4.1',
-      'key_path': 'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\SystemInformation',
+      'key_path': 'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Control\\SystemInformation',
       'last_written_time': '2024-08-28T09:23:49.0020310+00:00'
     }
 
