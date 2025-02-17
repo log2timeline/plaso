@@ -13,7 +13,7 @@ from plaso.parsers.winreg_plugins import motherboard_info
 from tests.parsers.winreg_plugins import test_lib
 
 
-class BackgroundActivityModeratorWindowsRegistryPluginTest(
+class WindowsRegistryMotherboardInfoPluginTest(
     test_lib.RegistryPluginTestCase):
   """Tests for the Motherboard Info Windows Registry plugin."""
 
