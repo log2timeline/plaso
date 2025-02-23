@@ -41,6 +41,7 @@ class BaseEngine(object):
     self._abort = False
     self._analyzers_profiler = None
     self._artifacts_registry = None
+    self._artifacts_trie = None
     self._excluded_file_system_find_specs = None
     self._included_file_system_find_specs = None
     self._memory_profiler = None
@@ -53,7 +54,6 @@ class BaseEngine(object):
     self._status_update_interval = 0.5
     self._storage_profiler = None
     self._task_queue_profiler = None
-    self._artifacts_trie = None
 
     self.knowledge_base = knowledge_base.KnowledgeBase()
 
