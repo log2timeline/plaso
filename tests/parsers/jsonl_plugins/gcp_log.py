@@ -193,5 +193,7 @@ class GCPLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 10)
     self.CheckEventData(event_data, expected_event_values)
 
+
 if __name__ == '__main__':
   unittest.main()
+  
