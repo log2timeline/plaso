@@ -196,4 +196,3 @@ class GCPLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
 
 if __name__ == '__main__':
   unittest.main()
-
