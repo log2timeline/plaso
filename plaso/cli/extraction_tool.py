@@ -512,7 +512,7 @@ class ExtractionTool(
     session.debug_mode = self._debug_mode
     session.enabled_parser_names = enabled_parser_names
     session.extract_winevt_resources = self._extract_winevt_resources
-    session.filter_file_path = self._filter_file
+    session.filter_file = self._filter_file
     session.parser_filter_expression = self._parser_filter_expression
     session.preferred_codepage = self._preferred_codepage
     session.preferred_encoding = self.preferred_encoding
