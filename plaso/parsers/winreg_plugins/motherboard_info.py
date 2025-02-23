@@ -31,6 +31,7 @@ class WindowsRegistryMotherboardInfoEventData(events.EventData):
     self.bios_release_date = None
     self.bios_version = None
     self.key_path = None
+    self.last_written_time = None
 
 
 class MotherboardInfoPlugin(interface.WindowsRegistryPlugin):
