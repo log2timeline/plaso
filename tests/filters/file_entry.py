@@ -2,12 +2,14 @@
 # -*- coding: utf-8 -*-
 """Tests for the file entry filters."""
 
+import os
 import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
+from plaso.engine import artifacts_trie
 from plaso.filters import file_entry as file_entry_filters
 from plaso.lib import specification
 
@@ -377,6 +379,40 @@ class FileEntryFilterCollectionTest(shared_test_lib.BaseTestCase):
     file_entry_filter = file_entry_filters.NamesFileEntryFilter(['name'])
     test_filter_collection.AddFilter(file_entry_filter)
     self.assertTrue(test_filter_collection.HasFilters())
+
+  def testSetArtifactsTrie(self):
+    """Tests the SetArtifactsTrie function."""
+    test_filter_collection = file_entry_filters.FileEntryFilterCollection()
+    trie = artifacts_trie.ArtifactsTrie()
+    test_filter_collection.SetArtifactsTrie(trie)
+    self.assertEqual(test_filter_collection._artifacts_trie, trie)
+
+  def testGetMatchingArtifacts(self):
+    """Tests the GetMatchingArtifacts function."""
+    test_filter_collection = file_entry_filters.FileEntryFilterCollection()
+    trie = artifacts_trie.ArtifactsTrie()
+    trie.AddPath(
+        'artifact1', f'{os.sep}path{os.sep}to{os.sep}file.txt', os.sep)
+    trie.AddPath(
+        'artifact2', f'{os.sep}path{os.sep}to{os.sep}dir{os.sep}', os.sep)
+    test_filter_collection.SetArtifactsTrie(trie)
+
+    # Test matching a file.
+    matches = test_filter_collection.GetMatchingArtifacts(
+        f'{os.sep}path{os.sep}to{os.sep}file.txt', os.sep)
+    self.assertIn('artifact1', matches)
+    self.assertNotIn('artifact2', matches)
+
+    # Test matching a directory.
+    matches = test_filter_collection.GetMatchingArtifacts(
+        f'{os.sep}path{os.sep}to{os.sep}dir', os.sep)
+    self.assertIn('artifact2', matches)
+    self.assertNotIn('artifact1', matches)
+
+    # Test non-matching path.
+    matches = test_filter_collection.GetMatchingArtifacts(
+        f'{os.sep}nonexistent{os.sep}path', os.sep)
+    self.assertEqual(matches, [])
 
   # TODO: add test for Matches.
   # TODO: add test for Print.

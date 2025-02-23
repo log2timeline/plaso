@@ -595,6 +595,193 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
       expected_json_data.sort(key=lambda digest: digest['sha256'])
       self.assertEqual(json_data, expected_json_data)
 
+  def testProcessSourceEnableArtifactsMap(self):
+    """Tests the ProcessSource function with atrifacts map enabled.
+
+    This test uses plaso/test_data/image.qcow2 which has directories matching
+    artifact filters: [TestGroupExport, TestFiles3, TestFiles4,
+    TestFilesImageExport] in plaso/test_data/artifacts/artifacts_filters.yaml
+
+    plaso/test_data/image.qcow2 files and directories:
+      ├── a_directory/
+      │   ├── a_file
+      │   └── another_file
+      ├── lost+found/
+      └── passwords.txt
+    """
+    test_artifacts_path = self._GetTestFilePath(['artifacts'])
+    self._SkipIfPathNotExists(test_artifacts_path)
+
+    test_file_path = self._GetTestFilePath(['image.qcow2'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
+
+    options = test_lib.TestOptions()
+    options.artifact_definitions_path = test_artifacts_path
+    options.image = test_file_path
+    options.quiet = True
+    options.artifact_filter_string = 'TestGroupExport'
+    options.enable_artifacts_map = True
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      options.path = temp_directory
+
+      test_tool.ParseOptions(options)
+
+      test_tool.ProcessSource()
+
+      expected_extracted_files = sorted([
+          os.path.join(temp_directory, 'a_directory'),
+          os.path.join(temp_directory, 'a_directory', 'another_file'),
+          os.path.join(temp_directory, 'a_directory', 'a_file'),
+          os.path.join(temp_directory, 'passwords.txt'),
+          os.path.join(temp_directory, 'hashes.json'),
+          os.path.join(temp_directory, 'artifacts_map.json')])
+      expected_json_data = {
+          'TestFiles3': [
+              f'a_directory{os.sep}another_file',
+              f'a_directory{os.sep}a_file'],
+          'TestFiles4':
+              [f'a_directory{os.sep}another_file', 'passwords.txt']}
+
+      extracted_files = self._RecursiveList(temp_directory)
+      self.assertEqual(sorted(extracted_files), expected_extracted_files)
+
+      # Verify content of artifacts_map.json
+      artifacts_map_file_path = os.path.join(
+          temp_directory, 'artifacts_map.json')
+      with open(artifacts_map_file_path, 'r', encoding='utf-8') as file_object:
+        artifacts_map = json.load(file_object)
+
+      self.assertTrue(isinstance(artifacts_map, dict))
+      self.assertEqual(expected_json_data, artifacts_map)
+
+  def testProcessSourceEnableArtifactsMap_NonMatchingPaths(self):
+    """Tests ProcessSource with artifacts map enabled and no matching paths.
+
+    This test uses plaso/test_data/image.qcow2 which has directories matching
+    artifact filters: [TestGroupExport, TestFiles3, TestFiles4,
+    TestFilesImageExport] in plaso/test_data/artifacts/artifacts_filters.yaml
+
+    plaso/test_data/image.qcow2 files and directories:
+      ├── a_directory/
+      │   ├── a_file
+      │   └── another_file
+      ├── lost+found/
+      └── passwords.txt
+    """
+    test_artifacts_path = self._GetTestFilePath(["artifacts"])
+    self._SkipIfPathNotExists(test_artifacts_path)
+
+    test_file_path = self._GetTestFilePath(["image.qcow2"])
+    self._SkipIfPathNotExists(test_file_path)
+
+    output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+    test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
+
+    options = test_lib.TestOptions()
+    options.artifact_definitions_path = test_artifacts_path
+    options.image = test_file_path
+    options.quiet = True
+    # Use a valid artifact that will not match anything in the test image.
+    options.artifact_filter_string = "TestGroupExtract"
+    options.enable_artifacts_map = True
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      options.path = temp_directory
+
+      test_tool.ParseOptions(options)
+
+      test_tool.ProcessSource()
+
+      # Verify that no files were extracted.
+      # Only artifacts_map.json and hashes.json should exist.
+      self.assertEqual(
+          sorted(os.listdir(temp_directory)),
+          sorted(['hashes.json', 'artifacts_map.json']))
+
+      # Verify that the trie has no matching paths for image.qcow2.
+      self.assertIsNotNone(test_tool._filter_collection._artifacts_trie)
+      self.assertNotIn('a_directory',
+                       test_tool._filter_collection._artifacts_trie.root
+                       .children[os.sep].children)
+
+      # Verify that artifacts_map.json is created but empty
+      artifacts_map_file_path = os.path.join(
+          temp_directory, "artifacts_map.json")
+      with open(
+          artifacts_map_file_path, "r", encoding="utf-8"
+      ) as file_object:
+        artifacts_map = json.load(file_object)
+
+      self.assertEqual(artifacts_map, {})
+
+  def testProcessSourceEnableArtifactsMap_EmptyFilter(self):
+    """Tests ProcessSource with artifacts map enabled and an empty filter."""
+    test_artifacts_path = self._GetTestFilePath(['artifacts'])
+    self._SkipIfPathNotExists(test_artifacts_path)
+
+    test_file_path = self._GetTestFilePath(['image.qcow2'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
+
+    options = test_lib.TestOptions()
+    options.artifact_definitions_path = test_artifacts_path
+    options.image = test_file_path
+    options.quiet = True
+    options.artifact_filter_string = ''  # Empty filter
+    options.enable_artifacts_map = True
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      options.path = temp_directory
+
+      test_tool.ParseOptions(options)
+
+      test_tool.ProcessSource()
+
+      # Verify that artifacts_map.json is created but empty
+      artifacts_map_file_path = os.path.join(
+          temp_directory, 'artifacts_map.json')
+      with open(artifacts_map_file_path, 'r', encoding='utf-8') as file_object:
+        artifacts_map = json.load(file_object)
+
+      self.assertEqual(artifacts_map, {})
+
+  def testProcessSourceWithFile(self):
+    """Tests the ProcessSource function with Registry files."""
+    test_artifacts_path = self._GetTestFilePath(["artifacts"])
+    self._SkipIfPathNotExists(test_artifacts_path)
+
+    test_file_path = self._GetTestFilePath(["SYSTEM"])
+    self._SkipIfPathNotExists(test_file_path)
+
+    output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+    test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
+
+    options = test_lib.TestOptions()
+    options.artifact_definitions_path = test_artifacts_path
+    options.image = test_file_path
+    options.quiet = True
+    options.artifact_filter_string = "TestRegistry"
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      options.path = temp_directory
+
+      test_tool.ParseOptions(options)
+      test_tool.ProcessSource()
+
+      output = output_writer.ReadOutput()
+      error_msg = ', '.join(test_tool._SOURCE_TYPES_TO_PREPROCESS)
+      self.assertEqual(
+          output,
+          (f'Input must be in "{error_msg}" '
+           'the type: "file" is not supported.\n')
+      )
+
 
 if __name__ == '__main__':
   unittest.main()

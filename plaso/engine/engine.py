@@ -41,6 +41,7 @@ class BaseEngine(object):
     self._abort = False
     self._analyzers_profiler = None
     self._artifacts_registry = None
+    self._artifacts_trie = None
     self._excluded_file_system_find_specs = None
     self._included_file_system_find_specs = None
     self._memory_profiler = None
@@ -166,8 +167,9 @@ class BaseEngine(object):
     self._artifacts_registry = registry
 
   def BuildCollectionFilters(
-      self, environment_variables, user_accounts, artifact_filter_names=None,
-      filter_file_path=None):
+      self, environment_variables, user_accounts,
+      artifact_filter_names=None, filter_file_path=None,
+      enable_artifacts_map=False):
     """Builds collection filters from artifacts or filter file if available.
 
     Args:
@@ -178,6 +180,8 @@ class BaseEngine(object):
           definitions that are used for filtering file system and Windows
           Registry key paths.
       filter_file_path (Optional[str]): path of filter file.
+      enable_artifacts_map (Optional[bool]): True if the artifacts path map
+          should be generated. Defaults to False.
 
     Raises:
       InvalidFilter: if no valid file system find specifications are built.
@@ -192,7 +196,8 @@ class BaseEngine(object):
           self._artifacts_registry)
       filters_helper.BuildFindSpecs(
           artifact_filter_names, environment_variables=environment_variables,
-          user_accounts=user_accounts)
+          user_accounts=user_accounts,
+          enable_artifacts_map=enable_artifacts_map)
 
       # If the user selected Windows Registry artifacts we have to ensure
       # the Windows Registry files are parsed.
@@ -200,7 +205,10 @@ class BaseEngine(object):
         filters_helper.BuildFindSpecs(
             self._WINDOWS_REGISTRY_FILES_ARTIFACT_NAMES,
             environment_variables=environment_variables,
-            user_accounts=user_accounts)
+            user_accounts=user_accounts,
+            enable_artifacts_map=enable_artifacts_map,
+            original_registry_artifact_filter_names=(
+                filters_helper.registry_find_specs_artifact_names))
 
       if not filters_helper.file_system_find_specs:
         raise errors.InvalidFilter(
@@ -210,6 +218,8 @@ class BaseEngine(object):
       self._included_file_system_find_specs = (
           filters_helper.file_system_find_specs)
       self._registry_find_specs = filters_helper.registry_find_specs
+
+      self._artifacts_trie = filters_helper.artifacts_trie
 
     elif filter_file_path:
       logger.debug((
@@ -263,6 +273,14 @@ class BaseEngine(object):
     session.preferred_encoding = preferred_encoding
 
     return session
+
+  def GetArtifactsTrie(self):
+    """Retrieves the artifacts trie.
+
+    Returns:
+      ArtifactsTrie: artifacts trie.
+    """
+    return self._artifacts_trie
 
   def GetCollectionExcludedFindSpecs(self):
     """Retrieves find specifications to exclude from collection.
