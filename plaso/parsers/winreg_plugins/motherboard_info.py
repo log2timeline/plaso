@@ -12,12 +12,12 @@ class WindowsRegistryMotherboardInfoEventData(events.EventData):
   """Windows Motherboard Info event data attribute container.
 
   Attributes:
-    motherboard_manufacturer (str): Name of the company that created the motherboard.
+    motherboard_manufacturer (str): Motherboard manafacturer name.
     motherboard_model (str): Name of the specific motherboard model.
     bios_release_date (str): Date of release of the installed BIOS.
     bios_version (str): Version of installed BIOS.
     key_path (str): Windows Registry key path.
-    last_written_time (dfdatetime.DateTimeValues): entry last written date and time.
+    last_written_time (dfdatetime.DateTimeValues): entry last written datetime.
   """
 
   DATA_TYPE = 'windows:registry:motherboard_info'
@@ -41,7 +41,8 @@ class MotherboardInfoPlugin(interface.WindowsRegistryPlugin):
 
   FILTERS = frozenset([
     interface.WindowsRegistryKeyPathFilter(
-      'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\SystemInformation'
+      'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\'
+      'SystemInformation'
     )
   ])
 

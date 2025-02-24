@@ -32,22 +32,26 @@ class BackgroundActivityModeratorWindowsRegistryPluginTest(
 
     value_data = 'Microsoft Corporation'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-      'SystemManufacturer', data=value_data, data_type=dfwinreg_definitions.REG_SZ,)
+      'SystemManufacturer', data=value_data,
+      data_type=dfwinreg_definitions.REG_SZ)
     registry_key.AddValue(registry_value)
 
     value_data = 'Virtual Machine'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-      'SystemProductName', data=value_data, data_type=dfwinreg_definitions.REG_SZ, )
+      'SystemProductName', data=value_data,
+      data_type=dfwinreg_definitions.REG_SZ)
     registry_key.AddValue(registry_value)
 
     value_data = '05/13/2024'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-      'BIOSReleaseDate', data=value_data, data_type=dfwinreg_definitions.REG_SZ, )
+      'BIOSReleaseDate', data=value_data,
+      data_type=dfwinreg_definitions.REG_SZ)
     registry_key.AddValue(registry_value)
 
     value_data = 'Hyper-V UEFI Release v4.1'.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-      'BIOSVersion', data=value_data, data_type=dfwinreg_definitions.REG_SZ, )
+      'BIOSVersion', data=value_data,
+      data_type=dfwinreg_definitions.REG_SZ)
     registry_key.AddValue(registry_value)
 
     return registry_key
@@ -78,7 +82,8 @@ class BackgroundActivityModeratorWindowsRegistryPluginTest(
       'motherboard_model': 'Virtual Machine',
       'bios_release_date': '05/13/2024',
       'bios_version': 'Hyper-V UEFI Release v4.1',
-      'key_path': 'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Control\\SystemInformation',
+      'key_path': 'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Control\\'
+                  'SystemInformation',
       'last_written_time': '2024-08-28T09:23:49.0020310+00:00'
     }
 
