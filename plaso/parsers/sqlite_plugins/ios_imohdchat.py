@@ -34,8 +34,7 @@ class IMOHDChatMessageEventData(events.EventData):
 
 
 class IMOHDChatMessagePlugin(interface.SQLitePlugin):
-  """SQLite parser plugin for IMO HD chat message database files.
-  """
+  """SQLite parser plugin for IMO HD chat message database files."""
 
   NAME = 'ios_imohdchat_message'
   DATA_FORMAT = (
