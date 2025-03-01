@@ -7,30 +7,30 @@ from plaso.containers import events
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
+
 class IMOHDChatMessageEventData(events.EventData):
   """IMO HD chat message event data.
 
   Attributes:
-    application (str): name of the application.
-    bundle_identifier (str): bundle identifier of the application.
-    count (int): number of occurances of the event.
-    event (str): event.
-    last_used_time (dfdatetime.DateTimeValues): last date and time
-        the application was last used.
+    alias (str): alias (or name) of the author of the message.
     query (str): SQL query that was used to obtain the event data.
+    recorded_time (dfdatetime.DateTimeValues): date and time the chat
+        message was recorded.
+    status (int): send status.
+    text (str): text of the chat message.
   """
 
-  DATA_TYPE = 'ios:imohdchat_message:entry'
+  DATA_TYPE = 'ios:imohdchat:message'
 
   def __init__(self):
     """Initializes event data."""
     super(IMOHDChatMessageEventData, self).__init__(
         data_type=self.DATA_TYPE)
-    self.zalias = None
-    self.ztext = None
-    self.zissent = None
-    self.zts = None
+    self.alias = None
     self.query = None
+    self.recorded_time = None
+    self.send_status = None
+    self.text = None
 
 
 class IMOHDChatMessagePlugin(interface.SQLitePlugin):
@@ -43,19 +43,11 @@ class IMOHDChatMessagePlugin(interface.SQLitePlugin):
 
   REQUIRED_STRUCTURE = {
       'ZIMOCHATMSG': frozenset([
-          'Z_PK', 'ZALIAS', 'ZTEXT', 'ZISSENT',
-          'ZTS'])}
+          'Z_PK', 'ZALIAS', 'ZTEXT', 'ZISSENT', 'ZTS'])}
 
   QUERIES = [(
-      ('SELECT ZTS/1000000000, ZALIAS, ZTEXT, ZISSENT '
-       'FROM ZIMOCHATMSG ORDER BY ZTS'),
+      'SELECT ZTS, ZALIAS, ZTEXT, ZISSENT FROM ZIMOCHATMSG',
       'ParseApplicationUsageRow')]
-
-  SCHEMAS = [{
-      'application_usage': (
-          'CREATE TABLE ZIMOCHATMSG (Z_PK INTEGER, ZALIAS TEXT, ZTEXT TEXT, ZISSENT INTEGER '
-          'ZTS INTEGER, '
-          'PRIMARY KEY (Z_PK))')}]
 
   def _GetDateTimeRowValue(self, query_hash, row, value_name):
     """Retrieves a date and time value from the row.
@@ -73,7 +65,7 @@ class IMOHDChatMessagePlugin(interface.SQLitePlugin):
     if timestamp is None:
       return None
 
-    return dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+    return dfdatetime_posix_time.PosixTimeInNanoseconds(timestamp=timestamp)
 
   def ParseApplicationUsageRow(
       self, parser_mediator, query, row, **unused_kwargs):
@@ -87,13 +79,13 @@ class IMOHDChatMessagePlugin(interface.SQLitePlugin):
     """
     query_hash = hash(query)
 
+    # TODO: add attribute for ZSENDERTS
     event_data = IMOHDChatMessageEventData()
-    event_data.zalias = self._GetRowValue(query_hash, row, 'ZALIAS')
-    event_data.ztext = self._GetRowValue(query_hash, row, 'ZTEXT')
-    event_data.zissent = self._GetRowValue(query_hash, row, 'ZISSENT')
-    event_data.zts = self._GetDateTimeRowValue(
-        query_hash, row, 'ZTS/1000000000')
+    event_data.alias = self._GetRowValue(query_hash, row, 'ZALIAS')
     event_data.query = query
+    event_data.recorded_time = self._GetDateTimeRowValue(query_hash, row, 'ZTS')
+    event_data.status = self._GetRowValue(query_hash, row, 'ZISSENT')
+    event_data.text = self._GetRowValue(query_hash, row, 'ZTEXT')
 
     parser_mediator.ProduceEventData(event_data)
 

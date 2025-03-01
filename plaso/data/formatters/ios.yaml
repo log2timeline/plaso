@@ -33,16 +33,6 @@ short_source: 'PLIST'
 source: 'Apple iOS Car Play application plist'
 ---
 type: 'conditional'
-data_type: 'ios:idstatuscache:lookup'
-message:
-- 'Process Name: {process_name}'
-- 'Apple Identifier: {apple_identifier}'
-short_message:
-- 'Apple Identifier: {apple_identifier}'
-short_source: 'PLIST'
-source: 'Apple iOS identity services status cache plist'
----
-type: 'conditional'
 data_type: 'ios:datausage:event'
 message:
 - 'Bundle Identifier: {bundle_identifier}'
@@ -55,6 +45,36 @@ short_message:
 - 'Process Name: {process_name}'
 short_source: 'HISTORY'
 source: 'iOS data usage database'
+---
+type: 'conditional'
+data_type: 'ios:idstatuscache:lookup'
+message:
+- 'Process Name: {process_name}'
+- 'Apple Identifier: {apple_identifier}'
+short_message:
+- 'Apple Identifier: {apple_identifier}'
+short_source: 'PLIST'
+source: 'Apple iOS identity services status cache plist'
+---
+type: 'conditional'
+data_type: 'ios:imohdchat:message'
+enumeration_helpers:
+- input_attribute: 'status'
+  output_attribute: 'status_string'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'Received'
+    1: 'Sent'
+message: 
+- 'Sender Name: {alias}'
+- 'Message: {text}'
+- 'Status: {status_string}'
+short_message: 
+- 'Sender Name: {alias}'
+- 'Message: {text}'
+- 'Status: {status_string}'
+short_source: 'IMO HD Chat message'
+source: 'IMO HD Chat Message SQLite database'
 ---
 type: 'conditional'
 data_type: 'ios:kik:messaging'
@@ -233,23 +253,3 @@ short_message:
 - 'Message: {text}'
 short_source: 'Twitter iOS'
 source: 'Twitter iOS Status'
----
-type: 'conditional'
-data_type: 'ios:imohdchat_message:entry'
-enumeration_helpers:
-- input_attribute: 'zissent'
-  output_attribute: 'zissent'
-  default_value: 'UNKNOWN'
-  values:
-    0: 'Received'
-    1: 'Sent'
-message: 
-- 'Sender Name : {zalias}'
-- 'Message : {ztext}'
-- 'Message Status : {zissent}'
-short_message: 
-- 'Sender Name : {zalias}'
-- 'Message : {ztext}'
-- 'Message Status : {zissent}'
-short_source: 'LOG'
-source: 'IMO HD Chat Message Log'

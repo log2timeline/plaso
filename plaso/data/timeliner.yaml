@@ -511,6 +511,12 @@ attribute_mappings:
   description: 'Lookup Time'
 place_holder_event: true
 ---
+data_type: 'ios:imohdchat:message'
+attribute_mappings:
+- name: 'recorded_time'
+  description: 'Recorded Time'
+place_holder_event: true
+---
 data_type: 'ios:datausage:event'
 attribute_mappings:
 - name: 'start_time'
@@ -1794,10 +1800,4 @@ data_type: 'zeitgeist:activity'
 attribute_mappings:
 - name: 'recorded_time'
   description: 'Recorded Time'
-place_holder_event: true
----
-data_type: 'ios:imohdchat_message:entry'
-attribute_mappings:
-- name: 'zts'
-  description: 'Timestamp'
 place_holder_event: true
