@@ -525,6 +525,23 @@ short_message:
 short_source: 'REG'
 source: 'Registry Key'
 ---
+type: 'conditional'
+data_type: 'windows:registry:motherboard_info'
+message:
+- 'Motherboard Manufacturer: {motherboard_manufacturer}'
+- 'Motherboard Model: {motherboard_model}'
+- 'BIOS Release Date: {bios_release_date}'
+- 'BIOS Version: {bios_version}'
+- 'Origin: {key_path}'
+short_message:
+- '{motherboard_manufacturer}'
+- '{motherboard_model}'
+- '{bios_release_date}'
+- '{bios_version}'
+- 'Origin: {key_path}'
+short_source: 'REG'
+source: 'Registry Key'
+---
 type: 'basic'
 data_type: 'windows:registry:mrulist'
 message: '[{key_path}] {entries}'
