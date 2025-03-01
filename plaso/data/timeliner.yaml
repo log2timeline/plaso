@@ -1529,6 +1529,12 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: true
 ---
+data_type: 'windows:registry:motherboard_info'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+place_holder_event: false
+---
 data_type: 'windows:registry:mrulist'
 attribute_mappings:
 - name: 'last_written_time'
@@ -1795,9 +1801,3 @@ attribute_mappings:
 - name: 'recorded_time'
   description: 'Recorded Time'
 place_holder_event: true
----
-data_type: 'windows:registry:motherboard_info'
-attribute_mappings:
-- name: 'last_written_time'
-  description: 'Content Modification Time'
-place_holder_event: false
