@@ -29,7 +29,7 @@ class IMOHDChatMessageEventData(events.EventData):
     self.alias = None
     self.query = None
     self.recorded_time = None
-    self.send_status = None
+    self.status = None
     self.text = None
 
 
