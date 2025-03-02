@@ -16,8 +16,8 @@ class IOSNotesEventData(events.EventData):
         created.
     modification_time (dfdatetime.DateTimeValues): date and time the note was
         last modified.
-    title (str): title of the note.
     snippet (str): snippet of the note.
+    title (str): title of the note.
   """
 
   DATA_TYPE = 'ios:notes:note'
@@ -27,8 +27,8 @@ class IOSNotesEventData(events.EventData):
     super(IOSNotesEventData, self).__init__(data_type=self.DATA_TYPE)
     self.creation_time = None
     self.modification_time = None
-    self.title = None
     self.snippet = None
+    self.title = None
 
 
 class IOSNotesPlugin(interface.SQLitePlugin):
@@ -39,8 +39,7 @@ class IOSNotesPlugin(interface.SQLitePlugin):
 
   REQUIRED_STRUCTURE = {
     'ZICCLOUDSYNCINGOBJECT': frozenset([
-        'ZCREATIONDATE3', 'ZMODIFICATIONDATE1', 'ZTITLE1', 'ZSNIPPET'])
-  }
+        'ZCREATIONDATE3', 'ZMODIFICATIONDATE1', 'ZTITLE1', 'ZSNIPPET'])}
 
   QUERIES = [
       ('SELECT ZCREATIONDATE3, ZMODIFICATIONDATE1, ZTITLE1,ZSNIPPET'
