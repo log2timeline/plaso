@@ -65,11 +65,11 @@ enumeration_helpers:
   values:
     0: 'Received'
     1: 'Sent'
-message: 
+message:
 - 'Sender Name: {alias}'
 - 'Message: {text}'
 - 'Status: {status_string}'
-short_message: 
+short_message:
 - 'Sender Name: {alias}'
 - 'Message: {text}'
 - 'Status: {status_string}'
