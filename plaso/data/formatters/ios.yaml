@@ -1,12 +1,12 @@
 # Plaso iOS related event formatters.
 ---
 type: 'conditional'
-data_type: 'ios:accounts:account'
+data_type: 'ios:accounts:entry'
 message:
 - 'Account Type: {account_type}'
 - 'Username: {username}'
 - 'Identifier: {identifier}'
-- 'Owning Bundle Identifier: {owning_bundle_id}'
+- 'Owning Bundle Identifier: {owning_bundle_identifier}'
 short_message:
 - 'Account Type: {account_type}'
 - 'Username: {username}'

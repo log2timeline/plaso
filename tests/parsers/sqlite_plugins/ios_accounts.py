@@ -26,12 +26,11 @@ class IOSAccountsPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(number_of_warnings, 0)
 
     expected_event_values = {
-        'date': '2020-03-21T21:47:57.068197+00:00', 
         'account_type': 'iCloud',
+        'creation_time': '2020-03-21T21:47:57.068197+00:00',
         'identifier': '1589F4EC-8F6C-4F37-929F-C6F121B36A59',
-        'owning_bundle_id': 'com.apple.purplebuddy',
-        'username': 'thisisdfir@gmail.com'
-    }
+        'owning_bundle_identifier': 'com.apple.purplebuddy',
+        'username': 'thisisdfir@gmail.com'}
 
     event_data = storage_writer.GetAttributeContainerByIndex(
         'event_data', 3)
