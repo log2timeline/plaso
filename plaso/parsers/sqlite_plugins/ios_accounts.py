@@ -8,24 +8,24 @@ from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 
-class IOSAccounts(events.EventData):
+class IOSAccountsEventData(events.EventData):
   """iOS accounts event data.
 
   Attributes:
-      account_type (str): account type.
-      creation_time (dfdatetime.DateTimeValues): date and time the account
-          was created.
-      identifier (str): identifier.
-      owning_bundle_identifier (str): owning bundle identifier of the
-          application managing the account.
-      username (str): user name.
+    account_type (str): account type.
+    creation_time (dfdatetime.DateTimeValues): date and time the account
+        was created.
+    identifier (str): identifier.
+    owning_bundle_identifier (str): owning bundle identifier of the
+        application managing the account.
+    username (str): user name.
   """
 
   DATA_TYPE = 'ios:accounts:entry'
 
   def __init__(self):
     """Initializes event data."""
-    super(IOSAccounts, self).__init__(data_type=self.DATA_TYPE)
+    super(IOSAccountsEventData, self).__init__(data_type=self.DATA_TYPE)
     self.account_type = None
     self.creation_time = None
     self.identifier = None
@@ -41,7 +41,7 @@ class IOSAccountsPlugin(interface.SQLitePlugin):
 
   REQUIRED_STRUCTURE = {
       'ZACCOUNT': frozenset([
-          'ZACCOUNTTYPE', 'ZDATE', 'ZUSERNAME', 'ZIDENTIFIER', 
+          'ZACCOUNTTYPE', 'ZDATE', 'ZUSERNAME', 'ZIDENTIFIER',
           'ZOWNINGBUNDLEID']),
       'ZACCOUNTTYPE': frozenset([
           'Z_PK', 'ZACCOUNTTYPEDESCRIPTION'])}
@@ -103,7 +103,7 @@ class IOSAccountsPlugin(interface.SQLitePlugin):
     """
     query_hash = hash(query)
 
-    event_data = IOSAccounts()
+    event_data = IOSAccountsEventData()
     event_data.account_type = self._GetRowValue(
         query_hash, row, 'ZACCOUNTTYPEDESCRIPTION')
     event_data.creation_time = self._GetTimeRowValue(query_hash, row, 'ZDATE')
