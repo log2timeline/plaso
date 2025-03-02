@@ -16,6 +16,7 @@ One of the maintainers will examine your code, and may request changes. Check of
 order, and then a maintainer will review your code.
 
 ## Checklist:
-* [ ] Automated checks (GitHub Actions, AppVeyor) pass
-* [ ] No new [new dependencies](https://plaso.readthedocs.io/en/latest/sources/developer/Adding-a-new-dependency.html) are required or l2tdevtools has been updated
-* [ ] Reviewer assigned
+* [ ] No new [new dependencies](https://plaso.readthedocs.io/en/latest/sources/developer/Adding-a-new-dependency.html) are required or l2tdevtools has been updated.
+* [ ] Test data has a Plaso compatible license. If the test data was not authored by you (the contributor), make sure to mention its orginal source in ACKNOWLEDGEMENTS.
+* [ ] Reviewer assigned.
+* [ ] Automated checks (GitHub Actions, AppVeyor) pass.
