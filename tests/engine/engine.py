@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """Tests the engine."""
 
+import os
 import unittest
 
 from dfvfs.helpers import fake_file_system_builder
@@ -11,8 +12,10 @@ from dfvfs.path import path_spec
 from dfvfs.resolver import context
 from dfvfs.vfs import file_system as dfvfs_file_system
 
+from plaso.containers import artifacts as containers_artifacts
 from plaso.engine import configurations
 from plaso.engine import engine
+from plaso.lib import errors
 from plaso.storage.fake import writer as fake_writer
 
 from tests import test_lib as shared_test_lib
@@ -93,7 +96,115 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
 
     # TODO: add test that raises BadConfigOption
 
-  # TODO: add tests for BuildCollectionFilters.
+  def testBuildCollectionFilters(self):
+    """Tests the BuildCollectionFilters function."""
+    test_artifacts_path = shared_test_lib.GetTestFilePath(['artifacts'])
+    self._SkipIfPathNotExists(test_artifacts_path)
+
+    test_engine = TestEngine()
+    test_engine.BuildArtifactsRegistry(test_artifacts_path, None)
+
+    # Test with artifact_filter_names
+    artifact_filter_names = ['TestFiles', 'TestFiles2']
+    environment_variables = [
+        containers_artifacts.EnvironmentVariableArtifact(
+            case_sensitive=False, name='systemdrive', value='C:'
+        )
+    ]
+    test_user_accounts = [
+        containers_artifacts.UserAccountArtifact(
+            identifier='1000',
+            path_separator='\\',
+            user_directory='C:\\Users\\testuser1',
+            username='testuser1',
+        ),
+        containers_artifacts.UserAccountArtifact(
+            identifier='1001',
+            path_separator='\\',
+            user_directory='%%environ_systemdrive%%\\Users\\testuser2',
+            username='testuser2',
+        ),
+    ]
+
+    # Pass artifact_filter_names to CreateSession
+    session = test_engine.CreateSession(
+        artifact_filter_names=artifact_filter_names)
+    test_engine.BuildCollectionFilters(
+        environment_variables,
+        test_user_accounts,
+        artifact_filter_names=session.artifact_filters,
+        enable_artifacts_map=True
+    )
+
+    self.assertIsNotNone(test_engine._artifacts_trie)
+    # Verify content of the artifacts trie
+    self.assertIn(os.sep, test_engine._artifacts_trie.root.children)
+    trie_root = test_engine._artifacts_trie.root.children[os.sep]
+    self.assertIn(
+        'test_data',
+        trie_root.children)
+    self.assertIn(
+        '*.evtx',
+        trie_root.children['test_data'].children)
+    self.assertIn(
+        'Users',
+        trie_root.children)
+    self.assertIn(
+        'testuser1',
+        trie_root.children['Users'].children)
+    self.assertIn(
+        'testuser2',
+        trie_root.children['Users'].children)
+    self.assertIn(
+        'Documents',
+        trie_root.children['Users'].children['testuser1'].children)
+    self.assertIn(
+        'Documents',
+        trie_root.children['Users'].children['testuser2'].children)
+    self.assertIn(
+        'WindowsPowerShell',
+        trie_root.children['Users'].children['testuser1']
+        .children['Documents'].children)
+    self.assertIn(
+        'WindowsPowerShell',
+        trie_root.children['Users'].children['testuser2']
+        .children['Documents'].children)
+    self.assertIn(
+        'profile.ps1',
+        trie_root.children['Users'].children['testuser1']
+        .children['Documents'].children['WindowsPowerShell'].children)
+    self.assertIn(
+        'profile.ps1',
+        trie_root.children['Users'].children['testuser2']
+        .children['Documents'].children['WindowsPowerShell'].children)
+
+    # Test with filter_file_path
+    test_filter_file_path = self._GetTestFilePath(
+        ['end_to_end', 'filter_file2.yaml'])
+    self._SkipIfPathNotExists(test_filter_file_path)
+
+    test_engine.BuildCollectionFilters(
+        environment_variables,
+        test_user_accounts,
+        filter_file_path=test_filter_file_path,
+        enable_artifacts_map=True
+    )
+
+    self.assertIsNotNone(test_engine._included_file_system_find_specs)
+    self.assertIsNotNone(test_engine._excluded_file_system_find_specs)
+
+    # Test specific file paths from filter file.
+    included_find_specs = test_engine.GetCollectionIncludedFindSpecs()
+    self.assertGreater(len(included_find_specs), 0)
+
+    # Test with invalid filter
+    with self.assertRaises(errors.InvalidFilter):
+      test_engine.BuildCollectionFilters(
+          environment_variables,
+          test_user_accounts,
+          artifact_filter_names=['NonExistentArtifact'],
+          enable_artifacts_map=True
+      )
 
   def testCreateSession(self):
     """Tests the CreateSession function."""
@@ -116,8 +227,12 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
         parent=os_path_spec)
 
     resolver_context = context.Context()
-    test_file_system, test_mount_point = test_engine.GetSourceFileSystem(
-        source_path_spec, resolver_context=resolver_context)
+    (
+        test_file_system,
+        test_mount_point,
+    ) = test_engine.GetSourceFileSystem(
+        source_path_spec, resolver_context=resolver_context
+    )
 
     self.assertIsNotNone(test_file_system)
     self.assertIsInstance(test_file_system, dfvfs_file_system.FileSystem)
@@ -149,11 +264,12 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
     storage_writer.Open()
 
     source_configurations = test_engine.PreprocessSource(
-        [source_path_spec], storage_writer)
+        [source_path_spec], storage_writer
+    )
 
     self.assertEqual(len(source_configurations), 1)
-    self.assertEqual(source_configurations[0].operating_system, 'Windows NT')
+    self.assertEqual(source_configurations[0].operating_system, "Windows NT")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   unittest.main()

@@ -48,14 +48,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
   _COPY_BUFFER_SIZE = 32768
 
-  _DIRTY_CHARACTERS = frozenset([
-      '\x00', '\x01', '\x02', '\x03', '\x04', '\x05', '\x06', '\x07',
-      '\x08', '\x09', '\x0a', '\x0b', '\x0c', '\x0d', '\x0e', '\x0f',
-      '\x10', '\x11', '\x12', '\x13', '\x14', '\x15', '\x16', '\x17',
-      '\x18', '\x19', '\x1a', '\x1b', '\x1c', '\x1d', '\x1e', '\x1f',
-      os.path.sep, '!', '$', '%', '&', '*', '+', ':', ';', '<', '>',
-      '?', '@', '|', '~', '\x7f'])
-
   _HASHES_FILENAME = 'hashes.json'
 
   _READ_BUFFER_SIZE = 4096
@@ -84,10 +76,12 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     self._abort = False
     self._artifact_definitions_path = None
     self._artifact_filters = None
+    self._artifacts_paths_map = collections.defaultdict(list)
     self._artifacts_registry = None
     self._custom_artifacts_path = None
     self._destination_path = None
     self._digests = {}
+    self._enable_artifacts_map = False
     self._filter_collection = file_entry_filters.FileEntryFilterCollection()
     self._filter_file = None
     self._no_hashes = False
@@ -151,11 +145,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     path = getattr(file_system_path_spec, 'location', None)
     path_segments = file_system.SplitPath(path)
 
-    # Sanitize each path segment.
-    for index, path_segment in enumerate(path_segments):
-      path_segments[index] = ''.join([
-          character if character not in self._DIRTY_CHARACTERS else '_'
-          for character in path_segment])
+    path_segments = path_helper.PathHelper.SanitizePathSegments(path_segments)
 
     target_filename = path_segments.pop()
 
@@ -213,17 +203,9 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     target_directory, target_filename = self._CreateSanitizedDestination(
         file_entry, file_entry.path_spec, data_stream_name, destination_path)
-
-    # If does not exist, append path separator to have consistent behaviour.
-    if not destination_path.endswith(os.path.sep):
-      destination_path = destination_path + os.path.sep
-
-    # TODO: refactor
-    path = None
-
+    path = path_helper.PathHelper.GetRelativePath(
+        target_directory, target_filename, destination_path)
     target_path = os.path.join(target_directory, target_filename)
-    if target_path.startswith(destination_path):
-      path = target_path[len(destination_path):]
 
     self._paths_by_hash[digest].append(path)
 
@@ -246,6 +228,13 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
           f'{display_name:s} because exported file: {target_path:s} already '
           f'exists.'))
       return
+
+    # Generate a map between artifacts and extracted paths.
+    if self._enable_artifacts_map:
+      for artifact_name in self._filter_collection.GetMatchingArtifacts(
+          path, os.sep):
+        path_list = self._artifacts_paths_map.setdefault(artifact_name, [])
+        path_list.append(path)
 
     try:
       self._WriteFileEntry(file_entry, data_stream_name, target_path)
@@ -276,6 +265,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     for data_stream in file_entry.data_streams:
       if self._abort:
         break
+
       self._ExtractDataStream(
           file_entry, data_stream.name, destination_path,
           skip_duplicates=skip_duplicates)
@@ -350,10 +340,15 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       extraction_engine.BuildCollectionFilters(
           environment_variables, user_accounts,
           artifact_filter_names=artifact_filters,
-          filter_file_path=filter_file)
+          filter_file_path=filter_file,
+          enable_artifacts_map=self._enable_artifacts_map)
     except errors.InvalidFilter as exception:
       raise errors.BadConfigOption(
           f'Unable to build collection filters with error: {exception!s}')
+
+    if self._enable_artifacts_map:
+      atrifacts_trie = extraction_engine.GetArtifactsTrie()
+      self._filter_collection.SetArtifactsTrie(atrifacts_trie)
 
     excluded_find_specs = extraction_engine.GetCollectionExcludedFindSpecs()
     included_find_specs = extraction_engine.GetCollectionIncludedFindSpecs()
@@ -655,6 +650,12 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     self.AddFilterOptions(argument_parser)
 
     argument_parser.add_argument(
+        '--enable_artifacts_map', dest='enable_artifacts_map',
+        action='store_true', default=False, help=(
+            'Output a JSON file mapping extracted files/directories to '
+            'artifact definitions.'))
+
+    argument_parser.add_argument(
         '-w', '--write', action='store', dest='path', type=str,
         metavar='PATH', default='export', help=(
             'The directory in which extracted files should be stored.'))
@@ -785,6 +786,9 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     self._EnforceProcessMemoryLimit(self._process_memory_limit)
 
+    self._enable_artifacts_map = getattr(
+        options, 'enable_artifacts_map', False)
+
   def PrintFilterCollection(self):
     """Prints the filter collection."""
     self._filter_collection.Print(self._output_writer)
@@ -799,6 +803,12 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     """
     try:
       self.ScanSource(self._source_path)
+      if self._source_type not in self._SOURCE_TYPES_TO_PREPROCESS:
+        source_types = ', '.join(self._SOURCE_TYPES_TO_PREPROCESS)
+        self._output_writer.Write((
+            f'Input must be in "{source_types:s}" the type: '
+            f'"{self._source_type}" is not supported.\n'))
+        return
     except dfvfs_errors.UserAbort as exception:
       raise errors.UserAbort(exception)
 
@@ -822,6 +832,12 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         for sha256, paths in self._paths_by_hash.items():
           json_data.append({'sha256': sha256, 'paths': paths})
         json.dump(json_data, file_object)
+
+    if self._enable_artifacts_map:
+      artifacts_map_file = os.path.join(
+          self._destination_path, 'artifacts_map.json')
+      with open(artifacts_map_file, 'w', encoding='utf-8') as file_object:
+        json.dump(self._artifacts_paths_map, file_object)
 
     self._output_writer.Write('Export completed.\n')
     self._output_writer.Write('\n')
