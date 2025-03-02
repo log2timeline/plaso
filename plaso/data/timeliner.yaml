@@ -487,9 +487,9 @@ attribute_mappings:
   description: 'Creation Time'
 place_holder_event: false
 ---
-data_type: 'ios:accounts:account'
+data_type: 'ios:accounts:entry'
 attribute_mappings:
-- name: 'date'
+- name: 'creation_time'
   description: 'Creation Time'
 place_holder_event: true
 ---

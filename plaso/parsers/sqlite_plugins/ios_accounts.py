@@ -12,25 +12,26 @@ class IOSAccounts(events.EventData):
   """iOS accounts event data.
 
   Attributes:
-      date (dfdatetime.DateTimeValues): date and time the account
-          was created.
       account_type (str): account type.
-      username (str): user name.
+      creation_time (dfdatetime.DateTimeValues): date and time the account
+          was created.
       identifier (str): identifier.
-      owning_bundle_id (str): owning bundle identifier of the app
-          managing the account.
+      owning_bundle_identifier (str): owning bundle identifier of the
+          application managing the account.
+      username (str): user name.
   """
 
-  DATA_TYPE = 'ios:accounts:account'
+  DATA_TYPE = 'ios:accounts:entry'
 
   def __init__(self):
     """Initializes event data."""
     super(IOSAccounts, self).__init__(data_type=self.DATA_TYPE)
-    self.date = None
     self.account_type = None
-    self.username = None
+    self.creation_time = None
     self.identifier = None
-    self.owning_bundle_id = None
+    self.owning_bundle_identifier = None
+    self.username = None
+
 
 class IOSAccountsPlugin(interface.SQLitePlugin):
   """SQLite parser plugin for iOS accounts (Accounts3.db) database files."""
@@ -43,8 +44,7 @@ class IOSAccountsPlugin(interface.SQLitePlugin):
           'ZACCOUNTTYPE', 'ZDATE', 'ZUSERNAME', 'ZIDENTIFIER', 
           'ZOWNINGBUNDLEID']),
       'ZACCOUNTTYPE': frozenset([
-          'Z_PK', 'ZACCOUNTTYPEDESCRIPTION'])
-  }
+          'Z_PK', 'ZACCOUNTTYPEDESCRIPTION'])}
 
   QUERIES = [((
       'SELECT ZACCOUNT.ZDATE, ZACCOUNTTYPE.ZACCOUNTTYPEDESCRIPTION, '
@@ -77,13 +77,13 @@ class IOSAccountsPlugin(interface.SQLitePlugin):
     """Retrieves a date and time value from the row.
 
     Args:
-        query_hash (int): hash of the query, that uniquely
+      query_hash (int): hash of the query, that uniquely
           identifies the query that produced the row.
-        row (sqlite3.Row): row.
-        value_name (str): name of the value.
+      row (sqlite3.Row): row.
+      value_name (str): name of the value.
 
     Returns:
-        dfdatetime.CocoaTime: date and time value or None if not available.
+      dfdatetime.CocoaTime: date and time value or None if not available.
     """
     timestamp = self._GetRowValue(query_hash, row, value_name)
     if timestamp is None:
@@ -92,27 +92,26 @@ class IOSAccountsPlugin(interface.SQLitePlugin):
     return dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
 
   # pylint: disable=unused-argument
-  def ParseAccountRow(
-    self, parser_mediator, query, row, **unused_kwargs):
+  def ParseAccountRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses an account row.
 
     Args:
-        parser_mediator (ParserMediator): mediates interactions between
+      parser_mediator (ParserMediator): mediates interactions between
           parsers and other components, such as storage and dfVFS.
-        query (str): query that created the row.
-        row (sqlite3.Row): row.
+      query (str): query that created the row.
+      row (sqlite3.Row): row.
     """
     query_hash = hash(query)
 
     event_data = IOSAccounts()
-    event_data.date = self._GetTimeRowValue(query_hash, row, 'ZDATE')
-    event_data.account_type = self._GetRowValue(query_hash,
-        row, 'ZACCOUNTTYPEDESCRIPTION')
+    event_data.account_type = self._GetRowValue(
+        query_hash, row, 'ZACCOUNTTYPEDESCRIPTION')
+    event_data.creation_time = self._GetTimeRowValue(query_hash, row, 'ZDATE')
+    event_data.identifier = self._GetRowValue(
+        query_hash, row, 'ZIDENTIFIER')
+    event_data.owning_bundle_identifier = self._GetRowValue(
+        query_hash, row, 'ZOWNINGBUNDLEID')
     event_data.username = self._GetRowValue(query_hash, row, 'ZUSERNAME')
-    event_data.identifier = self._GetRowValue(query_hash, row,
-        'ZIDENTIFIER')
-    event_data.owning_bundle_id = self._GetRowValue(query_hash, row,
-        'ZOWNINGBUNDLEID')
 
     parser_mediator.ProduceEventData(event_data)
 
