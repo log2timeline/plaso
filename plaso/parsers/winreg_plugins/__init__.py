@@ -7,6 +7,7 @@ from plaso.parsers.winreg_plugins import bagmru
 from plaso.parsers.winreg_plugins import bam
 from plaso.parsers.winreg_plugins import ccleaner
 from plaso.parsers.winreg_plugins import default
+from plaso.parsers.winreg_plugins import diagnosed_applications
 from plaso.parsers.winreg_plugins import lfu
 from plaso.parsers.winreg_plugins import motherboard_info
 from plaso.parsers.winreg_plugins import mountpoints
