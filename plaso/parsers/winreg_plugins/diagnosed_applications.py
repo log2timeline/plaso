@@ -53,7 +53,6 @@ class DiagnosedApplicationsPlugin(interface.WindowsRegistryPlugin):
     for subkey in registry_key.GetSubkeys():
       event_data = WindowsRegistryDiagnosedApplicationsEventData()
       event_data.process_name = subkey.name
-      print(subkey.GetValueByName('LastDetectionTime'))
       
       try:
         event_data.last_detection_time = self._ParseFiletime(
