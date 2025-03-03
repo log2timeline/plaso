@@ -38,7 +38,7 @@ class WindowsRegistryDiagnosedApplicationsPluginTest(
       'LastDetectionTime', data=value_data,
       data_type=dfwinreg_definitions.REG_QWORD)
     registry_key.AddValue(registry_value)
-    print(registry_key.GetValueByName('LastDetectionTime'))
+    print(str(registry_key.GetValueByName('LastDetectionTime')))
 
     return registry_key
 
