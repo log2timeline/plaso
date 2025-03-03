@@ -8,6 +8,7 @@ from plaso.parsers.plist_plugins import install_history
 from plaso.parsers.plist_plugins import ios_carplay
 from plaso.parsers.plist_plugins import ios_identityservices
 from plaso.parsers.plist_plugins import ios_mobilebackup
+from plaso.parsers.plist_plugins import ios_siminfo
 from plaso.parsers.plist_plugins import ios_wifi_known_networks
 from plaso.parsers.plist_plugins import ipod
 from plaso.parsers.plist_plugins import launchd
@@ -22,6 +23,3 @@ from plaso.parsers.plist_plugins import software_update
 from plaso.parsers.plist_plugins import spotlight_searched_terms
 from plaso.parsers.plist_plugins import spotlight_volume
 from plaso.parsers.plist_plugins import time_machine
-
-# Impor parser yang baru dibuat
-from plaso.parsers.plist_plugins import ios_siminfo
