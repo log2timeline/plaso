@@ -23,7 +23,7 @@ class WindowsRegistryDiagnosedApplicationsEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(WindowsRegistryMotherboardInfoEventData, self).__init__(
+    super(WindowsRegistryDiagnosedApplicationsEventData, self).__init__(
         data_type=self.DATA_TYPE)
     self.process_name = None
     self.last_detection_time = None
