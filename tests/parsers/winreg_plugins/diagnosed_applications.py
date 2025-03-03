@@ -32,7 +32,7 @@ class WindowsRegistryDiagnosedApplicationsPluginTest(
         'DiagnosedApplications\\chrome.exe'
     )
 
-    value_data = int(filetime.timestamp).encode('utf_16_le')
+    value_data = filetime.timestamp.encode('utf_16_le')
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
       'LastDetectionTime', data=value_data,
       data_type=dfwinreg_definitions.REG_QWORD)
