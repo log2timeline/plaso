@@ -8,7 +8,7 @@ from plaso.parsers.winreg_plugins import interface
 
 
 class WindowsRegistryDiagnosedApplicationsEventData(events.EventData):
-  """Windows Motherboard Info event data attribute container.
+  """Windows Diagnosed Application event data attribute container.
 
   Attributes:
     process_name (str): Name of the process diagnosed by RADAR.
