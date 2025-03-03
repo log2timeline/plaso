@@ -39,7 +39,7 @@ class DiagnosedApplicationsPlugin(interface.WindowsRegistryPlugin):
 
   FILTERS = frozenset([
     interface.WindowsRegistryKeyPathFilter(
-      'HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\RADAR\\HeapLeakDetection\\
+      'HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\RADAR\\HeapLeakDetection\\'
       'DiagnosedApplications')])
 
   def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
