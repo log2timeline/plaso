@@ -41,7 +41,7 @@ class WindowsRegistryDiagnosedApplicationsPluginTest(
     return registry_key
 
   def testProcessValue(self):
-    """Tests the Process function for BAM data."""
+    """Tests the Process function for Diagnosed Applications data."""
     test_file_entry = test_lib.TestFileEntry('SOFTWARE')
     registry_key = self._CreateTestKey()
     plugin = diagnosed_applications.DiagnosedApplicationsPlugin()
