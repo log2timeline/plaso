@@ -11,13 +11,13 @@ class AndroidNativeDownloadsEventData(events.EventData):
   """Android Native Downloads (DownloadProvider) event data.
 
   Also see :
-  STATUS_* and DESTINATION_* constants: 
+  STATUS_* and DESTINATION_* constants:
     https://android.googlesource.com/platform/frameworks/base/
     +/refs/heads/master/core/java/android/provider/Downloads.java
-  ERROR_*, PAUSED_*, and VISIBILITY_* constants: 
+  ERROR_*, PAUSED_*, and VISIBILITY_* constants:
     https://android.googlesource.com/platform/frameworks/base/
     +/refs/heads/main/core/java/android/app/DownloadManager.java
-  Basis for what columns to extract: 
+  Basis for what columns to extract:
     https://forensafe.com/blogs/Android_Downloads.html
 
   Attributes:
@@ -32,8 +32,8 @@ class AndroidNativeDownloadsEventData(events.EventData):
       otherwise it holds one of the ERROR_* constants.
       If the download is paused, this holds one of the PAUSED_* constants.
     saved_to (str): Path to the downloaded file on disk.
-    deleted (bool): Set to true if this download is deleted. 
-      Also Removed from the database when MediaProvider database 
+    deleted (bool): Set to true if this download is deleted.
+      Also Removed from the database when MediaProvider database
       deletes the metadata associated with this downloaded file.
     notification_package (str): Package name associated with notification
       of a running download.
@@ -43,16 +43,16 @@ class AndroidNativeDownloadsEventData(events.EventData):
       it is also deleted from MediaProvider DB.
     error_msg (str): The column with errorMsg for a failed downloaded.
       Used only for debugging purposes.
-    is_visible_in_downloads_ui (int) :  Whether or not this download should 
+    is_visible_in_downloads_ui (int) :  Whether or not this download should
       be displayed in the system's Downloads UI. Defaults to true.
     destination (int): Contains the flag that controls download destination.
       See the DESTINATION_* constants for a list of legal values.
-    ui_visibility (int): Contains the flags that control if the download is 
-      displayed by the UI. 
+    ui_visibility (int): Contains the flags that control if the download is
+      displayed by the UI.
       See the VISIBILITY_* constants for a list of legal values.
     e_tag (str): ETag of this file.
-    description (str): The client-supplied description of this download. 
-      This will be displayed in system notifications. 
+    description (str): The client-supplied description of this download.
+      This will be displayed in system notifications.
       Defaults to empty string.
   """
 
@@ -60,7 +60,8 @@ class AndroidNativeDownloadsEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(AndroidNativeDownloadsEventData, self).__init__(data_type=self.DATA_TYPE)
+    super(AndroidNativeDownloadsEventData, self).__init__(data_type=
+                                                          self.DATA_TYPE)
     self.lastmod = None
     self.id = None
     self.uri = None
