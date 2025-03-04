@@ -32,7 +32,7 @@ class WindowsRegistryDiagnosedApplicationsPluginTest(
         'DiagnosedApplications\\chrome.exe'
     )
 
-    value_data = (int(filetime.timestamp)).to_bytes(8, byteorder='little')
+    value_data = b"\x01\xDB\x78\x82\x3A\x40\x72\x1D"
     print(value_data)
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
       'LastDetectionTime', data=value_data,
@@ -63,7 +63,7 @@ class WindowsRegistryDiagnosedApplicationsPluginTest(
 
     expected_event_values = {
       'process_name': 'chrome.exe',
-      'last_detection_time': '2024-08-28T09:23:49.0020310+00:00',
+      'last_detection_time': '2025-02-06T10:31:05.594524+02:00',
       'data_type': 'windows:registry:diagnosed_applications',
       'key_path': (
           'HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\RADAR\\HeapLeakDetection'
