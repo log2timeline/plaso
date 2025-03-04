@@ -58,6 +58,38 @@ short_source: 'LOG'
 source: 'Android Call History'
 ---
 type: 'conditional'
+data_type: 'android:files_by_google:record'
+enumeration_helpers:
+- input_attribute: 'media_type'
+  output_attribute: 'media_type'
+  values:
+    0: 'App/Data'
+    1: 'Picture'
+    2: 'Audio'
+    3: 'Video'
+    6: 'Text'
+- input_attribute: 'is_hidden'
+  output_attribute: 'is_hidden'
+  values:
+    0: 'Visible'
+    1: 'Hidden'
+message:
+- 'File root path: {root_path}'
+- 'File root relative path: {root_relative_path}'
+- 'File name: {file_name}'
+- 'Media type: {media_type}'
+- 'Mime type: {mime_type}'
+- 'File visibility: {is_hidden}'
+short_message:
+- 'File root relative path: {root_relative_path}'
+- 'File name: {file_name}'
+- 'Mime type: {mime_type}'
+- 'File visibility: {is_hidden}'
+separator: ', '
+short_source: 'Files by Google'
+source: 'Files by Google event data.'
+---
+type: 'conditional'
 data_type: 'android:logcat'
 message:
 - '{message}'
