@@ -5,7 +5,7 @@
 import unittest
 
 from plaso.parsers.sqlite_plugins import android_native_downloads
-
+  
 from tests.parsers.sqlite_plugins import test_lib
 
 class AndroidNativeDownloadsTest(test_lib.SQLitePluginTestCase):
@@ -33,8 +33,8 @@ class AndroidNativeDownloadsTest(test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'lastmod': '2022-11-12T15:32:28.279+00:00',
         'id': 46,
-        'uri': '''https://cdn.discordapp.com/attachments/
-        622810296226152474/1041012392089370735/IMG_1953.jpg''',
+        'uri': 'https://cdn.discordapp.com/attachments/' +
+        '622810296226152474/1041012392089370735/IMG_1953.jpg',
         'mimetype': 'image/jpeg',
         'total_bytes': 2149749,
         'current_bytes': 2149749,
@@ -43,8 +43,8 @@ class AndroidNativeDownloadsTest(test_lib.SQLitePluginTestCase):
         'deleted': 0,
         'notification_package': 'com.discord',
         'title': 'IMG_1953.jpg',
-        'media_provider_uri': '''content://media/
-        external_primary/images/media/1000000486''',
+        'media_provider_uri': 'content://media/' +
+        'external_primary/images/media/1000000486',
         'error_msg': None,
         'is_visible_in_downloads_ui': 1,
         'destination': 4,
