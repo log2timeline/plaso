@@ -101,7 +101,7 @@ class DiagnosedApplicationsPlugin(
       )
       event_data.key_path = subkey.path
       event_data.last_written_time = subkey.last_written_time
-  
+      
       parser_mediator.ProduceEventData(event_data)
 
 
