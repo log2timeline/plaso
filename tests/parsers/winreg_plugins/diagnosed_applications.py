@@ -24,7 +24,7 @@ class WindowsRegistryDiagnosedApplicationsPluginTest(
     """
     filetime = dfdatetime_filetime.Filetime()
     filetime.CopyFromDateTimeString('2024-08-28 09:23:49.002031')
-    registry_key = dfwinreg_fake.FakeWinRegistryKey(
+    self.registry_key = dfwinreg_fake.FakeWinRegistryKey(
       'chrome.exe',
       key_path_prefix='HKEY_LOCAL_MACHINE\\SOFTWARE',
       last_written_time=filetime.timestamp,
@@ -32,22 +32,25 @@ class WindowsRegistryDiagnosedApplicationsPluginTest(
         'DiagnosedApplications\\chrome.exe'
     )
 
-    value_data = b"\x01\xDB\x78\x82\x3A\x40\x72\x1D"
-    print(value_data)
     registry_value = dfwinreg_fake.FakeWinRegistryValue(
-      'LastDetectionTime', data=value_data,
-      data_type=dfwinreg_definitions.REG_QWORD)
-    registry_key.AddValue(registry_value)
-
-    return registry_key
+      'LastDetectionTime',
+      data=b'\xac\xbcu\xbe<u\xcc\x01',
+      data_type=dfwinreg_definitions.REG_QWORD
+    )
+    self.registry_key.AddValue(registry_value)
 
   def testProcessValue(self):
     """Tests the Process function for Diagnosed Applications data."""
-    test_file_entry = test_lib.TestFileEntry('SOFTWARE')
-    registry_key = self._CreateTestKey()
+    test_file_entry = self._GetTestFileEntry(['SOFTWARE'])
+    key_path = 'HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\RADAR\\HeapLeakDetection\\DiagnosedApplications'
+
+    win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
+    registry_key = win_registry.GetKeyByPath(key_path)
     plugin = diagnosed_applications.DiagnosedApplicationsPlugin()
     storage_writer = self._ParseKeyWithPlugin(
-        registry_key, plugin, file_entry=test_file_entry)
+      registry_key=registry_key,
+      plugin=plugin
+    )
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -62,13 +65,14 @@ class WindowsRegistryDiagnosedApplicationsPluginTest(
     self.assertEqual(number_of_warnings, 0)
 
     expected_event_values = {
-      'process_name': 'chrome.exe',
-      'last_detection_time': '2025-02-06T10:31:05.594524+02:00',
+      'process_name': 'TrustedInstaller.exe',
+      'last_detection_time': '2011-09-17T13:21:44.0776364+00:00',
       'data_type': 'windows:registry:diagnosed_applications',
       'key_path': (
-          'HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\RADAR\\HeapLeakDetection'
-          '\\DiagnosedApplications\\chrome.exe'),
-      'last_written_time': '2024-08-28T09:23:49.0020310+00:00'}
+          'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\RADAR\\HeapLeakDetection'
+          '\\DiagnosedApplications\\TrustedInstaller.exe'),
+      'last_written_time': '2011-09-17T13:21:44.0776364+00:00'
+    }
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
