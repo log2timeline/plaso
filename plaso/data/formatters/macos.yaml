@@ -369,7 +369,7 @@ message:
 short_message:
 - 'Body: {body}'
 short_source: 'Launchd'
-source: 'MacOS Laucnhd'
+source: 'MacOS Launchd'
 ---
 type: 'conditional'
 data_type: 'macos:lsquarantine:entry'
