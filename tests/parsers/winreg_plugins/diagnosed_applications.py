@@ -4,10 +4,6 @@
 
 import unittest
 
-from dfdatetime import filetime as dfdatetime_filetime
-from dfwinreg import definitions as dfwinreg_definitions
-from dfwinreg import fake as dfwinreg_fake
-
 from plaso.parsers.winreg_plugins import diagnosed_applications
 
 from tests.parsers.winreg_plugins import test_lib
