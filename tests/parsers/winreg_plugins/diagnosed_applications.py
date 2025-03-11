@@ -20,7 +20,8 @@ class WindowsRegistryDiagnosedApplicationsPluginTest(
   def testProcessValue(self):
     """Tests the Process function for Diagnosed Applications data."""
     test_file_entry = self._GetTestFileEntry(['SOFTWARE'])
-    key_path = 'HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\RADAR\\HeapLeakDetection\\DiagnosedApplications'
+    key_path = ('HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\RADAR\\'
+                'HeapLeakDetection\\DiagnosedApplications')
 
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
