@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Plug-in to collect evidence of execution from RADAR 
-HeapLeakDetection Diagnosed Applications."""
+"""Plug-in to collect evidence of execution from RADAR HeapLeakDetection
+Diagnosed Applications."""
 
 import os
 
