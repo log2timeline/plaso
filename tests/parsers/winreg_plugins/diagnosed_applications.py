@@ -17,28 +17,6 @@ class WindowsRegistryDiagnosedApplicationsPluginTest(
     test_lib.RegistryPluginTestCase):
   """Tests for the Diagnosed Applications Windows Registry plugin."""
 
-  def _CreateTestKey(self):
-    """Creates Registry keys and values for testing.
-    Returns:
-      dfwinreg.WinRegistryKey: a Windows Registry key.
-    """
-    filetime = dfdatetime_filetime.Filetime()
-    filetime.CopyFromDateTimeString('2024-08-28 09:23:49.002031')
-    self.registry_key = dfwinreg_fake.FakeWinRegistryKey(
-      'chrome.exe',
-      key_path_prefix='HKEY_LOCAL_MACHINE\\SOFTWARE',
-      last_written_time=filetime.timestamp,
-      relative_key_path='Microsoft\\RADAR\\HeapLeakDetection\\'
-        'DiagnosedApplications\\chrome.exe'
-    )
-
-    registry_value = dfwinreg_fake.FakeWinRegistryValue(
-      'LastDetectionTime',
-      data=b'\xac\xbcu\xbe<u\xcc\x01',
-      data_type=dfwinreg_definitions.REG_QWORD
-    )
-    self.registry_key.AddValue(registry_value)
-
   def testProcessValue(self):
     """Tests the Process function for Diagnosed Applications data."""
     test_file_entry = self._GetTestFileEntry(['SOFTWARE'])
