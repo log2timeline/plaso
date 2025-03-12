@@ -47,8 +47,7 @@ class FilesByGoogleEventData(events.EventData):
 
 
 class FilesByGooglePlugin(interface.SQLitePlugin):
-  """
-  SQLite parser plugin for Google "Files by Google" app database files.
+  """SQLite parser plugin for Google "Files by Google" app database files.
 
   The Files by Google app database file is typically stored in:
   /data/user/0/com.google.android.apps.nbu.files/databases/files_master_database
@@ -175,7 +174,7 @@ class FilesByGooglePlugin(interface.SQLitePlugin):
       value_name (str): name of the value.
 
     Returns:
-      dfdatetime.PosixTimeInMilliseconds: date and time value or None if 
+      dfdatetime.PosixTimeInMilliseconds: date and time value or None if
       not available.
     """
     timestamp = self._GetRowValue(query_hash, row, value_name)
