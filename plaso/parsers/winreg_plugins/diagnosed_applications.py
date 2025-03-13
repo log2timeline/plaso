@@ -49,7 +49,7 @@ class DiagnosedApplicationsPlugin(
     interface.WindowsRegistryKeyPathFilter(
       'HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\RADAR\\HeapLeakDetection\\'
       'DiagnosedApplications')])
-  _DEFINITION_FILE = os.path.join(
+  _DEFINITION_FILE = join(
     dirname(__file__), 'filetime.yaml')
 
   def _ParseFiletime(self, byte_stream):
