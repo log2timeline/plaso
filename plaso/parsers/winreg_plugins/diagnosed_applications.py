@@ -2,7 +2,7 @@
 """Plug-in to collect evidence of execution from RADAR HeapLeakDetection
 Diagnosed Applications."""
 
-import os
+from os.path import dirname
 
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
@@ -50,7 +50,7 @@ class DiagnosedApplicationsPlugin(
       'HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\RADAR\\HeapLeakDetection\\'
       'DiagnosedApplications')])
   _DEFINITION_FILE = os.path.join(
-    os.path.dirname(__file__), 'filetime.yaml')
+    dirname(__file__), 'filetime.yaml')
 
   def _ParseFiletime(self, byte_stream):
     """Parses a FILETIME date and time value from a byte stream.
