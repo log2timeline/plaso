@@ -33,26 +33,22 @@ class ArtifactsTrieTest(unittest.TestCase):
     root = self.trie.root
     self.assertIn('/', root.children)
     self.assertIn('path', root.children['/'].children)
-    self.assertIn('to', root.children['/'].children['path'].children)
+    path_children = root.children['/'].children['path'].children
+    self.assertIn('to', path_children)
+    to_children = path_children['to'].children
     self.assertIn(
-        'file.txt', root.children['/'].children['path'].children['to'].children)
+        'file.txt', to_children)
     self.assertIn(
         'another.txt',
-        root.children['/'].children['path'].children['to'].children
+        to_children
     )
     self.assertEqual(
-        root.children['/']
-        .children['path']
-        .children['to']
-        .children['file.txt']
+        to_children['file.txt']
         .artifacts_names,
         ['artifact1'],
     )
     self.assertEqual(
-        root.children['/']
-        .children['path']
-        .children['to']
-        .children['another.txt']
+        to_children['another.txt']
         .artifacts_names,
         ['artifact2']
     )
@@ -65,24 +61,20 @@ class ArtifactsTrieTest(unittest.TestCase):
     root = self.trie.root
     self.assertIn('/', root.children)
     self.assertIn('path', root.children['/'].children)
-    self.assertIn('to', root.children['/'].children['path'].children)
+    path_children = root.children['/'].children['path'].children
+    self.assertIn('to', path_children)
+    to_children = path_children['to'].children
     self.assertIn(
-        '*.txt', root.children['/'].children['path'].children['to'].children)
+        '*.txt', to_children)
     self.assertIn(
-        'dir**', root.children['/'].children['path'].children['to'].children)
+        'dir**', to_children)
     self.assertEqual(
-        root.children['/']
-        .children['path']
-        .children['to']
-        .children['*.txt']
+        to_children['*.txt']
         .artifacts_names,
         ['artifact1']
     )
     self.assertEqual(
-        root.children['/']
-        .children['path']
-        .children['to']
-        .children['dir**']
+        to_children['dir**']
         .artifacts_names,
         ['artifact2']
     )

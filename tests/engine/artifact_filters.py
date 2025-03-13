@@ -338,67 +338,61 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
     # Test that paths are added to artifacts trie.
     self.assertIn(os.sep, test_filter_file.artifacts_trie.root.children)
     path_trie_node = test_filter_file.artifacts_trie.root.children[os.sep]
+    path_trie_node_children = path_trie_node.children
     self.assertEqual(
         path_trie_node.artifacts_names, [])
-    self.assertEqual(len(path_trie_node.children), 5)
-    self.assertIn('Windows', path_trie_node.children)
-    self.assertIn('test_data', path_trie_node.children)
-    self.assertIn('home', path_trie_node.children)
-    self.assertIn('Users', path_trie_node.children)
-    self.assertIn('homes', path_trie_node.children)
+    self.assertEqual(len(path_trie_node_children), 5)
+    self.assertIn('Windows', path_trie_node_children)
+    self.assertIn('test_data', path_trie_node_children)
+    self.assertIn('home', path_trie_node_children)
+    self.assertIn('Users', path_trie_node_children)
+    self.assertIn('homes', path_trie_node_children)
 
     self.assertEqual(
-        path_trie_node.children['Windows'].artifacts_names, [])
+        path_trie_node_children['Windows'].artifacts_names, [])
     self.assertIn(
-        'test_data', path_trie_node.children['Windows'].children)
+        'test_data', path_trie_node_children['Windows'].children)
 
+    test_data_children = path_trie_node_children['test_data'].children
     self.assertEqual(
-        path_trie_node.children['test_data'].artifacts_names, [])
-    self.assertEqual(len(path_trie_node.children['test_data'].children), 1)
-    self.assertIn('*', path_trie_node.children['test_data'].children)
+        path_trie_node_children['test_data'].artifacts_names, [])
+    self.assertEqual(len(test_data_children), 1)
+    self.assertIn('*', test_data_children)
 
+    star_children = test_data_children['*'].children
     self.assertEqual(
-        path_trie_node.children['test_data']
-        .children['*'].artifacts_names,
+        test_data_children['*'].artifacts_names,
         [artifact_name])
-    
     self.assertEqual(
-        len(path_trie_node.children['test_data'].children['*'].children), 1)
+        len(star_children), 1)
     self.assertIn(
-        '*', path_trie_node.children['test_data'].children['*'].children)
+        '*', star_children)
 
     self.assertEqual(
-        path_trie_node.children['test_data']
-        .children['*'].children['*'].artifacts_names,
+        star_children['*'].artifacts_names,
         [artifact_name]
     )
     self.assertEqual(
-        len(
-            path_trie_node.children['test_data']
-            .children['*'].children['*'].children
-        ),
-        1
-    )
+        len(star_children['*'].children), 1)
     self.assertIn(
         '*',
-        path_trie_node.children['test_data'].children['*']
-        .children['*'].children
+        star_children['*'].children
     )
 
     self.assertEqual(
-        path_trie_node.children['home'].artifacts_names, [])
+        path_trie_node_children['home'].artifacts_names, [])
     self.assertIn(
-        'testuser2', path_trie_node.children['home'].children)
+        'testuser2', path_trie_node_children['home'].children)
 
     self.assertEqual(
-        path_trie_node.children['Users'].artifacts_names, [])
+        path_trie_node_children['Users'].artifacts_names, [])
     self.assertIn(
-        'testuser2', path_trie_node.children['Users'].children)
+        'testuser2', path_trie_node_children['Users'].children)
 
     self.assertEqual(
-        path_trie_node.children['homes'].artifacts_names, [])
+        path_trie_node_children['homes'].artifacts_names, [])
     self.assertIn(
-        'testuser1', path_trie_node.children['homes'].children)
+        'testuser1', path_trie_node_children['homes'].children)
 
   def testBuildFindSpecsFromRegistrySourceKey(self):
     """Tests the _BuildFindSpecsFromRegistrySourceKey function on Windows
@@ -420,10 +414,12 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
         'HKEY_LOCAL_MACHINE', 'System', 'ControlSet.*', 'Control', '.*', '.*',
         '.*', '.*', '.*', '.*', '.*', '.*', '.*', '.*']
 
+    first_find_spec = find_specs[0]
+    last_find_spec = find_specs[-1]
     self.assertEqual(
-        find_specs[0]._key_path_segments, first_expected_key_path_segments)
+        first_find_spec._key_path_segments, first_expected_key_path_segments)
     self.assertEqual(
-        find_specs[-1]._key_path_segments, last_expected_key_path_segments)
+        last_find_spec._key_path_segments, last_expected_key_path_segments)
 
     # Test CurrentControlSet
     key_path = 'HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control'

@@ -138,8 +138,9 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
 
     self.assertIsNotNone(test_engine._artifacts_trie)
     # Verify content of the artifacts trie
-    self.assertIn(os.sep, test_engine._artifacts_trie.root.children)
-    trie_root = test_engine._artifacts_trie.root.children[os.sep]
+    artifacts_trie_root_children = test_engine._artifacts_trie.root.children
+    self.assertIn(os.sep, artifacts_trie_root_children)
+    trie_root = artifacts_trie_root_children[os.sep]
     self.assertIn(
         'test_data',
         trie_root.children)
@@ -149,34 +150,35 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
     self.assertIn(
         'Users',
         trie_root.children)
+    users_child = trie_root.children['Users']
     self.assertIn(
         'testuser1',
-        trie_root.children['Users'].children)
+        users_child.children)
     self.assertIn(
         'testuser2',
-        trie_root.children['Users'].children)
+        users_child.children)
+    testuser1_child = users_child.children['testuser1']
+    testuser2_child = users_child.children['testuser2']
     self.assertIn(
         'Documents',
-        trie_root.children['Users'].children['testuser1'].children)
+        testuser1_child.children)
     self.assertIn(
         'Documents',
-        trie_root.children['Users'].children['testuser2'].children)
+        testuser2_child.children)
+    documents_child_user1 = testuser1_child.children['Documents']
+    documents_child_user2 = testuser2_child.children['Documents']
     self.assertIn(
         'WindowsPowerShell',
-        trie_root.children['Users'].children['testuser1']
-        .children['Documents'].children)
+        documents_child_user1.children)
     self.assertIn(
         'WindowsPowerShell',
-        trie_root.children['Users'].children['testuser2']
-        .children['Documents'].children)
+        documents_child_user2.children)
     self.assertIn(
         'profile.ps1',
-        trie_root.children['Users'].children['testuser1']
-        .children['Documents'].children['WindowsPowerShell'].children)
+        documents_child_user1.children['WindowsPowerShell'].children)
     self.assertIn(
         'profile.ps1',
-        trie_root.children['Users'].children['testuser2']
-        .children['Documents'].children['WindowsPowerShell'].children)
+        documents_child_user2.children['WindowsPowerShell'].children)
 
     # Test with filter_file_path
     test_filter_file_path = self._GetTestFilePath(
