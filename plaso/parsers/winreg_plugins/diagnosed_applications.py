@@ -2,7 +2,7 @@
 """Plug-in to collect evidence of execution from RADAR HeapLeakDetection
 Diagnosed Applications."""
 
-from os.path import dirname
+from os.path import dirname, join
 
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
