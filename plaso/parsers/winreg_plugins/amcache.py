@@ -28,6 +28,7 @@ class AMCacheFileEventData(events.EventData):
         (31457280 bytes) of file, preceded by "0000").
     file_modification_time (dfdatetime.DateTimeValues): file entry last
         modification date and time.
+    file_name (str): name of the file.
     file_reference (str): file system file reference, for example 9-1 (MFT
         entry - sequence number).
     file_size (int): size of file in bytes.
@@ -58,6 +59,7 @@ class AMCacheFileEventData(events.EventData):
     self.file_identifier = None
     self.file_modification_time = None
     self.file_reference = None
+    self.file_name = None
     self.file_size = None
     self.file_version = None
     self.full_path = None
@@ -123,6 +125,7 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
   _APPLICATION_SUB_KEY_VALUES = {
       'FileId': 'file_identifier',
       'LowerCaseLongPath': 'full_path',
+      'Name': 'file_name',
       'ProductName': 'product_name',
       'ProductVersion': 'file_version',
       'ProgramId': 'program_identifier',
