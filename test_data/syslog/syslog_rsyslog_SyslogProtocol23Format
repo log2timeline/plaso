@@ -1,4 +1,4 @@
-<15>1 2021-03-06T04:07:38.251122+00:00 hostname log_tag - - -  this is debug
+<15>1 2021-03-06T04:07:38.251122+00:00 hostname log_tag - 123 -  this is debug
 <14>1 2021-03-06T04:07:38.251280+00:00 hostname log_tag - - -  this is info
 with another line
 <14>1 2021-03-06T04:07:38.251318+00:00 hostname log_tag - - -  !@#$%^&*()-_=+[]{}\|;:'",./<>?
