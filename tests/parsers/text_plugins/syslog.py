@@ -218,7 +218,8 @@ class SyslogTextPluginTest(test_lib.TextPluginTestCase):
         'hostname': 'hostname',
         'last_written_time': '2021-03-06T04:07:38.251122+00:00',
         'reporter': 'log_tag',
-        'severity': 'DEBUG'}
+        'severity': 'DEBUG',
+        'facility': 'user-level message'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
@@ -374,7 +375,8 @@ class TraditionalSyslogTextPluginTest(test_lib.TextPluginTestCase):
         'last_written_time': '0000-01-22T07:52:33',
         'pid': 30840,
         'reporter': 'client',
-        'severity': None}
+        'severity': None,
+        'facility': None}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
@@ -385,7 +387,8 @@ class TraditionalSyslogTextPluginTest(test_lib.TextPluginTestCase):
         'data_type': 'syslog:line',
         'last_written_time': '0001-03-23T23:01:18',
         'reporter': 'somrandomexe',
-        'severity': None}
+        'severity': None,
+        'facility': None}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 9)
     self.CheckEventData(event_data, expected_event_values)
@@ -440,7 +443,8 @@ class TraditionalSyslogTextPluginTest(test_lib.TextPluginTestCase):
         'hostname': 'osx-machine',
         'last_written_time': '0000-03-11T19:26:39',
         'reporter': 'kernel',
-        'severity': None}
+        'severity': None,
+        'facility': None}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
@@ -496,7 +500,8 @@ class TraditionalSyslogTextPluginTest(test_lib.TextPluginTestCase):
         'hostname': 'myhostname.myhost.com',
         'last_written_time': '0000-01-22T07:54:32',
         'reporter': 'Job',
-        'severity': None}
+        'severity': None,
+        'facility': None}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
