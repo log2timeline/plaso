@@ -66,6 +66,7 @@ class SyslogLineEventData(events.EventData):
     self.reporter = None
     self.severity = None
     self.facility = None
+    self.message_identifier = None
 
 
 class SyslogCronTaskRunEventData(SyslogLineEventData):
@@ -501,9 +502,12 @@ class SyslogTextPlugin(BaseSyslogTextPlugin):
       priority = self._GetValueFromStructure(structure, 'priority')
       severity = self._PriorityToSeverity(priority)
       facility = self._PriorityToFacility(priority)
+      message_identifier = self._GetValueFromStructure(
+          structure, 'message_identifier')
     else:
       severity = self._GetValueFromStructure(structure, 'severity')
       facility = None
+      message_identifier = None
 
     event_data = None
     if reporter == 'CRON':
@@ -522,6 +526,7 @@ class SyslogTextPlugin(BaseSyslogTextPlugin):
     event_data.reporter = reporter
     event_data.severity = severity
     event_data.facility = facility
+    event_data.message_identifier = message_identifier
 
     parser_mediator.ProduceEventData(event_data)
 

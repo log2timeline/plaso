@@ -219,7 +219,8 @@ class SyslogTextPluginTest(test_lib.TextPluginTestCase):
         'last_written_time': '2021-03-06T04:07:38.251122+00:00',
         'reporter': 'log_tag',
         'severity': 'DEBUG',
-        'facility': 'user-level message'}
+        'facility': 'user-level message',
+        'message_identifier': '123'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
