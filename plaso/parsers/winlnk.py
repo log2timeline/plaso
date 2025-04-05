@@ -5,9 +5,11 @@ import uuid
 
 import pylnk
 
+from acstore.containers import interface as containers_interface
+from acstore.containers import manager as containers_manager
+
 from dfdatetime import filetime as dfdatetime_filetime
 
-from plaso.containers import events
 from plaso.containers import windows_events
 from plaso.lib import definitions
 from plaso.lib import specification
@@ -16,8 +18,9 @@ from plaso.parsers import manager
 from plaso.parsers.shared import shell_items
 
 
-class WinLnkLinkEventData(events.EventData):
-  """Windows Shortcut (LNK) link event data.
+class WindowsShortcutAttributeContainer(
+    containers_interface.AttributeContainer):
+  """Windows Shortcut (LNK) attribute container.
 
   Attributes:
     access_time (dfdatetime.DateTimeValues): file entry last access date
@@ -37,7 +40,7 @@ class WinLnkLinkEventData(events.EventData):
         identifier.
     droid_volume_identifier (str): distributed link tracking droid volume
         identifier.
-    env_var_location (str): environment variables location.
+    environment_variables_location (str): environment variables location.
     file_attribute_flags (int): file attribute flags of the linked item.
     file_size (int): size of the linked item.
     icon_location (str): icon location.
@@ -51,11 +54,34 @@ class WinLnkLinkEventData(events.EventData):
     working_directory (str): working directory.
   """
 
-  DATA_TYPE = 'windows:lnk:link'
+  CONTAINER_TYPE = 'windows_shortcut'
+
+  SCHEMA = {
+      'access_time': 'dfdatetime.DateTimeValues',
+      'birth_droid_file_identifier': 'str',
+      'birth_droid_volume_identifier': 'str',
+      'command_line_arguments': 'str',
+      'creation_time': 'dfdatetime.DateTimeValues',
+      'description': 'str',
+      'drive_serial_number': 'int',
+      'drive_type': 'str',
+      'droid_file_identifier': 'str',
+      'droid_volume_identifier': 'str',
+      'environment_variables_location': 'str',
+      'file_attribute_flags': 'int',
+      'file_size': 'int',
+      'icon_location': 'str',
+      'link_target': 'str',
+      'local_path': 'str',
+      'modification_time': 'dfdatetime.DateTimeValues',
+      'network_path': 'str',
+      'relative_path': 'str',
+      'volume_label': 'str',
+      'working_directory': 'str'}
 
   def __init__(self):
-    """Initializes event data."""
-    super(WinLnkLinkEventData, self).__init__(data_type=self.DATA_TYPE)
+    """Initializes a Windows Shortcut (LNK) attribute container."""
+    super(WindowsShortcutAttributeContainer, self).__init__()
     self.access_time = None
     self.birth_droid_file_identifier = None
     self.birth_droid_volume_identifier = None
@@ -66,7 +92,7 @@ class WinLnkLinkEventData(events.EventData):
     self.drive_type = None
     self.droid_file_identifier = None
     self.droid_volume_identifier = None
-    self.env_var_location = None
+    self.environment_variables_location = None
     self.file_attribute_flags = None
     self.file_size = None
     self.icon_location = None
@@ -77,6 +103,10 @@ class WinLnkLinkEventData(events.EventData):
     self.relative_path = None
     self.volume_label = None
     self.working_directory = None
+
+
+containers_manager.AttributeContainersManager.RegisterAttributeContainer(
+    WindowsShortcutAttributeContainer)
 
 
 class WinLnkParser(interface.FileObjectParser):
@@ -108,6 +138,52 @@ class WinLnkParser(interface.FileObjectParser):
       return None
 
     return dfdatetime_filetime.Filetime(timestamp=filetime)
+
+  def _GetEventValues(self, lnk_file):
+    """Retrieves the event values attribute container.
+
+    Args:
+      lnk_file (pylnk.file): Windows shortcut (LNK) file.
+
+    Returns:
+      WindowsShortcutAttributeContainer: event values attribute container.
+    """
+    access_time = lnk_file.get_file_access_time_as_integer()
+    creation_time = lnk_file.get_file_creation_time_as_integer()
+    modification_time = lnk_file.get_file_modification_time_as_integer()
+
+    event_values = WindowsShortcutAttributeContainer()
+    event_values.access_time = self._GetDateTime(access_time)
+    event_values.birth_droid_file_identifier = (
+        lnk_file.birth_droid_file_identifier)
+    event_values.birth_droid_volume_identifier = (
+        lnk_file.birth_droid_volume_identifier)
+    event_values.command_line_arguments = self._GetSanitizedPathString(
+        lnk_file.command_line_arguments)
+    event_values.creation_time = self._GetDateTime(creation_time)
+    event_values.description = self._GetSanitizedPathString(
+        lnk_file.description)
+    event_values.drive_serial_number = lnk_file.drive_serial_number
+    event_values.drive_type = lnk_file.drive_type
+    event_values.droid_file_identifier = lnk_file.droid_file_identifier
+    event_values.droid_volume_identifier = lnk_file.droid_volume_identifier
+    event_values.environment_variables_location = self._GetSanitizedPathString(
+        lnk_file.environment_variables_location)
+    event_values.file_attribute_flags = lnk_file.file_attribute_flags
+    event_values.file_size = lnk_file.file_size
+    event_values.icon_location = self._GetSanitizedPathString(
+        lnk_file.icon_location)
+    event_values.local_path = self._GetSanitizedPathString(lnk_file.local_path)
+    event_values.modification_time = self._GetDateTime(modification_time)
+    event_values.network_path = self._GetSanitizedPathString(
+        lnk_file.network_path)
+    event_values.relative_path = self._GetSanitizedPathString(
+        lnk_file.relative_path)
+    event_values.volume_label = lnk_file.volume_label
+    event_values.working_directory = self._GetSanitizedPathString(
+        lnk_file.working_directory)
+
+    return event_values
 
   def _GetSanitizedPathString(self, path):
     """Retrieves a sanitize path string.
@@ -198,43 +274,12 @@ class WinLnkParser(interface.FileObjectParser):
 
       link_target = shell_items_parser.CopyToPath()
 
-    access_time = lnk_file.get_file_access_time_as_integer()
-    creation_time = lnk_file.get_file_creation_time_as_integer()
-    modification_time = lnk_file.get_file_modification_time_as_integer()
+    event_values = self._GetEventValues(lnk_file)
+    event_values.link_target = link_target
 
-    event_data = WinLnkLinkEventData()
-    event_data.access_time = self._GetDateTime(access_time)
-    event_data.birth_droid_file_identifier = (
-        lnk_file.birth_droid_file_identifier)
-    event_data.birth_droid_volume_identifier = (
-        lnk_file.birth_droid_volume_identifier)
-    event_data.command_line_arguments = self._GetSanitizedPathString(
-        lnk_file.command_line_arguments)
-    event_data.creation_time = self._GetDateTime(creation_time)
-    event_data.description = self._GetSanitizedPathString(
-        lnk_file.description)
-    event_data.drive_serial_number = lnk_file.drive_serial_number
-    event_data.drive_type = lnk_file.drive_type
-    event_data.droid_file_identifier = lnk_file.droid_file_identifier
-    event_data.droid_volume_identifier = lnk_file.droid_volume_identifier
-    event_data.env_var_location = self._GetSanitizedPathString(
-        lnk_file.environment_variables_location)
-    event_data.file_attribute_flags = lnk_file.file_attribute_flags
-    event_data.file_size = lnk_file.file_size
-    event_data.icon_location = self._GetSanitizedPathString(
-        lnk_file.icon_location)
-    event_data.link_target = link_target
-    event_data.local_path = self._GetSanitizedPathString(lnk_file.local_path)
-    event_data.modification_time = self._GetDateTime(modification_time)
-    event_data.network_path = self._GetSanitizedPathString(
-        lnk_file.network_path)
-    event_data.relative_path = self._GetSanitizedPathString(
-        lnk_file.relative_path)
-    event_data.volume_label = lnk_file.volume_label
-    event_data.working_directory = self._GetSanitizedPathString(
-        lnk_file.working_directory)
-
-    parser_mediator.ProduceEventData(event_data)
+    # TODO: lookup event_data.data_type based on container_type
+    parser_mediator.ProduceEventDataFromAttributeContainer(
+        'windows:lnk:link', event_values)
 
     if lnk_file.droid_file_identifier:  # pylint: disable=using-constant-test
       try:

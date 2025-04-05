@@ -9,7 +9,6 @@ from plaso.lib import definitions
 from plaso.parsers import filestat
 from plaso.parsers import winevt
 from plaso.parsers import winevtx
-from plaso.parsers import winlnk
 from plaso.parsers import winjob
 from plaso.parsers import winprefetch
 from plaso.parsers.bencode_plugins import utorrent
@@ -80,22 +79,22 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
     attribute_values_per_name = {
         'filename': ['Recent'],
         'local_path': ['file.exe']}
-    self._CheckTaggingRule(
-        winlnk.WinLnkLinkEventData, attribute_values_per_name,
+    self._CheckTaggingRuleFromAttributeContainer(
+        'windows:lnk:link', 'windows_shortcut', attribute_values_per_name,
         ['application_execution'])
 
     attribute_values_per_name = {
         'filename': ['Recent'],
         'network_path': ['file.exe']}
-    self._CheckTaggingRule(
-        winlnk.WinLnkLinkEventData, attribute_values_per_name,
+    self._CheckTaggingRuleFromAttributeContainer(
+        'windows:lnk:link', 'windows_shortcut', attribute_values_per_name,
         ['application_execution'])
 
     attribute_values_per_name = {
         'filename': ['Recent'],
         'relative_path': ['file.exe']}
-    self._CheckTaggingRule(
-        winlnk.WinLnkLinkEventData, attribute_values_per_name,
+    self._CheckTaggingRuleFromAttributeContainer(
+        'windows:lnk:link', 'windows_shortcut', attribute_values_per_name,
         ['application_execution'])
 
     # Test: data_type is 'windows:prefetch:execution'
@@ -122,14 +121,14 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
     # Set timestamp to 0 otherwise document_open rule triggers.
     event.timestamp = 0
 
-    storage_writer = self._TagEvent(event, event_data, None)
+    storage_writer = self._TagEvent(event, event_data, None, None)
 
     self._CheckLabels(storage_writer, [])
 
     event.timestamp = self._TEST_TIMESTAMP
     event_data.entries = 'Index: 0 [MRU Value a]: file.exe'
 
-    storage_writer = self._TagEvent(event, event_data, None)
+    storage_writer = self._TagEvent(event, event_data, None, None)
 
     self._CheckLabels(storage_writer, ['application_execution'])
 
@@ -141,14 +140,14 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
     # Set timestamp to 0 otherwise document_open rule triggers.
     event.timestamp = 0
 
-    storage_writer = self._TagEvent(event, event_data, None)
+    storage_writer = self._TagEvent(event, event_data, None, None)
 
     self._CheckLabels(storage_writer, [])
 
     event.timestamp = self._TEST_TIMESTAMP
     event_data.entries = 'Index: 0 [MRU Value 1]: file.exe'
 
-    storage_writer = self._TagEvent(event, event_data, None)
+    storage_writer = self._TagEvent(event, event_data, None, None)
 
     self._CheckLabels(storage_writer, ['application_execution'])
 
@@ -220,13 +219,13 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
 
     event.timestamp = 0
 
-    storage_writer = self._TagEvent(event, event_data, None)
+    storage_writer = self._TagEvent(event, event_data, None, None)
 
     self._CheckLabels(storage_writer, [])
 
     event.timestamp = self._TEST_TIMESTAMP
 
-    storage_writer = self._TagEvent(event, event_data, None)
+    storage_writer = self._TagEvent(event, event_data, None, None)
 
     self._CheckLabels(storage_writer, ['document_open'])
 
@@ -241,13 +240,13 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
 
     event.timestamp = 0
 
-    storage_writer = self._TagEvent(event, event_data, None)
+    storage_writer = self._TagEvent(event, event_data, None, None)
 
     self._CheckLabels(storage_writer, [])
 
     event.timestamp = self._TEST_TIMESTAMP
 
-    storage_writer = self._TagEvent(event, event_data, None)
+    storage_writer = self._TagEvent(event, event_data, None, None)
 
     self._CheckLabels(storage_writer, ['document_open'])
 
@@ -589,13 +588,13 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
 
     event_data = utorrent.UTorrentEventData()
 
-    storage_writer = self._TagEvent(event, event_data, None)
+    storage_writer = self._TagEvent(event, event_data, None, None)
 
     self._CheckLabels(storage_writer, [])
 
     event.timestamp_desc = 'Downloaded Time'
 
-    storage_writer = self._TagEvent(event, event_data, None)
+    storage_writer = self._TagEvent(event, event_data, None, None)
 
     self._CheckLabels(storage_writer, ['file_download'])
 
@@ -609,13 +608,13 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
 
     event_data = summary.OLECFSummaryInformationEventData()
 
-    storage_writer = self._TagEvent(event, event_data, None)
+    storage_writer = self._TagEvent(event, event_data, None, None)
 
     self._CheckLabels(storage_writer, [])
 
     event.timestamp_desc = definitions.TIME_DESCRIPTION_LAST_PRINTED
 
-    storage_writer = self._TagEvent(event, event_data, None)
+    storage_writer = self._TagEvent(event, event_data, None, None)
 
     self._CheckLabels(storage_writer, ['document_print'])
 

@@ -226,6 +226,15 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
       else:
         event_data_stream = None
 
+      event_values_identifier = event_data.GetEventValuesIdentifier()
+      if event_values_identifier:
+        # TODO: get container_type from event_data.data_type
+        container_type = None
+        event_values = storage_reader.GetAttributeContainerByIdentifier(
+            container_type, event_values_identifier)
+      else:
+        event_values = None
+
       event_identifier = event.GetIdentifier()
       event_tag = storage_reader.GetEventTagByEventIdentifer(event_identifier)
 
@@ -234,7 +243,7 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
 
       if event_filter:
         filter_match = event_filter.Match(
-            event, event_data, event_data_stream, event_tag)
+            event, event_data, event_data_stream, event_values, event_tag)
       else:
         filter_match = None
 
