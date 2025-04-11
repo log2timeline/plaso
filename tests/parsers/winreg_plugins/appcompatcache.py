@@ -286,7 +286,10 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'file_entry_modification_time': '2004-08-04T14:00:00.0000000+00:00',
         'key_path': expected_key_path,
         'last_update_time': '2009-09-20T11:59:16.3281250+00:00',
-        'path': '\\??\\C:\\WINDOWS\\system32\\hticons.dll'}
+        'path': '\\??\\C:\\WINDOWS\\system32\\hticons.dll',
+        'executed': False,
+        'insertion_flags': None,
+    }
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
@@ -323,7 +326,11 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'key_path': expected_key_path,
         'last_update_time': None,
         'path': (
-            '\\??\\C:\\WINDOWS\\Microsoft.NET\\Framework\\v1.1.4322\\ngen.exe')}
+            '\\??\\C:\\WINDOWS\\Microsoft.NET\\Framework\\v1.1.4322\\ngen.exe'
+        ),
+        'executed': False,
+        'insertion_flags': None,
+    }
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
@@ -361,7 +368,10 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'file_entry_modification_time': '2006-11-02T12:35:24.7041218+00:00',
         'key_path': expected_key_path,
         'last_update_time': None,
-        'path': '\\??\\C:\\Windows\\SYSTEM32\\WISPTIS.EXE'}
+        'path': '\\??\\C:\\Windows\\SYSTEM32\\WISPTIS.EXE',
+        'executed': False,
+        'insertion_flags': None,
+    }
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
@@ -399,7 +409,10 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'file_entry_modification_time': '2012-04-04T01:46:37.9329644+00:00',
         'key_path': key_path,
         'last_update_time': None,
-        'path': '\\??\\C:\\Windows\\PSEXESVC.EXE'}
+        'path': '\\??\\C:\\Windows\\PSEXESVC.EXE',
+        'executed': True,
+        'insertion_flags': 7,
+    }
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 9)
     self.CheckEventData(event_data, expected_event_values)
@@ -437,7 +450,10 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'file_entry_modification_time': '2012-02-18T05:18:23.9350000+00:00',
         'key_path': expected_key_path,
         'last_update_time': None,
-        'path': 'SYSVOL\\Windows\\System32\\wbem\\WmiPrvSE.exe'}
+        'path': 'SYSVOL\\Windows\\System32\\wbem\\WmiPrvSE.exe',
+        'executed': True,
+        'insertion_flags': 67,
+    }
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
@@ -473,7 +489,10 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'file_entry_modification_time': '2013-08-22T12:35:25.3750709+00:00',
         'key_path': expected_key_path,
         'last_update_time': None,
-        'path': 'SYSVOL\\Windows\\System32\\dllhost.exe'}
+        'path': 'SYSVOL\\Windows\\System32\\dllhost.exe',
+        'executed': False,
+        'insertion_flags': 8323072,
+    }
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
@@ -509,7 +528,10 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'file_entry_modification_time': '2014-09-22T06:42:39.0000000+00:00',
         'key_path': expected_key_path,
         'last_update_time': None,
-        'path': 'C:\\Windows\\system32\\MpSigStub.exe'}
+        'path': 'C:\\Windows\\system32\\MpSigStub.exe',
+        'executed': True,
+        'insertion_flags': None,
+    }
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
@@ -547,7 +569,11 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'last_update_time': None,
         'path': (
             'C:\\Program Files (x86)\\NVIDIA Corporation\\3D Vision\\'
-            'nvstreg.exe')}
+            'nvstreg.exe'
+        ),
+        'executed': True,
+        'insertion_flags': None,
+    }
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
