@@ -34,8 +34,9 @@ class AppCompatCacheEventData(events.EventData):
         to the start of the Windows Registry value data, from which the event
         data was extracted.
     path (str): full path to the executable.
-    insertion_flags (int): Execution flag
-    executed (bool): Can be indicator of execution
+    insertion_flags (int): Execution flag.
+    executed (bool): Can be indicator of execution.
+    control_set (int): Control set number of AppCompatCache registry key.
   """
 
   DATA_TYPE = 'windows:registry:appcompatcache'
@@ -51,6 +52,7 @@ class AppCompatCacheEventData(events.EventData):
     self.path = None
     self.insertion_flags = None
     self.executed = None
+    self.control_set = None
 
 
 class AppCompatCacheHeader(object):
@@ -664,6 +666,8 @@ class AppCompatCacheWindowsRegistryPlugin(
     if not self._cached_entry_data_type_map:
       raise errors.ParseError('Unable to determine cached entry data type.')
 
+    control_set = self._ExtractControlSet(registry_key.path)
+
     parse_cached_entry_function = None
     if format_type == self._FORMAT_TYPE_XP:
       parse_cached_entry_function = self._ParseCachedEntryXP
@@ -688,6 +692,7 @@ class AppCompatCacheWindowsRegistryPlugin(
       event_data.key_path = registry_key.path
       event_data.offset = cached_entry_offset
       event_data.path = cached_entry_object.path
+      event_data.control_set = control_set
 
       if cached_entry_object.last_modification_time:
         event_data.file_entry_modification_time = dfdatetime_filetime.Filetime(
@@ -711,6 +716,24 @@ class AppCompatCacheWindowsRegistryPlugin(
       if (header_object.number_of_cached_entries != 0 and
           cached_entry_index >= header_object.number_of_cached_entries):
         break
+
+  def _ExtractControlSet(self, path):
+    """Extract control set number from key path.
+
+    Args:
+        path (str): Path
+
+    Returns:
+        Optional[int]: Control set number.
+    """
+    parts = path.split('\\')
+    for part in parts:
+      if part.upper().startswith('CONTROLSET'):
+        try:
+          return int(part[10:], 10)
+        except ValueError:
+          pass
+    return None
 
 
 winreg_parser.WinRegistryParser.RegisterPlugin(

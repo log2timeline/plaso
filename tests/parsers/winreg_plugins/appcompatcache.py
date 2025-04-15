@@ -252,6 +252,17 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
     self._AssertFiltersOnKeyPath(plugin, 'HKEY_LOCAL_MACHINE\\System', (
         'CurrentControlSet\\Control\\Session Manager\\AppCompatCache'))
 
+    self._AssertFiltersOnKeyPath(
+        plugin,
+        'HKEY_LOCAL_MACHINE\\System',
+        'ControlSet001\\Control\\Session Manager\\AppCompatCache',
+    )
+    self._AssertFiltersOnKeyPath(
+        plugin,
+        'HKEY_LOCAL_MACHINE\\System',
+        'ControlSet47\\Control\\Session Manager\\AppCompatCache',
+    )
+
     self._AssertNotFiltersOnKeyPath(
         plugin, 'HKEY_LOCAL_MACHINE\\System', 'Bogus')
 
@@ -289,6 +300,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'path': '\\??\\C:\\WINDOWS\\system32\\hticons.dll',
         'executed': False,
         'insertion_flags': None,
+        'control_set': 1,
     }
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
@@ -330,6 +342,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         ),
         'executed': False,
         'insertion_flags': None,
+        'control_set': 1,
     }
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
@@ -371,6 +384,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'path': '\\??\\C:\\Windows\\SYSTEM32\\WISPTIS.EXE',
         'executed': False,
         'insertion_flags': None,
+        'control_set': 1,
     }
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
@@ -412,6 +426,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'path': '\\??\\C:\\Windows\\PSEXESVC.EXE',
         'executed': True,
         'insertion_flags': 7,
+        'control_set': 1,
     }
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 9)
@@ -453,6 +468,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'path': 'SYSVOL\\Windows\\System32\\wbem\\WmiPrvSE.exe',
         'executed': True,
         'insertion_flags': 67,
+        'control_set': 1,
     }
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
@@ -492,6 +508,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'path': 'SYSVOL\\Windows\\System32\\dllhost.exe',
         'executed': False,
         'insertion_flags': 8323072,
+        'control_set': 1,
     }
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
@@ -531,6 +548,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'path': 'C:\\Windows\\system32\\MpSigStub.exe',
         'executed': True,
         'insertion_flags': None,
+        'control_set': 1,
     }
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
