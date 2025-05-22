@@ -18,13 +18,13 @@ plaso.helpers.language\_tags module
 
 .. automodule:: plaso.helpers.language_tags
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Module contents
 ---------------
 
 .. automodule:: plaso.helpers
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

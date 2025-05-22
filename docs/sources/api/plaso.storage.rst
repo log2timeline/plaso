@@ -19,53 +19,53 @@ plaso.storage.factory module
 
 .. automodule:: plaso.storage.factory
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 plaso.storage.logger module
 ---------------------------
 
 .. automodule:: plaso.storage.logger
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 plaso.storage.reader module
 ---------------------------
 
 .. automodule:: plaso.storage.reader
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 plaso.storage.serializers module
 --------------------------------
 
 .. automodule:: plaso.storage.serializers
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 plaso.storage.time\_range module
 --------------------------------
 
 .. automodule:: plaso.storage.time_range
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 plaso.storage.writer module
 ---------------------------
 
 .. automodule:: plaso.storage.writer
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Module contents
 ---------------
 
 .. automodule:: plaso.storage
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

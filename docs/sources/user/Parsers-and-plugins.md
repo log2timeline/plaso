@@ -239,6 +239,7 @@ explorer_mountpoints2 | Parser for Windows Explorer mount points Registry data.
 explorer_programscache | Parser for Windows Explorer Programs Cache Registry data.
 microsoft_office_mru | Parser for Microsoft Office MRU Registry data.
 microsoft_outlook_mru | Parser for Microsoft Outlook search MRU Registry data.
+motherboard_info | Parser for Motherboard Info Registry data.
 mrulist_shell_item_list | Parser for Most Recently Used (MRU) Registry data.
 mrulist_string | Parser for Most Recently Used (MRU) Registry data.
 mrulistex_shell_item_list | Parser for Most Recently Used (MRU) Registry data.
