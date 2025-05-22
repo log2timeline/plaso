@@ -9,21 +9,21 @@ plaso.serializer.json\_serializer module
 
 .. automodule:: plaso.serializer.json_serializer
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 plaso.serializer.logger module
 ------------------------------
 
 .. automodule:: plaso.serializer.logger
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Module contents
 ---------------
 
 .. automodule:: plaso.serializer
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
