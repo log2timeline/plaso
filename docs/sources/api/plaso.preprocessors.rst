@@ -9,69 +9,69 @@ plaso.preprocessors.generic module
 
 .. automodule:: plaso.preprocessors.generic
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 plaso.preprocessors.interface module
 ------------------------------------
 
 .. automodule:: plaso.preprocessors.interface
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 plaso.preprocessors.linux module
 --------------------------------
 
 .. automodule:: plaso.preprocessors.linux
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 plaso.preprocessors.logger module
 ---------------------------------
 
 .. automodule:: plaso.preprocessors.logger
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 plaso.preprocessors.macos module
 --------------------------------
 
 .. automodule:: plaso.preprocessors.macos
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 plaso.preprocessors.manager module
 ----------------------------------
 
 .. automodule:: plaso.preprocessors.manager
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 plaso.preprocessors.mediator module
 -----------------------------------
 
 .. automodule:: plaso.preprocessors.mediator
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 plaso.preprocessors.windows module
 ----------------------------------
 
 .. automodule:: plaso.preprocessors.windows
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Module contents
 ---------------
 
 .. automodule:: plaso.preprocessors
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
