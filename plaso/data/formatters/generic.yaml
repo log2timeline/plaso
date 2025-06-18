@@ -209,6 +209,26 @@ short_source: 'DOCKER'
 source: 'Docker Layer'
 ---
 type: 'conditional'
+data_type: 'drone:dji:mavic'
+message:
+- 'Longitude: {longitude}'
+- 'Latitude: {latitude}'
+- 'Height: {height}'
+- 'X_velocity: {x_velocity}'
+- 'Y_velocity: {y_velocity}'
+- 'Z_velocity: {z_velocity}'
+separator: ', '
+short_message:
+- 'Longitude: {longitude}'
+- 'Latitude: {latitude}'
+- 'Height: {height}'
+- 'X_velocity: {x_velocity}'
+- 'Y_velocity: {y_velocity}'
+- 'Z_velocity: {z_velocity}'
+short_source: 'Log'
+source: 'DJI Mavic DAT Log'
+---
+type: 'conditional'
 data_type: 'dropbox:sync_history:entry'
 message:
 - 'Path: {local_path}'
