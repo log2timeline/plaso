@@ -1,322 +1,322 @@
 # Plaso timeliner configuration.
 ---
-data_type: 'android:app_usage'
+data_type: "android:app_usage"
 attribute_mappings:
-- name: 'last_resume_time'
-  description: 'Last Resume Time'
+  - name: "last_resume_time"
+    description: "Last Resume Time"
 place_holder_event: true
 ---
-data_type: 'android:event:battery'
+data_type: "android:event:battery"
 attribute_mappings:
-- name: 'recorded_time'
-  description: 'Recorded Time'
+  - name: "recorded_time"
+    description: "Recorded Time"
 place_holder_event: true
 ---
-data_type: 'android:event:call'
+data_type: "android:event:call"
 attribute_mappings:
-- name: 'end_time'
-  description: 'End Time'
-- name: 'start_time'
-  description: 'Start Time'
+  - name: "end_time"
+    description: "End Time"
+  - name: "start_time"
+    description: "Start Time"
 place_holder_event: true
 ---
-data_type: 'android:logcat'
+data_type: "android:logcat"
 attribute_mappings:
-- name: 'recorded_time'
-  description: 'Recorded Time'
+  - name: "recorded_time"
+    description: "Recorded Time"
 place_holder_event: true
 ---
-data_type: 'android:messaging:hangouts'
+data_type: "android:messaging:hangouts"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
+  - name: "creation_time"
+    description: "Creation Time"
 place_holder_event: true
 ---
-data_type: 'android:messaging:sms'
+data_type: "android:messaging:sms"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
+  - name: "creation_time"
+    description: "Creation Time"
 place_holder_event: true
 ---
-data_type: 'android:tango:contact'
+data_type: "android:tango:contact"
 attribute_mappings:
-- name: 'access_time'
-  description: 'Last Access Time'
-- name: 'friend_request_time'
-  description: 'Friend Request Time'
-- name: 'last_active_time'
-  description: 'Last Active Time'
+  - name: "access_time"
+    description: "Last Access Time"
+  - name: "friend_request_time"
+    description: "Friend Request Time"
+  - name: "last_active_time"
+    description: "Last Active Time"
 place_holder_event: false
 ---
-data_type: 'android:sqlite:app_usage'
+data_type: "android:sqlite:app_usage"
 attribute_mappings:
-- name: 'start_time'
-  description: 'Start Time'
+  - name: "start_time"
+    description: "Start Time"
 place_holder_event: false
 ---
-data_type: 'android:tango:conversation'
+data_type: "android:tango:conversation"
 place_holder_event: true
 ---
-data_type: 'android:tango:message'
+data_type: "android:tango:message"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
-- name: 'sent_time'
-  description: 'Sent Time'
+  - name: "creation_time"
+    description: "Creation Time"
+  - name: "sent_time"
+    description: "Sent Time"
 place_holder_event: false
 ---
-data_type: 'android:twitter:contact'
+data_type: "android:twitter:contact"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
-- name: 'friendship_time'
-  description: 'Befriended Time'
-- name: 'modification_time'
-  description: 'Content Modification Time'
+  - name: "creation_time"
+    description: "Creation Time"
+  - name: "friendship_time"
+    description: "Befriended Time"
+  - name: "modification_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'android:twitter:search'
+data_type: "android:twitter:search"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
+  - name: "creation_time"
+    description: "Creation Time"
 place_holder_event: true
 ---
-data_type: 'android:twitter:status'
+data_type: "android:twitter:status"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
+  - name: "creation_time"
+    description: "Creation Time"
 place_holder_event: true
 ---
-data_type: 'android:webview:cookie'
+data_type: "android:webview:cookie"
 attribute_mappings:
-- name: 'expiration_time'
-  description: 'Expiration Time'
+  - name: "expiration_time"
+    description: "Expiration Time"
 place_holder_event: true
 ---
-data_type: 'android:webviewcache'
+data_type: "android:webviewcache"
 attribute_mappings:
-- name: 'expiration_time'
-  description: 'Expiration Time'
-- name: 'last_modified_time'
-  description: 'Content Modification Time'
+  - name: "expiration_time"
+    description: "Expiration Time"
+  - name: "last_modified_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'apache:access_log:entry'
+data_type: "apache:access_log:entry"
 attribute_mappings:
-- name: 'recorded_time'
-  description: 'Recorded Time'
+  - name: "recorded_time"
+    description: "Recorded Time"
 place_holder_event: true
 ---
-data_type: 'av:defender:detection_history'
+data_type: "av:defender:detection_history"
 attribute_mappings:
-- name: 'recorded_time'
-  description: 'Recorded Time'
+  - name: "recorded_time"
+    description: "Recorded Time"
 place_holder_event: true
 ---
-data_type: 'av:mcafee:accessprotectionlog'
+data_type: "av:mcafee:accessprotectionlog"
 attribute_mappings:
-- name: 'written_time'
-  description: 'Content Modification Time'
+  - name: "written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'av:symantec:scanlog'
+data_type: "av:symantec:scanlog"
 attribute_mappings:
-- name: 'last_written_time'
-  description: 'Content Modification Time'
+  - name: "last_written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'av:trendmicro:scan'
+data_type: "av:trendmicro:scan"
 attribute_mappings:
-- name: 'written_time'
-  description: 'Content Modification Time'
+  - name: "written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'av:trendmicro:webrep'
+data_type: "av:trendmicro:webrep"
 attribute_mappings:
-- name: 'written_time'
-  description: 'Content Modification Time'
+  - name: "written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'aws:cloudtrail:entry'
+data_type: "aws:cloudtrail:entry"
 attribute_mappings:
-- name: 'recorded_time'
-  description: 'Recorded Time'
+  - name: "recorded_time"
+    description: "Recorded Time"
 place_holder_event: true
 ---
-data_type: 'aws:elb:access'
+data_type: "aws:elb:access"
 attribute_mappings:
-- name: 'request_time'
-  description: 'Request Received Time'
-- name: 'response_time'
-  description: 'Response Sent Time'
+  - name: "request_time"
+    description: "Request Received Time"
+  - name: "response_time"
+    description: "Response Sent Time"
 place_holder_event: true
 ---
-data_type: 'azure:activitylog:entry'
+data_type: "azure:activitylog:entry"
 attribute_mappings:
-- name: 'recorded_time'
-  description: 'Recorded Time'
+  - name: "recorded_time"
+    description: "Recorded Time"
 place_holder_event: true
 ---
-data_type: 'azure:application_gateway_access:entry'
+data_type: "azure:application_gateway_access:entry"
 attribute_mappings:
-- name: 'recorded_time'
-  description: 'Recorded Time'
+  - name: "recorded_time"
+    description: "Recorded Time"
 place_holder_event: true
 ---
-data_type: 'bash:history:entry'
+data_type: "bash:history:entry"
 attribute_mappings:
-- name: 'written_time'
-  description: 'Content Modification Time'
+  - name: "written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'bsm:entry'
+data_type: "bsm:entry"
 attribute_mappings:
-- name: 'written_time'
-  description: 'Content Modification Time'
+  - name: "written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
 # TODO: prefix data_type with 'windows:registry:'.
-data_type: 'ccleaner:configuration'
+data_type: "ccleaner:configuration"
 attribute_mappings:
-- name: 'last_written_time'
-  description: 'Content Modification Time'
+  - name: "last_written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
 # TODO: prefix data_type with 'windows:registry:'.
-data_type: 'ccleaner:update'
+data_type: "ccleaner:update"
 attribute_mappings:
-- name: 'update_time'
-  description: 'Update Time'
+  - name: "update_time"
+    description: "Update Time"
 place_holder_event: true
 ---
-data_type: 'chrome:autofill:entry'
+data_type: "chrome:autofill:entry"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
-- name: 'last_used_time'
-  description: 'Last Used Time'
+  - name: "creation_time"
+    description: "Creation Time"
+  - name: "last_used_time"
+    description: "Last Used Time"
 place_holder_event: true
 ---
-data_type: 'chrome:cache:entry'
+data_type: "chrome:cache:entry"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
+  - name: "creation_time"
+    description: "Creation Time"
 place_holder_event: true
 ---
-data_type: 'chrome:cookie:entry'
+data_type: "chrome:cookie:entry"
 attribute_mappings:
-- name: 'access_time'
-  description: 'Last Access Time'
-- name: 'creation_time'
-  description: 'Creation Time'
-- name: 'expiration_time'
-  description: 'Expiration Time'
+  - name: "access_time"
+    description: "Last Access Time"
+  - name: "creation_time"
+    description: "Creation Time"
+  - name: "expiration_time"
+    description: "Expiration Time"
 place_holder_event: true
 ---
-data_type: 'chrome:extension_activity:activity_log'
+data_type: "chrome:extension_activity:activity_log"
 attribute_mappings:
-- name: 'recorded_time'
-  description: 'Recorded Time'
+  - name: "recorded_time"
+    description: "Recorded Time"
 place_holder_event: true
 ---
-data_type: 'chrome:history:file_downloaded'
+data_type: "chrome:history:file_downloaded"
 attribute_mappings:
-- name: 'end_time'
-  description: 'End Time'
-- name: 'start_time'
-  description: 'Start Time'
+  - name: "end_time"
+    description: "End Time"
+  - name: "start_time"
+    description: "Start Time"
 place_holder_event: true
 ---
-data_type: 'chrome:history:page_visited'
+data_type: "chrome:history:page_visited"
 attribute_mappings:
-- name: 'last_visited_time'
-  description: 'Last Visited Time'
+  - name: "last_visited_time"
+    description: "Last Visited Time"
 place_holder_event: true
 ---
-data_type: 'chrome:preferences:content_settings:exceptions'
+data_type: "chrome:preferences:content_settings:exceptions"
 attribute_mappings:
-- name: 'last_visited_time'
-  description: 'Last Visited Time'
+  - name: "last_visited_time"
+    description: "Last Visited Time"
 place_holder_event: true
 ---
-data_type: 'chrome:preferences:extension_installation'
+data_type: "chrome:preferences:extension_installation"
 attribute_mappings:
-- name: 'installation_time'
-  description: 'Time of installation'
+  - name: "installation_time"
+    description: "Time of installation"
 place_holder_event: true
 ---
-data_type: 'chrome:preferences:extensions_autoupdater'
+data_type: "chrome:preferences:extensions_autoupdater"
 attribute_mappings:
-- name: 'recorded_time'
-  description: 'Recorded Time'
+  - name: "recorded_time"
+    description: "Recorded Time"
 place_holder_event: true
 ---
-data_type: 'confluence:access'
+data_type: "confluence:access"
 attribute_mappings:
-- name: 'recorded_time'
-  description: 'Recorded Time'
+  - name: "recorded_time"
+    description: "Recorded Time"
 place_holder_event: true
 ---
-data_type: 'cookie:google:analytics:utma'
+data_type: "cookie:google:analytics:utma"
 attribute_mappings:
-- name: 'visited_times'
-  description: 'Visited Time'
+  - name: "visited_times"
+    description: "Visited Time"
 place_holder_event: true
 ---
-data_type: 'cookie:google:analytics:utmb'
+data_type: "cookie:google:analytics:utmb"
 attribute_mappings:
-- name: 'last_visited_time'
-  description: 'Last Visited Time'
+  - name: "last_visited_time"
+    description: "Last Visited Time"
 place_holder_event: true
 ---
-data_type: 'cookie:google:analytics:utmt'
+data_type: "cookie:google:analytics:utmt"
 attribute_mappings:
-- name: 'last_visited_time'
-  description: 'Last Visited Time'
+  - name: "last_visited_time"
+    description: "Last Visited Time"
 place_holder_event: true
 ---
-data_type: 'cookie:google:analytics:utmz'
+data_type: "cookie:google:analytics:utmz"
 attribute_mappings:
-- name: 'last_visited_time'
-  description: 'Last Visited Time'
+  - name: "last_visited_time"
+    description: "Last Visited Time"
 place_holder_event: true
 ---
-data_type: 'cri:container:log:entry'
+data_type: "cri:container:log:entry"
 attribute_mappings:
-- name: 'event_datetime'
-  description: 'Content Modification Time'
+  - name: "event_datetime"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'cups:ipp:event'
+data_type: "cups:ipp:event"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
-- name: 'end_time'
-  description: 'End Time'
-- name: 'start_time'
-  description: 'Start Time'
+  - name: "creation_time"
+    description: "Creation Time"
+  - name: "end_time"
+    description: "End Time"
+  - name: "start_time"
+    description: "Start Time"
 place_holder_event: true
 ---
-data_type: 'docker:container:configuration'
+data_type: "docker:container:configuration"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
-- name: 'end_time'
-  description: 'End Time'
-- name: 'start_time'
-  description: 'Start Time'
+  - name: "creation_time"
+    description: "Creation Time"
+  - name: "end_time"
+    description: "End Time"
+  - name: "start_time"
+    description: "Start Time"
 place_holder_event: true
 ---
-data_type: 'docker:container:log:entry'
+data_type: "docker:container:log:entry"
 attribute_mappings:
-- name: 'written_time'
-  description: 'Content Modification Time'
+  - name: "written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'docker:layer:configuration'
+data_type: "docker:layer:configuration"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
+  - name: "creation_time"
+    description: "Creation Time"
 place_holder_event: false
 ---
 data_type: "drone:flight:event"
@@ -325,1485 +325,1485 @@ attribute_mappings:
     description: "Creation Time"
 place_holder_event: false
 ---
-data_type: 'dropbox:sync_history:entry'
+data_type: "dropbox:sync_history:entry"
 attribute_mappings:
-- name: 'recorded_time'
-  description: 'Recorded Time'
+  - name: "recorded_time"
+    description: "Recorded Time"
 place_holder_event: true
 ---
-data_type: 'edge:resources:load_statistics'
+data_type: "edge:resources:load_statistics"
 attribute_mappings:
-- name: 'last_update'
-  description: 'Last Updated Time'
+  - name: "last_update"
+    description: "Last Updated Time"
 place_holder_event: true
 ---
-data_type: 'firefox:cache:record'
+data_type: "firefox:cache:record"
 attribute_mappings:
-- name: 'expiration_time'
-  description: 'Expiration Time'
-- name: 'last_fetched_time'
-  description: 'Last Visited Time'
-- name: 'last_modified_time'
-  description: 'Content Modification Time'
+  - name: "expiration_time"
+    description: "Expiration Time"
+  - name: "last_fetched_time"
+    description: "Last Visited Time"
+  - name: "last_modified_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'firefox:cookie:entry'
+data_type: "firefox:cookie:entry"
 attribute_mappings:
-- name: 'access_time'
-  description: 'Last Access Time'
-- name: 'creation_time'
-  description: 'Creation Time'
-- name: 'expiration_time'
-  description: 'Expiration Time'
+  - name: "access_time"
+    description: "Last Access Time"
+  - name: "creation_time"
+    description: "Creation Time"
+  - name: "expiration_time"
+    description: "Expiration Time"
 place_holder_event: true
 ---
-data_type: 'firefox:downloads:download'
+data_type: "firefox:downloads:download"
 attribute_mappings:
-- name: 'end_time'
-  description: 'End Time'
-- name: 'start_time'
-  description: 'Start Time'
+  - name: "end_time"
+    description: "End Time"
+  - name: "start_time"
+    description: "Start Time"
 place_holder_event: true
 ---
-data_type: 'firefox:places:bookmark'
+data_type: "firefox:places:bookmark"
 attribute_mappings:
-- name: 'added_time'
-  description: 'Added Time'
-- name: 'modification_time'
-  description: 'Content Modification Time'
+  - name: "added_time"
+    description: "Added Time"
+  - name: "modification_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'firefox:places:bookmark_annotation'
+data_type: "firefox:places:bookmark_annotation"
 attribute_mappings:
-- name: 'added_time'
-  description: 'Added Time'
-- name: 'modification_time'
-  description: 'Content Modification Time'
+  - name: "added_time"
+    description: "Added Time"
+  - name: "modification_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'firefox:places:bookmark_folder'
+data_type: "firefox:places:bookmark_folder"
 attribute_mappings:
-- name: 'added_time'
-  description: 'Added Time'
-- name: 'modification_time'
-  description: 'Content Modification Time'
+  - name: "added_time"
+    description: "Added Time"
+  - name: "modification_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'firefox:places:page_visited'
+data_type: "firefox:places:page_visited"
 attribute_mappings:
-- name: 'last_visited_time'
-  description: 'Last Visited Time'
+  - name: "last_visited_time"
+    description: "Last Visited Time"
 place_holder_event: true
 ---
-data_type: 'fish:history:entry'
+data_type: "fish:history:entry"
 attribute_mappings:
-- name: 'written_time'
-  description: 'Content Modification Time'
+  - name: "written_time"
+    description: "Content Modification Time"
 place_holder_event: false
 ---
-data_type: 'fs:bodyfile:entry'
+data_type: "fs:bodyfile:entry"
 attribute_mappings:
-- name: 'access_time'
-  description: 'Last Access Time'
-- name: 'change_time'
-  description: 'Metadata Modification Time'
-- name: 'creation_time'
-  description: 'Creation Time'
-- name: 'modification_time'
-  description: 'Content Modification Time'
+  - name: "access_time"
+    description: "Last Access Time"
+  - name: "change_time"
+    description: "Metadata Modification Time"
+  - name: "creation_time"
+    description: "Creation Time"
+  - name: "modification_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'fs:ntfs:usn_change'
+data_type: "fs:ntfs:usn_change"
 attribute_mappings:
-- name: 'update_time'
-  description: 'Metadata Modification Time'
+  - name: "update_time"
+    description: "Metadata Modification Time"
 place_holder_event: true
 ---
-data_type: 'fs:stat'
+data_type: "fs:stat"
 attribute_mappings:
-- name: 'access_time'
-  description: 'Last Access Time'
-- name: 'added_time'
-  description: 'Added Time'
-- name: 'backup_time'
-  description: 'Backup Time'
-- name: 'change_time'
-  description: 'Metadata Modification Time'
-- name: 'creation_time'
-  description: 'Creation Time'
-- name: 'deletion_time'
-  description: 'Content Deletion Time'
-- name: 'modification_time'
-  description: 'Content Modification Time'
+  - name: "access_time"
+    description: "Last Access Time"
+  - name: "added_time"
+    description: "Added Time"
+  - name: "backup_time"
+    description: "Backup Time"
+  - name: "change_time"
+    description: "Metadata Modification Time"
+  - name: "creation_time"
+    description: "Creation Time"
+  - name: "deletion_time"
+    description: "Content Deletion Time"
+  - name: "modification_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'fs:stat:ntfs'
+data_type: "fs:stat:ntfs"
 attribute_mappings:
-- name: 'access_time'
-  description: 'Last Access Time'
-- name: 'creation_time'
-  description: 'Creation Time'
-- name: 'entry_modification_time'
-  description: 'Metadata Modification Time'
-- name: 'modification_time'
-  description: 'Content Modification Time'
+  - name: "access_time"
+    description: "Last Access Time"
+  - name: "creation_time"
+    description: "Creation Time"
+  - name: "entry_modification_time"
+    description: "Metadata Modification Time"
+  - name: "modification_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'gcp:log:entry'
+data_type: "gcp:log:entry"
 attribute_mappings:
-- name: 'recorded_time'
-  description: 'Recorded Time'
+  - name: "recorded_time"
+    description: "Recorded Time"
 place_holder_event: true
 ---
-data_type: 'gdrive:snapshot:cloud_entry'
+data_type: "gdrive:snapshot:cloud_entry"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
-- name: 'modification_time'
-  description: 'Content Modification Time'
+  - name: "creation_time"
+    description: "Creation Time"
+  - name: "modification_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'gdrive:snapshot:local_entry'
+data_type: "gdrive:snapshot:local_entry"
 attribute_mappings:
-- name: 'modification_time'
-  description: 'Content Modification Time'
+  - name: "modification_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'google_drive_sync_log:entry'
+data_type: "google_drive_sync_log:entry"
 attribute_mappings:
-- name: 'added_time'
-  description: 'Added Time'
+  - name: "added_time"
+    description: "Added Time"
 place_holder_event: true
 ---
-data_type: 'googlelog:log'
+data_type: "googlelog:log"
 attribute_mappings:
-- name: 'last_written_time'
-  description: 'Content Modification Time'
+  - name: "last_written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'iis:log:line'
+data_type: "iis:log:line"
 attribute_mappings:
-- name: 'last_written_time'
-  description: 'Content Modification Time'
+  - name: "last_written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'imessage:event:chat'
+data_type: "imessage:event:chat"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
+  - name: "creation_time"
+    description: "Creation Time"
 place_holder_event: false
 ---
-data_type: 'ios:app_privacy:access'
+data_type: "ios:app_privacy:access"
 attribute_mappings:
-- name: 'recorded_time'
-  description: 'Recorded Time'
+  - name: "recorded_time"
+    description: "Recorded Time"
 place_holder_event: true
 ---
-data_type: 'ios:app_privacy:network'
+data_type: "ios:app_privacy:network"
 attribute_mappings:
-- name: 'recorded_time'
-  description: 'Recorded Time'
+  - name: "recorded_time"
+    description: "Recorded Time"
 place_holder_event: true
 ---
-data_type: 'ios:carplay:history:entry'
+data_type: "ios:carplay:history:entry"
 attribute_mappings:
-- name: 'last_run_time'
-  description: 'Last Time Executed'
+  - name: "last_run_time"
+    description: "Last Time Executed"
 place_holder_event: false
 ---
-data_type: 'ios:idstatuscache:lookup'
+data_type: "ios:idstatuscache:lookup"
 attribute_mappings:
-- name: 'lookup_time'
-  description: 'Lookup Time'
+  - name: "lookup_time"
+    description: "Lookup Time"
 place_holder_event: true
 ---
-data_type: 'ios:datausage:event'
+data_type: "ios:datausage:event"
 attribute_mappings:
-- name: 'start_time'
-  description: 'Start Time'
+  - name: "start_time"
+    description: "Start Time"
 place_holder_event: true
 ---
-data_type: 'ios:kik:messaging'
+data_type: "ios:kik:messaging"
 attribute_mappings:
-- name: 'received_time'
-  description: 'Received Time'
+  - name: "received_time"
+    description: "Received Time"
 place_holder_event: true
 ---
-data_type: 'ios:lockdownd_log:entry'
+data_type: "ios:lockdownd_log:entry"
 attribute_mappings:
-- name: 'written_time'
-  description: 'Content Modification Time'
+  - name: "written_time"
+    description: "Content Modification Time"
 place_holder_event: false
 ---
-data_type: 'ios:netusage:process'
+data_type: "ios:netusage:process"
 attribute_mappings:
-- name: 'start_time'
-  description: 'Start Time'
+  - name: "start_time"
+    description: "Start Time"
 place_holder_event: true
 ---
-data_type: 'ios:netusage:route'
+data_type: "ios:netusage:route"
 attribute_mappings:
-- name: 'start_time'
-  description: 'Start Time'
+  - name: "start_time"
+    description: "Start Time"
 place_holder_event: true
 ---
-data_type: 'ios:powerlog:application_usage'
+data_type: "ios:powerlog:application_usage"
 attribute_mappings:
-- name: 'start_time'
-  description: 'Start Time'
+  - name: "start_time"
+    description: "Start Time"
 place_holder_event: true
 ---
-data_type: 'ios:screentime:event'
+data_type: "ios:screentime:event"
 attribute_mappings:
-- name: 'start_time'
-  description: 'Start Time'
+  - name: "start_time"
+    description: "Start Time"
 place_holder_event: true
 ---
-data_type: 'ios:sysdiag_log:entry'
+data_type: "ios:sysdiag_log:entry"
 attribute_mappings:
-- name: 'written_time'
-  description: 'Content Modification Time'
+  - name: "written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'ios:sysdiagnose:logd:line'
+data_type: "ios:sysdiagnose:logd:line"
 attribute_mappings:
-- name: 'written_time'
-  description: 'Content Modification Time'
+  - name: "written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'ios:twitter:contact'
+data_type: "ios:twitter:contact"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
-- name: 'modification_time'
-  description: 'Content Modification Time'
+  - name: "creation_time"
+    description: "Creation Time"
+  - name: "modification_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'ios:twitter:status'
+data_type: "ios:twitter:status"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
-- name: 'modification_time'
-  description: 'Content Modification Time'
+  - name: "creation_time"
+    description: "Creation Time"
+  - name: "modification_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'ipod:device:entry'
+data_type: "ipod:device:entry"
 attribute_mappings:
-- name: 'last_connected_time'
-  description: 'Last Connection Time'
+  - name: "last_connected_time"
+    description: "Last Connection Time"
 place_holder_event: true
 ---
-data_type: 'java:download:idx'
+data_type: "java:download:idx"
 attribute_mappings:
-- name: 'downloaded_time'
-  description: 'Downloaded Time'
-- name: 'expiration_time'
-  description: 'Expiration Time'
-- name: 'modification_time'
-  description: 'Content Modification Time'
+  - name: "downloaded_time"
+    description: "Downloaded Time"
+  - name: "expiration_time"
+    description: "Expiration Time"
+  - name: "modification_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'kodi:videos:viewing'
+data_type: "kodi:videos:viewing"
 attribute_mappings:
-- name: 'last_played_time'
-  description: 'Last Played Time'
+  - name: "last_played_time"
+    description: "Last Played Time"
 place_holder_event: true
 ---
-data_type: 'linux:apt_history_log:entry'
+data_type: "linux:apt_history_log:entry"
 attribute_mappings:
-# TODO: add end_time
-- name: 'start_time'
-  description: 'Start Time'
+  # TODO: add end_time
+  - name: "start_time"
+    description: "Start Time"
 place_holder_event: true
 ---
-data_type: 'linux:dpkg_log:entry'
+data_type: "linux:dpkg_log:entry"
 attribute_mappings:
-- name: 'added_time'
-  description: 'Added Time'
+  - name: "added_time"
+    description: "Added Time"
 place_holder_event: true
 ---
-data_type: 'linux:locate_database:entry'
+data_type: "linux:locate_database:entry"
 attribute_mappings:
-- name: 'written_time'
-  description: 'Content Modification Time'
+  - name: "written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'linux:popularity_contest_log:entry'
+data_type: "linux:popularity_contest_log:entry"
 attribute_mappings:
-- name: 'access_time'
-  description: 'Last Access Time'
-- name: 'change_time'
-  description: 'Metadata Modification Time'
+  - name: "access_time"
+    description: "Last Access Time"
+  - name: "change_time"
+    description: "Metadata Modification Time"
 place_holder_event: true
 ---
-data_type: 'linux:popularity_contest_log:session'
+data_type: "linux:popularity_contest_log:session"
 attribute_mappings:
-- name: 'end_time'
-  description: 'End Time'
-- name: 'start_time'
-  description: 'Start Time'
+  - name: "end_time"
+    description: "End Time"
+  - name: "start_time"
+    description: "Start Time"
 place_holder_event: true
 ---
-data_type: 'linux:utmp:event'
+data_type: "linux:utmp:event"
 attribute_mappings:
-- name: 'written_time'
-  description: 'Content Modification Time'
+  - name: "written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'mackeeper:cache'
+data_type: "mackeeper:cache"
 attribute_mappings:
-- name: 'added_time'
-  description: 'Added Time'
+  - name: "added_time"
+    description: "Added Time"
 place_holder_event: true
 ---
-data_type: 'macos:airport:entry'
+data_type: "macos:airport:entry"
 attribute_mappings:
-- name: 'last_connected_time'
-  description: 'Last Connection Time'
+  - name: "last_connected_time"
+    description: "Last Connection Time"
 place_holder_event: true
 ---
-data_type: 'macos:appfirewall_log:entry'
+data_type: "macos:appfirewall_log:entry"
 attribute_mappings:
-- name: 'added_time'
-  description: 'Added Time'
+  - name: "added_time"
+    description: "Added Time"
 place_holder_event: true
 ---
-data_type: 'macos:apple_account:entry'
+data_type: "macos:apple_account:entry"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
-- name: 'last_connected_time'
-  description: 'Connection Established'
-- name: 'validation_time'
-  description: 'Validation Time'
+  - name: "creation_time"
+    description: "Creation Time"
+  - name: "last_connected_time"
+    description: "Connection Established"
+  - name: "validation_time"
+    description: "Validation Time"
 place_holder_event: true
 ---
-data_type: 'macos:application_usage:entry'
+data_type: "macos:application_usage:entry"
 attribute_mappings:
-- name: 'last_used_time'
-  description: 'Last Used Time'
+  - name: "last_used_time"
+    description: "Last Used Time"
 place_holder_event: true
 ---
-data_type: 'macos:asl:entry'
+data_type: "macos:asl:entry"
 attribute_mappings:
-- name: 'written_time'
-  description: 'Content Modification Time'
+  - name: "written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'macos:asl:file'
+data_type: "macos:asl:file"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
+  - name: "creation_time"
+    description: "Creation Time"
 place_holder_event: true
 ---
-data_type: 'macos:unified_logging:event'
+data_type: "macos:unified_logging:event"
 attribute_mappings:
-- name: 'recorded_time'
-  description: 'Recorded Time'
+  - name: "recorded_time"
+    description: "Recorded Time"
 place_holder_event: true
 ---
-data_type: 'macos:background_items:entry'
+data_type: "macos:background_items:entry"
 attribute_mappings:
-- name: 'target_creation_time'
-  description: 'Target Creation Time'
-- name: 'volume_creation_time'
-  description: 'Volume Creation Time'
+  - name: "target_creation_time"
+    description: "Target Creation Time"
+  - name: "volume_creation_time"
+    description: "Volume Creation Time"
 place_holder_event: true
 ---
-data_type: 'macos:bluetooth:entry'
+data_type: "macos:bluetooth:entry"
 attribute_mappings:
-- name: 'inquiry_time'
-  description: 'Last Inquiry Update Time'
-- name: 'name_update_time'
-  description: 'Last Name Update Time'
-- name: 'services_update_time'
-  description: 'Last Services Update Time'
+  - name: "inquiry_time"
+    description: "Last Inquiry Update Time"
+  - name: "name_update_time"
+    description: "Last Name Update Time"
+  - name: "services_update_time"
+    description: "Last Services Update Time"
 place_holder_event: true
 ---
-data_type: 'macos:document_versions:file'
+data_type: "macos:document_versions:file"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
-- name: 'last_seen_time'
-  description: 'Last Seen Time'
+  - name: "creation_time"
+    description: "Creation Time"
+  - name: "last_seen_time"
+    description: "Last Seen Time"
 place_holder_event: true
 ---
-data_type: 'macos:fseventsd:record'
+data_type: "macos:fseventsd:record"
 attribute_mappings:
-- name: 'file_entry_modification_time'
-  description: 'File Last Modification Time'
+  - name: "file_entry_modification_time"
+    description: "File Last Modification Time"
 place_holder_event: true
 ---
-data_type: 'macos:install_history:entry'
+data_type: "macos:install_history:entry"
 attribute_mappings:
-- name: 'written_time'
-  description: 'Content Modification Time'
+  - name: "written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'macos:keychain:application'
+data_type: "macos:keychain:application"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
-- name: 'modification_time'
-  description: 'Content Modification Time'
+  - name: "creation_time"
+    description: "Creation Time"
+  - name: "modification_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'macos:keychain:internet'
+data_type: "macos:keychain:internet"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
-- name: 'modification_time'
-  description: 'Content Modification Time'
+  - name: "creation_time"
+    description: "Creation Time"
+  - name: "modification_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'macos:knowledgec:application'
+data_type: "macos:knowledgec:application"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
-- name: 'end_time'
-  description: 'End Time'
-- name: 'start_time'
-  description: 'Added Time'
+  - name: "creation_time"
+    description: "Creation Time"
+  - name: "end_time"
+    description: "End Time"
+  - name: "start_time"
+    description: "Added Time"
 place_holder_event: true
 ---
-data_type: 'macos:knowledgec:safari'
+data_type: "macos:knowledgec:safari"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
-- name: 'end_time'
-  description: 'End Time'
-- name: 'start_time'
-  description: 'Added Time'
+  - name: "creation_time"
+    description: "Creation Time"
+  - name: "end_time"
+    description: "End Time"
+  - name: "start_time"
+    description: "Added Time"
 place_holder_event: true
 ---
-data_type: 'macos:launchd:entry'
+data_type: "macos:launchd:entry"
 # Note that the Mac OS launchd entry has no date and time values.
 place_holder_event: true
 ---
-data_type: 'macos:launchd_log:entry'
+data_type: "macos:launchd_log:entry"
 attribute_mappings:
-- name: 'written_time'
-  description: 'Content Modification Time'
+  - name: "written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'macos:login_items:entry'
+data_type: "macos:login_items:entry"
 attribute_mappings:
-- name: 'target_creation_time'
-  description: 'Target Creation Time'
-- name: 'volume_creation_time'
-  description: 'Volume Creation Time'
+  - name: "target_creation_time"
+    description: "Target Creation Time"
+  - name: "volume_creation_time"
+    description: "Volume Creation Time"
 place_holder_event: true
 ---
-data_type: 'macos:login_window:entry'
+data_type: "macos:login_window:entry"
 # Note that the Mac OS login window entry has no date and time values.
 place_holder_event: true
 ---
-data_type: 'macos:login_window:managed_login_item'
+data_type: "macos:login_window:managed_login_item"
 # Note that the Mac OS login window managed login item has no date and time values.
 place_holder_event: true
 ---
-data_type: 'macos:lsquarantine:entry'
+data_type: "macos:lsquarantine:entry"
 attribute_mappings:
-- name: 'downloaded_time'
-  description: 'Downloaded Time'
+  - name: "downloaded_time"
+    description: "Downloaded Time"
 place_holder_event: true
 ---
-data_type: 'macos:notes:entry'
+data_type: "macos:notes:entry"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
-- name: 'modification_time'
-  description: 'Content Modification Time'
+  - name: "creation_time"
+    description: "Creation Time"
+  - name: "modification_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'macos:notification_center:entry'
+data_type: "macos:notification_center:entry"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
+  - name: "creation_time"
+    description: "Creation Time"
 place_holder_event: true
 ---
-data_type: 'macos:securityd_log:entry'
+data_type: "macos:securityd_log:entry"
 attribute_mappings:
-- name: 'added_time'
-  description: 'Added Time'
+  - name: "added_time"
+    description: "Added Time"
 place_holder_event: true
 ---
-data_type: 'macos:software_updata:entry'
+data_type: "macos:software_updata:entry"
 attribute_mappings:
-- name: 'full_update_time'
-  description: 'Full Update Time'
-- name: 'update_time'
-  description: 'Update Time'
+  - name: "full_update_time"
+    description: "Full Update Time"
+  - name: "update_time"
+    description: "Update Time"
 place_holder_event: true
 ---
-data_type: 'macos:startup_item:entry'
+data_type: "macos:startup_item:entry"
 # Note that the Mac OS startup item has no date and time values.
 place_holder_event: true
 ---
-data_type: 'macos:tcc_entry'
+data_type: "macos:tcc_entry"
 attribute_mappings:
-- name: 'modification_time'
-  description: 'Content Modification Time'
+  - name: "modification_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'macos:time_machine:backup'
+data_type: "macos:time_machine:backup"
 attribute_mappings:
-- name: 'snapshot_times'
-  description: 'Backup Snapshot Creation Time'
+  - name: "snapshot_times"
+    description: "Backup Snapshot Creation Time"
 place_holder_event: true
 ---
-data_type: 'macos:user:entry'
+data_type: "macos:user:entry"
 attribute_mappings:
-- name: 'last_login_attempt_time'
-  description: 'Last Login Attempt Time'
-- name: 'last_login_time'
-  description: 'Last Login Time'
-- name: 'last_password_set_time'
-  description: 'Last Password Set Time'
-- name: 'last_written_time'
-  description: 'Content Modification Time'
+  - name: "last_login_attempt_time"
+    description: "Last Login Attempt Time"
+  - name: "last_login_time"
+    description: "Last Login Time"
+  - name: "last_password_set_time"
+    description: "Last Password Set Time"
+  - name: "last_written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'macos:utmpx:entry'
+data_type: "macos:utmpx:entry"
 attribute_mappings:
-- name: 'written_time'
-  description: 'Content Modification Time'
+  - name: "written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'macos:wifi_log:entry'
+data_type: "macos:wifi_log:entry"
 attribute_mappings:
-- name: 'added_time'
-  description: 'Added Time'
+  - name: "added_time"
+    description: "Added Time"
 place_holder_event: true
 ---
-data_type: 'microsoft365:audit_log:entry'
+data_type: "microsoft365:audit_log:entry"
 attribute_mappings:
-- name: 'recorded_time'
-  description: 'Recorded Time'
+  - name: "recorded_time"
+    description: "Recorded Time"
 place_holder_event: true
 ---
-data_type: 'msie:webcache:container'
+data_type: "msie:webcache:container"
 attribute_mappings:
-- name: 'access_time'
-  description: 'Last Access Time'
-- name: 'creation_time'
-  description: 'Creation Time'
-- name: 'expiration_time'
-  description: 'Expiration Time'
-- name: 'modification_time'
-  description: 'Content Modification Time'
-- name: 'post_check_time'
-  description: 'Post Check Time'
-- name: 'synchronization_time'
-  description: 'Synchronization Time'
+  - name: "access_time"
+    description: "Last Access Time"
+  - name: "creation_time"
+    description: "Creation Time"
+  - name: "expiration_time"
+    description: "Expiration Time"
+  - name: "modification_time"
+    description: "Content Modification Time"
+  - name: "post_check_time"
+    description: "Post Check Time"
+  - name: "synchronization_time"
+    description: "Synchronization Time"
 place_holder_event: true
 ---
-data_type: 'msie:webcache:containers'
+data_type: "msie:webcache:containers"
 attribute_mappings:
-- name: 'access_time'
-  description: 'Last Access Time'
-- name: 'scavenge_time'
-  description: 'Last Scavenge Time'
+  - name: "access_time"
+    description: "Last Access Time"
+  - name: "scavenge_time"
+    description: "Last Scavenge Time"
 place_holder_event: true
 ---
-data_type: 'msie:webcache:leak_file'
+data_type: "msie:webcache:leak_file"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
+  - name: "creation_time"
+    description: "Creation Time"
 place_holder_event: true
 ---
-data_type: 'msie:webcache:partitions'
+data_type: "msie:webcache:partitions"
 attribute_mappings:
-- name: 'scavenge_time'
-  description: 'Last Scavenge Time'
+  - name: "scavenge_time"
+    description: "Last Scavenge Time"
 place_holder_event: false
 ---
-data_type: 'msie:webcache:cookie'
+data_type: "msie:webcache:cookie"
 attribute_mappings:
-- name: 'expiration_time'
-  description: 'Expiration Time'
-- name: 'modification_time'
-  description: 'Modification Time'
+  - name: "expiration_time"
+    description: "Expiration Time"
+  - name: "modification_time"
+    description: "Modification Time"
 place_holder_event: true
 ---
-data_type: 'msiecf:leak'
+data_type: "msiecf:leak"
 place_holder_event: true
 ---
-data_type: 'msiecf:redirected'
+data_type: "msiecf:redirected"
 place_holder_event: true
 ---
-data_type: 'msiecf:url'
+data_type: "msiecf:url"
 attribute_mappings:
-- name: 'access_time'
-  description: 'Last Access Time'
-- name: 'creation_time'
-  description: 'Creation Time'
-- name: 'expiration_time'
-  description: 'Expiration Time'
-- name: 'modification_time'
-  description: 'Content Modification Time'
-- name: 'last_visited_time'
-  description: 'Last Visited Time'
-- name: 'primary_time'
-  description: 'Unknown Time'
-- name: 'secondary_time'
-  description: 'Unknown Time'
-- name: 'synchronization_time'
-  description: 'Synchronization Time'
+  - name: "access_time"
+    description: "Last Access Time"
+  - name: "creation_time"
+    description: "Creation Time"
+  - name: "expiration_time"
+    description: "Expiration Time"
+  - name: "modification_time"
+    description: "Content Modification Time"
+  - name: "last_visited_time"
+    description: "Last Visited Time"
+  - name: "primary_time"
+    description: "Unknown Time"
+  - name: "secondary_time"
+    description: "Unknown Time"
+  - name: "synchronization_time"
+    description: "Synchronization Time"
 place_holder_event: true
 ---
-data_type: 'networkminer:fileinfos:file'
+data_type: "networkminer:fileinfos:file"
 attribute_mappings:
-- name: 'written_time'
-  description: 'Content Modification Time'
+  - name: "written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'olecf:dest_list:entry'
+data_type: "olecf:dest_list:entry"
 attribute_mappings:
-- name: 'modification_time'
-  description: 'Content Modification Time'
+  - name: "modification_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'olecf:document_summary_info'
+data_type: "olecf:document_summary_info"
 attribute_mappings:
-- name: 'item_creation_time'
-  description: 'Item Creation Time'
-- name: 'item_modification_time'
-  description: 'Item Modification Time'
+  - name: "item_creation_time"
+    description: "Item Creation Time"
+  - name: "item_modification_time"
+    description: "Item Modification Time"
 place_holder_event: true
 ---
-data_type: 'olecf:item'
+data_type: "olecf:item"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
-- name: 'modification_time'
-  description: 'Content Modification Time'
+  - name: "creation_time"
+    description: "Creation Time"
+  - name: "modification_time"
+    description: "Content Modification Time"
 place_holder_event: false
 ---
-data_type: 'olecf:summary_info'
+data_type: "olecf:summary_info"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Document Creation Time'
-- name: 'item_creation_time'
-  description: 'Item Creation Time'
-- name: 'item_modification_time'
-  description: 'Item Modification Time'
-- name: 'last_printed_time'
-  description: 'Document Last Printed Time'
-- name: 'last_save_time'
-  description: 'Document Last Save Time'
+  - name: "creation_time"
+    description: "Document Creation Time"
+  - name: "item_creation_time"
+    description: "Item Creation Time"
+  - name: "item_modification_time"
+    description: "Item Modification Time"
+  - name: "last_printed_time"
+    description: "Document Last Printed Time"
+  - name: "last_save_time"
+    description: "Document Last Save Time"
 place_holder_event: true
 ---
-data_type: 'openxml:metadata'
+data_type: "openxml:metadata"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
-- name: 'last_printed_time'
-  description: 'Last Printed Time'
-- name: 'modification_time'
-  description: 'Content Modification Time'
+  - name: "creation_time"
+    description: "Creation Time"
+  - name: "last_printed_time"
+    description: "Last Printed Time"
+  - name: "modification_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'opera:history:entry'
+data_type: "opera:history:entry"
 attribute_mappings:
-- name: 'last_visited_time'
-  description: 'Last Visited Time'
+  - name: "last_visited_time"
+    description: "Last Visited Time"
 place_holder_event: true
 ---
-data_type: 'opera:history:typed_entry'
+data_type: "opera:history:typed_entry"
 attribute_mappings:
-- name: 'last_typed_time'
-  description: 'Last Typed Time'
+  - name: "last_typed_time"
+    description: "Last Typed Time"
 place_holder_event: true
 ---
-data_type: 'p2p:bittorrent:transmission'
+data_type: "p2p:bittorrent:transmission"
 attribute_mappings:
-- name: 'added_time'
-  description: 'Added Time'
-- name: 'downloaded_time'
-  description: 'Downloaded Time'
-- name: 'last_activity_time'
-  description: 'Last Activity Time'
+  - name: "added_time"
+    description: "Added Time"
+  - name: "downloaded_time"
+    description: "Downloaded Time"
+  - name: "last_activity_time"
+    description: "Last Activity Time"
 place_holder_event: true
 ---
-data_type: 'p2p:bittorrent:utorrent'
+data_type: "p2p:bittorrent:utorrent"
 attribute_mappings:
-- name: 'added_time'
-  description: 'Added Time'
-- name: 'downloaded_time'
-  description: 'Downloaded Time'
-- name: 'modification_times'
-  description: 'Content Modification Time'
+  - name: "added_time"
+    description: "Added Time"
+  - name: "downloaded_time"
+    description: "Downloaded Time"
+  - name: "modification_times"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'pe_coff:dll_import'
+data_type: "pe_coff:dll_import"
 attribute_mappings:
-- name: 'modification_time'
-  description: 'Content Modification Time'
+  - name: "modification_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'pe_coff:file'
+data_type: "pe_coff:file"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
-- name: 'export_table_modification_time'
-  description: 'Content Modification Time'
-- name: 'load_configuration_table_modification_time'
-  description: 'Content Modification Time'
+  - name: "creation_time"
+    description: "Creation Time"
+  - name: "export_table_modification_time"
+    description: "Content Modification Time"
+  - name: "load_configuration_table_modification_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'pe_coff:resource'
+data_type: "pe_coff:resource"
 attribute_mappings:
-- name: 'modification_time'
-  description: 'Content Modification Time'
+  - name: "modification_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'plist:key'
+data_type: "plist:key"
 attribute_mappings:
-- name: 'written_time'
-  description: 'Content Modification Time'
+  - name: "written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'pls_recall:entry'
+data_type: "pls_recall:entry"
 attribute_mappings:
-- name: 'written_time'
-  description: 'Content Modification Time'
+  - name: "written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'postgresql:application_log:entry'
+data_type: "postgresql:application_log:entry"
 attribute_mappings:
-- name: 'recorded_time'
-  description: 'Recorded Time'
+  - name: "recorded_time"
+    description: "Recorded Time"
 place_holder_event: true
 ---
-data_type: 'powershell:transcript_log:entry'
+data_type: "powershell:transcript_log:entry"
 attribute_mappings:
-- name: 'start_time'
-  description: 'Start Time'
+  - name: "start_time"
+    description: "Start Time"
 place_holder_event: true
 ---
-data_type: 'safari:cookie:entry'
+data_type: "safari:cookie:entry"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
-- name: 'expiration_time'
-  description: 'Expiration Time'
+  - name: "creation_time"
+    description: "Creation Time"
+  - name: "expiration_time"
+    description: "Expiration Time"
 place_holder_event: true
 ---
-data_type: 'safari:downloads:entry'
+data_type: "safari:downloads:entry"
 attribute_mappings:
-- name: 'end_time'
-  description: 'End Time'
-- name: 'start_time'
-  description: 'Start Time'
+  - name: "end_time"
+    description: "End Time"
+  - name: "start_time"
+    description: "Start Time"
 place_holder_event: true
 ---
-data_type: 'safari:history:visit'
+data_type: "safari:history:visit"
 attribute_mappings:
-- name: 'last_visited_time'
-  description: 'Last Visited Time'
+  - name: "last_visited_time"
+    description: "Last Visited Time"
 place_holder_event: true
 ---
-data_type: 'safari:history:visit_sqlite'
+data_type: "safari:history:visit_sqlite"
 attribute_mappings:
-- name: 'last_visited_time'
-  description: 'Last Visited Time'
+  - name: "last_visited_time"
+    description: "Last Visited Time"
 place_holder_event: true
 ---
-data_type: 'santa:diskmount'
+data_type: "santa:diskmount"
 attribute_mappings:
-- name: 'appearance_time'
-  description: 'First Connection Time'
-- name: 'last_written_time'
-  description: 'Content Modification Time'
+  - name: "appearance_time"
+    description: "First Connection Time"
+  - name: "last_written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'santa:execution'
+data_type: "santa:execution"
 attribute_mappings:
-- name: 'last_run_time'
-  description: 'Last Time Executed'
+  - name: "last_run_time"
+    description: "Last Time Executed"
 place_holder_event: false
 ---
-data_type: 'santa:file_system_event'
+data_type: "santa:file_system_event"
 attribute_mappings:
-- name: 'last_written_time'
-  description: 'Content Modification Time'
+  - name: "last_written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'santa:process_exit'
+data_type: "santa:process_exit"
 attribute_mappings:
-- name: 'exit_time'
-  description: 'Exit Time'
+  - name: "exit_time"
+    description: "Exit Time"
 place_holder_event: false
 ---
-data_type: 'sccm_log:entry'
+data_type: "sccm_log:entry"
 attribute_mappings:
-- name: 'written_time'
-  description: 'Content Modification Time'
+  - name: "written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'selinux:line'
+data_type: "selinux:line"
 attribute_mappings:
-- name: 'last_written_time'
-  description: 'Content Modification Time'
+  - name: "last_written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'setupapi:log:line'
+data_type: "setupapi:log:line"
 attribute_mappings:
-- name: 'end_time'
-  description: 'End Time'
-- name: 'start_time'
-  description: 'Added Time'
+  - name: "end_time"
+    description: "End Time"
+  - name: "start_time"
+    description: "Added Time"
 place_holder_event: true
 ---
-data_type: 'shell:zsh:history'
+data_type: "shell:zsh:history"
 attribute_mappings:
-- name: 'last_written_time'
-  description: 'Content Modification Time'
+  - name: "last_written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'skydrive:log:entry'
+data_type: "skydrive:log:entry"
 attribute_mappings:
-- name: 'added_time'
-  description: 'Added Time'
+  - name: "added_time"
+    description: "Added Time"
 place_holder_event: true
 ---
-data_type: 'skype:event:account'
+data_type: "skype:event:account"
 attribute_mappings:
-- name: 'authentication_request_time'
-  description: 'Authentication Request Time'
-- name: 'authentication_request_sent_time'
-  description: 'Authentication Request Sent Time'
-- name: 'last_online_time'
-  description: 'Last Online Time'
-- name: 'last_used_time'
-  description: 'Last Used Time'
-- name: 'mood_change_time'
-  description: 'Mood Change Time'
-- name: 'profile_change_time'
-  description: 'Profile Change Time'
+  - name: "authentication_request_time"
+    description: "Authentication Request Time"
+  - name: "authentication_request_sent_time"
+    description: "Authentication Request Sent Time"
+  - name: "last_online_time"
+    description: "Last Online Time"
+  - name: "last_used_time"
+    description: "Last Used Time"
+  - name: "mood_change_time"
+    description: "Mood Change Time"
+  - name: "profile_change_time"
+    description: "Profile Change Time"
 place_holder_event: true
 ---
-data_type: 'skype:event:call'
+data_type: "skype:event:call"
 attribute_mappings:
-- name: 'attempt_time'
-  description: 'Attempt Time'
-- name: 'end_time'
-  description: 'End Time'
-- name: 'start_time'
-  description: 'Start Time'
+  - name: "attempt_time"
+    description: "Attempt Time"
+  - name: "end_time"
+    description: "End Time"
+  - name: "start_time"
+    description: "Start Time"
 place_holder_event: true
 ---
-data_type: 'skype:event:chat'
+data_type: "skype:event:chat"
 attribute_mappings:
-- name: 'recorded_time'
-  description: 'Recorded Time'
+  - name: "recorded_time"
+    description: "Recorded Time"
 place_holder_event: true
 ---
-data_type: 'skype:event:sms'
+data_type: "skype:event:sms"
 attribute_mappings:
-- name: 'recorded_time'
-  description: 'Recorded Time'
+  - name: "recorded_time"
+    description: "Recorded Time"
 place_holder_event: true
 ---
-data_type: 'skype:event:transferfile'
+data_type: "skype:event:transferfile"
 attribute_mappings:
-- name: 'accept_time'
-  description: 'Accept Time'
-- name: 'end_time'
-  description: 'End Time'
-- name: 'start_time'
-  description: 'Start Time'
+  - name: "accept_time"
+    description: "Accept Time"
+  - name: "end_time"
+    description: "End Time"
+  - name: "start_time"
+    description: "Start Time"
 place_holder_event: true
 ---
-data_type: 'snort:fastlog:alert'
+data_type: "snort:fastlog:alert"
 attribute_mappings:
-- name: 'last_written_time'
-  description: 'Content Modification Time'
+  - name: "last_written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'sophos:av:log'
+data_type: "sophos:av:log"
 attribute_mappings:
-- name: 'added_time'
-  description: 'Added Time'
+  - name: "added_time"
+    description: "Added Time"
 place_holder_event: true
 ---
-data_type: 'spotlight:metadata_item'
+data_type: "spotlight:metadata_item"
 attribute_mappings:
-- name: 'added_time'
-  description: 'Added Time'
-- name: 'attribute_change_time'
-  description: 'Attribute Change Time'
-- name: 'content_creation_time'
-  description: 'Content Creation Time'
-- name: 'content_modification_time'
-  description: 'Content Modification Time'
-- name: 'creation_time'
-  description: 'Creation Time'
-- name: 'downloaded_time'
-  description: 'Downloaded Time'
-- name: 'modification_time'
-  description: 'Modification Time'
-- name: 'purchase_time'
-  description: 'AppStore Purchase Time'
-- name: 'snapshot_times'
-  description: 'Backup Snapshot Creation Time'
-- name: 'update_time'
-  description: 'Update Time'
-- name: 'used_times'
-  description: 'Used Time'
+  - name: "added_time"
+    description: "Added Time"
+  - name: "attribute_change_time"
+    description: "Attribute Change Time"
+  - name: "content_creation_time"
+    description: "Content Creation Time"
+  - name: "content_modification_time"
+    description: "Content Modification Time"
+  - name: "creation_time"
+    description: "Creation Time"
+  - name: "downloaded_time"
+    description: "Downloaded Time"
+  - name: "modification_time"
+    description: "Modification Time"
+  - name: "purchase_time"
+    description: "AppStore Purchase Time"
+  - name: "snapshot_times"
+    description: "Backup Snapshot Creation Time"
+  - name: "update_time"
+    description: "Update Time"
+  - name: "used_times"
+    description: "Used Time"
 place_holder_event: true
 ---
-data_type: 'spotlight_searched_terms:entry'
+data_type: "spotlight_searched_terms:entry"
 attribute_mappings:
-- name: 'last_used_time'
-  description: 'Last Used Time'
+  - name: "last_used_time"
+    description: "Last Used Time"
 place_holder_event: true
 ---
-data_type: 'spotlight_volume_configuration:store'
+data_type: "spotlight_volume_configuration:store"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
+  - name: "creation_time"
+    description: "Creation Time"
 place_holder_event: true
 ---
-data_type: 'syslog:cron:task_run'
+data_type: "syslog:cron:task_run"
 attribute_mappings:
-- name: 'last_written_time'
-  description: 'Content Modification Time'
+  - name: "last_written_time"
+    description: "Content Modification Time"
 place_holder_event: false
 ---
-data_type: 'syslog:line'
+data_type: "syslog:line"
 attribute_mappings:
-- name: 'last_written_time'
-  description: 'Content Modification Time'
+  - name: "last_written_time"
+    description: "Content Modification Time"
 place_holder_event: false
 ---
-data_type: 'syslog:ssh:failed_connection'
+data_type: "syslog:ssh:failed_connection"
 attribute_mappings:
-- name: 'last_written_time'
-  description: 'Content Modification Time'
+  - name: "last_written_time"
+    description: "Content Modification Time"
 place_holder_event: false
 ---
-data_type: 'syslog:ssh:login'
+data_type: "syslog:ssh:login"
 attribute_mappings:
-- name: 'last_written_time'
-  description: 'Content Modification Time'
+  - name: "last_written_time"
+    description: "Content Modification Time"
 place_holder_event: false
 ---
-data_type: 'syslog:ssh:opened_connection'
+data_type: "syslog:ssh:opened_connection"
 attribute_mappings:
-- name: 'last_written_time'
-  description: 'Content Modification Time'
+  - name: "last_written_time"
+    description: "Content Modification Time"
 place_holder_event: false
 ---
-data_type: 'systemd:journal'
+data_type: "systemd:journal"
 attribute_mappings:
-- name: 'written_time'
-  description: 'Content Modification Time'
+  - name: "written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
 # TODO: prefix data_type with 'windows:registry:'.
-data_type: 'task_scheduler:task_cache:entry'
+data_type: "task_scheduler:task_cache:entry"
 attribute_mappings:
-- name: 'last_registered_time'
-  description: 'Last registered Time'
-- name: 'last_written_time'
-  description: 'Content Modification Time'
-- name: 'launch_time'
-  description: 'Launch Time'
-- name: 'unknown_time'
-  description: 'Unknown Time'
+  - name: "last_registered_time"
+    description: "Last registered Time"
+  - name: "last_written_time"
+    description: "Content Modification Time"
+  - name: "launch_time"
+    description: "Launch Time"
+  - name: "unknown_time"
+    description: "Unknown Time"
 place_holder_event: true
 ---
-data_type: 'teamviewer:application_log:entry'
+data_type: "teamviewer:application_log:entry"
 attribute_mappings:
-- name: 'recorded_time'
-  description: 'Recorded Time'
+  - name: "recorded_time"
+    description: "Recorded Time"
 place_holder_event: true
 ---
-data_type: 'teamviewer:connections_incoming:entry'
+data_type: "teamviewer:connections_incoming:entry"
 attribute_mappings:
-- name: 'end_time'
-  description: 'End Time'
-- name: 'start_time'
-  description: 'Start Time'
+  - name: "end_time"
+    description: "End Time"
+  - name: "start_time"
+    description: "Start Time"
 place_holder_event: true
 ---
-data_type: 'teamviewer:connections_outgoing:entry'
+data_type: "teamviewer:connections_outgoing:entry"
 attribute_mappings:
-- name: 'end_time'
-  description: 'End Time'
-- name: 'start_time'
-  description: 'Start Time'
+  - name: "end_time"
+    description: "End Time"
+  - name: "start_time"
+    description: "Start Time"
 place_holder_event: true
 ---
-data_type: 'viminfo:history'
+data_type: "viminfo:history"
 attribute_mappings:
-- name: 'recorded_time'
-  description: 'Recorded Time'
+  - name: "recorded_time"
+    description: "Recorded Time"
 place_holder_event: true
 ---
-data_type: 'vsftpd:log'
+data_type: "vsftpd:log"
 attribute_mappings:
-- name: 'added_time'
-  description: 'Added Time'
+  - name: "added_time"
+    description: "Added Time"
 place_holder_event: true
 ---
-data_type: 'windows:diagnosis:eventtranscript'
+data_type: "windows:diagnosis:eventtranscript"
 attribute_mappings:
-- name: 'recorded_time'
-  description: 'Recorded Time'
+  - name: "recorded_time"
+    description: "Recorded Time"
 place_holder_event: true
 ---
-data_type: 'wincc:simatic_s7:entry'
+data_type: "wincc:simatic_s7:entry"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
+  - name: "creation_time"
+    description: "Creation Time"
 place_holder_event: true
 ---
-data_type: 'wincc:sys_log:entry'
+data_type: "wincc:sys_log:entry"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
+  - name: "creation_time"
+    description: "Creation Time"
 place_holder_event: true
 ---
-data_type: 'windows:distributed_link_tracking:creation'
+data_type: "windows:distributed_link_tracking:creation"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
+  - name: "creation_time"
+    description: "Creation Time"
 place_holder_event: true
 ---
-data_type: 'windows:firewall_log:entry'
+data_type: "windows:firewall_log:entry"
 attribute_mappings:
-- name: 'last_written_time'
-  description: 'Content Modification Time'
+  - name: "last_written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'windows:evt:record'
+data_type: "windows:evt:record"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
-- name: 'written_time'
-  description: 'Content Modification Time'
+  - name: "creation_time"
+    description: "Creation Time"
+  - name: "written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'windows:evtx:record'
+data_type: "windows:evtx:record"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
-- name: 'written_time'
-  description: 'Content Modification Time'
+  - name: "creation_time"
+    description: "Creation Time"
+  - name: "written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'windows:file_history:namespace'
+data_type: "windows:file_history:namespace"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
-- name: 'modification_time'
-  description: 'Content Modification Time'
+  - name: "creation_time"
+    description: "Creation Time"
+  - name: "modification_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'windows:lnk:link'
+data_type: "windows:lnk:link"
 attribute_mappings:
-- name: 'access_time'
-  description: 'Last Access Time'
-- name: 'creation_time'
-  description: 'Creation Time'
-- name: 'modification_time'
-  description: 'Content Modification Time'
+  - name: "access_time"
+    description: "Last Access Time"
+  - name: "creation_time"
+    description: "Creation Time"
+  - name: "modification_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'windows:metadata:deleted_item'
+data_type: "windows:metadata:deleted_item"
 attribute_mappings:
-- name: 'deletion_time'
-  description: 'Content Deletion Time'
+  - name: "deletion_time"
+    description: "Content Deletion Time"
 place_holder_event: true
 ---
-data_type: 'windows:onedrive:log'
+data_type: "windows:onedrive:log"
 attribute_mappings:
-- name: 'recorded_time'
-  description: 'Recorded Time'
+  - name: "recorded_time"
+    description: "Recorded Time"
 place_holder_event: false
 ---
-data_type: 'windows:pca_log:entry'
+data_type: "windows:pca_log:entry"
 attribute_mappings:
-- name: 'last_execution_time'
-  description: 'Last Time Executed'
+  - name: "last_execution_time"
+    description: "Last Time Executed"
 place_holder_event: false
 ---
-data_type: 'windows:prefetch:execution'
+data_type: "windows:prefetch:execution"
 attribute_mappings:
-- name: 'last_run_time'
-  description: 'Last Time Executed'
-- name: 'previous_run_times'
-  description: 'Previous Last Time Executed'
+  - name: "last_run_time"
+    description: "Last Time Executed"
+  - name: "previous_run_times"
+    description: "Previous Last Time Executed"
 place_holder_event: true
 ---
-data_type: 'windows:push_notification:notification'
+data_type: "windows:push_notification:notification"
 attribute_mappings:
-- name: 'arrival_time'
-  description: 'Arrival Time'
-- name: 'expiration_time'
-  description: 'Expiration Time'
+  - name: "arrival_time"
+    description: "Arrival Time"
+  - name: "expiration_time"
+    description: "Expiration Time"
 place_holder_event: true
 ---
-data_type: 'windows:push_notification:notification_handler'
+data_type: "windows:push_notification:notification_handler"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
-- name: 'modification_time'
-  description: 'Modification Time'
+  - name: "creation_time"
+    description: "Creation Time"
+  - name: "modification_time"
+    description: "Modification Time"
 place_holder_event: true
 ---
-data_type: 'windows:registry:amcache'
+data_type: "windows:registry:amcache"
 attribute_mappings:
-- name: 'file_creation_time'
-  # TODO: rename to 'File Creation Time'
-  description: 'Creation Time'
-- name: 'file_modification_time'
-  # TODO: rename to 'File Last Modification Time'
-  description: 'Content Modification Time'
-- name: 'installation_time'
-  description: 'Installation Time'
-- name: 'last_written_time'
-  description: 'Content Modification Time'
-- name: 'link_time'
-  description: 'Link Time'
-- name: 'msi_installation_time'
-  description: 'Installation Time'
+  - name: "file_creation_time"
+    # TODO: rename to 'File Creation Time'
+    description: "Creation Time"
+  - name: "file_modification_time"
+    # TODO: rename to 'File Last Modification Time'
+    description: "Content Modification Time"
+  - name: "installation_time"
+    description: "Installation Time"
+  - name: "last_written_time"
+    description: "Content Modification Time"
+  - name: "link_time"
+    description: "Link Time"
+  - name: "msi_installation_time"
+    description: "Installation Time"
 place_holder_event: false
 ---
-data_type: 'windows:registry:amcache:programs'
+data_type: "windows:registry:amcache:programs"
 attribute_mappings:
-- name: 'installation_time'
-  description: 'Installation Time'
+  - name: "installation_time"
+    description: "Installation Time"
 place_holder_event: false
 ---
-data_type: 'windows:registry:appcompatcache'
+data_type: "windows:registry:appcompatcache"
 attribute_mappings:
-- name: 'file_entry_modification_time'
-  description: 'File Last Modification Time'
-- name: 'last_update_time'
-  description: 'Last Time Executed'
+  - name: "file_entry_modification_time"
+    description: "File Last Modification Time"
+  - name: "last_update_time"
+    description: "Last Time Executed"
 place_holder_event: true
 ---
-data_type: 'windows:registry:bagmru'
+data_type: "windows:registry:bagmru"
 attribute_mappings:
-- name: 'last_written_time'
-  description: 'Content Modification Time'
+  - name: "last_written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'windows:registry:bam'
+data_type: "windows:registry:bam"
 attribute_mappings:
-- name: 'last_run_time'
-  description: 'Last Time Executed'
+  - name: "last_run_time"
+    description: "Last Time Executed"
 place_holder_event: false
 ---
-data_type: 'windows:registry:boot_execute'
+data_type: "windows:registry:boot_execute"
 attribute_mappings:
-- name: 'last_written_time'
-  description: 'Content Modification Time'
+  - name: "last_written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'windows:registry:boot_verification'
+data_type: "windows:registry:boot_verification"
 attribute_mappings:
-- name: 'last_written_time'
-  description: 'Content Modification Time'
+  - name: "last_written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'windows:registry:explorer:programcache'
+data_type: "windows:registry:explorer:programcache"
 attribute_mappings:
-- name: 'last_written_time'
-  description: 'Content Modification Time'
+  - name: "last_written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'windows:registry:key_value'
+data_type: "windows:registry:key_value"
 attribute_mappings:
-- name: 'last_written_time'
-  description: 'Content Modification Time'
+  - name: "last_written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'windows:registry:installation'
+data_type: "windows:registry:installation"
 attribute_mappings:
-- name: 'installation_time'
-  description: 'Installation Time'
+  - name: "installation_time"
+    description: "Installation Time"
 place_holder_event: false
 ---
-data_type: 'windows:registry:mount_points2'
+data_type: "windows:registry:mount_points2"
 attribute_mappings:
-- name: 'last_written_time'
-  description: 'Content Modification Time'
+  - name: "last_written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'windows:registry:motherboard_info'
+data_type: "windows:registry:motherboard_info"
 attribute_mappings:
-- name: 'last_written_time'
-  description: 'Content Modification Time'
+  - name: "last_written_time"
+    description: "Content Modification Time"
 place_holder_event: false
 ---
-data_type: 'windows:registry:mrulist'
+data_type: "windows:registry:mrulist"
 attribute_mappings:
-- name: 'last_written_time'
-  description: 'Content Modification Time'
+  - name: "last_written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'windows:registry:mrulistex'
+data_type: "windows:registry:mrulistex"
 attribute_mappings:
-- name: 'last_written_time'
-  description: 'Content Modification Time'
+  - name: "last_written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'windows:registry:msie_zone_settings'
+data_type: "windows:registry:msie_zone_settings"
 attribute_mappings:
-- name: 'last_written_time'
-  description: 'Content Modification Time'
+  - name: "last_written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'windows:registry:mstsc:connection'
+data_type: "windows:registry:mstsc:connection"
 attribute_mappings:
-- name: 'last_written_time'
-  description: 'Content Modification Time'
+  - name: "last_written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'windows:registry:mstsc:mru'
+data_type: "windows:registry:mstsc:mru"
 attribute_mappings:
-- name: 'last_written_time'
-  description: 'Content Modification Time'
+  - name: "last_written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'windows:registry:network'
+data_type: "windows:registry:network"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
-- name: 'last_connected_time'
-  description: 'Last Connection Time'
+  - name: "creation_time"
+    description: "Creation Time"
+  - name: "last_connected_time"
+    description: "Last Connection Time"
 place_holder_event: true
 ---
-data_type: 'windows:registry:network_drive'
+data_type: "windows:registry:network_drive"
 attribute_mappings:
-- name: 'last_written_time'
-  description: 'Content Modification Time'
+  - name: "last_written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'windows:registry:office_mru'
+data_type: "windows:registry:office_mru"
 attribute_mappings:
-- name: 'last_written_time'
-  description: 'Content Modification Time'
+  - name: "last_written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'windows:registry:office_mru_list'
+data_type: "windows:registry:office_mru_list"
 attribute_mappings:
-- name: 'last_written_time'
-  description: 'Content Modification Time'
+  - name: "last_written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'windows:registry:outlook_search_mru'
+data_type: "windows:registry:outlook_search_mru"
 attribute_mappings:
-- name: 'last_written_time'
-  description: 'Content Modification Time'
+  - name: "last_written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'windows:registry:run'
+data_type: "windows:registry:run"
 attribute_mappings:
-- name: 'last_written_time'
-  description: 'Content Modification Time'
+  - name: "last_written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'windows:registry:sam_users'
+data_type: "windows:registry:sam_users"
 attribute_mappings:
-- name: 'last_login_time'
-  description: 'Last Login Time'
-- name: 'last_password_set_time'
-  description: 'Last Password Set Time'
-- name: 'last_written_time'
-  description: 'Content Modification Time'
+  - name: "last_login_time"
+    description: "Last Login Time"
+  - name: "last_password_set_time"
+    description: "Last Password Set Time"
+  - name: "last_written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'windows:registry:service'
+data_type: "windows:registry:service"
 attribute_mappings:
-- name: 'last_written_time'
-  description: 'Content Modification Time'
+  - name: "last_written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'windows:registry:shutdown'
+data_type: "windows:registry:shutdown"
 attribute_mappings:
-- name: 'last_shutdown_time'
-  description: 'Last Shutdown Time'
+  - name: "last_shutdown_time"
+    description: "Last Shutdown Time"
 place_holder_event: false
 ---
-data_type: 'windows:registry:timezone'
+data_type: "windows:registry:timezone"
 attribute_mappings:
-- name: 'last_written_time'
-  description: 'Content Modification Time'
+  - name: "last_written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'windows:registry:typedurls'
+data_type: "windows:registry:typedurls"
 attribute_mappings:
-- name: 'last_written_time'
-  description: 'Content Modification Time'
+  - name: "last_written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'windows:registry:usb'
+data_type: "windows:registry:usb"
 attribute_mappings:
-- name: 'last_written_time'
-  # TODO: change description to correspond to meaning of date time value.
-  description: 'Last Connection Time'
+  - name: "last_written_time"
+    # TODO: change description to correspond to meaning of date time value.
+    description: "Last Connection Time"
 place_holder_event: true
 ---
-data_type: 'windows:registry:usbstor:instance'
+data_type: "windows:registry:usbstor:instance"
 attribute_mappings:
-- name: 'device_last_arrival_time'
-  description: 'Last Connection Time'
-- name: 'device_last_removal_time'
-  description: 'Last Disconnect Time'
-- name: 'driver_first_installation_time'
-  description: 'Installation Time'
-- name: 'driver_last_installation_time'
-  description: 'Installation Time'
-- name: 'firmware_time'
-  description: 'Compile Time'
+  - name: "device_last_arrival_time"
+    description: "Last Connection Time"
+  - name: "device_last_removal_time"
+    description: "Last Disconnect Time"
+  - name: "driver_first_installation_time"
+    description: "Installation Time"
+  - name: "driver_last_installation_time"
+    description: "Installation Time"
+  - name: "firmware_time"
+    description: "Compile Time"
 place_holder_event: true
 ---
-data_type: 'windows:registry:userassist'
+data_type: "windows:registry:userassist"
 attribute_mappings:
-- name: 'last_execution_time'
-  description: 'Last Time Executed'
+  - name: "last_execution_time"
+    description: "Last Time Executed"
 place_holder_event: true
 ---
-data_type: 'windows:registry:winlogon'
+data_type: "windows:registry:winlogon"
 attribute_mappings:
-- name: 'last_written_time'
-  description: 'Content Modification Time'
+  - name: "last_written_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'windows:restore_point:info'
+data_type: "windows:restore_point:info"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
+  - name: "creation_time"
+    description: "Creation Time"
 place_holder_event: true
 ---
-data_type: 'windows:shell_item:file_entry'
+data_type: "windows:shell_item:file_entry"
 attribute_mappings:
-- name: 'access_time'
-  description: 'Last Access Time'
-- name: 'creation_time'
-  description: 'Creation Time'
-- name: 'modification_time'
-  description: 'Content Modification Time'
+  - name: "access_time"
+    description: "Last Access Time"
+  - name: "creation_time"
+    description: "Creation Time"
+  - name: "modification_time"
+    description: "Content Modification Time"
 place_holder_event: true
 ---
-data_type: 'windows:srum:application_usage'
+data_type: "windows:srum:application_usage"
 attribute_mappings:
-- name: 'last_connected_time'
-  description: 'Last Connection Time'
-- name: 'recorded_time'
-  description: 'Recorded Time'
+  - name: "last_connected_time"
+    description: "Last Connection Time"
+  - name: "recorded_time"
+    description: "Recorded Time"
 place_holder_event: true
 ---
-data_type: 'windows:srum:network_connectivity'
+data_type: "windows:srum:network_connectivity"
 attribute_mappings:
-- name: 'last_connected_time'
-  description: 'Last Connection Time'
-- name: 'recorded_time'
-  description: 'Recorded Time'
+  - name: "last_connected_time"
+    description: "Last Connection Time"
+  - name: "recorded_time"
+    description: "Recorded Time"
 place_holder_event: true
 ---
-data_type: 'windows:srum:network_usage'
+data_type: "windows:srum:network_usage"
 attribute_mappings:
-- name: 'last_connected_time'
-  description: 'Last Connection Time'
-- name: 'recorded_time'
-  description: 'Recorded Time'
+  - name: "last_connected_time"
+    description: "Last Connection Time"
+  - name: "recorded_time"
+    description: "Recorded Time"
 place_holder_event: true
 ---
-data_type: 'windows:tasks:job'
+data_type: "windows:tasks:job"
 attribute_mappings:
-- name: 'last_run_time'
-  description: 'Last Time Executed'
+  - name: "last_run_time"
+    description: "Last Time Executed"
 place_holder_event: true
 ---
-data_type: 'windows:tasks:trigger'
+data_type: "windows:tasks:trigger"
 attribute_mappings:
-- name: 'end_time'
-  description: 'Scheduled to end'
-- name: 'start_time'
-  description: 'Scheduled to start'
+  - name: "end_time"
+    description: "Scheduled to end"
+  - name: "start_time"
+    description: "Scheduled to start"
 place_holder_event: true
 ---
-data_type: 'windows:timeline:generic'
+data_type: "windows:timeline:generic"
 attribute_mappings:
-- name: 'start_time'
-  description: 'Start Time'
+  - name: "start_time"
+    description: "Start Time"
 place_holder_event: true
 ---
-data_type: 'windows:timeline:user_engaged'
+data_type: "windows:timeline:user_engaged"
 attribute_mappings:
-- name: 'start_time'
-  description: 'Start Time'
+  - name: "start_time"
+    description: "Start Time"
 place_holder_event: true
 ---
-data_type: 'windows:user_access_logging:clients'
+data_type: "windows:user_access_logging:clients"
 attribute_mappings:
-- name: 'access_time'
-  description: 'Last Access Time'
-- name: 'insert_time'
-  description: 'First Access Time'
+  - name: "access_time"
+    description: "Last Access Time"
+  - name: "insert_time"
+    description: "First Access Time"
 place_holder_event: true
 ---
-data_type: 'windows:user_access_logging:dns'
+data_type: "windows:user_access_logging:dns"
 attribute_mappings:
-- name: 'last_seen_time'
-  description: 'Last Seen Time'
+  - name: "last_seen_time"
+    description: "Last Seen Time"
 place_holder_event: true
 ---
-data_type: 'windows:user_access_logging:role_access'
+data_type: "windows:user_access_logging:role_access"
 attribute_mappings:
-- name: 'first_seen_time'
-  description: 'First Seen Time'
-- name: 'last_seen_time'
-  description: 'Last Seen Time'
+  - name: "first_seen_time"
+    description: "First Seen Time"
+  - name: "last_seen_time"
+    description: "Last Seen Time"
 place_holder_event: true
 ---
-data_type: 'windows:user_access_logging:system_identity'
+data_type: "windows:user_access_logging:system_identity"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
+  - name: "creation_time"
+    description: "Creation Time"
 place_holder_event: true
 ---
-data_type: 'windows:user_access_logging:virtual_machines'
+data_type: "windows:user_access_logging:virtual_machines"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
-- name: 'last_active_time'
-  description: 'Last Active Time'
+  - name: "creation_time"
+    description: "Creation Time"
+  - name: "last_active_time"
+    description: "Last Active Time"
 place_holder_event: true
 ---
-data_type: 'windows:volume:creation'
+data_type: "windows:volume:creation"
 attribute_mappings:
-- name: 'creation_time'
-  description: 'Creation Time'
+  - name: "creation_time"
+    description: "Creation Time"
 place_holder_event: true
 ---
 # TODO: prefix data_type with 'windows:registry:'.
-data_type: 'winrar:history'
+data_type: "winrar:history"
 attribute_mappings:
-- name: 'last_written_time'
-  description: 'Content Modification Time'
+  - name: "last_written_time"
+    description: "Content Modification Time"
 ---
-data_type: 'xchat:log:line'
+data_type: "xchat:log:line"
 attribute_mappings:
-- name: 'added_time'
-  description: 'Added Time'
+  - name: "added_time"
+    description: "Added Time"
 place_holder_event: true
 ---
-data_type: 'xchat:scrollback:line'
+data_type: "xchat:scrollback:line"
 attribute_mappings:
-- name: 'added_time'
-  description: 'Added Time'
+  - name: "added_time"
+    description: "Added Time"
 place_holder_event: true
 ---
-data_type: 'zeitgeist:activity'
+data_type: "zeitgeist:activity"
 attribute_mappings:
-- name: 'recorded_time'
-  description: 'Recorded Time'
+  - name: "recorded_time"
+    description: "Recorded Time"
 place_holder_event: true
