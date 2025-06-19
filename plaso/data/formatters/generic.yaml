@@ -208,6 +208,23 @@ short_message:
 short_source: 'DOCKER'
 source: 'Docker Layer'
 ---
+type: "conditional"
+data_type: "drone:flight:event"
+message:
+  - "Longitude: {longitude}"
+  - "Latitude: {latitude}"
+  - "Height: {height}m"
+  - "Distance: {distance}m"
+  - "Speed: {speed}m/s"
+short_message:
+  - "Flight at {timestamp}"
+  - "Longitude: {longitude}"
+  - "Latitude: {latitude}"
+  - "Distance: {distance}m"
+  - "Speed: {speed}m/s"
+short_source: "DJI"
+source: "DJI Flight Log"
+---
 type: 'conditional'
 data_type: 'dropbox:sync_history:entry'
 message:
