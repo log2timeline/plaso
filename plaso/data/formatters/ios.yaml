@@ -111,6 +111,22 @@ short_source: 'Kik iOS'
 source: 'Kik iOS messages'
 ---
 type: 'conditional'
+data_type: 'ios:instagram:thread'
+message:
+- 'Sender ID: {sender_pk}'
+- 'Username: {username}'
+- 'Message: {message}'
+- 'Video Chat ID: {video_chat_call_id}'
+- 'Video Chat Title: {video_chat_title}'
+- 'Shared Media ID: {shared_media_id}'
+- 'Shared Media URL: {shared_media_url}'
+short_message:
+- 'Username: {username}'
+- 'Message: {message}'
+short_source: 'Instagram iOS'
+source: 'Instagram iOS threads'
+---
+type: 'conditional'
 data_type: 'ios:lockdownd_log:entry'
 message:
 - 'Process identifer: {process_identifier}'

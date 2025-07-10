@@ -529,6 +529,12 @@ attribute_mappings:
   description: 'Received Time'
 place_holder_event: true
 ---
+data_type: 'ios:instagram:thread'
+attribute_mappings:
+- name: 'sent_time'
+  description: 'Sent Time'
+place_holder_event: true
+---
 data_type: 'ios:lockdownd_log:entry'
 attribute_mappings:
 - name: 'written_time'
