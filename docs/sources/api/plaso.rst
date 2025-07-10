@@ -33,13 +33,13 @@ plaso.dependencies module
 
 .. automodule:: plaso.dependencies
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 Module contents
 ---------------
 
 .. automodule:: plaso
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

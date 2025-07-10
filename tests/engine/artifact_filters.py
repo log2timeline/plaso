@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """Tests for the artifacts file filter functions."""
 
+import os
 import unittest
 
 from artifacts import reader as artifacts_reader
@@ -210,11 +211,17 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
 
     # Test expansion of environment variables.
     path_entry = '%%environ_systemroot%%\\test_data\\*.evtx'
+    artifact_name = 'Test'
     environment_variable = [artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name='SystemRoot', value='C:\\Windows')]
 
     find_specs = test_filter_file._BuildFindSpecsFromFileSourcePath(
-        path_entry, separator, environment_variable, test_user_accounts)
+        artifact_name,
+        path_entry,
+        separator,
+        environment_variable,
+        test_user_accounts,
+        enable_artifacts_map=True)
 
     # Should build 1 find_spec.
     self.assertEqual(len(find_specs), 1)
@@ -229,8 +236,14 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
 
     # Test expansion of globs.
     path_entry = '\\test_data\\**'
+    artifact_name = 'Test'
     find_specs = test_filter_file._BuildFindSpecsFromFileSourcePath(
-        path_entry, separator, environment_variable, test_user_accounts)
+        artifact_name,
+        path_entry,
+        separator,
+        environment_variable,
+        test_user_accounts,
+        enable_artifacts_map=True)
 
     # Glob expansion should by default recurse ten levels.
     self.assertEqual(len(find_specs), 10)
@@ -255,8 +268,14 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
     test_user_accounts = [test_user1, test_user2]
 
     path_entry = '%%users.homedir%%/.thumbnails/**3'
+    artifact_name = 'Test'
     find_specs = test_filter_file._BuildFindSpecsFromFileSourcePath(
-        path_entry, separator, environment_variable, test_user_accounts)
+        artifact_name,
+        path_entry,
+        separator,
+        environment_variable,
+        test_user_accounts,
+        enable_artifacts_map=True)
 
     # 6 find specs should be created for testuser1 and testuser2.
     self.assertEqual(len(find_specs), 6)
@@ -278,8 +297,14 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
     test_user_accounts = [test_user1, test_user2]
 
     path_entry = '%%users.userprofile%%\\AppData\\**4'
+    artifact_name = 'Test'
     find_specs = test_filter_file._BuildFindSpecsFromFileSourcePath(
-        path_entry, separator, environment_variable, test_user_accounts)
+        artifact_name,
+        path_entry,
+        separator,
+        environment_variable,
+        test_user_accounts,
+        enable_artifacts_map=True)
 
     # 8 find specs should be created for testuser1 and testuser2.
     self.assertEqual(len(find_specs), 8)
@@ -291,8 +316,14 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
         find_specs[7]._location_segments, expected_location_segments)
 
     path_entry = '%%users.localappdata%%\\Microsoft\\**4'
+    artifact_name = 'Test'
     find_specs = test_filter_file._BuildFindSpecsFromFileSourcePath(
-        path_entry, separator, environment_variable, test_user_accounts)
+        artifact_name,
+        path_entry,
+        separator,
+        environment_variable,
+        test_user_accounts,
+        enable_artifacts_map=True)
 
     # 16 find specs should be created for testuser1 and testuser2.
     self.assertEqual(len(find_specs), 16)
@@ -304,7 +335,130 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
     self.assertEqual(
         find_specs[15]._location_segments, expected_location_segments)
 
-  # TODO: add tests for _BuildFindSpecsFromRegistrySourceKey
+    # Test that paths are added to artifacts trie.
+    self.assertIn(os.sep, test_filter_file.artifacts_trie.root.children)
+    path_trie_node = test_filter_file.artifacts_trie.root.children[os.sep]
+    path_trie_node_children = path_trie_node.children
+    self.assertEqual(
+        path_trie_node.artifacts_names, [])
+    self.assertEqual(len(path_trie_node_children), 5)
+    self.assertIn('Windows', path_trie_node_children)
+    self.assertIn('test_data', path_trie_node_children)
+    self.assertIn('home', path_trie_node_children)
+    self.assertIn('Users', path_trie_node_children)
+    self.assertIn('homes', path_trie_node_children)
+
+    self.assertEqual(
+        path_trie_node_children['Windows'].artifacts_names, [])
+    self.assertIn(
+        'test_data', path_trie_node_children['Windows'].children)
+
+    test_data_children = path_trie_node_children['test_data'].children
+    self.assertEqual(
+        path_trie_node_children['test_data'].artifacts_names, [])
+    self.assertEqual(len(test_data_children), 1)
+    self.assertIn('*', test_data_children)
+
+    star_children = test_data_children['*'].children
+    self.assertEqual(
+        test_data_children['*'].artifacts_names,
+        [artifact_name])
+    self.assertEqual(
+        len(star_children), 1)
+    self.assertIn(
+        '*', star_children)
+
+    self.assertEqual(
+        star_children['*'].artifacts_names,
+        [artifact_name]
+    )
+    self.assertEqual(
+        len(star_children['*'].children), 1)
+    self.assertIn(
+        '*',
+        star_children['*'].children
+    )
+
+    self.assertEqual(
+        path_trie_node_children['home'].artifacts_names, [])
+    self.assertIn(
+        'testuser2', path_trie_node_children['home'].children)
+
+    self.assertEqual(
+        path_trie_node_children['Users'].artifacts_names, [])
+    self.assertIn(
+        'testuser2', path_trie_node_children['Users'].children)
+
+    self.assertEqual(
+        path_trie_node_children['homes'].artifacts_names, [])
+    self.assertIn(
+        'testuser1', path_trie_node_children['homes'].children)
+
+  def testBuildFindSpecsFromRegistrySourceKey(self):
+    """Tests the _BuildFindSpecsFromRegistrySourceKey function on Windows
+    Registry sources."""
+    test_filter_file = self._CreateTestArtifactDefinitionsFiltersHelper()
+
+    # Test expansion of multiple repeated stars.
+    key_path = 'HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\**'
+    find_specs = test_filter_file._BuildFindSpecsFromRegistrySourceKey(
+        key_path)
+
+    # Glob expansion should by default recurse ten levels.
+    self.assertEqual(len(find_specs), 10)
+
+    # The dfwinreg.FindSpec calls glob2regex, thus the dot in ControlSet.*
+    first_expected_key_path_segments = [
+        'HKEY_LOCAL_MACHINE', 'System', 'ControlSet.*', 'Control', '.*']
+    last_expected_key_path_segments = [
+        'HKEY_LOCAL_MACHINE', 'System', 'ControlSet.*', 'Control', '.*', '.*',
+        '.*', '.*', '.*', '.*', '.*', '.*', '.*', '.*']
+
+    first_find_spec = find_specs[0]
+    last_find_spec = find_specs[-1]
+    self.assertEqual(
+        first_find_spec._key_path_segments, first_expected_key_path_segments)
+    self.assertEqual(
+        last_find_spec._key_path_segments, last_expected_key_path_segments)
+
+    # Test CurrentControlSet
+    key_path = 'HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control'
+    find_specs = test_filter_file._BuildFindSpecsFromRegistrySourceKey(
+        key_path)
+
+    self.assertEqual(len(find_specs), 1)
+
+    # The dfwinreg.FindSpec calls glob2regex, thus the dot in ControlSet.*
+    expected_key_path_segments = [
+        'HKEY_LOCAL_MACHINE', 'System', 'ControlSet.*', 'Control']
+
+    self.assertEqual(
+        find_specs[0]._key_path_segments, expected_key_path_segments)
+
+    # Test expansion of user home directories
+    key_path = 'HKEY_USERS\\%%users.sid%%\\Software'
+    find_specs = test_filter_file._BuildFindSpecsFromRegistrySourceKey(
+        key_path)
+
+    self.assertEqual(len(find_specs), 1)
+
+    expected_key_path_segments = ['HKEY_CURRENT_USER', 'Software']
+
+    self.assertEqual(
+        find_specs[0]._key_path_segments, expected_key_path_segments)
+
+    # Test expansion of single star
+    key_path = 'HKEY_LOCAL_MACHINE\\Software\\*\\Classes'
+    find_specs = test_filter_file._BuildFindSpecsFromRegistrySourceKey(
+        key_path)
+
+    self.assertEqual(len(find_specs), 1)
+
+    expected_key_path_segments = [
+        'HKEY_LOCAL_MACHINE', 'Software', '.*', 'Classes']
+
+    self.assertEqual(
+        find_specs[0]._key_path_segments, expected_key_path_segments)
 
 
 if __name__ == '__main__':
