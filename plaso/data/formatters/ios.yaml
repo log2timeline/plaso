@@ -57,6 +57,23 @@ short_source: 'HISTORY'
 source: 'iOS data usage database'
 ---
 type: 'conditional'
+data_type: 'ios:discord:message'
+message:
+- 'User Id: {user_identifier}'
+- 'Username: {username}'
+- 'Message: {content}'
+- 'Attachment Name: {attachment_name}'
+- 'Attachment Size: {attachment_size}'
+- 'Attachment type: {attachment_type}'
+- 'Attachment URL: {attachment_proxy_url}'
+- 'Channel Id: {channel_identifier}'
+short_message:
+- 'Username: {username}'
+- 'Message: {content}'
+short_source: 'Discord iOS'
+source: 'Discord iOS Messages'
+---
+type: 'conditional'
 data_type: 'ios:kik:messaging'
 enumeration_helpers:
 - input_attribute: 'message_status'
