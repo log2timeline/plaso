@@ -356,7 +356,7 @@ class CLITool(object):
         utc_offset_string = f'+{utc_offset:s}'
       else:
         _, _, utc_offset = local_date_string.rpartition('-')
-        utc_offset_string = '-{utc_offset:s}'
+        utc_offset_string = f'-{utc_offset:s}'
 
       table_view.AddRow([time_zone_name, utc_offset_string])
 
