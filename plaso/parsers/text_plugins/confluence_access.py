@@ -3,7 +3,7 @@
 
 Also see:
   https://confluence.atlassian.com/doc/configure-access-logs-1044780567.html
-  https://confluence.atlassian.com/confkb/audit-confluence-using-the-tomcat-valve-component-223216846.html
+  https://support.atlassian.com/confluence/kb/audit-confluence-using-the-tomcat-valve-component/
 """
 
 import pyparsing

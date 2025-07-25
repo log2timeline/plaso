@@ -154,7 +154,7 @@ class FirefoxCookie2Plugin(BaseFirefoxCookiePlugin):
   """SQLite parser plugin for Mozilla Firefox cookies schema 2 databases.
 
   Also see:
-    https://hg.mozilla.org/mozilla-central/file/349a2f003529/netwerk/cookie/nsCookie.h
+    https://hg-edge.mozilla.org/mozilla-central/file/349a2f003529/netwerk/cookie/nsCookie.h
   """
 
   NAME = 'firefox_2_cookies'
