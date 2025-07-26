@@ -4,6 +4,7 @@
 import collections
 import copy
 import datetime
+import decimal
 import os
 import pytz
 
@@ -219,7 +220,14 @@ class EventDataTimeliner(object):
         timestamp = 0
 
     if timestamp is None:
-      timestamp = date_time.GetPlasoTimestamp()
+      try:
+        timestamp = date_time.GetPlasoTimestamp()
+      except decimal.InvalidOperation as exception:
+        self._ProduceTimeliningWarning(
+            storage_writer, event_data, str(exception))
+
+        date_time = dfdatetime_semantic_time.InvalidTime()
+        timestamp = 0
 
     if timestamp is None:
       self._ProduceTimeliningWarning(

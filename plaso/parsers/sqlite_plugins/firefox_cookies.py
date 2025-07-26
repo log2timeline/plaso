@@ -68,7 +68,9 @@ class BaseFirefoxCookiePlugin(
       dfdatetime.PosixTime: date and time value or None if not available.
     """
     timestamp = self._GetRowValue(query_hash, row, value_name)
-    if timestamp is None:
+    # Note that pysqlite3 can return an empty string for a NULL value.
+    # Also see: https://github.com/log2timeline/plaso/issues/4961
+    if timestamp is None or not isinstance(timestamp, int):
       return None
 
     return dfdatetime_posix_time.PosixTime(timestamp=timestamp)
@@ -88,9 +90,12 @@ class BaseFirefoxCookiePlugin(
           available.
     """
     timestamp = self._GetRowValue(query_hash, row, value_name)
-    if timestamp is None:
+    # Note that pysqlite3 can return an empty string for a NULL value.
+    # Also see: https://github.com/log2timeline/plaso/issues/4961
+    if timestamp is None or not isinstance(timestamp, int):
       return None
 
+    print(value_name, repr(timestamp))
     return dfdatetime_posix_time.PosixTimeInMicroseconds(timestamp=timestamp)
 
   def ParseCookieRow(self, parser_mediator, query, row, **unused_kwargs):
