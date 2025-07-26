@@ -57,6 +57,23 @@ short_source: 'HISTORY'
 source: 'iOS data usage database'
 ---
 type: 'conditional'
+data_type: 'ios:discord:message'
+message:
+- 'User Id: {user_identifier}'
+- 'Username: {username}'
+- 'Message: {content}'
+- 'Attachment Name: {attachment_name}'
+- 'Attachment Size: {attachment_size}'
+- 'Attachment type: {attachment_type}'
+- 'Attachment URL: {attachment_proxy_url}'
+- 'Channel Id: {channel_identifier}'
+short_message:
+- 'Username: {username}'
+- 'Message: {content}'
+short_source: 'Discord iOS'
+source: 'Discord iOS Messages'
+---
+type: 'conditional'
 data_type: 'ios:kik:messaging'
 enumeration_helpers:
 - input_attribute: 'message_status'
@@ -92,6 +109,22 @@ short_message:
 - '{body}'
 short_source: 'Kik iOS'
 source: 'Kik iOS messages'
+---
+type: 'conditional'
+data_type: 'ios:instagram:thread'
+message:
+- 'Sender ID: {sender_pk}'
+- 'Username: {username}'
+- 'Message: {message}'
+- 'Video Chat ID: {video_chat_call_id}'
+- 'Video Chat Title: {video_chat_title}'
+- 'Shared Media ID: {shared_media_id}'
+- 'Shared Media URL: {shared_media_url}'
+short_message:
+- 'Username: {username}'
+- 'Message: {message}'
+short_source: 'Instagram iOS'
+source: 'Instagram iOS threads'
 ---
 type: 'conditional'
 data_type: 'ios:lockdownd_log:entry'
