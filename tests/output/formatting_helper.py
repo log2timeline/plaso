@@ -100,6 +100,9 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     output_mediator = self._CreateOutputMediator(dynamic_time=False)
     test_helper = formatting_helper.FieldFormattingHelper()
 
+    self.assertIsNone(output_mediator._time_zone)
+    self.assertFalse(output_mediator.dynamic_time)
+
     # Test with event.date_time
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))

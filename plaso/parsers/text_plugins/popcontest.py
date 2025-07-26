@@ -5,7 +5,7 @@ Information updated 20 january 2014.
 From Debian Package Popularity Contest
 Avery Pennarun <apenwarr@debian.org>
 
-From 'https://www.unix.com/man-page/Linux/8/popularity-contest':
+From 'https://www.unix.com/man_page/linux/8/popularity-contest/':
 
     The  popularity-contest command gathers information about Debian pack-
     ages installed on the system, and prints the name of the most  recently
