@@ -268,6 +268,7 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
       RuntimeError: if the OpenSearch index cannot be created.
     """
     try:
+      # pylint: disable=missing-kwoa,too-many-function-args
       if not self._client.indices.exists(index_name):
         self._client.indices.create(
             body={'mappings': mappings}, index=index_name)
