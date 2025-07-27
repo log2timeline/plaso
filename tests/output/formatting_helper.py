@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the output module field formatting helper."""
 
-import platform
 import unittest
 
 from dfdatetime import posix_time as dfdatetime_posix_time
