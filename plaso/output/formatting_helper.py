@@ -143,8 +143,8 @@ class FieldFormattingHelper(object):
         return '0000-00-00T00:00:00.000000+00:00'
 
       try:
-        datetime_object = datetime.datetime(1970, 1, 1) + datetime.timedelta(
-            microseconds=timestamp)
+        datetime_object = datetime.datetime(
+            1970, 1, 1, tzinfo=None) + datetime.timedelta(microseconds=timestamp)
 
         datetime_object = datetime_object.astimezone(output_mediator.time_zone)
 
