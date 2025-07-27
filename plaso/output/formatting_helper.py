@@ -144,7 +144,7 @@ class FieldFormattingHelper(object):
 
       try:
         datetime_object = (
-            datetime.datetime(1970, 1, 1, tzinfo=None) +
+            datetime.datetime(1970, 1, 1, tzinfo=pytz.UTC) +
             datetime.timedelta(microseconds=timestamp))
 
         datetime_object = datetime_object.astimezone(output_mediator.time_zone)
