@@ -143,6 +143,8 @@ class FieldFormattingHelper(object):
         return '0000-00-00T00:00:00.000000+00:00'
 
       try:
+        # Note that setting tzinfo to None can have unexpected results on
+        # certain platforms.
         datetime_object = (
             datetime.datetime(1970, 1, 1, tzinfo=pytz.UTC) +
             datetime.timedelta(microseconds=timestamp))
