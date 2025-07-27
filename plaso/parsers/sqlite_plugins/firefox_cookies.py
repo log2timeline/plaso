@@ -95,7 +95,6 @@ class BaseFirefoxCookiePlugin(
     if timestamp is None or not isinstance(timestamp, int):
       return None
 
-    print(value_name, repr(timestamp))
     return dfdatetime_posix_time.PosixTimeInMicroseconds(timestamp=timestamp)
 
   def ParseCookieRow(self, parser_mediator, query, row, **unused_kwargs):

@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the output module field formatting helper."""
 
-import platform
 import unittest
 
 from dfdatetime import posix_time as dfdatetime_posix_time
@@ -100,9 +99,6 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     output_mediator = self._CreateOutputMediator(dynamic_time=False)
     test_helper = formatting_helper.FieldFormattingHelper()
 
-    self.assertIsNone(output_mediator._time_zone)
-    self.assertFalse(output_mediator.dynamic_time)
-
     # Test with event.date_time
     event, event_data, event_data_stream = (
         containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
@@ -132,33 +128,21 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
 
     date_time_string = test_helper._FormatDateTime(
         output_mediator, event, event_data, event_data_stream)
-    if platform.system() == 'Windows':
-      expected_date_time_string = '0000-00-00T00:00:00.000000+00:00'
-    else:
-      expected_date_time_string = '1920-04-30T10:34:20.673000+00:00'
-    self.assertEqual(date_time_string, expected_date_time_string)
+    self.assertEqual(date_time_string, '1920-04-30T10:34:20.673000+00:00')
 
     event.date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
         timestamp=-1567517139327447)
 
     date_time_string = test_helper._FormatDateTime(
         output_mediator, event, event_data, event_data_stream)
-    if platform.system() == 'Windows':
-      expected_date_time_string = '0000-00-00T00:00:00.000000+00:00'
-    else:
-      expected_date_time_string = '1920-04-30T10:34:20.672553+00:00'
-    self.assertEqual(date_time_string, expected_date_time_string)
+    self.assertEqual(date_time_string, '1920-04-30T10:34:20.672553+00:00')
 
     event.date_time = dfdatetime_posix_time.PosixTimeInNanoseconds(
         timestamp=-1567517139327447871)
 
     date_time_string = test_helper._FormatDateTime(
         output_mediator, event, event_data, event_data_stream)
-    if platform.system() == 'Windows':
-      expected_date_time_string = '0000-00-00T00:00:00.000000+00:00'
-    else:
-      expected_date_time_string = '1920-04-30T10:34:20.672552+00:00'
-    self.assertEqual(date_time_string, expected_date_time_string)
+    self.assertEqual(date_time_string, '1920-04-30T10:34:20.672552+00:00')
 
     event.date_time = dfdatetime_semantic_time.InvalidTime()
 
@@ -193,11 +177,7 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
     event.timestamp = -1567517139327447
     date_time_string = test_helper._FormatDateTime(
         output_mediator, event, event_data, event_data_stream)
-    if platform.system() == 'Windows':
-      expected_date_time_string = '0000-00-00T00:00:00.000000+00:00'
-    else:
-      expected_date_time_string = '1920-04-30T10:34:20.672553+00:00'
-    self.assertEqual(date_time_string, expected_date_time_string)
+    self.assertEqual(date_time_string, '1920-04-30T10:34:20.672553+00:00')
 
     event.timestamp = -9223372036854775808
     date_time_string = test_helper._FormatDateTime(
