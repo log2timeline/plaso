@@ -65,6 +65,42 @@ short_message:
 short_source: 'LOG'
 source: 'MacKeeper Cache'
 ---
+type: 'conditional'
+data_type: 'macos:accounts:entry'
+enumeration_helpers:
+- input_attribute: 'is_active'
+  output_attribute: 'is_active_string'
+  default_value: 'Unknown'
+  values:
+    0: 'No'
+    1: 'Yes'
+- input_attribute: 'is_authenticated'
+  output_attribute: 'is_authenticated_string'
+  default_value: 'Unknown'
+  values:
+    0: 'No'
+    1: 'Yes'
+- input_attribute: 'is_visible'
+  output_attribute: 'is_visible_string'
+  default_value: 'Unknown'
+  values:
+    0: 'No'
+    1: 'Yes'
+message:
+- 'Username: {username}'
+- 'Account type: {account_type}'
+- 'Description: {account_description}'
+- 'Identifier: {identifier}'
+- 'Active: {is_active_string}'
+- 'Authenticated: {is_authenticated_string}'
+- 'Visible: {is_visible_string}'
+- 'Owning bundle: {owning_bundle}'
+short_message:
+- 'Username: {username}'
+- 'Account type: {account_type}'
+short_source: 'ACCOUNTS'
+source: 'MacOS Accounts'
+---
 type: 'basic'
 data_type: 'macos:airport:entry'
 message: '[WiFi] Connected to network: <{ssid}> using security {security_type}'
