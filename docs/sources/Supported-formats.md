@@ -131,6 +131,7 @@ File System Format support is provided by [dfVFS](https://dfvfs.readthedocs.io/e
 * Kodi videos SQLite database (MyVideos.db) file
 * MacOS and iOS iMessage database (chat.db, sms.db) file
 * MacOS application usage SQLite database (application_usage.sqlite) file
+* MacOS Accounts SQLite database (Accounts4.sqlite) file
 * MacOS document revisions SQLite database file
 * MacOS Duet / KnowledgeC SQLites database file
 * MacOS launch services quarantine events database SQLite database file

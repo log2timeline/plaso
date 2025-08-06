@@ -650,6 +650,16 @@ attribute_mappings:
   description: 'Added Time'
 place_holder_event: true
 ---
+data_type: 'macos:accounts:entry'
+attribute_mappings:
+- name: 'creation_time'
+  description: 'Creation Time'
+- name: 'modification_time'
+  description: 'Modification Time'
+- name: 'last_credential_rejection_time'
+  description: 'Last Credential Rejection Time'
+place_holder_event: true
+---
 data_type: 'macos:airport:entry'
 attribute_mappings:
 - name: 'last_connected_time'

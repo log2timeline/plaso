@@ -169,6 +169,7 @@ mac_knowledgec | Parser for MacOS Duet/KnowledgeC SQLites database files.
 mac_notes | Parser for MacOS Notes SQLite database (NotesV7.storedata) files.
 mac_notificationcenter | Parser for MacOS Notification Center SQLite database files.
 mackeeper_cache | Parser for MacOS MacKeeper cache SQLite database files.
+macos_accounts | Parser for MacOS Accounts SQLite database (Accounts4.sqlite) files.
 macostcc | Parser for MacOS Transparency, Consent, Control (TCC) SQLite database (TCC.db) files.
 safari_historydb | Parser for Safari history SQLite database (History.db) files.
 skype | Parser for Skype SQLite database (main.db) files.

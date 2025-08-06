@@ -30,6 +30,7 @@ from plaso.parsers.sqlite_plugins import ios_twitter
 from plaso.parsers.sqlite_plugins import kodi
 from plaso.parsers.sqlite_plugins import ls_quarantine
 from plaso.parsers.sqlite_plugins import mackeeper_cache
+from plaso.parsers.sqlite_plugins import macos_accounts
 from plaso.parsers.sqlite_plugins import macos_appusage
 from plaso.parsers.sqlite_plugins import macos_document_versions
 from plaso.parsers.sqlite_plugins import macos_knowledgec
