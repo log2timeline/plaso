@@ -48,6 +48,12 @@ attribute_mappings:
   description: 'Last Active Time'
 place_holder_event: false
 ---
+data_type: 'android:sqlite:app_launch'
+attribute_mappings:
+- name: 'launch_time'
+  description: 'App Launch Time'
+place_holder_event: true
+---
 data_type: 'android:sqlite:app_usage'
 attribute_mappings:
 - name: 'start_time'
