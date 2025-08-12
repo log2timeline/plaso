@@ -17,7 +17,8 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
     self._tagging_rules = None
 
   def ExamineEvent(
-      self, analysis_mediator, event, event_data, event_data_stream):
+      self, analysis_mediator, event, event_data, event_data_stream,
+      event_values):
     """Labels events according to the rules in a tagging file.
 
     Args:
@@ -26,13 +27,15 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
       event (EventObject): event to examine.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
+      event_values (AttributeContainer): event values attribute container.
     """
     matched_label_names = []
-    for label_name, filter_objects in self._tagging_rules.items():
-      for filter_object in filter_objects:
-        # Note that tagging events based on existing labels is currently
-        # not supported.
-        if filter_object.Match(event, event_data, event_data_stream, None):
+    for label_name, event_filters in self._tagging_rules.items():
+      for event_filter in event_filters:
+        # Note that tagging events based on existing labels is currently not
+        # supported.
+        if event_filter.Match(
+            event, event_data, event_data_stream, event_values, None):
           matched_label_names.append(label_name)
           break
 
