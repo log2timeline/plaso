@@ -33,6 +33,17 @@ short_source: 'PLIST'
 source: 'Apple iOS Car Play application plist'
 ---
 type: 'conditional'
+data_type: 'routined:plist:event'
+message:
+  - 'KEY: {key}'
+  - 'VALUE: {value}'
+  - 'TIMESTAMP: {timestamp}'
+short_message:
+  - 'KEY: {key}'
+short_source: 'PLIST'
+source: 'Apple iOS routined application plist file'
+---
+type: 'conditional'
 data_type: 'ios:idstatuscache:lookup'
 message:
 - 'Process Name: {process_name}'
