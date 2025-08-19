@@ -4,7 +4,6 @@ acstore >= 20240407
 artifacts >= 20220219
 bencode.py
 certifi >= 2016.9.26
-cffi >= 1.9.1
 defusedxml >= 0.5.0
 dfdatetime >= 20240330
 dfvfs >= 20240115
