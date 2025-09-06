@@ -29,7 +29,7 @@ ENV LANG en_US.UTF-8
 ENV LC_ALL en_US.UTF-8
 
 WORKDIR /usr/local/bin
-COPY plaso-switch.sh "plaso-switch.sh
+COPY plaso-switch.sh plaso-switch.sh
 RUN chmod a+x plaso-switch.sh
 
 VOLUME ["/data"]
