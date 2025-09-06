@@ -35,6 +35,6 @@ RUN chmod a+x plaso-switch.sh
 VOLUME ["/data"]
 
 USER ubuntu
-WORKDIR /home/ubuntu/
+WORKDIR /home/ubuntu
 
 ENTRYPOINT ["/usr/local/bin/plaso-switch.sh"]
