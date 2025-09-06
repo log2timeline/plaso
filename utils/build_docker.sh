@@ -14,7 +14,7 @@ cd config/docker;
 
 docker build --no-cache --force-rm -t log2timeline/plaso . 2>&1 | tee ${LOGFILE};
 
-IDENTIFIER=$( grep -e '^Successfully built ' ${LOGFILE} | sed 's/^Successfully built //' );
+IDENTIFIER=$( grep -e ' writing image ' ${LOGFILE} | sed 's/^.* writing image //;s/ done$//' );
 
 docker run log2timeline/plaso log2timeline --version 2>&1 | tee ${LOGFILE};
 
