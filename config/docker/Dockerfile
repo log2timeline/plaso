@@ -11,7 +11,7 @@ FROM ubuntu:noble
 ARG PPA_TRACK=stable
 
 USER root
-ENV DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 # Combining the apt-get commands into a single run reduces the size of the resulting image.
 # The apt-get installations below are interdependent and need to be done in sequence.
 RUN apt-get -y update && \
@@ -25,8 +25,8 @@ RUN apt-get -y update && \
 
 # Set terminal to UTF-8 by default
 RUN locale-gen en_US.UTF-8 && update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
-ENV LANG en_US.UTF-8
-ENV LC_ALL en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LC_ALL=en_US.UTF-8
 
 WORKDIR /usr/local/bin
 COPY plaso-switch.sh plaso-switch.sh
