@@ -11,7 +11,7 @@ FROM ubuntu:noble
 ARG PPA_TRACK=stable
 
 USER root
-ENV DEBIAN_FRONTEND=noninteractive
+ENV DEBIAN_FRONTEND noninteractive
 # Combining the apt-get commands into a single run reduces the size of the resulting image.
 # The apt-get installations below are interdependent and need to be done in sequence.
 RUN apt-get -y update && \
