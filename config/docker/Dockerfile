@@ -1,5 +1,4 @@
 FROM ubuntu:noble
-LABEL maintainer="Log2Timeline <log2timeline-dev@googlegroups.com>"
 
 # Create container with:
 # docker build --no-cache --build-arg PPA_TRACK="[dev|stable]" \
@@ -11,8 +10,8 @@ LABEL maintainer="Log2Timeline <log2timeline-dev@googlegroups.com>"
 
 ARG PPA_TRACK=stable
 
+USER root
 ENV DEBIAN_FRONTEND=noninteractive
-
 # Combining the apt-get commands into a single run reduces the size of the resulting image.
 # The apt-get installations below are interdependent and need to be done in sequence.
 RUN apt-get -y update && \
@@ -30,11 +29,12 @@ ENV LANG en_US.UTF-8
 ENV LC_ALL en_US.UTF-8
 
 WORKDIR /usr/local/bin
-COPY "plaso-switch.sh" "plaso-switch.sh"
+COPY plaso-switch.sh "plaso-switch.sh
 RUN chmod a+x plaso-switch.sh
 
 VOLUME ["/data"]
 
-WORKDIR /home/plaso/
+USER ubuntu
+WORKDIR /home/ubuntu/
 
 ENTRYPOINT ["/usr/local/bin/plaso-switch.sh"]
