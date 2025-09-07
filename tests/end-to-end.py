@@ -69,6 +69,34 @@ class TestCase(object):
     self._test_sources_path = test_sources_path
     self._tools_path = tools_path
 
+  def _GetLoggingOptions(self, command, logging_options):
+    """Determines the logging options.
+
+    Args:
+      command (str): command the logging options are for.
+      logging_options (list[str]): logging options from the test definition.
+
+    Returns:
+      [str]: logging options.
+    """
+    return [
+        option.replace('%command%', command).replace(
+            '%results%', self._test_results_path)
+        for option in logging_options]
+
+  def _GetProfilinggOptions(self, profiling_options):
+    """Determines the profiling options.
+
+    Args:
+      profiling_options (list[str]): profiling options from the test definition.
+
+    Returns:
+      [str]: profiling options.
+    """
+    return [
+        option.replace('%results%', self._test_results_path)
+        for option in profiling_options]
+
   def _RunCommand(self, command, stdout=None, stderr=None):
     """Runs a command.
 
@@ -632,9 +660,10 @@ class StorageFileTestCase(TestCase):
     if output_filter:
       output_options.append(output_filter)
 
-    logging_options = [
-        option.replace('%command%', 'psort')
-        for option in test_definition.logging_options]
+    logging_options = self._GetLoggingOptions(
+        'psort', test_definition.logging_options)
+    profiling_options = self._GetProfilinggOptions(
+        test_definition.profiling_options)
 
     stdout_file = os.path.join(
         temp_directory, '{0:s}-psort.out'.format(test_definition.name))
@@ -646,7 +675,7 @@ class StorageFileTestCase(TestCase):
     command.extend(output_options)
     command.extend(logging_options)
     command.extend(['--status-view', 'none', '--unattended'])
-    command.extend(test_definition.profiling_options)
+    command.extend(profiling_options)
 
     with open(stdout_file, 'w', encoding='utf-8') as stdout:
       with open(stderr_file, 'w', encoding='utf-8') as stderr:
@@ -758,18 +787,20 @@ class ExtractAndOutputTestCase(StorageFileTestCase):
             self._test_sources_path, yara_rules_path)
       extract_options.extend(['--yara-rules', yara_rules_path])
 
-    logging_options = [
-        option.replace('%command%', 'log2timeline')
-        for option in test_definition.logging_options]
+    logging_options = self._GetLoggingOptions(
+        'log2timeline', test_definition.logging_options)
+    profiling_options = self._GetProfilinggOptions(
+        test_definition.profiling_options)
 
     stdout_file = os.path.join(
         temp_directory, '{0:s}-log2timeline.out'.format(test_definition.name))
     stderr_file = os.path.join(
         temp_directory, '{0:s}-log2timeline.err'.format(test_definition.name))
+
     command = [self._log2timeline_path]
     command.extend(extract_options)
     command.extend(logging_options)
-    command.extend(test_definition.profiling_options)
+    command.extend(profiling_options)
     command.extend(['--storage-file', storage_file, source_path])
 
     with open(stdout_file, 'w', encoding='utf-8') as stdout:
@@ -972,9 +1003,10 @@ class ExtractAndOutputWithPstealTestCase(StorageFileTestCase):
           temp_directory, test_definition.output_file)
     psteal_options.extend(['-w', output_file_path])
 
-    logging_options = [
-        option.replace('%command%', 'psteal')
-        for option in test_definition.logging_options]
+    logging_options = self._GetLoggingOptions(
+        'psteal', test_definition.logging_options)
+    profiling_options = self._GetProfilinggOptions(
+        test_definition.profiling_options)
 
     stdout_file = os.path.join(
         temp_directory, '{0:s}-psteal.out'.format(test_definition.name))
@@ -986,7 +1018,7 @@ class ExtractAndOutputWithPstealTestCase(StorageFileTestCase):
     command.extend(logging_options)
     command.extend(output_options)
     command.extend(['--status-view', 'none', '--unattended'])
-    command.extend(test_definition.profiling_options)
+    command.extend(profiling_options)
 
     with open(stdout_file, 'w', encoding='utf-8') as stdout:
       with open(stderr_file, 'w', encoding='utf-8') as stderr:
@@ -1451,9 +1483,10 @@ class ImageExportTestCase(TestCase):
 
     output_options = ['-w', exported_files_path]
 
-    logging_options = [
-        option.replace('%command%', 'image_export')
-        for option in test_definition.logging_options]
+    logging_options = self._GetLoggingOptions(
+        'image_export', test_definition.logging_options)
+    profiling_options = self._GetProfilinggOptions(
+        test_definition.profiling_options)
 
     stdout_file = os.path.join(
         temp_directory, '{0:s}-image_export.out'.format(test_definition.name))
@@ -1464,7 +1497,7 @@ class ImageExportTestCase(TestCase):
     command.extend(export_options)
     command.extend(output_options)
     command.extend(logging_options)
-    command.extend(test_definition.profiling_options)
+    command.extend(profiling_options)
     command.append(source_path)
 
     with open(stdout_file, 'w', encoding='utf-8') as stdout:
