@@ -230,7 +230,8 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
     except errors.QueueAlreadyClosed:
       logger.error('Queue for {0:s} was already closed.'.format(self.name))
 
-  def _ProcessEvent(self, mediator, event, event_data, event_data_stream):
+  def _ProcessEvent(
+      self, mediator, event, event_data, event_data_stream, event_values):
     """Processes an event.
 
     Args:
@@ -239,10 +240,11 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
+      event_values (AttributeContainer): event values attribute container.
     """
     try:
       self._analysis_plugin.ExamineEvent(
-          mediator, event, event_data, event_data_stream)
+          mediator, event, event_data, event_data_stream, event_values)
 
     except Exception as exception:  # pylint: disable=broad-except
       # TODO: write analysis error and change logger to debug only.

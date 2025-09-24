@@ -16,14 +16,18 @@ fi
 
 rm -rf build/ dist/;
 
-./setup.py -q sdist_test_data;
+cp MANIFEST.test_data.in MANIFEST.in
+
+./setup.py -q sdist;
 
 if test $? -ne ${EXIT_SUCCESS};
 then
-	echo "Unable to run: ./setup.py sdist_test_data";
+	echo "Unable to run: ./setup.py sdist";
 
 	exit ${EXIT_FAILURE};
 fi
+
+git checkout MANIFEST.in
 
 SDIST_PACKAGE=`ls -1 dist/plaso-*.tar.gz | head -n1 | sed 's?^dist/??'`;
 
@@ -72,8 +76,8 @@ cp -rf ${SOURCE_DIRECTORY}/* .;
 TEST_FILE="psort_test.plaso";
 
 # Syslog does not contain a year we must pass preferred year to prevent the parser failing early on non-leap years.
-PYTHONPATH=. python ./tools/log2timeline.py --buffer_size=300 --quiet --preferred_year 2012 --storage-file ${TEST_FILE} test_data/syslog;
-PYTHONPATH=. python ./tools/log2timeline.py --quiet --timezone=Iceland --preferred_year 2012 --storage-file ${TEST_FILE} test_data/syslog;
+PYTHONPATH=. python ./plaso/scripts/log2timeline.py --buffer_size=300 --quiet --preferred_year 2012 --storage-file ${TEST_FILE} test_data/syslog/syslog;
+PYTHONPATH=. python ./plaso/scripts/log2timeline.py --quiet --timezone=Iceland --preferred_year 2012 --storage-file ${TEST_FILE} test_data/syslog/syslog;
 
 cat > tagging.txt <<EOI
 anacron1
@@ -86,7 +90,7 @@ repeated
   body contains 'last message repeated'
 EOI
 
-PYTHONPATH=. python ./tools/psort.py --analysis tagging --output-format=null --tagging-file=tagging.txt ${TEST_FILE};
+PYTHONPATH=. python ./plaso/scripts/psort.py --analysis tagging --output-format=null --tagging-file=tagging.txt ${TEST_FILE};
 
 # Run tagging twice.
 cat > tagging.txt <<EOI
@@ -100,13 +104,13 @@ repeated
   body contains 'last message repeated'
 EOI
 
-PYTHONPATH=. python ./tools/psort.py --analysis tagging --output-format=null --tagging-file=tagging.txt ${TEST_FILE};
+PYTHONPATH=. python ./plaso/scripts/psort.py --analysis tagging --output-format=null --tagging-file=tagging.txt ${TEST_FILE};
 
 mv ${TEST_FILE} ${OLD_PWD}/test_data/;
 
 TEST_FILE="pinfo_test.plaso";
 
-PYTHONPATH=. python ./tools/log2timeline.py --partition=all --quiet --storage-file ${TEST_FILE} test_data/tsk_volume_system.raw;
+PYTHONPATH=. python ./plaso/scripts/log2timeline.py --partition=all --quiet --storage-file ${TEST_FILE} test_data/tsk_volume_system.raw;
 
 mv ${TEST_FILE} ${OLD_PWD}/test_data/;
 

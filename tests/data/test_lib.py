@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Data files related functions and classes for testing."""
 
+from acstore.containers import manager as containers_manager
+
 from plaso.analysis import mediator as analysis_mediator
 from plaso.analysis import tagging
 from plaso.containers import events
@@ -12,6 +14,8 @@ from tests import test_lib as shared_test_lib
 
 class TaggingFileTestCase(shared_test_lib.BaseTestCase):
   """The unit test case for a tagging file."""
+
+  _CONTAINERS_MANAGER = containers_manager.AttributeContainersManager
 
   _TAG_FILE = None
 
@@ -53,7 +57,7 @@ class TaggingFileTestCase(shared_test_lib.BaseTestCase):
 
     if not attribute_values_per_name:
       event_data = event_data_class()
-      storage_writer = self._TagEvent(event, event_data, None)
+      storage_writer = self._TagEvent(event, event_data, None, None)
 
       self._CheckLabels(storage_writer, expected_rule_names)
 
@@ -74,7 +78,7 @@ class TaggingFileTestCase(shared_test_lib.BaseTestCase):
           attribute_value = attribute_values[attribute_value_index]
           setattr(event_data, attribute_name, attribute_value)
 
-        storage_writer = self._TagEvent(event, event_data, None)
+        storage_writer = self._TagEvent(event, event_data, None, None)
 
         self._CheckLabels(storage_writer, expected_rule_names)
 
@@ -92,17 +96,85 @@ class TaggingFileTestCase(shared_test_lib.BaseTestCase):
             attribute_value = attribute_values[0]
           setattr(event_data, attribute_name, attribute_value)
 
-        storage_writer = self._TagEvent(event, event_data, None)
+        storage_writer = self._TagEvent(event, event_data, None, None)
 
         self._CheckLabels(storage_writer, [])
 
-  def _TagEvent(self, event, event_data, event_data_stream):
+  def _CheckTaggingRuleFromAttributeContainer(
+      self, data_type, container_type, attribute_values_per_name,
+      expected_rule_names):
+    """Tests a tagging rule from an event values attribute container.
+
+    Args:
+      data_type (str): event data type.
+      container_type (str): event values attribute container type.
+      attribute_values_per_name (dict[str, list[str]): values of the event data
+          attribute values per name, to use for testing events that match the
+          tagging rule.
+      expected_rule_names (list[str]): expected rule names.
+    """
+    event_values = self._CONTAINERS_MANAGER.CreateAttributeContainer(
+        container_type)
+    event_values_identifier = event_values.GetIdentifier()
+
+    # TODO: lookup data_type based on container_type
+
+    event_data = events.EventData(data_type=data_type)
+    event_data.SetEventValuesIdentifier(event_values_identifier)
+
+    event = events.EventObject()
+    event.timestamp = self._TEST_TIMESTAMP
+    event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
+
+    if not attribute_values_per_name:
+      storage_writer = self._TagEvent(event, event_data, None, event_values)
+
+      self._CheckLabels(storage_writer, expected_rule_names)
+
+    else:
+      maximum_number_of_attribute_values = max(
+          len(attribute_values)
+          for attribute_values in attribute_values_per_name.values())
+
+      # Test if variations defined by the attribute_values_per_name match the
+      # tagging rule.
+      for test_index in range(maximum_number_of_attribute_values):
+        # Create the test event data and set the attributes to one of the test
+        # values.
+        for attribute_name, attribute_values in (
+            attribute_values_per_name.items()):
+          attribute_value_index = min(test_index, len(attribute_values) - 1)
+          attribute_value = attribute_values[attribute_value_index]
+          setattr(event_values, attribute_name, attribute_value)
+
+        storage_writer = self._TagEvent(event, event_data, None, event_values)
+
+        self._CheckLabels(storage_writer, expected_rule_names)
+
+      # Test if bogus variations on attribute_values_per_name do not match the
+      # tagging rule.
+      for test_attribute_name in attribute_values_per_name.keys():
+        # Test event data and set the attributes to one of the test values.
+        for attribute_name, attribute_values in (
+            attribute_values_per_name.items()):
+          if attribute_name == test_attribute_name:
+            attribute_value = 'BOGUS'
+          else:
+            attribute_value = attribute_values[0]
+          setattr(event_values, attribute_name, attribute_value)
+
+        storage_writer = self._TagEvent(event, event_data, None, event_values)
+
+        self._CheckLabels(storage_writer, [])
+
+  def _TagEvent(self, event, event_data, event_data_stream, event_values):
     """Tags an event.
 
     Args:
       event (Event): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
+      event_values (AttributeContainer): event values attribute container.
 
     Returns:
       FakeStorageWriter: storage writer.
@@ -121,6 +193,11 @@ class TaggingFileTestCase(shared_test_lib.BaseTestCase):
       event_data_stream_identifier = event_data_stream.GetIdentifier()
       event_data.SetEventDataStreamIdentifier(event_data_stream_identifier)
 
+    if event_values:
+      storage_writer.AddAttributeContainer(event_values)
+      event_values_identifier = event_values.GetIdentifier()
+      event_data.SetEventValuesIdentifier(event_values_identifier)
+
     storage_writer.AddAttributeContainer(event_data)
     event_data_identifier = event_data.GetIdentifier()
     event.SetEventDataIdentifier(event_data_identifier)
@@ -132,7 +209,8 @@ class TaggingFileTestCase(shared_test_lib.BaseTestCase):
 
     plugin = tagging.TaggingAnalysisPlugin()
     plugin.SetAndLoadTagFile(tag_file_path)
-    plugin.ExamineEvent(mediator, event, event_data, event_data_stream)
+    plugin.ExamineEvent(
+        mediator, event, event_data, event_data_stream, event_values)
 
     analysis_report = plugin.CompileReport(mediator)
     storage_writer.AddAttributeContainer(analysis_report)

@@ -51,7 +51,8 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     mediator.SetStorageWriter(storage_writer)
 
     for event, event_data, event_data_stream in test_events:
-      plugin.ExamineEvent(mediator, event, event_data, event_data_stream)
+      # TODO: add support for event_values.
+      plugin.ExamineEvent(mediator, event, event_data, event_data_stream, None)
 
     analysis_report = plugin.CompileReport(mediator)
     storage_writer.AddAttributeContainer(analysis_report)
@@ -92,7 +93,8 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
               events.EventDataStream.CONTAINER_TYPE,
               event_data_stream_identifier)
 
-      plugin.ExamineEvent(mediator, event, event_data, event_data_stream)
+      # TODO: add support for event_values.
+      plugin.ExamineEvent(mediator, event, event_data, event_data_stream, None)
 
     analysis_report = plugin.CompileReport(mediator)
     storage_writer.AddAttributeContainer(analysis_report)

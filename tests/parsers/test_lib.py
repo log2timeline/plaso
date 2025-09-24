@@ -177,37 +177,28 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
           'event value: "{0:s}" does not match expected value').format(name)
       self.assertEqual(value, expected_value, error_message)
 
-  def CheckEventValues(self, storage_writer, event, expected_event_values):
-    """Asserts that an event and its event data matches the expected values.
+  def CheckEventValues(self, event_values, expected_event_values):
+    """Asserts that event values matches the expected values.
 
     Args:
-      storage_writer (StorageWriter): storage writer.
-      event (EventObject): event to check.
+      event_values (acstore.AttributeContainer): event values attribute
+          container to check.
       expected_event_values (dict[str, list[str]): expected values of the event
-          and event data attribute values per name.
+          data attribute values per name.
     """
-    event_data = None
     for name, expected_value in expected_event_values.items():
-      if name == 'timestamp' and isinstance(expected_value, str):
-        posix_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-            timestamp=event.timestamp)
-        value = posix_time.CopyToDateTimeString()
-
-      elif name in ('date_time', 'timestamp', 'timestamp_desc'):
-        value = getattr(event, name, None)
-
-      else:
-        if not event_data:
-          event_data = self._GetEventDataOfEvent(storage_writer, event)
-
-        value = getattr(event_data, name, None)
-
-      if name == 'date_time' and value and isinstance(expected_value, str):
+      value = getattr(event_values, name, None)
+      if isinstance(value, dfdatetime_interface.DateTimeValues):
         date_time_value = value.CopyToDateTimeStringISO8601()
         if not date_time_value:
           # Call CopyToDateTimeString to support semantic date time values.
           date_time_value = value.CopyToDateTimeString()
         value = date_time_value
+
+      elif isinstance(value, list) and value and isinstance(
+          value[0], dfdatetime_interface.DateTimeValues):
+        value = [date_time_value.CopyToDateTimeStringISO8601()
+                 for date_time_value in value]
 
       error_message = (
           'event value: "{0:s}" does not match expected value').format(name)

@@ -449,15 +449,33 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
             f'message file: {message_file_lookup_key:s} could not be found.'))
         return
 
-    lookup_key = None
-    if container.CONTAINER_TYPE in (
-        self._CONTAINER_TYPE_EVENT_DATA,
-        self._CONTAINER_TYPE_EVENT_DATA_STREAM,
-        'windows_eventlog_message_file'):
-      # Preserve the lookup key before adding it to the attribute container
-      # store.
-      identifier = container.GetIdentifier()
-      lookup_key = identifier.CopyToString()
+    if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
+      event_values_identifier = container.GetEventValuesIdentifier()
+      event_values_lookup_key = None
+      if event_values_identifier:
+        event_values_lookup_key = event_values_identifier.CopyToString()
+
+        event_values_identifier = merge_helper.GetAttributeContainerIdentifier(
+            event_values_lookup_key)
+
+      if event_values_identifier:
+        container.SetEventValuesIdentifier(event_values_identifier)
+      elif event_values_lookup_key:
+        identifier = container.GetIdentifier()
+        identifier_string = identifier.CopyToString()
+
+        # TODO: store this as a merge warning so this is preserved
+        # in the storage file.
+        logger.error((
+            f'Unable to merge {container.CONTAINER_TYPE:s} attribute '
+            f'container: {identifier_string:s} since corresponding event '
+            f'values: {event_values_lookup_key:s} could not be found.'))
+        return
+
+    # For attribute containers that are referenced from other containers,
+    # preserve the lookup key before adding it to the attribute container store.
+    lookup_key, identifier = merge_helper.PreserveAttributeContainerIdentifier(
+        container)
 
     storage_writer.AddAttributeContainer(container)
 

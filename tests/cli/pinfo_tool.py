@@ -150,10 +150,10 @@ Storage files are different.
         '{"file_hashes": [',
         ('    {"sha256_hash": '
          '"1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4", '
-         '"display_name": "OS:/tmp/test/test_data/syslog"},'),
+         '"display_name": "OS:/tmp/test/test_data/syslog/syslog"},'),
         ('    {"sha256_hash": '
          '"1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4", '
-         '"display_name": "OS:/tmp/test/test_data/syslog"}'),
+         '"display_name": "OS:/tmp/test/test_data/syslog/syslog"}'),
         ']}',
         '']
 
@@ -183,9 +183,9 @@ Storage files are different.
         'SHA256 hash | Display name',
         '--- | ---',
         ('1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4 | '
-         'OS:/tmp/test/test_data/syslog'),
+         'OS:/tmp/test/test_data/syslog/syslog'),
         ('1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4 | '
-         'OS:/tmp/test/test_data/syslog'),
+         'OS:/tmp/test/test_data/syslog/syslog'),
         '']
 
     output = output_writer.ReadOutput()
@@ -213,9 +213,9 @@ Storage files are different.
     expected_output = [
         'SHA256 hash\tDisplay name',
         ('1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4\t'
-         'OS:/tmp/test/test_data/syslog'),
+         'OS:/tmp/test/test_data/syslog/syslog'),
         ('1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4\t'
-         'OS:/tmp/test/test_data/syslog'),
+         'OS:/tmp/test/test_data/syslog/syslog'),
         '']
 
     output = output_writer.ReadOutput()
@@ -552,8 +552,8 @@ Storage files are different.
   def testPrintStorageInformationAsJSON(self):
     """Tests the PrintStorageInformation function with JSON output format."""
     test_filename = 'pinfo_test.plaso'
-    session_identifier = '0db86b5f-9176-4863-bf1e-9ac7ca632377'
-    session_start_time = '2023-03-27 03:47:24.091665'
+    session_identifier = '34895a64-9ddf-4e7d-be73-a9380cf2e930'
+    session_start_time = '2024-03-28 07:54:56.198184'
 
     test_file_path = self._GetTestFilePath([test_filename])
     self._SkipIfPathNotExists(test_file_path)
@@ -595,14 +595,14 @@ Storage files are different.
   def testPrintStorageInformationAsText(self):
     """Tests the PrintStorageInformation function with text output format."""
     test_filename = 'pinfo_test.plaso'
-    format_version = '20230327'
-    plaso_version = '20230311'
-    session_identifier = '0db86b5f-9176-4863-bf1e-9ac7ca632377'
-    session_start_time = '2023-03-27T03:47:24.091665+00:00'
-    session_completion_time = '2023-03-27T03:47:32.596408+00:00'
+    format_version = '20240325'
+    plaso_version = '20240317'
+    session_identifier = '34895a64-9ddf-4e7d-be73-a9380cf2e930'
+    session_start_time = '2024-03-28T07:54:56.198184+00:00'
+    session_completion_time = '2024-03-28T07:55:04.476594+00:00'
 
     command_line_arguments = (
-        './tools/log2timeline.py --partition=all --quiet '
+        './plaso/scripts/log2timeline.py --partition=all --quiet '
         '--storage-file pinfo_test.plaso test_data/tsk_volume_system.raw')
 
     enabled_parser_names = ', '.join([
@@ -653,6 +653,7 @@ Storage files are different.
         'olecf/olecf_default',
         'olecf/olecf_document_summary',
         'olecf/olecf_summary',
+        'onedrive_log',
         'opera_global',
         'opera_typed_history',
         'pe',
@@ -660,11 +661,16 @@ Storage files are different.
         'plist/airport',
         'plist/apple_id',
         'plist/ios_carplay',
+        'plist/ios_identityservices',
         'plist/ipod_device',
         'plist/launchd_plist',
+        'plist/macos_background_items_plist',
         'plist/macos_bluetooth',
+        'plist/macos_install_history',
+        'plist/macos_login_items_plist',
+        'plist/macos_login_window_plist',
         'plist/macos_software_update',
-        'plist/macosx_install_history',
+        'plist/macos_startup_item_plist',
         'plist/macuser',
         'plist/plist_default',
         'plist/safari_downloads',
@@ -677,6 +683,7 @@ Storage files are different.
         'recycle_bin',
         'recycle_bin_info2',
         'rplog',
+        'simatic_s7',
         'spotlight_storedb',
         'sqlite',
         'sqlite/android_calls',
@@ -691,12 +698,16 @@ Storage files are different.
         'sqlite/chrome_autofill',
         'sqlite/chrome_extension_activity',
         'sqlite/dropbox',
-        'sqlite/firefox_cookies',
+        'sqlite/edge_load_statistics',
+        'sqlite/firefox_10_cookies',
+        'sqlite/firefox_118_downloads',
+        'sqlite/firefox_2_cookies',
         'sqlite/firefox_downloads',
         'sqlite/firefox_history',
         'sqlite/google_drive',
         'sqlite/hangouts_messages',
         'sqlite/imessage',
+        'sqlite/ios_datausage',
         'sqlite/ios_netusage',
         'sqlite/ios_powerlog',
         'sqlite/ios_screentime',
@@ -716,6 +727,7 @@ Storage files are different.
         'sqlite/twitter_android',
         'sqlite/twitter_ios',
         'sqlite/windows_eventtranscript',
+        'sqlite/windows_push_notification',
         'sqlite/windows_timeline',
         'sqlite/zeitgeist',
         'symantec_scanlog',
@@ -736,8 +748,10 @@ Storage files are different.
         'text/mac_appfirewall_log',
         'text/mac_securityd',
         'text/mac_wifi',
+        'text/macos_launchd_log',
         'text/popularity_contest',
         'text/postgresql',
+        'text/powershell_transcript',
         'text/santa',
         'text/sccm',
         'text/selinux',
@@ -757,9 +771,11 @@ Storage files are different.
         'text/zsh_extended_history',
         'trendmicro_url',
         'trendmicro_vd',
+        'unified_logging',
         'usnjrnl',
         'utmp',
         'utmpx',
+        'wincc_sys',
         'windefender_history',
         'winevt',
         'winevtx',

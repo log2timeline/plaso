@@ -126,12 +126,21 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       else:
         event_data_stream = None
 
+      event_values_identifier = event_data.GetEventValuesIdentifier()
+      if event_values_identifier:
+        # TODO: get container_type from event_data.data_type
+        container_type = None
+        event_values = storage_writer.GetAttributeContainerByIdentifier(
+            container_type, event_values_identifier)
+      else:
+        event_values = None
+
       event_identifier = event.GetIdentifier()
       event_tag = storage_writer.GetEventTagByEventIdentifer(event_identifier)
 
       if event_filter:
         filter_match = event_filter.Match(
-            event, event_data, event_data_stream, event_tag)
+            event, event_data, event_data_stream, event_values, event_tag)
       else:
         filter_match = None
 
@@ -142,7 +151,8 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
       for event_queue in self._event_queues.values():
         # TODO: Check for premature exit of analysis plugins.
-        event_queue.PushItem((event, event_data, event_data_stream))
+        event_queue.PushItem(
+            (event, event_data, event_data_stream, event_values))
 
       self._number_of_consumed_events += 1
 

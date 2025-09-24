@@ -66,14 +66,14 @@ class MacOSTaggingFileTest(test_lib.TaggingFileTestCase):
     event_data = filestat.FileStatEventData()
     event_data.filename = '/LaunchDaemons/test.plist'
 
-    storage_writer = self._TagEvent(event, event_data, None)
+    storage_writer = self._TagEvent(event, event_data, None, None)
 
     self._CheckLabels(storage_writer, [])
 
     event_data = filestat.FileStatEventData()
     event_data.filename = '/LaunchAgents/test.plist'
 
-    storage_writer = self._TagEvent(event, event_data, None)
+    storage_writer = self._TagEvent(event, event_data, None, None)
 
     self._CheckLabels(storage_writer, ['autorun'])
 
@@ -98,13 +98,13 @@ class MacOSTaggingFileTest(test_lib.TaggingFileTestCase):
 
     event_data = filestat.FileStatEventData()
 
-    storage_writer = self._TagEvent(event, event_data, None)
+    storage_writer = self._TagEvent(event, event_data, None, None)
 
     self._CheckLabels(storage_writer, [])
 
     event.timestamp_desc = 'Downloaded Time'
 
-    storage_writer = self._TagEvent(event, event_data, None)
+    storage_writer = self._TagEvent(event, event_data, None, None)
 
     self._CheckLabels(storage_writer, ['file_download'])
 
@@ -134,13 +134,13 @@ class MacOSTaggingFileTest(test_lib.TaggingFileTestCase):
 
     event_data = summary.OLECFSummaryInformationEventData()
 
-    storage_writer = self._TagEvent(event, event_data, None)
+    storage_writer = self._TagEvent(event, event_data, None, None)
 
     self._CheckLabels(storage_writer, [])
 
     event.timestamp_desc = definitions.TIME_DESCRIPTION_LAST_PRINTED
 
-    storage_writer = self._TagEvent(event, event_data, None)
+    storage_writer = self._TagEvent(event, event_data, None, None)
 
     self._CheckLabels(storage_writer, ['document_print'])
 

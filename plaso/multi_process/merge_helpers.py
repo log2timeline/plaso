@@ -66,7 +66,7 @@ class BaseTaskMergeHelper(object):
     return container
 
   def GetAttributeContainerIdentifier(self, lookup_key):
-    """Retrieves an attribute container.
+    """Retrieves an attribute container identifier.
 
     Args:
       lookup_key (str): lookup key that identifies the attribute container.
@@ -78,7 +78,7 @@ class BaseTaskMergeHelper(object):
     return self._container_identifier_mappings.get(lookup_key, None)
 
   def SetAttributeContainerIdentifier(self, lookup_key, identifier):
-    """Sets an attribute container.
+    """Sets an attribute container identifier.
 
     Args:
       lookup_key (str): lookup key that identifies the attribute container.
@@ -118,9 +118,79 @@ class ExtractionTaskMergeHelper(BaseTaskMergeHelper):
       # data by the timeliner and therefore needs to be merged before event
       # data containers.
       events.DateLessLogHelper.CONTAINER_TYPE,
-      events.EventData.CONTAINER_TYPE,
       warnings.ExtractionWarning.CONTAINER_TYPE,
       warnings.RecoveryWarning.CONTAINER_TYPE,
       artifacts.WindowsEventLogMessageFileArtifact.CONTAINER_TYPE,
       artifacts.WindowsEventLogMessageStringArtifact.CONTAINER_TYPE,
       artifacts.WindowsWevtTemplateEvent.CONTAINER_TYPE)
+
+  def __init__(self, task_storage_reader, task_identifier):
+    """Initialize a helper for merging task related attribute containers.
+
+    Args:
+      task_storage_reader (StorageReader): task storage reader.
+      task_identifier (str): identifier of the task that is merged.
+    """
+    super(ExtractionTaskMergeHelper, self).__init__(
+        task_storage_reader, task_identifier)
+    self._event_values_container_types = set()
+
+  def _GetAttributeContainers(self, task_storage_reader):
+    """Retrieves attribute containers to merge.
+
+    Args:
+      task_storage_reader (StorageReader): task storage reader.
+
+    Yields:
+      AttributeContainer: attribute container.
+    """
+    self._event_values_container_types = set()
+    for container in task_storage_reader.GetAttributeContainers(
+        events.EventData.CONTAINER_TYPE):
+      event_values_identifier = container.GetEventValuesIdentifier()
+      if event_values_identifier:
+        self._event_values_container_types.add(event_values_identifier.name)
+
+    for container_type in self._CONTAINER_TYPES:
+      for container in task_storage_reader.GetAttributeContainers(
+          container_type):
+        yield container
+
+    # Merge event values attribute containers before the event data that
+    # references it.
+    for container_type in self._event_values_container_types:
+      for container in task_storage_reader.GetAttributeContainers(
+          container_type):
+        yield container
+
+    for container in task_storage_reader.GetAttributeContainers(
+        events.EventData.CONTAINER_TYPE):
+      yield container
+
+    self.fully_merged = True
+
+  def PreserveAttributeContainerIdentifier(self, container):
+    """Preserves an attribute container identifier.
+
+    Args:
+      container (AttributeContainer): attribute container.
+
+    Returns:
+      tuple[str, AttributeContainerIdentifier]: lookup key and corresponding
+          attribute container identifier or None, None if the attribute
+          container does not require to be mapped.
+    """
+    if container.CONTAINER_TYPE in (
+        artifacts.WindowsEventLogMessageFileArtifact.CONTAINER_TYPE,
+        events.EventData.CONTAINER_TYPE,
+        events.EventDataStream.CONTAINER_TYPE):
+      identifier = container.GetIdentifier()
+      lookup_key = identifier.CopyToString()
+      return lookup_key, identifier
+
+    if container.CONTAINER_TYPE in self._event_values_container_types:
+      identifier = container.GetIdentifier()
+      lookup_key = identifier.CopyToString()
+      return lookup_key, identifier
+
+    return None, None

@@ -271,7 +271,8 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
     return super(BrowserSearchPlugin, self).CompileReport(analysis_mediator)
 
   def ExamineEvent(
-      self, analysis_mediator, event, event_data, event_data_stream):
+      self, analysis_mediator, event, event_data, event_data_stream,
+      event_values):
     """Analyzes an event.
 
     Args:
@@ -280,6 +281,7 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
       event (EventObject): event.
       event_data (EventData): event data.
       event_data_stream (EventDataStream): event data stream.
+      event_values (AttributeContainer): event values attribute container.
     """
     if event_data.data_type not in self._SUPPORTED_EVENT_DATA_TYPES:
       return

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+
 # -*- coding: utf-8 -*-
 """Tests for the event filter expression parser filter classes."""
 
@@ -15,13 +15,15 @@ from tests.containers import test_lib as containers_test_lib
 class FalseFilter(filters.Operator):
   """A filter which always evaluates to False for testing."""
 
-  def Matches(self, event, event_data, event_data_stream, event_tag):
+  def Matches(
+      self, event, event_data, event_data_stream, event_values, event_tag):
     """Determines if the event, data and tag match the filter.
 
     Args:
       event (EventObject): event to compare against the filter.
       event_data (EventData): event data to compare against the filter.
       event_data_stream (EventDataStream): event data stream.
+      event_values (AttributeContainer): event values attribute container.
       event_tag (EventTag): event tag to compare against the filter.
 
     Returns:
@@ -33,13 +35,15 @@ class FalseFilter(filters.Operator):
 class TrueFilter(filters.Operator):
   """A filter which always evaluates to True for testing."""
 
-  def Matches(self, event, event_data, event_data_stream, event_tag):
+  def Matches(
+      self, event, event_data, event_data_stream, event_values, event_tag):
     """Determines if the event, data and tag match the filter.
 
     Args:
       event (EventObject): event to compare against the filter.
       event_data (EventData): event data to compare against the filter.
       event_data_stream (EventDataStream): event data stream.
+      event_values (AttributeContainer): event values attribute container.
       event_tag (EventTag): event tag to compare against the filter.
 
     Returns:
@@ -98,13 +102,13 @@ class AndFilterTest(shared_test_lib.BaseTestCase):
     filter_object = filters.AndFilter(arguments=[
         true_filter_object, true_filter_object])
 
-    result = filter_object.Matches(event, event_data, None, None)
+    result = filter_object.Matches(event, event_data, None, None, None)
     self.assertTrue(result)
 
     filter_object = filters.AndFilter(arguments=[
         false_filter_object, true_filter_object])
 
-    result = filter_object.Matches(event, event_data, None, None)
+    result = filter_object.Matches(event, event_data, None, None, None)
     self.assertFalse(result)
 
 
@@ -128,13 +132,13 @@ class OrFilterTest(shared_test_lib.BaseTestCase):
     filter_object = filters.OrFilter(arguments=[
         false_filter_object, true_filter_object])
 
-    result = filter_object.Matches(event, event_data, None, None)
+    result = filter_object.Matches(event, event_data, None, None, None)
     self.assertTrue(result)
 
     filter_object = filters.OrFilter(arguments=[
         false_filter_object, false_filter_object])
 
-    result = filter_object.Matches(event, event_data, None, None)
+    result = filter_object.Matches(event, event_data, None, None, None)
     self.assertFalse(result)
 
 
@@ -154,7 +158,7 @@ class IdentityFilterTest(shared_test_lib.BaseTestCase):
 
     filter_object = filters.IdentityFilter()
 
-    result = filter_object.Matches(event, event_data, None, None)
+    result = filter_object.Matches(event, event_data, None, None, None)
     self.assertTrue(result)
 
 
@@ -194,16 +198,16 @@ class GenericBinaryOperatorTest(shared_test_lib.BaseTestCase):
     filter_object = filters.GenericBinaryOperator(arguments=['test_value', 1])
 
     test_value = filter_object._GetValue(
-        'test_value', event, event_data, None, event_tag)
+        'test_value', event, event_data, None, None, event_tag)
     self.assertEqual(test_value, 1)
 
     test_value = filter_object._GetValue(
-        'timestamp', event, event_data, None, event_tag)
+        'timestamp', event, event_data, None, None, event_tag)
     self.assertIsNotNone(test_value)
     self.assertEqual(test_value.timestamp, 5134324321)
 
     test_value = filter_object._GetValue(
-        'tag', event, event_data, None, event_tag)
+        'tag', event, event_data, None, None, event_tag)
     self.assertEqual(test_value, ['browser_search'])
 
   # TODO: add tests for FlipBool function
