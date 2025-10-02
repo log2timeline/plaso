@@ -1,0 +1,7 @@
+#Software: Microsoft Internet Information Services 10.0
+#Version: 1.0
+#Date: 2021-08-07 00:00:01
+#Fields: date time s-ip cs-method cs-uri-stem cs-uri-query s-port cs-username c-ip cs(User-Agent) cs(Referer) sc-status sc-substatus sc-win32-status time-taken
+2022-01-01 00:01:24 fe80::1ff:fe23:4567:890a%3 POST /powershell clientApplication=ActiveMonitor;PSVersion=5.1.14393.4467 444  random\ranuser1 ::1 Microsoft+WinRM+Client - 200 0 0 15
+2022-01-02 00:01:25 ::1 GET /api/test - 443  testuser fe80::abcd:ef01:2345:6789%eth0 Mozilla/5.0 - 200 0 0 20
+2022-01-03 00:01:26 2001:db8::1%2 POST /endpoint - 443  admin 192.168.1.100 curl/7.68.0 - 404 0 0 10

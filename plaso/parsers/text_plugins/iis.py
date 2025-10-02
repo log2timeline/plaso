@@ -93,9 +93,15 @@ class WinIISTextPlugin(interface.TextPlugin):
   _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
+  # IPv6 address with optional zone index (e.g., fe80::1%3 or fe80::1%eth0)
+  # Zone index format: % followed by alphanumeric characters
+  _IPV6_WITH_ZONE = pyparsing.Combine(
+      pyparsing.pyparsing_common.ipv6_address +
+      pyparsing.Optional('%' + pyparsing.Word(pyparsing.alphanums)))
+
   _IP_ADDRESS = (
       pyparsing.pyparsing_common.ipv4_address |
-      pyparsing.pyparsing_common.ipv6_address | _BLANK)
+      _IPV6_WITH_ZONE | _BLANK)
 
   PORT = pyparsing.Word(pyparsing.nums, max=6).set_parse_action(
       lambda tokens: int(tokens[0], 10)) | _BLANK
