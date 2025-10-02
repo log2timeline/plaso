@@ -1,0 +1,8 @@
+1677971734.079  1234 1.2.3.4 TCP_TUNNEL/200 39 CONNECT domain.xyz:443 - HIER_DIRECT/1.2.3.4 -
+1677971734.080  1234 1.2.3.4 TCP_TUNNEL/200 39 CONNECT domain.xyz:443 - HIER_DIRECT/1.2.3.4  -
+1677971735.123  567 192.168.1.100 TCP_MISS/200 5432 GET http://example.com/index.html user1 HIER_DIRECT/93.184.216.34 text/html
+1677971736.456  890 10.0.0.50 TCP_HIT/304 0 GET http://example.com/logo.png - NONE/- image/png
+1677971737.789  123 2001:db8::1 TCP_MISS/404 1024 GET http://example.com/missing.html admin HIER_DIRECT/93.184.216.34 text/html
+1677971738.012  456 172.16.0.1 TCP_DENIED/403 256 POST http://example.com/api/data - HIER_NONE/- application/json
+1677971739.345  789 192.168.0.5 TCP_REFRESH_HIT/200 8192 GET http://cdn.example.com/script.js - HIER_DIRECT/1.2.3.4 application/javascript
+1677971740.678  234 10.10.10.10 TCP_TUNNEL/200 54321 CONNECT secure.example.com:443 user@domain.com HIER_DIRECT/10.20.30.40 -
