@@ -137,7 +137,19 @@ class WinEvtxParser(interface.FileObjectParser):
 
     # Computer name is the value stored in the event record and does not
     # necessarily correspond with the actual hostname.
-    event_data.computer_name = evtx_record.computer_name
+    try:
+      computer_name = evtx_record.computer_name
+      if computer_name:
+        event_data.computer_name = computer_name
+    except (AttributeError, TypeError) as exception:
+      warning_message = (
+          'unable to read computer name from event record: {0:d} '
+          'with error: {1!s}').format(record_index, exception)
+      if recovered:
+        parser_mediator.ProduceRecoveryWarning(warning_message)
+      else:
+        parser_mediator.ProduceExtractionWarning(warning_message)
+
     event_data.user_sid = evtx_record.user_security_identifier
 
     event_data.strings = list(evtx_record.strings)
