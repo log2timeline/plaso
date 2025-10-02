@@ -13,7 +13,7 @@ class PowerShellTranscriptLogTextPluginTest(test_lib.TextPluginTestCase):
   """Tests for PowerShell transcript log text parser plugin."""
 
   def testProcess(self):
-    """Tests the Process function ."""
+    """Tests the Process function."""
     plugin = powershell_transcript.PowerShellTranscriptLogTextPlugin()
     storage_writer = self._ParseTextFileWithPlugin(
         ['powershell_transcript.txt'], plugin)
@@ -37,6 +37,7 @@ class PowerShellTranscriptLogTextPluginTest(test_lib.TextPluginTestCase):
         'compatible_versions': '1.0, 2.0, 3.0, 4.0, 5.0, 5.1.17763.1852',
         'data_type': 'powershell:transcript_log:entry',
         'edition': 'Desktop',
+        'end_time': '2022-07-21T02:37:59',
         'host_application':
             'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe',
         'machine': 'MSEDGEWIN10 (Microsoft Windows NT 10.0.17763.0)',
@@ -140,6 +141,49 @@ class PowerShellTranscriptLogTextPluginTest(test_lib.TextPluginTestCase):
         'ws_man_stack_version': '3.0'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 1)
+    self.CheckEventData(event_data, expected_event_values)
+
+  def testProcessIncomplete(self):
+    """Tests the Process function on an incomplete file without footer."""
+    plugin = powershell_transcript.PowerShellTranscriptLogTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(
+        ['powershell_transcript_incomplete.txt'], plugin)
+
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 1)
+
+    # Should have one extraction warning for missing footer
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 1)
+
+    warnings = list(storage_writer.GetAttributeContainers('extraction_warning'))
+    warning = warnings[0]
+    self.assertIn('missing transcript footer', warning.message)
+
+    expected_event_values = {
+        'build_version': '10.0.17763.1852',
+        'clr_version': '4.0.30319.42000',
+        'commands': (
+            'PS C:\\Windows\\system32> whoami; msedgewin10\\ieuser; '
+            'PS C:\\Windows\\system32> Get-Process'),
+        'compatible_versions': '1.0, 2.0, 3.0, 4.0, 5.0, 5.1.17763.1852',
+        'data_type': 'powershell:transcript_log:entry',
+        'edition': 'Desktop',
+        'host_application':
+            'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe',
+        'machine': 'MSEDGEWIN10 (Microsoft Windows NT 10.0.17763.0)',
+        'process_identifier': '6456',
+        'remoting_protocol_version': '2.3',
+        'runas_user': 'MSEDGEWIN10\\IEUser',
+        'serialization_version': '1.1.0.1',
+        'start_time': '2022-07-21T02:37:49',
+        'username': 'MSEDGEWIN10\\IEUser',
+        'version': '5.1.17763.1852',
+        'ws_man_stack_version': '3.0'}
+
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
 
 
