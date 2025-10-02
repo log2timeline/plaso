@@ -29,6 +29,7 @@ from plaso.parsers.text_plugins import setupapi
 from plaso.parsers.text_plugins import skydrivelog
 from plaso.parsers.text_plugins import snort_fastlog
 from plaso.parsers.text_plugins import sophos_av
+from plaso.parsers.text_plugins import squid_access
 from plaso.parsers.text_plugins import syslog
 from plaso.parsers.text_plugins import teamviewer
 from plaso.parsers.text_plugins import viminfo
