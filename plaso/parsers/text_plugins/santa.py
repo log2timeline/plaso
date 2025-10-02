@@ -335,6 +335,13 @@ class SantaTextPlugin(interface.TextPlugin):
       pyparsing.Literal('EXIT').set_results_name('action') +
       _PID + _PID_VERSION + _PPID + _UID + _GID + _END_OF_LINE)
 
+  # Newsyslog header/footer format:
+  # MMM DD HH:MM:SS hostname newsyslog[PID]: message
+  _NEWSYSLOG_LINE = (
+      pyparsing.Regex(
+          r'[A-Z][a-z]{2}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2}\s+\S+\s+'
+          r'newsyslog\[\d+\]:\s+.*') + _END_OF_LINE)
+
   _QUOTA_EXCEEDED_LINE = (
       _DATE_TIME_BLOCK + pyparsing.Literal((
           '*** LOG MESSAGE QUOTA EXCEEDED - SOME MESSAGES FROM THIS PROCESS '
@@ -344,6 +351,7 @@ class SantaTextPlugin(interface.TextPlugin):
       ('execution_line', _EXECUTION_LINE),
       ('file_system_event_line', _FILE_OPERATION_LINE),
       ('mount_line', _DISK_MOUNT_LINE),
+      ('newsyslog_line', _NEWSYSLOG_LINE),
       ('process_exit_line', _PROCESS_EXIT_LINE),
       ('quota_exceeded_line', _QUOTA_EXCEEDED_LINE),
       ('unmount_line', _DISK_UNMOUNT_LINE)]
@@ -364,6 +372,10 @@ class SantaTextPlugin(interface.TextPlugin):
     Raises:
       ParseError: if the structure cannot be parsed.
     """
+    if key == 'newsyslog_line':
+      # Skip newsyslog header/footer lines
+      return
+
     if key == 'quota_exceeded_line':
       # skip this line
       return
