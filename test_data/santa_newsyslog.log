@@ -1,0 +1,4 @@
+Mar 31 06:30:02 hostname newsyslog[10904]: logfile turned over due to size>25000K
+[2023-03-31T06:29:57.423Z] I santad: action=EXIT|pid=10897|pidversion=2243287|ppid=1|uid=262|gid=262
+[2023-04-12T22:18:02.588Z] I santad: action=EXEC|decision=ALLOW|reason=CERT|sha256=abc123def456|cert_sha256=def789ghi012|cert_cn=Software Signing|pid=12345|pidversion=3456789|ppid=1|uid=0|user=root|gid=0|group=wheel|mode=M|path=/usr/bin/test
+Apr 12 22:33:30 hostname newsyslog[58079]: logfile turned over due to size>40000K
