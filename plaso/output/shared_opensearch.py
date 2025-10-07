@@ -268,19 +268,19 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
       RuntimeError: if the OpenSearch index cannot be created.
     """
     try:
-        # pylint: disable=missing-kwoa,too-many-function-args
-        try:
-            # Try the new way first (for versions 2.5.0+)
-            if not self._client.indices.exists(index=index_name):
-                self._client.indices.create(
-                    body={"mappings": mappings}, index=index_name
-                )
-        except TypeError:
-            # If that fails, it must be an older version, so try the old way
-            if not self._client.indices.exists(index_name):
-                self._client.indices.create(
-                    body={"mappings": mappings}, index=index_name
-                )
+      # pylint: disable=missing-kwoa,too-many-function-args
+      try:
+          # Try the new way first (for versions 2.5.0+)
+          if not self._client.indices.exists(index=index_name):
+            self._client.indices.create(
+              body={"mappings": mappings}, index=index_name
+            )
+      except TypeError:
+          # If that fails, it must be an older version, so try the old way
+          if not self._client.indices.exists(index_name):
+            self._client.indices.create(
+              body={"mappings": mappings}, index=index_name
+          )
     except opensearchpy.exceptions.ConnectionError as exception:
         raise RuntimeError(
             f"Unable to create OpenSearch index with error: {exception!s}"
