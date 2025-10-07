@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+=# -*- coding: utf-8 -*-
 """Shared functionality for OpenSearch output modules."""
 
 import logging
@@ -269,7 +269,7 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
     """
     try:
       # pylint: disable=missing-kwoa,too-many-function-args
-      if not self._client.indices.exists(index_name):
+      if not self._client.indices.exists(index=index_name):
         self._client.indices.create(
             body={'mappings': mappings}, index=index_name)
 
