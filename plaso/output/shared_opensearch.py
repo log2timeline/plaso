@@ -283,8 +283,7 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
         )
     except opensearchpy.exceptions.ConnectionError as exception:
       raise RuntimeError(
-            f"Unable to create OpenSearch index with error: {exception!s}"
-      )
+          f"Unable to create OpenSearch index with error: {exception!s}")
 
   def _FlushEvents(self):
     """Inserts the buffered event documents into OpenSearch."""
