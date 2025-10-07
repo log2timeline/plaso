@@ -273,17 +273,17 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
         # Try the new way first (for versions 2.5.0+)
         if not self._client.indices.exists(index=index_name):
           self._client.indices.create(
-              body={"mappings": mappings}, index=index_name
+              body={'mappings': mappings}, index=index_name
         )
       except TypeError:
         # If that fails, it must be an older version, so try the old way
         if not self._client.indices.exists(index_name):
           self._client.indices.create(
-              body={"mappings": mappings}, index=index_name
+              body={'mappings': mappings}, index=index_name
         )
     except opensearchpy.exceptions.ConnectionError as exception:
       raise RuntimeError(
-          f"Unable to create OpenSearch index with error: {exception!s}")
+          f'Unable to create OpenSearch index with error: {exception!s}')
 
   def _FlushEvents(self):
     """Inserts the buffered event documents into OpenSearch."""
