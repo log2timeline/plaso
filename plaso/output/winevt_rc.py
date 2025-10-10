@@ -664,14 +664,11 @@ class WinevtResourcesHelper(object):
     self._lcid = lcid or self.DEFAULT_LCID
     self._message_string_cache = collections.OrderedDict()
     self._resouce_file_helper = resource_files.WindowsResourceFileHelper
-    self._storage_reader = None
+    self._storage_reader = storage_reader
     self._windows_eventlog_message_files = None
     self._windows_eventlog_providers = None
     self._winevt_database_reader = None
 
-    if storage_reader and storage_reader.HasAttributeContainers(
-        'windows_eventlog_provider'):
-      self._storage_reader = storage_reader
 
   def _CacheMessageString(
       self, provider_identifier, log_source, message_identifier,
@@ -1081,13 +1078,13 @@ class WinevtResourcesHelper(object):
     Returns:
       str: parameter string or None if not available.
     """
-    if self._environment_variables is None and storage_reader:
+    if self._environment_variables is None:
       self._ReadEnvironmentVariables(storage_reader)
 
-    if self._windows_eventlog_providers is None and storage_reader:
+    if self._windows_eventlog_providers is None:
       self._ReadWindowsEventLogProviders(storage_reader)
 
-    if self._windows_eventlog_message_files is None and storage_reader:
+    if self._windows_eventlog_message_files is None:
       self._ReadWindowsEventLogMessageFiles(storage_reader)
 
     provider, provider_lookup_key = self._GetWindowsEventLogProvider(
@@ -1182,7 +1179,7 @@ class WinevtResourcesHelper(object):
     message_string = self._GetCachedMessageString(
         provider_identifier, log_source, message_identifier, event_version)
     if not message_string:
-      if self._storage_reader:
+      if self._storage_reader.HasAttributeContainers('windows_eventlog_provider'):
         message_string = self._ReadEventMessageString(
             self._storage_reader, provider_identifier, log_source,
             message_identifier, event_version)
