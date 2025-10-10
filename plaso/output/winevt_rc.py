@@ -818,6 +818,8 @@ class WinevtResourcesHelper(object):
     filter_expression = (
         f'language_identifier == {self._lcid:d} and '
         f'message_identifier == {message_identifier:d}')
+    if storage_reader is None:
+        return message_strings
 
     for message_string in storage_reader.GetAttributeContainers(
         'windows_eventlog_message_string', filter_expression=filter_expression):
@@ -841,6 +843,8 @@ class WinevtResourcesHelper(object):
       list[str]: message strings.
     """
     message_strings = []
+    if storage_reader is None:
+        return message_strings
 
     for message_file_identifier in message_file_identifiers:
       filter_expression = (
