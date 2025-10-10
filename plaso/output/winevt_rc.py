@@ -1081,13 +1081,13 @@ class WinevtResourcesHelper(object):
     Returns:
       str: parameter string or None if not available.
     """
-    if self._environment_variables is None:
+    if self._environment_variables is None and storage_reader:
       self._ReadEnvironmentVariables(storage_reader)
 
-    if self._windows_eventlog_providers is None:
+    if self._windows_eventlog_providers is None and storage_reader:
       self._ReadWindowsEventLogProviders(storage_reader)
 
-    if self._windows_eventlog_message_files is None:
+    if self._windows_eventlog_message_files is None and storage_reader:
       self._ReadWindowsEventLogMessageFiles(storage_reader)
 
     provider, provider_lookup_key = self._GetWindowsEventLogProvider(
@@ -1095,7 +1095,7 @@ class WinevtResourcesHelper(object):
     if not provider:
       return None
 
-    if not storage_reader.HasAttributeContainers(
+    if storage_reader is None or not storage_reader.HasAttributeContainers(
         'windows_eventlog_message_string'):
       return None
 
