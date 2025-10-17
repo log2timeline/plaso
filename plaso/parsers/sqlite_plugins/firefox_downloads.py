@@ -265,7 +265,11 @@ class Firefox118DownloadsPlugin(interface.SQLitePlugin):
 
     event_data.deleted = content_data.get('deleted', None)
     event_data.download_state = content_data.get('state', None)
-    event_data.end_time = content_data.get('endTime', None)
+    end_time = content_data.get('endTime', None)
+    if end_time is not None:
+      event_data.end_time = dfdatetime_posix_time.PosixTimeInMilliseconds(
+          timestamp=end_time
+      )
     event_data.expiration = self._GetRowValue(query_hash, row, 'expiration')
     event_data.flags = self._GetRowValue(query_hash, row, 'flags')
     event_data.full_path = self._GetRowValue(query_hash, row, 'dest_fpath')
