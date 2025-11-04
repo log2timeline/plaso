@@ -107,6 +107,30 @@ attribute_mappings:
   description: 'Recorded Time'
 place_holder_event: true
 ---
+data_type: 'apple:biome:app_launch'
+attribute_mappings:
+- name: 'event_time'
+  description: 'Event Time'
+- name: 'launcher'
+  description: 'process that launched the application'
+- name: 'launched application'
+  description: 'name of the launched application'
+place_holder_event: true
+---
+data_type: 'apple:biome:app_linstall'
+attribute_mappings:
+- name: 'event_time'
+  description: 'Event Time'
+- name: 'action_guid'
+  description: 'GUID for the action of installing the application'
+- name: 'action_name'
+  description: 'name of the action'
+- name: 'application_name'
+  description: 'name of the application'
+- name: 'bundle_identifier'
+  description: 'bundle identifier of the application'
+place_holder_event: true
+---
 data_type: 'av:defender:detection_history'
 attribute_mappings:
 - name: 'recorded_time'

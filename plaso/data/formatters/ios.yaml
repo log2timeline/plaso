@@ -1,6 +1,16 @@
 # Plaso iOS related event formatters.
 ---
 type: 'conditional'
+data_type: 'apple:biome:app_launch'
+message:
+- 'Launcher: {launcher}'
+- 'Launched Application: {launched_application}'
+short_message:
+- 'Launched Application: {launched_application}'
+short_source: 'LOG'
+source: 'Apple biome application launch'
+---
+type: 'conditional'
 data_type: 'ios:app_privacy:access'
 message:
 - 'Accessor Identifier: {accessor_identifier}'
