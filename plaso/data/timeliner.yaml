@@ -319,6 +319,12 @@ attribute_mappings:
   description: 'Creation Time'
 place_holder_event: false
 ---
+data_type: 'drone:dji:mavic'
+attribute_mappings:
+- name: 'timestamp'
+  description: 'Recorded Time'
+place_holder_event: true
+---
 data_type: 'dropbox:sync_history:entry'
 attribute_mappings:
 - name: 'recorded_time'
