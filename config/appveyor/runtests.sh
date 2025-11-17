@@ -2,14 +2,17 @@
 # Script to run tests
 
 # Set the following environment variables to build libyal with gettext.
-export CPPFLAGS="-I/usr/local/include -I/usr/local/opt/gettext/include ${CPPFLAGS}";
-export LDFLAGS="-L/usr/local/lib -L/usr/local/opt/gettext/lib ${LDFLAGS}";
+export CPPFLAGS="-I/usr/local/include -I/usr/local/opt/gettext/include ${CPPFLAGS}"
+export LDFLAGS="-L/usr/local/lib -L/usr/local/opt/gettext/lib ${LDFLAGS}"
 
 # Set the following environment variables to build pycrypto and yara-python.
-export CPPFLAGS="-I/usr/local/opt/openssl@1.1/include ${CPPFLAGS}";
-export LDFLAGS="-L/usr/local/opt/openssl@1.1/lib ${LDFLAGS}";
+export CPPFLAGS="-I/usr/local/opt/openssl@1.1/include ${CPPFLAGS}"
+export LDFLAGS="-L/usr/local/opt/openssl@1.1/lib ${LDFLAGS}"
 
 # Set the following environment variables to ensure tox can find Python 3.14.
-export PATH="/usr/local/opt/python@3.14/bin:${PATH}";
+export PATH="/usr/local/opt/python@3.14/bin:${PATH}"
+
+# Disable colored output.
+export NO_COLOR=1
 
 tox -e py314
