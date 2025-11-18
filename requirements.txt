@@ -50,7 +50,7 @@ lz4 >= 0.10.0
 opensearch-py
 pefile >= 2023.2.7
 psutil >= 5.4.3
-pyparsing >= 3.0.0,< 3.2.0
+pyparsing >= 3.0.0
 python-dateutil >= 1.5
 pytsk3 >= 20210419
 pytz
