@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the extraction tool object."""
 
-import argparse
 import sys
 import unittest
 
@@ -354,9 +353,7 @@ Test argument parser.
 
   def testAddExtractionOptions(self):
     """Tests the AddExtractionOptions function."""
-    argument_parser = argparse.ArgumentParser(
-        prog='extraction_tool_test.py', description='Test argument parser.',
-        add_help=False, formatter_class=test_lib.SortedArgumentsHelpFormatter)
+    argument_parser = self._GetTestArgumentParser('extraction_tool_test.py')
 
     test_tool = extraction_tool.ExtractionTool()
     test_tool.AddExtractionOptions(argument_parser)
@@ -366,9 +363,7 @@ Test argument parser.
 
   def testAddPerformanceOptions(self):
     """Tests the AddPerformanceOptions function."""
-    argument_parser = argparse.ArgumentParser(
-        prog='extraction_tool_test.py', description='Test argument parser.',
-        add_help=False, formatter_class=test_lib.SortedArgumentsHelpFormatter)
+    argument_parser = self._GetTestArgumentParser('extraction_tool_test.py')
 
     test_tool = extraction_tool.ExtractionTool()
     test_tool.AddPerformanceOptions(argument_parser)
@@ -378,10 +373,7 @@ Test argument parser.
 
   def testAddProcessingOptions(self):
     """Tests the AddProcessingOptions function."""
-    argument_parser = argparse.ArgumentParser(
-        prog='extraction_tool_test.py',
-        description='Test argument parser.', add_help=False,
-        formatter_class=test_lib.SortedArgumentsHelpFormatter)
+    argument_parser = self._GetTestArgumentParser('extraction_tool_test.py')
 
     test_tool = extraction_tool.ExtractionTool()
     test_tool.AddProcessingOptions(argument_parser)

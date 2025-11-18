@@ -107,6 +107,24 @@ class TestBinaryOutputWriter(tools.FileObjectOutputWriter):
 class CLIToolTestCase(shared_test_lib.BaseTestCase):
   """The unit test case for a CLI tool."""
 
+  PY_3_14_AND_LATER = bool(tuple(sys.version_info[0:2]) >= (3, 14))
+
+  def _GetTestArgumentParser(self, prog):
+    """Retrieves an argument parser for testing.
+
+    Args:
+      prog (str): program name.
+    """
+    if self.PY_3_14_AND_LATER:
+      # pylint: disable=unexpected-keyword-arg
+      return argparse.ArgumentParser(
+          prog=prog, description='Test argument parser.', add_help=False,
+          color=False, formatter_class=SortedArgumentsHelpFormatter)
+
+    return argparse.ArgumentParser(
+        prog=prog, description='Test argument parser.', add_help=False,
+        formatter_class=SortedArgumentsHelpFormatter)
+
   def _RunArgparseFormatHelp(self, argument_parser):
     """Runs argparse.format_help() with test conditions.
 
