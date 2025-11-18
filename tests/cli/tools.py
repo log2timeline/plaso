@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the CLI tools classes."""
 
-import argparse
 import io
 import locale
 import os
@@ -81,9 +80,7 @@ Test argument parser.
 
   def testAddBasicOptions(self):
     """Tests the AddBasicOptions function."""
-    argument_parser = argparse.ArgumentParser(
-        prog='tool_test.py', description='Test argument parser.',
-        add_help=False, formatter_class=test_lib.SortedArgumentsHelpFormatter)
+    argument_parser = self._GetTestArgumentParser('tool_test.py')
 
     test_tool = tools.CLITool()
     test_tool.AddBasicOptions(argument_parser)
@@ -93,9 +90,7 @@ Test argument parser.
 
   def testAddInformationalOptions(self):
     """Tests the AddInformationalOptions function."""
-    argument_parser = argparse.ArgumentParser(
-        prog='tool_test.py', description='Test argument parser.',
-        add_help=False, formatter_class=test_lib.SortedArgumentsHelpFormatter)
+    argument_parser = self._GetTestArgumentParser('tool_test.py')
 
     test_tool = tools.CLITool()
     test_tool.AddInformationalOptions(argument_parser)

@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the profiling CLI arguments helper."""
 
-import argparse
 import sys
 import unittest
 
@@ -69,10 +68,7 @@ Test argument parser.
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
-    argument_parser = argparse.ArgumentParser(
-        prog='cli_helper.py', description='Test argument parser.',
-        add_help=False,
-        formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
+    argument_parser = self._GetTestArgumentParser('cli_helper.py')
 
     profiling.ProfilingArgumentsHelper.AddArguments(argument_parser)
 

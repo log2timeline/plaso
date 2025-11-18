@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the psort CLI tool."""
 
-import argparse
 import io
 import os
 import sys
@@ -229,10 +228,7 @@ Test argument parser.
 
   def testAddProcessingOptions(self):
     """Tests the AddProcessingOptions function."""
-    argument_parser = argparse.ArgumentParser(
-        prog='psort_test.py',
-        description='Test argument parser.', add_help=False,
-        formatter_class=test_lib.SortedArgumentsHelpFormatter)
+    argument_parser = self._GetTestArgumentParser('psort_test.py')
 
     test_tool = psort_tool.PsortTool()
     test_tool.AddProcessingOptions(argument_parser)

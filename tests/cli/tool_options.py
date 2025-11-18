@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the CLI tool options mix-ins."""
 
-import argparse
 import sys
 import unittest
 
@@ -251,9 +250,7 @@ Test argument parser.
 
   def testAddOutputOptions(self):
     """Tests the AddOutputOptions function."""
-    argument_parser = argparse.ArgumentParser(
-        prog='tool_options.py', description='Test argument parser.',
-        add_help=False, formatter_class=test_lib.SortedArgumentsHelpFormatter)
+    argument_parser = self._GetTestArgumentParser('tool_options.py')
 
     test_tool = TestToolWithOutputModuleOptions()
     test_tool.AddOutputOptions(argument_parser)

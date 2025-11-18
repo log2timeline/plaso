@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the storage media tool object."""
 
-import argparse
 import io
 import os
 import sys
@@ -1354,10 +1353,7 @@ Test argument parser.
 
   def testAddCredentialOptions(self):
     """Tests the AddCredentialOptions function."""
-    argument_parser = argparse.ArgumentParser(
-        prog='storage_media_tool_test.py',
-        description='Test argument parser.', add_help=False,
-        formatter_class=test_lib.SortedArgumentsHelpFormatter)
+    argument_parser = self._GetTestArgumentParser('storage_media_tool_test.py')
 
     test_tool = storage_media_tool.StorageMediaTool()
     test_tool.AddCredentialOptions(argument_parser)
@@ -1367,10 +1363,7 @@ Test argument parser.
 
   def testAddStorageMediaImageOptions(self):
     """Tests the AddStorageMediaImageOptions function."""
-    argument_parser = argparse.ArgumentParser(
-        prog='storage_media_tool_test.py',
-        description='Test argument parser.', add_help=False,
-        formatter_class=test_lib.SortedArgumentsHelpFormatter)
+    argument_parser = self._GetTestArgumentParser('storage_media_tool_test.py')
 
     test_tool = storage_media_tool.StorageMediaTool()
     test_tool.AddStorageMediaImageOptions(argument_parser)
@@ -1380,10 +1373,7 @@ Test argument parser.
 
   def testAddVSSProcessingOptions(self):
     """Tests the AddVSSProcessingOptions function."""
-    argument_parser = argparse.ArgumentParser(
-        prog='storage_media_tool_test.py',
-        description='Test argument parser.', add_help=False,
-        formatter_class=test_lib.SortedArgumentsHelpFormatter)
+    argument_parser = self._GetTestArgumentParser('storage_media_tool_test.py')
 
     test_tool = storage_media_tool.StorageMediaTool()
     test_tool.AddVSSProcessingOptions(argument_parser)
