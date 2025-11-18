@@ -12,7 +12,4 @@ export LDFLAGS="-L/usr/local/opt/openssl@1.1/lib ${LDFLAGS}"
 # Set the following environment variables to ensure tox can find Python.
 export PATH="/usr/local/opt/python@${PYTHON_VERSION}/bin:${PATH}"
 
-# Disable colored output.
-export NO_COLOR=1
-
 tox -e py${PYTHON_VERSION//./}
