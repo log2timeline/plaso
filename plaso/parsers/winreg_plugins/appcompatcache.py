@@ -33,6 +33,8 @@ class AppCompatCacheEventData(events.EventData):
     offset (int): offset of the Application Compatibility Cache entry relative
         to the start of the Windows Registry value data, from which the event
         data was extracted.
+    registry_last_written_time (dfdatetime.DateTimeValues): key last written
+        date and time.
     path (str): full path to the executable.
     insertion_flags (int): Execution flag.
     executed (bool): Can be indicator of execution.
@@ -48,6 +50,7 @@ class AppCompatCacheEventData(events.EventData):
     self.file_entry_modification_time = None
     self.key_path = None
     self.last_update_time = None
+    self.registry_last_written_time = None
     self.offset = None
     self.path = None
     self.insertion_flags = None
@@ -693,6 +696,7 @@ class AppCompatCacheWindowsRegistryPlugin(
       event_data.offset = cached_entry_offset
       event_data.path = cached_entry_object.path
       event_data.control_set = control_set
+      event_data.registry_last_written_time = registry_key.last_written_time
 
       if cached_entry_object.last_modification_time:
         event_data.file_entry_modification_time = dfdatetime_filetime.Filetime(
