@@ -297,6 +297,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'file_entry_modification_time': '2004-08-04T14:00:00.0000000+00:00',
         'key_path': expected_key_path,
         'last_update_time': '2009-09-20T11:59:16.3281250+00:00',
+        'registry_last_written_time': '2015-06-15T11:53:37.0430610+00:00',
         'path': '\\??\\C:\\WINDOWS\\system32\\hticons.dll',
         'executed': False,
         'insertion_flags': None,
@@ -337,6 +338,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'file_entry_modification_time': '2003-03-24T20:32:18.0000000+00:00',
         'key_path': expected_key_path,
         'last_update_time': None,
+        'registry_last_written_time': '2015-06-15T11:53:37.0430610+00:00',
         'path': (
             '\\??\\C:\\WINDOWS\\Microsoft.NET\\Framework\\v1.1.4322\\ngen.exe'
         ),
@@ -381,6 +383,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'file_entry_modification_time': '2006-11-02T12:35:24.7041218+00:00',
         'key_path': expected_key_path,
         'last_update_time': None,
+        'registry_last_written_time': '2015-06-15T11:53:37.0430610+00:00',
         'path': '\\??\\C:\\Windows\\SYSTEM32\\WISPTIS.EXE',
         'executed': False,
         'insertion_flags': None,
@@ -423,6 +426,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'file_entry_modification_time': '2012-04-04T01:46:37.9329644+00:00',
         'key_path': key_path,
         'last_update_time': None,
+        'registry_last_written_time': '2012-04-04T01:58:40.7767499+00:00',
         'path': '\\??\\C:\\Windows\\PSEXESVC.EXE',
         'executed': True,
         'insertion_flags': 7,
@@ -465,6 +469,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'file_entry_modification_time': '2012-02-18T05:18:23.9350000+00:00',
         'key_path': expected_key_path,
         'last_update_time': None,
+        'registry_last_written_time': '2015-06-15T11:53:37.0430610+00:00',
         'path': 'SYSVOL\\Windows\\System32\\wbem\\WmiPrvSE.exe',
         'executed': True,
         'insertion_flags': 67,
@@ -505,6 +510,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'file_entry_modification_time': '2013-08-22T12:35:25.3750709+00:00',
         'key_path': expected_key_path,
         'last_update_time': None,
+        'registry_last_written_time': '2015-06-15T11:53:37.0430610+00:00',
         'path': 'SYSVOL\\Windows\\System32\\dllhost.exe',
         'executed': False,
         'insertion_flags': 8323072,
@@ -545,6 +551,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'file_entry_modification_time': '2014-09-22T06:42:39.0000000+00:00',
         'key_path': expected_key_path,
         'last_update_time': None,
+        'registry_last_written_time': '2015-06-15T11:53:37.0430610+00:00',
         'path': 'C:\\Windows\\system32\\MpSigStub.exe',
         'executed': True,
         'insertion_flags': None,
@@ -585,6 +592,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'file_entry_modification_time': '2017-03-16T22:56:01.2487145+00:00',
         'key_path': expected_key_path,
         'last_update_time': None,
+        'registry_last_written_time': '2015-06-15T11:53:37.0430610+00:00',
         'path': (
             'C:\\Program Files (x86)\\NVIDIA Corporation\\3D Vision\\'
             'nvstreg.exe'
