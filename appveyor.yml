@@ -32,6 +32,7 @@ environment:
     APPVEYOR_BUILD_WORKER_IMAGE: macos-sonoma
     HOMEBREW_NO_INSTALL_CLEANUP: 1
     TARGET: tests
+    PYTHON_VERSION: "3.14"
 
 install:
 - cmd: "%PYTHON%\\python.exe -m pip install -U build pip setuptools twine wheel"

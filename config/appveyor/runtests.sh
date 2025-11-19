@@ -9,10 +9,7 @@ export LDFLAGS="-L/usr/local/lib -L/usr/local/opt/gettext/lib ${LDFLAGS}"
 export CPPFLAGS="-I/usr/local/opt/openssl@1.1/include ${CPPFLAGS}"
 export LDFLAGS="-L/usr/local/opt/openssl@1.1/lib ${LDFLAGS}"
 
-# Set the following environment variables to ensure tox can find Python 3.14.
-export PATH="/usr/local/opt/python@3.14/bin:${PATH}"
+# Set the following environment variables to ensure tox can find Python.
+export PATH="/usr/local/opt/python@${PYTHON_VERSION}/bin:${PATH}"
 
-# Disable colored output.
-export NO_COLOR=1
-
-tox -e py314
+tox -e py${PYTHON_VERSION//./}
