@@ -1,31 +1,31 @@
 environment:
   matrix:
-  - DESCRIPTION: "Run tests on Windows with 32-bit Python 3.12"
+  - DESCRIPTION: "Run tests on Windows with 32-bit Python 3.14"
     MACHINE_TYPE: "x86"
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
-    PYTHON: "C:\\Python312"
-    PYTHON_VERSION: "3.12"
+    PYTHON: "C:\\Python314"
+    PYTHON_VERSION: "3.14"
     L2TBINARIES_TRACK: "dev"
     TARGET: tests
-  - DESCRIPTION: "Run tests on Windows with 64-bit Python 3.12"
+  - DESCRIPTION: "Run tests on Windows with 64-bit Python 3.14"
     MACHINE_TYPE: "amd64"
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
-    PYTHON: "C:\\Python312-x64"
-    PYTHON_VERSION: "3.12"
+    PYTHON: "C:\\Python314-x64"
+    PYTHON_VERSION: "3.14"
     L2TBINARIES_TRACK: "dev"
     TARGET: tests
-  - DESCRIPTION: "Build wheel on Windows with 32-bit Python 3.12"
+  - DESCRIPTION: "Build wheel on Windows with 32-bit Python 3.14"
     MACHINE_TYPE: "amd64"
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
-    PYTHON: "C:\\Python312-x64"
-    PYTHON_VERSION: "3.12"
+    PYTHON: "C:\\Python314-x64"
+    PYTHON_VERSION: "3.14"
     L2TBINARIES_TRACK: "dev"
     TARGET: wheel
-  - DESCRIPTION: "Build wheel on Windows with 64-bit Python 3.12"
+  - DESCRIPTION: "Build wheel on Windows with 64-bit Python 3.14"
     MACHINE_TYPE: "amd64"
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
-    PYTHON: "C:\\Python312-x64"
-    PYTHON_VERSION: "3.12"
+    PYTHON: "C:\\Python314-x64"
+    PYTHON_VERSION: "3.14"
     L2TBINARIES_TRACK: "dev"
     TARGET: wheel
   - DESCRIPTION: "Run tests on Mac OS with Python 3.14"
