@@ -151,58 +151,47 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
     storage_counters = {}
 
-    extraction_warnings_by_path_spec = collections.Counter()
-    extraction_warnings_by_parser_chain = collections.Counter()
+    warning_types = [
+      self._CONTAINER_TYPE_EXTRACTION_WARNING,
+      self._CONTAINER_TYPE_RECOVERY_WARNING,
+      self._CONTAINER_TYPE_TIMELINING_WARNING,
+    ]
 
-    for warning in storage_reader.GetAttributeContainers(
-        self._CONTAINER_TYPE_EXTRACTION_WARNING):
-      path_spec_string = self._GetPathSpecificationString(warning.path_spec)
-
-      extraction_warnings_by_path_spec[path_spec_string] += 1
-      extraction_warnings_by_parser_chain[warning.parser_chain] += 1
-
-    storage_counters['extraction_warnings_by_path_spec'] = (
-        extraction_warnings_by_path_spec)
-    storage_counters['extraction_warnings_by_parser_chain'] = (
-        extraction_warnings_by_parser_chain)
-
-    recovery_warnings_by_path_spec = collections.Counter()
-    recovery_warnings_by_parser_chain = collections.Counter()
-
-    for warning in storage_reader.GetAttributeContainers(
-        self._CONTAINER_TYPE_RECOVERY_WARNING):
-      path_spec_string = self._GetPathSpecificationString(warning.path_spec)
-
-      recovery_warnings_by_path_spec[path_spec_string] += 1
-      recovery_warnings_by_parser_chain[warning.parser_chain] += 1
-
-    storage_counters['recovery_warnings_by_path_spec'] = (
-        recovery_warnings_by_path_spec)
-    storage_counters['recovery_warnings_by_parser_chain'] = (
-        recovery_warnings_by_parser_chain)
-
-    timelining_warnings_by_path_spec = collections.Counter()
-    timelining_warnings_by_parser_chain = collections.Counter()
-
-    if storage_reader.HasAttributeContainers(
-        self._CONTAINER_TYPE_TIMELINING_WARNING):
-      for warning in storage_reader.GetAttributeContainers(
-          self._CONTAINER_TYPE_TIMELINING_WARNING):
-        path_spec_string = self._GetPathSpecificationString(warning.path_spec)
-
-        timelining_warnings_by_path_spec[path_spec_string] += 1
-        timelining_warnings_by_parser_chain[warning.parser_chain] += 1
-
-    storage_counters['timelining_warnings_by_path_spec'] = (
-        timelining_warnings_by_path_spec)
-    storage_counters['timelining_warnings_by_parser_chain'] = (
-        timelining_warnings_by_parser_chain)
+    for warning_type in warning_types:
+      warning_counters = self._CalculateStorageWarningCounters(
+        storage_reader, warning_type)
+      storage_counters.update(warning_counters)
 
     storage_counters['analysis_reports'] = analysis_reports_counter
     storage_counters['event_labels'] = event_labels_counter
     storage_counters['parsers'] = parsers_counter
 
     return storage_counters
+
+  def _CalculateStorageWarningCounters(self, storage_reader, warning_type):
+    """Calculates the counters of a warning attribute container.
+
+    Args:
+      storage_reader (StorageReader): storage reader.
+      warning_type (str): the warning container type.
+
+    Returns:
+      dict[str, collections.Counter]: storage counters for that warning type.
+    """
+    warnings_by_path_spec = collections.Counter()
+    warnings_by_parser_chain = collections.Counter()
+
+    if storage_reader.HasAttributeContainers(warning_type):
+      for warning in storage_reader.GetAttributeContainers(warning_type):
+        path_spec_string = self._GetPathSpecificationString(warning.path_spec)
+
+        warnings_by_path_spec[path_spec_string] += 1
+        warnings_by_parser_chain[warning.parser_chain] += 1
+
+    return {
+      f'{warning_type}s_by_path_spec': warnings_by_path_spec,
+      f'{warning_type}s_by_parser_chain': warnings_by_parser_chain,
+    }
 
   def _CheckStorageFile(self, storage_file_path, warn_about_existing=False):
     """Checks if the storage file path is valid.

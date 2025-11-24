@@ -118,6 +118,46 @@ Storage files are different.
 
     self.assertEqual(output, expected_output)
 
+  def testCalculateStorageWarningCounters(self):
+    """Tests the _CalculateStorageCounter function."""
+    test_file_path = self._GetTestFilePath(['psort_test.plaso'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+
+    storage_reader = test_tool._GetStorageReader(test_file_path)
+
+    with self.subTest('Non-existing attribute container'):
+      container_type = 'bad-container-type'
+      self.assertFalse(storage_reader.HasAttributeContainers(container_type))
+
+      expected_output = {
+        f'{container_type}s_by_path_spec': collections.Counter(),
+        f'{container_type}s_by_parser_chain': collections.Counter(),
+      }
+      output = test_tool._CalculateStorageWarningCounters(
+        storage_reader, container_type)
+
+      self.assertEqual(output, expected_output)
+
+    with self.subTest('Existing warning attribute container'):
+      container_type = 'extraction_warning'
+      self.assertTrue(storage_reader.HasAttributeContainers(container_type))
+
+      expected_output = {
+        'extraction_warnings_by_parser_chain': collections.Counter({
+          'text/syslog_traditional': 2,
+        }),
+        'extraction_warnings_by_path_spec': collections.Counter({
+          'type: OS, location: /tmp/test/test_data/syslog\n': 2,
+        }),
+      }
+      output = test_tool._CalculateStorageWarningCounters(
+        storage_reader, container_type)
+
+      self.assertEqual(output, expected_output)
+
   # TODO: add test for _CompareStores.
 
   def testGenerateAnalysisResultsReportAsJSON(self):
