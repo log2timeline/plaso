@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """Tests for the pinfo CLI tool."""
 
+import collections
 import json
 import unittest
 
@@ -30,7 +31,45 @@ Parser (plugin) name : Number of events
 Storage files are different.
 """
 
-  # TODO: add test for _CalculateStorageCounters.
+  def testCalculateStorageCounters(self):
+    """Tests the _CalculateStorageCounters function."""
+    test_file_path = self._GetTestFilePath(['psort_test.plaso'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+
+    storage_reader = test_tool._GetStorageReader(test_file_path)
+
+    expected_output = {
+      'analysis_reports': collections.Counter(),
+      'event_labels': collections.Counter({
+        'total': 8,
+        'repeated': 4,
+        'exit1': 2,
+        'exit2': 2,
+      }),
+      'extraction_warnings_by_parser_chain': collections.Counter({
+        'text/syslog_traditional': 2,
+      }),
+      'extraction_warnings_by_path_spec': collections.Counter({
+        'type: OS, location: /tmp/test/test_data/syslog\n': 2,
+      }),
+      'parsers': collections.Counter({
+        'total': 38,
+        'syslog_traditional': 32,
+        'filestat': 6,
+      }),
+      'recovery_warnings_by_parser_chain': collections.Counter(),
+      'recovery_warnings_by_path_spec': collections.Counter(),
+      'timelining_warnings_by_parser_chain': collections.Counter(),
+      'timelining_warnings_by_path_spec': collections.Counter(),
+    }
+
+    output = test_tool._CalculateStorageCounters(storage_reader)
+
+    self.assertEqual(output, expected_output)
+
   # TODO: add test for _CompareStores.
 
   def testGenerateAnalysisResultsReportAsJSON(self):
