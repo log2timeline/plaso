@@ -120,7 +120,6 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     # TODO: determine analysis report counter from actual stored analysis
     # reports or remove.
     analysis_reports_counter = collections.Counter()
-    analysis_reports_counter_error = False
 
     event_labels_counter = {}
     if storage_reader.HasAttributeContainers('event_label_count'):
@@ -130,7 +129,6 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
               'event_label_count')}
 
     event_labels_counter = collections.Counter(event_labels_counter)
-    event_labels_counter_error = False
 
     parsers_counter = {}
     if storage_reader.HasAttributeContainers('parser_count'):
@@ -140,7 +138,6 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
               'parser_count')}
 
     parsers_counter = collections.Counter(parsers_counter)
-    parsers_counter_error = False
 
     storage_counters = {}
 
@@ -191,14 +188,9 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     storage_counters['timelining_warnings_by_parser_chain'] = (
         timelining_warnings_by_parser_chain)
 
-    if not analysis_reports_counter_error:
-      storage_counters['analysis_reports'] = analysis_reports_counter
-
-    if not event_labels_counter_error:
-      storage_counters['event_labels'] = event_labels_counter
-
-    if not parsers_counter_error:
-      storage_counters['parsers'] = parsers_counter
+    storage_counters['analysis_reports'] = analysis_reports_counter
+    storage_counters['event_labels'] = event_labels_counter
+    storage_counters['parsers'] = parsers_counter
 
     return storage_counters
 
