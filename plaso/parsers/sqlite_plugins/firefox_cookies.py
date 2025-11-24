@@ -190,7 +190,7 @@ class FirefoxCookie10Plugin(BaseFirefoxCookiePlugin):
   In schema 10 baseDomain was removed.
 
   Also see:
-    https://searchfox.org/mozilla-central/source/netwerk/cookie/CookiePersistentStorage.cpp
+    https://searchfox.org/firefox-main/source/netwerk/cookie/CookiePersistentStorage.cpp
   """
 
   NAME = 'firefox_10_cookies'
