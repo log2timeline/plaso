@@ -109,6 +109,7 @@ class GCPLogEventData(events.EventData):
     self.source_images = None
     self.status_code = None
     self.status_message = None
+    self.status_reasons = None
     self.text_payload = None
     self.user_agent = None
 
