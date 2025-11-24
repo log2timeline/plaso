@@ -18,6 +18,7 @@ from plaso.containers import events
 from plaso.containers import event_sources
 from plaso.containers import reports
 from plaso.containers import warnings
+from plaso.containers.counts import EventLabelCount, ParserCount
 from plaso.engine import path_helper
 from plaso.lib import errors
 from plaso.lib import loggers
@@ -108,6 +109,27 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     self.list_reports = False
     self.list_sections = False
 
+  def _CalculateStorageCounter(self, storage_reader, container_type, key_name):
+    """Calculates the counters of a single attribute container.
+
+    Args:
+      storage_reader (StorageReader): storage reader.
+      container_type (str): attribute container type.
+      key_name (str): name or label of a counter.
+
+    Returns:
+      collections.Counter: counters of an attribute container.
+    """
+    if not storage_reader.HasAttributeContainers(container_type):
+      return collections.Counter()
+
+    counters = {
+      # Names are optional, set it to None by default to avoid exception.
+      getattr(attribute, key_name, None): attribute.number_of_events
+      for attribute in storage_reader.GetAttributeContainers(container_type)}
+
+    return collections.Counter(counters)
+
   def _CalculateStorageCounters(self, storage_reader):
     """Calculates the counters of the entire storage.
 
@@ -121,23 +143,11 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     # reports or remove.
     analysis_reports_counter = collections.Counter()
 
-    event_labels_counter = {}
-    if storage_reader.HasAttributeContainers('event_label_count'):
-      event_labels_counter = {
-          event_label_count.label: event_label_count.number_of_events
-          for event_label_count in storage_reader.GetAttributeContainers(
-              'event_label_count')}
+    event_labels_counter = self._CalculateStorageCounter(
+      storage_reader, EventLabelCount.CONTAINER_TYPE, 'label')
 
-    event_labels_counter = collections.Counter(event_labels_counter)
-
-    parsers_counter = {}
-    if storage_reader.HasAttributeContainers('parser_count'):
-      parsers_counter = {
-          parser_count.name: parser_count.number_of_events
-          for parser_count in storage_reader.GetAttributeContainers(
-              'parser_count')}
-
-    parsers_counter = collections.Counter(parsers_counter)
+    parsers_counter = self._CalculateStorageCounter(
+      storage_reader, ParserCount.CONTAINER_TYPE, 'name')
 
     storage_counters = {}
 

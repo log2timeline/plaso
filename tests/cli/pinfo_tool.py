@@ -8,6 +8,7 @@ import unittest
 
 from plaso.cli import views as cli_views
 from plaso.cli import pinfo_tool
+from plaso.containers.counts import ParserCount
 from plaso.lib import errors
 
 from tests import test_lib as shared_test_lib
@@ -30,6 +31,53 @@ Parser (plugin) name : Number of events
 
 Storage files are different.
 """
+
+  def testCalculateStorageCounter(self):
+    """Tests the _CalculateStorageCounter function."""
+    test_file_path = self._GetTestFilePath(['psort_test.plaso'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+
+    storage_reader = test_tool._GetStorageReader(test_file_path)
+
+    with self.subTest('Non-existing attribute container'):
+      container_type = 'bad-container-type'
+      self.assertFalse(storage_reader.HasAttributeContainers(container_type))
+
+      expected_output = collections.Counter()
+      output = test_tool._CalculateStorageCounter(
+        storage_reader, container_type, 'key_name')
+
+      self.assertEqual(output, expected_output)
+
+    with self.subTest('Existing attribute container'):
+      container_type = ParserCount.CONTAINER_TYPE
+      self.assertTrue(storage_reader.HasAttributeContainers(container_type))
+
+      expected_output = collections.Counter({
+        'total': 38,
+        'syslog_traditional': 32,
+        'filestat': 6,
+      })
+      output = test_tool._CalculateStorageCounter(
+        storage_reader, container_type, 'name')
+
+      self.assertEqual(output, expected_output)
+
+    # Names/labels are currently optional.
+    with self.subTest('It does not raise when name is None'):
+      container_type = ParserCount.CONTAINER_TYPE
+      self.assertTrue(storage_reader.HasAttributeContainers(container_type))
+      bad_attribute = 'bad_attribute'
+
+      for attribute in storage_reader.GetAttributeContainers(container_type):
+        with self.assertRaises(AttributeError):
+          getattr(attribute, bad_attribute)
+
+      test_tool._CalculateStorageCounter(
+        storage_reader, container_type, bad_attribute)
 
   def testCalculateStorageCounters(self):
     """Tests the _CalculateStorageCounters function."""
