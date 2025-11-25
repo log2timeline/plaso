@@ -5,12 +5,14 @@
 import collections
 import json
 import unittest
+from unittest import mock
 
 from plaso.cli import views as cli_views
 from plaso.cli import pinfo_tool
 from plaso.containers.counts import ParserCount
 from plaso.lib import errors
 
+from plaso.storage.reader import StorageReader
 from tests import test_lib as shared_test_lib
 from tests.cli import test_lib
 
@@ -158,7 +160,67 @@ Storage files are different.
 
       self.assertEqual(output, expected_output)
 
-  # TODO: add test for _CompareStores.
+  # FIXME: Not sure how to name this since testCompareStores already exists.
+  def testPrivateCompareStores(self):
+    """Tests the _CompareStores function."""
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+
+    storage_reader = mock.Mock(spec_set=StorageReader)
+    compare_storage_reader = mock.Mock(spec_set=StorageReader)
+
+    counter_types = [
+      'parsers',
+      'extraction_warnings_by_parser_chain',
+      'extraction_warnings_by_path_spec',
+      'recovery_warnings_by_parser_chain',
+      'recovery_warnings_by_path_spec',
+      'timelining_warnings_by_parser_chain',
+      'timelining_warnings_by_path_spec',
+      'event_labels',
+      'analysis_reports']
+
+    with (
+      mock.patch.object(test_tool, '_PrintCounterDifferences') as mock_print,
+      mock.patch.object(
+        test_tool, '_CalculateStorageCounters', return_value={}),
+    ):
+
+      differences = {}
+
+      with (
+        self.subTest('Identical store counters'),
+        mock.patch.object(
+          test_tool, '_CompareCounter', return_value=differences,
+        ) as mock_compare,
+      ):
+        mock_print.reset_mock()
+        mock_compare.reset_mock()
+
+        output = test_tool._CompareStores(storage_reader, storage_reader)
+
+        self.assertTrue(output)
+        self.assertEqual(mock_compare.call_count, len(counter_types))
+        mock_print.assert_not_called()
+
+      # They are all differents.
+      differences = {counter_type: (11, 22) for counter_type in counter_types}
+
+      with (
+        self.subTest('Different store counters'),
+        mock.patch.object(
+          test_tool, '_CompareCounter', return_value=differences,
+        ) as mock_compare,
+      ):
+        mock_print.reset_mock()
+        mock_compare.reset_mock()
+
+        output = test_tool._CompareStores(
+          storage_reader, compare_storage_reader)
+
+        self.assertFalse(output)
+        self.assertEqual(mock_compare.call_count, len(counter_types))
+        self.assertEqual(mock_print.call_count, len(counter_types))
 
   def testGenerateAnalysisResultsReportAsJSON(self):
     """Tests the _GenerateAnalysisResultsReport function."""
