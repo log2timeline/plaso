@@ -1225,13 +1225,16 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     if self._sections == 'all' or 'events' in self._sections:
       data_types = storage_counters.get('data_types', collections.Counter())
 
-      self._PrintDataTypesCounter(data_types)
-      section_written = True
+      # FIXME: This should be mandatory but the test file must be re-generated.
+      if data_types:
+        self._PrintDataTypesCounter(data_types)
+        section_written = True
 
-      if self._output_format == 'json' and section_written:
-        self._output_writer.Write(', ')
+        if self._output_format == 'json' and section_written:
+          self._output_writer.Write(', ')
 
-      section_written = False
+        section_written = False
+
       parsers = storage_counters.get('parsers', collections.Counter())
 
       self._PrintParsersCounter(parsers)
