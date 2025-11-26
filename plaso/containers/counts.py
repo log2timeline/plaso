@@ -5,6 +5,33 @@ from acstore.containers import interface
 from acstore.containers import manager
 
 
+class DataTypeCount(interface.AttributeContainer):
+  """Data type count attribute container.
+
+  Attributes:
+    name (str): name of the data type.
+    number_of_events (int): number of events generated with this data type.
+  """
+
+  CONTAINER_TYPE = 'data_type_count'
+
+  SCHEMA = {
+      'name': 'str',
+      'number_of_events': 'int'}
+
+  def __init__(self, name=None, number_of_events=None):
+    """Initializes a data type count attribute container.
+
+    Args:
+      name (Optional[str]): name of the data type.
+      number_of_events (Optional[int]): number of events generated with this
+          data type.
+    """
+    super(DataTypeCount, self).__init__()
+    self.name = name
+    self.number_of_events = number_of_events
+
+
 class EventLabelCount(interface.AttributeContainer):
   """Event label count attribute container.
 
@@ -61,4 +88,4 @@ class ParserCount(interface.AttributeContainer):
 
 
 manager.AttributeContainersManager.RegisterAttributeContainers([
-    EventLabelCount, ParserCount])
+    DataTypeCount, EventLabelCount, ParserCount])
