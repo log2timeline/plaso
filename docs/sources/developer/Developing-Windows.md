@@ -55,33 +55,8 @@ C:\Python3\python.exe C:\plaso-build\plaso\plaso\frontend\pinfo.py timeline.plas
 
 ## Development tools
 
-If you intend to do development on Plaso you'll also need to install some
-development tools:
+If you intend to do development on Plaso you'll also need to install the
+following development tools:
 
-* PyLint
-* Python Mock
-
-### PyLint
-
-At the moment Plaso development requires PyLint 2.6.x.
-
-### Python Mock
-
-Download the latest source package from: https://pypi.org/project/mock
-
-To build the MSI file run the following commands from the build root directory:
-
-```bash
-tar xvf mock-1.0.1.tar.gz
-cd mock-1.0.1\
-C:\Python3\python.exe setup.py bdist_msi
-cd ..
-```
-
-This will create a MSI in the dist sub directory e.g.:
-
-```bash
-dist\mock-1.0.1.win32.msi
-```
-
-Install the MSI.
+* mock
+* pylint

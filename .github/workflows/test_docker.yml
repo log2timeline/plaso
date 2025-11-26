@@ -37,7 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        version: ['24.04']
+        version: ['26.04']
     container:
       image: ubuntu:${{ matrix.version }}
     steps:
