@@ -285,10 +285,12 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
         compare_storage_reader)
 
     # Compare number of events by data type.
-    data_types_counter = storage_counters.get('data_types', collections.Counter())
+    data_types_counter = storage_counters.get(
+      'data_types', collections.Counter())
     compare_data_types_counter = compare_storage_counters.get(
         'data_types', collections.Counter())
-    differences = self._CompareCounter(data_types_counter, compare_data_types_counter)
+    differences = self._CompareCounter(
+      data_types_counter, compare_data_types_counter)
 
     if differences:
       stores_are_identical = False
