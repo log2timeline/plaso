@@ -28,19 +28,13 @@ environment:
     PYTHON_VERSION: "3.14"
     L2TBINARIES_TRACK: "dev"
     TARGET: wheel
-  - DESCRIPTION: "Run tests on Mac OS with Python 3.14"
-    APPVEYOR_BUILD_WORKER_IMAGE: macos-sonoma
-    HOMEBREW_NO_INSTALL_CLEANUP: 1
-    TARGET: tests
-    PYTHON_VERSION: "3.14"
 
 install:
 - cmd: "%PYTHON%\\python.exe -m pip install -U build pip setuptools twine wheel"
 # Pywin32 appears to be necessary to ensure sys.platform is working correctly.
 - cmd: "%PYTHON%\\python.exe -m pip install pywin32"
 - cmd: "%PYTHON%\\python.exe %PYTHON%\\Scripts\\pywin32_postinstall.py -install"
-- ps: If ($isWindows) { .\config\appveyor\install.ps1 }
-- sh: config/appveyor/install.sh
+- ps: .\config\appveyor\install.ps1
 
 build_script:
 - cmd: IF [%TARGET%]==[wheel] (
@@ -52,7 +46,6 @@ test_script:
     IF EXIST "tests\\end-to-end.py" (
         set PYTHONPATH=. &&
         "%PYTHON%\\python.exe" "tests\\end-to-end.py" --debug -c "config\\end-to-end.ini" ) )
-- sh: config/appveyor/runtests.sh
 
 artifacts:
 - path: dist\*.whl
