@@ -1,0 +1,23 @@
+# Run tests on Mac OS.
+name: test_macos
+on: [push, pull_request]
+permissions: read-all
+jobs:
+  test_macos:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+        - os: macos-26
+          python-version: '3.14'
+          toxenv: 'py314'
+    steps:
+    - uses: actions/checkout@v5
+    - name: Install dependencies
+      run: |
+        brew update -q
+        brew install -q gettext gnu-sed python@${{ matrix.python-version }} tox || true
+        brew link --force gettext
+    - name: Run tests
+      run: |
+        tox -e ${{ matrix.toxenv }}
