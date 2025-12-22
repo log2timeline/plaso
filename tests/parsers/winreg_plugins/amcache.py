@@ -120,6 +120,7 @@ class AMCachePluginTest(test_lib.RegistryPluginTestCase):
         'file_creation_time': None,
         'file_identifier': '000075c5a97f521f760e32a4a9639a653eed862e9c61',
         'file_modification_time': None,
+        'file_name': 'svchost.exe',
         'full_path': 'c:\\windows\\system32\\svchost.exe',
         'installation_time': None,
         'last_written_time': None,
