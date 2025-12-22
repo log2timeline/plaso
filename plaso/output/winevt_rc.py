@@ -1212,9 +1212,10 @@ class WinevtResourcesHelper(object):
     message_string = self._GetCachedMessageString(
         provider_identifier, log_source, message_identifier, None)
     if not message_string:
-      message_string = self._ReadParameterMessageString(
-          self._storage_reader, provider_identifier, log_source,
-          message_identifier)
+      if self._storage_reader:
+        message_string = self._ReadParameterMessageString(
+            self._storage_reader, provider_identifier, log_source,
+            message_identifier)
 
       if message_string:
         self._CacheMessageString(
