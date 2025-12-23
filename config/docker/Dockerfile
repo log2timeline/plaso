@@ -26,7 +26,8 @@ RUN apt-get -y update && \
     apt-get -y upgrade && \
     apt-get -y install \
         locales \
-        plaso-tools && \
+        plaso-tools \
+        tzdata && \
     apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 
 # Set terminal to UTF-8 by default
