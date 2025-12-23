@@ -195,15 +195,14 @@ class Firefox118DownloadsPlugin(interface.SQLitePlugin):
       'moz_annos': frozenset([
           'id', 'place_id', 'anno_attribute_id', 'content', 'flags',
           'expiration', 'type', 'dateAdded', 'lastModified']),
-      'moz_places': frozenset([
-          'id', 'title', 'url', 'last_visit_date'])}
+      'moz_places': frozenset(['id', 'title', 'url', 'last_visit_date'])}
 
   QUERIES = [
       (('SELECT annos1.content, annos2.flags, annos2.expiration, annos2.type, '
         'annos2.dateAdded, annos2.lastModified, annos2.content as dest_fpath, '
         'places.url, places.title, places.last_visit_date '
-        'from moz_annos annos1, moz_annos annos2, moz_places places '
-        'WHERE annos1.anno_attribute_id == annos2.anno_attribute_id+1 '
+        'FROM moz_annos annos1, moz_annos annos2, moz_places places '
+        'WHERE annos1.anno_attribute_id == (annos2.anno_attribute_id + 1) '
         'AND annos1.place_id == annos2.place_id '
         'AND annos1.place_id == places.id'),
        'ParseDownloadsRow')]
@@ -260,12 +259,24 @@ class Firefox118DownloadsPlugin(interface.SQLitePlugin):
 
     content = self._GetRowValue(query_hash, row, 'content')
     content_data = json.loads(content)
+    # Content consists of a JSON object similar to:
+    # {
+    #   'state': 1,
+    #   'deleted': False,
+    #   'endTime': 1689722333589,
+    #   'fileSize': 66383750
+    # }
 
     event_data = Firefox118DownloadEventData()
 
     event_data.deleted = content_data.get('deleted', None)
     event_data.download_state = content_data.get('state', None)
-    event_data.end_time = content_data.get('endTime', None)
+
+    end_time = content_data.get('endTime', None)
+    if end_time is not None:
+      event_data.end_time = dfdatetime_posix_time.PosixTimeInMilliseconds(
+          timestamp=end_time)
+
     event_data.expiration = self._GetRowValue(query_hash, row, 'expiration')
     event_data.flags = self._GetRowValue(query_hash, row, 'flags')
     event_data.full_path = self._GetRowValue(query_hash, row, 'dest_fpath')
