@@ -541,6 +541,14 @@ attribute_mappings:
   description: 'Start Time'
 place_holder_event: true
 ---
+data_type: 'ios:notes:note'
+attribute_mappings:
+- name: 'creation_time'
+  description: 'Creation Time'
+- name: 'modification_time'
+  description: 'Modification Time'
+place_holder_event: true
+---
 data_type: 'ios:powerlog:application_usage'
 attribute_mappings:
 - name: 'start_time'
