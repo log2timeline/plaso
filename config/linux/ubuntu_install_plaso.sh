@@ -72,7 +72,6 @@ PYTHON_DEPENDENCIES="libbde-python3
                      python3-pytsk3
                      python3-redis
                      python3-requests
-                     python3-six
                      python3-tz
                      python3-urllib3
                      python3-xattr

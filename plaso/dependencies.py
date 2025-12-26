@@ -71,7 +71,6 @@ PYTHON_DEPENDENCIES = {
     'pyvslvm': ('get_version()', '20160109', None, True),
     'redis': ('__version__', '3.4', None, False),
     'requests': ('__version__', '2.18.0', None, True),
-    'six': ('__version__', '1.1.0', None, True),
     'urllib3': ('__version__', '1.21.1', None, True),
     'xattr': ('__version__', '0.7.2', None, False),
     'xlsxwriter': ('__version__', '0.9.3', None, True),
