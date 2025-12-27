@@ -18,6 +18,7 @@ from plaso.containers import events
 from plaso.containers import event_sources
 from plaso.containers import reports
 from plaso.containers import warnings
+from plaso.containers.counts import EventLabelCount, ParserCount
 from plaso.engine import path_helper
 from plaso.lib import errors
 from plaso.lib import loggers
@@ -108,6 +109,27 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     self.list_reports = False
     self.list_sections = False
 
+  def _CalculateStorageCounter(self, storage_reader, container_type, key_name):
+    """Calculates the counters of a single attribute container.
+
+    Args:
+      storage_reader (StorageReader): storage reader.
+      container_type (str): attribute container type.
+      key_name (str): name or label of a counter.
+
+    Returns:
+      collections.Counter: counters of an attribute container.
+    """
+    if not storage_reader.HasAttributeContainers(container_type):
+      return collections.Counter()
+
+    counters = {
+      # Names are optional, set it to None by default to avoid exception.
+      getattr(attribute, key_name, None): attribute.number_of_events
+      for attribute in storage_reader.GetAttributeContainers(container_type)}
+
+    return collections.Counter(counters)
+
   def _CalculateStorageCounters(self, storage_reader):
     """Calculates the counters of the entire storage.
 
@@ -120,87 +142,56 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     # TODO: determine analysis report counter from actual stored analysis
     # reports or remove.
     analysis_reports_counter = collections.Counter()
-    analysis_reports_counter_error = False
 
-    event_labels_counter = {}
-    if storage_reader.HasAttributeContainers('event_label_count'):
-      event_labels_counter = {
-          event_label_count.label: event_label_count.number_of_events
-          for event_label_count in storage_reader.GetAttributeContainers(
-              'event_label_count')}
+    event_labels_counter = self._CalculateStorageCounter(
+      storage_reader, EventLabelCount.CONTAINER_TYPE, 'label')
 
-    event_labels_counter = collections.Counter(event_labels_counter)
-    event_labels_counter_error = False
-
-    parsers_counter = {}
-    if storage_reader.HasAttributeContainers('parser_count'):
-      parsers_counter = {
-          parser_count.name: parser_count.number_of_events
-          for parser_count in storage_reader.GetAttributeContainers(
-              'parser_count')}
-
-    parsers_counter = collections.Counter(parsers_counter)
-    parsers_counter_error = False
+    parsers_counter = self._CalculateStorageCounter(
+      storage_reader, ParserCount.CONTAINER_TYPE, 'name')
 
     storage_counters = {}
 
-    extraction_warnings_by_path_spec = collections.Counter()
-    extraction_warnings_by_parser_chain = collections.Counter()
+    warning_types = [
+      self._CONTAINER_TYPE_EXTRACTION_WARNING,
+      self._CONTAINER_TYPE_RECOVERY_WARNING,
+      self._CONTAINER_TYPE_TIMELINING_WARNING,
+    ]
 
-    for warning in storage_reader.GetAttributeContainers(
-        self._CONTAINER_TYPE_EXTRACTION_WARNING):
-      path_spec_string = self._GetPathSpecificationString(warning.path_spec)
+    for warning_type in warning_types:
+      warning_counters = self._CalculateStorageWarningCounters(
+        storage_reader, warning_type)
+      storage_counters.update(warning_counters)
 
-      extraction_warnings_by_path_spec[path_spec_string] += 1
-      extraction_warnings_by_parser_chain[warning.parser_chain] += 1
-
-    storage_counters['extraction_warnings_by_path_spec'] = (
-        extraction_warnings_by_path_spec)
-    storage_counters['extraction_warnings_by_parser_chain'] = (
-        extraction_warnings_by_parser_chain)
-
-    recovery_warnings_by_path_spec = collections.Counter()
-    recovery_warnings_by_parser_chain = collections.Counter()
-
-    for warning in storage_reader.GetAttributeContainers(
-        self._CONTAINER_TYPE_RECOVERY_WARNING):
-      path_spec_string = self._GetPathSpecificationString(warning.path_spec)
-
-      recovery_warnings_by_path_spec[path_spec_string] += 1
-      recovery_warnings_by_parser_chain[warning.parser_chain] += 1
-
-    storage_counters['recovery_warnings_by_path_spec'] = (
-        recovery_warnings_by_path_spec)
-    storage_counters['recovery_warnings_by_parser_chain'] = (
-        recovery_warnings_by_parser_chain)
-
-    timelining_warnings_by_path_spec = collections.Counter()
-    timelining_warnings_by_parser_chain = collections.Counter()
-
-    if storage_reader.HasAttributeContainers(
-        self._CONTAINER_TYPE_TIMELINING_WARNING):
-      for warning in storage_reader.GetAttributeContainers(
-          self._CONTAINER_TYPE_TIMELINING_WARNING):
-        path_spec_string = self._GetPathSpecificationString(warning.path_spec)
-
-        timelining_warnings_by_path_spec[path_spec_string] += 1
-        timelining_warnings_by_parser_chain[warning.parser_chain] += 1
-
-    storage_counters['timelining_warnings_by_path_spec'] = (
-        timelining_warnings_by_path_spec)
-    storage_counters['timelining_warnings_by_parser_chain'] = (
-        timelining_warnings_by_parser_chain)
-
-    if not analysis_reports_counter_error:
-      storage_counters['analysis_reports'] = analysis_reports_counter
-
-    if not event_labels_counter_error:
-      storage_counters['event_labels'] = event_labels_counter
-
-    if not parsers_counter_error:
-      storage_counters['parsers'] = parsers_counter
+    storage_counters['analysis_reports'] = analysis_reports_counter
+    storage_counters['event_labels'] = event_labels_counter
+    storage_counters['parsers'] = parsers_counter
 
     return storage_counters
+
+  def _CalculateStorageWarningCounters(self, storage_reader, warning_type):
+    """Calculates the counters of a warning attribute container.
+
+    Args:
+      storage_reader (StorageReader): storage reader.
+      warning_type (str): the warning container type.
+
+    Returns:
+      dict[str, collections.Counter]: storage counters for that warning type.
+    """
+    warnings_by_path_spec = collections.Counter()
+    warnings_by_parser_chain = collections.Counter()
+
+    if storage_reader.HasAttributeContainers(warning_type):
+      for warning in storage_reader.GetAttributeContainers(warning_type):
+        path_spec_string = self._GetPathSpecificationString(warning.path_spec)
+
+        warnings_by_path_spec[path_spec_string] += 1
+        warnings_by_parser_chain[warning.parser_chain] += 1
+
+    return {
+      f'{warning_type}s_by_path_spec': warnings_by_path_spec,
+      f'{warning_type}s_by_parser_chain': warnings_by_parser_chain,
+    }
 
   def _CheckStorageFile(self, storage_file_path, warn_about_existing=False):
     """Checks if the storage file path is valid.
@@ -271,139 +262,58 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
     compare_storage_counters = self._CalculateStorageCounters(
         compare_storage_reader)
 
-    # Compare number of events.
-    parsers_counter = storage_counters.get('parsers', collections.Counter())
-    compare_parsers_counter = compare_storage_counters.get(
-        'parsers', collections.Counter())
-    differences = self._CompareCounter(parsers_counter, compare_parsers_counter)
+    counters = [
+      (
+        'parsers', False,
+        'Events generated per parser',
+        ['Parser (plugin) name', 'Number of events']),
+      (
+        'extraction_warnings_by_parser_chain', False,
+        'Extraction warnings generated per parser',
+        ['Parser (plugin) name', 'Number of warnings']),
+      (
+        'extraction_warnings_by_path_spec', True,
+        'Pathspecs with most extraction warnings',
+        ['Number of warnings', 'Pathspec']),
+      (
+        'recovery_warnings_by_parser_chain', False,
+        'Recovery warnings generated per parser',
+        ['Parser (plugin) name', 'Number of warnings']),
+      (
+        'recovery_warnings_by_path_spec', True,
+        'Pathspecs with most recovery warnings',
+        ['Number of warnings', 'Pathspec']),
+      (
+        'timelining_warnings_by_parser_chain', False,
+        'Timelining warnings generated per parser',
+        ['Parser (plugin) name', 'Number of warnings']),
+      (
+        'timelining_warnings_by_path_spec', True,
+        'Pathspecs with most timelining warnings',
+        ['Number of warnings', 'Pathspec']),
+      (
+        'event_labels', False,
+        'Event tags generated per label',
+        ['Label', 'Number of event tags']),
+      (
+        'analysis_reports', False,
+        'Reports generated per plugin',
+         ['Plugin name', 'Number of reports']),
+    ]
 
-    if differences:
-      stores_are_identical = False
+    for (counter_type, reverse, title, column_names) in counters:
+      storage_counter = storage_counters.get(
+        counter_type, collections.Counter())
+      compare_storage_counter = compare_storage_counters.get(
+        counter_type, collections.Counter())
+      differences = self._CompareCounter(
+        storage_counter, compare_storage_counter)
 
-      self._PrintCounterDifferences(
-          differences,
-          column_names=['Parser (plugin) name', 'Number of events'],
-          title='Events generated per parser')
+      if differences:
+        stores_are_identical = False
 
-    # Compare extraction warnings by parser chain.
-    warnings_counter = storage_counters.get(
-        'extraction_warnings_by_parser_chain', collections.Counter())
-    compare_warnings_counter = compare_storage_counters.get(
-        'extraction_warnings_by_parser_chain', collections.Counter())
-    differences = self._CompareCounter(
-        warnings_counter, compare_warnings_counter)
-
-    if differences:
-      stores_are_identical = False
-
-      self._PrintCounterDifferences(
-          differences,
-          column_names=['Parser (plugin) name', 'Number of warnings'],
-          title='Extraction warnings generated per parser')
-
-    # Compare extraction warnings by path specification
-    warnings_counter = storage_counters.get(
-        'extraction_warnings_by_path_spec', collections.Counter())
-    compare_warnings_counter = compare_storage_counters.get(
-        'extraction_warnings_by_path_spec', collections.Counter())
-    differences = self._CompareCounter(
-        warnings_counter, compare_warnings_counter)
-
-    if differences:
-      stores_are_identical = False
-
-      self._PrintCounterDifferences(
-          differences, column_names=['Number of warnings', 'Pathspec'],
-          reverse=True, title='Pathspecs with most extraction warnings')
-
-    # Compare recovery warnings by parser chain.
-    warnings_counter = storage_counters.get(
-        'recovery_warnings_by_parser_chain', collections.Counter())
-    compare_warnings_counter = compare_storage_counters.get(
-        'recovery_warnings_by_parser_chain', collections.Counter())
-    differences = self._CompareCounter(
-        warnings_counter, compare_warnings_counter)
-
-    if differences:
-      stores_are_identical = False
-
-      self._PrintCounterDifferences(
-          differences,
-          column_names=['Parser (plugin) name', 'Number of warnings'],
-          title='Recovery warnings generated per parser')
-
-    # Compare recovery warnings by path specification
-    warnings_counter = storage_counters.get(
-        'recovery_warnings_by_path_spec', collections.Counter())
-    compare_warnings_counter = compare_storage_counters.get(
-        'recovery_warnings_by_path_spec', collections.Counter())
-    differences = self._CompareCounter(
-        warnings_counter, compare_warnings_counter)
-
-    if differences:
-      stores_are_identical = False
-
-      self._PrintCounterDifferences(
-          differences, column_names=['Number of warnings', 'Pathspec'],
-          reverse=True, title='Pathspecs with most recovery warnings')
-
-    # Compare timelining warnings by parser chain.
-    warnings_counter = storage_counters.get(
-        'timelining_warnings_by_parser_chain', collections.Counter())
-    compare_warnings_counter = compare_storage_counters.get(
-        'timelining_warnings_by_parser_chain', collections.Counter())
-    differences = self._CompareCounter(
-        warnings_counter, compare_warnings_counter)
-
-    if differences:
-      stores_are_identical = False
-
-      self._PrintCounterDifferences(
-          differences,
-          column_names=['Parser (plugin) name', 'Number of warnings'],
-          title='Timelining warnings generated per parser')
-
-    # Compare timelining warnings by path specification.
-    warnings_counter = storage_counters.get(
-        'timelining_warnings_by_path_spec', collections.Counter())
-    compare_warnings_counter = compare_storage_counters.get(
-        'timelining_warnings_by_path_spec', collections.Counter())
-    differences = self._CompareCounter(
-        warnings_counter, compare_warnings_counter)
-
-    if differences:
-      stores_are_identical = False
-
-      self._PrintCounterDifferences(
-          differences, column_names=['Number of warnings', 'Pathspec'],
-          reverse=True, title='Pathspecs with most timelining warnings')
-
-    # Compare event labels.
-    labels_counter = storage_counters.get('event_labels', collections.Counter())
-    compare_labels_counter = compare_storage_counters.get(
-        'event_labels', collections.Counter())
-    differences = self._CompareCounter(labels_counter, compare_labels_counter)
-
-    if differences:
-      stores_are_identical = False
-
-      self._PrintCounterDifferences(
-          differences, column_names=['Label', 'Number of event tags'],
-          title='Event tags generated per label')
-
-    # Compare analysis reports.
-    reports_counter = storage_counters.get(
-        'analysis_reports', collections.Counter())
-    compare_reports_counter = compare_storage_counters.get(
-        'analysis_reports', collections.Counter())
-    differences = self._CompareCounter(reports_counter, compare_reports_counter)
-
-    if differences:
-      stores_are_identical = False
-
-      self._PrintCounterDifferences(
-          differences, column_names=['Plugin name', 'Number of reports'],
-          title='Reports generated per plugin')
+        self._PrintCounterDifferences(
+          differences, reverse=reverse, column_names=column_names, title=title)
 
     return stores_are_identical
 
