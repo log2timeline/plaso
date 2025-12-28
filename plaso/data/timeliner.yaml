@@ -565,6 +565,12 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: true
 ---
+data_type: 'ios:tiktok:contact'
+attribute_mappings:
+- name: 'chat_timestamp'
+  description: 'Latest Chat Time'
+place_holder_event: true
+---
 data_type: 'ios:twitter:contact'
 attribute_mappings:
 - name: 'creation_time'

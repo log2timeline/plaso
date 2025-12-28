@@ -26,6 +26,7 @@ from plaso.parsers.sqlite_plugins import ios_kik
 from plaso.parsers.sqlite_plugins import ios_netusage
 from plaso.parsers.sqlite_plugins import ios_powerlog
 from plaso.parsers.sqlite_plugins import ios_screentime
+from plaso.parsers.sqlite_plugins import ios_tiktok_contacts
 from plaso.parsers.sqlite_plugins import ios_twitter
 from plaso.parsers.sqlite_plugins import kodi
 from plaso.parsers.sqlite_plugins import ls_quarantine
