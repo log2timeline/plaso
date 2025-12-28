@@ -16,6 +16,7 @@ from plaso.parsers.sqlite_plugins import chrome_extension_activity
 from plaso.parsers.sqlite_plugins import chrome_history
 from plaso.parsers.sqlite_plugins import dropbox
 from plaso.parsers.sqlite_plugins import edge_load_statistics
+from plaso.parsers.sqlite_plugins import files_by_google
 from plaso.parsers.sqlite_plugins import firefox_cookies
 from plaso.parsers.sqlite_plugins import firefox_downloads
 from plaso.parsers.sqlite_plugins import firefox_history
