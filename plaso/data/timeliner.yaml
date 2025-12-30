@@ -1479,6 +1479,8 @@ attribute_mappings:
   description: 'File Last Modification Time'
 - name: 'last_update_time'
   description: 'Last Time Executed'
+- name: 'registry_last_written_time'
+  description: 'Registry Last Written Time'
 place_holder_event: true
 ---
 data_type: 'windows:registry:bagmru'
