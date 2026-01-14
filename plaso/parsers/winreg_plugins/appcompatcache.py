@@ -14,12 +14,6 @@ from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
 
 
-# pylint: disable=line-too-long
-# Ref: https://github.com/libyal/winreg-kb/blob/main/docs/sources/system-keys/Application-compatibility-cache.md#insertion-flags
-# pylint: enable=line-too-long
-_INSERTION_FLAG_EXECUTE = 0x00000002
-
-
 class AppCompatCacheEventData(events.EventData):
   """Application Compatibility Cache event data.
 
@@ -37,7 +31,6 @@ class AppCompatCacheEventData(events.EventData):
         date and time.
     path (str): full path to the executable.
     insertion_flags (int): Execution flag.
-    executed (bool): Can be indicator of execution.
     control_set (int): Control set number of AppCompatCache registry key.
   """
 
@@ -54,7 +47,6 @@ class AppCompatCacheEventData(events.EventData):
     self.offset = None
     self.path = None
     self.insertion_flags = None
-    self.executed = None
     self.control_set = None
 
 
@@ -82,7 +74,6 @@ class AppCompatCacheCachedEntry(object):
     self.last_update_time = None
     self.shim_flags = None
     self.path = None
-    self.executed = None
 
 
 class AppCompatCacheWindowsRegistryPlugin(
@@ -586,10 +577,6 @@ class AppCompatCacheWindowsRegistryPlugin(
     if data_size > 0:
       cached_entry_object.data = cached_entry_data[
           data_offset:data_offset + data_size]
-      # Derived from E. Zimmerman AppCompatCache Win10 parser.
-      cached_entry_object.executed = (
-          int.from_bytes(cached_entry_object.data[-4:], 'little') == 1
-      )
 
     return cached_entry_object
 
@@ -706,11 +693,8 @@ class AppCompatCacheWindowsRegistryPlugin(
         event_data.last_update_time = dfdatetime_filetime.Filetime(
             timestamp=cached_entry_object.last_update_time)
 
-      event_data.executed = cached_entry_object.executed or False
       if cached_entry_object.insertion_flags is not None:
         event_data.insertion_flags = cached_entry_object.insertion_flags
-        if cached_entry_object.insertion_flags & _INSERTION_FLAG_EXECUTE:
-          event_data.executed = True
 
       parser_mediator.ProduceEventData(event_data)
 
