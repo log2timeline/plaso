@@ -665,6 +665,12 @@ attribute_mappings:
   description: 'Latest Device Source Added Time'
 place_holder_event: true
 ---
+data_type: 'ios:health:source_devices'
+attribute_mappings:
+- name: 'date_time'
+  description: 'Device Source Added Time'
+place_holder_event: true
+---
 data_type: 'ios:health:steps'
 attribute_mappings:
 - name: 'end_time'
