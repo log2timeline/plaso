@@ -517,6 +517,108 @@ attribute_mappings:
   description: 'Start Time'
 place_holder_event: true
 ---
+data_type: 'ios:health:achievements'
+attribute_mappings:
+- name: 'date_time'
+  description: 'Achievement Date'
+place_holder_event: true
+---
+data_type: 'ios:health:all_watch_sleep_latest'
+attribute_mappings:
+- name: 'date_time'
+  description: 'Latest Sleep Sample Start'
+place_holder_event: true
+---
+data_type: 'ios:health:all_watch_sleep'
+attribute_mappings:
+- name: 'date_time'
+  description: 'Sleep Sample Start'
+place_holder_event: true
+---
+data_type: 'ios:health:headphone_audio_levels'
+attribute_mappings:
+- name: 'date_time'
+  description: 'Exposure Start Time'
+place_holder_event: true
+---
+data_type: 'ios:health:heart_rate'
+attribute_mappings:
+- name: 'start_date'
+  description: 'Heart Rate Start'
+place_holder_event: true
+---
+data_type: 'ios:health:height'
+attribute_mappings:
+- name: 'date_time'
+  description: 'Height Recorded Time'
+place_holder_event: true
+---
+data_type: 'ios:health:resting_heart_rate'
+attribute_mappings:
+- name: 'date_time'
+  description: 'Resting Heart Rate Time'
+place_holder_event: true
+---
+data_type: 'ios:health:source_devices_latest'
+attribute_mappings:
+- name: 'date_time'
+  description: 'Latest Device Source Added Time'
+place_holder_event: true
+---
+data_type: 'ios:health:source_devices'
+attribute_mappings:
+- name: 'date_time'
+  description: 'Device Source Added Time'
+place_holder_event: true
+---
+data_type: 'ios:health:steps'
+attribute_mappings:
+- name: 'date_time'
+  description: 'Steps Recorded Start'
+place_holder_event: true
+---
+data_type: 'ios:health:watch_by_sleep_period_latest'
+attribute_mappings:
+- name: 'date_time'
+  description: 'Latest Sleep Period Start'
+place_holder_event: true
+---
+data_type: 'ios:health:all_watch_by_sleep_period'
+attribute_mappings:
+- name: 'date_time'
+  description: 'Sleep Period Start'
+place_holder_event: true
+---
+data_type: 'ios:health:watch_worn'
+attribute_mappings:
+- name: 'date_time'
+  description: 'Watch Worn Start'
+place_holder_event: true
+---
+data_type: 'ios:health:weight'
+attribute_mappings:
+- name: 'date_time'
+  description: 'Weight Recorded Time'
+place_holder_event: true
+---
+data_type: 'ios:health:workouts_latest'
+attribute_mappings:
+- name: 'date_time'
+  description: 'Workouts Latest Start'
+place_holder_event: true
+---
+data_type: 'ios:health:workouts'
+attribute_mappings:
+- name: 'date_time'
+  description: 'Workout Start Time'
+place_holder_event: true
+---
+data_type: 'ios:health:wrist_temperature'
+attribute_mappings:
+- name: 'date_time'
+  description: 'Wrist Temperature Recorded'
+place_holder_event: true
+---
 data_type: 'ios:kik:messaging'
 attribute_mappings:
 - name: 'received_time'

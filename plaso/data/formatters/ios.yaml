@@ -57,6 +57,461 @@ short_source: 'HISTORY'
 source: 'iOS data usage database'
 ---
 type: 'conditional'
+data_type: 'ios:health:achievements'
+message:
+  - 'Template Name: {template_unique_name}'
+  - 'Created Date: {created_date}'
+  - 'Earned Date: {earned_date}'
+  - 'Value: {value_in_canonical_unit} {value_canonical_unit}'
+  - 'Creator Device ID: {creator_device}'
+  - 'Sync Provenance: {sync_provenance}'
+short_message:
+  - 'Achievement: {template_unique_name}'
+  - 'Value: {value_in_canonical_unit}'
+short_source: 'Achievements'
+source: 'iOS Health Achievements'
+---
+type: 'conditional'
+data_type: 'ios:health:all_watch_sleep_latest'
+enumeration_helpers:
+  - input_attribute: 'sleep_state_code'
+    output_attribute: 'sleep_state_label'
+    default_value: 'UNKNOWN'
+    values:
+      1: 'In Bed'
+      2: 'Awake'
+      3: 'REM'
+      4: 'Core'
+      5: 'Deep'
+message:
+  - 'Sleep State: {sleep_state_label}'
+  - 'Duration: {sleep_state_hms}'
+  - 'Start: {start_date_str}'
+  - 'End: {end_date_str}'
+short_message:
+  - '{sleep_state_label} for {sleep_state_hms}'
+short_source: 'All Watch Sleep Latest'
+source: 'iOS Health All Watch Sleep Latest'
+---
+type: 'conditional'
+data_type: 'ios:health:all_watch_sleep'
+enumeration_helpers:
+  - input_attribute: 'sleep_state_code'
+    output_attribute: 'sleep_state_code'
+    default_value: 'UNKNOWN'
+    values:
+      0: 'In Bed'
+      1: 'Asleep'
+message:
+  - 'Sleep Status: {sleep_state_code}'
+  - 'Start Time: {start_date_str}'
+  - 'End Time: {end_date_str}'
+  - 'Duration: {sleep_state_hms}'
+short_message:
+  - 'Sleep Status: {sleep_state_code} ({sleep_state_hms})'
+short_source: 'All Watch Sleep'
+source: 'iOS Health All Watch Sleep'
+---
+type: 'conditional'
+data_type: 'ios:health:headphone_audio_levels'
+message:
+  - 'Sound Level: {decibels} dB'
+  - 'Duration: {total_time_duration}'
+  - 'Bundle Name: {bundle_name}'
+  - 'Device: {device_name} ({device_model})'
+  - 'Manufacturer: {device_manufacturer}'
+  - 'Start: {start_date_str}'
+  - 'End: {end_date_str}'
+  - 'Data ID: {data_id}'
+short_message:
+  - '{decibels} dB via {device_name} for {total_time_duration}'
+short_source: 'Headphone Audio Levels'
+source: 'iOS Health Headphone Audio'
+---
+type: 'conditional'
+data_type: 'ios:health:heart_rate'
+message:
+  - 'Heart Rate: {bpm} BPM'
+  - 'Context: {context}'
+  - 'Device: {device_name} ({hardware})'
+  - 'Source: {source_name} (v{software_version})'
+  - 'Time Zone: {tz_name}'
+  - 'Start Time: {start_date_str}'
+  - 'End Time: {end_date_str}'
+  - 'Added to Health: {added_date_str}'
+short_message:
+  - '{bpm} BPM ({context})'
+short_source: 'Heart Rate'
+source: 'iOS Health Heart Rate'
+---
+type: 'conditional'
+data_type: 'ios:health:height'
+message:
+  - 'Height: {height_cm} cm ({height_ft_in})'
+  - 'Height (meters): {height_m} m'
+  - 'Timestamp: {height_value_ts_str}'
+short_message:
+  - 'Height: {height_cm} cm'
+short_source: 'Height'
+source: 'iOS Health Height'
+---
+type: 'conditional'
+data_type: 'ios:health:resting_heart_rate'
+message:
+  - 'Resting Heart Rate: {resting_heart_rate} BPM'
+  - 'Source: {source}'
+  - 'Hardware: {hardware}'
+  - 'Start Time: {start_date_str}'
+  - 'End Time: {end_date_str}'
+  - 'Added to Health: {date_added_to_health_str}'
+short_message:
+  - 'Resting HR: {resting_heart_rate} BPM'
+short_source: 'Resting Heart Rate'
+source: 'iOS Health Resting Heart Rate'
+---
+type: 'conditional'
+data_type: 'ios:health:source_devices_latest'
+message:
+  - 'Device Name: {device_name}'
+  - 'Manufacturer: {manufacturer}'
+  - 'Model: {model}'
+  - 'Hardware Version: {hardware}'
+  - 'Software/Firmware: {software} / {firmware}'
+  - 'Local Identifier: {local_identifier}'
+  - 'Sync Provenance: {sync_provenance}'
+  - 'Sync Identity: {sync_identity}'
+  - 'Creation Date: {creation_date_str}'
+short_message:
+  - 'Source Device: {device_name} ({model})'
+short_source: 'Source Devices Latest'
+source: 'iOS Health Source Devices Latest'
+---
+type: 'conditional'
+data_type: 'ios:health:source_devices'
+message:
+  - 'Device Name: {device_name}'
+  - 'Manufacturer: {manufacturer}'
+  - 'Model: {model}'
+  - 'Hardware Version: {hardware}'
+  - 'Software/Firmware: {software} / {firmware}'
+  - 'Local Identifier: {local_identifier}'
+  - 'Sync Provenance: {sync_provenance}'
+  - 'Creation Date: {creation_date_str}'
+short_message:
+  - 'Source Device: {device_name} ({model})'
+short_source: 'Source Devices'
+source: 'iOS Health Source Devices'
+---
+type: 'conditional'
+data_type: 'ios:health:steps'
+message:
+  - 'Steps: {steps}'
+  - 'Device: {device}'
+  - 'Duration: {duration} seconds'
+  - 'Start Time: {start_date_str}'
+  - 'End Time: {end_date_str}'
+short_message:
+  - '{steps} steps via {device}'
+short_source: 'Steps'
+source: 'iOS Health Steps'
+---
+type: 'conditional'
+data_type: 'ios:health:watch_by_sleep_period_latest'
+message:
+  - 'Total Sleep Duration: {total_duration} minutes'
+  - 'Deep Sleep: {deep_duration_hms} ({deep_percent}%)'
+  - 'REM Sleep: {rem_duration_hms} ({rem_percent}%)'
+  - 'Core Sleep: {core_duration_hms} ({core_percent}%)'
+  - 'Awake: {awake_duration_hms} ({awake_percent}%)'
+  - 'Start Time: {start_date_str}'
+  - 'End Time: {end_date_str}'
+short_message:
+  - 'Sleep Period: {total_duration} min (Deep: {deep_percent}%, REM: {rem_percent}%)'
+short_source: 'Watch by Sleep Period Latest'
+source: 'iOS Health Watch by Sleep Period Latest'
+---
+type: 'conditional'
+data_type: 'ios:health:watch_by_sleep_period'
+message:
+  - 'Total Time in Bed: {time_in_bed_hms}'
+  - 'Actual Sleep Percent: {asleep_percent}%'
+  - 'In Bed Duration: {in_bed_duration_hms} ({in_bed_percent}%)'
+  - 'Device: {device_name}'
+  - 'Start: {start_date_str}'
+  - 'End: {end_date_str}'
+  - 'Data Type ID: {data_type_id}'
+short_message:
+  - 'Sleep Period: {time_in_bed_hms} (Asleep: {asleep_percent}%)'
+short_source: 'Watch by Sleep Period'
+source: 'iOS Health Watch by Sleep Period'
+---
+type: 'conditional'
+data_type: 'ios:health:watch_worn'
+message:
+  - 'Duration Worn: {hours_worn} hours'
+  - 'Time Off After This Period: {hours_off_before_next} hours'
+  - 'Start Wearing: {start_time_str}'
+  - 'Last Worn Time: {last_worn_time_str}'
+short_message:
+  - 'Worn for {hours_worn}h (Then off for {hours_off_before_next}h)'
+short_source: 'Watch Worn Data'
+source: 'iOS Health Watch Worn Data'
+---
+type: 'conditional'
+data_type: 'ios:health:weight'
+message:
+  - 'Weight: {weight_kg_str} kg'
+  - 'Weight (lbs): {weight_lbs_str} lbs'
+  - 'Weight (stone): {weight_stone_str}'
+  - 'Timestamp: {weight_value_ts_str}'
+short_message:
+  - 'Weight: {weight_kg_str} kg ({weight_lbs_str} lbs)'
+short_source: 'Weight'
+source: 'iOS Health Weight'
+---
+type: 'conditional'
+data_type: 'ios:health:workouts_latest'
+enumeration_helpers:
+  - input_attribute: 'activity_type'
+    output_attribute: 'activity_label'
+    default_value: 'OTHER'
+    values:
+      1: "AMERICAN FOOTBALL"
+      2: "ARCHERY"
+      3: "AUSTRALIAN FOOTBALL"
+      4: "BADMINTON"
+      5: "BASEBALL"
+      6: "BASKETBALL"
+      7: "BOWLING"
+      8: "BOXING"
+      9: "CLIMBING"
+      10: "CRICKET"
+      11: "CROSS TRAINING"
+      12: "CURLING"
+      13: "CYCLING"
+      16: "ELLIPTICAL"
+      17: "EQUESTRIAN SPORTS"
+      18: "FENCING"
+      19: "FISHING"
+      20: "FUNCTION STRENGTH TRAINING"
+      21: "GOLF"
+      22: "GYMNASTICS"
+      23: "HANDBALL"
+      24: "HIKING"
+      25: "HOCKEY"
+      26: "HUNTING"
+      27: "LACROSS"
+      28: "MARTIAL ARTS"
+      29: "MIND AND BODY"
+      31: "PADDLE SPORTS"
+      32: "PLAY"
+      33: "PREPARATION AND RECOVERY"
+      34: "RACQUETBALL"
+      35: "ROWING"
+      36: "RUGBY"
+      37: "RUNNING"
+      38: "SAILING"
+      39: "SKATING SPORTS"
+      40: "SNOW SPORTS"
+      41: "SOCCER"
+      42: "SOFTBALL"
+      43: "SQUASH"
+      44: "STAIRSTEPPER"
+      45: "SURFING SPORTS"
+      46: "SWIMMING"
+      47: "TABLE TENNIS"
+      48: "TENNIS"
+      49: "TRACK AND FIELD"
+      50: "TRADITIONAL STRENGTH TRAINING"
+      51: "VOLLEYBALL"
+      52: "WALKING"
+      53: "WATER FITNESS"
+      54: "WATER POLO"
+      55: "WATER SPORTS"
+      56: "WRESTLING"
+      57: "YOGA"
+      58: "BARRE"
+      59: "CORE TRAINING"
+      60: "CROSS COUNTRY SKIING"
+      61: "DOWNHILL SKIING"
+      62: "FLEXIBILITY"
+      63: "HIGH INTENSITY INTERVAL TRAINING (HIIT)"
+      64: "JUMP ROPE"
+      65: "KICKBOXING"
+      66: "PILATES"
+      67: "SNOWBOARDING"
+      68: "STAIRS"
+      69: "STEP TRAINING"
+      70: "WHEELCHAIR WALK PACE"
+      71: "WHEELCHAIR RUN PACE"
+      72: "TAI CHI"
+      73: "MIXED CARDIO"
+      74: "HAND CYCLING"
+      75: "DISC SPORTS"
+      76: "FITNESS GAMING"
+      77: "DANCE"
+      78: "SOCIAL DANCE"
+      79: "PICKLEBALL"
+      80: "COOLDOWN"
+      3000: "OTHER"
+  - input_attribute: 'goal_type'
+    output_attribute: 'goal_label'
+    default_value: 'Unknown'
+    values:
+      0: "Open"
+      1: "Distance in meters"
+      2: "Time in seconds"
+      3: "Kilocalories"
+  - input_attribute: 'location_type'
+    output_attribute: 'location_label'
+    default_value: 'Unknown'
+    values:
+      1: 'Indoor'
+      2: 'Outdoor'
+message:
+  - 'Activity: {activity_label} ({location_label})'
+  - 'Workout Goal: {goal_label} ({goal})'
+  - 'Duration: {workout_duration}'
+  - 'Distance: {total_distance_km} km ({total_distance_miles} miles)'
+  - 'Energy: {total_active_energy_kcal} kcal Active / {total_resting_energy_kcal} kcal Resting'
+  - 'Heart Rate: Avg {avg_heart_rate_bpm} BPM (Min: {min_heart_rate_bpm}, Max: {max_heart_rate_bpm})'
+  - 'Environment: {temperature_c}°C ({temperature_f}°F), {humidity_percent}% Humidity'
+  - 'Elevation: Min {min_ground_elevation_m}m, Max {max_ground_elevation_m}m'
+  - 'Location: Lat {latitude}, Lon {longitude}'
+  - 'Device: {hardware} (Source: {source})'
+  - 'Timezone: {timezone}'
+  - 'Added to Health: {added_timestamp_str}'
+short_message:
+  - '{activity_label}: {total_distance_km}km in {workout_duration}'
+short_source: 'Workouts Latest'
+source: 'iOS Health Workouts Latest'
+---
+type: 'conditional'
+data_type: 'ios:health:workouts'
+enumeration_helpers:
+  - input_attribute: 'activity_type'
+    output_attribute: 'activity_label'
+    default_value: 'OTHER'
+    values:
+      1: "AMERICAN FOOTBALL"
+      2: "ARCHERY"
+      3: "AUSTRALIAN FOOTBALL"
+      4: "BADMINTON"
+      5: "BASEBALL"
+      6: "BASKETBALL"
+      7: "BOWLING"
+      8: "BOXING"
+      9: "CLIMBING"
+      10: "CRICKET"
+      11: "CROSS TRAINING"
+      12: "CURLING"
+      13: "CYCLING"
+      16: "ELLIPTICAL"
+      17: "EQUESTRIAN SPORTS"
+      18: "FENCING"
+      19: "FISHING"
+      20: "FUNCTION STRENGTH TRAINING"
+      21: "GOLF"
+      22: "GYMNASTICS"
+      23: "HANDBALL"
+      24: "HIKING"
+      25: "HOCKEY"
+      26: "HUNTING"
+      27: "LACROSS"
+      28: "MARTIAL ARTS"
+      29: "MIND AND BODY"
+      31: "PADDLE SPORTS"
+      32: "PLAY"
+      33: "PREPARATION AND RECOVERY"
+      34: "RACQUETBALL"
+      35: "ROWING"
+      36: "RUGBY"
+      37: "RUNNING"
+      38: "SAILING"
+      39: "SKATING SPORTS"
+      40: "SNOW SPORTS"
+      41: "SOCCER"
+      42: "SOFTBALL"
+      43: "SQUASH"
+      44: "STAIRSTEPPER"
+      45: "SURFING SPORTS"
+      46: "SWIMMING"
+      47: "TABLE TENNIS"
+      48: "TENNIS"
+      49: "TRACK AND FIELD"
+      50: "TRADITIONAL STRENGTH TRAINING"
+      51: "VOLLEYBALL"
+      52: "WALKING"
+      53: "WATER FITNESS"
+      54: "WATER POLO"
+      55: "WATER SPORTS"
+      56: "WRESTLING"
+      57: "YOGA"
+      58: "BARRE"
+      59: "CORE TRAINING"
+      60: "CROSS COUNTRY SKIING"
+      61: "DOWNHILL SKIING"
+      62: "FLEXIBILITY"
+      63: "HIGH INTENSITY INTERVAL TRAINING (HIIT)"
+      64: "JUMP ROPE"
+      65: "KICKBOXING"
+      66: "PILATES"
+      67: "SNOWBOARDING"
+      68: "STAIRS"
+      69: "STEP TRAINING"
+      70: "WHEELCHAIR WALK PACE"
+      71: "WHEELCHAIR RUN PACE"
+      72: "TAI CHI"
+      73: "MIXED CARDIO"
+      74: "HAND CYCLING"
+      75: "DISC SPORTS"
+      76: "FITNESS GAMING"
+      77: "DANCE"
+      78: "SOCIAL DANCE"
+      79: "PICKLEBALL"
+      80: "COOLDOWN"
+      3000: "OTHER"
+  - input_attribute: 'goal_type'
+    output_attribute: 'goal_label'
+    default_value: 'Unknown'
+    values:
+      0: "Open"
+      1: "Distance in meters"
+      2: "Time in seconds"
+      3: "Kilocalories"
+message:
+  - 'Activity: {activity_label}'
+  - 'Duration: {workout_duration}'
+  - 'Distance: {total_distance_km} km ({total_distance_miles} miles)'
+  - 'Energy: {total_energy_burned} kcal Active / {total_basal_energy_burned} kcal Basal'
+  - 'Steps: {total_w_steps}'
+  - 'Flights Climbed: {total_flights_climbed}'
+  - 'Goal: {goal_label} ({goal})'
+  - 'Start: {start_date_str}'
+  - 'End: {end_date_str}'
+short_message:
+  - '{activity_label}: {total_distance_km}km in {workout_duration}'
+short_source: 'Workouts'
+source: 'iOS Health Workouts'
+---
+type: 'conditional'
+data_type: 'ios:health:wrist_temperature'
+message:
+  - 'Wrist Temperature: {wrist_temperature_c}°C ({wrist_temperature_f}°F)'
+  - 'Surface Temperature: {surface_temperature_c}°C ({surface_temperature_f}°F)'
+  - 'Device: {device_name} ({device_model})'
+  - 'Hardware/Software: {hardware_version} / {software_version}'
+  - 'Algorithm Version: {algorithm_version}'
+  - 'Source: {source}'
+  - 'Start Time: {start_time_str}'
+  - 'End Time: {end_time_str}'
+  - 'Added to Health: {date_added_str}'
+short_message:
+  - 'Wrist Temp: {wrist_temperature_c}°C via {device_model}'
+short_source: 'TEMP'
+source: 'iOS Health Wrist Temperature'
+---
+type: 'conditional'
 data_type: 'ios:kik:messaging'
 enumeration_helpers:
 - input_attribute: 'message_status'
