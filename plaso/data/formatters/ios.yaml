@@ -140,6 +140,16 @@ short_source: 'HISTORY'
 source: 'iOS netusage.sqlite database'
 ---
 type: 'conditional'
+data_type: 'ios:notes:note'
+message:
+- 'Title: {title}'
+- 'Content: {snippet}'
+short_message:
+- 'Title: {title}'
+short_source: 'SQLITE'
+source: 'iOS notes database'
+---
+type: 'conditional'
 data_type: 'ios:powerlog:application_usage'
 message:
 - 'Application: {bundle_identifier}'

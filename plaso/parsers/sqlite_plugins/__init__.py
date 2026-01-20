@@ -24,6 +24,7 @@ from plaso.parsers.sqlite_plugins import imessage
 from plaso.parsers.sqlite_plugins import ios_datausage
 from plaso.parsers.sqlite_plugins import ios_kik
 from plaso.parsers.sqlite_plugins import ios_netusage
+from plaso.parsers.sqlite_plugins import ios_notes
 from plaso.parsers.sqlite_plugins import ios_powerlog
 from plaso.parsers.sqlite_plugins import ios_screentime
 from plaso.parsers.sqlite_plugins import ios_twitter
