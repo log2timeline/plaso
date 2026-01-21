@@ -107,6 +107,12 @@ attribute_mappings:
   description: 'Recorded Time'
 place_holder_event: true
 ---
+data_type: 'apple:pstxt:entry'
+attribute_mappings:
+- name: 'start_time'
+  description: 'Start time'
+place_holder_event: true
+---
 data_type: 'av:defender:detection_history'
 attribute_mappings:
 - name: 'recorded_time'

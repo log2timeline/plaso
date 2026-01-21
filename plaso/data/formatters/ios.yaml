@@ -1,6 +1,35 @@
 # Plaso iOS related event formatters.
 ---
 type: 'conditional'
+data_type: 'apple:pstxt:entry'
+message:
+- 'Command: {command}'
+- 'Control terminal name: {control_terminal_name}'
+- '%CPU: {cpu}'
+- 'Flags: {flags}'
+- '%Memory: {memory}'
+- 'Nice Value: {nice_value}'
+- 'Persona: {persona}'
+- 'Process identifier: {process_identifier}'
+- 'Parent process identifier: {parent_process_identifier}'
+- 'Resident set size: {resident_set_size}'
+- 'Scheduling_priority: {scheduling_priority}'
+- 'Symbolic_process_state: {symbolic_process_state}'
+- 'CPU time: {up_time}'
+- 'User: {user}'
+- 'User_identifier: {user_identifier}'
+- 'Virtual Size (kb): {virtual_size}'
+- 'Wait Channel: {wait_channel}'
+short_message:
+- 'Command: {command}'
+- 'Process identifier: {process_identifier}'
+- 'Parent process identifier: {parent_process_identifier}'
+- 'User: {user}'
+- 'User_identifier: {user_identifier}'
+short_source: 'Log'
+source: 'Apple ps.txt'
+---
+type: 'conditional'
 data_type: 'ios:app_privacy:access'
 message:
 - 'Accessor Identifier: {accessor_identifier}'

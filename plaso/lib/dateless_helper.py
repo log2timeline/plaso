@@ -10,6 +10,16 @@ from plaso.containers import events
 class DateLessLogFormatHelper(object):
   """Date-less log format helper mix-in."""
 
+  _WEEKDAY_DICT = {
+    'mon': 1,
+    'tue': 2,
+    'wed': 3,
+    'thu': 4,
+    'fri': 5,
+    'sat': 6,
+    'sun': 7
+  }
+
   _MONTH_DICT = {
       'jan': 1,
       'feb': 2,
@@ -84,6 +94,18 @@ class DateLessLogFormatHelper(object):
     """
     # TODO: add support for localization.
     return self._MONTH_DICT.get(month_string.lower(), None)
+
+  def _GetWeekDayFromString(self, weekday_string):
+    """Retrieves a numeric day of week value from a string.
+
+    Args:
+      weekday_string (str): day of week formatted as a string.
+
+    Returns:
+      int: day of week formatted as integer, where Monday is 1.
+    """
+    # TODO: add support for localization.
+    return self._WEEKDAY_DICT.get(weekday_string.lower(), None)
 
   def _GetRelativeYear(self):
     """Retrieves the relative year.

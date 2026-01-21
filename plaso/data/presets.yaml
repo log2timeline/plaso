@@ -29,6 +29,7 @@ parsers:
 - sqlite/ios_screentime
 - sqlite/kik_ios
 - sqlite/twitter_ios
+- text/apple_ps_txt
 - text/ios_lockdownd
 - text/ios_logd
 - text/ios_sysdiag_log
@@ -91,6 +92,7 @@ parsers:
 - sqlite/mackeeper_cache
 - sqlite/mac_knowledgec
 - sqlite/skype
+- text/apple_ps_txt
 - text/bash_history
 - text/gdrive_synclog
 - text/mac_appfirewall_log
