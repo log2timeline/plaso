@@ -47,8 +47,8 @@ data_type: 'ios:datausage:event'
 message:
 - 'Bundle Identifier: {bundle_identifier}'
 - 'Process Name: {process_name}'
-- 'Wifi In: {wifi_in}'
-- 'Wifi Out: {wifi_out}'
+- 'WiFi In: {wifi_in}'
+- 'WiFi Out: {wifi_out}'
 - 'Wireless Wan In: {wireless_wan_in}'
 - 'Wireless Wan Out: {wireless_wan_out}'
 short_message:
@@ -128,8 +128,8 @@ type: 'conditional'
 data_type: 'ios:netusage:process'
 message:
 - 'Process Name: {process_name}'
-- 'Wifi In: {wifi_in}'
-- 'Wifi Out: {wifi_out}'
+- 'WiFi In: {wifi_in}'
+- 'WiFi Out: {wifi_out}'
 - 'Wired In: {wired_in}'
 - 'Wired Out: {wired_out}'
 - 'Wireless Wan In: {wireless_wan_in}'
@@ -233,3 +233,14 @@ short_message:
 - 'Message: {text}'
 short_source: 'Twitter iOS'
 source: 'Twitter iOS Status'
+---
+type: 'conditional'
+data_type: 'ios:wifi:known_networks:entry'
+message:
+- 'SSID: {ssid}'
+- 'BSSID: {bssid}'
+- 'Channel: {channel}'
+short_message:
+- 'SSID: {ssid}'
+short_source: 'PLIST'
+source: 'Apple iOS WiFi Known Networks plist file'
