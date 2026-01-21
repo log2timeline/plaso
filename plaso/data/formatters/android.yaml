@@ -1,6 +1,22 @@
 # Plaso Android related event formatters.
 ---
 type: 'conditional'
+data_type: 'android:burners'
+message:
+- 'Phone Number: {phone_number_id}'
+- 'Voice Mail: {voicemail_url}'
+- 'User Id: {user_id}'
+- 'Name:  {name} '
+- 'Alias: {alias}'
+- 'Features: {features}'
+- 'Total Minutes: {total_minutes}'
+short_message: 
+- 'Phone Number: {phone_number_id}'
+- 'User: {user_id}'
+short_source: 'SQLITE'
+source: 'Android burners database'
+---
+type: 'conditional'
 data_type: 'android:app_usage'
 message:
 - 'Package: {package}'
