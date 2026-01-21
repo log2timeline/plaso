@@ -517,10 +517,22 @@ attribute_mappings:
   description: 'Start Time'
 place_holder_event: true
 ---
+data_type: 'ios:discord:message'
+attribute_mappings:
+- name: 'sent_time'
+  description: 'Sent Time'
+place_holder_event: true
+---
 data_type: 'ios:kik:messaging'
 attribute_mappings:
 - name: 'received_time'
   description: 'Received Time'
+place_holder_event: true
+---
+data_type: 'ios:instagram:thread'
+attribute_mappings:
+- name: 'sent_time'
+  description: 'Sent Time'
 place_holder_event: true
 ---
 data_type: 'ios:lockdownd_log:entry'
