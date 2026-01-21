@@ -87,6 +87,14 @@ attribute_mappings:
   description: 'Creation Time'
 place_holder_event: true
 ---
+data_type: 'android:viber:call'
+attribute_mappings:
+- name: 'end_time'
+  description: 'End Time'
+- name: 'start_time'
+  description: 'Start Time'
+place_holder_event: true
+---
 data_type: 'android:webview:cookie'
 attribute_mappings:
 - name: 'expiration_time'

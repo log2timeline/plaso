@@ -230,6 +230,33 @@ short_source: 'Twitter Android'
 source: 'Twitter Android Status'
 ---
 type: 'conditional'
+data_type: 'android:viber:call'
+enumeration_helpers:
+- input_attribute: 'type'
+  output_attribute: 'type'
+  default_value: 'UNKNOWN'
+  values:
+    1: 'INCOMING'
+    2: 'OUTGOING'
+- input_attribute: 'viber_call_type'
+  output_attribute: 'viber_call_type'
+  default_value: 'UNKNOWN'
+  values:
+    1: 'AUDIO CALL'
+    4: 'VIDEO CALL'
+message:
+- 'Number: {number}'
+- 'Call type: {type}'
+- 'Viber call type: {viber_call_type}'
+- 'Duration: {duration} seconds'
+short_message:
+- '{number}'
+- '{type}'
+- '{viber_call_type}'
+short_source: 'Android Viber'
+source: 'Android Viber Call History'
+---
+type: 'conditional'
 data_type: 'android:webview:cookie'
 message:
 - 'Host: {host}'
