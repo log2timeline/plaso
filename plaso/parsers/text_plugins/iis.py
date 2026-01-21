@@ -104,24 +104,24 @@ class WinIISTextPlugin(interface.TextPlugin):
   # "domain\user$", "domain/user", "user@domain" or "-" for an anonymous user.
   _USERNAME = pyparsing.Word(pyparsing.alphanums + '-.\\$@/') | _BLANK
 
-  _URI_SAFE_CHARACTERS = '/.?&+;_=()-:,%'
+  _URI_SAFE_CHARACTERS = '/.?&+;_=()-:,%*~|[]<>{}$\'"!`#À¯Ã§¡@\\'
 
   _URI = pyparsing.Word(pyparsing.alphanums + _URI_SAFE_CHARACTERS) | _BLANK
 
   _URI_STEM = (pyparsing.Word(
-      pyparsing.alphanums + _URI_SAFE_CHARACTERS + '$') | _BLANK)
+      pyparsing.alphanums + _URI_SAFE_CHARACTERS) | _BLANK)
 
   _UA = pyparsing.Word(
-      pyparsing.alphanums + _URI_SAFE_CHARACTERS + '[]') | _BLANK
+      pyparsing.alphanums + _URI_SAFE_CHARACTERS) | _BLANK
 
   _COOKIE = pyparsing.Word(
-      pyparsing.alphanums + _URI_SAFE_CHARACTERS + '@{}"\\') | _BLANK
+      pyparsing.alphanums + _URI_SAFE_CHARACTERS) | _BLANK
 
   # Per https://blogs.iis.net/nazim/use-of-special-characters-like-in-an-iis-url
   # IIS does not require that a query comply with RFC1738 restrictions on valid
   # URI characters
   _QUERY = (pyparsing.Word(
-      pyparsing.alphanums + _URI_SAFE_CHARACTERS + '{}|\\^~[]`\'"<>@$') |
+      pyparsing.alphanums + _URI_SAFE_CHARACTERS + '^') |
            _BLANK)
 
   _DATE = (
