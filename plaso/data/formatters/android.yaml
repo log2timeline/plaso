@@ -1,6 +1,33 @@
 # Plaso Android related event formatters.
 ---
 type: 'conditional'
+data_type: 'android:airtag:event'
+enumeration_helpers:
+- input_attribute: 'rssi'
+  output_attribute: 'rssi'
+  default_value: 'UNKNOWN'
+  values:
+    -100: 'Very Weak'
+    -80: 'Weak'
+    -60: 'Average'
+    -40: 'Strong'
+message:
+- 'Device address: {device_address}'
+- 'Signal strength: {rssi}'
+- 'Latitude: {latitude}'
+- 'Longitude: {longitude}'
+- 'Device name: {device_name}'
+- 'First discovery: {first_discovery}'
+- 'Last seen: {last_seen}'
+short_message:
+- 'Device address: {device_address}'
+- 'Signal strength: {rssi}'
+- 'Last seen: {last_seen}'
+separator: ', '
+short_source: 'AirGuard AirTag Tracker'
+source: 'AirGuard AirTag Tracker event data.'
+---
+type: 'conditional'
 data_type: 'android:app_usage'
 message:
 - 'Package: {package}'
