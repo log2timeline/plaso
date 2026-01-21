@@ -21,6 +21,7 @@ class EventDataTimeliner(object):
   """The event data timeliner.
 
   Attributes:
+    data_types_counter (collections.Counter): number of events per data types.
     number_of_produced_events (int): number of produced events.
     parsers_counter (collections.Counter): number of events per parser or
         parser plugin.
@@ -55,6 +56,7 @@ class EventDataTimeliner(object):
     self._preferred_year = preferred_year
     self._time_zone_per_path_spec = None
 
+    self.data_types_counter = collections.Counter()
     self.number_of_produced_events = 0
     self.parsers_counter = collections.Counter()
 
@@ -387,6 +389,8 @@ class EventDataTimeliner(object):
         event_data.data_type not in self._place_holder_event):
       return
 
+    data_type_name = getattr(event_data, 'data_type', None)
+
     parser_name = None
     parser_chain = getattr(event_data, '_parser_chain', None)
     if parser_chain:
@@ -417,6 +421,10 @@ class EventDataTimeliner(object):
 
         number_of_events += 1
 
+        if data_type_name:
+          self.data_types_counter[data_type_name] += 1
+        self.data_types_counter['total'] += 1
+
         if parser_name:
           self.parsers_counter[parser_name] += 1
         self.parsers_counter['total'] += 1
@@ -433,6 +441,10 @@ class EventDataTimeliner(object):
           definitions.TIME_DESCRIPTION_NOT_A_TIME)
 
       storage_writer.AddAttributeContainer(event)
+
+      if data_type_name:
+        self.data_types_counter[data_type_name] += 1
+      self.data_types_counter['total'] += 1
 
       if parser_name:
         self.parsers_counter[parser_name] += 1
