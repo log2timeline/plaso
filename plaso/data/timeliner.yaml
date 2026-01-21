@@ -1507,6 +1507,12 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: true
 ---
+data_type: 'windows:registry:diagnosed_applications'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+place_holder_event: false
+---
 data_type: 'windows:registry:explorer:programcache'
 attribute_mappings:
 - name: 'last_written_time'
