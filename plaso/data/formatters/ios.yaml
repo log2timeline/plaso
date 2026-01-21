@@ -1,6 +1,19 @@
 # Plaso iOS related event formatters.
 ---
 type: 'conditional'
+data_type: 'ios:accounts:entry'
+message:
+- 'Account Type: {account_type}'
+- 'Username: {username}'
+- 'Identifier: {identifier}'
+- 'Owning Bundle Identifier: {owning_bundle_identifier}'
+short_message:
+- 'Account Type: {account_type}'
+- 'Username: {username}'
+short_source: 'SQLITE'
+source: 'iOS accounts database'
+---
+type: 'conditional'
 data_type: 'ios:app_privacy:access'
 message:
 - 'Accessor Identifier: {accessor_identifier}'
