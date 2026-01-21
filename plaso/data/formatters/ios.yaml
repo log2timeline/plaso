@@ -104,6 +104,24 @@ short_source: 'LOG'
 source: 'iOS lockdown daemon log'
 ---
 type: 'conditional'
+data_type: 'ios:mobile_backup:entry'
+message:
+- 'Activity description: {activity_description}'
+short_message:
+- 'Activity description: {activity_description}'
+short_source: 'PLIST'
+source: 'Apple iOS Mobile Backup application plist'
+---
+type: 'conditional'
+data_type: 'ios:mobile_backup:state'
+message:
+- 'Description: {description}'
+short_message:
+- 'Description: {description}'
+short_source: 'PLIST'
+source: 'Apple iOS Mobile Backup application plist'
+---
+type: 'conditional'
 data_type: 'ios:netusage:route'
 enumeration_helpers:
 - input_attribute: 'network_type'

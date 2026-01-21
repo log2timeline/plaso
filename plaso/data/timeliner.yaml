@@ -529,6 +529,20 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: false
 ---
+data_type: 'ios:mobile_backup:entry'
+attribute_mappings:
+- name: 'account_enabled_time'
+  description: 'Account Enabled Time'
+- name: 'backup_state_time'
+  description: 'Backup State Time'
+place_holder_event: false
+---
+data_type: 'ios:mobile_backup:state'
+attribute_mappings:
+- name: 'backup_time'
+  description: 'Backup Time'
+place_holder_event: false
+---
 data_type: 'ios:netusage:process'
 attribute_mappings:
 - name: 'start_time'
