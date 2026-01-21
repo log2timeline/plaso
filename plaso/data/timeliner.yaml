@@ -107,6 +107,20 @@ attribute_mappings:
   description: 'Recorded Time'
 place_holder_event: true
 ---
+data_type: 'apple:ips_recovery_logd'
+attribute_mappings:
+- name: 'event_time'
+  description: 'Event Time'
+- name: 'process_launch_time'
+  description: 'Process Launch Time'
+place_holder_event: true
+---
+data_type: 'apple:ips_stacks'
+attribute_mappings:
+- name: 'event_time'
+  description: 'Event Time'
+place_holder_event: true
+---
 data_type: 'av:defender:detection_history'
 attribute_mappings:
 - name: 'recorded_time'
