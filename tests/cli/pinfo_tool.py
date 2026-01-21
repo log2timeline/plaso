@@ -2,13 +2,17 @@
 # -*- coding: utf-8 -*-
 """Tests for the pinfo CLI tool."""
 
+import collections
 import json
 import unittest
+from unittest import mock
 
 from plaso.cli import views as cli_views
 from plaso.cli import pinfo_tool
+from plaso.containers.counts import ParserCount
 from plaso.lib import errors
 
+from plaso.storage.reader import StorageReader
 from tests import test_lib as shared_test_lib
 from tests.cli import test_lib
 
@@ -30,8 +34,193 @@ Parser (plugin) name : Number of events
 Storage files are different.
 """
 
-  # TODO: add test for _CalculateStorageCounters.
-  # TODO: add test for _CompareStores.
+  def testCalculateStorageCounter(self):
+    """Tests the _CalculateStorageCounter function."""
+    test_file_path = self._GetTestFilePath(['psort_test.plaso'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+
+    storage_reader = test_tool._GetStorageReader(test_file_path)
+
+    with self.subTest('Non-existing attribute container'):
+      container_type = 'bad-container-type'
+      self.assertFalse(storage_reader.HasAttributeContainers(container_type))
+
+      expected_output = collections.Counter()
+      output = test_tool._CalculateStorageCounter(
+        storage_reader, container_type, 'key_name')
+
+      self.assertEqual(output, expected_output)
+
+    with self.subTest('Existing attribute container'):
+      container_type = ParserCount.CONTAINER_TYPE
+      self.assertTrue(storage_reader.HasAttributeContainers(container_type))
+
+      expected_output = collections.Counter({
+        'total': 38,
+        'syslog_traditional': 32,
+        'filestat': 6,
+      })
+      output = test_tool._CalculateStorageCounter(
+        storage_reader, container_type, 'name')
+
+      self.assertEqual(output, expected_output)
+
+    # Names/labels are currently optional.
+    with self.subTest('It does not raise when name is None'):
+      container_type = ParserCount.CONTAINER_TYPE
+      self.assertTrue(storage_reader.HasAttributeContainers(container_type))
+      bad_attribute = 'bad_attribute'
+
+      for attribute in storage_reader.GetAttributeContainers(container_type):
+        with self.assertRaises(AttributeError):
+          getattr(attribute, bad_attribute)
+
+      test_tool._CalculateStorageCounter(
+        storage_reader, container_type, bad_attribute)
+
+  def testCalculateStorageCounters(self):
+    """Tests the _CalculateStorageCounters function."""
+    test_file_path = self._GetTestFilePath(['psort_test.plaso'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+
+    storage_reader = test_tool._GetStorageReader(test_file_path)
+
+    expected_output = {
+      'analysis_reports': collections.Counter(),
+      'event_labels': collections.Counter({
+        'total': 8,
+        'repeated': 4,
+        'exit1': 2,
+        'exit2': 2,
+      }),
+      'extraction_warnings_by_parser_chain': collections.Counter({
+        'text/syslog_traditional': 2,
+      }),
+      'extraction_warnings_by_path_spec': collections.Counter({
+        'type: OS, location: /tmp/test/test_data/syslog\n': 2,
+      }),
+      'parsers': collections.Counter({
+        'total': 38,
+        'syslog_traditional': 32,
+        'filestat': 6,
+      }),
+      'recovery_warnings_by_parser_chain': collections.Counter(),
+      'recovery_warnings_by_path_spec': collections.Counter(),
+      'timelining_warnings_by_parser_chain': collections.Counter(),
+      'timelining_warnings_by_path_spec': collections.Counter(),
+    }
+
+    output = test_tool._CalculateStorageCounters(storage_reader)
+
+    self.assertEqual(output, expected_output)
+
+  def testCalculateStorageWarningCounters(self):
+    """Tests the _CalculateStorageCounter function."""
+    test_file_path = self._GetTestFilePath(['psort_test.plaso'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+
+    storage_reader = test_tool._GetStorageReader(test_file_path)
+
+    with self.subTest('Non-existing attribute container'):
+      container_type = 'bad-container-type'
+      self.assertFalse(storage_reader.HasAttributeContainers(container_type))
+
+      expected_output = {
+        f'{container_type}s_by_path_spec': collections.Counter(),
+        f'{container_type}s_by_parser_chain': collections.Counter(),
+      }
+      output = test_tool._CalculateStorageWarningCounters(
+        storage_reader, container_type)
+
+      self.assertEqual(output, expected_output)
+
+    with self.subTest('Existing warning attribute container'):
+      container_type = 'extraction_warning'
+      self.assertTrue(storage_reader.HasAttributeContainers(container_type))
+
+      expected_output = {
+        'extraction_warnings_by_parser_chain': collections.Counter({
+          'text/syslog_traditional': 2,
+        }),
+        'extraction_warnings_by_path_spec': collections.Counter({
+          'type: OS, location: /tmp/test/test_data/syslog\n': 2,
+        }),
+      }
+      output = test_tool._CalculateStorageWarningCounters(
+        storage_reader, container_type)
+
+      self.assertEqual(output, expected_output)
+
+  # FIXME: Not sure how to name this since testCompareStores already exists.
+  def testPrivateCompareStores(self):
+    """Tests the _CompareStores function."""
+    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
+    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+
+    storage_reader = mock.Mock(spec_set=StorageReader)
+    compare_storage_reader = mock.Mock(spec_set=StorageReader)
+
+    counter_types = [
+      'parsers',
+      'extraction_warnings_by_parser_chain',
+      'extraction_warnings_by_path_spec',
+      'recovery_warnings_by_parser_chain',
+      'recovery_warnings_by_path_spec',
+      'timelining_warnings_by_parser_chain',
+      'timelining_warnings_by_path_spec',
+      'event_labels',
+      'analysis_reports']
+
+    with (
+      mock.patch.object(test_tool, '_PrintCounterDifferences') as mock_print,
+      mock.patch.object(
+        test_tool, '_CalculateStorageCounters', return_value={}),
+    ):
+
+      differences = {}
+
+      with (
+        self.subTest('Identical store counters'),
+        mock.patch.object(
+          test_tool, '_CompareCounter', return_value=differences,
+        ) as mock_compare,
+      ):
+        mock_print.reset_mock()
+        mock_compare.reset_mock()
+
+        output = test_tool._CompareStores(storage_reader, storage_reader)
+
+        self.assertTrue(output)
+        self.assertEqual(mock_compare.call_count, len(counter_types))
+        mock_print.assert_not_called()
+
+      # They are all differents.
+      differences = {counter_type: (11, 22) for counter_type in counter_types}
+
+      with (
+        self.subTest('Different store counters'),
+        mock.patch.object(
+          test_tool, '_CompareCounter', return_value=differences,
+        ) as mock_compare,
+      ):
+        mock_print.reset_mock()
+        mock_compare.reset_mock()
+
+        output = test_tool._CompareStores(
+          storage_reader, compare_storage_reader)
+
+        self.assertFalse(output)
+        self.assertEqual(mock_compare.call_count, len(counter_types))
+        self.assertEqual(mock_print.call_count, len(counter_types))
 
   def testGenerateAnalysisResultsReportAsJSON(self):
     """Tests the _GenerateAnalysisResultsReport function."""
