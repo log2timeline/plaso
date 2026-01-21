@@ -167,6 +167,18 @@ short_source: 'HISTORY'
 source: 'iOS Screen Time database'
 ---
 type: 'conditional'
+data_type: 'ios:sim:info'
+message:
+- 'SIM MDN: {mdn}'
+- 'SIM Type: {sim_type}'
+- 'CB Ver: {cb_ver}'
+- 'Label ID: {label_id}'
+short_message:
+- 'SIM MDN: {mdn}'
+short_source: 'IOS'
+source: 'iOS SIM Info'
+---
+type: 'conditional'
 data_type: 'ios:sysdiagnose:logd:line'
 message:
 - 'Logger: {logger}'
