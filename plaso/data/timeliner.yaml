@@ -20,6 +20,12 @@ attribute_mappings:
   description: 'Start Time'
 place_holder_event: true
 ---
+data_type: 'android:files_by_google:record'
+attribute_mappings:
+- name: 'date_modified'
+  description: 'File Modified Time'
+place_holder_event: true
+---
 data_type: 'android:logcat'
 attribute_mappings:
 - name: 'recorded_time'
