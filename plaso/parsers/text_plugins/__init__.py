@@ -4,6 +4,7 @@
 from plaso.parsers.text_plugins import android_logcat
 from plaso.parsers.text_plugins import apache_access
 from plaso.parsers.text_plugins import apt_history
+from plaso.parsers.text_plugins import atlassian_confluence
 from plaso.parsers.text_plugins import aws_elb_access
 from plaso.parsers.text_plugins import bash_history
 from plaso.parsers.text_plugins import confluence_access
