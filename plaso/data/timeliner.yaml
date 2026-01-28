@@ -107,6 +107,12 @@ attribute_mappings:
   description: 'Recorded Time'
 place_holder_event: true
 ---
+data_type: 'atlassian:confluence:line'
+attribute_mappings:
+- name: 'date_time'
+  description: 'Date Time'
+place_holder_event: true
+---
 data_type: 'av:defender:detection_history'
 attribute_mappings:
 - name: 'recorded_time'
