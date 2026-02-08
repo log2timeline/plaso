@@ -18,6 +18,7 @@ from plaso.multi_process import merge_helpers
 from plaso.multi_process import plaso_queue
 from plaso.multi_process import task_engine
 from plaso.multi_process import zeromq_queue
+from plaso.storage import serializers
 
 
 class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
@@ -142,7 +143,12 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
       for event_queue in self._event_queues.values():
         # TODO: Check for premature exit of analysis plugins.
-        event_queue.PushItem((event, event_data, event_data_stream))
+        event_tripple = events.EventTripple()
+        event_tripple.event = event
+        event_tripple.event_data = event_data
+        event_tripple.event_data_stream = event_data_stream
+
+        event_queue.PushItem(event_tripple)
 
       self._number_of_consumed_events += 1
 
