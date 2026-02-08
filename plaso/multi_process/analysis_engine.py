@@ -18,7 +18,6 @@ from plaso.multi_process import merge_helpers
 from plaso.multi_process import plaso_queue
 from plaso.multi_process import task_engine
 from plaso.multi_process import zeromq_queue
-from plaso.storage import serializers
 
 
 class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
