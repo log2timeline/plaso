@@ -1,3 +1,12 @@
+---
+name: New release
+about: Create a new release
+title: 'Create [VERSION] release'
+labels: ''
+assignees: ''
+
+---
+
 - [ ] Update version and documentation
   - `./utils/update_release.sh`
 - [ ] Create GitHub release and tag
