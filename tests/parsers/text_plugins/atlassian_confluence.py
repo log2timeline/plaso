@@ -8,11 +8,11 @@ from plaso.parsers.text_plugins import atlassian_confluence
 
 from tests.parsers import test_lib
 
-"""Test main method for atlassian-confluence."""
 class AtlassianConfluenceTest(test_lib.ParserTestCase):
   """Tests for the Atlassian Confluence application log parser."""
 
   def testParse(self):
+    """Main Test parse for Atlassian Confluence."""
     parser = atlassian_confluence.AtlassianConfluenceTextPlugin()
     storage_writer = self._ParseFile(['atlassian-confluence.log'], parser)
 
