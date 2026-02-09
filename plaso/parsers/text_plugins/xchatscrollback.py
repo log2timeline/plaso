@@ -9,7 +9,7 @@ and/or a particular conversation, XChat will display the last messages
 exchanged. This artifact could be present, if not disabled, even if
 normal logging is disabled.
 
-From the XChat FAQ (http://xchat.org/faq):
+From the XChat FAQ (https://xchat.org/faq):
 
 Q: 'How do I keep text from previous sessions from being displayed when I
 join a channel?'
@@ -32,7 +32,7 @@ The time reported in the log is the number of seconds since January 1, 1970
 should strip those control fields.
 
 Also see:
-  http://xchat.org
+  https://xchat.org
 """
 
 import pyparsing

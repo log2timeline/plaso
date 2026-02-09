@@ -48,7 +48,7 @@ If parsing is True, set parsing=False and log debug
 2.2) If parsing = False, skip until next good header is found
 
 Also see:
-  http://xchat.org
+  https://xchat.org
 """
 
 import pyparsing
