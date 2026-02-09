@@ -142,7 +142,12 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
       for event_queue in self._event_queues.values():
         # TODO: Check for premature exit of analysis plugins.
-        event_queue.PushItem((event, event_data, event_data_stream))
+        event_tripple = events.EventTripple()
+        event_tripple.event = event
+        event_tripple.event_data = event_data
+        event_tripple.event_data_stream = event_data_stream
+
+        event_queue.PushItem(event_tripple)
 
       self._number_of_consumed_events += 1
 

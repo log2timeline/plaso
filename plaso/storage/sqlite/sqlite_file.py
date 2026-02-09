@@ -75,7 +75,7 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       AttributeContainer: attribute container.
     """
     schema = self._GetAttributeContainerSchema(container_type)
-    if schema:
+    if schema and container_type != self._CONTAINER_TYPE_EVENT_DATA:
       return super(SQLiteStorageFile, self)._CreateAttributeContainerFromRow(
           container_type, column_names, row, first_column_index)
 
@@ -106,7 +106,7 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
           an unsupported attribute container is provided.
     """
     schema = self._GetAttributeContainerSchema(container_type)
-    if schema:
+    if schema and container_type != self._CONTAINER_TYPE_EVENT_DATA:
       super(SQLiteStorageFile, self)._CreateAttributeContainerTable(
           container_type)
     else:
@@ -276,7 +276,7 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       OSError: when there is an error querying the storage file.
     """
     schema = self._GetAttributeContainerSchema(container.CONTAINER_TYPE)
-    if schema:
+    if schema and container.CONTAINER_TYPE != self._CONTAINER_TYPE_EVENT_DATA:
       super(SQLiteStorageFile, self)._WriteNewAttributeContainer(container)
     else:
       next_sequence_number = self._GetAttributeContainerNextSequenceNumber(
@@ -328,7 +328,7 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
           the storage file.
     """
     schema = self._GetAttributeContainerSchema(container_type)
-    if schema:
+    if schema and container_type != self._CONTAINER_TYPE_EVENT_DATA:
       container = super(SQLiteStorageFile, self).GetAttributeContainerByIndex(
           container_type, index)
 
@@ -401,7 +401,7 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       OSError: when there is an error querying the storage file.
     """
     schema = self._GetAttributeContainerSchema(container_type)
-    if schema:
+    if schema and container_type != self._CONTAINER_TYPE_EVENT_DATA:
       for container in super(SQLiteStorageFile, self).GetAttributeContainers(
           container_type, filter_expression=filter_expression):
         # TODO: the YearLessLogHelper attribute container is kept for backwards

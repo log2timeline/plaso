@@ -209,6 +209,12 @@ class EventData(interface.AttributeContainer):
 
   CONTAINER_TYPE = 'event_data'
 
+  SCHEMA = {
+      '_event_data_stream_identifier': 'AttributeContainerIdentifier',
+      '_event_values_hash': 'str',
+      '_parser_chain': 'str',
+      'data_type': 'str'}
+
   _SERIALIZABLE_PROTECTED_ATTRIBUTES = [
       '_event_data_stream_identifier',
       '_event_values_hash',
@@ -499,6 +505,25 @@ class EventTag(interface.AttributeContainer):
     self._event_identifier = event_identifier
 
 
+class EventTripple(interface.AttributeContainer):
+  """Event tripple.
+
+  Attributes:
+    event (EventObject): event.
+    event_data (EventData): event data.
+    event_data_stream (EventDataStream): event data stream.
+  """
+
+  CONTAINER_TYPE = 'event_tripple'
+
+  def __init__(self):
+    """Initializes an event tripple."""
+    super(EventTripple, self).__init__()
+    self.event = None
+    self.event_data = None
+    self.event_data_stream = None
+
+
 # TODO: the YearLessLogHelper attribute container is kept for backwards
 # compatibility remove once storage format 20230327 is obsolete.
 class YearLessLogHelper(interface.AttributeContainer):
@@ -557,4 +582,4 @@ class YearLessLogHelper(interface.AttributeContainer):
 
 manager.AttributeContainersManager.RegisterAttributeContainers([
     DateLessLogHelper, EventData, EventDataStream, EventObject, EventTag,
-    YearLessLogHelper])
+    EventTripple, YearLessLogHelper])
