@@ -9,7 +9,7 @@ assignees: ''
 
 - [ ] Update version and documentation
   - `./utils/update_release.sh`
-- [ ] Create GitHub release and tag
+- [ ] Create GitHub pre-release and tag
 - [ ] Upload source package and signature to Github release page as pre-release
   - `python -m build --sdist`
   - `gpg --armor --detach-sign dist/plaso-$VERSION.tar.gz > dist/plaso-$VERSION.tar.gz.asc`
