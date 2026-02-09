@@ -5,8 +5,6 @@ This is for the atlassian-confluence.log file, one of multiple log files
 produced by a Confluence DC/Server installation.
 """
 
-import re
-
 import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements
@@ -24,7 +22,7 @@ class AtlassianConfluenceEventData(events.EventData):
     body (str): the freeform body of the log line.
     level (str): the logging level of the event.
     logger_class (str): the Confluence class responsible for logging.
-    logger_method (str): name of the method within the class calling the logger.
+    logger_method (str): name of the method within the class.
     thread (str): the Confluence thread from which the log event originated.
     written_time (dfdatetime.DateTimeValues): entry written date and time.
   """
@@ -33,7 +31,8 @@ class AtlassianConfluenceEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(AtlassianConfluenceEventData, self).__init__(data_type=self.DATA_TYPE)
+    super(
+        AtlassianConfluenceEventData, self).__init__(data_type=self.DATA_TYPE)
     self.body = None
     self.level = None
     self.logger_class = None
@@ -61,7 +60,8 @@ class AtlassianConfluenceTextPlugin(interface.TextPlugin):
       pyparsing.Suppress('-') +
       pyparsing.Word(pyparsing.nums, exact=2).set_results_name('month') +
       pyparsing.Suppress('-') +
-      pyparsing.Word(pyparsing.nums, exact=2).set_results_name('day_of_month') +
+      pyparsing.Word(
+          pyparsing.nums, exact=2).set_results_name('day_of_month') +
       pyparsing.Word(pyparsing.nums, exact=2).set_results_name('hours') +
       pyparsing.Suppress(':') +
       pyparsing.Word(pyparsing.nums, exact=2).set_results_name('minutes') +
@@ -74,7 +74,8 @@ class AtlassianConfluenceTextPlugin(interface.TextPlugin):
   # Log level (DEBUG, INFO, WARN, ERROR, FATAL)
   _LOG_LEVEL = pyparsing.oneOf(_CONFLUENCE_LEVELS).set_results_name('level')
 
-  # Thread name enclosed in brackets: [Catalina-utility-1] or [hz.confluence.event-3]
+  # Thread name enclosed in brackets: [Catalina-utility-1]
+  # or [hz.confluence.event-3]
   # Allows alphanumerics, hyphens, underscores, dots, colons, and spaces
   _CONFLUENCE_THREAD = (
       pyparsing.Suppress('[') +
@@ -89,7 +90,8 @@ class AtlassianConfluenceTextPlugin(interface.TextPlugin):
       pyparsing.SkipTo(']').set_results_name('logger_class') +
       pyparsing.Suppress(']'))
 
-  # Logger method name: startCluster, memberAdded, <init>, lambda$getCompletedStatuses$0
+  # Logger method name: startCluster, memberAdded, <init>,
+  # lambda$getCompletedStatuses$0
   _CONFLUENCE_LOGGER_METHOD = (
       pyparsing.Word(
           pyparsing.alphanums + '_$<>').set_results_name('logger_method'))
@@ -133,11 +135,16 @@ class AtlassianConfluenceTextPlugin(interface.TextPlugin):
 
     try:
       year = int(self._GetValueFromStructure(time_elements_structure, 'year'))
-      month = int(self._GetValueFromStructure(time_elements_structure, 'month'))
-      day = int(self._GetValueFromStructure(time_elements_structure, 'day_of_month'))
-      hours = int(self._GetValueFromStructure(time_elements_structure, 'hours'))
-      minutes = int(self._GetValueFromStructure(time_elements_structure, 'minutes'))
-      seconds = int(self._GetValueFromStructure(time_elements_structure, 'seconds'))
+      month = int(
+          self._GetValueFromStructure(time_elements_structure, 'month'))
+      day = int(
+          self._GetValueFromStructure(time_elements_structure, 'day_of_month'))
+      hours = int(
+          self._GetValueFromStructure(time_elements_structure, 'hours'))
+      minutes = int(
+          self._GetValueFromStructure(time_elements_structure, 'minutes'))
+      seconds = int(
+          self._GetValueFromStructure(time_elements_structure, 'seconds'))
       milliseconds = int(self._GetValueFromStructure(
           time_elements_structure, 'milliseconds'))
 
@@ -164,7 +171,7 @@ class AtlassianConfluenceTextPlugin(interface.TextPlugin):
     parser_mediator.ProduceEventData(event_data)
 
   def CheckRequiredFormat(self, parser_mediator, text_reader):
-    """Check if the log record has the minimal structure required by the parser.
+    """Check if the log record has the minimal structure required.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -180,6 +187,5 @@ class AtlassianConfluenceTextPlugin(interface.TextPlugin):
       return False
 
     return 'date_time' in structure
-
 
 text_parser.TextLogParser.RegisterPlugin(AtlassianConfluenceTextPlugin)
