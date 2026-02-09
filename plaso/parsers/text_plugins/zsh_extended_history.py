@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Text parser plugin for ZSH extended_history files.
-
-References:
-  https://zsh.sourceforge.io/Doc/Release/Options.html#index-EXTENDEDHISTORY
-"""
+"""Text parser plugin for ZSH extended_history files."""
 
 import pyparsing
 
