@@ -2,7 +2,7 @@ Source: plaso
 Section: python
 Priority: extra
 Maintainer: Log2Timeline maintainers <log2timeline-maintainers@googlegroups.com>
-Build-Depends: debhelper (>= 9), dh-python, python3-all (>= 3.6~), python3-setuptools
+Build-Depends: debhelper (>= 9), dh-python, python3-all (>= 3.6~), python3-setuptools, pybuild-plugin-pyproject
 Standards-Version: 4.1.4
 X-Python3-Version: >= 3.6
 Homepage: https://github.com/log2timeline/plaso
