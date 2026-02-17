@@ -130,23 +130,14 @@ class AtlassianConfluenceTextPlugin(interface.TextPlugin):
       raise errors.ParseError(
           'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    time_elements_structure = self._GetValueFromStructure(
-        structure, 'date_time')
-
     try:
-      year = int(self._GetValueFromStructure(time_elements_structure, 'year'))
-      month = int(
-          self._GetValueFromStructure(time_elements_structure, 'month'))
-      day = int(
-          self._GetValueFromStructure(time_elements_structure, 'day_of_month'))
-      hours = int(
-          self._GetValueFromStructure(time_elements_structure, 'hours'))
-      minutes = int(
-          self._GetValueFromStructure(time_elements_structure, 'minutes'))
-      seconds = int(
-          self._GetValueFromStructure(time_elements_structure, 'seconds'))
-      milliseconds = int(self._GetValueFromStructure(
-          time_elements_structure, 'milliseconds'))
+      year = int(self._GetValueFromStructure(structure, 'year'))
+      month = int(self._GetValueFromStructure(structure, 'month'))
+      day = int(self._GetValueFromStructure(structure, 'day_of_month'))
+      hours = int(self._GetValueFromStructure(structure, 'hours'))
+      minutes = int(self._GetValueFromStructure(structure, 'minutes'))
+      seconds = int(self._GetValueFromStructure(structure, 'seconds'))
+      milliseconds = int(self._GetValueFromStructure(structure, 'milliseconds'))
 
       date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
           time_elements_tuple=(
