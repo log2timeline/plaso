@@ -28,8 +28,6 @@ class AtlassianConfluenceTest(test_lib.TextPluginTestCase):
         'recovery_warning')
     self.assertEqual(num_warnings, 0)
 
-    event_data_list = list(storage_writer.GetAttributeContainers('event_data'))
-
     expected_event_values_list = [
         {
             'data_type': 'atlassian:confluence:line',
@@ -87,7 +85,8 @@ class AtlassianConfluenceTest(test_lib.TextPluginTestCase):
                 )}]
 
     for index, expected_event_values in enumerate(expected_event_values_list):
-      event_data = storage_writer.GetAttributeContainerByIndex('event_data', index)
+      event_data = storage_writer.GetAttributeContainerByIndex(
+          'event_data', index)
       self.CheckEventData(event_data, expected_event_values)
 
 
