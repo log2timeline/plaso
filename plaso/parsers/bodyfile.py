@@ -82,9 +82,15 @@ class BodyfileParser(interface.FileObjectParser):
   _MD5_RE = re.compile(r'^[0-9a-fA-F]{32}$')
 
   _NON_PRINTABLE_CHARACTERS = list(range(0, 0x20)) + list(range(0x7f, 0xa0))
+  # Add Unicode surrogate characters (0xD800-0xDFFF) that need escaping
+  _SURROGATE_CHARACTERS = list(range(0xd800, 0xe000))
+
   _ESCAPE_CHARACTERS = str.maketrans({
       value: '\\x{0:02x}'.format(value)
       for value in _NON_PRINTABLE_CHARACTERS})
+  _ESCAPE_CHARACTERS.update({
+      value: '\\U{0:08x}'.format(value)
+      for value in _SURROGATE_CHARACTERS})
 
   def _GetDateTimeFromTimestamp(self, float_value):
     """Retrieves a date time object from the floating-point timestamp.
@@ -315,7 +321,8 @@ class BodyfileParser(interface.FileObjectParser):
     # Note that we cannot use the DSVParser here since the bodyfile format is
     # not strict and clean file format.
     line_reader = text_file.TextFile(
-        file_object, encoding='UTF-8', end_of_line='\n')
+        file_object, encoding='UTF-8', end_of_line='\n',
+        encoding_errors='surrogatepass')
 
     first_line = True
     file_offset = 0

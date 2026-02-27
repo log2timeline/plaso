@@ -90,6 +90,29 @@ class BodyfileTest(test_lib.ParserTestCase):
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 2)
     self.CheckEventData(event_data, expected_event_values)
 
+  def testParseUnpairedSurrogate(self):
+    """Tests the Parse function on a bodyfile with unpaired surrogates."""
+    parser = bodyfile.BodyfileParser()
+    storage_writer = self._ParseFile(
+        ['bodyfile', 'bodyfile.surrogate'], parser)
+
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 1)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    # Test that unpaired surrogate U+D800 is escaped as \U0000d800
+    expected_filename = '/test_file_\\U0000d800.txt'
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.assertEqual(event_data.filename, expected_filename)
+
 
 if __name__ == '__main__':
   unittest.main()
