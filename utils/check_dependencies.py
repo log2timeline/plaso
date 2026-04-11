@@ -17,7 +17,7 @@ if __name__ == '__main__':
     build_instructions_url = (
         'https://plaso.readthedocs.io/en/latest/sources/user/Users-Guide.html')
 
-    print('See: {0:s} on how to set up plaso.'.format(build_instructions_url))
+    print(f'See: {build_instructions_url:s} on how to set up plaso.')
     print('')
 
     sys.exit(1)

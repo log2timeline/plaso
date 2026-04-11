@@ -5,7 +5,7 @@
 import sys
 import unittest
 
-import mock
+from unittest import mock
 
 from dfvfs.lib import definitions as dfvfs_definitions
 

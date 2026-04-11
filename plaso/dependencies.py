@@ -105,15 +105,15 @@ def _CheckPythonModule(
   module_object = _ImportPythonModule(module_name)
   if not module_object:
     if not is_required:
-      print('[OPTIONAL]\tmissing: {0:s}.'.format(module_name))
+      print(f'[OPTIONAL]\tmissing: {module_name:s}.')
       return True
 
-    print('[FAILURE]\tmissing: {0:s}.'.format(module_name))
+    print(f'[FAILURE]\tmissing: {module_name:s}.')
     return False
 
   if not version_attribute_name or not minimum_version:
     if verbose_output:
-      print('[OK]\t\t{0:s}'.format(module_name))
+      print(f'[OK]\t\t{module_name:s}')
     return True
 
   module_version = None
@@ -127,17 +127,17 @@ def _CheckPythonModule(
   if not module_version:
     if not is_required:
       print((
-          '[OPTIONAL]\tunable to determine version information '
-          'for: {0:s}').format(module_name))
+          f'[OPTIONAL]\tunable to determine version information '
+          f'for: {module_name:s}'))
       return True
 
     print((
-        '[FAILURE]\tunable to determine version information '
-        'for: {0:s}').format(module_name))
+        f'[FAILURE]\tunable to determine version information '
+        f'for: {module_name:s}'))
     return False
 
   # Make sure the module version is a string.
-  module_version = '{0!s}'.format(module_version)
+  module_version = f'{module_version!s}'
 
   # Remove a version suffix, such as: 0.7.0~rc1
   module_version_list = _VERSION_SPLIT_REGEX.split(module_version)
@@ -156,13 +156,13 @@ def _CheckPythonModule(
   if module_version_map < minimum_version_map:
     if not is_required:
       print((
-          '[OPTIONAL]\t{0:s} version: {1!s} is too old, {2!s} or later '
-          'required.').format(module_name, module_version, minimum_version))
+          f'[OPTIONAL]\t{module_name:s} version: {module_version!s} is too '
+          f'old, {minimum_version!s} or later required.'))
       return True
 
     print((
-        '[FAILURE]\t{0:s} version: {1!s} is too old, {2!s} or later '
-        'required.').format(module_name, module_version, minimum_version))
+        f'[FAILURE]\t{module_name:s} version: {module_version!s} is too old, '
+        f'{minimum_version!s} or later required.'))
     return False
 
   if maximum_version:
@@ -171,17 +171,17 @@ def _CheckPythonModule(
     if module_version_map > maximum_version_map:
       if not is_required:
         print((
-            '[OPTIONAL]\t{0:s} version: {1!s} is too recent, {2!s} or earlier '
-            'required.').format(module_name, module_version, minimum_version))
+            f'[OPTIONAL]\t{module_name:s} version: {module_version!s} is too '
+            f'recent, {minimum_version!s} or earlier required.'))
         return True
 
       print((
-          '[FAILURE]\t{0:s} version: {1!s} is too recent, {2!s} or earlier '
-          'required.').format(module_name, module_version, maximum_version))
+          f'[FAILURE]\t{module_name:s} version: {module_version!s} is too '
+          f'recent, {maximum_version!s} or earlier required.'))
       return False
 
   if verbose_output:
-    print('[OK]\t\t{0:s} version: {1!s}'.format(module_name, module_version))
+    print(f'[OK]\t\t{module_name:s} version: {module_version!s}')
 
   return True
 

@@ -58,5 +58,4 @@ C:\Python3\python.exe C:\plaso-build\plaso\plaso\frontend\pinfo.py timeline.plas
 If you intend to do development on Plaso you'll also need to install the
 following development tools:
 
-* mock
 * pylint

@@ -6,10 +6,11 @@
 .PHONY: override_dh_auto_test
 override_dh_auto_test:
 
+
 .PHONY: override_dh_auto_install
 override_dh_auto_install:
 	dh_auto_install
-	mkdir -p debian/tmp/usr/share/plaso/
+	mkdir -p debian/tmp/usr/share/plaso
 	mv -n debian/tmp/usr/lib/python*/dist-packages/plaso/data/* debian/tmp/usr/share/plaso
 	rm -rf debian/tmp/usr/lib/python*/dist-packages/plaso/data
 	find debian/tmp/usr/bin/ -type f -exec mv {} {}.py \;
