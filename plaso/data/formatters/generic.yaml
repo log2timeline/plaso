@@ -17,6 +17,20 @@ short_source: 'LOG'
 source: 'Apache Access Log'
 ---
 type: 'conditional'
+data_type: 'atlassian:confluence:line'
+message:
+- 'level: {level}'
+- 'thread: {thread}'
+- 'logger_class: {logger_class}'
+- 'logger_method: {logger_method}'
+- 'body: {body}'
+short_message:
+- '{logger_method}'
+- 'from: {logger_class}'
+short_source: 'LOG'
+source: 'Atlassian Confluence Log'
+---
+type: 'conditional'
 data_type: 'aws:cloudtrail:entry'
 message:
 - 'User {user_name}'
