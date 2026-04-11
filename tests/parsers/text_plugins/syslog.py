@@ -377,7 +377,7 @@ class TraditionalSyslogTextPluginTest(test_lib.TextPluginTestCase):
         'last_written_time': '0000-01-22T07:52:33',
         'pid': 30840,
         'reporter': 'client',
-        'severity': None,}
+        'severity': None}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
