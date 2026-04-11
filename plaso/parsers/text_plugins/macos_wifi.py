@@ -153,7 +153,7 @@ class MacOSWiFiLogTextPlugin(
     # TODO: replace "x in y" checks by startswith if possible.
     if 'airportdProcessDLILEvent' in action:
       network_interface = text.split()[0]
-      return 'Interface {0:s} turn up.'.format(network_interface)
+      return f'Interface {network_interface:s} turn up.'
 
     if 'doAutoJoin' in action:
       match = self._CONNECTED_RE.match(text)
@@ -161,7 +161,7 @@ class MacOSWiFiLogTextPlugin(
         ssid = match.group(1)[1:-1]
       else:
         ssid = 'Unknown'
-      return 'Wi-Fi connected to SSID: {0:s}'.format(ssid)
+      return f'Wi-Fi connected to SSID: {ssid:s}'
 
     if 'processSystemPSKAssoc' in action:
       wifi_parameters = self._WIFI_PARAMETERS_RE.search(text)
@@ -177,8 +177,8 @@ class MacOSWiFiLogTextPlugin(
           security = 'Unknown'
 
         return (
-            'New wifi configured. BSSID: {0:s}, SSID: {1:s}, '
-            'Security: {2:s}.').format(bssid, ssid, security)
+            f'New wifi configured. BSSID: {bssid:s}, SSID: {ssid:s}, '
+            f'Security: {security:s}.')
 
     return text
 
@@ -257,7 +257,7 @@ class MacOSWiFiLogTextPlugin(
 
     except (TypeError, ValueError) as exception:
       raise errors.ParseError(
-          'Unable to parse time elements with error: {0!s}'.format(exception))
+          f'Unable to parse time elements with error: {exception!s}')
 
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the plugin.

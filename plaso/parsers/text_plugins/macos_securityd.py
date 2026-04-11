@@ -139,7 +139,7 @@ class MacOSSecuritydLogTextPlugin(
       structure = self._repeated_structure
 
       message = self._GetStringValueFromStructure(structure, 'message')
-      message = 'Repeated {0:d} times: {1:s}'.format(repeat_count, message)
+      message = f'Repeated {repeat_count:d} times: {message:s}'
 
     event_data = MacOSSecuritydLogEventData()
     event_data.added_time = self._ParseTimeElements(time_elements_structure)
@@ -186,7 +186,7 @@ class MacOSSecuritydLogTextPlugin(
 
     except (TypeError, ValueError) as exception:
       raise errors.ParseError(
-          'Unable to parse time elements with error: {0!s}'.format(exception))
+          f'Unable to parse time elements with error: {exception!s}')
 
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the plugin.

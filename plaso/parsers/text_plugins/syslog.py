@@ -215,8 +215,7 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
       structure = self._CRON_MESSAGE.parse_string(body)
     except pyparsing.ParseException as exception:
       logger.debug(
-          'Unable to parse cron message body with error: {0!s}'.format(
-              exception))
+          f'Unable to parse cron message body with error: {exception!s}')
       return None
 
     keys = list(structure.keys())
@@ -253,8 +252,7 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
       structure = self._SSHD_MESSAGE.parse_string(body)
     except pyparsing.ParseException as exception:
       logger.debug(
-          'Unable to parse sshd message body with error: {0!s}'.format(
-              exception))
+          f'Unable to parse sshd message body with error: {exception!s}')
       return None
 
     keys = list(structure.keys())
@@ -509,7 +507,7 @@ class SyslogTextPlugin(BaseSyslogTextPlugin):
 
     except (TypeError, ValueError) as exception:
       raise errors.ParseError(
-          'Unable to parse time elements with error: {0!s}'.format(exception))
+          f'Unable to parse time elements with error: {exception!s}')
 
   def _PriorityToSeverity(self, priority):
     """Converts a syslog protocol 23 priority value to severity.
@@ -731,7 +729,7 @@ class TraditionalSyslogTextPlugin(
 
     except (TypeError, ValueError) as exception:
       raise errors.ParseError(
-          'Unable to parse time elements with error: {0!s}'.format(exception))
+          f'Unable to parse time elements with error: {exception!s}')
 
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the parser.
