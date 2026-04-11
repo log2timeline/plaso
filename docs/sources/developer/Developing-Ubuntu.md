@@ -52,14 +52,4 @@ to do unattended bulk builds.
 If you intend to do development on Plaso you'll also need to install some
 development tools:
 
-* PyLint
-* Python Mock
-
-### PyLint
-Currently plaso development uses PyLint version 2.6.x.
-
-### Python Mock
-To install Python Mock run:
-```bash
-sudo apt-get install python-mock
-```
+* PyLint 3.2.x

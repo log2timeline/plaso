@@ -39,5 +39,4 @@ dependencies regularly.**
 
 If you intend to do development on plaso you'll also need to install some development tools:
 
-* PyLint 1.9.x
-* Python Mock
+* PyLint 3.2.x

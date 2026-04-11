@@ -78,7 +78,7 @@ If your code requires adding a new dependency please check out these instruction
 1. Join the development mailing list: [log2timeline-dev@googlegroups.com](https://groups.google.com/forum/#%21forum/log2timeline-dev)
 and [Slack channel](https://github.com/open-source-dfir/slack), we recommend
 using the same account as step 1
-1. Install the required development tools like pylint and python-mock
+1. Install the required development tools like pylint
 1. Make sure to run all the tests in the Plaso codebase, and that they
 successfully complete in your development environment
 1. Make sure your development environment is set up correctly so that you can develop
