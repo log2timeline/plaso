@@ -255,8 +255,7 @@ class WinIISTextPlugin(interface.TextPlugin):
       if not field_structure:
         field_structure = self._URI
         parser_mediator.ProduceExtractionWarning(
-            'missing definition for field: {0:s} defaulting to URI'.format(
-                member))
+            f'missing definition for field: {member:s} defaulting to URI')
 
       log_line_structure += field_structure
 
@@ -392,7 +391,7 @@ class WinIISTextPlugin(interface.TextPlugin):
 
     except (TypeError, ValueError) as exception:
       raise errors.ParseError(
-          'Unable to parse time elements with error: {0!s}'.format(exception))
+          f'Unable to parse time elements with error: {exception!s}')
 
   def _ResetState(self):
     """Resets stored values."""

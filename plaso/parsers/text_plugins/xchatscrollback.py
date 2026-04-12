@@ -114,7 +114,7 @@ class XChatScrollbackLogTextPlugin(interface.TextPlugin):
       structure = self._MESSAGE.parse_string(stripped_text)
     except pyparsing.ParseException as exception:
       raise errors.ParseError(
-          'Unable to parse raw text with error: {0!s}'.format(exception))
+          f'Unable to parse raw text with error: {exception!s}')
 
     nickname = self._GetValueFromStructure(structure, 'nickname')
     text = self._GetValueFromStructure(structure, 'text', default_value='')

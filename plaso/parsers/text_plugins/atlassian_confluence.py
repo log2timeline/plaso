@@ -31,8 +31,7 @@ class AtlassianConfluenceEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(
-        AtlassianConfluenceEventData, self).__init__(data_type=self.DATA_TYPE)
+    super(AtlassianConfluenceEventData, self).__init__(data_type=self.DATA_TYPE)
     self.body = None
     self.level = None
     self.logger_class = None
@@ -49,6 +48,15 @@ class AtlassianConfluenceTextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-8'
 
+  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
+      lambda tokens: int(tokens[0], 10))
+
+  _THREE_DIGITS = pyparsing.Word(pyparsing.nums, exact=3).set_parse_action(
+      lambda tokens: int(tokens[0], 10))
+
+  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).set_parse_action(
+      lambda tokens: int(tokens[0], 10))
+
   # Confluence log levels
   _CONFLUENCE_LEVELS = [
       'DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL']
@@ -56,20 +64,11 @@ class AtlassianConfluenceTextPlugin(interface.TextPlugin):
   # Date and time format: 2022-07-12 01:08:59,489
   # Format: YYYY-MM-DD HH:MM:SS,mmm (comma-separated milliseconds)
   _DATE_TIME = (
-      pyparsing.Word(pyparsing.nums, exact=4).set_results_name('year') +
-      pyparsing.Suppress('-') +
-      pyparsing.Word(pyparsing.nums, exact=2).set_results_name('month') +
-      pyparsing.Suppress('-') +
-      pyparsing.Word(
-          pyparsing.nums, exact=2).set_results_name('day_of_month') +
-      pyparsing.Word(pyparsing.nums, exact=2).set_results_name('hours') +
-      pyparsing.Suppress(':') +
-      pyparsing.Word(pyparsing.nums, exact=2).set_results_name('minutes') +
-      pyparsing.Suppress(':') +
-      pyparsing.Word(pyparsing.nums, exact=2).set_results_name('seconds') +
-      pyparsing.Suppress(',') +
-      pyparsing.Word(pyparsing.nums, exact=3).set_results_name('milliseconds')
-  ).set_results_name('date_time')
+      _FOUR_DIGITS + pyparsing.Suppress('-') + _TWO_DIGITS +
+      pyparsing.Suppress('-') + _TWO_DIGITS + _TWO_DIGITS +
+      pyparsing.Suppress(':') + _TWO_DIGITS + pyparsing.Suppress(':') +
+      _TWO_DIGITS + pyparsing.Suppress(',') + _THREE_DIGITS).set_results_name(
+          'date_time')
 
   # Log level (DEBUG, INFO, WARN, ERROR, FATAL)
   _LOG_LEVEL = pyparsing.oneOf(_CONFLUENCE_LEVELS).set_results_name('level')
@@ -128,25 +127,10 @@ class AtlassianConfluenceTextPlugin(interface.TextPlugin):
     """
     if key != 'log_entry':
       raise errors.ParseError(
-          'Unable to parse record, unknown structure: {0:s}'.format(key))
+          f'Unable to parse record, unknown structure: {key:s}')
 
-    try:
-      year = int(self._GetValueFromStructure(structure, 'year'))
-      month = int(self._GetValueFromStructure(structure, 'month'))
-      day = int(self._GetValueFromStructure(structure, 'day_of_month'))
-      hours = int(self._GetValueFromStructure(structure, 'hours'))
-      minutes = int(self._GetValueFromStructure(structure, 'minutes'))
-      seconds = int(self._GetValueFromStructure(structure, 'seconds'))
-      milliseconds = int(self._GetValueFromStructure(structure, 'milliseconds'))
-
-      date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
-          time_elements_tuple=(
-              year, month, day, hours, minutes, seconds, milliseconds))
-      # Confluence logs use local server time, not UTC
-      date_time.is_local_time = True
-    except (TypeError, ValueError) as exception:
-      raise errors.ParseError(
-          'Unable to parse time elements with error: {0!s}'.format(exception))
+    time_elements_structure = self._GetValueFromStructure(
+        structure, 'date_time')
 
     event_data = AtlassianConfluenceEventData()
     event_data.body = self._GetValueFromStructure(
@@ -157,9 +141,35 @@ class AtlassianConfluenceTextPlugin(interface.TextPlugin):
     event_data.logger_method = self._GetValueFromStructure(
         structure, 'logger_method')
     event_data.thread = self._GetValueFromStructure(structure, 'thread')
-    event_data.written_time = date_time
+    event_data.written_time = self._ParseTimeElements(time_elements_structure)
 
     parser_mediator.ProduceEventData(event_data)
+
+  def _ParseTimeElements(self, time_elements_structure):
+    """Parses date and time elements of a log line.
+
+    Args:
+      time_elements_structure (pyparsing.ParseResults): date and time elements
+          of a log line.
+
+    Returns:
+      dfdatetime.TimeElements: date and time value.
+
+    Raises:
+      ParseError: if a valid date and time value cannot be derived from
+          the time elements.
+    """
+    try:
+      date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
+          time_elements_tuple=time_elements_structure)
+
+      date_time.is_local_time = True
+
+      return date_time
+
+    except (TypeError, ValueError) as exception:
+      raise errors.ParseError(
+          f'Unable to parse time elements with error: {exception!s}')
 
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required.
@@ -177,6 +187,15 @@ class AtlassianConfluenceTextPlugin(interface.TextPlugin):
     except errors.ParseError:
       return False
 
-    return 'date_time' in structure
+    time_elements_structure = self._GetValueFromStructure(
+        structure, 'date_time')
+
+    try:
+      self._ParseTimeElements(time_elements_structure)
+    except errors.ParseError:
+      return False
+
+    return True
+
 
 text_parser.TextLogParser.RegisterPlugin(AtlassianConfluenceTextPlugin)

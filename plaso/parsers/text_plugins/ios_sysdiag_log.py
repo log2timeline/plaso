@@ -201,7 +201,7 @@ class IOSSysdiagLogTextPlugin(interface.TextPluginWithLineContinuation):
 
     except (TypeError, ValueError) as exception:
       raise errors.ParseError(
-          'Unable to parse time elements with error: {0!s}'.format(exception))
+          f'Unable to parse time elements with error: {exception!s}')
 
   def _ResetState(self):
     """Resets stored values."""
