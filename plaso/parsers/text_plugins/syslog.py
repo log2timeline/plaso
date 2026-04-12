@@ -501,7 +501,7 @@ class SyslogTextPlugin(BaseSyslogTextPlugin):
 
     if key == 'rsyslog_protocol_23_line':
       priority = self._GetValueFromStructure(structure, 'priority')
-      
+
       facility = self._PriorityToFacility(priority)
       message_identifier = self._GetValueFromStructure(
           structure, 'message_identifier')
