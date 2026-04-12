@@ -215,8 +215,10 @@ class SyslogTextPluginTest(test_lib.TextPluginTestCase):
 
     expected_event_values = {
         'data_type': 'syslog:line',
+        'facility': 'user-level message',
         'hostname': 'hostname',
         'last_written_time': '2021-03-06T04:07:38.251122+00:00',
+        'message_identifier': '123',
         'reporter': 'log_tag',
         'severity': 'DEBUG'}
 
@@ -370,6 +372,7 @@ class TraditionalSyslogTextPluginTest(test_lib.TextPluginTestCase):
     expected_event_values = {
         'body': 'INFO No new content in ímynd.dd.',
         'data_type': 'syslog:line',
+        'facility': None,
         'hostname': 'myhostname.myhost.com',
         'last_written_time': '0000-01-22T07:52:33',
         'pid': 30840,
@@ -383,6 +386,7 @@ class TraditionalSyslogTextPluginTest(test_lib.TextPluginTestCase):
     expected_event_values = {
         'body': 'This syslog message has a fractional value for seconds.',
         'data_type': 'syslog:line',
+        'facility': None,
         'last_written_time': '0001-03-23T23:01:18',
         'reporter': 'somrandomexe',
         'severity': None}
@@ -437,6 +441,7 @@ class TraditionalSyslogTextPluginTest(test_lib.TextPluginTestCase):
 
     expected_event_values = {
         'data_type': 'syslog:line',
+        'facility': None,
         'hostname': 'osx-machine',
         'last_written_time': '0000-03-11T19:26:39',
         'reporter': 'kernel',
@@ -493,6 +498,7 @@ class TraditionalSyslogTextPluginTest(test_lib.TextPluginTestCase):
 
     expected_event_values = {
         'data_type': 'syslog:line',
+        'facility': None,
         'hostname': 'myhostname.myhost.com',
         'last_written_time': '0000-01-22T07:54:32',
         'reporter': 'Job',

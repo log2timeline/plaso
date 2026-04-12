@@ -42,9 +42,11 @@ class SyslogLineEventData(events.EventData):
 
   Attributes:
     body (str): message body.
+    facility (str): facility.
     hostname (str): hostname of the reporter.
     last_written_time (dfdatetime.DateTimeValues): entry last written date and
         time.
+    message_identifier (str): message identifier.
     pid (str): process identifier of the reporter.
     reporter (str): reporter.
     severity (str): severity.
@@ -60,8 +62,10 @@ class SyslogLineEventData(events.EventData):
     """
     super(SyslogLineEventData, self).__init__(data_type=data_type)
     self.body = None
+    self.facility = None
     self.hostname = None
     self.last_written_time = None
+    self.message_identifier = None
     self.pid = None
     self.reporter = None
     self.severity = None
@@ -311,6 +315,58 @@ class SyslogTextPlugin(BaseSyslogTextPlugin):
   _SYSLOG_SEVERITY = [
       'EMERG', 'ALERT', 'CRIT', 'ERR', 'WARNING', 'NOTICE', 'INFO', 'DEBUG']
 
+  # According to section 6.2.1 of
+  # https://datatracker.ietf.org/doc/html/draft-ietf-syslog-protocol-23
+  #  0             kernel messages
+  #  1             user-level messages
+  #  2             mail system
+  #  3             system daemons
+  #  4             security/authorization messages
+  #  5             messages generated internally by syslogd
+  #  6             line printer subsystem
+  #  7             network news subsystem
+  #  8             UUCP subsystem
+  #  9             clock daemon
+  # 10             security/authorization messages
+  # 11             FTP daemon
+  # 12             NTP subsystem
+  # 13             log audit
+  # 14             log alert
+  # 15             clock daemon (note 2)
+  # 16             local use 0  (local0)
+  # 17             local use 1  (local1)
+  # 18             local use 2  (local2)
+  # 19             local use 3  (local3)
+  # 20             local use 4  (local4)
+  # 21             local use 5  (local5)
+  # 22             local use 6  (local6)
+  # 23             local use 7  (local7)
+  _SYSLOG_FACILITY = [
+      'kernel message',
+      'user-level message',
+      'mail system',
+      'system daemons',
+      'security/authorization messages',
+      'messages generated internally by syslogd',
+      'line printer subsystem',
+      'network news subsystem',
+      'UUCP subsystem',
+      'clock daemon',
+      'security/authorization messages',
+      'FTP daemon',
+      'NTP subsystem',
+      'log audit',
+      'log alert',
+      'clock daemon',
+      'local use 0',
+      'local use 1',
+      'local use 2',
+      'local use 3',
+      'local use 4',
+      'local use 5',
+      'local use 6',
+      'local use 7']
+
   # TODO: change pattern to allow only spaces as a field separator.
   _BODY_PATTERN = (
       r'.*?(?=($|\n\w{3}\s+\d{1,2}\s\d{2}:\d{2}:\d{2})|'
@@ -443,8 +499,14 @@ class SyslogTextPlugin(BaseSyslogTextPlugin):
 
     if key == 'rsyslog_protocol_23_line':
       priority = self._GetValueFromStructure(structure, 'priority')
+
+      facility = self._PriorityToFacility(priority)
+      message_identifier = self._GetValueFromStructure(
+          structure, 'message_identifier')
       severity = self._PriorityToSeverity(priority)
     else:
+      facility = None
+      message_identifier = None
       severity = self._GetValueFromStructure(structure, 'severity')
 
     event_data = None
@@ -457,9 +519,11 @@ class SyslogTextPlugin(BaseSyslogTextPlugin):
       event_data = SyslogLineEventData()
 
     event_data.body = body
+    event_data.facility = facility
     event_data.hostname = self._GetValueFromStructure(structure, 'hostname')
     event_data.last_written_time = self._ParseTimeElements(
         time_elements_structure)
+    event_data.message_identifier = message_identifier
     event_data.pid = self._GetValueFromStructure(structure, 'pid')
     event_data.reporter = reporter
     event_data.severity = severity
@@ -512,8 +576,8 @@ class SyslogTextPlugin(BaseSyslogTextPlugin):
   def _PriorityToSeverity(self, priority):
     """Converts a syslog protocol 23 priority value to severity.
 
-    Also see:
-      https://datatracker.ietf.org/doc/html/draft-ietf-syslog-protocol-23
+    Severity is derived from the 3 least significant bits of the priority
+    value.
 
     Args:
       priority (int): a syslog protocol 23 priority value.
@@ -521,8 +585,21 @@ class SyslogTextPlugin(BaseSyslogTextPlugin):
     Returns:
       str: the value from _SYSLOG_SEVERITY corresponding to severity value.
     """
-    severity = self._SYSLOG_SEVERITY[priority % 8]
-    return severity
+    return self._SYSLOG_SEVERITY[priority & 0x07]
+
+  def _PriorityToFacility(self, priority: int) -> str:
+    """Converts a syslog protocol 23 or RFC3164 priority to facility.
+
+    Facility is derived from the 5 most significant bits of the priority
+    value.
+
+    Args:
+      priority (int): a syslog rfc3164 or protocol 23 priority value.
+
+    Returns:
+      str: the value from _SYSLOG_FACILITY corresponding to facility value.
+    """
+    return self._SYSLOG_FACILITY[priority >> 3]
 
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the parser.
