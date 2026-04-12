@@ -28,6 +28,14 @@ plaso.parsers.text\_plugins.apt\_history module
    :show-inheritance:
    :undoc-members:
 
+plaso.parsers.text\_plugins.atlassian\_confluence module
+--------------------------------------------------------
+
+.. automodule:: plaso.parsers.text_plugins.atlassian_confluence
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 plaso.parsers.text\_plugins.aws\_elb\_access module
 ---------------------------------------------------
 
