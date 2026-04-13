@@ -31,6 +31,20 @@ short_source: 'LOG'
 source: 'Atlassian Confluence Log'
 ---
 type: 'conditional'
+data_type: 'atlassian:jira:line'
+message:
+- 'level: {level}'
+- 'thread: {thread}'
+- 'logger_class: {logger_class}'
+- 'logger_method: {logger_method}'
+- 'body: {body}'
+short_message:
+- '{logger_method}'
+- 'from: {logger_class}'
+short_source: 'LOG'
+source: 'Atlassian Jira Log'
+---
+type: 'conditional'
 data_type: 'aws:cloudtrail:entry'
 message:
 - 'User {user_name}'
@@ -153,6 +167,25 @@ short_message:
 - 'from: {remote_name}'
 short_source: 'LOG'
 source: 'Confluence access log'
+---
+type: 'conditional'
+data_type: 'jira:access'
+message:
+- 'http_request: {http_request_method} '
+- '{http_request_uri}'
+- 'from: {remote_name}'
+- 'via: {forwarded_for}'
+- 'user: {user_name}'
+- 'code: {http_response_code}'
+- 'referer: {http_request_referer}'
+- 'user_agent: {http_request_user_agent}'
+- 'thread: {thread_name}'
+short_message:
+- '{http_request_method}'
+- '{http_request_uri}'
+- 'from: {remote_name}'
+short_source: 'LOG'
+source: 'Jira access log'
 ---
 type: 'conditional'
 data_type: 'cri:container:log:entry'

@@ -1,0 +1,1 @@
+[03/Oct/2022:09:00:01 +0000] 10.0.0.5 admin http-nio-8080-exec-1 192.168.1.10 GET /secure/Dashboard.jspa HTTP/1.1 200 350ms 12345 http://localhost/ Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36

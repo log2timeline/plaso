@@ -113,6 +113,12 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: true
 ---
+data_type: 'atlassian:jira:line'
+attribute_mappings:
+- name: 'written_time'
+  description: 'Content Modification Time'
+place_holder_event: true
+---
 data_type: 'av:defender:detection_history'
 attribute_mappings:
 - name: 'recorded_time'
@@ -258,6 +264,12 @@ attribute_mappings:
 place_holder_event: true
 ---
 data_type: 'confluence:access'
+attribute_mappings:
+- name: 'recorded_time'
+  description: 'Recorded Time'
+place_holder_event: true
+---
+data_type: 'jira:access'
 attribute_mappings:
 - name: 'recorded_time'
   description: 'Recorded Time'
