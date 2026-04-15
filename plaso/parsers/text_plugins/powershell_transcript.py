@@ -2,6 +2,8 @@
 """Text parser plugin for PowerShell transcript log files."""
 
 import copy
+import re
+
 import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements
@@ -22,6 +24,8 @@ class PowerShellTranscriptLogEventData(events.EventData):
     compatible_versions (str): Compatible PowerShell versions.
     configuration_name (str): Configuration name.
     edition (str): PowerShell edition
+    end_time (dfdatetime.DateTimeValues): date and time the end of
+        the PowerShell transcript.
     host_application (str): Application that executed the commands.
     machine (str): Hostname of machine.
     process_identifier (str): Process identifier.
@@ -48,6 +52,7 @@ class PowerShellTranscriptLogEventData(events.EventData):
     self.compatible_versions = None
     self.configuration_name = None
     self.edition = None
+    self.end_time = None
     self.host_application = None
     self.machine = None
     self.process_identifier = None
@@ -123,18 +128,67 @@ class PowerShellTranscriptLogTextPlugin(interface.TextPlugin):
       ('log_line', _LOG_LINE),
       ('separator_line', _SEPARATOR_LINE)]
 
+  # Footer grammar - matches "Windows PowerShell transcript end" and similar
+  # localized versions, followed by end time
+  _TRANSCRIPT_END_LINE = pyparsing.Regex(
+      r'.*transcript.*end.*\n|.*end.*transcript.*\n', re.IGNORECASE)
+
+  _FOOTER_GRAMMAR = (
+      _SEPARATOR_LINE + _TRANSCRIPT_END_LINE +
+      _METADATA_LINE.set_results_name('end_time') +
+      _SEPARATOR_LINE)
+
   VERIFICATION_GRAMMAR = _SEPARATOR_LINE + _TRANSSCRIPT_START_LINE
 
   VERIFICATION_LITERALS = ['Windows PowerShell']
-
-  # TODO: handle footer with end time.
 
   def __init__(self):
     """Initializes a text parser plugin."""
     super(PowerShellTranscriptLogTextPlugin, self).__init__()
     self._command_history = []
     self._event_data = None
+    self._has_footer = False
     self._in_command_history = False
+
+  def _ParseFooter(self, parser_mediator, text_reader):
+    """Parses a text-log file footer.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      text_reader (EncodedTextReader): text reader.
+
+    Returns:
+      bool: True if footer was found and parsed, False otherwise.
+    """
+    try:
+      structure_generator = self._FOOTER_GRAMMAR.scan_string(
+          text_reader.lines, max_matches=1)
+      structure, start, end = next(structure_generator)
+
+    except (StopIteration, pyparsing.ParseException):
+      return False
+
+    if not structure:
+      return False
+
+    end_time_structure = self._GetStringValueFromStructure(
+        structure, 'end_time')
+
+    try:
+      time_elements_structure = self._DATE_TIME.parse_string(
+          end_time_structure)
+    except pyparsing.ParseException:
+      return False
+
+    if self._event_data:
+      self._event_data.end_time = self._ParseTimeElements(
+          time_elements_structure)
+
+    self._has_footer = True
+    text_reader.SkipAhead(end)
+
+    return True
 
   def _ParseHeader(self, parser_mediator, text_reader):
     """Parses a text-log file header.
@@ -206,6 +260,32 @@ class PowerShellTranscriptLogTextPlugin(interface.TextPlugin):
     self._in_command_history = True
 
     text_reader.SkipAhead(end)
+
+  def _ParseFinalize(self, parser_mediator):
+    """Finalizes parsing.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+    """
+    if not self._has_footer:
+      parser_mediator.ProduceExtractionWarning(
+          'missing transcript footer, file may be incomplete')
+
+  def _ParseLines(self, parser_mediator, text_reader):
+    """Parses lines of text using a pyparsing definition.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      text_reader (EncodedTextReader): text reader.
+    """
+    super(PowerShellTranscriptLogTextPlugin, self)._ParseLines(
+        parser_mediator, text_reader)
+
+    # Try to parse footer after all records have been parsed
+    if text_reader.lines:
+      self._ParseFooter(parser_mediator, text_reader)
 
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
@@ -294,6 +374,7 @@ class PowerShellTranscriptLogTextPlugin(interface.TextPlugin):
     """Resets stored values."""
     self._command_history = []
     self._event_data = None
+    self._has_footer = False
     self._in_command_history = False
 
   def CheckRequiredFormat(self, parser_mediator, text_reader):
