@@ -58,8 +58,7 @@ class AtlassianConfluenceTextPlugin(interface.TextPlugin):
       lambda tokens: int(tokens[0], 10))
 
   # Confluence log levels
-  _CONFLUENCE_LEVELS = [
-      'DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL']
+  _CONFLUENCE_LEVELS = ['DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL']
 
   # Date and time format: 2022-07-12 01:08:59,489
   # Format: YYYY-MM-DD HH:MM:SS,mmm (comma-separated milliseconds)
@@ -102,12 +101,8 @@ class AtlassianConfluenceTextPlugin(interface.TextPlugin):
   # Complete log line structure
   # Format: <timestamp> <level> [<thread>] [<logger_class>] <method> <message>
   _CONFLUENCE_LOG_LINE = (
-      _DATE_TIME +
-      _LOG_LEVEL +
-      _CONFLUENCE_THREAD +
-      _CONFLUENCE_LOGGER +
-      _CONFLUENCE_LOGGER_METHOD +
-      _CONFLUENCE_LOG_MESSAGE)
+      _DATE_TIME + _LOG_LEVEL + _CONFLUENCE_THREAD + _CONFLUENCE_LOGGER +
+      _CONFLUENCE_LOGGER_METHOD + _CONFLUENCE_LOG_MESSAGE)
 
   _LINE_STRUCTURES = [('log_entry', _CONFLUENCE_LOG_LINE)]
 
