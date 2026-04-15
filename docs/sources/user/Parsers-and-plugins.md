@@ -188,6 +188,7 @@ Name | Description
 android_logcat | Parser for Android logcat files.
 apache_access | Parser for Apache access log (access.log) files.
 apt_history | Parser for Advanced Packaging Tool (APT) History log files.
+atlassian_confluence | Parser for Atlassian Confluence log files.
 aws_elb_access | Parser for AWS ELB Access log files.
 bash_history | Parser for Bash history files.
 confluence_access | Parser for Confluence access log (access.log) files.

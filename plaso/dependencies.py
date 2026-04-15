@@ -23,7 +23,7 @@ PYTHON_DEPENDENCIES = {
     'dateutil': ('__version__', '1.5', None, True),
     'defusedxml': ('__version__', '0.5.0', None, True),
     'dfdatetime': ('__version__', '20251018', None, True),
-    'dfvfs': ('__version__', '20240115', None, True),
+    'dfvfs': ('__version__', '20260411', None, True),
     'dfwinreg': ('__version__', '20240229', None, True),
     'dtfabric': ('__version__', '20230518', None, True),
     'flor': ('__version__', '1.1.3', None, False),

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "plaso"
-version = "20260411"
+version = "20260413"
 description = "Plaso (log2timeline) - Super timeline all the things"
 maintainers = [
     { name = "Log2Timeline maintainers", email = "log2timeline-maintainers@googlegroups.com" },
@@ -24,10 +24,9 @@ dependencies = [
     "artifacts >= 20220219",
     "bencode.py",
     "certifi >= 2016.9.26",
-    "cffi >= 1.9.1",
     "defusedxml >= 0.5.0",
     "dfdatetime >= 20251018",
-    "dfvfs >= 20240115",
+    "dfvfs >= 20260411",
     "dfwinreg >= 20240229",
     "dtfabric >= 20230518",
     "flor >= 1.1.3",

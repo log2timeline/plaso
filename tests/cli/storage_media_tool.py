@@ -166,7 +166,7 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
         output_writer=test_output_writer)
 
     test_mediator._PrintTSKPartitionIdentifiersOverview(
-        volume_system, ['p1', 'p2'])
+        volume_system, ['p1', 'p5'])
 
     file_object.seek(0, os.SEEK_SET)
     output_data = file_object.read()
@@ -177,7 +177,7 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
         b'Identifier      Offset (in bytes)       Size (in bytes)',
         (b'p1              512 (0x00000200)        175.0KiB / 179.2kB '
          b'(179200 B)'),
-        b'p2              180224 (0x0002c000)     1.2MiB / 1.3MB (1294336 B)',
+        b'p5              180224 (0x0002c000)     1.2MiB / 1.3MB (1294336 B)',
         b'',
         b'']
 
@@ -475,7 +475,7 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
         output_writer=test_output_writer)
 
     # Test selection of single partition.
-    input_file_object = io.BytesIO(b'2\n')
+    input_file_object = io.BytesIO(b'5\n')
     test_input_reader = tools.FileObjectInputReader(input_file_object)
 
     output_file_object = io.BytesIO()
@@ -485,12 +485,12 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
         input_reader=test_input_reader, output_writer=test_output_writer)
 
     volume_identifiers = test_mediator.GetPartitionIdentifiers(
-        volume_system, ['p1', 'p2'])
+        volume_system, ['p1', 'p5'])
 
-    self.assertEqual(volume_identifiers, ['p2'])
+    self.assertEqual(volume_identifiers, ['p5'])
 
     # Test selection of single partition.
-    input_file_object = io.BytesIO(b'p2\n')
+    input_file_object = io.BytesIO(b'p5\n')
     test_input_reader = tools.FileObjectInputReader(input_file_object)
 
     output_file_object = io.BytesIO()
@@ -500,12 +500,12 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
         input_reader=test_input_reader, output_writer=test_output_writer)
 
     volume_identifiers = test_mediator.GetPartitionIdentifiers(
-        volume_system, ['p1', 'p2'])
+        volume_system, ['p1', 'p5'])
 
-    self.assertEqual(volume_identifiers, ['p2'])
+    self.assertEqual(volume_identifiers, ['p5'])
 
     # Test selection of single partition with invalid input on first attempt.
-    input_file_object = io.BytesIO(b'bogus\np2\n')
+    input_file_object = io.BytesIO(b'bogus\np5\n')
     test_input_reader = tools.FileObjectInputReader(input_file_object)
 
     output_file_object = io.BytesIO()
@@ -515,9 +515,9 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
         input_reader=test_input_reader, output_writer=test_output_writer)
 
     volume_identifiers = test_mediator.GetPartitionIdentifiers(
-        volume_system, ['p1', 'p2'])
+        volume_system, ['p1', 'p5'])
 
-    self.assertEqual(volume_identifiers, ['p2'])
+    self.assertEqual(volume_identifiers, ['p5'])
 
     # Test selection of all partitions.
     input_file_object = io.BytesIO(b'all\n')
@@ -530,9 +530,9 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
         input_reader=test_input_reader, output_writer=test_output_writer)
 
     volume_identifiers = test_mediator.GetPartitionIdentifiers(
-        volume_system, ['p1', 'p2'])
+        volume_system, ['p1', 'p5'])
 
-    self.assertEqual(volume_identifiers, ['p1', 'p2'])
+    self.assertEqual(volume_identifiers, ['p1', 'p5'])
 
     # TODO: test selection of no partitions.
 
