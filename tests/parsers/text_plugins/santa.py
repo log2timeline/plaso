@@ -182,5 +182,61 @@ class SantaTextPluginTest(test_lib.TextPluginTestCase):
     self.CheckEventData(event_data, expected_event_values)
 
 
+  def testProcessWithNewsyslogHeaders(self):
+    """Tests the Process function with newsyslog headers and footers."""
+    plugin = santa.SantaTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(
+        ['santa_newsyslog.log'], plugin)
+
+    # Should only parse the 2 valid Santa log lines, skipping newsyslog lines
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 2)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    # Test EXIT event
+    expected_event_values = {
+        'action': 'EXIT',
+        'data_type': 'santa:process_exit',
+        'exit_time': '2023-03-31T06:29:57.423+00:00',
+        'gid': '262',
+        'pid': '10897',
+        'pid_version': '2243287',
+        'ppid': '1',
+        'uid': '262'}
+
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
+
+    # Test EXEC event
+    expected_event_values = {
+        'action': 'EXEC',
+        'certificate_common_name': 'Software Signing',
+        'certificate_hash': 'def789ghi012',
+        'data_type': 'santa:execution',
+        'decision': 'ALLOW',
+        'gid': '0',
+        'group': 'wheel',
+        'last_run_time': '2023-04-12T22:18:02.588+00:00',
+        'mode': 'M',
+        'pid': '12345',
+        'pid_version': '3456789',
+        'ppid': '1',
+        'process_hash': 'abc123def456',
+        'process_path': '/usr/bin/test',
+        'reason': 'CERT',
+        'uid': '0',
+        'user': 'root'}
+
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 1)
+    self.CheckEventData(event_data, expected_event_values)
+
 if __name__ == '__main__':
   unittest.main()
