@@ -204,6 +204,72 @@ class WinIISTextPluginTest(test_lib.TextPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
+  def testProcessWithIPv6ZoneIndex(self):
+    """Tests the Process function with IPv6 addresses containing zone index."""
+    plugin = iis.WinIISTextPlugin()
+    storage_writer = self._ParseTextFileWithPlugin(
+        ['iis_ipv6_zone.log'], plugin)
+
+    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+        'event_data')
+    self.assertEqual(number_of_event_data, 3)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    # Test first event: IPv6 zone index in dest_ip
+    expected_event_values = {
+        'data_type': 'iis:log:line',
+        'dest_ip': 'fe80::1ff:fe23:4567:890a%3',
+        'dest_port': 444,
+        'http_method': 'POST',
+        'http_status': 200,
+        'last_written_time': '2022-01-01T00:01:24+00:00',
+        'requested_uri_stem': '/powershell',
+        'source_ip': '::1',
+        'cs_username': 'random\\ranuser1',
+        'user_agent': 'Microsoft+WinRM+Client'}
+
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
+
+    # Test second event: IPv6 zone index in source_ip
+    expected_event_values = {
+        'data_type': 'iis:log:line',
+        'dest_ip': '::1',
+        'dest_port': 443,
+        'http_method': 'GET',
+        'http_status': 200,
+        'last_written_time': '2022-01-02T00:01:25+00:00',
+        'requested_uri_stem': '/api/test',
+        'source_ip': 'fe80::abcd:ef01:2345:6789%eth0',
+        'cs_username': 'testuser',
+        'user_agent': 'Mozilla/5.0'}
+
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 1)
+    self.CheckEventData(event_data, expected_event_values)
+
+    # Test third event: IPv6 zone index in dest_ip with IPv4 source
+    expected_event_values = {
+        'data_type': 'iis:log:line',
+        'dest_ip': '2001:db8::1%2',
+        'dest_port': 443,
+        'http_method': 'POST',
+        'http_status': 404,
+        'last_written_time': '2022-01-03T00:01:26+00:00',
+        'requested_uri_stem': '/endpoint',
+        'source_ip': '192.168.1.100',
+        'cs_username': 'admin',
+        'user_agent': 'curl/7.68.0'}
+
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 2)
+    self.CheckEventData(event_data, expected_event_values)
+
 
 if __name__ == '__main__':
   unittest.main()
