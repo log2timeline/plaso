@@ -96,6 +96,24 @@ class JiraAccessTextPluginTest(test_lib.TextPluginTestCase):
     result = plugin.CheckRequiredFormat(parser_mediator, text_reader)
     self.assertTrue(result)
 
+    # A line with an invalid hour (25) passes grammar but fails time parsing.
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+    file_system_builder.AddFile('/file.txt', (
+        b'[03/Oct/2022:25:00:01 +0000] admin http-nio-8080-exec-1 '
+        b'192.168.1.10 GET /secure/Dashboard.jspa HTTP/1.1 200 350ms '
+        b'12345 http://localhost/ Mozilla/5.0\n'))
+
+    file_entry = file_system_builder.file_system.GetFileEntryByPath('/file.txt')
+
+    parser_mediator = self._CreateParserMediator(None, file_entry=file_entry)
+
+    file_object = file_entry.GetFileObject()
+    text_reader = text_parser.EncodedTextReader(file_object)
+    text_reader.ReadLines()
+
+    result = plugin.CheckRequiredFormat(parser_mediator, text_reader)
+    self.assertFalse(result)
+
     # A Jira application log line should not match.
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
     file_system_builder.AddFile('/file.txt', (

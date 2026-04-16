@@ -52,6 +52,24 @@ class AtlassianJiraTest(test_lib.TextPluginTestCase):
     result = plugin.CheckRequiredFormat(parser_mediator, text_reader)
     self.assertTrue(result)
 
+    # A line with an invalid month (13) passes grammar but fails time parsing.
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+    file_system_builder.AddFile('/file.txt', (
+        b'2022-13-03 09:00:01,042 INFO [main] '
+        b'[com.atlassian.jira.startup.JiraStartupLogger] start '
+        b'Jira starting up.\n'))
+
+    file_entry = file_system_builder.file_system.GetFileEntryByPath('/file.txt')
+
+    parser_mediator = self._CreateParserMediator(None, file_entry=file_entry)
+
+    file_object = file_entry.GetFileObject()
+    text_reader = text_parser.EncodedTextReader(file_object)
+    text_reader.ReadLines()
+
+    result = plugin.CheckRequiredFormat(parser_mediator, text_reader)
+    self.assertFalse(result)
+
     # A Confluence access log line should not match.
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
     file_system_builder.AddFile('/file.txt', (
