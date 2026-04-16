@@ -21,7 +21,7 @@ class JiraAccessTextPluginTest(test_lib.TextPluginTestCase):
     plugin = jira_access.JiraAccessTextPlugin()
 
     with self.assertRaises(errors.ParseError):
-      plugin._ParseTimeElements(None)
+      plugin._ParseTimeElements(None)  # pylint: disable=protected-access
 
   def testProcessMonths(self):
     """Tests all month abbreviations are parsed correctly."""

@@ -22,14 +22,14 @@ class AtlassianJiraTest(test_lib.TextPluginTestCase):
 
     # A tuple with an out-of-bounds month value should raise ParseError.
     with self.assertRaises(errors.ParseError):
-      plugin._ParseTimeElements((2022, 13, 1, 0, 0, 0, 0))
+      plugin._ParseTimeElements((2022, 13, 1, 0, 0, 0, 0))  # pylint: disable=protected-access
 
   def testParseRecordUnknownKey(self):
     """Tests _ParseRecord raises ParseError on an unknown structure key."""
     plugin = atlassian_jira.AtlassianJiraTextPlugin()
 
     with self.assertRaises(errors.ParseError):
-      plugin._ParseRecord(None, 'unknown_key', {})
+      plugin._ParseRecord(None, 'unknown_key', {})  # pylint: disable=protected-access
 
   def testCheckRequiredFormat(self):
     """Tests the CheckRequiredFormat function."""
