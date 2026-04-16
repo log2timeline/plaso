@@ -45,9 +45,10 @@ test_script:
     "%PYTHON%\\python.exe" run_tests.py &&
     IF EXIST "tests\\end-to-end.py" (
         set PYTHONPATH=. &&
-        "%PYTHON%\\python.exe" "tests\\end-to-end.py" --debug -c "config\\end-to-end.ini" ) ) &&
-    pip install dist\*.whl &&
-    "%PYTHON%\\python.exe" "%PYTHON%\\Scripts\\log2timeline.exe" --status_view linear --storage_file test.plaso test_data\image.qcow2 2>&1
+        "%PYTHON%\\python.exe" "tests\\end-to-end.py" --debug -c "config\\end-to-end.ini" ) )
+- cmd: IF [%TARGET%]==[wheel] (
+    pip install dist\plaso-*.whl &&
+    "%PYTHON%\\python.exe" "%PYTHON%\\Scripts\\log2timeline.exe" --status_view linear --storage_file test.plaso test_data\image.qcow2 2>&1 )
 
 artifacts:
 - path: dist\*.whl
