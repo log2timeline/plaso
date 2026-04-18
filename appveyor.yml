@@ -47,7 +47,7 @@ test_script:
         set PYTHONPATH=. &&
         "%PYTHON%\\python.exe" "tests\\end-to-end.py" --debug -c "config\\end-to-end.ini" ) )
 - cmd: IF [%TARGET%]==[wheel] (
-    for %%F in (dist\*.whl) do (set WHEEL=%%F) &&
+    for %F in (dist\*.whl) do (set WHEEL=%F) &&
     "%PYTHON%\\python.exe" -m pip install "%WHEEL%" &&
     dir "%WHEEL%" "%PYTHON%\\Scripts" &&
     "%PYTHON%\\python.exe" "%PYTHON%\\Scripts\\log2timeline.exe" --status_view linear --storage_file test.plaso test_data\image.qcow2 2>&1 )
