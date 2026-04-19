@@ -16,6 +16,9 @@ from dfvfs.resolver import context as dfvfs_context
 # The following import makes sure the analyzers are registered.
 from plaso import analyzers  # pylint: disable=unused-import
 
+# The following import makes sure the parsers are registered.
+from plaso import parsers  # pylint: disable=unused-import
+
 from plaso.cli import logger
 from plaso.cli import status_view
 from plaso.cli import storage_media_tool
@@ -25,7 +28,6 @@ from plaso.cli.helpers import manager as helpers_manager
 from plaso.containers import artifacts
 from plaso.engine import configurations
 from plaso.engine import engine
-from plaso.single_process import extraction_engine as single_extraction_engine
 from plaso.filters import parser_filter
 from plaso.helpers import language_tags
 from plaso.lib import definitions
@@ -33,6 +35,7 @@ from plaso.lib import errors
 from plaso.multi_process import extraction_engine as multi_extraction_engine
 from plaso.parsers import manager as parsers_manager
 from plaso.parsers import presets as parsers_presets
+from plaso.single_process import extraction_engine as single_extraction_engine
 from plaso.storage import factory as storage_factory
 
 
