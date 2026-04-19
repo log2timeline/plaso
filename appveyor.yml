@@ -49,7 +49,8 @@ test_script:
 - cmd: IF [%TARGET%]==[wheel] (
     for %%f in (dist\*.whl) do ("%PYTHON%\\python.exe" -m pip install %%f) &&
     set PATH="%PYTHON%\\Scripts:%PATH" &&
-    "%PYTHON%\\python.exe" "%PYTHON%\\Scripts\\log2timeline.exe" --status_view linear --storage_file test.plaso test_data\image.qcow2 2>&1 )
+    "%PYTHON%\\python.exe" "%PYTHON%\\Scripts\\log2timeline.exe" --status_view linear --storage_file test.plaso test_data\image.qcow2 2>&1 &&
+    "%PYTHON%\\python.exe" "%PYTHON%\\Scripts\\psort.exe" --status_view linear -w timeline.log test.plaso 2>&1 )
 
 artifacts:
 - path: dist\*.whl
