@@ -16,6 +16,9 @@ from dfvfs.resolver import context as dfvfs_context
 # The following import makes sure the analyzers are registered.
 from plaso import analyzers  # pylint: disable=unused-import
 
+# The following import makes sure the parsers are registered.
+from plaso import parsers  # pylint: disable=unused-import
+
 from plaso.cli import logger
 from plaso.cli import status_view
 from plaso.cli import storage_media_tool
