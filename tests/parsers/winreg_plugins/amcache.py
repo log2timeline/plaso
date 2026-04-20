@@ -125,7 +125,16 @@ class AMCachePluginTest(test_lib.RegistryPluginTestCase):
         'installation_time': None,
         'last_written_time': None,
         'link_time': '1997-01-10T22:26:24+00:00',
-        'msi_installation_time': None}
+        'msi_installation_time': None,
+        'sha1': '75c5a97f521f760e32a4a9639a653eed862e9c61',
+        'file_size': 53744,
+        'language_code': 1033,
+        'file_version': '10.0.18362.1 (winbuild.160101.0800)',
+        'company_name': 'microsoft corporation',
+        'file_description': None,
+        'file_reference': None,
+        'product_name': 'microsoft® windows® operating system',
+        'program_identifier': '0000f519feec486de87ed73cb92d3cac802400000000'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 135)
     self.CheckEventData(event_data, expected_event_values)
