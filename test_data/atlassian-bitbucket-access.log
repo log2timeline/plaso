@@ -1,0 +1,4 @@
+63.246.22.199,172.16.1.187 | https | o@9K7Z3NNx6x3112x1 | eaccru | 2012-10-29 00:06:26,838 | "GET /git/STASH/mina-sshd-fork.git/info/refs HTTP/1.1" | "" "git/1.7.4.1" | 200 | 0 | 13 | refs,cache:hit | 101 | tmpqqw |
+10.229.31.195 | https | o@2CM38K4Fx339x113x2 | admin | 2022-04-12 05:39:57,408 | "POST /rest/api/1.0/projects/TEST/repos/test/pull-requests HTTP/1.1" | "http://bitbucket.example.com/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36" | 201 | 832 | 1204 | - | 383 | eyoqcd |
+0:0:0:0:0:0:0:1 | http | o@1APC3V1x930x168705816x2 | - | 2020-07-21 15:30:52,815 | "GET /rest/api/latest/projects/AAAAA/repos/main/pull-requests/394/diff HTTP/1.1" | "" "git/2.38.1" | 200 | 0 | 9812 | - | 47 | - |
+172.5.1.1 | ssh | o@1QGGCWQx626x45680x0 | acarlton | 2020-08-13 10:26:37,907 | "SSH - git-upload-pack '/stash/stash.git'" | "" "git/2.38.1" | 200 | 0 | 9812 | push | 1397 | vlumts |

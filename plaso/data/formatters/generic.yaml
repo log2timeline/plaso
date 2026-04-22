@@ -17,6 +17,38 @@ short_source: 'LOG'
 source: 'Apache Access Log'
 ---
 type: 'conditional'
+data_type: 'atlassian:bitbucket:access'
+message:
+- 'http_request: {http_request_method}'
+- '{http_request_uri}'
+- 'ssh_repo: {ssh_repository_path}'
+- 'from: {remote_address}'
+- 'user: {user_name}'
+- 'protocol: {protocol}'
+- 'code: {http_response_code}'
+- 'user_agent: {http_request_user_agent}'
+- 'labels: {labels}'
+short_message:
+- '{http_request_method}'
+- '{http_request_uri}'
+- 'from: {remote_address}'
+short_source: 'LOG'
+source: 'Atlassian Bitbucket Access Log'
+---
+type: 'conditional'
+data_type: 'atlassian:bitbucket:line'
+message:
+- 'level: {level}'
+- 'thread: {thread}'
+- 'logger_class: {logger_class}'
+- 'body: {body}'
+short_message:
+- '{level}'
+- 'from: {logger_class}'
+short_source: 'LOG'
+source: 'Atlassian Bitbucket Log'
+---
+type: 'conditional'
 data_type: 'atlassian:confluence:line'
 message:
 - 'level: {level}'
