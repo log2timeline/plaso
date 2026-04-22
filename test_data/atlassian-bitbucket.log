@@ -1,0 +1,4 @@
+2020-09-08 07:53:45,084 INFO [main] com.atlassian.bitbucket.internal.boot.log.BuildInfoLogger Starting Bitbucket 7.4.0 (204e35a built on Tue Jul 07 14:31:59 NZST 2020)
+2020-07-21 14:24:40,658 WARN [threadpool:thread-5] c.a.b.m.r.impl.MarkupRendererImpl Caught exception while rendering markup: could not connect to server
+2020-08-13 10:26:37,907 DEBUG [ssh-scm-request-handler] c.a.s.i.s.g.p.s.CachingSshUploadPack STASH/stash[1234]: Completed git-upload-pack v1 [refs:bypass[1397ms]]
+2020-07-21 15:26:19,026 ERROR [http-nio-7990-exec-81] o.h.i.ExceptionMapperStandardImpl HHH000346: Error during managed flush [PersistenceException: [n/a]]
