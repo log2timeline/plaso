@@ -10,6 +10,7 @@ from plaso.parsers.text_plugins import atlassian_jira
 from plaso.parsers.text_plugins import aws_elb_access
 from plaso.parsers.text_plugins import bash_history
 from plaso.parsers.text_plugins import bitbucket_access
+from plaso.parsers.text_plugins import bitbucket_audit
 from plaso.parsers.text_plugins import confluence_access
 from plaso.parsers.text_plugins import cri
 from plaso.parsers.text_plugins import dpkg
