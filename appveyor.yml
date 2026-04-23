@@ -51,6 +51,7 @@ test_script:
     set OLDPATH="%PATH%" &&
     set PATH="%PYTHON%\\Scripts" &&
     set PYTHONPATH="%PYTHON%\\Lib\\site-packages" &&
+    dir "%PYTHON%\\Lib\\site-packages\\plaso" &&
     "%PYTHON%\\python.exe" "%PYTHON%\\Scripts\\log2timeline.exe" --status_view linear --storage_file test.plaso test_data\image.qcow2 2>&1 &&
     "%PYTHON%\\python.exe" "%PYTHON%\\Scripts\\psort.exe" --status_view linear -w timeline.log test.plaso 2>&1 &&
     set PATH="%OLDPATH%" )
