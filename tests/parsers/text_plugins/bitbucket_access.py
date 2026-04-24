@@ -171,7 +171,7 @@ class BitbucketAccessTextPluginTest(test_lib.TextPluginTestCase):
         'remote_address': '10.229.31.65',
         'request_id': 'o@1GGG0Q5Kx420x106x2',
         'request_time': None,
-        'session_id': None,
+        'session_id': '508028',
         'ssh_repository_path': None,
         'user_name': 'admin'}
 
