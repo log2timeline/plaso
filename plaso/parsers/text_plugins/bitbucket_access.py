@@ -82,6 +82,189 @@ class BitbucketAccessEventData(events.EventData):
     self.user_name = None
 
 
+def _MakeSep():
+  """Returns a fresh pipe separator suppressor."""
+  return pyparsing.Suppress(pyparsing.Literal('|'))
+
+
+def _MakeInt():
+  """Returns a fresh integer parser."""
+  return pyparsing.Word(pyparsing.nums).set_parse_action(
+      lambda tokens: int(tokens[0], 10))
+
+
+def _MakeIntOrDash():
+  """Returns a fresh integer-or-dash parser."""
+  return pyparsing.Literal('-') | _MakeInt()
+
+
+def _MakeTwoDigits():
+  """Returns a fresh two-digit integer parser."""
+  return pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
+      lambda tokens: int(tokens[0], 10))
+
+
+def _MakeThreeDigits():
+  """Returns a fresh three-digit integer parser."""
+  return pyparsing.Word(pyparsing.nums, exact=3).set_parse_action(
+      lambda tokens: int(tokens[0], 10))
+
+
+def _MakeFourDigits():
+  """Returns a fresh four-digit integer parser."""
+  return pyparsing.Word(pyparsing.nums, exact=4).set_parse_action(
+      lambda tokens: int(tokens[0], 10))
+
+
+def _MakeDateTime():
+  """Returns a fresh date-time parser for format: YYYY-MM-DD HH:MM:SS,mmm."""
+  return (
+      _MakeFourDigits() + pyparsing.Suppress('-') +
+      _MakeTwoDigits() + pyparsing.Suppress('-') +
+      _MakeTwoDigits() + _MakeTwoDigits() +
+      pyparsing.Suppress(':') + _MakeTwoDigits() +
+      pyparsing.Suppress(':') + _MakeTwoDigits() +
+      pyparsing.Suppress(',') + _MakeThreeDigits()
+  ).set_results_name('date_time')
+
+
+def _MakeRemoteAddress():
+  """Returns a fresh remote address parser."""
+  return pyparsing.Combine(
+      pyparsing.Word(pyparsing.alphanums + '.:,')
+  ).set_results_name('remote_address')
+
+
+def _MakeRequestId():
+  """Returns a fresh request ID parser."""
+  return (
+      pyparsing.Word(pyparsing.alphanums + '@*-_x') |
+      pyparsing.Literal('-')).set_results_name('request_id')
+
+
+def _MakeUserName():
+  """Returns a fresh user name parser."""
+  return (
+      pyparsing.Word(pyparsing.alphanums + '-_./') |
+      pyparsing.Literal('-')).set_results_name('user_name')
+
+
+def _MakeSessionId():
+  """Returns a fresh session ID parser."""
+  return (
+      pyparsing.Word(pyparsing.alphanums + '-_') |
+      pyparsing.Literal('-')).set_results_name('session_id')
+
+
+def _MakeLabels():
+  """Returns a fresh labels parser."""
+  return pyparsing.SkipTo(
+      pyparsing.Literal('|')).set_results_name('labels')
+
+
+_HTTP_METHODS = [
+    'CONNECT', 'DELETE', 'GET', 'HEAD', 'OPTIONS', 'PATCH', 'POST', 'PUT',
+    'TRACE']
+
+_REQUEST_URI = pyparsing.Word(pyparsing.alphanums + '/-_.?=%&:+<>#~[]@!,()')
+
+
+def _MakeHttpRequest():
+  """Returns a fresh HTTP request parser."""
+  return pyparsing.Group(
+      pyparsing.Suppress('"') +
+      pyparsing.one_of(_HTTP_METHODS).set_results_name('http_method') +
+      _REQUEST_URI.copy().set_results_name('request_url') +
+      pyparsing.Word(pyparsing.alphanums + '/.').set_results_name(
+          'http_version') +
+      pyparsing.Suppress('"')).set_results_name('http_request')
+
+
+def _MakeSshRequest():
+  """Returns a fresh SSH request parser."""
+  return pyparsing.Group(
+      pyparsing.Suppress('"') +
+      pyparsing.Literal('SSH').set_results_name('http_method') +
+      pyparsing.Suppress(pyparsing.Literal('-')) +
+      pyparsing.Word(pyparsing.alphanums + '-_').set_results_name(
+          'request_url') +
+      pyparsing.QuotedString("'").set_results_name('ssh_repo') +
+      pyparsing.Suppress('"')).set_results_name('http_request')
+
+
+def _MakeGrpcRequest():
+  """Returns a fresh gRPC action parser."""
+  return pyparsing.Group(
+      pyparsing.Suppress('"') +
+      pyparsing.SkipTo('"').set_results_name('request_url') +
+      pyparsing.Suppress('"')).set_results_name('http_request')
+
+
+def _MakeRefererUserAgent():
+  """Returns a fresh referer + user-agent parser."""
+  referer = (
+      pyparsing.Suppress('"') +
+      pyparsing.Optional(
+          pyparsing.Word(pyparsing.alphanums + '/-_.?=%&:+<>#~[]@!,()')
+      ).set_results_name('referer') +
+      pyparsing.Suppress('"'))
+  user_agent = (
+      pyparsing.Suppress('"') +
+      pyparsing.SkipTo('"').set_results_name('user_agent') +
+      pyparsing.Suppress('"'))
+  return referer + user_agent
+
+
+def _MakeHttpAccessLogLine():
+  """Returns a fresh HTTP/SSH access log line grammar."""
+  return (
+      _MakeRemoteAddress() + _MakeSep() +
+      pyparsing.Word(pyparsing.alphanums).set_results_name('protocol') +
+      _MakeSep() +
+      _MakeRequestId() + _MakeSep() +
+      _MakeUserName() + _MakeSep() +
+      _MakeDateTime() + _MakeSep() +
+      (_MakeHttpRequest() | _MakeSshRequest() | _MakeGrpcRequest()) +
+      _MakeSep() +
+      _MakeRefererUserAgent() + _MakeSep() +
+      _MakeIntOrDash().set_results_name('status_code') + _MakeSep() +
+      _MakeIntOrDash().set_results_name('bytes_read') + _MakeSep() +
+      _MakeIntOrDash().set_results_name('bytes_written') + _MakeSep() +
+      _MakeLabels() + _MakeSep() +
+      _MakeIntOrDash().set_results_name('request_time') + _MakeSep() +
+      _MakeSessionId() + _MakeSep() +
+      pyparsing.Suppress(pyparsing.LineEnd()))
+
+
+def _MakeGrpcAccessLogLine():
+  """Returns a fresh gRPC/Mesh access log line grammar.
+
+  The gRPC/Mesh access log has 15 pipe-separated fields:
+  ip | grpc | request_id | mesh_execution_id | user | timestamp |
+  "action" | - | status | bytes_read | bytes_written |
+  mesh_in | mesh_out | duration_ns | session_id |
+  """
+  return (
+      _MakeRemoteAddress() + _MakeSep() +
+      pyparsing.Literal('grpc').set_results_name('protocol') + _MakeSep() +
+      _MakeRequestId() + _MakeSep() +
+      (pyparsing.Word(pyparsing.alphanums + '@*-_x') |
+       pyparsing.Literal('-')).set_results_name('mesh_execution_id') +
+      _MakeSep() +
+      _MakeUserName() + _MakeSep() +
+      _MakeDateTime() + _MakeSep() +
+      _MakeGrpcRequest() + _MakeSep() +
+      pyparsing.Suppress(pyparsing.Literal('-')) + _MakeSep() +
+      _MakeIntOrDash().set_results_name('status_code') + _MakeSep() +
+      _MakeIntOrDash().set_results_name('bytes_read') + _MakeSep() +
+      _MakeIntOrDash().set_results_name('bytes_written') + _MakeSep() +
+      _MakeIntOrDash().set_results_name('mesh_in') + _MakeSep() +
+      _MakeIntOrDash().set_results_name('mesh_out') + _MakeSep() +
+      _MakeIntOrDash().set_results_name('duration_ns') + _MakeSep() +
+      _MakeSessionId() + _MakeSep() +
+      pyparsing.Suppress(pyparsing.LineEnd()))
+
+
 class BitbucketAccessTextPlugin(interface.TextPlugin):
   """Text parser plugin for Atlassian Bitbucket access log files."""
 
@@ -91,176 +274,18 @@ class BitbucketAccessTextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-8'
 
-  _SEP = pyparsing.Suppress(pyparsing.Literal('|'))
-
-  _INTEGER = pyparsing.Word(pyparsing.nums).set_parse_action(
-      lambda tokens: int(tokens[0], 10))
-
-  # Separate integer copies for use in named result fields to avoid
-  # result name mutation on the shared _INTEGER class attribute.
-  _INTEGER_OR_DASH = (
-      pyparsing.Literal('-') |
-      pyparsing.Word(pyparsing.nums).set_parse_action(
-          lambda tokens: int(tokens[0], 10)))
-
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
-      lambda tokens: int(tokens[0], 10))
-
-  _THREE_DIGITS = pyparsing.Word(pyparsing.nums, exact=3).set_parse_action(
-      lambda tokens: int(tokens[0], 10))
-
-  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).set_parse_action(
-      lambda tokens: int(tokens[0], 10))
-
-  # Remote address: IPv4/IPv6, with optional comma-separated forwarded IPs.
-  # e.g. "63.246.22.199,172.16.1.187", "0:0:0:0:0:0:0:1", "10.229.31.65"
-  _REMOTE_ADDRESS = pyparsing.Combine(
-      pyparsing.Word(pyparsing.alphanums + '.:,')
-  ).set_results_name('remote_address')
-
-  # Protocol: http, https, ssh, grpc
-  _PROTOCOL = pyparsing.Word(pyparsing.alphanums).set_results_name('protocol')
-
-  # Request ID: e.g. i@9K7Z3NNx6x3112x1, o@..., *15DACNLx206x3554x1, -
-  _REQUEST_ID = (
-      pyparsing.Word(pyparsing.alphanums + '@*-_x') |
-      pyparsing.Literal('-')).set_results_name('request_id')
-
-  # Mesh execution ID (gRPC only): e.g. @5XDWX5x420x2768x0
-  _MESH_EXECUTION_ID = (
-      pyparsing.Word(pyparsing.alphanums + '@*-_x') |
-      pyparsing.Literal('-')).set_results_name('mesh_execution_id')
-
-  # User name: alphanumeric with dots/hyphens/underscores/slashes, or '-'.
-  # Includes access-token-user/2/5 style names.
-  _USER_NAME = (
-      pyparsing.Word(pyparsing.alphanums + '-_./') |
-      pyparsing.Literal('-')).set_results_name('user_name')
-
-  # Date and time format: 2020-08-13 03:26:14,222
-  _DATE_TIME = (
-      _FOUR_DIGITS + pyparsing.Suppress('-') + _TWO_DIGITS +
-      pyparsing.Suppress('-') + _TWO_DIGITS + _TWO_DIGITS +
-      pyparsing.Suppress(':') + _TWO_DIGITS + pyparsing.Suppress(':') +
-      _TWO_DIGITS + pyparsing.Suppress(',') + _THREE_DIGITS).set_results_name(
-          'date_time')
-
-  _HTTP_METHODS = [
-      'CONNECT', 'DELETE', 'GET', 'HEAD', 'OPTIONS', 'PATCH', 'POST', 'PUT',
-      'TRACE']
-
-  _HTTP_VERSION = pyparsing.Word(pyparsing.alphanums + '/.').set_results_name(
-      'http_version')
-
-  _REQUEST_URI = pyparsing.Word(pyparsing.alphanums + '/-_.?=%&:+<>#~[]@!,()')
-
-  # HTTP request enclosed in quotes: "GET /path HTTP/1.1"
-  _HTTP_REQUEST = pyparsing.Group(
-      pyparsing.Suppress('"') +
-      pyparsing.one_of(_HTTP_METHODS).set_results_name('http_method') +
-      _REQUEST_URI.set_results_name('request_url') +
-      _HTTP_VERSION +
-      pyparsing.Suppress('"')).set_results_name('http_request')
-
-  # SSH request: "SSH - git-upload-pack '/repo.git'"
-  _SSH_REQUEST = pyparsing.Group(
-      pyparsing.Suppress('"') +
-      pyparsing.Literal('SSH').set_results_name('http_method') +
-      pyparsing.Suppress(pyparsing.Literal('-')) +
-      pyparsing.Word(pyparsing.alphanums + '-_').set_results_name(
-          'request_url') +
-      pyparsing.QuotedString("'").set_results_name('ssh_repo') +
-      pyparsing.Suppress('"')).set_results_name('http_request')
-
-  # gRPC/Mesh action: e.g. "HostingService/HttpBackend"
-  _GRPC_REQUEST = pyparsing.Group(
-      pyparsing.Suppress('"') +
-      pyparsing.SkipTo('"').set_results_name('request_url') +
-      pyparsing.Suppress('"')).set_results_name('http_request')
-
-  _REQUEST_FIELD = _HTTP_REQUEST | _SSH_REQUEST | _GRPC_REQUEST
-
-  # Referer + user agent fields (HTTP only): "" "git/2.44.0"
-  _REFERER = (
-      pyparsing.Suppress('"') +
-      pyparsing.Optional(
-          pyparsing.Word(pyparsing.alphanums + '/-_.?=%&:+<>#~[]@!,()')
-      ).set_results_name('referer') +
-      pyparsing.Suppress('"'))
-
-  _USER_AGENT = (
-      pyparsing.Suppress('"') +
-      pyparsing.SkipTo('"').set_results_name('user_agent') +
-      pyparsing.Suppress('"'))
-
-  _REFERER_USER_AGENT = _REFERER + _USER_AGENT
-
-  # Status code or '-'
-  _STATUS_CODE = _INTEGER_OR_DASH.copy().set_results_name('status_code')
-
-  # Labels: free-form text up to next '|', e.g. "refs, cache:hit", "-"
-  _LABELS = pyparsing.SkipTo(
-      pyparsing.Literal('|')).set_results_name('labels')
-
-  # Request time or '-'
-  _REQUEST_TIME = _INTEGER_OR_DASH.copy().set_results_name('request_time')
-
-  # Session ID or '-'
-  _SESSION_ID = (
-      pyparsing.Word(pyparsing.alphanums + '-_') |
-      pyparsing.Literal('-')).set_results_name('session_id')
-
-  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
-
-  # Standard HTTP/SSH access log (13 pipe-separated fields):
-  # ip | protocol | request_id | user | timestamp | "request" |
-  # "referer" "user_agent" | status | bytes_read | bytes_written |
-  # labels | request_time | session_id |
-  _HTTP_ACCESS_LOG_LINE = (
-      _REMOTE_ADDRESS + _SEP +
-      _PROTOCOL + _SEP +
-      _REQUEST_ID + _SEP +
-      _USER_NAME + _SEP +
-      _DATE_TIME + _SEP +
-      _REQUEST_FIELD + _SEP +
-      _REFERER_USER_AGENT + _SEP +
-      _STATUS_CODE + _SEP +
-      _INTEGER_OR_DASH.copy().set_results_name('bytes_read') + _SEP +
-      _INTEGER_OR_DASH.copy().set_results_name('bytes_written') + _SEP +
-      _LABELS + _SEP +
-      _REQUEST_TIME + _SEP +
-      _SESSION_ID + _SEP +
-      _END_OF_LINE)
-
-  # gRPC/Mesh access log (15 pipe-separated fields, no referer/user-agent):
-  # ip | grpc | request_id | mesh_execution_id | user | timestamp |
-  # "action" | - | status | bytes_read | bytes_written |
-  # mesh_in | mesh_out | duration_ns | labels | session_id |
-  _GRPC_ACCESS_LOG_LINE = (
-      _REMOTE_ADDRESS + _SEP +
-      pyparsing.Literal('grpc').set_results_name('protocol') + _SEP +
-      _REQUEST_ID + _SEP +
-      _MESH_EXECUTION_ID + _SEP +
-      _USER_NAME + _SEP +
-      _DATE_TIME + _SEP +
-      _GRPC_REQUEST + _SEP +
-      pyparsing.Suppress(pyparsing.Literal('-')) + _SEP +
-      _STATUS_CODE + _SEP +
-      _INTEGER_OR_DASH.copy().set_results_name('bytes_read') + _SEP +
-      _INTEGER_OR_DASH.copy().set_results_name('bytes_written') + _SEP +
-      _INTEGER_OR_DASH.copy().set_results_name('mesh_in') + _SEP +
-      _INTEGER_OR_DASH.copy().set_results_name('mesh_out') + _SEP +
-      _INTEGER_OR_DASH.copy().set_results_name('duration_ns') + _SEP +
-      _LABELS + _SEP +
-      _SESSION_ID + _SEP +
-      _END_OF_LINE)
+  # Build completely independent grammar instances for each line structure
+  # to avoid pyparsing result name mutation when shared objects are used in
+  # multiple grammar expressions combined with ^ (Or).
+  _HTTP_ACCESS_LOG_LINE = _MakeHttpAccessLogLine()
+  _GRPC_ACCESS_LOG_LINE = _MakeGrpcAccessLogLine()
 
   _LINE_STRUCTURES = [
       ('grpc_access_log', _GRPC_ACCESS_LOG_LINE),
       ('http_access_log', _HTTP_ACCESS_LOG_LINE),
   ]
 
-  VERIFICATION_GRAMMAR = _GRPC_ACCESS_LOG_LINE | _HTTP_ACCESS_LOG_LINE
+  VERIFICATION_GRAMMAR = _MakeGrpcAccessLogLine() | _MakeHttpAccessLogLine()
 
   VERIFICATION_LITERALS = [' | http | ', ' | https | ', ' | ssh | ',
                            ' | grpc | ']
