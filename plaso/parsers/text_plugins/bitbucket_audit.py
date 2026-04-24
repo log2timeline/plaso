@@ -186,8 +186,10 @@ class BitbucketAuditTextPlugin(interface.TextPlugin):
           the timestamp.
     """
     try:
-      return dfdatetime_posix_time.PosixTimeInMilliseconds(
+      date_time = dfdatetime_posix_time.PosixTimeInMilliseconds(
           timestamp=timestamp_ms)
+
+      return date_time
     except (TypeError, ValueError) as exception:
       raise errors.ParseError(
           f'Unable to parse timestamp with error: {exception!s}')
@@ -218,7 +220,7 @@ class BitbucketAuditTextPlugin(interface.TextPlugin):
     # The timestamp must look like a plausible millisecond epoch value.
     # Reject values that are too small (before year 2000) or too large.
     # Year 2000 in ms = 946684800000; year 2100 in ms = 4102444800000
-    if not (946684800000 <= timestamp_ms <= 4102444800000):
+    if not 946684800000 <= timestamp_ms <= 4102444800000:
       return False
 
     return True

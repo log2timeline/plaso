@@ -11,7 +11,8 @@ The default log format (logback pattern: %date %-5level [%thread] %request
 
 With the optional %request context fields between [thread] and logger_class:
 
-  YYYY-MM-DD HH:MM:SS,mmm LEVEL [thread] user request_id session_id ip "action" logger_class message
+  YYYY-MM-DD HH:MM:SS,mmm LEVEL [thread] user request_id session_id ip
+  "action" logger_class message
 
 All %request fields are optional and may be absent. In practice, lines often
 omit some or all of these fields depending on the context of the log event.
@@ -101,89 +102,76 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
   # Log level (DEBUG, ERROR, FATAL, INFO, TRACE, WARN).
   _LOG_LEVEL = pyparsing.oneOf(_BITBUCKET_LEVELS).set_results_name('level')
 
-  # Thread name enclosed in brackets. Thread names can contain brackets
-  # themselves (e.g. sshd-SshServer[1aa226b3](port=7999)-nio2-thread-3),
-  # so use SkipTo to find the last ']' before the level/logger fields.
+  # Thread name enclosed in brackets. Thread names do not contain ']'.
   _BITBUCKET_THREAD = (
       pyparsing.Suppress('[') +
       pyparsing.SkipTo(']').set_results_name('thread') +
       pyparsing.Suppress(']'))
 
-  # Optional %request context fields that appear between [thread] and
-  # logger_class. These are produced by logback's %request converter.
-  # Format: user request_id session_id ip_address "action"
-  #
-  # user: alphanumeric with hyphens/dots/underscores, or absent.
-  # request_id: hex-like token e.g. 2CM38K4Fx339x113x2, or absent.
-  # session_id: short alphanumeric, or absent (may be comma-separated with
-  #             a second mesh ID, e.g. @5XDWX5x339x568x0,4SJOMSOBx339x40x2).
-  # ip_address: IPv4/IPv6 address, or absent.
-  # action: quoted string e.g. "TransactionService/Transact", or absent.
-  #
-  # Because all fields are optional and the boundary between them and the
-  # logger class is ambiguous, we use SkipTo to capture the logger class
-  # (dotted/abbreviated class name) as the anchor point, then parse the
-  # preceding %request fields out of the captured text.
-
-  # Logger class: abbreviated or full Java class name.
-  # Matches patterns like: c.a.b.m.r.DefaultRepositoryManager,
+  # Logger class: abbreviated or full Java class name. Matches patterns like:
+  # c.a.b.m.r.DefaultRepositoryManager,
   # com.atlassian.bitbucket.internal.boot.log.BuildInfoLogger,
   # o.h.i.ExceptionMapperStandardImpl, org.hibernate.SQL
-  _BITBUCKET_LOGGER = (
-      pyparsing.Word(
-          pyparsing.alphanums + '._$').set_results_name('logger_class'))
-
-  # The %request user field: matches a non-hyphen-starting word that looks
-  # like a username (alphanumeric, dots, hyphens, underscores, slashes).
-  _REQUEST_USER = pyparsing.Word(
-      pyparsing.alphanums + '-_./').set_results_name('request_user')
-
-  # Request ID: alphanumeric token with 'x' separators, e.g. 2CM38K4Fx339x113x2
-  _REQUEST_ID = pyparsing.Word(
-      pyparsing.alphanums + 'x').set_results_name('request_id')
-
-  # Session ID: short alphanumeric with optional comma-separated mesh ID,
-  # e.g. @5XDWX5x339x568x0 or @5XDWX5x339x568x0,4SJOMSOBx339x40x2
-  _SESSION_ID = pyparsing.Combine(
-      pyparsing.Word(pyparsing.alphanums + '@*-_x') +
-      pyparsing.Optional(
-          pyparsing.Literal(',') +
-          pyparsing.Word(pyparsing.alphanums + '@*-_x'))
-  ).set_results_name('session_id')
-
-  # IP address: IPv4 or IPv6.
-  _IP_ADDRESS = pyparsing.Combine(
-      pyparsing.Word(pyparsing.alphanums + '.:')
-  ).set_results_name('ip_address')
-
-  # Quoted request action: "TransactionService/Transact" or
-  # "POST /rest/api/... HTTP/1.1" etc.
-  _REQUEST_ACTION = pyparsing.QuotedString('"').set_results_name(
-      'request_action')
-
-  # Optional %request context block: all fields optional.
-  _REQUEST_CONTEXT = pyparsing.Optional(
-      pyparsing.Group(
-          pyparsing.Optional(_REQUEST_USER) &
-          pyparsing.Optional(_REQUEST_ID) &
-          pyparsing.Optional(_SESSION_ID) &
-          pyparsing.Optional(_IP_ADDRESS) &
-          pyparsing.Optional(_REQUEST_ACTION)
-      ).set_results_name('request_context'))
+  # The class name must start with a letter and contain at least one dot.
+  _BITBUCKET_LOGGER = pyparsing.Regex(
+      r'[a-zA-Z][a-zA-Z0-9_$]*(?:\.[a-zA-Z][a-zA-Z0-9_$]*)+').set_results_name(
+          'logger_class')
 
   # Log message body: rest of line.
   _BITBUCKET_LOG_MESSAGE = pyparsing.SkipTo(
       pyparsing.LineEnd()).set_results_name('body')
 
+  # The %request context block between [thread] and logger_class is optional.
+  # It may contain: user, request_id, session_id, ip_address, "action".
+  # We capture everything between ']' and the logger class as raw text and
+  # parse it afterwards.
+  _REQUEST_CONTEXT_RAW = pyparsing.SkipTo(
+      _BITBUCKET_LOGGER).set_results_name('request_context_raw')
+
   # Complete log line structure:
   # <timestamp> <level> [<thread>] [optional request context] <logger> <body>
   _BITBUCKET_LOG_LINE = (
       _DATE_TIME + _LOG_LEVEL + _BITBUCKET_THREAD +
-      _REQUEST_CONTEXT + _BITBUCKET_LOGGER + _BITBUCKET_LOG_MESSAGE)
+      _REQUEST_CONTEXT_RAW + _BITBUCKET_LOGGER + _BITBUCKET_LOG_MESSAGE)
 
   _LINE_STRUCTURES = [('log_entry', _BITBUCKET_LOG_LINE)]
 
   VERIFICATION_GRAMMAR = _BITBUCKET_LOG_LINE
+
+  VERIFICATION_LITERALS = [
+      ' INFO ', ' WARN ', ' ERROR ', ' DEBUG ', ' FATAL ', ' TRACE ']
+
+  # Sub-patterns for parsing the raw request context string.
+  # Request ID: alphanumeric token with 'x' separators.
+  _RE_REQUEST_ID = pyparsing.Regex(r'[0-9A-Za-z]{6,}x[0-9]+x[0-9]+x[0-9]+')
+
+  # Session ID: @/*/alphanumeric token, optionally comma-separated with mesh.
+  _RE_SESSION_ID = pyparsing.Regex(
+      r'[@*][A-Za-z0-9_x]+(?:,[A-Za-z0-9_x]+)?')
+
+  # IPv4 or IPv6 address.
+  _RE_IP_ADDRESS = pyparsing.Regex(
+      r'(?:\d{1,3}\.){3}\d{1,3}|(?:[0-9a-fA-F]*:){2,7}[0-9a-fA-F]*')
+
+  # Quoted action string.
+  _RE_REQUEST_ACTION = pyparsing.QuotedString('"')
+
+  # Username: word characters, dots, hyphens, slashes.
+  _RE_USER_NAME = pyparsing.Regex(r'[A-Za-z][A-Za-z0-9._\-/]*')
+
+  _REQUEST_CONTEXT_GRAMMAR = (
+      pyparsing.Optional(_RE_USER_NAME.copy().set_results_name(
+          'request_user')) +
+      pyparsing.Optional(_RE_REQUEST_ID.copy().set_results_name(
+          'request_id')) +
+      pyparsing.Optional(_RE_SESSION_ID.copy().set_results_name(
+          'session_id')) +
+      pyparsing.Optional(_RE_IP_ADDRESS.copy().set_results_name(
+          'ip_address')) +
+      pyparsing.Optional(_RE_REQUEST_ACTION.copy().set_results_name(
+          'request_action')))
+
+  _LINE_STRUCTURES = [('log_entry', _BITBUCKET_LOG_LINE)]
 
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
@@ -204,7 +192,8 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
     time_elements_structure = self._GetValueFromStructure(
         structure, 'date_time')
 
-    request_context = self._GetValueFromStructure(structure, 'request_context')
+    request_context_raw = self._GetValueFromStructure(
+        structure, 'request_context_raw', default_value='').strip()
 
     event_data = AtlassianBitbucketEventData()
     event_data.body = self._GetValueFromStructure(
@@ -214,17 +203,17 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
         structure, 'logger_class')
     event_data.thread = self._GetValueFromStructure(structure, 'thread')
 
-    if request_context:
-      user_name = self._GetValueFromStructure(request_context, 'request_user')
-      event_data.user_name = user_name or None
-      event_data.request_id = self._GetValueFromStructure(
-          request_context, 'request_id') or None
-      event_data.session_id = self._GetValueFromStructure(
-          request_context, 'session_id') or None
-      event_data.ip_address = self._GetValueFromStructure(
-          request_context, 'ip_address') or None
-      event_data.request_action = self._GetValueFromStructure(
-          request_context, 'request_action') or None
+    if request_context_raw:
+      try:
+        ctx = self._REQUEST_CONTEXT_GRAMMAR.parse_string(
+            request_context_raw, parse_all=False)
+        event_data.user_name = ctx.get('request_user') or None
+        event_data.request_id = ctx.get('request_id') or None
+        event_data.session_id = ctx.get('session_id') or None
+        event_data.ip_address = ctx.get('ip_address') or None
+        event_data.request_action = ctx.get('request_action') or None
+      except pyparsing.ParseException:
+        pass
 
     event_data.written_time = self._ParseTimeElements(time_elements_structure)
 

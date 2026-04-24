@@ -165,13 +165,13 @@ class BitbucketAccessTextPlugin(interface.TextPlugin):
       pyparsing.QuotedString("'").set_results_name('ssh_repo') +
       pyparsing.Suppress('"')).set_results_name('http_request')
 
-  # gRPC/Mesh action: "HostingService/HttpBackend", "TransactionService/Transact"
+  # gRPC/Mesh action: e.g. "HostingService/HttpBackend"
   _GRPC_REQUEST = pyparsing.Group(
       pyparsing.Suppress('"') +
       pyparsing.SkipTo('"').set_results_name('request_url') +
       pyparsing.Suppress('"')).set_results_name('http_request')
 
-  _REQUEST_FIELD = (_HTTP_REQUEST | _SSH_REQUEST | _GRPC_REQUEST)
+  _REQUEST_FIELD = _HTTP_REQUEST | _SSH_REQUEST | _GRPC_REQUEST
 
   # Referer + user agent fields (HTTP only): "" "git/2.44.0"
   _REFERER = (
@@ -223,8 +223,10 @@ class BitbucketAccessTextPlugin(interface.TextPlugin):
       _REQUEST_FIELD + _SEP +
       _REFERER_USER_AGENT + _SEP +
       _STATUS_CODE + _SEP +
-      _BYTES.set_results_name('bytes_read') + _SEP +
-      _BYTES.set_results_name('bytes_written') + _SEP +
+      (pyparsing.Literal('-') | _INTEGER.copy()).set_results_name(
+          'bytes_read') + _SEP +
+      (pyparsing.Literal('-') | _INTEGER.copy()).set_results_name(
+          'bytes_written') + _SEP +
       _LABELS + _SEP +
       _REQUEST_TIME + _SEP +
       _SESSION_ID + _SEP +
@@ -244,11 +246,16 @@ class BitbucketAccessTextPlugin(interface.TextPlugin):
       _GRPC_REQUEST + _SEP +
       pyparsing.Suppress(pyparsing.Literal('-')) + _SEP +
       _STATUS_CODE + _SEP +
-      _BYTES.set_results_name('bytes_read') + _SEP +
-      _BYTES.set_results_name('bytes_written') + _SEP +
-      _BYTES.set_results_name('mesh_in') + _SEP +
-      _BYTES.set_results_name('mesh_out') + _SEP +
-      _BYTES.set_results_name('duration_ns') + _SEP +
+      (pyparsing.Literal('-') | _INTEGER.copy()).set_results_name(
+          'bytes_read') + _SEP +
+      (pyparsing.Literal('-') | _INTEGER.copy()).set_results_name(
+          'bytes_written') + _SEP +
+      (pyparsing.Literal('-') | _INTEGER.copy()).set_results_name(
+          'mesh_in') + _SEP +
+      (pyparsing.Literal('-') | _INTEGER.copy()).set_results_name(
+          'mesh_out') + _SEP +
+      (pyparsing.Literal('-') | _INTEGER.copy()).set_results_name(
+          'duration_ns') + _SEP +
       _LABELS + _SEP +
       _SESSION_ID + _SEP +
       _END_OF_LINE)
@@ -258,7 +265,7 @@ class BitbucketAccessTextPlugin(interface.TextPlugin):
       ('http_access_log', _HTTP_ACCESS_LOG_LINE),
   ]
 
-  VERIFICATION_GRAMMAR = (_GRPC_ACCESS_LOG_LINE | _HTTP_ACCESS_LOG_LINE)
+  VERIFICATION_GRAMMAR = _GRPC_ACCESS_LOG_LINE | _HTTP_ACCESS_LOG_LINE
 
   VERIFICATION_LITERALS = [' | http | ', ' | https | ', ' | ssh | ',
                            ' | grpc | ']
