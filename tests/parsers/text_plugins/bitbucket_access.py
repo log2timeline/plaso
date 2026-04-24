@@ -20,7 +20,7 @@ class BitbucketAccessTextPluginTest(test_lib.TextPluginTestCase):
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
-    self.assertEqual(number_of_event_data, 6)
+    self.assertEqual(number_of_event_data, 7)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -176,6 +176,33 @@ class BitbucketAccessTextPluginTest(test_lib.TextPluginTestCase):
         'user_name': 'admin'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 5)
+    self.CheckEventData(event_data, expected_event_values)
+
+
+    # Seventh entry: input (i@) request with all dash placeholders — covers
+    # the status_code == '-', bytes == '-', request_time == '-',
+    # user_name == '-', session_id == '-' branches.
+    expected_event_values = {
+        'data_type': 'atlassian:bitbucket:access',
+        'http_request_method': 'GET',
+        'http_request_uri': '/git/STASH/mina-sshd-fork.git/info/refs',
+        'http_request_user_agent': 'git/1.7.4.1',
+        'http_response_bytes_read': None,
+        'http_response_bytes_written': None,
+        'http_response_code': None,
+        'http_version': 'HTTP/1.1',
+        'labels': None,
+        'mesh_execution_id': None,
+        'protocol': 'https',
+        'recorded_time': '2012-10-29T00:06:26.723',
+        'remote_address': '63.246.22.199',
+        'request_id': 'i@9K7Z3NNx6x3112x1',
+        'request_time': None,
+        'session_id': None,
+        'ssh_repository_path': None,
+        'user_name': None}
+
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 6)
     self.CheckEventData(event_data, expected_event_values)
 
 
