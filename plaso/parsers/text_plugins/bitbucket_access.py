@@ -96,6 +96,13 @@ class BitbucketAccessTextPlugin(interface.TextPlugin):
   _INTEGER = pyparsing.Word(pyparsing.nums).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
+  # Separate integer copies for use in named result fields to avoid
+  # result name mutation on the shared _INTEGER class attribute.
+  _INTEGER_OR_DASH = (
+      pyparsing.Literal('-') |
+      pyparsing.Word(pyparsing.nums).set_parse_action(
+          lambda tokens: int(tokens[0], 10)))
+
   _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
       lambda tokens: int(tokens[0], 10))
 
@@ -189,19 +196,14 @@ class BitbucketAccessTextPlugin(interface.TextPlugin):
   _REFERER_USER_AGENT = _REFERER + _USER_AGENT
 
   # Status code or '-'
-  _STATUS_CODE = (
-      pyparsing.Literal('-') | _INTEGER).set_results_name('status_code')
-
-  # Bytes or '-'
-  _BYTES = pyparsing.Literal('-') | _INTEGER
+  _STATUS_CODE = _INTEGER_OR_DASH.copy().set_results_name('status_code')
 
   # Labels: free-form text up to next '|', e.g. "refs, cache:hit", "-"
   _LABELS = pyparsing.SkipTo(
       pyparsing.Literal('|')).set_results_name('labels')
 
   # Request time or '-'
-  _REQUEST_TIME = (
-      pyparsing.Literal('-') | _INTEGER).set_results_name('request_time')
+  _REQUEST_TIME = _INTEGER_OR_DASH.copy().set_results_name('request_time')
 
   # Session ID or '-'
   _SESSION_ID = (
@@ -223,10 +225,8 @@ class BitbucketAccessTextPlugin(interface.TextPlugin):
       _REQUEST_FIELD + _SEP +
       _REFERER_USER_AGENT + _SEP +
       _STATUS_CODE + _SEP +
-      (pyparsing.Literal('-') | _INTEGER.copy()).set_results_name(
-          'bytes_read') + _SEP +
-      (pyparsing.Literal('-') | _INTEGER.copy()).set_results_name(
-          'bytes_written') + _SEP +
+      _INTEGER_OR_DASH.copy().set_results_name('bytes_read') + _SEP +
+      _INTEGER_OR_DASH.copy().set_results_name('bytes_written') + _SEP +
       _LABELS + _SEP +
       _REQUEST_TIME + _SEP +
       _SESSION_ID + _SEP +
@@ -246,16 +246,11 @@ class BitbucketAccessTextPlugin(interface.TextPlugin):
       _GRPC_REQUEST + _SEP +
       pyparsing.Suppress(pyparsing.Literal('-')) + _SEP +
       _STATUS_CODE + _SEP +
-      (pyparsing.Literal('-') | _INTEGER.copy()).set_results_name(
-          'bytes_read') + _SEP +
-      (pyparsing.Literal('-') | _INTEGER.copy()).set_results_name(
-          'bytes_written') + _SEP +
-      (pyparsing.Literal('-') | _INTEGER.copy()).set_results_name(
-          'mesh_in') + _SEP +
-      (pyparsing.Literal('-') | _INTEGER.copy()).set_results_name(
-          'mesh_out') + _SEP +
-      (pyparsing.Literal('-') | _INTEGER.copy()).set_results_name(
-          'duration_ns') + _SEP +
+      _INTEGER_OR_DASH.copy().set_results_name('bytes_read') + _SEP +
+      _INTEGER_OR_DASH.copy().set_results_name('bytes_written') + _SEP +
+      _INTEGER_OR_DASH.copy().set_results_name('mesh_in') + _SEP +
+      _INTEGER_OR_DASH.copy().set_results_name('mesh_out') + _SEP +
+      _INTEGER_OR_DASH.copy().set_results_name('duration_ns') + _SEP +
       _LABELS + _SEP +
       _SESSION_ID + _SEP +
       _END_OF_LINE)
