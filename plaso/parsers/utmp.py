@@ -173,7 +173,7 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
           'Unable to parse first utmp entry with error: missing written time')
 
     if not event_data.username and event_data.type not in (
-        self._DEAD_PROCESS_TYPE, self.INIT_PROCESS_TYPE):
+        self._DEAD_PROCESS_TYPE, self._INIT_PROCESS_TYPE):
       raise errors.WrongParser(
           'Unable to parse first utmp entry with error: missing username')
 
