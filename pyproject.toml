@@ -93,6 +93,9 @@ Documentation = "https://plaso.readthedocs.io/en/latest"
 Homepage = "https://github.com/log2timeline/plaso"
 Repository = "https://github.com/log2timeline/plaso"
 
+[tool.setuptools]
+package-dir = {"plaso" = "plaso"}
+
 [tool.setuptools.package-data]
 plaso = [
     "data/*.*",
@@ -104,8 +107,3 @@ plaso = [
     "parsers/winreg_plugins/*.yaml",
     "preprocessors/*.yaml",
 ]
-
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["plaso"]
-exclude = ["docs", "tests", "tests.*", "utils"]
