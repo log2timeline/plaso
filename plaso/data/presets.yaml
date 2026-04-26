@@ -18,6 +18,14 @@ parsers:
 - sqlite/chrome_66_cookies
 - sqlite/skype
 ---
+name: atlassian
+description: Preset for Atlassian Data Center and Server products (Confluence, Jira).
+parsers:
+- text/atlassian_confluence
+- text/atlassian_jira
+- text/confluence_access
+- text/jira_access
+---
 name: ios
 description: Preset for iOS.
 parsers:

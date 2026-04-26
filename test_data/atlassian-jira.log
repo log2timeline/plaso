@@ -1,0 +1,7 @@
+2022-10-03 09:00:01,042 INFO [main] [com.atlassian.jira.startup.JiraStartupLogger] start Jira starting up. Version : 9.2.0, Mode : EAR, Build Number : 904000, Build Date : 2022-08-25, Build UID : abc12345-dead-beef-cafe-1234567890ab
+2022-10-03 09:00:45,317 INFO [http-nio-8080-exec-1] [com.atlassian.jira.web.filters.JiraLoginFilter] doFilter Login attempted by user 'admin' from host '192.168.1.10'
+2022-10-03 09:01:12,884 WARN [Caesium-1-4] [com.atlassian.jira.cluster.ClusterManager] checkClusterLock Lock 'CLUSTER_UPGRADE_LOCK' is held by node 'node1'. Cannot acquire.
+2022-10-03 09:02:33,501 ERROR [scheduler_Worker-3] [com.atlassian.jira.mail.MailService] sendMail Failed to send notification email to 'user@example.com': Connection refused
+2022-10-03 09:05:00,999 INFO [AJP-bio-8009-exec-5] [com.atlassian.jira.issue.index.DefaultIndexManager] reIndexAll Full re-index started by user 'admin'
+2022-10-03 09:07:11,123 DEBUG [http-nio-8080-exec-2] [com.atlassian.jira.security.JiraAuthenticationContext] getLoggedInUser No user found in session, returning null
+2022-10-03 09:09:59,000 FATAL [main] [com.atlassian.jira.startup.JiraStartupLogger] <init> Fatal error during Jira startup: Out of memory
