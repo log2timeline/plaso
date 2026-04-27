@@ -189,6 +189,7 @@ android_logcat | Parser for Android logcat files.
 apache_access | Parser for Apache access log (access.log) files.
 apt_history | Parser for Advanced Packaging Tool (APT) History log files.
 atlassian_confluence | Parser for Atlassian Confluence log files.
+atlassian_jira | Parser for Atlassian Jira log files.
 aws_elb_access | Parser for AWS ELB Access log files.
 bash_history | Parser for Bash history files.
 confluence_access | Parser for Confluence access log (access.log) files.
@@ -199,6 +200,7 @@ googlelog | Parser for Google-formatted log files.
 ios_lockdownd | Parser for iOS lockdown daemon log.
 ios_logd | Parser for iOS sysdiagnose logd files.
 ios_sysdiag_log | Parser for iOS sysdiag log.
+jira_access | Parser for Jira access log (access.log) files.
 mac_appfirewall_log | Parser for MacOS Application firewall log (appfirewall.log) files.
 mac_securityd | Parser for MacOS security daemon (securityd) log files.
 mac_wifi | Parser for MacOS Wi-Fi log (wifi.log) files.
@@ -274,6 +276,7 @@ winreg_default | Parser for Windows Registry data.
 Name | Parsers and plugins
 --- | ---
 android | android_app_usage, chrome_cache, filestat, sqlite/android_app_usage, sqlite/android_calls, sqlite/android_sms, sqlite/android_turbo, sqlite/android_webview, sqlite/android_webviewcache, sqlite/chrome_8_history, sqlite/chrome_17_cookies, sqlite/chrome_27_history, sqlite/chrome_66_cookies, sqlite/skype
+atlassian | text/atlassian_confluence, text/atlassian_jira, text/confluence_access, text/jira_access
 ios | jsonl/ios_application_privacy, plist/ios_identityservices, sqlite/imessage, sqlite/ios_netusage, sqlite/ios_powerlog, sqlite/ios_screentime, sqlite/kik_ios, sqlite/twitter_ios, text/ios_lockdownd, text/ios_logd, text/ios_sysdiag_log
 linux | bencode, czip/oxml, jsonl/docker_container_config, jsonl/docker_container_log, jsonl/docker_layer_config, filestat, olecf, pls_recall, sqlite/google_drive, sqlite/skype, sqlite/zeitgeist, systemd_journal, text/apt_history, text/bash_history, text/dpkg, text/gdrive_synclog, text/googlelog, text/popularity_contest, text/selinux, text/syslog, text/syslog_traditional, text/vsftpd, text/xchatlog, text/xchatscrollback, text/zsh_extended_history, utmp, webhist
 macos | asl_log, bencode, bsm_log, cups_ipp, czip/oxml, filestat, fseventsd, mac_keychain, olecf, plist, spotlight_storedb, sqlite/appusage, sqlite/google_drive, sqlite/imessage, sqlite/ls_quarantine, sqlite/mac_document_versions, sqlite/mac_notes, sqlite/mackeeper_cache, sqlite/mac_knowledgec, sqlite/skype, text/bash_history, text/gdrive_synclog, text/mac_appfirewall_log, text/mac_securityd, text/mac_wifi, text/macos_launchd_log, text/syslog, text/syslog_traditional, text/zsh_extended_history, utmpx, webhist

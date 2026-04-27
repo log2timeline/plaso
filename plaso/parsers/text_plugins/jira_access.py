@@ -3,7 +3,6 @@
 
 Also see:
   https://confluence.atlassian.com/adminjiraserver/configuring-jira-application-logging-938847740.html
-  https://confluence.atlassian.com/jiracore/jira-access-logs-972322818.html
 """
 
 import pyparsing

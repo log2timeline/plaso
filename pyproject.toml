@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "plaso"
-version = "20260426"
+version = "20260427"
 description = "Plaso (log2timeline) - Super timeline all the things"
 maintainers = [
     { name = "Log2Timeline maintainers", email = "log2timeline-maintainers@googlegroups.com" },
