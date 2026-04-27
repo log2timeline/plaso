@@ -22,6 +22,8 @@ Also see:
   https://support.atlassian.com/bitbucket-data-center/kb/how-to-change-the-bitbucket-application-log-format/
 """
 
+import re
+
 import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements
@@ -136,37 +138,7 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
 
   _LINE_STRUCTURES = [('log_entry', _BITBUCKET_LOG_LINE)]
 
-  # Use a fresh independent grammar for verification to avoid mutations
-  # caused by _SetLineStructures wrapping _BITBUCKET_LOG_LINE in a Group
-  # and applying set_default_whitespace_chars in place.
-  VERIFICATION_GRAMMAR = (
-      (pyparsing.Word(pyparsing.nums, exact=4) +
-       pyparsing.Suppress('-') +
-       pyparsing.Word(pyparsing.nums, exact=2) +
-       pyparsing.Suppress('-') +
-       pyparsing.Word(pyparsing.nums, exact=2) +
-       pyparsing.Word(pyparsing.nums, exact=2) +
-       pyparsing.Suppress(':') +
-       pyparsing.Word(pyparsing.nums, exact=2) +
-       pyparsing.Suppress(':') +
-       pyparsing.Word(pyparsing.nums, exact=2) +
-       pyparsing.Suppress(',') +
-       pyparsing.Word(pyparsing.nums, exact=3)).set_results_name('date_time') +
-      pyparsing.oneOf(
-          ['DEBUG', 'ERROR', 'FATAL', 'INFO', 'TRACE', 'WARN']
-      ).set_results_name('level') +
-      pyparsing.Suppress('[') +
-      pyparsing.SkipTo(']').set_results_name('thread') +
-      pyparsing.Suppress(']') +
-      pyparsing.SkipTo(
-          pyparsing.Regex(
-              r'[a-zA-Z][a-zA-Z0-9_$]*(?:\.[a-zA-Z][a-zA-Z0-9_$]*)+')
-      ).set_results_name('request_context_raw') +
-      pyparsing.Regex(
-          r'[a-zA-Z][a-zA-Z0-9_$]*(?:\.[a-zA-Z][a-zA-Z0-9_$]*)+',
-      ).set_results_name('logger_class') +
-      pyparsing.SkipTo(
-          pyparsing.LineEnd()).set_results_name('body'))
+  VERIFICATION_GRAMMAR = _BITBUCKET_LOG_LINE
 
   VERIFICATION_LITERALS = [
       ' INFO ', ' WARN ', ' ERROR ', ' DEBUG ', ' FATAL ', ' TRACE ']
@@ -275,6 +247,14 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
       raise errors.ParseError(
           f'Unable to parse time elements with error: {exception!s}')
 
+  # Regex to verify the first line is a valid Bitbucket log line:
+  # YYYY-MM-DD HH:MM:SS,mmm LEVEL [thread] ... dotted.class.Name message
+  _VERIFICATION_REGEX = re.compile(
+      r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3} '
+      r'(?:DEBUG|ERROR|FATAL|INFO|TRACE|WARN) '
+      r'\[[^\]]+\] '
+      r'.*[a-zA-Z][a-zA-Z0-9_$]*(?:\.[a-zA-Z][a-zA-Z0-9_$]*)+')
+
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the plugin.
 
@@ -286,20 +266,8 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct plugin, False otherwise.
     """
-    try:
-      structure = self._VerifyString(text_reader.lines)
-    except errors.ParseError:
-      return False
-
-    time_elements_structure = self._GetValueFromStructure(
-        structure, 'date_time')
-
-    try:
-      self._ParseTimeElements(time_elements_structure)
-    except errors.ParseError:
-      return False
-
-    return True
+    first_line = text_reader.lines.partition('\n')[0]
+    return bool(self._VERIFICATION_REGEX.match(first_line))
 
 
 text_parser.TextLogParser.RegisterPlugin(AtlassianBitbucketTextPlugin)
