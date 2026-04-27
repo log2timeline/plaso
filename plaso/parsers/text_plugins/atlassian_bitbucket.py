@@ -136,7 +136,37 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
 
   _LINE_STRUCTURES = [('log_entry', _BITBUCKET_LOG_LINE)]
 
-  VERIFICATION_GRAMMAR = _BITBUCKET_LOG_LINE
+  # Use a fresh independent grammar for verification to avoid mutations
+  # caused by _SetLineStructures wrapping _BITBUCKET_LOG_LINE in a Group
+  # and applying set_default_whitespace_chars in place.
+  VERIFICATION_GRAMMAR = (
+      (pyparsing.Word(pyparsing.nums, exact=4) +
+       pyparsing.Suppress('-') +
+       pyparsing.Word(pyparsing.nums, exact=2) +
+       pyparsing.Suppress('-') +
+       pyparsing.Word(pyparsing.nums, exact=2) +
+       pyparsing.Word(pyparsing.nums, exact=2) +
+       pyparsing.Suppress(':') +
+       pyparsing.Word(pyparsing.nums, exact=2) +
+       pyparsing.Suppress(':') +
+       pyparsing.Word(pyparsing.nums, exact=2) +
+       pyparsing.Suppress(',') +
+       pyparsing.Word(pyparsing.nums, exact=3)).set_results_name('date_time') +
+      pyparsing.oneOf(
+          ['DEBUG', 'ERROR', 'FATAL', 'INFO', 'TRACE', 'WARN']
+      ).set_results_name('level') +
+      pyparsing.Suppress('[') +
+      pyparsing.SkipTo(']').set_results_name('thread') +
+      pyparsing.Suppress(']') +
+      pyparsing.SkipTo(
+          pyparsing.Regex(
+              r'[a-zA-Z][a-zA-Z0-9_$]*(?:\.[a-zA-Z][a-zA-Z0-9_$]*)+')
+      ).set_results_name('request_context_raw') +
+      pyparsing.Regex(
+          r'[a-zA-Z][a-zA-Z0-9_$]*(?:\.[a-zA-Z][a-zA-Z0-9_$]*)+',
+      ).set_results_name('logger_class') +
+      pyparsing.SkipTo(
+          pyparsing.LineEnd()).set_results_name('body'))
 
   VERIFICATION_LITERALS = [
       ' INFO ', ' WARN ', ' ERROR ', ' DEBUG ', ' FATAL ', ' TRACE ']
