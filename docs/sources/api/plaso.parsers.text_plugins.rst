@@ -36,6 +36,14 @@ plaso.parsers.text\_plugins.atlassian\_confluence module
    :show-inheritance:
    :undoc-members:
 
+plaso.parsers.text\_plugins.atlassian\_jira module
+--------------------------------------------------
+
+.. automodule:: plaso.parsers.text_plugins.atlassian_jira
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 plaso.parsers.text\_plugins.aws\_elb\_access module
 ---------------------------------------------------
 
@@ -128,6 +136,14 @@ plaso.parsers.text\_plugins.ios\_sysdiag\_log module
 ----------------------------------------------------
 
 .. automodule:: plaso.parsers.text_plugins.ios_sysdiag_log
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+plaso.parsers.text\_plugins.jira\_access module
+-----------------------------------------------
+
+.. automodule:: plaso.parsers.text_plugins.jira_access
    :members:
    :show-inheritance:
    :undoc-members:
