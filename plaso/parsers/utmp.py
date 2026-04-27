@@ -53,13 +53,13 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
   NAME = 'utmp'
   DATA_FORMAT = 'Linux libc6 utmp file'
 
-  _DEFINITION_FILE = os.path.join(
-      os.path.dirname(__file__), 'utmp.yaml')
+  _DEFINITION_FILE = os.path.join(os.path.dirname(__file__), 'utmp.yaml')
 
   _EMPTY_IP_ADDRESS = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
   _SUPPORTED_TYPES = frozenset(range(0, 10))
 
+  _INIT_PROCESS_TYPE = 5
   _DEAD_PROCESS_TYPE = 8
 
   def _ReadEntry(self, parser_mediator, file_object, file_offset):
@@ -89,11 +89,11 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
           file_object, file_offset, entry_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError((
-          'Unable to parse utmp entry at offset: 0x{0:08x} with error: '
-          '{1!s}.').format(file_offset, exception))
+          f'Unable to parse utmp entry at offset: 0x{file_offset:08x} with '
+          f'error: {exception!s}.'))
 
     if entry.type not in self._SUPPORTED_TYPES:
-      raise errors.ParseError('Unsupported type: {0:d}'.format(entry.type))
+      raise errors.ParseError(f'Unsupported type: {entry.type:d}')
 
     code_page = parser_mediator.GetCodePage()
 
@@ -166,22 +166,21 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
           parser_mediator, file_object, file_offset)
     except errors.ParseError as exception:
       raise errors.WrongParser(
-          'Unable to parse first utmp entry with error: {0!s}'.format(
-              exception))
+          f'Unable to parse first utmp entry with error: {exception!s}')
 
     if not event_data.written_time:
       raise errors.WrongParser(
           'Unable to parse first utmp entry with error: missing written time')
 
-    if not event_data.username and event_data.type != self._DEAD_PROCESS_TYPE:
+    if not event_data.username and event_data.type not in (
+        self._DEAD_PROCESS_TYPE, self._INIT_PROCESS_TYPE):
       raise errors.WrongParser(
           'Unable to parse first utmp entry with error: missing username')
 
     if warning_strings:
       all_warnings = ', '.join(warning_strings)
       raise errors.WrongParser(
-          'Unable to parse first utmp entry with error: {0:s}'.format(
-              all_warnings))
+          f'Unable to parse first utmp entry with error: {all_warnings:s}')
 
     parser_mediator.ProduceEventData(event_data)
 
