@@ -140,10 +140,10 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
 
   VERIFICATION_GRAMMAR = _BITBUCKET_LOG_LINE
 
-  # Verification literals specific to Bitbucket application logs.
-  # The pattern "LEVEL [" (log level immediately followed by a space and
-  # opening bracket for the thread name) is characteristic of the Bitbucket
-  # logback format and unlikely to appear in other log formats like syslog.
+  # Verification literals for Bitbucket application logs.
+  # The pattern " INFO [" or " WARN [" etc. (log level followed immediately by
+  # a space and opening bracket for the thread name) is characteristic of the
+  # Bitbucket/logback format and does not appear in syslog or Windows logs.
   VERIFICATION_LITERALS = [
       ' INFO [', ' WARN [', ' ERROR [', ' DEBUG [', ' FATAL [', ' TRACE [']
 
@@ -251,13 +251,17 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
       raise errors.ParseError(
           f'Unable to parse time elements with error: {exception!s}')
 
-  # Regex to verify the first line is a valid Bitbucket log line:
-  # YYYY-MM-DD HH:MM:SS,mmm LEVEL [thread] ... dotted.class.Name message
+  # Regex to verify a line is a valid Bitbucket application log line.
+  # Requires: YYYY-MM-DD HH:MM:SS,mmm LEVEL [thread] ... logger.Class body
+  # The dotted logger class name must NOT be enclosed in square brackets
+  # (which would indicate Confluence format). It appears as a bare token
+  # anywhere after [thread], either immediately or after request context fields.
   _VERIFICATION_REGEX = re.compile(
       r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3} '
       r'(?:DEBUG|ERROR|FATAL|INFO|TRACE|WARN) '
       r'\[[^\]]+\] '
-      r'.*[a-zA-Z][a-zA-Z0-9_$]*(?:\.[a-zA-Z][a-zA-Z0-9_$]*)+')
+      r'(?:(?!\[)[^\n])*'
+      r'[a-zA-Z][a-zA-Z0-9_$]*(?:\.[a-zA-Z][a-zA-Z0-9_$]*)+')
 
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the plugin.
@@ -270,8 +274,25 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct plugin, False otherwise.
     """
-    first_line = text_reader.lines.partition('\n')[0]
-    return bool(self._VERIFICATION_REGEX.match(first_line))
+    lines = text_reader.lines.splitlines()
+
+    # Require the first non-empty line to match the Bitbucket log format.
+    # Also require at least one additional matching line to reduce false
+    # positives from files that incidentally contain one matching line.
+    matching_lines = 0
+    for line in lines:
+      if not line:
+        continue
+      if self._VERIFICATION_REGEX.match(line):
+        matching_lines += 1
+        if matching_lines >= 2:
+          return True
+      else:
+        # If the first non-empty line does not match, reject immediately.
+        if matching_lines == 0:
+          return False
+
+    return False
 
 
 text_parser.TextLogParser.RegisterPlugin(AtlassianBitbucketTextPlugin)
