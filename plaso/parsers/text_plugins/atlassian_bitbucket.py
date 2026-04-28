@@ -140,13 +140,6 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
 
   VERIFICATION_GRAMMAR = _BITBUCKET_LOG_LINE
 
-  # Verification literals for Bitbucket application logs.
-  # The pattern " INFO [" or " WARN [" etc. (log level followed immediately by
-  # a space and opening bracket for the thread name) is characteristic of the
-  # Bitbucket/logback format and does not appear in syslog or Windows logs.
-  VERIFICATION_LITERALS = [
-      ' INFO [', ' WARN [', ' ERROR [', ' DEBUG [', ' FATAL [', ' TRACE [']
-
   # Sub-patterns for parsing the raw request context string.
   # Request ID: alphanumeric token with 'x' separators.
   _RE_REQUEST_ID = pyparsing.Regex(r'[0-9A-Za-z]{6,}x[0-9]+x[0-9]+x[0-9]+')
@@ -274,11 +267,9 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct plugin, False otherwise.
     """
+    # Fast pre-check: the first non-empty line must match the Bitbucket
+    # timestamp + level + [thread] + unbracketed dotted-class format.
     lines = text_reader.lines.splitlines()
-
-    # The first non-empty line MUST match the Bitbucket timestamp format.
-    # Then require at least one additional match in the first 20 lines to
-    # avoid false positives from files with only one Bitbucket-like line.
     first_checked = False
     matching_lines = 0
     for line in lines[:20]:
@@ -288,12 +279,31 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
         matching_lines += 1
         first_checked = True
         if matching_lines >= 2:
-          return True
+          break
       elif not first_checked:
         # First non-empty line must match.
         return False
 
-    return False
+    if matching_lines < 2:
+      return False
+
+    # Secondary check: use the pyparsing grammar to verify the structure
+    # and extract a parseable timestamp, following the same pattern as the
+    # atlassian_confluence parser.
+    try:
+      structure = self._VerifyString(text_reader.lines)
+    except errors.ParseError:
+      return False
+
+    time_elements_structure = self._GetValueFromStructure(
+        structure, 'date_time')
+
+    try:
+      self._ParseTimeElements(time_elements_structure)
+    except errors.ParseError:
+      return False
+
+    return True
 
 
 text_parser.TextLogParser.RegisterPlugin(AtlassianBitbucketTextPlugin)
