@@ -130,7 +130,6 @@ class BitbucketAuditTextPlugin(interface.TextPlugin):
 
   VERIFICATION_GRAMMAR = _AUDIT_LOG_LINE
 
-  VERIFICATION_LITERALS = [' | ']
 
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
