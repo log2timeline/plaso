@@ -3,3 +3,4 @@
 2022-04-12 05:39:57,766 INFO [grpc-server:thread-16] admin 2CM38K4Fx339x114x2 @5XDWX5x339x568x0 10.229.31.65 "ManagementService/RepairRepository" c.a.b.m.repair.DefaultRepairManager [p/0030/h/8a2a778e2d97e278f541/r/5] Repair from mesh2@2 completed in 238 ms
 2022-12-01 14:03:28,717 WARN [spring-startup] c.a.s.i.p.s.OsgiBundledPathScanner Cannot scan directory /extension/build-status/ in bundle com.atlassian.bitbucket.server.bitbucket-frontend; it does not exist
 2014-12-04 19:39:39,749 DEBUG [clusterScheduler_Worker-8] org.hibernate.SQL delete sta_activity_0 from sta_activity sta_activity_0 inner join HT_sta_pr_rescope_activity HT_sta_pr_rescope_activity_0 on sta_activity_0.id=HT_sta_pr_rescope_activity_0.activity_id
+2022-06-24 08:01:19,381 WARN [git:gc:thread-1] !!! c.a.s.i.r.DefaultRepositorySizeCache Size calculation failed

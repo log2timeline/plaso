@@ -4,6 +4,8 @@
 
 import unittest
 
+from plaso.parsers import mediator as parsers_mediator
+from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import bitbucket_access
 
 from tests.parsers.text_plugins import test_lib
@@ -20,7 +22,7 @@ class BitbucketAccessTextPluginTest(test_lib.TextPluginTestCase):
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
-    self.assertEqual(number_of_event_data, 7)
+    self.assertEqual(number_of_event_data, 8)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -204,6 +206,89 @@ class BitbucketAccessTextPluginTest(test_lib.TextPluginTestCase):
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 6)
     self.CheckEventData(event_data, expected_event_values)
+
+    # Eighth entry: HTTP request where request_id is '-' → None.
+    expected_event_values = {
+        'data_type': 'atlassian:bitbucket:access',
+        'http_request_method': 'GET',
+        'http_request_uri': '/git/STASH/mina-sshd-fork.git/info/refs',
+        'http_request_user_agent': 'git/1.7.4.1',
+        'http_response_bytes_read': 101,
+        'http_response_bytes_written': 512,
+        'http_response_code': 200,
+        'http_version': 'HTTP/1.1',
+        'labels': 'refs, cache:hit',
+        'mesh_execution_id': None,
+        'protocol': 'https',
+        'recorded_time': '2012-10-29T00:06:26.838',
+        'remote_address': '10.0.0.1',
+        'request_id': None,
+        'request_time': 45,
+        'session_id': 'tmpqqw',
+        'ssh_repository_path': None,
+        'user_name': 'eaccru'}
+
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 7)
+    self.CheckEventData(event_data, expected_event_values)
+
+
+  def _CheckRequiredFormat(self, plugin, path_segments):
+    """Helper to call CheckRequiredFormat on a test file."""
+    parser_mediator = parsers_mediator.ParserMediator()
+    storage_writer = self._CreateStorageWriter()
+    parser_mediator.SetStorageWriter(storage_writer)
+    file_entry = self._GetTestFileEntry(path_segments)
+    parser_mediator.SetFileEntry(file_entry)
+    parser_mediator.AppendToParserChain('text')
+    encoding = plugin.ENCODING or parser_mediator.GetCodePage()
+    file_object = file_entry.GetFileObject()
+    text_reader = text_parser.EncodedTextReader(file_object, encoding=encoding)
+    text_reader.ReadLines()
+    return plugin.CheckRequiredFormat(parser_mediator, text_reader)
+
+  def testCheckRequiredFormat(self):
+    """Tests the CheckRequiredFormat function."""
+    plugin = bitbucket_access.BitbucketAccessTextPlugin()
+
+    # Non-access-log file (syslog) should be rejected.
+    self.assertFalse(
+        self._CheckRequiredFormat(plugin, ['syslog', 'syslog']))
+
+  def testParseErrors(self):
+    """Tests _ParseRecord and _ParseTimeElements error paths."""
+    plugin = bitbucket_access.BitbucketAccessTextPlugin()
+
+    from plaso.lib import errors
+    from unittest import mock
+
+    # _ParseTimeElements raises ParseError on an invalid string input.
+    with self.assertRaises(errors.ParseError):
+      plugin._ParseTimeElements('invalid')
+
+    # _ParseRecord raises ParseError on unknown key.
+    with self.assertRaises(errors.ParseError):
+      plugin._ParseRecord(None, 'unknown_key', {})
+
+    # CheckRequiredFormat returns False for non-matching content.
+    text_reader = mock.Mock()
+    text_reader.lines = 'Jan 22 07:52:33 hostname sshd[123]: connection'
+    self.assertFalse(plugin.CheckRequiredFormat(mock.Mock(), text_reader))
+
+    # CheckRequiredFormat returns False when _ParseTimeElements raises ParseError.
+    # Use a valid access log line so _VerifyString passes, then _ParseTimeElements
+    # is patched to raise ParseError to cover lines 409-410.
+    from plaso.lib import errors as plaso_errors
+    import unittest.mock as unit_mock
+    with unit_mock.patch.object(
+        plugin, '_ParseTimeElements',
+        side_effect=plaso_errors.ParseError('test')):
+      text_reader2 = mock.Mock()
+      text_reader2.lines = (
+          '10.100.253.254 | https | o@OS8A8Sx92x131x0 | eaccru | '
+          '2012-10-29 00:06:26,838 | '
+          '"GET /scm/test.git/info/refs HTTP/1.1" | '
+          '"" "git/1.7.4.1" | 200 | 101 | 512 | refs, cache:hit | 45 | tmpqqw |')
+      self.assertFalse(plugin.CheckRequiredFormat(mock.Mock(), text_reader2))
 
 
 if __name__ == '__main__':

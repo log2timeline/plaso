@@ -4,6 +4,8 @@
 
 import unittest
 
+from plaso.parsers import mediator as parsers_mediator
+from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import atlassian_bitbucket
 
 from tests.parsers.text_plugins import test_lib
@@ -20,7 +22,7 @@ class AtlassianBitbucketTextPluginTest(test_lib.TextPluginTestCase):
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
-    self.assertEqual(number_of_event_data, 5)
+    self.assertEqual(number_of_event_data, 6)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -128,6 +130,95 @@ class AtlassianBitbucketTextPluginTest(test_lib.TextPluginTestCase):
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 4)
     self.CheckEventData(event_data, expected_event_values)
+
+
+  def _CheckRequiredFormat(self, plugin, path_segments):
+    """Helper to call CheckRequiredFormat on a test file."""
+    parser_mediator = parsers_mediator.ParserMediator()
+    storage_writer = self._CreateStorageWriter()
+    parser_mediator.SetStorageWriter(storage_writer)
+    file_entry = self._GetTestFileEntry(path_segments)
+    parser_mediator.SetFileEntry(file_entry)
+    parser_mediator.AppendToParserChain('text')
+    encoding = plugin.ENCODING or parser_mediator.GetCodePage()
+    file_object = file_entry.GetFileObject()
+    text_reader = text_parser.EncodedTextReader(file_object, encoding=encoding)
+    text_reader.ReadLines()
+    return plugin.CheckRequiredFormat(parser_mediator, text_reader)
+
+  def testCheckRequiredFormat(self):
+    """Tests the CheckRequiredFormat function."""
+    plugin = atlassian_bitbucket.AtlassianBitbucketTextPlugin()
+
+    # Non-Bitbucket file (syslog) should be rejected: first line is
+    # 'Jan 22 ...' which does not match the YYYY-MM-DD timestamp format.
+    self.assertFalse(
+        self._CheckRequiredFormat(plugin, ['syslog', 'syslog']))
+
+    # Confluence log (with bracketed logger class) should be rejected.
+    self.assertFalse(
+        self._CheckRequiredFormat(plugin, ['atlassian-confluence.log']))
+
+  def testParseErrors(self):
+    """Tests _ParseRecord and _ParseTimeElements error paths."""
+    plugin = atlassian_bitbucket.AtlassianBitbucketTextPlugin()
+
+    from plaso.lib import errors
+    from unittest import mock
+
+    # _ParseTimeElements raises ParseError on an invalid string input.
+    with self.assertRaises(errors.ParseError):
+      plugin._ParseTimeElements('invalid')
+
+    # _ParseRecord raises ParseError on unknown key.
+    with self.assertRaises(errors.ParseError):
+      plugin._ParseRecord(None, 'unknown_key', {})
+
+    # CheckRequiredFormat returns False when only 1 matching line (needs 2).
+    text_reader = mock.Mock()
+    text_reader.lines = (
+        '2020-09-08 07:53:45,084 INFO [main] '
+        'com.atlassian.bitbucket.internal.boot.log.BuildInfoLogger '
+        'Starting Bitbucket 7.4.0\n'
+        'Jan 22 07:52:33 not-a-bitbucket-line\n')
+    self.assertFalse(plugin.CheckRequiredFormat(mock.Mock(), text_reader))
+
+    # CheckRequiredFormat returns False when first non-empty line doesn't match.
+    text_reader2 = mock.Mock()
+    text_reader2.lines = (
+        '\n'
+        'Jan 22 07:52:33 hostname sshd[123]: connection\n'
+        '2020-09-08 07:53:45,084 INFO [main] '
+        'com.atlassian.bitbucket.log.Logger Starting\n')
+    self.assertFalse(plugin.CheckRequiredFormat(mock.Mock(), text_reader2))
+
+    # CheckRequiredFormat returns False when _VerifyString raises ParseError.
+    # Use content where 2 lines match the regex but the pyparsing grammar fails.
+    # We simulate this by patching _VerifyString to raise ParseError.
+    from plaso.lib import errors as plaso_errors
+    import unittest.mock as unit_mock
+    with unit_mock.patch.object(
+        plugin, '_VerifyString',
+        side_effect=plaso_errors.ParseError('test')):
+      text_reader3 = mock.Mock()
+      text_reader3.lines = (
+          '2020-09-08 07:53:45,084 INFO [main] '
+          'com.atlassian.bitbucket.log.BuildInfoLogger Starting\n'
+          '2022-04-12 05:39:57,408 INFO [tx:thread-2] '
+          'c.a.b.m.r.DefaultRepositoryManager Created\n')
+      self.assertFalse(plugin.CheckRequiredFormat(mock.Mock(), text_reader3))
+
+    # CheckRequiredFormat returns False when _ParseTimeElements raises ParseError.
+    with unit_mock.patch.object(
+        plugin, '_ParseTimeElements',
+        side_effect=plaso_errors.ParseError('test')):
+      text_reader4 = mock.Mock()
+      text_reader4.lines = (
+          '2020-09-08 07:53:45,084 INFO [main] '
+          'com.atlassian.bitbucket.log.BuildInfoLogger Starting\n'
+          '2022-04-12 05:39:57,408 INFO [tx:thread-2] '
+          'c.a.b.m.r.DefaultRepositoryManager Created\n')
+      self.assertFalse(plugin.CheckRequiredFormat(mock.Mock(), text_reader4))
 
 
 if __name__ == '__main__':
