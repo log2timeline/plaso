@@ -140,9 +140,6 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
 
   VERIFICATION_GRAMMAR = _BITBUCKET_LOG_LINE
 
-  VERIFICATION_LITERALS = [
-      ' INFO ', ' WARN ', ' ERROR ', ' DEBUG ', ' FATAL ', ' TRACE ']
-
   # Sub-patterns for parsing the raw request context string.
   # Request ID: alphanumeric token with 'x' separators.
   _RE_REQUEST_ID = pyparsing.Regex(r'[0-9A-Za-z]{6,}x[0-9]+x[0-9]+x[0-9]+')
