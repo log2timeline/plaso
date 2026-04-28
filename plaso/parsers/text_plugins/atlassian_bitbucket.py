@@ -203,16 +203,13 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
     event_data.thread = self._GetValueFromStructure(structure, 'thread')
 
     if request_context_raw:
-      try:
-        ctx = self._REQUEST_CONTEXT_GRAMMAR.parse_string(
-            request_context_raw, parse_all=False)
-        event_data.user_name = ctx.get('request_user') or None
-        event_data.request_id = ctx.get('request_id') or None
-        event_data.session_id = ctx.get('session_id') or None
-        event_data.ip_address = ctx.get('ip_address') or None
-        event_data.request_action = ctx.get('request_action') or None
-      except pyparsing.ParseException:
-        pass
+      ctx = self._REQUEST_CONTEXT_GRAMMAR.parse_string(
+          request_context_raw, parse_all=False)
+      event_data.user_name = ctx.get('request_user') or None
+      event_data.request_id = ctx.get('request_id') or None
+      event_data.session_id = ctx.get('session_id') or None
+      event_data.ip_address = ctx.get('ip_address') or None
+      event_data.request_action = ctx.get('request_action') or None
 
     event_data.written_time = self._ParseTimeElements(time_elements_structure)
 

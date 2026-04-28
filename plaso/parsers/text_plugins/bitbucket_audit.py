@@ -184,14 +184,10 @@ class BitbucketAuditTextPlugin(interface.TextPlugin):
       ParseError: if a valid date and time value cannot be derived from
           the timestamp.
     """
-    try:
-      date_time = dfdatetime_posix_time.PosixTimeInMilliseconds(
-          timestamp=timestamp_ms)
+    date_time = dfdatetime_posix_time.PosixTimeInMilliseconds(
+        timestamp=timestamp_ms)
 
-      return date_time
-    except (TypeError, ValueError) as exception:
-      raise errors.ParseError(
-          f'Unable to parse timestamp with error: {exception!s}')
+    return date_time
 
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the plugin.
@@ -210,11 +206,6 @@ class BitbucketAuditTextPlugin(interface.TextPlugin):
       return False
 
     timestamp_ms = self._GetValueFromStructure(structure, 'timestamp_ms')
-
-    try:
-      self._ParseTimestamp(timestamp_ms)
-    except errors.ParseError:
-      return False
 
     # The timestamp must look like a plausible millisecond epoch value.
     # Reject values that are too small (before year 2000) or too large.

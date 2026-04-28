@@ -5,3 +5,4 @@
 0:0:0:0:0:0:0:1 | ssh | o@1APC3V1x930x168705816x2 | acarlton | 2020-08-13 10:26:37,907 | "SSH - git-upload-pack '/stash/stash.git'" | "" "git/2.38.1" | 200 | 0 | 9812 | push | 47 | abc123 |
 10.229.31.65 | grpc | o@1GGG0Q5Kx420x106x2 | @5XDWX5x420x2768x0 | admin | 2022-04-12 07:09:18,086 | "HostingService/HttpBackend" | - | 0 | 2 | 141583 | 18951 | 3826461940 | - | 508028 |
 63.246.22.199 | https | i@9K7Z3NNx6x3112x1 | - | 2012-10-29 00:06:26,723 | "GET /git/STASH/mina-sshd-fork.git/info/refs HTTP/1.1" | "" "git/1.7.4.1" | - | - | - | - | - | - |
+10.0.0.1 | https | - | eaccru | 2012-10-29 00:06:26,838 | "GET /git/STASH/mina-sshd-fork.git/info/refs HTTP/1.1" | "" "git/1.7.4.1" | 200 | 101 | 512 | refs, cache:hit | 45 | tmpqqw |
