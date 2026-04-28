@@ -276,21 +276,22 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
     """
     lines = text_reader.lines.splitlines()
 
-    # Require the first non-empty line to match the Bitbucket log format.
-    # Also require at least one additional matching line to reduce false
-    # positives from files that incidentally contain one matching line.
+    # The first non-empty line MUST match the Bitbucket timestamp format.
+    # Then require at least one additional match in the first 20 lines to
+    # avoid false positives from files with only one Bitbucket-like line.
+    first_checked = False
     matching_lines = 0
-    for line in lines:
+    for line in lines[:20]:
       if not line:
         continue
       if self._VERIFICATION_REGEX.match(line):
         matching_lines += 1
+        first_checked = True
         if matching_lines >= 2:
           return True
-      else:
-        # If the first non-empty line does not match, reject immediately.
-        if matching_lines == 0:
-          return False
+      elif not first_checked:
+        # First non-empty line must match.
+        return False
 
     return False
 
