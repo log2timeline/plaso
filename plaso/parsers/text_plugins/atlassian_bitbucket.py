@@ -140,6 +140,13 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
 
   VERIFICATION_GRAMMAR = _BITBUCKET_LOG_LINE
 
+  # Verification literals specific to Bitbucket application logs.
+  # The pattern "LEVEL [" (log level immediately followed by a space and
+  # opening bracket for the thread name) is characteristic of the Bitbucket
+  # logback format and unlikely to appear in other log formats like syslog.
+  VERIFICATION_LITERALS = [
+      ' INFO [', ' WARN [', ' ERROR [', ' DEBUG [', ' FATAL [', ' TRACE [']
+
   # Sub-patterns for parsing the raw request context string.
   # Request ID: alphanumeric token with 'x' separators.
   _RE_REQUEST_ID = pyparsing.Regex(r'[0-9A-Za-z]{6,}x[0-9]+x[0-9]+x[0-9]+')
