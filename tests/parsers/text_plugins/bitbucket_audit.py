@@ -3,7 +3,9 @@
 """Tests for the Atlassian Bitbucket audit log text parser plugin."""
 
 import unittest
+import unittest.mock
 
+from plaso.lib import errors
 from plaso.parsers import mediator as parsers_mediator
 from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import bitbucket_audit
@@ -134,31 +136,28 @@ class BitbucketAuditTextPluginTest(test_lib.TextPluginTestCase):
         self._CheckRequiredFormat(plugin, ['syslog', 'syslog']))
 
   def testParseErrors(self):
-    """Tests _ParseRecord, _ParseTimestamp and CheckRequiredFormat error paths.
-    """
+    """Tests _ParseRecord and CheckRequiredFormat error paths."""
     plugin = bitbucket_audit.BitbucketAuditTextPlugin()
-
-    from plaso.lib import errors
-    from unittest import mock
 
     # _ParseRecord raises ParseError on unknown key.
     with self.assertRaises(errors.ParseError):
-      plugin._ParseRecord(None, 'unknown_key', {})
+      plugin._ParseRecord(  # pylint: disable=protected-access
+          None, 'unknown_key', {})
 
     # CheckRequiredFormat rejects a file with an out-of-range timestamp
     # (year 1970 = timestamp 0, which is before the 2000 cutoff).
-    text_reader = mock.Mock()
+    text_reader = unittest.mock.Mock()
     text_reader.lines = (
         '0:0:0:0:0:0:0:1 | RestrictedRefAddedEvent | admin | 0 | '
         'BITBUCKET/bitbucket | {} | @req | session')
-    result = plugin.CheckRequiredFormat(mock.Mock(), text_reader)
-    self.assertFalse(result)
+    self.assertFalse(plugin.CheckRequiredFormat(
+        unittest.mock.Mock(), text_reader))
 
     # CheckRequiredFormat rejects when _VerifyString fails (non-matching file).
-    text_reader2 = mock.Mock()
+    text_reader2 = unittest.mock.Mock()
     text_reader2.lines = 'Jan 22 07:52:33 hostname sshd[123]: connection'
-    result2 = plugin.CheckRequiredFormat(mock.Mock(), text_reader2)
-    self.assertFalse(result2)
+    self.assertFalse(plugin.CheckRequiredFormat(
+        unittest.mock.Mock(), text_reader2))
 
 
 if __name__ == '__main__':

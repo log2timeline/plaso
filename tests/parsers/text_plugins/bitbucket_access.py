@@ -3,7 +3,9 @@
 """Tests for the Atlassian Bitbucket access log text parser plugin."""
 
 import unittest
+import unittest.mock
 
+from plaso.lib import errors
 from plaso.parsers import mediator as parsers_mediator
 from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import bitbucket_access
@@ -258,37 +260,35 @@ class BitbucketAccessTextPluginTest(test_lib.TextPluginTestCase):
     """Tests _ParseRecord and _ParseTimeElements error paths."""
     plugin = bitbucket_access.BitbucketAccessTextPlugin()
 
-    from plaso.lib import errors
-    from unittest import mock
-
     # _ParseTimeElements raises ParseError on an invalid string input.
     with self.assertRaises(errors.ParseError):
-      plugin._ParseTimeElements('invalid')
+      plugin._ParseTimeElements(  # pylint: disable=protected-access
+          'invalid')
 
     # _ParseRecord raises ParseError on unknown key.
     with self.assertRaises(errors.ParseError):
-      plugin._ParseRecord(None, 'unknown_key', {})
+      plugin._ParseRecord(  # pylint: disable=protected-access
+          None, 'unknown_key', {})
 
     # CheckRequiredFormat returns False for non-matching content.
-    text_reader = mock.Mock()
+    text_reader = unittest.mock.Mock()
     text_reader.lines = 'Jan 22 07:52:33 hostname sshd[123]: connection'
-    self.assertFalse(plugin.CheckRequiredFormat(mock.Mock(), text_reader))
+    self.assertFalse(plugin.CheckRequiredFormat(
+        unittest.mock.Mock(), text_reader))
 
-    # CheckRequiredFormat returns False when _ParseTimeElements raises ParseError.
-    # Use a valid access log line so _VerifyString passes, then _ParseTimeElements
-    # is patched to raise ParseError to cover lines 409-410.
-    from plaso.lib import errors as plaso_errors
-    import unittest.mock as unit_mock
-    with unit_mock.patch.object(
+    # CheckRequiredFormat returns False when _ParseTimeElements raises.
+    with unittest.mock.patch.object(
         plugin, '_ParseTimeElements',
-        side_effect=plaso_errors.ParseError('test')):
-      text_reader2 = mock.Mock()
+        side_effect=errors.ParseError('test')):
+      text_reader2 = unittest.mock.Mock()
       text_reader2.lines = (
           '10.100.253.254 | https | o@OS8A8Sx92x131x0 | eaccru | '
           '2012-10-29 00:06:26,838 | '
           '"GET /scm/test.git/info/refs HTTP/1.1" | '
-          '"" "git/1.7.4.1" | 200 | 101 | 512 | refs, cache:hit | 45 | tmpqqw |')
-      self.assertFalse(plugin.CheckRequiredFormat(mock.Mock(), text_reader2))
+          '"" "git/1.7.4.1" | 200 | 101 | 512 | '
+          'refs, cache:hit | 45 | tmpqqw |')
+      self.assertFalse(plugin.CheckRequiredFormat(
+          unittest.mock.Mock(), text_reader2))
 
 
 if __name__ == '__main__':

@@ -3,7 +3,9 @@
 """Tests for the Atlassian Bitbucket application log text parser plugin."""
 
 import unittest
+import unittest.mock
 
+from plaso.lib import errors
 from plaso.parsers import mediator as parsers_mediator
 from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import atlassian_bitbucket
@@ -163,62 +165,60 @@ class AtlassianBitbucketTextPluginTest(test_lib.TextPluginTestCase):
     """Tests _ParseRecord and _ParseTimeElements error paths."""
     plugin = atlassian_bitbucket.AtlassianBitbucketTextPlugin()
 
-    from plaso.lib import errors
-    from unittest import mock
-
     # _ParseTimeElements raises ParseError on an invalid string input.
     with self.assertRaises(errors.ParseError):
-      plugin._ParseTimeElements('invalid')
+      plugin._ParseTimeElements('invalid')  # pylint: disable=protected-access
 
     # _ParseRecord raises ParseError on unknown key.
     with self.assertRaises(errors.ParseError):
-      plugin._ParseRecord(None, 'unknown_key', {})
+      plugin._ParseRecord(  # pylint: disable=protected-access
+          None, 'unknown_key', {})
 
     # CheckRequiredFormat returns False when only 1 matching line (needs 2).
-    text_reader = mock.Mock()
+    text_reader = unittest.mock.Mock()
     text_reader.lines = (
         '2020-09-08 07:53:45,084 INFO [main] '
         'com.atlassian.bitbucket.internal.boot.log.BuildInfoLogger '
         'Starting Bitbucket 7.4.0\n'
         'Jan 22 07:52:33 not-a-bitbucket-line\n')
-    self.assertFalse(plugin.CheckRequiredFormat(mock.Mock(), text_reader))
+    self.assertFalse(plugin.CheckRequiredFormat(
+        unittest.mock.Mock(), text_reader))
 
     # CheckRequiredFormat returns False when first non-empty line doesn't match.
-    text_reader2 = mock.Mock()
+    text_reader2 = unittest.mock.Mock()
     text_reader2.lines = (
         '\n'
         'Jan 22 07:52:33 hostname sshd[123]: connection\n'
         '2020-09-08 07:53:45,084 INFO [main] '
         'com.atlassian.bitbucket.log.Logger Starting\n')
-    self.assertFalse(plugin.CheckRequiredFormat(mock.Mock(), text_reader2))
+    self.assertFalse(plugin.CheckRequiredFormat(
+        unittest.mock.Mock(), text_reader2))
 
     # CheckRequiredFormat returns False when _VerifyString raises ParseError.
-    # Use content where 2 lines match the regex but the pyparsing grammar fails.
-    # We simulate this by patching _VerifyString to raise ParseError.
-    from plaso.lib import errors as plaso_errors
-    import unittest.mock as unit_mock
-    with unit_mock.patch.object(
+    with unittest.mock.patch.object(
         plugin, '_VerifyString',
-        side_effect=plaso_errors.ParseError('test')):
-      text_reader3 = mock.Mock()
+        side_effect=errors.ParseError('test')):
+      text_reader3 = unittest.mock.Mock()
       text_reader3.lines = (
           '2020-09-08 07:53:45,084 INFO [main] '
           'com.atlassian.bitbucket.log.BuildInfoLogger Starting\n'
           '2022-04-12 05:39:57,408 INFO [tx:thread-2] '
           'c.a.b.m.r.DefaultRepositoryManager Created\n')
-      self.assertFalse(plugin.CheckRequiredFormat(mock.Mock(), text_reader3))
+      self.assertFalse(plugin.CheckRequiredFormat(
+          unittest.mock.Mock(), text_reader3))
 
-    # CheckRequiredFormat returns False when _ParseTimeElements raises ParseError.
-    with unit_mock.patch.object(
+    # CheckRequiredFormat returns False when _ParseTimeElements raises.
+    with unittest.mock.patch.object(
         plugin, '_ParseTimeElements',
-        side_effect=plaso_errors.ParseError('test')):
-      text_reader4 = mock.Mock()
+        side_effect=errors.ParseError('test')):
+      text_reader4 = unittest.mock.Mock()
       text_reader4.lines = (
           '2020-09-08 07:53:45,084 INFO [main] '
           'com.atlassian.bitbucket.log.BuildInfoLogger Starting\n'
           '2022-04-12 05:39:57,408 INFO [tx:thread-2] '
           'c.a.b.m.r.DefaultRepositoryManager Created\n')
-      self.assertFalse(plugin.CheckRequiredFormat(mock.Mock(), text_reader4))
+      self.assertFalse(plugin.CheckRequiredFormat(
+          unittest.mock.Mock(), text_reader4))
 
 
 if __name__ == '__main__':
