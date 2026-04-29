@@ -109,8 +109,7 @@ class ESEDBPlugin(plugins.BasePlugin, dtfabric_helper.DtFabricHelper):
       return self._ReadStructureFromByteStream(value, 0, integer_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError(
-          'Unable to parse integer value with error: {0!s}'.format(
-              exception))
+          f'Unable to parse integer value with error: {exception!s}')
 
   def _ConvertValueBinaryDataToULInt64(self, value):
     """Converts a binary data value into an integer.
@@ -135,8 +134,7 @@ class ESEDBPlugin(plugins.BasePlugin, dtfabric_helper.DtFabricHelper):
       return self._ReadStructureFromByteStream(value, 0, integer_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError(
-          'Unable to parse integer value with error: {0!s}'.format(
-              exception))
+          f'Unable to parse integer value with error: {exception!s}')
 
   def _GetFiletimeRecordValue(self, record_values, value_name):
     """Retrieves a FILETIME record value.
@@ -240,8 +238,8 @@ class ESEDBPlugin(plugins.BasePlugin, dtfabric_helper.DtFabricHelper):
       column_name = record.get_column_name(value_entry)
       if column_name in record_values:
         parser_mediator.ProduceExtractionWarning(
-            '[{0:s}] duplicate column: {1:s} in table: {2:s}'.format(
-                self.NAME, column_name, table_name))
+            f'[{self.NAME:s}] duplicate column: {column_name:s} in table: '
+            f'{table_name:s}')
         continue
 
       value_callback = None
@@ -251,9 +249,9 @@ class ESEDBPlugin(plugins.BasePlugin, dtfabric_helper.DtFabricHelper):
           value_callback = getattr(self, value_callback_method, None)
           if value_callback is None:
             logger.warning((
-                '[{0:s}] missing value callback method: {1:s} for column: '
-                '{2:s} in table: {3:s}').format(
-                    self.NAME, value_callback_method, column_name, table_name))
+                f'[{self.NAME:s}] missing value callback method: '
+                f'{value_callback_method:s} for column: {column_name:s} in '
+                f'table: {table_name:s}'))
 
       if value_callback:
         try:
@@ -264,10 +262,9 @@ class ESEDBPlugin(plugins.BasePlugin, dtfabric_helper.DtFabricHelper):
           logger.error(exception)
           value = None
           parser_mediator.ProduceExtractionWarning((
-              'unable to parse value: {0:s} in record: {1:d} with callback: '
-              '{2:s} in table: {3:s} with error: {4!s}').format(
-                  column_name, record_index, value_callback_method, table_name,
-                  exception))
+              f'unable to parse value: {column_name:s} in record: '
+              f'{record_index:d} with callback: {value_callback_method:s} in '
+              f'table: {table_name:s} with error: {exception!s}'))
 
       else:
         try:
@@ -275,9 +272,9 @@ class ESEDBPlugin(plugins.BasePlugin, dtfabric_helper.DtFabricHelper):
         except ValueError as exception:
           value = None
           parser_mediator.ProduceExtractionWarning((
-              'unable to parse value: {0:s}  in record: {1:d} in table: {2:s} '
-              'with error: {3!s}').format(
-                  column_name, record_index, table_name, exception))
+              f'unable to parse value: {column_name:s}  in record: '
+              f'{record_index:d} in table: {table_name:s} with error: '
+              f'{exception!s}'))
 
       record_values[column_name] = value
 
@@ -310,16 +307,15 @@ class ESEDBPlugin(plugins.BasePlugin, dtfabric_helper.DtFabricHelper):
 
       callback = getattr(self, callback_method, None)
       if callback is None:
-        logger.warning(
-            '[{0:s}] missing callback method: {1:s} for table: {2:s}'.format(
-                self.NAME, callback_method, table_name))
+        logger.warning((
+            f'[{self.NAME:s}] missing callback method: {callback_method:s} '
+            f'for table: {table_name:s}'))
         continue
 
       esedb_table = database.GetTableByName(table_name)
       if not esedb_table:
         if table_name not in self.OPTIONAL_TABLES:
-          logger.warning('[{0:s}] missing table: {1:s}'.format(
-              self.NAME, table_name))
+          logger.warning(f'[{self.NAME:s}] missing table: {table_name:s}')
         continue
 
       # The database is passed in case the database contains table names
