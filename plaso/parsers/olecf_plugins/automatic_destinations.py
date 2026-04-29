@@ -162,7 +162,7 @@ class AutomaticDestinationsOLECFPlugin(
         birth_droid_volume_identifier = ''
         parser_mediator.ProduceExtractionWarning((
             f'unable to read birth droid volume identifier with error: '
-            f'{exception:s}'))
+            f'{exception!s}'))
 
       try:
         birth_droid_file_identifier = self._ParseDistributedTrackingIdentifier(
@@ -172,7 +172,7 @@ class AutomaticDestinationsOLECFPlugin(
         birth_droid_file_identifier = ''
         parser_mediator.ProduceExtractionWarning((
             f'unable to read birth droid file identifier with error: '
-            f'{exception:s}'))
+            f'{exception!s}'))
 
       event_data = AutomaticDestinationsDestListEntryEventData()
       event_data.birth_droid_file_identifier = birth_droid_file_identifier
