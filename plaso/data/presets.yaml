@@ -113,7 +113,7 @@ parsers:
 ---
 name: mactime
 description: Backwards compatibility for mactime parser.
-deprecated: True
+deprecated: true
 parsers:
 - bodyfile
 ---
