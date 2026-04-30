@@ -184,8 +184,7 @@ class EventExtractionWorker(object):
       RuntimeError: if the file-like object cannot be retrieved from
           the file entry.
     """
-    logger.debug('[AnalyzeDataStream] analyzing file: {0:s}'.format(
-        display_name))
+    logger.debug(f'[AnalyzeDataStream] analyzing file: {display_name:s}')
 
     if self._processing_profiler:
       self._processing_profiler.StartTiming('analyzing')
@@ -194,8 +193,8 @@ class EventExtractionWorker(object):
       file_object = file_entry.GetFileObject(data_stream_name=data_stream_name)
       if not file_object:
         raise RuntimeError((
-            'Unable to retrieve file-like object for file entry: '
-            '{0:s}.').format(display_name))
+            f'Unable to retrieve file-like object for file entry: '
+            f'{display_name:s}'))
 
       self._AnalyzeFileObject(file_object, display_name, event_data_stream)
 
@@ -203,8 +202,8 @@ class EventExtractionWorker(object):
       if self._processing_profiler:
         self._processing_profiler.StopTiming('analyzing')
 
-    logger.debug('[AnalyzeDataStream] completed analyzing file: {0:s}'.format(
-        display_name))
+    logger.debug(
+        f'[AnalyzeDataStream] completed analyzing file: {display_name:s}')
 
   def _AnalyzeFileObject(self, file_object, display_name, event_data_stream):
     """Processes a file-like object with analyzers.
@@ -269,9 +268,9 @@ class EventExtractionWorker(object):
     for analyzer_object in self._analyzers:
       for result in analyzer_object.GetResults():
         logger.debug((
-            '[AnalyzeFileObject] attribute {0:s}:{1!s} calculated for '
-            'file: {2:s}.').format(
-                result.attribute_name, result.attribute_value, display_name))
+            f'[AnalyzeFileObject] attribute {result.attribute_name:s}:'
+            f'{result.attribute_value!s} calculated for file: '
+            f'{display_name:s}'))
 
         setattr(event_data_stream, result.attribute_name,
                 result.attribute_value)
@@ -476,9 +475,9 @@ class EventExtractionWorker(object):
       return
 
     display_name = parser_mediator.GetDisplayName()
-    logger.debug(
-        '[ExtractMetadataFromFileEntry] processing file entry: {0:s}'.format(
-            display_name))
+    logger.debug((
+        f'[ExtractMetadataFromFileEntry] processing file entry: '
+        f'{display_name:s}'))
 
     self.processing_status = definitions.STATUS_INDICATOR_EXTRACTING
 
@@ -513,8 +512,8 @@ class EventExtractionWorker(object):
       type_indicators = []
 
       warning_message = (
-          'analyzer failed to determine compressed stream type indicators '
-          'with error: {0!s}').format(exception)
+          f'analyzer failed to determine compressed stream type indicators '
+          f'with error: {exception!s}')
       parser_mediator.ProduceExtractionWarning(
           warning_message, path_spec=path_spec)
 
@@ -539,8 +538,8 @@ class EventExtractionWorker(object):
       type_indicators = []
 
       warning_message = (
-          'analyzer failed to determine storage media image type indicators '
-          'with error: {0!s}').format(exception)
+          f'analyzer failed to determine storage media image type indicators '
+          f'with error: {exception!s}')
       parser_mediator.ProduceExtractionWarning(
           warning_message, path_spec=path_spec)
 
@@ -596,7 +595,7 @@ class EventExtractionWorker(object):
 
     except (IOError, errors.MaximumRecursionDepth) as exception:
       warning_message = (
-          'unable to process archive file with error: {0!s}').format(exception)
+          f'unable to process archive file with error: {exception!s}')
       parser_mediator.ProduceExtractionWarning(
           warning_message, path_spec=generated_path_spec)
 
@@ -641,8 +640,7 @@ class EventExtractionWorker(object):
 
     except (IOError, dfvfs_errors.ScannerError) as exception:
       warning_message = (
-          'unable to process storage media image with error: {0!s}').format(
-              exception)
+          f'unable to process storage media image with error: {exception!s}')
       parser_mediator.ProduceExtractionWarning(
           warning_message, path_spec=storage_media_image_path_spec)
 
@@ -666,9 +664,8 @@ class EventExtractionWorker(object):
     if number_of_type_indicators > 1:
       display_name = parser_mediator.GetDisplayName()
       logger.debug((
-          'Found multiple format type indicators: {0:s} for '
-          'compressed stream file: {1:s}').format(
-              ', '.join(type_indicators), display_name))
+          f'Found multiple format type indicators: {type_indicators!s} for '
+          f'compressed stream file: {display_name:s}'))
 
     for type_indicator in type_indicators:
       if type_indicator == dfvfs_definitions.TYPE_INDICATOR_BZIP2:
@@ -691,8 +688,8 @@ class EventExtractionWorker(object):
         compressed_stream_path_spec = None
 
         warning_message = (
-            'unsupported compressed stream format type indicator: '
-            '{0:s}').format(type_indicator)
+            f'unsupported compressed stream format type indicator: '
+            f'{type_indicator:s}')
         parser_mediator.ProduceExtractionWarning(
             warning_message, path_spec=path_spec)
 
@@ -727,8 +724,8 @@ class EventExtractionWorker(object):
 
       except dfvfs_errors.BackEndError as exception:
         warning_message = (
-            'unable to process directory entry: {0:s} with error: '
-            '{1!s}').format(sub_file_entry.name, exception)
+            f'unable to process directory entry: {sub_file_entry.name:s} with '
+            f'error: {exception!s}')
         parser_mediator.ProduceExtractionWarning(
             warning_message, path_spec=file_entry.path_spec)
         continue
@@ -762,7 +759,7 @@ class EventExtractionWorker(object):
     """
     display_name = parser_mediator.GetDisplayName()
     logger.debug(
-        '[ProcessFileEntry] processing file entry: {0:s}'.format(display_name))
+            f'[ProcessFileEntry] processing file entry: {display_name:s}')
 
     if self._IsMetadataFile(file_entry):
       self._ProcessMetadataFile(parser_mediator, file_entry)
@@ -775,9 +772,8 @@ class EventExtractionWorker(object):
 
         if self._CanSkipDataStream(file_entry, data_stream):
           logger.debug((
-              '[ProcessFileEntry] Skipping datastream {0:s} for {1:s}: '
-              '{2:s}').format(
-                  data_stream.name, file_entry.type_indicator, display_name))
+              f'[ProcessFileEntry] Skipping datastream {data_stream.name:s} '
+              f'for {file_entry.type_indicator:s}: {display_name:s}'))
           continue
 
         self._ProcessFileEntryDataStream(
@@ -790,8 +786,7 @@ class EventExtractionWorker(object):
         self._ProcessFileEntryDataStream(parser_mediator, file_entry, None)
 
     logger.debug(
-        '[ProcessFileEntry] done processing file entry: {0:s}'.format(
-            display_name))
+            f'[ProcessFileEntry] done processing file entry: {display_name:s}')
 
   def _ProcessFileEntryDataStream(
       self, parser_mediator, file_entry, data_stream):
@@ -807,8 +802,8 @@ class EventExtractionWorker(object):
     display_name = parser_mediator.GetDisplayName()
     data_stream_name = getattr(data_stream, 'name', '') or ''
     logger.debug((
-        '[ProcessFileEntryDataStream] processing data stream: "{0:s}" of '
-        'file entry: {1:s}').format(data_stream_name, display_name))
+        f'[ProcessFileEntryDataStream] processing data stream: '
+        f'"{data_stream_name:s}" of file entry: {display_name:s}'))
 
     event_data_stream = None
     if data_stream:
@@ -840,7 +835,7 @@ class EventExtractionWorker(object):
     skip_content_extraction = self._CanSkipContentExtraction(file_entry)
     if skip_content_extraction:
       display_name = parser_mediator.GetDisplayName()
-      logger.debug('Skipping content extraction of: {0:s}'.format(display_name))
+      logger.debug(f'Skipping content extraction of: {display_name:s}')
       self.processing_status = definitions.STATUS_INDICATOR_IDLE
       return
 
@@ -901,8 +896,8 @@ class EventExtractionWorker(object):
         if len(results) > 1:
           display_name = parser_mediator.GetDisplayName()
           logger.debug((
-              'Found multiple format type indicators: {0!s} for archive file: '
-              '{1:s}').format(results, display_name))
+              f'Found multiple format type indicators: {results!s} for archive '
+              f'file: {display_name:s}'))
 
         self._ExtractContentFromDataStream(
              parser_mediator, file_entry, data_stream.name)
@@ -1029,7 +1024,7 @@ class EventExtractionWorker(object):
 
     if file_entry is None:
       display_name = parser_mediator.GetDisplayNameForPathSpec(path_spec)
-      logger.warning('Unable to open file entry: {0:s}'.format(display_name))
+      logger.warning(f'Unable to open file entry: {display_name:s}')
       self.processing_status = definitions.STATUS_INDICATOR_IDLE
       return
 
