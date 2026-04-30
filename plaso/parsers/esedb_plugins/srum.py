@@ -231,8 +231,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
 
     value_length = len(value)
     if value_length not in (4, 8):
-      raise errors.ParseError('Unsupported value data size: {0:d}'.format(
-          value_length))
+      raise errors.ParseError(f'Unsupported value data size: {value_length:d}')
 
     if value_length == 4:
       floating_point_map = self._GetDataTypeMap('float32le')
@@ -245,8 +244,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
       return self._ReadStructureFromByteStream(value, 0, floating_point_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError(
-          'Unable to parse floating-point value with error: {0!s}'.format(
-              exception))
+          f'Unable to parse floating-point value with error: {exception!s}')
 
   def _GetIdentifierMappings(self, parser_mediator, cache, database):
     """Retrieves the identifier mappings from SruDbIdMapTable table.
@@ -386,9 +384,9 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
 
     identifier_type = record_values.get('IdType', None)
     if identifier_type not in self._SUPPORTED_IDENTIFIER_TYPES:
-      parser_mediator.ProduceExtractionWarning(
-          'unsupported IdType value: {0!s} in table: SruDbIdMapTable'.format(
-              identifier_type))
+      parser_mediator.ProduceExtractionWarning((
+          f'unsupported IdType value: {identifier_type!s} in table: '
+          f'SruDbIdMapTable'))
       return None, None
 
     mapped_value = record_values.get('IdBlob', None)
@@ -442,7 +440,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
 
       if identifier in identifier_mappings:
         parser_mediator.ProduceExtractionWarning(
-            'identifier: {0:d} already exists in mappings.'.format(identifier))
+            f'identifier: {identifier:d} already exists in mappings.')
         continue
 
       identifier_mappings[identifier] = mapped_value

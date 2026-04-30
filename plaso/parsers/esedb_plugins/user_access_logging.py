@@ -203,7 +203,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
       str: string representation of the GUID.
     """
     guid_value = uuid.UUID(bytes_le=value)
-    return '{{{0!s}}}'.format(guid_value).lower()
+    return f'{{{guid_value!s}}}'.lower()
 
   def _ConvertIPAddressValue(self, value):
     """Converts bytes representation of an IP to a string.
@@ -252,8 +252,8 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
             value_mappings=self._CLIENTS_TABLE_VALUE_MAPPINGS)
       except (UnicodeDecodeError, ValueError):
         parser_mediator.ProduceExtractionWarning((
-            'Unable to retrieve record values from record: {0:d} '
-            'in table: {1:s}').format(record_index, table.name))
+            f'Unable to retrieve record values from record: {record_index:d} '
+            f'in table: {table.name:s}'))
         continue
 
       event_data = UserAccessLoggingClientsEventsData()
@@ -309,8 +309,8 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
             value_mappings=self._ROLE_ACCESS_TABLE_VALUE_MAPPINGS)
       except (UnicodeDecodeError, ValueError):
         parser_mediator.ProduceExtractionWarning((
-            'Unable to retrieve record values from record: {0:d} '
-            'in table: {1:s}').format(record_index, table.name))
+            f'Unable to retrieve record values from record: {record_index:d} '
+            f'in table: {table.name:s}'))
         continue
 
       event_data = UserAccessLoggingRoleAccessEventsData()
@@ -353,8 +353,8 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
             value_mappings=self._DNS_TABLE_VALUE_MAPPINGS)
       except (UnicodeDecodeError, ValueError):
         parser_mediator.ProduceExtractionWarning((
-            'Unable to retrieve record values from record: {0:d} '
-            'in table: {1:s}').format(record_index, table.name))
+            f'Unable to retrieve record values from record: {record_index:d} '
+            f'in table: {table.name:s}'))
         continue
 
       event_data = UserAccessLoggingDNSEventData()
@@ -394,8 +394,8 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
             value_mappings=self._VIRTUALMACHINES_TABLE_VALUE_MAPPINGS)
       except (UnicodeDecodeError, ValueError):
         parser_mediator.ProduceExtractionWarning((
-            'Unable to retrieve record values from record: {0:d} '
-            'in table: {1:s}').format(record_index, table.name))
+            f'Unable to retrieve record values from record: {record_index:d} '
+            f'in table: {table.name:s}'))
         continue
 
       event_data = UserAccessLoggingVirtualMachinesEventData()
@@ -439,8 +439,8 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
           system_identity_file_path_spec)
     except RuntimeError as exception:
       message = (
-          'Unable to open SystemIdentity.mdb file: {0:s} with error: '
-          '{1!s}'.format(kwargs['location'], exception))
+          f'Unable to open SystemIdentity.mdb file: {kwargs["location"]:s} '
+          f'with error: {exception!s}')
       parser_mediator.ProduceExtractionWarning(message)
 
     return system_identity_file_entry
@@ -460,8 +460,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
       database.Open(file_object)
     except (IOError, ValueError) as exception:
       parser_mediator.ProduceExtractionWarning(
-          'unable to open SystemInformation.mdb with error: {0!s}'.format(
-              exception))
+          f'unable to open SystemInformation.mdb with error: {exception!s}')
       return
 
     role_ids_table = database.GetTableByName('ROLE_IDS')
@@ -510,8 +509,8 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
             value_mappings=self._ROLE_IDS_TABLE_VALUE_MAPPINGS)
       except (UnicodeDecodeError, ValueError):
         parser_mediator.ProduceExtractionWarning((
-            'Unable to retrieve record values from record: {0:d} '
-            'in table: {1:s}').format(record_index, table.name))
+            f'Unable to retrieve record values from record: {record_index:d} '
+            f'in table: {table.name:s}'))
         continue
 
       role_identifier = record_values.get('RoleGuid', None)
@@ -546,8 +545,8 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
             parser_mediator, table.name, record_index, esedb_record)
       except (UnicodeDecodeError, ValueError):
         parser_mediator.ProduceExtractionWarning((
-            'Unable to retrieve record values from record: {0:d} '
-            'in table: {1:s}').format(record_index, table.name))
+            f'Unable to retrieve record values from record: {record_index:d} '
+            f'in table: {table.name:s}'))
         continue
 
       event_data = UserAccessLoggingSystemIdentityEventdata()

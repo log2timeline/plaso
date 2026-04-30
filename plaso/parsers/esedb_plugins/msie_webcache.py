@@ -209,8 +209,9 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
     """
     if value:
       value = value.decode('utf-8')
-      header_values = [value.strip() for value in value.split('\r\n') if value]
-      return '[{0:s}]'.format('; '.join(header_values))
+      header_values = '; '.join(
+          [value.strip() for value in value.split('\r\n') if value])
+      return f'[{header_values:s}]'
 
     return None
 
@@ -262,8 +263,8 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
 
       except UnicodeDecodeError:
         parser_mediator.ProduceExtractionWarning((
-            'Unable to retrieve record values from record: {0:d} '
-            'in table: {1:s}').format(record_index, table.name))
+            f'Unable to retrieve record values from record: {record_index:d} '
+            f'in table: {table.name:s}'))
         continue
 
       if (container_name in self._SUPPORTED_CONTAINER_NAMES or
@@ -363,8 +364,8 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
 
       except UnicodeDecodeError:
         parser_mediator.ProduceExtractionWarning((
-            'Unable to retrieve record values from record: {0:d} '
-            'in table: {1:s}').format(record_index, table.name))
+            f'Unable to retrieve record values from record: {record_index:d} '
+            f'in table: {table.name:s}'))
         continue
 
       cookie_name = self._CookieHexToAscii(record_values.get('Name', None))
@@ -433,18 +434,18 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
         continue
 
       if container_name in self._IGNORED_CONTAINER_NAMES:
-        parser_mediator.ProduceExtractionWarning(
-            'Skipped container (ContainerId: {0:d}, Name: {1:s})'.format(
-                container_identifier, container_name))
+        parser_mediator.ProduceExtractionWarning((
+            f'Skipped container (ContainerId: {container_identifier:d}, Name: '
+            f'{container_name:s})'))
         continue
 
-      table_name = 'Container_{0:d}'.format(container_identifier)
-      esedb_table = database.GetTableByName(table_name)
+      esedb_table = database.GetTableByName(
+          f'Container_{container_identifier:d}')
       if esedb_table:
         self._ParseContainerTable(parser_mediator, esedb_table, container_name)
 
-      table_name = 'CookieEntryEx_{0:d}'.format(container_identifier)
-      esedb_table = database.GetTableByName(table_name)
+      esedb_table = database.GetTableByName(
+          f'CookieEntryEx_{container_identifier:d}')
       if esedb_table:
         self._ParseCookieExTable(parser_mediator, esedb_table)
 
