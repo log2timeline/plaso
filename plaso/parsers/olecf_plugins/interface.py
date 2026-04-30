@@ -34,8 +34,7 @@ class OLECFPlugin(plugins.BasePlugin):
       filetime = olecf_item.get_creation_time_as_integer()
     except OverflowError as exception:
       logger.warning(
-          'Unable to read the creation time with error: {0!s}'.format(
-              exception))
+          f'Unable to read the creation time with error: {exception!s}')
       return None
 
     # Office template documents sometimes contain a creation time
@@ -61,8 +60,7 @@ class OLECFPlugin(plugins.BasePlugin):
       filetime = olecf_item.get_modification_time_as_integer()
     except OverflowError as exception:
       logger.warning(
-          'Unable to read the modification time with error: {0!s}'.format(
-              exception))
+          f'Unable to read the modification time with error: {exception!s}')
       return None
 
     if filetime == 0:
