@@ -25,7 +25,7 @@ class ChromeHistoryTypedCountFormatterHelper(
       elif typed_count == 1:
         url_typed_string = '(URL typed 1 time)'
       elif typed_count > 1:
-        url_typed_string = '(URL typed {0:d} times)'.format(typed_count)
+        url_typed_string = f'(URL typed {typed_count:d} times)'
       else:
         url_typed_string = typed_count
 

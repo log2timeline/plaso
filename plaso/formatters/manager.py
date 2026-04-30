@@ -38,8 +38,8 @@ class FormattersManager(object):
     identifier = formatter_helper_class.IDENTIFIER.lower()
     if identifier in cls._custom_formatter_helpers:
       raise KeyError((
-          'Custom event formatter helper already set for identifier: '
-          '{0:s}.').format(formatter_helper_class.IDENTIFIER))
+          f'Custom event formatter helper already set for identifier: '
+          f'{formatter_helper_class.IDENTIFIER:s}'))
 
     cls._custom_formatter_helpers[identifier] = formatter_helper_class()
 

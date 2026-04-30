@@ -246,18 +246,14 @@ class EventFormatter(object):
       parser_chain = event_values.get('_parser_chain', None) or 'N/A'
 
       error_message = (
-          'unable to format string: "{0:s}" missing required event '
-          'value: {1!s}').format(format_string, exception)
-      error_message = (
-          'Event: {0:s} data type: {1:s} display name: {2:s} '
-          'parser chain: {3:s} with error: {4:s}').format(
-              event_identifier, data_type, display_name, parser_chain,
-              error_message)
+          f'Event: {event_identifier:s} data type: {data_type:s} display '
+          f'name: {display_name:s} parser chain: {parser_chain:s} unable to '
+          f'format string: "{format_string:s}" with error: {exception!s}')
       logger.error(error_message)
 
       attribute_values = []
       for attribute, value in event_values.items():
-        attribute_values.append('{0:s}: {1!s}'.format(attribute, value))
+        attribute_values.append(f'{attribute:s}: {value!s}')
 
       message_string = ' '.join(attribute_values)
 
@@ -267,12 +263,10 @@ class EventFormatter(object):
       event_identifier = event_values.get('uuid', None) or 'N/A'
       parser_chain = event_values.get('_parser_chain', None) or 'N/A'
 
-      error_message = 'Unicode decode error: {0!s}'.format(exception)
       error_message = (
-          'Event: {0:s} data type: {1:s} display name: {2:s} '
-          'parser chain: {3:s} with error: {4:s}').format(
-              event_identifier, data_type, display_name, parser_chain,
-              error_message)
+          f'Event: {event_identifier:s} data type: {data_type:s} display '
+          f'name: {display_name:s} parser chain: {parser_chain:s} '
+          f'Unicode decode error: {exception!s}')
       logger.error(error_message)
 
       message_string = ''
@@ -414,7 +408,7 @@ class BasicEventFormatter(EventFormatter):
 
     # Truncate the short message string if necessary.
     if len(short_message_string) > 80:
-      short_message_string = '{0:s}...'.format(short_message_string[:77])
+      short_message_string = f'{short_message_string[:77]:s}...'
 
     return short_message_string
 
@@ -476,8 +470,8 @@ class ConditionalEventFormatter(EventFormatter):
 
       if len(set(attribute_names)) > 1:
         raise RuntimeError((
-            'Invalid format string piece: [{0:s}] contains more than 1 '
-            'attribute name.').format(format_string_piece))
+            f'Invalid format string piece: [{format_string_piece:s}] contains '
+            f'more than 1 attribute name.'))
 
       if not attribute_names:
         # The text format string piece is stored as an empty map entry to keep
@@ -588,6 +582,6 @@ class ConditionalEventFormatter(EventFormatter):
 
     # Truncate the short message string if necessary.
     if len(short_message_string) > 80:
-      short_message_string = '{0:s}...'.format(short_message_string[:77])
+      short_message_string = f'{short_message_string[:77]:s}...'
 
     return short_message_string

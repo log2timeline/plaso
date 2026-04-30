@@ -19,8 +19,10 @@ class NTFSFileReferenceFormatterHelper(interface.CustomEventFormatterHelper):
     """
     file_reference = event_values.get('file_reference', None)
     if file_reference:
-      event_values['file_reference'] = '{0:d}-{1:d}'.format(
-          file_reference & 0xffffffffffff, file_reference >> 48)
+      mft_entry_number = file_reference & 0xffffffffffff
+      sequence_number = file_reference >> 48
+      event_values['file_reference'] = (
+          f'{mft_entry_number:d}-{sequence_number:d}')
 
 
 class NTFSParentFileReferenceFormatterHelper(
@@ -38,8 +40,10 @@ class NTFSParentFileReferenceFormatterHelper(
     """
     parent_file_reference = event_values.get('parent_file_reference', None)
     if parent_file_reference:
-      event_values['parent_file_reference'] = '{0:d}-{1:d}'.format(
-          parent_file_reference & 0xffffffffffff, parent_file_reference >> 48)
+      mft_entry_number = parent_file_reference & 0xffffffffffff
+      sequence_number = parent_file_reference >> 48
+      event_values['parent_file_reference'] = (
+          f'{mft_entry_number:d}-{sequence_number:d}')
 
 
 class NTFSPathHintsFormatterHelper(interface.CustomEventFormatterHelper):

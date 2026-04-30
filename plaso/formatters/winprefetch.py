@@ -45,8 +45,7 @@ class WindowsPrefetchVolumesStringFormatterHelper(
       if not volume_serial_numbers:
         volume_serial_number = 'UNKNOWN'
       else:
-        volume_serial_number = '0x{0:08X}'.format(
-            volume_serial_numbers[volume_index])
+        volume_serial_number = f'0x{volume_serial_numbers[volume_index]:08X}'
 
       if not volume_device_paths:
         volume_device_path = 'UNKNOWN'
@@ -54,8 +53,8 @@ class WindowsPrefetchVolumesStringFormatterHelper(
         volume_device_path = volume_device_paths[volume_index]
 
       volumes_strings.append((
-          'volume: {0:d} [serial number: {1:s}, device path: {2:s}]').format(
-              volume_index + 1, volume_serial_number, volume_device_path))
+          f'volume: {volume_index + 1:d} [serial number: '
+          f'{volume_serial_number:s}, device path: {volume_device_path:s}]'))
 
     if volumes_strings:
       event_values['volumes_string'] = ', '.join(volumes_strings)

@@ -58,7 +58,7 @@ class DefaultEventFormatter(interface.BasicEventFormatter):
           isinstance(value[0], dfdatetime_interface.DateTimeValues)):
         continue
 
-      text_pieces.append('{0:s}: {1!s}'.format(name, value))
+      text_pieces.append(f'{name:s}: {value!s}')
 
     return super(DefaultEventFormatter, self)._FormatMessage(
         format_string, {'attribute_values': ' '.join(text_pieces)})

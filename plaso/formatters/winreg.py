@@ -30,10 +30,10 @@ class WindowsRegistryValuesFormatterHelper(
         if not data:
           data = '(empty)'
         elif isinstance(data, bytes):
-          data = '({0:d} bytes)'.format(len(data))
+          data = f'({len(data):d} bytes)'
 
         value_strings.append(
-            '{0:s}: [{1:s}] {2:s}'.format(name, data_type, data))
+            f'{name:s}: [{data_type:s}] {data:s}')
 
       values_string = ' '.join(value_strings)
 
