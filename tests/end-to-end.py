@@ -1328,8 +1328,8 @@ class ImageExportTestCase(TestCase):
 
       if not os.path.exists(reference_hashes_file_path):
         logging.error((
-                f'No such reference hashes file: '
-                f'{reference_hashes_file_path:s}'))
+            f'No such reference hashes file: '
+            f'{reference_hashes_file_path:s}'))
         return False
 
       with open(reference_hashes_file_path, 'r',
