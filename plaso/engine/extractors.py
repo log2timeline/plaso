@@ -377,7 +377,7 @@ class PathSpecExtractor(object):
         path_spec_string = self._GetPathSpecificationString(
             sub_file_entry.path_spec)
         logger.warning((
-            f'Unable to process file: {path_spec_string} with error: '
+            f'Unable to process file: {path_spec_string:s} with error: '
             f'{exception!s}'))
         continue
 
