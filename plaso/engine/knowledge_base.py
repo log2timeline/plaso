@@ -57,8 +57,9 @@ class KnowledgeBase(object):
     """
     name = environment_variable.name.upper()
     if name in self._environment_variables:
-      raise KeyError('Environment variable: {0:s} already exists.'.format(
-          environment_variable.name))
+      raise KeyError((
+          f'Environment variable: {environment_variable.name:s} already '
+          f'exists.'))
 
     self._environment_variables[name] = environment_variable
 
@@ -133,9 +134,9 @@ class KnowledgeBase(object):
       try:
         self.SetCodepage(system_configuration.code_page)
       except ValueError:
-        logger.warning(
-            'Unsupported codepage: {0:s}, defaulting to {1:s}'.format(
-                system_configuration.code_page, self._codepage))
+        logger.warning((
+            f'Unsupported codepage: {system_configuration.code_page:s}, '
+            f'defaulting to {self._codepage:s}'))
 
     self._hostnames[self._active_session] = system_configuration.hostname
 
@@ -156,9 +157,9 @@ class KnowledgeBase(object):
       try:
         self.SetTimeZone(system_configuration.time_zone)
       except ValueError:
-        logger.warning(
-            'Unsupported time zone: {0:s}, defaulting to {1:s}'.format(
-                system_configuration.time_zone, self._time_zone.zone))
+        logger.warning((
+            f'Unsupported time zone: {system_configuration.time_zone:s}, '
+            f'defaulting to {self._time_zone.zone:s}'))
 
   def SetActiveSession(self, session_identifier):
     """Sets the active session.
@@ -182,7 +183,7 @@ class KnowledgeBase(object):
       codecs.getencoder(codepage)
       self._codepage = codepage
     except LookupError:
-      raise ValueError('Unsupported codepage: {0:s}'.format(codepage))
+      raise ValueError(f'Unsupported codepage: {codepage:s}')
 
   def SetEnvironmentVariable(self, environment_variable):
     """Sets an environment variable.
@@ -222,7 +223,7 @@ class KnowledgeBase(object):
     try:
       self._time_zone = pytz.timezone(time_zone)
     except pytz.UnknownTimeZoneError:
-      raise ValueError('Unsupported time zone: {0!s}'.format(time_zone))
+      raise ValueError('Unsupported time zone: {time_zone!s}')
 
   def SetValue(self, identifier, value):
     """Sets a value by identifier.

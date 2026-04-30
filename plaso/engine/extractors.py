@@ -119,7 +119,7 @@ class EventDataExtractor(object):
         parser_filter_expression=parser_filter_expression)
 
     active_parser_names = ', '.join(sorted(self._parsers.keys()))
-    logger.debug('Active parsers: {0:s}'.format(active_parser_names))
+    logger.debug(f'Active parsers: {active_parser_names:s}')
 
     self._filestat_parser = self._parsers.get('filestat', None)
     if 'filestat' in self._parsers:
@@ -190,16 +190,16 @@ class EventDataExtractor(object):
     # We catch IOError so we can determine the parser that generated the error.
     except (IOError, dfvfs_errors.BackEndError) as exception:
       display_name = parser_mediator.GetDisplayName(file_entry=file_entry)
-      logger.warning(
-          '{0:s} unable to parse file: {1:s} with error: {2!s}'.format(
-              parser.NAME, display_name, exception))
+      logger.warning((
+          f'{parser.NAME:s} unable to parse file: {display_name:s} with error: '
+          f'{exception!s}'))
       result = self._PARSE_RESULT_FAILURE
 
     except errors.WrongParser as exception:
       display_name = parser_mediator.GetDisplayName(file_entry=file_entry)
-      logger.debug(
-          '{0:s} unable to parse file: {1:s} with error: {2!s}'.format(
-              parser.NAME, display_name, exception))
+      logger.debug((
+          f'{parser.NAME:s} unable to parse file: {display_name:s} with error: '
+          f'{exception!s}'))
       result = self._PARSE_RESULT_UNSUPPORTED
 
     parser_mediator.SampleMemoryUsage(parser.NAME)
@@ -232,8 +232,7 @@ class EventDataExtractor(object):
     for parser_name in parser_names:
       parser = self._parsers.get(parser_name, None)
       if not parser:
-        raise RuntimeError(
-            'Parser object missing for parser: {0:s}'.format(parser_name))
+        raise RuntimeError(f'Parser object missing for parser: {parser_name:s}')
 
       if parser.FILTERS:
         if not self._CheckParserCanProcessFileEntry(parser, file_entry):
@@ -242,8 +241,8 @@ class EventDataExtractor(object):
 
       display_name = parser_mediator.GetDisplayName(file_entry=file_entry)
       logger.debug((
-          '[ParseFileEntryWithParsers] parsing file: {0:s} with parser: '
-          '{1:s}').format(display_name, parser_name))
+          f'[ParseFileEntryWithParsers] parsing file: {display_name:s} with '
+          f'parser: {parser_name:s}'))
 
       parse_result = self._ParseFileEntryWithParser(
           parser_mediator, parser, file_entry, file_object=file_object)
@@ -377,9 +376,9 @@ class PathSpecExtractor(object):
       except dfvfs_errors.BackEndError as exception:
         path_spec_string = self._GetPathSpecificationString(
             sub_file_entry.path_spec)
-        logger.warning(
-            'Unable to process file: {0:s} with error: {1!s}'.format(
-                path_spec_string.replace('\n', ';'), exception))
+        logger.warning((
+            f'Unable to process file: {path_spec_string} with error: '
+            f'{exception!s}'))
         continue
 
       # For TSK-based file entries only, ignore the virtual /$OrphanFiles
@@ -401,7 +400,7 @@ class PathSpecExtractor(object):
       except (
           IOError, dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
           dfvfs_errors.PathSpecError) as exception:
-        logger.warning('{0!s}'.format(exception))
+        logger.warning(f'{exception!s}')
 
   def _ExtractPathSpecsFromFile(self, file_entry):
     """Extracts path specification from a file.
@@ -453,8 +452,7 @@ class PathSpecExtractor(object):
     except (
         dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
         dfvfs_errors.PathSpecError) as exception:
-      logger.error('Unable to open file system with error: {0!s}'.format(
-          exception))
+      logger.error(f'Unable to open file system with error: {exception!s}')
 
     if file_system:
       try:
@@ -474,7 +472,7 @@ class PathSpecExtractor(object):
       except (
           dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
           dfvfs_errors.PathSpecError) as exception:
-        logger.warning('{0!s}'.format(exception))
+        logger.warning(f'{exception!s}')
 
   def _GetPathSpecificationString(self, path_spec):
     """Retrieves a printable string representation of the path specification.
@@ -512,19 +510,18 @@ class PathSpecExtractor(object):
     except (
         dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
         dfvfs_errors.PathSpecError) as exception:
-      logger.error('Unable to open file entry with error: {0!s}'.format(
-          exception))
+      logger.error(f'Unable to open file entry with error: {exception!s}')
 
     if not file_entry:
       path_spec_string = self._GetPathSpecificationString(path_spec)
-      logger.warning('Unable to open: {0:s}'.format(path_spec_string))
+      logger.warning(f'Unable to open: {path_spec_string:s}')
 
     elif (not file_entry.IsDirectory() and not file_entry.IsFile() and
           not file_entry.IsDevice()):
       path_spec_string = self._GetPathSpecificationString(path_spec)
       logger.warning((
-          'Source path specification not a device, file or directory.\n'
-          '{0:s}').format(path_spec_string))
+          f'Source path specification not a device, file or directory.\n'
+          f'{path_spec_string:s}'))
 
     elif file_entry.IsFile():
       yield path_spec
