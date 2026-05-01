@@ -117,7 +117,7 @@ class AndroidWebViewPlugin(
     else:
       scheme = 'http'
 
-    url = '{0:s}://{1:s}{2:s}'.format(scheme, hostname, path)
+    url = f'{scheme:s}://{hostname:s}{path:s}'
 
     event_data = AndroidWebViewCookieEventData()
     event_data.cookie_name = cookie_name

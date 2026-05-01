@@ -103,10 +103,9 @@ class WinRegistryParser(interface.FileObjectParser):
           plugin_key_path = plugin_key_path.lower()
           if plugin_key_path in self._plugins_per_key_path:
             logger.warning((
-                'Windows Registry key path: {0:s} defined by plugin: {1:s} '
-                'already set by plugin: {2:s}').format(
-                    plugin_key_path, plugin_object.NAME,
-                    self._plugins_per_key_path[plugin_key_path].NAME))
+                f'Windows Registry key path: {plugin_key_path:s} defined '
+                f'by plugin: {plugin_object.NAME:s} already set by plugin: '
+                f'{self._plugins_per_key_path[plugin_key_path].NAME:s}'))
             continue
 
           self._plugins_per_key_path[plugin_key_path] = plugin_object
@@ -135,7 +134,7 @@ class WinRegistryParser(interface.FileObjectParser):
       plugin.UpdateChainAndProcess(parser_mediator, registry_key)
     except (IOError, dfwinreg_errors.WinRegistryValueError) as exception:
       parser_mediator.ProduceExtractionWarning(
-          'in key: {0:s} error: {1!s}'.format(registry_key.path, exception))
+          f'in key: {registry_key.path:s} error: {exception!s}')
 
   def _NormalizeKeyPath(self, key_path):
     """Normalizes a Windows Registry key path.
@@ -168,8 +167,7 @@ class WinRegistryParser(interface.FileObjectParser):
     """
     matching_plugin = None
 
-    logger.debug('Parsing Windows Registry key: {0:s}'.format(
-        registry_key.path))
+    logger.debug(f'Parsing Windows Registry key: {registry_key.path:s}')
 
     normalized_key_path = self._NormalizeKeyPath(registry_key.path)
     if self._path_filter and self._path_filter.CheckPath(normalized_key_path):
@@ -216,7 +214,7 @@ class WinRegistryParser(interface.FileObjectParser):
 
       except IOError as exception:
         parser_mediator.ProduceExtractionWarning(
-            'in key: {0:s} error: {1!s}'.format(registry_key.path, exception))
+            f'in key: {registry_key.path:s} error: {exception!s}')
 
   def _ParseKeysFromFindSpecs(self, parser_mediator, win_registry, find_specs):
     """Parses the Registry keys from FindSpecs.
@@ -249,8 +247,7 @@ class WinRegistryParser(interface.FileObjectParser):
       registry_file.Open(file_object)
     except IOError as exception:
       parser_mediator.ProduceExtractionWarning(
-          'unable to open Windows Registry file with error: {0!s}'.format(
-              exception))
+          f'unable to open Windows Registry file with error: {exception!s}')
       return
 
     try:
@@ -269,10 +266,9 @@ class WinRegistryParser(interface.FileObjectParser):
 
         elif not self._ARTIFACTS_FILTER_HELPER.CheckKeyCompatibility(
             key_path_prefix):
-          logger.warning((
-              'Artifacts filters are not supported for Windows Registry '
-              'file with key path prefix: "{0:s}".').format(
-                  key_path_prefix))
+          logger.warning(
+              f'Artifacts filters are not supported for Windows Registry '
+              f'file with key path prefix: "{key_path_prefix:s}".')
 
         else:
           win_registry.MapFile(key_path_prefix, registry_file)
@@ -284,7 +280,7 @@ class WinRegistryParser(interface.FileObjectParser):
               parser_mediator.registry_find_specs)
 
     except IOError as exception:
-      parser_mediator.ProduceExtractionWarning('{0!s}'.format(exception))
+      parser_mediator.ProduceExtractionWarning(f'{exception!s}')
 
     finally:
       if registry_file:

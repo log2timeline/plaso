@@ -237,7 +237,8 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
     # Paths are built top level to root so we need to reverse the list to
     # represent them in the traditional order.
     paths.reverse()
-    return '/{0:s}/'.format('/'.join(paths))
+    path_string = '/'.join(paths)
+    return f'/{path_string:s}/'
 
   def ParseCloudEntryRow(
       self, parser_mediator, query, row, cache=None, database=None,

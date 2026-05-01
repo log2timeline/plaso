@@ -188,7 +188,7 @@ class AndroidTangoProfilePlugin(interface.SQLitePlugin):
       first_name = codecs.decode(decoded_text, 'utf-8')
     except ValueError:
       parser_mediator.ProduceExtractionWarning(
-          'unable to parse first name: {0:s}'.format(first_name))
+          f'unable to parse first name: {first_name:s}')
 
     friend_request_message = self._GetRowValue(
         query_hash, row, 'friend_request_message')
@@ -197,7 +197,7 @@ class AndroidTangoProfilePlugin(interface.SQLitePlugin):
       friend_request_message = codecs.decode(decoded_text, 'utf-8')
     except ValueError:
       parser_mediator.ProduceExtractionWarning(
-          'unable to parse status: {0:s}'.format(friend_request_message))
+          f'unable to parse status: {friend_request_message:s}')
 
     is_friend = self._GetRowValue(query_hash, row, 'friend')
 
@@ -207,7 +207,7 @@ class AndroidTangoProfilePlugin(interface.SQLitePlugin):
       last_name = codecs.decode(decoded_text, 'utf-8')
     except ValueError:
       parser_mediator.ProduceExtractionWarning(
-          'unable to parse last name: {0:s}'.format(last_name))
+          f'unable to parse last name: {last_name:s}')
 
     status = self._GetRowValue(query_hash, row, 'status')
     try:
@@ -215,7 +215,7 @@ class AndroidTangoProfilePlugin(interface.SQLitePlugin):
       status = codecs.decode(decoded_text, 'utf-8')
     except ValueError:
       parser_mediator.ProduceExtractionWarning(
-          'unable to parse status: {0:s}'.format(status))
+          f'unable to parse status: {status:s}')
 
     event_data = AndroidTangoContactEventData()
     event_data.access_time = self._GetDateTimeRowValue(
