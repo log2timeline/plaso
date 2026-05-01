@@ -1,0 +1,5 @@
+0:0:0:0:0:0:0:1 | RestrictedRefAddedEvent | admin | 1400681361906 | BITBUCKET/bitbucket | {"id":1,"value":"refs/heads/random-cleanups","users":["user"]} | @8KJQAGx969x538x0 | 6ywzi6
+0:0:0:0:0:0:0:1 | RestrictedRefRemovedEvent | admin | 1400681365418 | BITBUCKET/bitbucket | {"id":1,"value":"refs/heads/random-cleanups"} | @8KJQAGx969x540x0 | 6ywzi6
+63.246.22.199,172.16.1.187 | RepositoryCreatedEvent | jsmith | 1400681373433 | PROJECT/myproject | {"id":2,"name":"my-repo","project":{"key":"myproject"}} | @8KJQAGx969x543x0 | tmpqqw
+10.1.1.100 | UserCreatedEvent | admin | 1400681400000 | - | - | - | -
+10.1.1.100 | UserLoggedInEvent | - | 1400681410000 | - | - | - | -
