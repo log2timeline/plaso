@@ -89,8 +89,8 @@ class OutputMediator(object):
       if (message_formatter.data_type in self._message_formatters and
           not override_existing):
         raise KeyError(
-            'Message formatter for data type: {0:s} already exists'.format(
-                message_formatter.data_type))
+            f'Message formatter for data type: {message_formatter.data_type:s} '
+            f'already exists')
 
       for identifier in message_formatter.custom_helpers:
         custom_formatter_helper = (
@@ -113,7 +113,7 @@ class OutputMediator(object):
       UserAccountArtifact: user account or None if not available.
     """
     # TODO: get username related to the source.
-    filter_expression = 'identifier == "{0:s}"'.format(user_identifier)
+    filter_expression = f'identifier == "{user_identifier:s}"'
     user_accounts = list(self._storage_reader.GetAttributeContainers(
         'user_account', filter_expression=filter_expression))
 
@@ -398,13 +398,11 @@ class OutputMediator(object):
     lcid = None
     if language_tag:
       if not isinstance(language_tag, str):
-        raise ValueError('Language tag: {0!s} is not a string.'.format(
-            language_tag))
+        raise ValueError(f'Language tag: {language_tag!s} is not a string.')
 
       lcid = languages.WindowsLanguageHelper.GetLCIDForLanguageTag(language_tag)
       if not lcid:
-        raise ValueError('No LCID found for language tag: {0:s}.'.format(
-            language_tag))
+        raise ValueError(f'No LCID found for language tag: {language_tag:s}.')
 
     self._language_tag = language_tag
     self._lcid = lcid
@@ -422,6 +420,6 @@ class OutputMediator(object):
       try:
         time_zone = pytz.timezone(time_zone)
       except pytz.UnknownTimeZoneError:
-        raise ValueError('Unsupported time zone: {0:s}'.format(time_zone))
+        raise ValueError(f'Unsupported time zone: {time_zone:s}')
 
     self._time_zone = time_zone

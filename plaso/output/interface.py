@@ -35,10 +35,9 @@ class OutputModule(object):
     parser_chain = getattr(event_data, '_parser_chain', None) or 'N/A'
 
     error_message = (
-        'Event: {0!s} data type: {1:s} display name: {2:s} '
-        'parser chain: {3:s} with error: {4:s}').format(
-            event_identifier_string, event_data.data_type, display_name,
-            parser_chain, error_message)
+        f'Event: {event_identifier_string!s} data type: '
+        f'{event_data.data_type:s} display name: {display_name:s} parser '
+        f'chain: {parser_chain:s} with error: {error_message:s}')
     logger.error(error_message)
 
   def Close(self):
