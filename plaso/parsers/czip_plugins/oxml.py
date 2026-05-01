@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Compound ZIP parser plugin for OpenXML files."""
 
 import re

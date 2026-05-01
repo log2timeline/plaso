@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Value types that can be used in an event filter."""
 
 from dfdatetime import posix_time as dfdatetime_posix_time

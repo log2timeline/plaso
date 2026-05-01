@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The storage media CLI tool."""
 
 import codecs

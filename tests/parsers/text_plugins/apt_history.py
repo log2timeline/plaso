@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Tests for the Advanced Packaging Tool (APT) History log text plugin."""
 
 import unittest

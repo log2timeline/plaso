@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The multi-process processing engine."""
 
 import abc

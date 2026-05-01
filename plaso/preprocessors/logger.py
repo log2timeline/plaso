@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The preprocessors sub module logger."""
 
 import logging

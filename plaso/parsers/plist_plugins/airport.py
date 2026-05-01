@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Plist parser plugin for MacOS Airport plist files."""
 
 from plaso.containers import events

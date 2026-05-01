@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This file contains the event formatters interface classes.
 
 The l2t_csv and other formats are dependent on a message field, referred to as

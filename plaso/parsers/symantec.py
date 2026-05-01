@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Symantec AV Corporate Edition and Endpoint Protection log file parser."""
 
 from dfdatetime import time_elements as dfdatetime_time_elements

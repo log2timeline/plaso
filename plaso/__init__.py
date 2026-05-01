@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Super timeline all the things (Plaso Langar Að Safna Öllu).
 
 log2timeline is a tool designed to extract timestamps from various files found

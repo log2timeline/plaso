@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The CUPS IPP files parser.
 
 CUPS IPP version 1.0:

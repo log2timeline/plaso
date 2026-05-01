@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Tests for the dtFabric format definition helper mix-in."""
 
 import io

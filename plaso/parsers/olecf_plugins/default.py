@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The default plugin for parsing OLE Compound Files (OLECF)."""
 
 from plaso.containers import events

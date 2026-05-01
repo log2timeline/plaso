@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Plug-in to collect information about the Windows timezone settings."""
 
 from plaso.containers import events

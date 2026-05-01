@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Dynamic selected delimiter separated values output module."""
 
 import datetime

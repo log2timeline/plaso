@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Analysis plugin to look up files in Viper and tag events.
 
 Also see:

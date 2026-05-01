@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The psteal CLI tool."""
 
 import argparse

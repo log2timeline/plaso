@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This file contains the necessary interface for OLECF plugins."""
 
 import abc

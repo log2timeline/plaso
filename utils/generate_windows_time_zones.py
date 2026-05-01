@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Script to generate Windows time zone name to Python mappings."""
 
 import argparse

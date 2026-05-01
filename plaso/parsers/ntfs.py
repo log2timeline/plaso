@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parser for NTFS metadata files."""
 
 import os

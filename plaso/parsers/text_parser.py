@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Text log parser."""
 
 import codecs

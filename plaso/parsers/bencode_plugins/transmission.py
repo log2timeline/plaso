@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Bencode parser plugin for Transmission BitTorrent files."""
 
 from plaso.containers import events

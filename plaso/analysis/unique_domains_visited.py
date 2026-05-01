@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """A plugin to generate a list of domains visited."""
 
 from urllib import parse as urlparse

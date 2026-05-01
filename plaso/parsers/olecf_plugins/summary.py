@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Plugin to parse the OLECF summary/document summary information items."""
 
 from dfdatetime import filetime as dfdatetime_filetime

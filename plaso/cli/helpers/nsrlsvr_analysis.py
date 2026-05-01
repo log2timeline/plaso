@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The nsrlsvr analysis plugin CLI arguments helper."""
 
 from plaso.analysis import nsrlsvr

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Text parser plugin for Snort3/Suricata fast-log alert log files.
 
 Snort3/Suricata fast.log format is a single line log format as shown below.

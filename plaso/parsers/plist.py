@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parser for binary and text Property List (plist) files."""
 
 import binascii

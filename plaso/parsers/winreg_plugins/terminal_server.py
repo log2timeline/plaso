@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This file contains the Terminal Server client Windows Registry plugins."""
 
 import re

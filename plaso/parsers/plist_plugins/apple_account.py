@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Plist parser plugin for Apple Account plist files.
 
 Fields within the plist key: com.apple.coreservices.appleidauthenticationinfo

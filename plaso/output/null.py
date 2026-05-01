@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Null device output module."""
 
 from plaso.output import interface

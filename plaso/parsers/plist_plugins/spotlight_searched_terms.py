@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Plist parser plugin for Spotlight searched terms plist files.
 
 Fields within the plist key: com.apple.spotlight.plist, where the name of

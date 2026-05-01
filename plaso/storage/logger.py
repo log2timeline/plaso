@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The storage sub module logger."""
 
 import logging

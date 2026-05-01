@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parser for bencoded files."""
 
 import os

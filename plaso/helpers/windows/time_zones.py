@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This file contains the Windows NT time zone definitions.
 
 The Windows time zone names can be obtained from the following

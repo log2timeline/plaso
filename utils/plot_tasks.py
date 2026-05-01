@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Script to plot tasks from profiling data.
 
 This script requires the matplotlib and numpy Python modules.

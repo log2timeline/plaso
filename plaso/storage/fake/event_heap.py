@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Heap to sort events in chronological order."""
 
 import heapq

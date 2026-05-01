@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The task-based multi-process processing extraction engine."""
 
 import collections

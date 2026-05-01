@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This file contains the Run/RunOnce key plugins for Plaso."""
 
 from plaso.containers import events

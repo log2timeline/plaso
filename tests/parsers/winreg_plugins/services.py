@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """This file contains tests for Services Windows Registry plugin."""
 
 import unittest

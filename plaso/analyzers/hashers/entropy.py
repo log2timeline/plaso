@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The entropy calculation implementation."""
 
 import collections

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Text parser plugin for bash history files."""
 
 import pyparsing

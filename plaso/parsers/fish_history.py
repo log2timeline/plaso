@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parser for fish history files."""
 
 import os

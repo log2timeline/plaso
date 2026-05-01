@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Hashing related functions and classes for testing."""
 
 import os

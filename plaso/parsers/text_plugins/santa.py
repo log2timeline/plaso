@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Text file parser plugin for Santa log files."""
 
 import pyparsing

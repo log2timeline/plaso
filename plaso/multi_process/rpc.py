@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The RPC client and server interface."""
 
 import abc

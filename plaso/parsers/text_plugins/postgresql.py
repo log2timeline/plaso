@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Text parser plugin for PostgreSQL application log files.
 
 This is a multi-line log format that records internal database application

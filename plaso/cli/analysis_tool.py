@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Shared functionality for an analysis CLI tool."""
 
 import time

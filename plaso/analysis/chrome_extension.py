@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Analysis plugin to gather information about Chrome extensions."""
 
 import re

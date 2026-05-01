@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Base class for a process that handles tasks used in multi-processing."""
 
 import os

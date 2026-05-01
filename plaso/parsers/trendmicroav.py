@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parser for Trend Micro Antivirus logs.
 
 Trend Micro uses two log files to track the scans (both manual/scheduled and

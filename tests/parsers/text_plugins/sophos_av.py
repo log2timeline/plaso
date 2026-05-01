@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Tests for the Sophos Anti-Virus log (SAV.txt) text parser plugin."""
 
 import unittest

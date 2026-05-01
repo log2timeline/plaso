@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Artifact attribute containers."""
 
 from acstore.containers import interface

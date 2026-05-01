@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Parser test for MacOS Cups IPP Log files."""
 
 import unittest

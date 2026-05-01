@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Tests for the bencode parser plugin for Transmission BitTorrent files."""
 
 import unittest

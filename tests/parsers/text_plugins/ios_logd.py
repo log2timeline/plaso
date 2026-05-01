@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Tests for the iOS sysdiagnose logd files (logd.0.log) text parser plugin."""
 
 import unittest

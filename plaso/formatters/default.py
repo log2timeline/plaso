@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The default event formatter."""
 
 from acstore.containers import interface as containers_interface

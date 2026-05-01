@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The analyzers sub module logger."""
 
 import logging

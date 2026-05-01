@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Text parser plugin for Sophos anti-virus logs (SAV.txt) files."""
 
 import pyparsing

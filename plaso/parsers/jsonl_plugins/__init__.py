@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Imports for the JSON-L parser plugins."""
 
 from plaso.parsers.jsonl_plugins import aws_cloudtrail_log

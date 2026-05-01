@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Tests for Microsoft Edge load statistics plugin."""
 
 import unittest

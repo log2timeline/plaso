@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Default plist parser plugin."""
 
 import datetime

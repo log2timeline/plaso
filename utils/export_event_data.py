@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Script to extract the event data attribute containers schema."""
 
 import argparse

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The psort CLI tool."""
 
 import argparse

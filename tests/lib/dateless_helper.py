@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Tests for the date-less log format helper mix-in."""
 
 import unittest

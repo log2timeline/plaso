@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The OpenSearch Timesketch output module CLI arguments helper."""
 
 from plaso.cli.helpers import interface

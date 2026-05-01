@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Plist parser plugin for Spotlight volume configuration plist files."""
 
 from plaso.containers import events

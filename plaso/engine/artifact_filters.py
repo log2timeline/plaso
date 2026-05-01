@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Helper to create filters based on forensic artifact definitions."""
 
 import os

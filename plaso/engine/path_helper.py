@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The path helper."""
 
 import os

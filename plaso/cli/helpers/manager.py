@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The CLI arguments helper manager objects."""
 
 from plaso.lib import errors

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """This file contains the tests for the generic text parser."""
 
 import unittest

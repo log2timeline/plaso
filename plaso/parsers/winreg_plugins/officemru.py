@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Windows Registry plugin for the Microsoft Office MRU."""
 
 import re

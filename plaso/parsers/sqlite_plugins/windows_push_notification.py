@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """SQLite parser plugin for Windows 10 push notification database files."""
 
 from plaso.containers import events

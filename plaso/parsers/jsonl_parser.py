@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Base parser for line-based JSON (JSON-L) log formats."""
 
 import json

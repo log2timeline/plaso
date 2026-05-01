@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """File containing a Windows Registry plugin to parse the USB Device key.
 
 Also see:

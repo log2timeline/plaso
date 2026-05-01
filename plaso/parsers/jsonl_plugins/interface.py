@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Interface for JSON-L parser plugins."""
 
 import abc

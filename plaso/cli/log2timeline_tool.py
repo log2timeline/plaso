@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The log2timeline CLI tool."""
 
 import argparse

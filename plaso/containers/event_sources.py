@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Event source attribute containers."""
 
 from acstore.containers import interface

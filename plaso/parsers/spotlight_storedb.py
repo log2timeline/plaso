@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parser for Apple Spotlight store database files."""
 
 from collections import abc as collections

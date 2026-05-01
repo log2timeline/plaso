@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parser for OLE Compound Files (OLECF)."""
 
 import pyolecf

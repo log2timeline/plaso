@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Windows EventLog providers helper."""
 
 

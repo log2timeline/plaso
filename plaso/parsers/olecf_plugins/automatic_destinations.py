@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Plugin to parse .automaticDestinations-ms OLECF files."""
 
 import os

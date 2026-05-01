@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Processing configuration classes."""
 
 from acstore.containers import interface

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parser for Windows NT Registry (REGF) files."""
 
 from dfwinreg import errors as dfwinreg_errors

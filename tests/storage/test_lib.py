@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Storage related functions and classes for testing."""
 
 from plaso.containers import events

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Operating system independent (generic) preprocessor plugins."""
 
 from dfvfs.helpers import file_system_searcher

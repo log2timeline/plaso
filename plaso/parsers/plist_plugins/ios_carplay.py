@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Plist parser plugin for Apple iOS Car Play application plist files.
 
 The plist contains history of opened applications in the Car Play application.

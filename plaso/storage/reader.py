@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The storage reader."""
 
 from plaso.containers import events

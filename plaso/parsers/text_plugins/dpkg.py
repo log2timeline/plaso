@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Text parser plugin for Debian package manager log (dpkg.log) files.
 
 An example:

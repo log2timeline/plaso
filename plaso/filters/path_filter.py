@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """A scan tree-based path filter implementation.
 
 The scan tree is a tree based on multiple paths that contains the path segments

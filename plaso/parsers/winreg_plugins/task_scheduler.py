@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This file contains the Task Scheduler Registry keys plugins."""
 
 import os

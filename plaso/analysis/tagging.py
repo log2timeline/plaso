@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Analysis plugin that labels events according to rules in a tagging file."""
 
 from plaso.analysis import interface

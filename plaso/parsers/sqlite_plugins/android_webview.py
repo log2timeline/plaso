@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """SQLite parser plugin for Android WebView database files."""
 
 from dfdatetime import java_time as dfdatetime_java_time

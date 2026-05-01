@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """CLI arguments helper related functions and classes for testing."""
 
 from plaso.cli.helpers import interface

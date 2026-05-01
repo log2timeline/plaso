@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Text parser plugin for WinCC log files."""
 
 from dfvfs.helpers import text_file

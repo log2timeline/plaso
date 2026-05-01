@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """YAML-based filter file."""
 
 import io

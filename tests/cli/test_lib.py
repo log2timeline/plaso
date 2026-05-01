@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """CLI related functions and classes for testing."""
 
 import argparse

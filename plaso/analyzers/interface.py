@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Definitions to provide a whole-file processing framework."""
 
 import abc

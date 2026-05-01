@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Interface for SQLite database file parser plugins."""
 
 import sqlite3

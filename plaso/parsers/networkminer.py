@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parser for NetworkMiner .fileinfos files."""
 
 from dfdatetime import time_elements as dfdatetime_time_elements

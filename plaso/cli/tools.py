@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The command line interface (CLI) tools classes."""
 
 import abc

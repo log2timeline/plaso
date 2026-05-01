@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Event attribute containers."""
 
 import hashlib

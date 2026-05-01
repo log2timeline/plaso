@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Plist parser plugin for iOS identity services status cache files."""
 
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time

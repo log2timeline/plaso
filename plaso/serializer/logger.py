@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The serializer sub module logger."""
 
 import logging

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Analyzer that matches Yara rules."""
 
 import yara

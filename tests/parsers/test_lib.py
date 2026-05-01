@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parser related functions and classes for testing."""
 
 from dfdatetime import interface as dfdatetime_interface

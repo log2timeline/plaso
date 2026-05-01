@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Bencode parser plugin interface."""
 
 import abc

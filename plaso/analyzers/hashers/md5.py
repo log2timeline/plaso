@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The MD5 hasher implementation."""
 
 import hashlib

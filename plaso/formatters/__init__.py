@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This file contains an import statement for each formatter."""
 
 from plaso.formatters import chrome

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Task attribute container definition."""
 
 import time

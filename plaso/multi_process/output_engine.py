@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The output and formatting multi-processing engine."""
 
 import heapq

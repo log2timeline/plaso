@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This file contains the output module interface class."""
 
 import abc

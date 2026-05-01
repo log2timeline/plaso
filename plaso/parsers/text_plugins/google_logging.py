@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Text parser plugin for Google-formatted log files.
 
 Note that this format is also used by Kubernetes.

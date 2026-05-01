@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Windows event data attribute containers."""
 
 from dfdatetime import uuid_time as dfdatetime_uuid_time
