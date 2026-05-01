@@ -95,8 +95,7 @@ class BinaryExpression(Expression):
   def __repr__(self):
     """Retrieves a string representation of the object for debugging."""
     if len(self.args) == 2:
-      return '({0!s}) {1:s} {2!s}'.format(
-          self.args[0], self.operator, self.args[1])
+      return f'({self.args[0]!s}) {self.operator:s} {self.args[1]!s}'
     return self.operator
 
   def AddOperands(self, lhs, rhs):
@@ -135,7 +134,7 @@ class BinaryExpression(Expression):
     elif operator in ('or', '||'):
       filter_class = filters.OrFilter
     else:
-      raise errors.ParseError('Unusupported operator: {0:s}.'.format(operator))
+      raise errors.ParseError(f'Unusupported operator: {operator:s}.')
 
     args = [argument.Compile() for argument in self.args]
     return filter_class(arguments=args)
@@ -186,7 +185,7 @@ class EventExpression(Expression):
 
   def __repr__(self):
     """Retrieves a string representation of the object for debugging."""
-    return '{0:s} {1:s} {2!s}'.format(self.attribute, self.operator, self.args)
+    return f'{self.attribute:s} {self.operator:s} {self.args!s}'
 
   def Compile(self):
     """Compiles the expression into a filter.
@@ -199,8 +198,7 @@ class EventExpression(Expression):
     """
     if self.attribute in self._DEPRECATED_EVENT_FILTER_ALIAS:
       logger.warning(
-          'Event filter alias: "{0:s}" no longer supported'.format(
-              self.attribute))
+          f'Event filter alias: "{self.attribute:s}" no longer supported')
 
     if not self.operator:
       raise errors.ParseError('Missing operator.')
@@ -208,7 +206,7 @@ class EventExpression(Expression):
     lookup_key = self.operator.lower()
     operator = self._OPERATORS.get(lookup_key, None)
     if not operator:
-      raise errors.ParseError('Unknown operator: {0:s}.'.format(self.operator))
+      raise errors.ParseError(f'Unknown operator: {self.operator:s}.')
 
     self.attribute = self._EVENT_FILTER_ALIAS.get(
         self.attribute, self.attribute)

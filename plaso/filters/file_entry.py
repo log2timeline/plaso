@@ -86,7 +86,7 @@ class DateTimeFileEntryFilter(FileEntryFilter):
 
     time_value_lower = time_value.lower()
     if time_value_lower not in self._SUPPORTED_TIME_VALUES:
-      raise ValueError('Unsupported time value: {0:s}.'.format(time_value))
+      raise ValueError(f'Unsupported time value: {time_value:s}.')
 
     start_date_time = None
     if start_time_string:
@@ -151,22 +151,23 @@ class DateTimeFileEntryFilter(FileEntryFilter):
       for date_time_range in self._date_time_ranges:
         if date_time_range.start_date_time is None:
           end_time_string = date_time_range.end_date_time.CopyToDateTimeString()
-          output_writer.Write('\t{0:s} after {1:s}\n'.format(
-              date_time_range.time_value, end_time_string))
+          output_writer.Write(
+              f'\t{date_time_range.time_value:s} after {end_time_string:s}\n')
 
         elif date_time_range.end_date_time is None:
           start_time_string = (
               date_time_range.start_date_time.CopyToDateTimeString())
-          output_writer.Write('\t{0:s} before {1:s}\n'.format(
-              date_time_range.time_value, start_time_string))
+          output_writer.Write((
+              f'\t{date_time_range.time_value:s} before '
+              f'{start_time_string:s}\n'))
 
         else:
           start_time_string = (
               date_time_range.start_date_time.CopyToDateTimeString())
           end_time_string = date_time_range.end_date_time.CopyToDateTimeString()
-          output_writer.Write('\t{0:s} between {1:s} and {2:s}\n'.format(
-              date_time_range.time_value, start_time_string,
-              end_time_string))
+          output_writer.Write(
+              f'\t{date_time_range.time_value:s} between '
+              f'{start_time_string:s} and {end_time_string:s}\n')
 
 
 class ExtensionsFileEntryFilter(FileEntryFilter):
@@ -210,8 +211,8 @@ class ExtensionsFileEntryFilter(FileEntryFilter):
       output_writer (CLIOutputWriter): output writer.
     """
     if self._extensions:
-      output_writer.Write('\textensions: {0:s}\n'.format(
-          ', '.join(self._extensions)))
+      output_writer.Write(
+          f'\textensions: {", ".join(self._extensions):s}\n')
 
 
 class NamesFileEntryFilter(FileEntryFilter):
@@ -247,8 +248,8 @@ class NamesFileEntryFilter(FileEntryFilter):
       output_writer (CLIOutputWriter): output writer.
     """
     if self._names:
-      output_writer.Write('\tnames: {0:s}\n'.format(
-          ', '.join(self._names)))
+      output_writer.Write(
+          f'\tnames: {", ".join(self._names):s}\n')
 
 
 class SignaturesFileEntryFilter(FileEntryFilter):
@@ -329,9 +330,9 @@ class SignaturesFileEntryFilter(FileEntryFilter):
     except IOError as exception:
       # TODO: replace location by display name.
       location = getattr(file_entry.path_spec, 'location', '')
-      logger.error((
-          '[skipping] unable to scan file: {0:s} for signatures '
-          'with error: {1!s}').format(location, exception))
+      logger.error(
+          f'[skipping] unable to scan file: {location:s} for signatures '
+          f'with error: {exception!s}')
       return False
 
     return scan_state.number_of_scan_results > 0
@@ -343,8 +344,8 @@ class SignaturesFileEntryFilter(FileEntryFilter):
       output_writer (CLIOutputWriter): output writer.
     """
     if self._file_scanner:
-      output_writer.Write('\tsignature identifiers: {0:s}\n'.format(
-          ', '.join(self._signature_identifiers)))
+      identifiers = ", ".join(self._signature_identifiers)
+      output_writer.Write(f'\tsignature identifiers: {identifiers:s}\n')
 
 
 class FileEntryFilterCollection(object):

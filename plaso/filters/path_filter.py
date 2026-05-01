@@ -85,9 +85,8 @@ class _PathFilterTable(object):
       str: debug string representing the path filter table.
     """
     text_parts = ['Path segment index\tPath segments(s)']
-    for index, path_segments in self.path_segments_per_index.items():
-      text_parts.append('{0:d}\t\t\t[{1:s}]'.format(
-          index, ', '.join(path_segments)))
+    for index, segments in self.path_segments_per_index.items():
+      text_parts.append(f'{index:d}\t\t\t[{", ".join(segments):s}]')
 
     text_parts.append('')
 
@@ -221,14 +220,12 @@ class _PathSegmentWeights(object):
     """
     text_parts = ['Path segment index\tWeight']
     for path_segment_index, weight in self._weight_per_index.items():
-      text_parts.append('{0:d}\t\t\t{1:d}'.format(
-          path_segment_index, weight))
+      text_parts.append(f'{path_segment_index:d}\t\t\t{weight:d}')
     text_parts.append('')
 
     text_parts.append('Weight\t\t\tPath segment index(es)')
     for weight, path_segment_indexes in self._indexes_per_weight.items():
-      text_parts.append('{0:d}\t\t\t{1!s}'.format(
-          weight, path_segment_indexes))
+      text_parts.append(f'{weight:d}\t\t\t{path_segment_indexes!s}')
     text_parts.append('')
 
     return '\n'.join(text_parts)
@@ -646,29 +643,25 @@ class PathFilterScanTreeNode(object):
     """
     indentation = '  ' * indentation_level
 
-    text_parts = ['{0:s}path segment index: {1:d}\n'.format(
-        indentation, self.path_segment_index)]
+    text_parts = [
+        f'{indentation:s}path segment index: {self.path_segment_index:d}\n']
 
     for path_segment, scan_object in self._path_segments.items():
-      text_parts.append('{0:s}path segment: {1:s}\n'.format(
-          indentation, path_segment))
+      text_parts.append(f'{indentation:s}path segment: {path_segment:s}\n')
 
       if isinstance(scan_object, PathFilterScanTreeNode):
-        text_parts.append('{0:s}scan tree node:\n'.format(indentation))
-        text_parts.append(scan_object.ToDebugString(indentation_level + 1))
+        text_parts.append(f'{indentation:s}scan tree node:\n')
 
       elif isinstance(scan_object, str):
-        text_parts.append('{0:s}path: {1:s}\n'.format(indentation, scan_object))
+        text_parts.append(f'{indentation:s}path: {scan_object:s}\n')
 
-    text_parts.append('{0:s}default value:\n'.format(indentation))
+    text_parts.append(f'{indentation:s}default value:\n')
 
     if isinstance(self.default_value, PathFilterScanTreeNode):
-      text_parts.append('{0:s}scan tree node:\n'.format(indentation))
-      text_parts.append(self.default_value.ToDebugString(indentation_level + 1))
+      text_parts.append(f'{indentation:s}scan tree node:\n')
 
     elif isinstance(self.default_value, str):
-      text_parts.append('{0:s}pattern: {1:s}\n'.format(
-          indentation, self.default_value))
+      text_parts.append(f'{indentation:s}pattern: {self.default_value:s}\n')
 
     text_parts.append('\n')
 
