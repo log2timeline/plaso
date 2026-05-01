@@ -191,7 +191,7 @@ class YAMLFormattersFile(object):
     different_keys = set(formatter_definition_values) - self._SUPPORTED_KEYS
     if different_keys:
       different_keys = ', '.join(different_keys)
-      raise errors.ParseError('Undefined keys: {0:s}'.format(different_keys))
+      raise errors.ParseError(f'Undefined keys: {different_keys:s}')
 
     formatter_type = formatter_definition_values.get('type', None)
     if not formatter_type:
@@ -199,9 +199,9 @@ class YAMLFormattersFile(object):
           'Invalid event formatter definition missing type.')
 
     if formatter_type not in ('basic', 'conditional'):
-      raise errors.ParseError(
-          'Invalid event formatter definition unsupported type: {0!s}.'.format(
-              formatter_type))
+      raise errors.ParseError((
+          f'Invalid event formatter definition unsupported type: '
+          f'{formatter_type!s}.'))
 
     data_type = formatter_definition_values.get('data_type', None)
     if not data_type:
@@ -211,26 +211,24 @@ class YAMLFormattersFile(object):
     message = formatter_definition_values.get('message', None)
     if not message:
       raise errors.ParseError(
-          'Invalid event formatter definition: {0:s} missing message.'.format(
-              data_type))
+          f'Invalid event formatter definition: {data_type:s} missing message.')
 
     short_message = formatter_definition_values.get('short_message', None)
     if not short_message:
       raise errors.ParseError((
-          'Invalid event formatter definition: {0:s} missing short '
-          'message.').format(data_type))
+          f'Invalid event formatter definition: {data_type:s} missing short '
+          f'message.'))
 
     short_source = formatter_definition_values.get('short_source', None)
     if not short_source:
       raise errors.ParseError((
-          'Invalid event formatter definition: {0:s} missing short '
-          'source.').format(data_type))
+          f'Invalid event formatter definition: {data_type:s} missing short '
+          f'source.'))
 
     source = formatter_definition_values.get('source', None)
     if not source:
       raise errors.ParseError(
-          'Invalid event formatter definition: {0:s} missing source.'.format(
-              data_type))
+          f'Invalid event formatter definition: {data_type:s} missing source.')
 
     formatter = None
 
