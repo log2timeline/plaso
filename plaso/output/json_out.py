@@ -30,8 +30,7 @@ class JSONOutputModule(shared_json.SharedJSONOutputModule):
       self.WriteText(', ')
 
     json_string = json.dumps(field_values, sort_keys=True)
-    output_text = '"event_{0:d}": {1:s}\n'.format(
-        self._event_counter, json_string)
+    output_text = f'"event_{self._event_counter:d}": {json_string:s}\n'
     self.WriteText(output_text)
 
     self._event_counter += 1

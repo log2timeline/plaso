@@ -111,8 +111,8 @@ class TextFileOutputModule(interface.OutputModule):
 
     if os.path.isfile(path):
       raise IOError((
-          'Unable to use an already existing file for output '
-          '[{0:s}]').format(path))
+          f'Unable to use an already existing file for output '
+          f'[{path:s}]'))
 
     self._file_object = open(path, 'wt', encoding=self._ENCODING)  # pylint: disable=consider-using-with
 
@@ -132,7 +132,7 @@ class TextFileOutputModule(interface.OutputModule):
     Args:
       text (str): text to output.
     """
-    self._file_object.write('{0:s}\n'.format(text))
+    self._file_object.write(f'{text:s}\n')
 
   def WriteText(self, text):
     """Writes text to the output file.

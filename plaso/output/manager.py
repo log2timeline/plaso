@@ -64,7 +64,7 @@ class OutputManager(object):
     name = name.lower()
     if name not in cls._output_classes:
       raise KeyError(
-          'Name: [{0:s}] not registered as an output module.'.format(name))
+          f'Name: [{name:s}] not registered as an output module.')
 
     return cls._output_classes[name]
 
@@ -133,8 +133,7 @@ class OutputManager(object):
 
     if output_name in class_dict:
       raise KeyError((
-          'Output class already set for name: {0:s}.').format(
-              output_class.NAME))
+          f'Output class already set for name: {output_class.NAME:s}.'))
 
     class_dict[output_name] = output_class
 

@@ -161,11 +161,11 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
 
     if None in (year, month, day_of_month):
       self._ReportEventError(event, event_data, (
-          'unable to copy timestamp: {0!s} to a human readable date. '
-          'Defaulting to: "00/00/0000"').format(event.timestamp))
+          f'unable to copy timestamp: {event.timestamp!s} to a human readable '
+          f'date. Defaulting to: "00/00/0000"'))
       return '00/00/0000'
 
-    return '{0:02d}/{1:02d}/{2:04d}'.format(month, day_of_month, year)
+    return f'{month:02d}/{day_of_month:02d}/{year:04d}'
 
   def _FormatExtraAttributes(
       self, output_mediator, event, event_data, event_data_stream):
@@ -185,8 +185,8 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
         event_data.data_type)
     if not message_formatter:
       logger.warning(
-          'Using default message formatter for data type: {0:s}'.format(
-              event_data.data_type))
+          f'Using default message formatter for data type: '
+          f'{event_data.data_type:s}')
       message_formatter = self._DEFAULT_MESSAGE_FORMATTER
 
     formatted_attribute_names = (
@@ -213,21 +213,18 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
       if isinstance(attribute_value, bytes):
         attribute_value = attribute_value.decode('utf-8', 'replace')
         logger.warning(
-            'Found bytes value for attribute "{0:s}" for data type: '
-            '{1!s}. Value was converted to UTF-8: "{2:s}"'.format(
-                attribute_name, event_data.data_type, attribute_value))
+            f'Found bytes value for attribute "{attribute_name:s}" for '
+            f'data type: {event_data.data_type!s}. Value was converted to '
+            f'UTF-8: "{attribute_value:s}"')
 
-      # With ! in {1!s} we force a string conversion since some of
-      # the extra attributes values can be integer, float point or
-      # boolean values.
-      extra_attributes.append('{0:s}: {1!s}'.format(
-          attribute_name, attribute_value))
+      # With ! in {name!s} we force a string conversion since some of the extra
+      # attributes values can be integer, float point or boolean values.
+      extra_attributes.append(f'{attribute_name:s}: {attribute_value!s}')
 
     if event_data_stream:
       for attribute_name, attribute_value in event_data_stream.GetAttributes():
         if attribute_name != 'path_spec':
-          extra_attributes.append('{0:s}: {1!s}'.format(
-              attribute_name, attribute_value))
+          extra_attributes.append(f'{attribute_name:s}: {attribute_value!s}')
 
     extra_attributes = '; '.join(sorted(extra_attributes))
 
