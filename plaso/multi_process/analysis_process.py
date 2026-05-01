@@ -76,10 +76,6 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
     if self._memory_profiler:
       self._memory_profiler.Sample('main', used_memory)
 
-    # XML RPC does not support integer values > 2 GiB so we format them
-    # as a string.
-    used_memory = '{0:d}'.format(used_memory)
-
     status = {
         'display_name': '',
         'identifier': self._name,
@@ -95,7 +91,9 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
         'number_of_produced_sources': None,
         'processing_status': self._status,
         'task_identifier': None,
-        'used_memory': used_memory}
+        # XML RPC does not support integer values > 2 GiB so we format them
+        # as a string.
+        'used_memory': f'{used_memory:d}'}
 
     if self._status in (
         definitions.STATUS_INDICATOR_ABORTED,
@@ -109,8 +107,8 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
     """The main loop."""
     self._StartProfiling(self._processing_configuration.profiling)
 
-    logger.debug('Analysis plugin: {0!s} (PID: {1:d}) started'.format(
-        self._name, self._pid))
+    logger.debug(
+        f'Analysis plugin: {self._name:s} (PID: {self._pid:d}) started.')
 
     # Creating the threading event in the constructor will cause a pickle
     # error on Windows when an analysis process is created.
@@ -148,17 +146,18 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
     task_storage_writer.AddAttributeContainer(task)
 
     try:
-      logger.debug(
-          '{0!s} (PID: {1:d}) started monitoring event queue.'.format(
-              self._name, self._pid))
+      logger.debug((
+          f'{self._name:s} (PID: {self._pid:d}) started monitoring event '
+          f'queue.'))
 
       while not self._abort:
         try:
           queued_object = self._event_queue.PopItem()
 
         except (errors.QueueClose, errors.QueueEmpty) as exception:
-          logger.debug('ConsumeItems exiting with exception {0!s}.'.format(
-              type(exception)))
+          exception_type = type(exception)
+          logger.debug(
+              f'ConsumeItems exiting with exception {exception_type!s}.')
           break
 
         if isinstance(queued_object, plaso_queue.QueueAbort):
@@ -169,9 +168,9 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
 
         self._number_of_consumed_events += 1
 
-      logger.debug(
-          '{0!s} (PID: {1:d}) stopped monitoring event queue.'.format(
-              self._name, self._pid))
+      logger.debug((
+          f'{self._name:s} (PID: {self._pid:d}) stopped monitoring event '
+          f'queue.'))
 
       if not self._abort:
         self._status = definitions.STATUS_INDICATOR_REPORTING
@@ -181,9 +180,9 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
     # All exceptions need to be caught here to prevent the process
     # from being killed by an uncaught exception.
     except Exception as exception:  # pylint: disable=broad-except
-      logger.warning(
-          'Unhandled exception in process: {0!s} (PID: {1:d}).'.format(
-              self._name, self._pid))
+      logger.warning((
+          f'Unhandled exception in process: {self._name:s} (PID: '
+          f'{self._pid:d}).'))
       logger.exception(exception)
 
       self._abort = True
@@ -204,8 +203,8 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
       self._FinalizeTaskStorageWriter(
           definitions.STORAGE_FORMAT_SQLITE, task)
     except IOError as exception:
-      logger.warning('Unable to finalize task storage with error: {0!s}'.format(
-          exception))
+      logger.warning(
+          f'Unable to finalize task storage with error: {exception!s}')
 
     if self._abort:
       self._status = definitions.STATUS_INDICATOR_ABORTED
@@ -216,8 +215,8 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
     self._foreman_status_wait_event.clear()
     self._foreman_status_wait_event.wait(self._FOREMAN_STATUS_WAIT)
 
-    logger.debug('Analysis plugin: {0!s} (PID: {1:d}) stopped'.format(
-        self._name, self._pid))
+    logger.debug(
+        f'Analysis plugin: {self._name:s} (PID: {self._pid:d}) stopped.')
 
     self._StopProfiling()
 
@@ -228,7 +227,7 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
     try:
       self._event_queue.Close(abort=self._abort)
     except errors.QueueAlreadyClosed:
-      logger.error('Queue for {0:s} was already closed.'.format(self.name))
+      logger.error(f'Queue for {self.name:s} was already closed.')
 
   def _ProcessEventTripple(self, mediator, event_tripple):
     """Processes an event tripple.

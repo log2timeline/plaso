@@ -66,8 +66,8 @@ class MultiProcessBaseProcess(multiprocessing.Process):
         log_path = os.path.dirname(self._processing_configuration.log_filename)
         log_filename = os.path.basename(
             self._processing_configuration.log_filename)
-        log_filename = '{0:s}_{1:s}'.format(self._name, log_filename)
-        self._log_filename = os.path.join(log_path, log_filename)
+        self._log_filename = os.path.join(
+            log_path, f'{self._name:s}_{log_filename:s}')
 
     # We need to share the RPC port number with the engine process.
     self.rpc_port = multiprocessing.Value('I', 0)
@@ -162,15 +162,14 @@ class MultiProcessBaseProcess(multiprocessing.Process):
 
     if not port:
       logger.error((
-          'Unable to start a process status RPC server for {0!s} '
-          '(PID: {1:d})').format(self._name, self._pid))
+          f'Unable to start a process status RPC server for {self._name:s} '
+          f'(PID: {self._pid:d})'))
       self._rpc_server = None
       return
 
     self.rpc_port.value = port
 
-    logger.debug(
-        'Process: {0!s} process status RPC server started'.format(self._name))
+    logger.debug(f'Process: {self._name:s} process status RPC server started.')
 
   def _StartProfiling(self, configuration):
     """Starts profiling.
@@ -187,19 +186,19 @@ class MultiProcessBaseProcess(multiprocessing.Process):
       self._memory_profiler.Start()
 
     if configuration.HaveProfileAnalyzers():
-      identifier = '{0:s}-analyzers'.format(self._name)
+      identifier = f'{self._name:s}-analyzers'
       self._analyzers_profiler = profilers.AnalyzersProfiler(
           identifier, configuration)
       self._analyzers_profiler.Start()
 
     if configuration.HaveProfileProcessing():
-      identifier = '{0:s}-processing'.format(self._name)
+      identifier = f'{self._name:s}-processing'
       self._processing_profiler = profilers.ProcessingProfiler(
           identifier, configuration)
       self._processing_profiler.Start()
 
     if configuration.HaveProfileSerializers():
-      identifier = '{0:s}-serializers'.format(self._name)
+      identifier = f'{self._name:s}-serializers'
       self._serializers_profiler = profilers.SerializersProfiler(
           identifier, configuration)
       self._serializers_profiler.Start()
@@ -226,8 +225,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     self._rpc_server = None
     self.rpc_port.value = 0
 
-    logger.debug(
-        'Process: {0!s} process status RPC server stopped'.format(self._name))
+    logger.debug(f'Process: {self._name:s} process status RPC server stopped.')
 
   def _StopProfiling(self):
     """Stops profiling."""
@@ -280,7 +278,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
       profile.enable()
       profile.runcall(self._RunProcess)
       profile.disable()
-      profile.dump_stats('{0:s}-profile.output'.format(self._name))
+      profile.dump_stats(f'{self._name:s}-profile.output')
     else:
       self._RunProcess()
 
@@ -315,23 +313,19 @@ class MultiProcessBaseProcess(multiprocessing.Process):
         debug_output=self._debug_output, filename=self._log_filename,
         quiet_mode=self._quiet_mode)
 
-    logger.debug('Process: {0!s} (PID: {1:d}) started'.format(
-        self._name, self._pid))
+    logger.debug(f'Process: {self._name:s} (PID: {self._pid:d}) started.')
 
     self._StartProcessStatusRPCServer()
 
-    logger.debug('Process: {0!s} (PID: {1:d}) enter main'.format(
-        self._name, self._pid))
+    logger.debug(f'Process: {self._name:s} (PID: {self._pid:d}) enter main.')
 
     self._Main()
 
-    logger.debug('Process: {0!s} (PID: {1:d}) exit main'.format(
-        self._name, self._pid))
+    logger.debug(f'Process: {self._name:s} (PID: {self._pid:d}) exit main.')
 
     self._StopProcessStatusRPCServer()
 
-    logger.debug('Process: {0!s} (PID: {1:d}) stopped'.format(
-        self._name, self._pid))
+    logger.debug(f'Process: {self._name:s} (PID: {self._pid:d}) stopped.')
 
     # Make sure log files are cleanly closed.
     logging.shutdown()

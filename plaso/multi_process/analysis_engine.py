@@ -192,14 +192,15 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
             merge_helper = merge_helpers.AnalysisTaskMergeHelper(
                 task_storage_reader, task.identifier)
 
-            logger.debug('Starting merge of task: {0:s}'.format(
-                merge_helper.task_identifier))
+            logger.debug(
+                f'Starting merge of task: {merge_helper.task_identifier:s}')
 
             number_of_containers = self._MergeAttributeContainers(
                 storage_writer, merge_helper)
 
-            logger.debug('Merged {0:d} containers of task: {1:s}'.format(
-                number_of_containers, merge_helper.task_identifier))
+            logger.debug((
+                f'Merged {number_of_containers:d} containers of task: '
+                f'{merge_helper.task_identifier:s}'))
 
           finally:
             task_storage_reader.Close()
@@ -251,9 +252,8 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
       if self._worker_memory_limit and used_memory > self._worker_memory_limit:
         logger.warning((
-            'Process: {0:s} (PID: {1:d}) killed because it exceeded the '
-            'memory limit: {2:d}.').format(
-                process.name, pid, self._worker_memory_limit))
+            f'Process: {process.name:s} (PID: {pid:d}) killed because it '
+            f'exceeded the memory limit: {self._worker_memory_limit:d}'))
         self._KillProcess(pid)
 
       if isinstance(process_status, dict):
@@ -273,9 +273,8 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         if process_is_alive:
           rpc_port = process.rpc_port.value
           logger.warning((
-              'Unable to retrieve process: {0:s} (PID: {1:d}) status via '
-              'RPC socket: http://localhost:{2:d}').format(
-                  process.name, pid, rpc_port))
+              f'Unable to retrieve process: {process.name:s} (PID: {pid:d}) '
+              f'status via RPC socket: http://localhost:{rpc_port:d}'))
 
           processing_status_string = 'RPC error'
           status_indicator = definitions.STATUS_INDICATOR_RUNNING
@@ -290,9 +289,8 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     if status_indicator in definitions.ERROR_STATUS_INDICATORS:
       logger.error((
-          'Process {0:s} (PID: {1:d}) is not functioning correctly. '
-          'Status code: {2!s}.').format(
-              process.name, pid, status_indicator))
+          f'Process {process.name:s} (PID: {pid:d}) is not functioning '
+          f'correctly. Status code: {status_indicator!s}.'))
 
       self._TerminateProcessByPid(pid)
 
@@ -347,8 +345,8 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
       process = self._StartWorkerProcess(analysis_plugin.NAME)
       if not process:
-        logger.error('Unable to create analysis process: {0:s}'.format(
-            analysis_plugin.NAME))
+        logger.error(
+            f'Unable to create analysis process: {analysis_plugin.NAME:s}')
 
     logger.info('Analysis plugins running')
 
@@ -363,10 +361,10 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     """
     analysis_plugin = self._analysis_plugins.get(process_name, None)
     if not analysis_plugin:
-      logger.error('Missing analysis plugin: {0:s}'.format(process_name))
+      logger.error(f'Missing analysis plugin: {process_name:s}')
       return None
 
-    queue_name = '{0:s} output event queue'.format(process_name)
+    queue_name = f'{process_name:s} output event queue'
     output_event_queue = zeromq_queue.ZeroMQPushBindQueue(
         name=queue_name, timeout_seconds=self._QUEUE_TIMEOUT)
     # Open the queue so it can bind to a random port, and we can get the
@@ -375,7 +373,7 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     self._event_queues[process_name] = output_event_queue
 
-    queue_name = '{0:s} input event queue'.format(process_name)
+    queue_name = f'{process_name:s} input event queue'
     input_event_queue = zeromq_queue.ZeroMQPullConnectQueue(
         name=queue_name, delay_open=True, port=output_event_queue.port,
         timeout_seconds=self._QUEUE_TIMEOUT)
@@ -388,15 +386,15 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     process.start()
 
-    logger.info('Started analysis plugin: {0:s} (PID: {1:d}).'.format(
-        process_name, process.pid))
+    logger.info(
+        f'Started analysis plugin: {process_name:s} (PID: {process.pid:d}).')
 
     try:
       self._StartMonitoringProcess(process)
     except (IOError, KeyError) as exception:
       logger.error((
-          'Unable to monitor analysis plugin: {0:s} (PID: {1:d}) '
-          'with error: {2!s}').format(process_name, process.pid, exception))
+          f'Unable to monitor analysis plugin: {process_name:s} (PID: '
+          f'{process.pid:d}) with error: {exception!s}'))
 
       process.terminate()
       return None
@@ -517,8 +515,8 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         current_timestamp = time.time()
         if current_timestamp > last_activity_timestamp:
           logger.error((
-              'Process {0:s} (PID: {1:d}) has not reported activity within '
-              'the timeout period.').format(process.name, pid))
+              f'Process {process.name:s} (PID: {pid:d}) has not reported '
+              f'activity within the timeout period.'))
           status_indicator = definitions.STATUS_INDICATOR_NOT_RESPONDING
 
     self._processing_status.UpdateWorkerStatus(
@@ -686,8 +684,7 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           definitions.STORAGE_FORMAT_SQLITE, session.identifier,
           abort=self._abort)
     except (IOError, OSError) as exception:
-      logger.error('Unable to stop task storage with error: {0!s}'.format(
-          exception))
+      logger.error(f'Unable to stop task storage with error: {exception!s}')
 
     if self._abort:
       logger.debug('Analysis aborted.')
