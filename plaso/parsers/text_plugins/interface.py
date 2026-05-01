@@ -62,12 +62,11 @@ class TextPlugin(plugins.BasePlugin):
       raise TypeError('Unsupported exception type.')
 
     if self._parser_mediator:
-      self._parser_mediator.ProduceExtractionWarning(
-          'error decoding 0x{0:02x} at offset: {1:d}'.format(
-              exception.object[exception.start],
-              self._current_offset + exception.start))
+      self._parser_mediator.ProduceExtractionWarning((
+          f'error decoding 0x{exception.object[exception.start]:02x} at '
+          f'offset: {self._current_offset + exception.start:d}'))
 
-    escaped = '\\x{0:2x}'.format(exception.object[exception.start])
+    escaped = f'\\x{exception.object[exception.start]:2x}'
     return escaped, exception.start + 1
 
   def _GetDecimalValueFromStructure(self, structure, name):
@@ -164,8 +163,9 @@ class TextPlugin(plugins.BasePlugin):
       self._current_offset = text_reader.get_offset()
     except UnicodeDecodeError as exception:
       parser_mediator.ProduceExtractionWarning((
-          'unable to read and decode log line at offset {0:d} with error: '
-          '{1!s}').format(self._current_offset, exception))
+          f'unable to read and decode log line at offset '
+          f'{self._current_offset:d} with error: '
+          f'{exception!s}'))
       return
 
     while text_reader.lines:
@@ -173,9 +173,9 @@ class TextPlugin(plugins.BasePlugin):
         break
 
       if consecutive_line_failures > self._MAXIMUM_CONSECUTIVE_LINE_FAILURES:
-        parser_mediator.ProduceExtractionWarning(
-            'more than {0:d} consecutive failures to parse lines.'.format(
-                self._MAXIMUM_CONSECUTIVE_LINE_FAILURES))
+        parser_mediator.ProduceExtractionWarning((
+            f'more than {self._MAXIMUM_CONSECUTIVE_LINE_FAILURES:d} '
+            f'consecutive failures to parse lines.'))
         break
 
       try:
@@ -188,15 +188,14 @@ class TextPlugin(plugins.BasePlugin):
         if not line:
           continue
 
-        logger.debug('unable to parse string with error: {0!s}'.format(
-            exception))
+        logger.debug(f'unable to parse string with error: {exception!s}')
 
         if len(line) > 80:
-          line = '{0:s}...'.format(line[:77])
+          line = f'{line[:77]:s}...'
 
         parser_mediator.ProduceExtractionWarning(
-            'unable to parse log line: {0:d} "{1:s}"'.format(
-                text_reader.line_number, line))
+            f'unable to parse log line: {text_reader.line_number:d} '
+            f'"{line:s}"')
 
         consecutive_line_failures += 1
 
@@ -210,8 +209,7 @@ class TextPlugin(plugins.BasePlugin):
 
       except errors.ParseError as exception:
         parser_mediator.ProduceExtractionWarning(
-            'unable to parse record: {0:s} with error: {1!s}'.format(
-                key, exception))
+            f'unable to parse record: {key:s} with error: {exception!s}')
 
       text_reader.SkipAhead(end)
 
@@ -220,8 +218,9 @@ class TextPlugin(plugins.BasePlugin):
         self._current_offset = text_reader.get_offset()
       except UnicodeDecodeError as exception:
         parser_mediator.ProduceExtractionWarning((
-            'unable to read and decode log line at offset {0:d} with error: '
-            '{1!s}').format(self._current_offset, exception))
+            f'unable to read and decode log line at offset '
+            f'{self._current_offset:d} with error: '
+            f'{exception!s}'))
         break
 
   @abc.abstractmethod
@@ -369,15 +368,16 @@ class TextPlugin(plugins.BasePlugin):
         self._current_offset = text_reader.get_offset()
       except UnicodeDecodeError as exception:
         parser_mediator.ProduceExtractionWarning((
-            'unable to read and decode log line at offset {0:d} with error: '
-            '{1!s}').format(self._current_offset, exception))
+            f'unable to read and decode log line at offset '
+            f'{self._current_offset:d} with error: '
+            f'{exception!s}'))
         return
 
       try:
         self._ParseHeader(parser_mediator, text_reader)
       except UnicodeDecodeError as exception:
         parser_mediator.ProduceExtractionWarning((
-            'unable to parser header with error: {0!s}').format(exception))
+            f'unable to parser header with error: {exception!s}'))
         return
 
       self._ParseLines(parser_mediator, text_reader)

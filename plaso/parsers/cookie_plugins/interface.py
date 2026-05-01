@@ -122,8 +122,7 @@ class BaseCookiePlugin(plugins.BasePlugin):
 
     if cookie_name != self.COOKIE_NAME:
       raise errors.WrongPlugin(
-          'Not the correct cookie plugin for: {0:s} [{1:s}]'.format(
-              cookie_name, self.NAME))
+          f'Not the correct cookie plugin for: {cookie_name:s} [{self.NAME:s}]')
 
     # This will raise if unhandled keyword arguments are passed.
     super(BaseCookiePlugin, self).Process(parser_mediator)

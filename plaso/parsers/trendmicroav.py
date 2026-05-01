@@ -121,13 +121,13 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
 
       if number_of_values < self._MINIMUM_NUMBER_OF_COLUMNS:
         raise errors.WrongParser(
-            'Expected at least {0:d} values, found {1:d}'.format(
-                self._MINIMUM_NUMBER_OF_COLUMNS, number_of_values))
+            f'Expected at least {self._MINIMUM_NUMBER_OF_COLUMNS:d} values, '
+            f'found {number_of_values:d}')
 
       if number_of_values > number_of_columns:
         raise errors.WrongParser(
-            'Expected at most {0:d} values, found {1:d}'.format(
-                number_of_columns, number_of_values))
+            f'Expected at most {number_of_columns:d} values, '
+            f'found {number_of_values:d}')
 
       yield dict(zip(self.COLUMNS, values))
 
@@ -152,7 +152,7 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
         timestamp = int(timestamp, 10)
       except (ValueError, TypeError):
         parser_mediator.ProduceExtractionWarning(
-            'Unable to parse timestamp value: {0!s}'.format(timestamp))
+            f'Unable to parse timestamp value: {timestamp!s}')
 
       return dfdatetime_posix_time.PosixTime(timestamp=timestamp)
 
@@ -162,8 +162,9 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
     except ValueError as exception:
       date_time = None
       parser_mediator.ProduceExtractionWarning((
-          'Unable to parse time string: "{0:s} {1:s}" with error: '
-          '{2!s}').format(repr(row['date']), repr(row['time']), exception))
+          f'Unable to parse time string: "{repr(row["date"]):s} '
+          f'{repr(row["time"]):s}" with error: '
+          f'{exception!s}'))
 
     return date_time
 
@@ -187,25 +188,25 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
       ValueError: if the date and time values cannot be parsed.
     """
     if len(date) != 8:
-      raise ValueError('Unsupported date string: {0!s}'.format(date))
+      raise ValueError(f'Unsupported date string: {date!s}')
 
     # The time consist of a hours and minutes value where the hours value has
     # no leading zero.
     if len(time) not in (3, 4):
-      raise ValueError('Unsupported time string: {0!s}'.format(time))
+      raise ValueError(f'Unsupported time string: {time!s}')
 
     try:
       year = int(date[:4], 10)
       month = int(date[4:6], 10)
       day = int(date[6:8], 10)
     except (TypeError, ValueError):
-      raise ValueError('Unable to parse date string: {0!s}'.format(date))
+      raise ValueError(f'Unable to parse date string: {date!s}')
 
     try:
       hour = int(time[:-2], 10)
       minutes = int(time[-2:], 10)
     except (TypeError, ValueError):
-      raise ValueError('Unable to parse time string: {0!s}'.format(date))
+      raise ValueError(f'Unable to parse time string: {time!s}')
 
     time_elements_tuple = (year, month, day, hour, minutes, 0)
     date_time = dfdatetime_time_elements.TimeElements(
