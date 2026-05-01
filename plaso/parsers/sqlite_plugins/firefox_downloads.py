@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """SQLite parser plugin for Mozilla Firefox downloads database files."""
 
 import json

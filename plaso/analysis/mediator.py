@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The analysis plugin mediator object."""
 
 import collections

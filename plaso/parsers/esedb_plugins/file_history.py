@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parser for the Microsoft File History ESE database."""
 
 from plaso.containers import events

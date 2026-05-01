@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The preprocess plugins manager."""
 
 from dfvfs.helpers import file_system_searcher

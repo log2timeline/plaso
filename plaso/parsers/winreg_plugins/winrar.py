@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This file contains a WinRAR history Windows Registry plugin."""
 
 import re

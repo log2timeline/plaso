@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parser for Windows Defender scan DetectionHistory files."""
 
 import os

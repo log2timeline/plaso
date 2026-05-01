@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Plist parser plugin for MacOS user plist files.
 
 Fields within the plist key:

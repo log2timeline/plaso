@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Helper to check for availability and version of dependencies."""
 
 import configparser

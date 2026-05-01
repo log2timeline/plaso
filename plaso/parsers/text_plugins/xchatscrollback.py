@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Text parser plugin for XChat scrollback log files.
 
 Information updated 06 September 2013.

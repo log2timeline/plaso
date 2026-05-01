@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Text parser plugin for AWS ELB access logs.
 
 The AWS documentation is not clear about the meaning of the "target_port_list"

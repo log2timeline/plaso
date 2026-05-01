@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Text parser plugin for iOS sysdiag log files."""
 
 import pyparsing

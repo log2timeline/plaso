@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The analysis plugins CLI arguments helper."""
 
 import sys

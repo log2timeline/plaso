@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Text plugin for MacOS Application firewall log (appfirewall.log) files."""
 
 import pyparsing

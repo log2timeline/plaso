@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Text parser plugin for PowerShell transcript log files."""
 
 import copy

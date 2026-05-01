@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """File system stat object parser."""
 
 import pytsk3

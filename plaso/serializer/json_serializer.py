@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """JSON attribute container serializer."""
 
 import binascii

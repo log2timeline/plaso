@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parser for Linux utmp files."""
 
 import os

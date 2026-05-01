@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Tests for Program Compatibility Assistant (PCA) log parsers."""
 
 import unittest

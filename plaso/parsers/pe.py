@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """A parser for Portable Executable (PE) files.
 
 Also see:

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The timeliner, which is used to generate events from event data."""
 
 import collections

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """SQLite database plugin related functions and classes for testing."""
 
 import os

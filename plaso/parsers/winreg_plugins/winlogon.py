@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This file contains the Winlogon Registry plugin."""
 
 from plaso.containers import events

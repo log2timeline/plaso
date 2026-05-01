@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The filter file CLI arguments helper."""
 
 import os

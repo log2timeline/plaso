@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The preprocess mediator."""
 
 import pytz

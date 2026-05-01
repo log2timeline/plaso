@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Text parser plugin for iOS sysdiagnose logd files (logd.0.log)."""
 
 import pyparsing

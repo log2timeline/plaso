@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Psteal (Plaso SýndarheimsTímalína sem Er ALgjörlega sjálfvirk).
 
 Psteal combines the log2timeline and psort tools into a single tool.

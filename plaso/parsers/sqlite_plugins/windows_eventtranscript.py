@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """SQLite parser plugin for Windows Diagnosis EventTranscript database file."""
 
 import json

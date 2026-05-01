@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Windows Registry plugin related functions and classes for testing."""
 
 from dfvfs.path import fake_path_spec

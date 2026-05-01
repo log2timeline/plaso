@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """OLECF plugin related functions and classes for testing."""
 
 import pyolecf

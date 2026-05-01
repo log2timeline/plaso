@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Text parser plugin for popularity contest log files.
 
 Information updated 20 january 2014.

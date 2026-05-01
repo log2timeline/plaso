@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """XML RPC server and client."""
 
 import socketserver as SocketServer

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Bencode parser plugin for uTorrent active torrent files."""
 
 from dfdatetime import posix_time as dfdatetime_posix_time

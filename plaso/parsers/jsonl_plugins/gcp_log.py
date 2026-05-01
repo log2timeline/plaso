@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """JSON-L parser plugin for Google Cloud (GCP) log files."""
 
 import re

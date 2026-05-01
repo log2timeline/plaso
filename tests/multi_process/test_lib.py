@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Multi-processing related functions and classes for testing."""
 
 from plaso.parsers import mediator as parsers_mediator

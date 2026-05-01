@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Text parser plugin for Advanced Packaging Tool (APT) History log files."""
 
 import pyparsing

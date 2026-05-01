@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parser for Systemd journal files."""
 
 import lzma

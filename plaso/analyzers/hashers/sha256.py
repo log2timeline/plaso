@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The SHA-256 Hasher implementation."""
 
 import hashlib

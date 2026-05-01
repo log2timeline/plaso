@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Analysis plugin that labels events by session."""
 
 from plaso.analysis import interface

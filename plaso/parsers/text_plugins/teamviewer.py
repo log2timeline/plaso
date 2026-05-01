@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Text parser plugins for TeamViewer log files."""
 
 import pyparsing

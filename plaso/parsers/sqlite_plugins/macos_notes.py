@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """SQLite parser plugin for MacOS Notes database files."""
 
 import html.parser as HTMLParser

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Path filters.
 
 Path filters are specified in filter files and are used during collection to

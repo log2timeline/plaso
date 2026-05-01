@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """An output module that writes event with geography data to a KML XML file.
 
 The Keyhole Markup Language (KML) is an XML notation for expressing geographic

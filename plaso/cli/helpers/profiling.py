@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The profiling CLI arguments helper."""
 
 import os

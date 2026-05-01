@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The language CLI arguments helper."""
 
 from plaso.cli import tools

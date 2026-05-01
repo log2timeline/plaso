@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The event filter."""
 
 from plaso.filters import expression_parser

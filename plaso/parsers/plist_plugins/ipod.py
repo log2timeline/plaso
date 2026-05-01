@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Plist parser plugin for iPod, iPad and iPhone storage plist files."""
 
 from plaso.containers import events

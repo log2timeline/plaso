@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """ZeroMQ implementations of the Plaso queue interface."""
 
 import abc

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Tests that all analysis plugins are imported correctly."""
 
 import unittest

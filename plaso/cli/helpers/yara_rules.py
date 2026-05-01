@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The YARA rules CLI arguments helper."""
 
 import io

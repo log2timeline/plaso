@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Interface for plist parser plugins.
 
 Plist files are only one example of a type of object that the Plaso tool is

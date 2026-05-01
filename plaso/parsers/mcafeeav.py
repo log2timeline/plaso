@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parser for McAfee Anti-Virus Logs.
 
 McAfee AV uses 4 logs to track when scans were run, when virus databases were

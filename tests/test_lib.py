@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Shared functions and classes for testing."""
 
 import io

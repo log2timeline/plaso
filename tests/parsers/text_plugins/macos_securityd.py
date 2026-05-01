@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Tests the MacOS security daemon (securityd) log file text parser plugin."""
 
 import unittest

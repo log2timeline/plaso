@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The hashing analyzer implementation."""
 
 from plaso.analyzers import interface

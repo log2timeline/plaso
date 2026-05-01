@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This file contains the MSIE zone settings plugin."""
 
 from plaso.containers import events

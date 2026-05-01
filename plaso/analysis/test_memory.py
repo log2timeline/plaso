@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Analysis plugin for testing exceeding memory consumption."""
 
 from plaso.analysis import interface

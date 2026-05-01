@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This file imports Python modules that register parsers."""
 
 from plaso.parsers import android_app_usage

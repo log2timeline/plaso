@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The filters sub module logger."""
 
 import logging

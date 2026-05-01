@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """SQLite-based storage writer."""
 
 from plaso.lib import definitions

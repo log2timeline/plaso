@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Tests for the Mac OS launchd log text parser plugin."""
 
 import unittest

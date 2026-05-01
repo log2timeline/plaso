@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Windows EventLog resources database reader."""
 
 import collections

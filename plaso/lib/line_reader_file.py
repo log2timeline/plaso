@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Binary line reader file-like object."""
 
 import os

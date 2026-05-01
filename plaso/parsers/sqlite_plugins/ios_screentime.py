@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """SQLite parser plugin for iOS Screen Time database files."""
 
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time

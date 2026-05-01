@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Redis-based attribute container store.
 
 Only supports task storage at the moment.

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The CLI tool options mix-ins."""
 
 import os

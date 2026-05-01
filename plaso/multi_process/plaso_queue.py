@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Queue management implementation for Plaso.
 
 This file contains an implementation of a queue used by plaso for queue

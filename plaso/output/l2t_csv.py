@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Output module for the log2timeline (L2T) CSV format.
 
 For documentation on the L2T CSV format see:

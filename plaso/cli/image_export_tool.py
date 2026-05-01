@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The image export CLI tool."""
 
 import argparse

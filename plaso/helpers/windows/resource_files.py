@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Windows PE/COFF resource file helper."""
 
 import re

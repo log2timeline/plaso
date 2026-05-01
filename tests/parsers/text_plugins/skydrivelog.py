@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Tests for the SkyDrive version 1 and 2 log files text parser plugins."""
 
 import unittest

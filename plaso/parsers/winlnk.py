@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parser for Windows Shortcut (LNK) files."""
 
 import uuid

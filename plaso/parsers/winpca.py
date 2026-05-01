@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parser for Windows Program Compatibility Assistant (PCA) log files."""
 
 from dfdatetime import time_elements as dfdatetime_time_elements

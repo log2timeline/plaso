@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Output module for the native (or "raw") Python format."""
 
 from acstore.containers import interface as containers_interface

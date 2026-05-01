@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Text parser plugin for MacOS security daemon (securityd) log files."""
 
 import pyparsing

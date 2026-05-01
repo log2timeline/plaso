@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The event filter expression parser expression classes."""
 
 import abc

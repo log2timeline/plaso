@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The date filters CLI arguments helper."""
 
 from plaso.cli import tools

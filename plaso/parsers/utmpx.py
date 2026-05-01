@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parser for MacOS utmpx files."""
 
 import os

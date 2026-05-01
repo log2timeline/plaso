@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Tests for the Mozilla Firefox history custom event formatter helpers."""
 
 import unittest

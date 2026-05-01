@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Delimiter separated values (DSV) parser interface."""
 
 import abc

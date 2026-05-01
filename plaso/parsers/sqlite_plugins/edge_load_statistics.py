@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parser for Microsoft Edge load statistics database."""
 
 from dfdatetime import webkit_time as dfdatetime_webkit_time

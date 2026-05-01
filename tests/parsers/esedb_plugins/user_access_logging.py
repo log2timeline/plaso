@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Tests for the User Access Logging (UAL) ESE database file."""
 
 import unittest

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Plist parser plugin for MacOS TimeMachine plist files."""
 
 import os

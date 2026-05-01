@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Tests for the .automaticDestinations-ms OLECF parser plugin."""
 
 import unittest

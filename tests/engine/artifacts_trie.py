@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Tests for the artifacts trie."""
 
 import unittest

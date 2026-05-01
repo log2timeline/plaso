@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """A plugin that extracts browser history from events."""
 
 import re

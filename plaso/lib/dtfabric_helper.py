@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The dtFabric helper mix-in."""
 
 import os

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Tests for the JSON-L parser plugin for Docker container config files."""
 
 import unittest

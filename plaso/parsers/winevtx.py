@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parser for Windows XML EventLog (EVTX) files."""
 
 import pyevtx

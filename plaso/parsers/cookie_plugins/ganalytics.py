@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This file contains a plugin for parsing Google Analytics cookies."""
 
 from urllib import parse as urlparse

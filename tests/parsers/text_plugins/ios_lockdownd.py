@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Tests for the iOS lockdown daemon log files text parser plugin."""
 
 import unittest

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """YAML-based timeliner configuration file."""
 
 import yaml

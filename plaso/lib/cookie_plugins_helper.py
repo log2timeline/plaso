@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The cookie plugins helper mix-in."""
 
 # Register the cookie plugins.

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parser for the Microsoft Internet Explorer WebCache ESE database.
 
 The WebCache database (WebCacheV01.dat or WebCacheV24.dat) are used by MSIE as

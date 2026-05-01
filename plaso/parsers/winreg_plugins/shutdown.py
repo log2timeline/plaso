@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Windows Registry plugin for parsing the last shutdown time of a system."""
 
 import os

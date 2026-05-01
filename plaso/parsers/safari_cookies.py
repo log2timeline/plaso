@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parser for Safari Binary Cookie files."""
 
 import os

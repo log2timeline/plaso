@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """SQLite parser plugin for Android text messages (SMS) database files."""
 
 from dfdatetime import java_time as dfdatetime_java_time

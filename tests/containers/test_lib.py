@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Containers related functions and classes for testing."""
 
 from dfdatetime import posix_time as dfdatetime_posix_time

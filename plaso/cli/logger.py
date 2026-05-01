@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The cli sub module logger."""
 
 import logging

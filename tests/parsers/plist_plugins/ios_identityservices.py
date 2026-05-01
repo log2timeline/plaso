@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Tests for the iOS identityservices plist plugin."""
 
 import unittest

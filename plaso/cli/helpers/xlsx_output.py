@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The XLSX output module CLI arguments helper."""
 
 from plaso.lib import errors

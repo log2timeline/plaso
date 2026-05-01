@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The profiler classes."""
 
 import codecs

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The status view CLI arguments helper."""
 
 from plaso.cli import status_view

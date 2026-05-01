@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Plist event attribute containers."""
 
 from plaso.containers import events

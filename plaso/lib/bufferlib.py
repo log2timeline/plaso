@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Circular buffer for storing event objects."""
 
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Text parser plugin for Atlassian Jira log files.
 
 This is for the atlassian-jira.log file, one of multiple log files

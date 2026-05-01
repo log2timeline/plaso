@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Redis-based storage reader."""
 
 from plaso.storage import reader

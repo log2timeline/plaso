@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Tests for the helper for parser and plugin filter expressions."""
 
 import unittest

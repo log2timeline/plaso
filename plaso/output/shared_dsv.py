@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Shared functionality for delimiter separated values output modules."""
 
 import collections

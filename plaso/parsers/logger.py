@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The parsers sub module logger."""
 
 import logging

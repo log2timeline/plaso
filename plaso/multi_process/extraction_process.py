@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The multi-process extraction worker process."""
 
 from dfvfs.lib import definitions as dfvfs_definitions

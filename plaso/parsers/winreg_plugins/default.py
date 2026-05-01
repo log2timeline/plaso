@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The default Windows Registry plugin."""
 
 from plaso.parsers import winreg_parser

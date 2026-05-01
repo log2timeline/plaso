@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parser for Windows Restore Point (rp.log) files."""
 
 import os

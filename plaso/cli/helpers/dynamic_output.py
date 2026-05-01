@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The dynamic output module CLI arguments helper."""
 
 from plaso.lib import errors

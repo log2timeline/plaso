@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Windows shell folders helper."""
 
 

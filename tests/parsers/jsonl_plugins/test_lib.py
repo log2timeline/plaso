@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """JSON-L parser plugin related functions and classes for testing."""
 
 import json

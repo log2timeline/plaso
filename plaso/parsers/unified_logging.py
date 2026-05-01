@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The Apple Unified Logging (AUL) file parser."""
 
 import abc

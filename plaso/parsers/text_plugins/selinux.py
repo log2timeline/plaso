@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Text parser plugin for SELinux audit log (audit.log) files.
 
 audit.log log line example:

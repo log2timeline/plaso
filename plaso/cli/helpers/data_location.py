@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The data location CLI arguments helper."""
 
 import os

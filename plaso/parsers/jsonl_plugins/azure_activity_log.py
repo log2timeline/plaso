@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """JSON-L parser plugin for Azure activity log files."""
 
 from dfdatetime import time_elements as dfdatetime_time_elements

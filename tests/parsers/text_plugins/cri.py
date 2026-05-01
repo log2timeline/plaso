@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Tests for the Container Runtime Interface (CRI) log text plugin."""
 
 import unittest

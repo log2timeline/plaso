@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This file contains a parser for compound ZIP files."""
 
 import zipfile

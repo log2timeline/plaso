@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Event filter expression parser."""
 
 import binascii

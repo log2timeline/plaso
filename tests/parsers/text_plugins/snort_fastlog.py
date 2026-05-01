@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Tests for Snort3/Suricata fast-log alert log text parser plugin."""
 
 import unittest

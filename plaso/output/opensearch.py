@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """An output module that saves events to OpenSearch."""
 
 from plaso.output import manager

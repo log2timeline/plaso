@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parser for Google Chrome and Chromium Cache files."""
 
 import os

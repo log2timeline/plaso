@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Report related attribute container definitions."""
 
 from acstore.containers import interface
