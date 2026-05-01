@@ -145,8 +145,9 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
         mediator.SetPreferredLanguageIdentifier(
             processing_configuration.preferred_language)
       except (KeyError, TypeError):
-        logger.warning('Unable to to set preferred language: {0!s}.'.format(
-              processing_configuration.preferred_language))
+        logger.warning((
+            f'Unable to to set preferred language: '
+            f'{processing_configuration.preferred_language!s}'))
 
     mediator.SetTimeZone(processing_configuration.preferred_time_zone)
 
@@ -381,16 +382,16 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
             formatters_directory)
       except KeyError as exception:
         raise errors.BadConfigOption((
-            'Unable to read message formatters from directory: {0:s} with '
-            'error: {1!s}').format(formatters_directory, exception))
+            f'Unable to read message formatters from directory: '
+            f'{formatters_directory:s} with error: {exception!s}'))
 
     elif os.path.isfile(formatters_file):
       try:
         output_mediator_object.ReadMessageFormattersFromFile(formatters_file)
       except KeyError as exception:
         raise errors.BadConfigOption((
-            'Unable to read message formatters from file: {0:s} with error: '
-            '{1!s}').format(formatters_file, exception))
+            f'Unable to read message formatters from file: '
+            f'{formatters_file:s} with error: {exception!s}'))
 
     else:
       raise errors.BadConfigOption('Missing formatters file and directory.')
@@ -401,8 +402,8 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
             custom_formatters_path, override_existing=True)
       except KeyError as exception:
         raise errors.BadConfigOption((
-            'Unable to read custrom message formatters from file: {0:s} with '
-            'error: {1!s}').format(formatters_file, exception))
+            f'Unable to read custrom message formatters from file: '
+            f'{formatters_file:s} with error: {exception!s}'))
 
   def _UpdateForemanProcessStatus(self):
     """Update the foreman process status."""

@@ -36,8 +36,7 @@ class XMLRPCClient(rpc.RPCClient):
     except (
         expat.ExpatError, SocketServer.socket.error,
         xmlrpclib.Fault) as exception:
-      logger.warning('Unable to make RPC call with error: {0!s}'.format(
-          exception))
+      logger.warning(f'Unable to make RPC call with error: {exception!s}')
       return None
 
   def Close(self):
@@ -54,15 +53,15 @@ class XMLRPCClient(rpc.RPCClient):
     Returns:
       bool: True if the communication channel was established.
     """
-    server_url = 'http://{0:s}:{1:d}'.format(hostname, port)
+    server_url = f'http://{hostname:s}:{port:d}'
 
     try:
       self._xmlrpc_proxy = xmlrpclib.ServerProxy(
           server_url, allow_none=True)
     except SocketServer.socket.error as exception:
       logger.warning((
-          'Unable to connect to RPC server on {0:s}:{1:d} with error: '
-          '{2!s}').format(hostname, port, exception))
+          f'Unable to connect to RPC server on {hostname:s}:{port:d} with '
+          f'error: {exception!s}'))
       return False
 
     return True
@@ -107,8 +106,8 @@ class ThreadedXMLRPCServer(rpc.RPCServer):
           (hostname, port), logRequests=False, allow_none=True)
     except SocketServer.socket.error as exception:
       logger.warning((
-          'Unable to bind a RPC server on {0:s}:{1:d} with error: '
-          '{2!s}').format(hostname, port, exception))
+          f'Unable to bind a RPC server on {hostname:s}:{port:d} with error: '
+          f'{exception!s}'))
       return False
 
     self._xmlrpc_server.register_function(
