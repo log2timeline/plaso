@@ -23,8 +23,7 @@ class CookiePluginsManager(object):
     """
     plugin_name = plugin_class.NAME.lower()
     if plugin_name not in cls._plugin_classes:
-      raise KeyError(
-          f'Plugin class not set for name: {plugin_class.NAME:s}.')
+      raise KeyError(f'Plugin class not set for name: {plugin_class.NAME:s}.')
 
     del cls._plugin_classes[plugin_name]
 
