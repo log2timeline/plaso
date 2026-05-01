@@ -96,11 +96,11 @@ class DynamicFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
 
     if None in (year, month, day_of_month):
       self._ReportEventError(event, event_data, (
-          'unable to copy timestamp: {0!s} to a human readable date. '
-          'Defaulting to: "0000-00-00"').format(event.timestamp))
+          f'unable to copy timestamp: {event.timestamp!s} to a human readable '
+          f'date. Defaulting to: "0000-00-00"'))
       return '0000-00-00'
 
-    return '{0:04d}-{1:02d}-{2:02d}'.format(year, month, day_of_month)
+    return f'{year:04d}-{month:02d}-{day_of_month:02d}'
 
   def _FormatTimestampDescription(
       self, output_mediator, event, event_data, event_data_stream):

@@ -97,7 +97,7 @@ class FieldFormattingHelper(object):
         return 'Invalid'
 
       if iso8601_string[-1] == 'Z':
-        iso8601_string = '{0:s}+00:00'.format(iso8601_string[:-1])
+        iso8601_string = f'{iso8601_string[:-1]:s}+00:00'
 
       if output_mediator.time_zone != pytz.UTC or date_time.time_zone_offset:
         # For output in a specific time zone overwrite the date, time in
@@ -155,16 +155,16 @@ class FieldFormattingHelper(object):
         datetime_object = datetime_object.astimezone(output_mediator.time_zone)
 
         iso8601_string = datetime_object.isoformat()
-        iso8601_string = '{0:s}.{1:06d}{2:s}'.format(
-            iso8601_string[:19], datetime_object.microsecond,
-            iso8601_string[-6:])
+        iso8601_string = (
+            f'{iso8601_string[:19]:s}.{datetime_object.microsecond:06d}'
+            f'{iso8601_string[-6:]:s}')
 
       except (OSError, OverflowError, TypeError, ValueError) as exception:
         iso8601_string = '0000-00-00T00:00:00.000000+00:00'
         self._ReportEventError(event, event_data, (
-            'unable to copy timestamp: {0!s} to a human readable date and '
-            'time with error: {1!s}. Defaulting to: "{2:s}"').format(
-                event.timestamp, exception, iso8601_string))
+            f'unable to copy timestamp: {event.timestamp!s} to a human '
+            f'readable date and time with error: {exception!s}. Defaulting '
+            f'to: "{iso8601_string:s}"'))
 
     return iso8601_string
 
@@ -276,7 +276,7 @@ class FieldFormattingHelper(object):
       inode = '-'
 
     elif isinstance(inode, int):
-      inode = '{0:d}'.format(inode)
+      inode = f'{inode:d}'
 
     return inode
 
@@ -340,8 +340,8 @@ class FieldFormattingHelper(object):
         event_data.data_type)
     if not message_formatter:
       logger.warning(
-          'Using default message formatter for data type: {0:s}'.format(
-              event_data.data_type))
+          f'Using default message formatter for data type: '
+          f'{event_data.data_type:s}')
       message_formatter = self._DEFAULT_MESSAGE_FORMATTER
 
     event_values = event_data.CopyToDict()
@@ -460,11 +460,11 @@ class FieldFormattingHelper(object):
 
     if None in (hours, minutes, seconds):
       self._ReportEventError(event, event_data, (
-          'unable to copy timestamp: {0!s} to a human readable time. '
-          'Defaulting to: "--:--:--"').format(event.timestamp))
+          f'unable to copy timestamp: {event.timestamp!s} to a human readable '
+          f'time. Defaulting to: "--:--:--"'))
       return '--:--:--'
 
-    return '{0:02d}:{1:02d}:{2:02d}'.format(hours, minutes, seconds)
+    return f'{hours:02d}:{minutes:02d}:{seconds:02d}'
 
   def _FormatTimeZone(
       self, output_mediator, event, event_data, event_data_stream):
@@ -503,9 +503,8 @@ class FieldFormattingHelper(object):
 
     except (OverflowError, TypeError, ValueError):
       self._ReportEventError(event, event_data, (
-          'unable to copy timestamp: {0!s} to a human readable time zone. '
-          'Defaulting to: "-"').format(event.timestamp))
-
+          f'unable to copy timestamp: {event.timestamp!s} to a human readable '
+          f'time zone. Defaulting to: "-"'))
       return '-'
 
   def _FormatUsername(
@@ -541,10 +540,9 @@ class FieldFormattingHelper(object):
     values = getattr(event_data, 'values', None)
     if isinstance(values, list) and event_data.data_type in (
         'windows:registry:key_value', 'windows:registry:service'):
-      values = ' '.join([
-          '{0:s}: [{1:s}] {2:s}'.format(
-              name or '(default)', data_type, data or '(empty)')
-          for name, data_type, data in sorted(values)])
+      values = ' '.join(
+          f'{name or "(default)"}: [{data_type:s}] {data or "(empty)"}'
+          for name, data_type, data in sorted(values))
 
     return values
 
@@ -563,12 +561,11 @@ class FieldFormattingHelper(object):
     display_name = getattr(event_data, 'display_name', None) or 'N/A'
     parser_chain = getattr(event_data, '_parser_chain', None) or 'N/A'
 
-    error_message = (
-        'Event: {0!s} description: {1:s} data type: {2:s} display name: {3:s} '
-        'parser chain: {4:s} with error: {5:s}').format(
-            event_identifier_string, event.timestamp_desc, event_data.data_type,
-            display_name, parser_chain, error_message)
-    logger.error(error_message)
+    logger.error((
+        f'Event: {event_identifier_string!s} description: '
+        f'{event.timestamp_desc:s} data type: {event_data.data_type:s} '
+        f'display name: {display_name:s} parser chain: {parser_chain:s} with '
+        f'error: {error_message:s}'))
 
   def GetFormattedField(
       self, output_mediator, field_name, event, event_data, event_data_stream,
@@ -600,6 +597,6 @@ class FieldFormattingHelper(object):
       output_value = getattr(event_data, field_name, None)
 
     if output_value is not None and not isinstance(output_value, str):
-      output_value = '{0!s}'.format(output_value)
+      output_value = f'{output_value!s}'
 
     return output_value

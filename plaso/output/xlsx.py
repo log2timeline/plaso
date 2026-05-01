@@ -76,9 +76,8 @@ class XLSXOutputModule(interface.OutputModule):
 
     except (OSError, OverflowError, TypeError, ValueError) as exception:
       self._ReportEventError(event, event_data, (
-          'unable to copy timestamp: {0!s} to a human readable date and time '
-          'with error: {1!s}. Defaulting to: "ERROR"').format(
-              event.timestamp, exception))
+          f'unable to copy timestamp: {event.timestamp!s} to a human readable '
+          f'date and time with error: {exception!s}. Defaulting to: "ERROR"'))
       return 'ERROR'
 
   def _SanitizeField(self, field):
@@ -158,7 +157,7 @@ class XLSXOutputModule(interface.OutputModule):
     if os.path.isfile(path):
       raise IOError((
           'Unable to use an already existing file for output '
-          '[{0:s}]').format(path))
+          f'[{path:s}]'))
 
     options = {
         'constant_memory': True,

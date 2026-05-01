@@ -29,8 +29,7 @@ class OutputManager(object):
 
     if output_class_name not in class_dict:
       raise KeyError(
-          'Output class not set for name: {0:s}.'.format(
-              output_class.NAME))
+          f'Output class not set for name: {output_class.NAME!s}')
 
     del class_dict[output_class_name]
 
