@@ -61,11 +61,11 @@ class CacheAddress(object):
     if not cache_address == 0x00000000:
       if self.file_type == self.FILE_TYPE_SEPARATE:
         file_selector = cache_address & 0x0fffffff
-        self.filename = 'f_{0:06x}'.format(file_selector)
+        self.filename = f'f_{file_selector:06x}'
 
       elif self.file_type in self._BLOCK_DATA_FILE_TYPES:
         file_selector = (cache_address & 0x00ff0000) >> 16
-        self.filename = 'data_{0:d}'.format(file_selector)
+        self.filename = f'data_{file_selector:d}'
 
         file_block_size = self._FILE_TYPE_BLOCK_SIZES[self.file_type]
         self.block_number = cache_address & 0x0000ffff
@@ -134,14 +134,13 @@ class ChromeCacheIndexFileParser(
           file_object, 0, file_header_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError(
-          'Unable to parse index file header with error: {0!s}'.format(
-              exception))
+          f'Unable to parse index file header with error: {exception!s}')
 
-    format_version = '{0:d}.{1:d}'.format(
-        file_header.major_version, file_header.minor_version)
+    format_version = (
+        f'{file_header.major_version:d}.{file_header.minor_version:d}')
     if format_version not in ('2.0', '2.1', '3.0'):
       raise errors.ParseError(
-          'Unsupported index file format version: {0:s}'.format(format_version))
+          f'Unsupported index file format version: {format_version:s}')
     self.creation_time = file_header.creation_time
 
   def _ParseIndexTable(self, file_object):
@@ -164,8 +163,8 @@ class ChromeCacheIndexFileParser(
             cache_address_data, file_offset, cache_address_map)
       except (ValueError, errors.ParseError) as exception:
         raise errors.ParseError((
-            'Unable to map cache address at offset: 0x{0:08x} with error: '
-            '{1!s}').format(file_offset, exception))
+            f'Unable to map cache address at offset: 0x{file_offset:08x} '
+            f'with error: {exception!s}'))
 
       if value:
         cache_address = CacheAddress(value)
@@ -189,8 +188,7 @@ class ChromeCacheIndexFileParser(
       self._ParseFileHeader(file_object)
     except errors.ParseError as exception:
       raise errors.ParseError(
-          'Unable to parse index file header with error: {0!s}'.format(
-              exception))
+          f'Unable to parse index file header with error: {exception!s}')
     # Skip over the LRU data, which is 112 bytes in size.
     file_object.seek(112, os.SEEK_CUR)
     self._ParseIndexTable(file_object)
@@ -220,20 +218,17 @@ class ChromeCacheDataBlockFileParser(
           file_object, 0, file_header_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError(
-          'Unable to parse data block file header with error: {0!s}'.format(
-              exception))
+          f'Unable to parse data block file header with error: {exception!s}')
 
-    format_version = '{0:d}.{1:d}'.format(
-        file_header.major_version, file_header.minor_version)
+    format_version = (
+        f'{file_header.major_version:d}.{file_header.minor_version:d}')
     if format_version not in ('2.0', '2.1'):
       raise errors.ParseError(
-          'Unsupported data block file format version: {0:s}'.format(
-              format_version))
+          f'Unsupported data block file format version: {format_version:s}')
 
     if file_header.block_size not in (256, 1024, 4096):
       raise errors.ParseError(
-          'Unsupported data block file block size: {0:d}'.format(
-              file_header.block_size))
+          f'Unsupported data block file block size: {file_header.block_size:d}')
 
   def ParseCacheEntry(self, file_object, block_offset):
     """Parses a cache entry.
@@ -255,8 +250,8 @@ class ChromeCacheDataBlockFileParser(
           file_object, block_offset, cache_entry_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError((
-          'Unable to parse cache entry at offset: 0x{0:08x} with error: '
-          '{1!s}').format(block_offset, exception))
+          f'Unable to parse cache entry at offset: 0x{block_offset:08x} with '
+          f'error: {exception!s}'))
 
     cache_entry_object = CacheEntry()
 
@@ -274,8 +269,7 @@ class ChromeCacheDataBlockFileParser(
       cache_entry_object.original_url = cache_entry_object.key.decode('ascii')
     except UnicodeDecodeError as exception:
       raise errors.ParseError(
-          'Unable to decode original URL in key with error: {0!s}'.format(
-              exception))
+          f'Unable to decode original URL in key with error: {exception!s}')
 
     return cache_entry_object
 
@@ -345,9 +339,8 @@ class ChromeCacheParser(interface.FileEntryParser):
         data_block_file_object = data_block_files.get(
             cache_address.filename, None)
         if not data_block_file_object:
-          message = 'Cache address: 0x{0:08x} missing data file.'.format(
-              cache_address.value)
-          parser_mediator.ProduceExtractionWarning(message)
+          parser_mediator.ProduceExtractionWarning(
+              f'Cache address: 0x{cache_address.value:08x} missing data file.')
           break
 
         try:
@@ -355,8 +348,7 @@ class ChromeCacheParser(interface.FileEntryParser):
               data_block_file_object, cache_address.block_offset)
         except (IOError, errors.ParseError) as exception:
           parser_mediator.ProduceExtractionWarning(
-              'Unable to parse cache entry with error: {0!s}'.format(
-                  exception))
+              f'Unable to parse cache entry with error: {exception!s}')
           break
 
         event_data = ChromeCacheEntryEventData()
@@ -367,7 +359,7 @@ class ChromeCacheParser(interface.FileEntryParser):
         # This shows up as r"_dk_{domain}( {domain})* {url}"
         # https://chromium.googlesource.com/chromium/src/+/
         # 95faad3cfd90169f0a267e979c36e3348476a948/net/http/http_cache.cc#427
-        if "_dk_" in cache_entry.original_url[:20]:
+        if '_dk_' in cache_entry.original_url[:20]:
           parsed_url = cache_entry.original_url.strip().rsplit(' ', 1)[-1]
           event_data.original_url = parsed_url
         else:
@@ -415,16 +407,15 @@ class ChromeCacheParser(interface.FileEntryParser):
           data_block_file_entry = path_spec_resolver.Resolver.OpenFileEntry(
               data_block_file_path_spec)
         except RuntimeError as exception:
-          message = (
-              'Unable to open data block file: {0:s} with error: '
-              '{1!s}'.format(kwargs['location'], exception))
-          parser_mediator.ProduceExtractionWarning(message)
+          location = kwargs['location'] or 'N/A'
+          parser_mediator.ProduceExtractionWarning(
+              f'Unable to open data block file: {location!s} with error: '
+              f'{exception!s}')
           data_block_file_entry = None
 
         if not data_block_file_entry:
-          message = 'Missing data block file: {0:s}'.format(
-              cache_address.filename)
-          parser_mediator.ProduceExtractionWarning(message)
+          parser_mediator.ProduceExtractionWarning(
+              f'Missing data block file: {cache_address.filename:s}')
           data_block_file_object = None
 
         else:
@@ -435,8 +426,8 @@ class ChromeCacheParser(interface.FileEntryParser):
                 parser_mediator, data_block_file_object)
           except (IOError, errors.ParseError) as exception:
             message = (
-                'Unable to parse data block file: {0:s} with error: '
-                '{1!s}').format(cache_address.filename, exception)
+                f'Unable to parse data block file: {cache_address.filename!s} '
+                f'with error: {exception!s}')
             parser_mediator.ProduceExtractionWarning(message)
             data_block_file_object = None
         data_block_files[cache_address.filename] = data_block_file_object
@@ -470,16 +461,15 @@ class ChromeCacheParser(interface.FileEntryParser):
     if not file_object:
       display_name = parser_mediator.GetDisplayName()
       raise errors.WrongParser(
-          '[{0:s}] unable to parse index file {1:s}'.format(
-              self.NAME, display_name))
+          f'[{self.NAME:s}] unable to parse index file {display_name:s}')
 
     try:
       index_file_parser.ParseFileObject(parser_mediator, file_object)
     except (IOError, errors.ParseError) as exception:
       display_name = parser_mediator.GetDisplayName()
       raise errors.WrongParser(
-          '[{0:s}] unable to parse index file {1:s} with error: {2!s}'.format(
-              self.NAME, display_name, exception))
+          f'[{self.NAME:s}] unable to parse index file {display_name:s} with '
+          f'error: {exception!s}')
 
     # TODO: create event based on index file creation time.
 

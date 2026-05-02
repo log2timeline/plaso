@@ -132,8 +132,7 @@ class ASLParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
     if additional_data_size % 8 != 0:
       raise errors.ParseError(
-          'Invalid record additional data size: {0:d}.'.format(
-              additional_data_size))
+          f'Unsupported record additional data size: {additional_data_size:d}.')
 
     additional_data = self._ReadData(
         file_object, file_offset, additional_data_size)
@@ -162,8 +161,7 @@ class ASLParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
     event_data = ASLEventData()
     event_data.computer_name = hostname
     event_data.extra_information = ', '.join([
-        '{0:s}: {1!s}'.format(name, value)
-        for name, value in sorted(extra_fields.items())])
+        f'{name:s}: {value!s}' for name, value in sorted(extra_fields.items())])
     event_data.facility = facility
     event_data.group_identifier = record.group_identifier
     event_data.level = record.alert_level
@@ -203,8 +201,8 @@ class ASLParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
           byte_stream, file_offset, extra_field_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError((
-          'Unable to parse record extra field at offset: 0x{0:08x} with error: '
-          '{1!s}').format(file_offset, exception))
+          f'Unable to parse record extra field at offset: 0x{file_offset:08x} '
+          f'with error: {exception!s}'))
 
     return record_extra_field
 
@@ -241,8 +239,7 @@ class ASLParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         return string_data[:string_size].decode('utf-8')
       except UnicodeDecodeError as exception:
         raise errors.ParseError(
-            'Unable to decode inline record string with error: {0!s}.'.format(
-                exception))
+            f'Unable to decode inline record string with error: {exception!s}.')
 
     record_string_map = self._GetDataTypeMap('asl_record_string')
 
@@ -251,8 +248,8 @@ class ASLParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
           file_object, string_offset, record_string_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError((
-          'Unable to parse record string at offset: 0x{0:08x} with error: '
-          '{1!s}').format(string_offset, exception))
+          f'Unable to parse record string at offset: 0x{string_offset:08x} '
+          f'with error: {exception!s}'))
 
     return record_string.string.rstrip('\x00')
 
@@ -286,8 +283,7 @@ class ASLParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
           file_object, 0, file_header_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.WrongParser(
-          'Unable to parse file header with error: {0!s}'.format(
-              exception))
+          f'Unable to parse file header with error: {exception!s}')
 
     is_dirty = False
     file_size = file_object.get_size()
@@ -304,7 +300,7 @@ class ASLParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
               parser_mediator, file_object, file_offset)
         except errors.ParseError as exception:
           parser_mediator.ProduceExtractionWarning(
-              'unable to parse record with error: {0!s}'.format(exception))
+              f'unable to parse record with error: {exception!s}')
           return
 
         if file_offset == 0:
