@@ -589,8 +589,8 @@ class SkypePlugin(interface.SQLitePlugin):
         src_aux = 'Unknown [no GUID]'
         dst_aux = 'Unknown [no GUID]'
     except IndexError:
-      src_aux = 'Unknown [{0:s}]'.format(guid)
-      dst_aux = 'Unknown [{0:s}]'.format(guid)
+      src_aux = f'Unknown [{guid:s}]'
+      dst_aux = f'Unknown [{guid:s}]'
 
     if is_incoming == '0':
       user_start_call = True
@@ -598,7 +598,7 @@ class SkypePlugin(interface.SQLitePlugin):
 
       ip_address = self._GetRowValue(query_hash, row, 'ip_address')
       if ip_address:
-        destination = '{0:s} <{1:s}>'.format(dst_aux, ip_address)
+        destination = f'{dst_aux:s} <{ip_address:s}>'
       else:
         destination = dst_aux
     else:
@@ -657,7 +657,7 @@ class SkypePlugin(interface.SQLitePlugin):
     if not to_account:
       to_account = dialog_partner or 'Unknown User'
 
-    from_account = '{0:s} <{1:s}>'.format(from_displayname, author)
+    from_account = f'{from_displayname:s} <{author:s}>'
 
     event_data = SkypeChatEventData()
     event_data.from_account = from_account
@@ -712,18 +712,18 @@ class SkypePlugin(interface.SQLitePlugin):
     partner_handle = self._GetRowValue(query_hash, row, 'partner_handle')
 
     if parent_id:
-      destination = '{0:s} <{1:s}>'.format(partner_handle, partner_dispname)
+      destination = f'{partner_handle:s} <{partner_dispname:s}>'
       skype_id, skype_name = source_dict.get(parent_id, [None, None])
       if skype_name:
-        source = '{0:s} <{1:s}>'.format(skype_id, skype_name)
+        source = f'{skype_id:s} <{skype_name:s}>'
     else:
-      source = '{0:s} <{1:s}>'.format(partner_handle, partner_dispname)
+      source = f'{partner_handle:s} <{partner_dispname:s}>'
 
       pk_id = self._GetRowValue(query_hash, row, 'pk_id')
       if pk_id:
         skype_id, skype_name = dest_dict.get(pk_id, [None, None])
         if skype_name:
-          destination = '{0:s} <{1:s}>'.format(skype_id, skype_name)
+          destination = f'{skype_id:s} <{skype_name:s}>'
 
     filename = self._GetRowValue(query_hash, row, 'filename')
     filesize = self._GetRowValue(query_hash, row, 'filesize')
@@ -732,8 +732,7 @@ class SkypePlugin(interface.SQLitePlugin):
       file_size = int(filesize, 10)
     except (ValueError, TypeError):
       parser_mediator.ProduceExtractionWarning(
-          'unable to convert file size: {0!s} of file: {1:s}'.format(
-              filesize, filename))
+          f'unable to convert file size: {filesize!s} of file: {filename:s}')
       file_size = 0
 
     event_data = SkypeTransferFileEventData()

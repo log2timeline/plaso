@@ -171,7 +171,7 @@ class BaseGoogleChromeHistoryPlugin(interface.SQLitePlugin):
     if not reference_url:
       return ''
 
-    return '{0:s} ({1:s})'.format(reference_url, reference_title)
+    return f'{reference_url:s} ({reference_title:s})'
 
   def _GetVisitSource(self, visit_identifier, cache, database):
     """Retrieves a visit source type based on the identifier.

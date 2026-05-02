@@ -165,10 +165,10 @@ class SQLiteDatabase(object):
       try:
         os.remove(self._temp_db_file_path)
       except (OSError, IOError) as exception:
-        logger.warning((
-            'Unable to remove temporary copy: {0:s} of SQLite database: '
-            '{1:s} with error: {2!s}').format(
-                self._temp_db_file_path, self._filename, exception))
+        logger.warning(
+            f'Unable to remove temporary copy: '
+            f'{self._temp_db_file_path} of SQLite database: '
+            f'{self._filename} with error: {exception!s}')
 
     self._temp_db_file_path = ''
 
@@ -176,10 +176,10 @@ class SQLiteDatabase(object):
       try:
         os.remove(self._temp_wal_file_path)
       except (OSError, IOError) as exception:
-        logger.warning((
-            'Unable to remove temporary copy: {0:s} of SQLite database: '
-            '{1:s} with error: {2!s}').format(
-                self._temp_wal_file_path, self._filename, exception))
+        logger.warning(
+            f'Unable to remove temporary copy: '
+            f'{self._temp_wal_file_path} of SQLite database: '
+            f'{self._filename} with error: {exception!s}')
 
     self._temp_wal_file_path = ''
 
@@ -231,7 +231,7 @@ class SQLiteDatabase(object):
     if wal_file_object:
       # Create WAL file using same filename so it is available for
       # sqlite3.connect()
-      temporary_filename = '{0:s}-wal'.format(self._temp_db_file_path)
+      temporary_filename = f'{self._temp_db_file_path}-wal'
 
       with open(temporary_filename, 'wb') as temporary_file:
         try:
@@ -259,7 +259,7 @@ class SQLiteDatabase(object):
         # The table name needs to be enclosed in quotes in case it contains
         # special characters like a dot.
         pragma_results = cursor.execute(
-            'PRAGMA table_info("{0:s}")'.format(table_name))
+            f'PRAGMA table_info("{table_name}")')
 
         for pragma_result in pragma_results:
           self.columns_per_table[table_name].append(pragma_result['name'])
@@ -275,8 +275,8 @@ class SQLiteDatabase(object):
         self._temp_wal_file_path = ''
 
       logger.debug(
-          'Unable to parse SQLite database: {0:s} with error: {1!s}'.format(
-              self._filename, exception))
+          f'Unable to parse SQLite database: '
+          f'{self._filename} with error: {exception!s}')
       raise
 
   def Query(self, query):
@@ -326,7 +326,7 @@ class SQLiteParser(interface.FileEntryParser):
     if not path_spec or not location:
       return None, None
 
-    location_wal = '{0:s}-wal'.format(location)
+    location_wal = f'{location}-wal'
     file_system = database_file_entry.GetFileSystem()
     wal_path_spec = path_spec_factory.Factory.NewPathSpec(
         file_system.type_indicator, parent=path_spec.parent,
@@ -347,9 +347,9 @@ class SQLiteParser(interface.FileEntryParser):
       database_wal.Open(database_file_object, wal_file_object=wal_file_object)
 
     except (IOError, ValueError, sqlite3.DatabaseError) as exception:
-      parser_mediator.ProduceExtractionWarning((
-          'unable to open SQLite database and WAL with error: '
-          '{0!s}').format(exception))
+      parser_mediator.ProduceExtractionWarning(
+          f'unable to open SQLite database and WAL with error: '
+          f'{exception!s}')
 
       return None, None
 
@@ -376,29 +376,33 @@ class SQLiteParser(interface.FileEntryParser):
       parser_mediator.SampleFormatCheckStopTiming(profiling_name)
 
     if not result:
-      logger.debug('Skipped parsing file: {0:s} with plugin: {1:s}'.format(
-          display_name, plugin.NAME))
+      logger.debug(
+          f'Skipped parsing file: '
+          f'{display_name} with plugin: '
+          f'{plugin.NAME}')
       return
 
-    logger.debug('Parsing file: {0:s} with plugin: {1:s}'.format(
-        display_name, plugin.NAME))
+    logger.debug(
+        f'Parsing file: '
+        f'{display_name} with plugin: '
+        f'{plugin.NAME}')
 
     parser_mediator.SampleStartTiming(profiling_name)
 
     try:
       schema_match = plugin.CheckSchema(database)
       if plugin.REQUIRES_SCHEMA_MATCH and not schema_match:
-        parser_mediator.ProduceExtractionWarning((
-            'plugin: {0:s} found required tables but not a matching '
-            'schema').format(plugin.NAME))
+        parser_mediator.ProduceExtractionWarning(
+            f'plugin: {plugin.NAME} found required tables '
+            f'but not a matching schema')
       else:
         plugin.UpdateChainAndProcess(
             parser_mediator, cache=cache, database=database)
 
     except Exception as exception:  # pylint: disable=broad-except
-      parser_mediator.ProduceExtractionWarning((
-          'plugin: {0:s} unable to parse SQLite database with error: '
-          '{1!s}').format(plugin.NAME, exception))
+      parser_mediator.ProduceExtractionWarning(
+          f'plugin: {plugin.NAME} unable to parse '
+          f'SQLite database with error: {exception!s}')
 
     finally:
       parser_mediator.SampleStopTiming(profiling_name)
@@ -431,7 +435,7 @@ class SQLiteParser(interface.FileEntryParser):
 
     except (IOError, ValueError, sqlite3.DatabaseError) as exception:
       parser_mediator.ProduceExtractionWarning(
-          'unable to open SQLite database with error: {0!s}'.format(exception))
+          f'unable to open SQLite database with error: {exception!s}')
       return
 
     # Create a cache in which the resulting tables are cached.
