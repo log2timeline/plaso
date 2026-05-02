@@ -100,17 +100,19 @@ class WinRegistryParser(interface.FileObjectParser):
           continue
 
         for plugin_key_path in plugin_key_paths:
-          plugin_key_path = plugin_key_path.lower()
-          if plugin_key_path in self._plugins_per_key_path:
+          lookup_path = plugin_key_path.lower()
+
+          existing_plugin = self._plugins_per_key_path.get(lookup_path)
+          if existing_plugin:
             logger.warning((
-                f'Windows Registry key path: {plugin_key_path:s} defined '
-                f'by plugin: {plugin_object.NAME:s} already set by plugin: '
-                f'{self._plugins_per_key_path[plugin_key_path].NAME:s}'))
+                f'Windows Registry key path: {plugin_key_path:s} defined by '
+                f'plugin: {plugin_object.NAME:s} already set by plugin: '
+                f'{existing_plugin.NAME:s}'))
             continue
 
-          self._plugins_per_key_path[plugin_key_path] = plugin_object
+          self._plugins_per_key_path[lookup_path] = plugin_object
 
-          key_paths.append(plugin_key_path)
+          key_paths.append(lookup_path)
 
     self._path_filter = path_filter.PathFilterScanTree(
         key_paths, case_sensitive=False, path_segment_separator='\\')

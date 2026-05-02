@@ -153,6 +153,31 @@ class AndroidTangoProfilePlugin(interface.SQLitePlugin):
           '`itemCanSeeMyPost` INTEGER NOT NULL, `itemCanShareMyPost` INTEGER '
           'NOT NULL, `itemCanContactMe` INTEGER NOT NULL)')}]
 
+  def _GetBase64RowValue(self, parser_mediator, query_hash, row, value_name):
+    """Retrieves a base64 encoded value from the row.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      query_hash (int): hash of the query, that uniquely identifies the query
+          that produced the row.
+      row (sqlite3.Row): row.
+      value_name (str): name of the value.
+
+    Returns:
+      object: value or None if not available.
+    """
+    encoded_value = self._GetRowValue(query_hash, row, value_name)
+    try:
+      value = base64_decode(encoded_value)
+      return codecs.decode(value, 'utf-8')
+
+    except ValueError as exception:
+      parser_mediator.ProduceExtractionWarning(
+          f'unable to decode: {value_name:s} with error: {exception!s}')
+
+    return None
+
   def _GetDateTimeRowValue(self, query_hash, row, value_name):
     """Retrieves a date and time value from the row.
 
@@ -182,48 +207,17 @@ class AndroidTangoProfilePlugin(interface.SQLitePlugin):
     """
     query_hash = hash(query)
 
-    first_name = self._GetRowValue(query_hash, row, 'first_name')
-    try:
-      decoded_text = base64_decode(first_name)
-      first_name = codecs.decode(decoded_text, 'utf-8')
-    except ValueError:
-      parser_mediator.ProduceExtractionWarning(
-          f'unable to parse first name: {first_name:s}')
-
-    friend_request_message = self._GetRowValue(
-        query_hash, row, 'friend_request_message')
-    try:
-      decoded_text = base64_decode(friend_request_message)
-      friend_request_message = codecs.decode(decoded_text, 'utf-8')
-    except ValueError:
-      parser_mediator.ProduceExtractionWarning(
-          f'unable to parse status: {friend_request_message:s}')
-
     is_friend = self._GetRowValue(query_hash, row, 'friend')
-
-    last_name = self._GetRowValue(query_hash, row, 'last_name')
-    try:
-      decoded_text = base64_decode(last_name)
-      last_name = codecs.decode(decoded_text, 'utf-8')
-    except ValueError:
-      parser_mediator.ProduceExtractionWarning(
-          f'unable to parse last name: {last_name:s}')
-
-    status = self._GetRowValue(query_hash, row, 'status')
-    try:
-      decoded_text = base64_decode(status)
-      status = codecs.decode(decoded_text, 'utf-8')
-    except ValueError:
-      parser_mediator.ProduceExtractionWarning(
-          f'unable to parse status: {status:s}')
 
     event_data = AndroidTangoContactEventData()
     event_data.access_time = self._GetDateTimeRowValue(
         query_hash, row, 'last_access_time')
     event_data.birthday = self._GetRowValue(query_hash, row, 'birthday')
     event_data.distance = self._GetRowValue(query_hash, row, 'distance')
-    event_data.first_name = first_name
-    event_data.friend_request_message = friend_request_message
+    event_data.first_name = self._GetBase64RowValue(
+         parser_mediator, query_hash, row, 'first_name')
+    event_data.friend_request_message = self._GetBase64RowValue(
+        parser_mediator, query_hash, row, 'friend_request_message')
     event_data.friend_request_time = self._GetDateTimeRowValue(
         query_hash, row, 'friend_request_time')
     event_data.friend_request_type = self._GetRowValue(
@@ -232,8 +226,10 @@ class AndroidTangoProfilePlugin(interface.SQLitePlugin):
     event_data.is_friend = bool(is_friend)
     event_data.last_active_time = self._GetDateTimeRowValue(
         query_hash, row, 'last_active_time')
-    event_data.last_name = last_name
-    event_data.status = status
+    event_data.last_name = self._GetBase64RowValue(
+        parser_mediator, query_hash, row, 'last_name')
+    event_data.status = self._GetBase64RowValue(
+        parser_mediator, query_hash, row, 'status')
 
     parser_mediator.ProduceEventData(event_data)
 
