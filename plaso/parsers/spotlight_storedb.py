@@ -648,8 +648,8 @@ class SpotlightStoreDatabaseParser(
 
     except errors.ParseError as exception:
       parser_mediator.ProduceExtractionWarning(
-          'unable to read metadata item: 0x{0:2x} with error: {1!s}'.format(
-              metadata_item.identifier, exception))
+          f'unable to read metadata item: 0x{metadata_item.identifier:2x} '
+          f'with error: {exception!s}')
 
     return 4 + metadata_item.data_size
 
@@ -718,8 +718,8 @@ class SpotlightStoreDatabaseParser(
             page_data[page_data_offset:])
       except dtfabric_errors.MappingError as exception:
         raise errors.ParseError((
-            'Unable to map property value data at offset: 0x{0:08x} with '
-            'error: {1!s}').format(page_data_offset, exception))
+            f'Unable to map property value data at offset: '
+            f'0x{page_data_offset:08x} with error: {exception!s}'))
 
       page_value_size = 4
 
@@ -740,8 +740,9 @@ class SpotlightStoreDatabaseParser(
 
       except dtfabric_errors.MappingError as exception:
         raise errors.ParseError((
-            'Unable to parse index data at offset: 0x{0:08x} with error: '
-            '{1:s}').format(page_data_offset + page_value_size, exception))
+            f'Unable to parse index data at offset: '
+            f'0x{page_data_offset + page_value_size:08x} with error: '
+            f'{exception!s}'))
 
       page_value_size += index_size
 
@@ -980,8 +981,8 @@ class SpotlightStoreDatabaseParser(
 
     except dtfabric_errors.MappingError as exception:
       raise errors.ParseError(
-          'Unable to parse array of byte values with error: {0!s}'.format(
-              exception))
+          f'Unable to parse array of byte values with error: '
+          f'{exception!s}')
 
     if bytes_read == 0:
       value = array_of_values[0]
@@ -1022,8 +1023,8 @@ class SpotlightStoreDatabaseParser(
 
     except dtfabric_errors.MappingError as exception:
       raise errors.ParseError((
-          'Unable to parse array of 32-bit floating-point values with error: '
-          '{0!s}').format(exception))
+          f'Unable to parse array of 32-bit floating-point values '
+          f'with error: {exception!s}'))
 
     if bytes_read == 0:
       value = array_of_values[0]
@@ -1064,8 +1065,8 @@ class SpotlightStoreDatabaseParser(
 
     except dtfabric_errors.MappingError as exception:
       raise errors.ParseError((
-          'Unable to parse array of 64-bit floating-point values with error: '
-          '{0!s}').format(exception))
+          f'Unable to parse array of 64-bit floating-point values '
+          f'with error: {exception!s}'))
 
     if bytes_read == 0:
       value = array_of_values[0]
@@ -1112,12 +1113,13 @@ class SpotlightStoreDatabaseParser(
             page_data[page_data_offset:], context=context)
       except dtfabric_errors.MappingError as exception:
         raise errors.ParseError((
-            'Unable to map property value data at offset: 0x{0:08x} with '
-            'error: {1!s}').format(page_data_offset, exception))
+            f'Unable to map property value data at offset: '
+            f'0x{page_data_offset:08x} with error: {exception!s}'))
 
       property_table[property_value.table_index] = property_value
 
       page_data_offset += context.byte_size
+
       page_value_index += 1
 
   def _ReadMetadataAttributeReferenceValue(self, property_type, data):
@@ -1182,8 +1184,8 @@ class SpotlightStoreDatabaseParser(
 
     except dtfabric_errors.MappingError as exception:
       raise errors.ParseError(
-          'Unable to parse array of string values with error: {0!s}'.format(
-              exception))
+          f'Unable to parse array of string values with error: '
+          f'{exception!s}')
 
     if property_type & 0x03 == 0x03:
       value = array_of_values[0]
@@ -1295,8 +1297,9 @@ class SpotlightStoreDatabaseParser(
     if page_header.property_table_type not in (
         0x00000011, 0x00000021, 0x00000041, 0x00000081):
       raise errors.ParseError(
-          'Unsupported property table type: 0x{0:08x}'.format(
-              page_header.property_table_type))
+          f'Unsupported property table type: '
+          f'0x{page_header.property_table_type:08x}')
+
 
     page_data = file_object.read(page_header.page_size - bytes_read)
 
@@ -1379,8 +1382,8 @@ class SpotlightStoreDatabaseParser(
       record = data_type_map.MapByteStream(data, context=context)
     except dtfabric_errors.MappingError as exception:
       raise errors.ParseError((
-          'Unable to map record at offset: 0x{0:08x} with error: '
-          '{1!s}').format(page_data_offset, exception))
+          f'Unable to map record at offset: 0x{page_data_offset:08x} '
+          f'with error: {exception!s}'))
 
     data_offset = context.byte_size
 
@@ -1428,8 +1431,8 @@ class SpotlightStoreDatabaseParser(
     if page_header.property_table_type not in (
         0x00000009, 0x00001009, 0x00005009):
       raise errors.ParseError(
-          'Unsupported property table type: 0x{0:08x}'.format(
-              page_header.property_table_type))
+          f'Unsupported property table type: '
+          f'0x{page_header.property_table_type:08x}')
 
     page_data = file_object.read(page_header.page_size - bytes_read)
 
@@ -1637,8 +1640,7 @@ class SpotlightStoreDatabaseParser(
 
     except errors.ParseError as exception:
       parser_mediator.ProduceExtractionWarning(
-          'unable to read store database with error: {0!s}'.format(
-              exception))
+          f'unable to read store database with error: {exception!s}')
       return
 
     for map_value in self._map_values:
@@ -1651,8 +1653,8 @@ class SpotlightStoreDatabaseParser(
 
       except errors.ParseError as exception:
         parser_mediator.ProduceExtractionWarning((
-            'unable to read record page at offset: 0x{0:08x} with error: '
-            '{1!s}').format(file_offset, exception))
+            f'unable to read record page at offset: 0x{file_offset:08x} '
+            f'with error: {exception!s}'))
         continue
 
 

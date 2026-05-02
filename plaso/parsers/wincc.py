@@ -83,8 +83,7 @@ class SIMATICLogParser(interface.FileObjectParser):
     """
     number_of_values = len(values)
     if number_of_values < 2:
-      error_string = 'Expected at least two values on line {0:d}'.format(
-          line_number)
+      error_string = f'Expected at least two values on line {line_number:d}'
       raise errors.WrongParser(error_string)
 
     # The first lines seem to  always follow the following format:
@@ -94,20 +93,23 @@ class SIMATICLogParser(interface.FileObjectParser):
     # 2019-05-27 10:05:43,419 INFO     | LogFileCount  : 3
     if line_number == 0:
       if not values[1].endswith(self._EXPECTED_FIRST_LINE_STRING):
-        error_string = 'Expected first line to end with "{0:s}"."{1!s}"'.format(
-            self._EXPECTED_FIRST_LINE_STRING, values[1])
+        error_string = (
+            f'Expected first line to end with '
+            f'"{self._EXPECTED_FIRST_LINE_STRING:s}""{values[1]!s}"')
         raise errors.WrongParser(error_string)
 
     if line_number == 1:
       if values[1].find(self._EXPECTED_SECOND_LINE_STRING) < 0:
-        error_string = 'Expected second line to contain "{0:s}"'.format(
-            self._EXPECTED_SECOND_LINE_STRING)
+        error_string = (
+            f'Expected second line to contain '
+            f'"{self._EXPECTED_SECOND_LINE_STRING:s}"')
         raise errors.WrongParser(error_string)
 
     if line_number == 2:
       if values[1].find(self._EXPECTED_THIRD_LINE_STRING) < 0:
-        error_string = 'Expected third line to contain {0:s}'.format(
-            self._EXPECTED_THIRD_LINE_STRING)
+        error_string = (
+            f'Expected third line to contain '
+            f'{self._EXPECTED_THIRD_LINE_STRING:s}')
         raise errors.WrongParser(error_string)
 
     event_data = SIMATICS7EventData()
@@ -117,8 +119,8 @@ class SIMATICLogParser(interface.FileObjectParser):
       event_data.creation_time = date_time
     except (TypeError, ValueError) as exception:
       error_string = (
-          'Unable to parse date time value with error: '
-          '{0!s} on line {1:d} {2!s}').format(exception, line_number, values)
+          f'Unable to parse date time value with error: '
+          f'{exception!s} on line {line_number:d} {values!s}')
       parser_mediator.ProduceExtractionWarning(error_string)
 
     event_data.body = ','.join(values[1:]).strip()
@@ -145,8 +147,7 @@ class SIMATICLogParser(interface.FileObjectParser):
       line = line_reader.readline()
     except UnicodeDecodeError as exception:
       raise errors.WrongParser(
-          'unable to read line: {0:d} with error: {1!s}'.format(
-              line_number, exception))
+          f'unable to read line: {line_number:d} with error: {exception!s}')
 
     while line:
       values = line.split(self.DELIMITER)
@@ -157,8 +158,7 @@ class SIMATICLogParser(interface.FileObjectParser):
         line = line_reader.readline()
       except UnicodeDecodeError as exception:
         parser_mediator.ProduceExtractionWarning(
-            'unable to read line: {0:d} with error: {1!s}'.format(
-                line_number, exception))
+            f'unable to read line: {line_number:d} with error: {exception!s}')
         break
 
 
@@ -191,8 +191,9 @@ class WinCCSysLogParser(interface.FileObjectParser):
     """
     number_of_values = len(values)
     if len(values) < 10:
-      error_string = 'invalid number of values : {0:d} in line: {1:d}'.format(
-          number_of_values, line_number)
+      error_string = (
+          f'invalid number of values: {number_of_values:d} in line: '
+          f'{line_number:d}')
 
       # On other lines, we might encounter times where the split() operation
       # produces more values.
@@ -203,49 +204,47 @@ class WinCCSysLogParser(interface.FileObjectParser):
 
     event_data = WinCCSysLogEventData()
 
-    try:
-      log_identifier = int(values[0], 10)
-      event_data.log_identifier = log_identifier
-    except ValueError as exception:
-      error_string = (
-          'Type of first value ({0!s}) should be an int in line: {1:d}').format(
-              values[0], line_number)
-      self._ParseValuesFail(
-          parser_mediator, first_line, exception, error_string)
+    identifier_value = values[0]
 
     try:
-      date_string = values[1]
-      time_string = values[2]
+      log_identifier = int(identifier_value, 10)
+      event_data.log_identifier = log_identifier
+    except ValueError as exception:
+      self._ParseValuesFail(parser_mediator, first_line, exception, (
+          f'Type of first value ({identifier_value!s}) should be an int in '
+          f'line: {line_number:d}'))
+
+    date_value = values[1]
+    time_value = values[2]
+
+    try:
       day_of_month, month, year = [
-          int(element, 10) for element in date_string.split('.')]
+          int(element, 10) for element in date_value.split('.')]
       hours, minutes, seconds, milliseconds = [
-          int(element, 10) for element in time_string.split(':')]
+          int(element, 10) for element in time_value.split(':')]
       time_elements_tuple = (
           year, month, day_of_month, hours, minutes, seconds, milliseconds)
       date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
-          time_elements_tuple=time_elements_tuple,
-      )
-      # Unsure about whether the format is dependant on the system's Locale
+          time_elements_tuple=time_elements_tuple)
+
+      # TODO: determine if format is dependant on the system's locale.
       date_time.is_local_time = True
 
       event_data.creation_time = date_time
 
     except (TypeError, ValueError) as exception:
-      error_string = (
-          'Unable to parse time elements with error: '
-          '{0!s} on line {1:d} {2!s}').format(
-              exception, line_number, values[1:2])
-      self._ParseValuesFail(
-          parser_mediator, first_line, exception, error_string)
+      self._ParseValuesFail(parser_mediator, first_line, exception, (
+          f'Unable to parse time elements with error: {exception!s} on line '
+          f'{line_number:d} [{date_value!s}, {time_value!s}]'))
+
+    event_number_value = values[3]
 
     try:
-      event_data.event_number = int(values[3], 10)
+      event_data.event_number = int(event_number_value, 10)
     except ValueError as exception:
-      error_string = (
-          'Type of event_number value ({0!s}) should be a decimal in line:'
-          '{1:d}').format(values[3], line_number)
-      self._ParseValuesFail(
-          parser_mediator, first_line, exception, error_string)
+      self._ParseValuesFail(parser_mediator, first_line, exception, (
+          f'Type of event_number value ({event_number_value!s}) should be a '
+          f'decimal in line: {line_number:d}'))
 
     # Column 4 and 5 contain unknown values, we are not parsing them.
 
@@ -255,19 +254,12 @@ class WinCCSysLogParser(interface.FileObjectParser):
     # Using this documentation to validate a Windows host name.
     # https://learn.microsoft.com/en-us/troubleshoot/windows-server/identity/naming-conventions-for-computer-domain-site-ou
     hostname = values[6]
+
     if first_line:
-      if not hostname:
-        error_string = (
-            'Hostname ({0!s}) needs to be at least 1 character on line:'
-            '{1:d}').format(hostname, line_number)
-        self._ParseValuesFail(
-            parser_mediator, first_line, exception, error_string)
-      if len(hostname) > 16:
-        error_string = (
-            'Hostname ({0!s}) can\'t be longer than 15 characters on line:'
-            '{1:d}').format(hostname, line_number)
-        self._ParseValuesFail(
-            parser_mediator, first_line, exception, error_string)
+      if not hostname or len(hostname) > 16:
+        self._ParseValuesFail(parser_mediator, first_line, exception, (
+            f'Unsupported hostname: "{hostname!s}" on line: {line_number:d}'))
+
       for character in self._DISALLOWED_HOSTNAME_CHARS:
         if character in hostname:
           error_string = (
@@ -322,8 +314,7 @@ class WinCCSysLogParser(interface.FileObjectParser):
       line = line_reader.readline().strip()
     except UnicodeDecodeError as exception:
       raise errors.WrongParser(
-          'unable to read line: {0:d} with error: {1!s}'.format(
-              line_number, exception))
+          f'unable to read line: {line_number:d} with error: {exception!s}')
 
     while line:
       if line.startswith(self._END_OF_LOG_FILE_STRING):
@@ -341,8 +332,7 @@ class WinCCSysLogParser(interface.FileObjectParser):
         line = line_reader.readline().strip()
       except UnicodeDecodeError as exception:
         parser_mediator.ProduceExtractionWarning(
-            'unable to read line: {0:d} with error: {1!s}'.format(
-                line_number, exception))
+            f'unable to read line: {line_number:d} with error: {exception!s}')
         break
 
 

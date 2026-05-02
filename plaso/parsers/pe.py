@@ -146,9 +146,9 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       section_name = getattr(section, 'Name', b'')
       # Ensure the name is decoded correctly.
       try:
-        section_name = '{0:s}'.format(section_name.decode('unicode_escape'))
+        section_name = section_name.decode('unicode_escape')
       except UnicodeDecodeError:
-        section_name = '{0:s}'.format(repr(section_name))
+        section_name = repr(section_name)
       section_names.append(section_name)
 
     return section_names
@@ -346,8 +346,7 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
           data, data_offset, message_table_header_map, context=context)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError(
-          'Unable to read message table header with error: {0!s}'.format(
-              exception))
+          f'Unable to read message table header with error: {exception!s}')
 
     data_offset += context.byte_size
 
@@ -359,9 +358,10 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
             data[data_offset:], data_offset, message_table_entry_map,
             context=context)
       except (ValueError, errors.ParseError) as exception:
-        raise errors.ParseError((
-            'Unable to read message table entry: {0:d} at offset: {1:d} with '
-            'error: {2!s}').format(entry_index, data_offset, exception))
+        raise errors.ParseError(
+            f'Unable to read message table entry: '
+            f'{entry_index:d} at offset: {data_offset:d} '
+            f'with error: {exception!s}')
 
       data_offset += context.byte_size
 
@@ -373,9 +373,9 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
               data[string_offset:], string_offset, message_table_string_map)
         except (ValueError, errors.ParseError) as exception:
           raise errors.ParseError((
-              'Unable to read message table string: 0x{0:08x} at offset: {1:d} '
-              'with error: {2!s}').format(
-                  message_identifier, string_offset, exception))
+              f'Unable to read message table string: '
+              f'0x{message_identifier:08x} at offset: '
+              f'{string_offset:d} with error: {exception!s}'))
 
         if message_table_string.flags & 0x01:
           string_encoding = 'utf-16-le'
