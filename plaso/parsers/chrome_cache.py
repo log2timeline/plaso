@@ -250,8 +250,8 @@ class ChromeCacheDataBlockFileParser(
           file_object, block_offset, cache_entry_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError((
-          f'Unable to parse cache entry at offset: 0x{block_offset:08x} '
-          f'with error: {exception!s}'))
+          f'Unable to parse cache entry at offset: 0x{block_offset:08x} with '
+          f'error: {exception!s}'))
 
     cache_entry_object = CacheEntry()
 
@@ -339,9 +339,8 @@ class ChromeCacheParser(interface.FileEntryParser):
         data_block_file_object = data_block_files.get(
             cache_address.filename, None)
         if not data_block_file_object:
-          message = (
+          parser_mediator.ProduceExtractionWarning(
               f'Cache address: 0x{cache_address.value:08x} missing data file.')
-          parser_mediator.ProduceExtractionWarning(message)
           break
 
         try:
@@ -360,7 +359,7 @@ class ChromeCacheParser(interface.FileEntryParser):
         # This shows up as r"_dk_{domain}( {domain})* {url}"
         # https://chromium.googlesource.com/chromium/src/+/
         # 95faad3cfd90169f0a267e979c36e3348476a948/net/http/http_cache.cc#427
-        if "_dk_" in cache_entry.original_url[:20]:
+        if '_dk_' in cache_entry.original_url[:20]:
           parsed_url = cache_entry.original_url.strip().rsplit(' ', 1)[-1]
           event_data.original_url = parsed_url
         else:
@@ -408,15 +407,15 @@ class ChromeCacheParser(interface.FileEntryParser):
           data_block_file_entry = path_spec_resolver.Resolver.OpenFileEntry(
               data_block_file_path_spec)
         except RuntimeError as exception:
-          message = (
-              f'Unable to open data block file: {kwargs["location"]!s} '
-              f'with error: {exception!s}')
-          parser_mediator.ProduceExtractionWarning(message)
+          location = kwargs['location'] or 'N/A'
+          parser_mediator.ProduceExtractionWarning(
+              f'Unable to open data block file: {location!s} with error: '
+              f'{exception!s}')
           data_block_file_entry = None
 
         if not data_block_file_entry:
-          message = f'Missing data block file: {cache_address.filename:s}'
-          parser_mediator.ProduceExtractionWarning(message)
+          parser_mediator.ProduceExtractionWarning(
+              f'Missing data block file: {cache_address.filename:s}')
           data_block_file_object = None
 
         else:
@@ -427,8 +426,8 @@ class ChromeCacheParser(interface.FileEntryParser):
                 parser_mediator, data_block_file_object)
           except (IOError, errors.ParseError) as exception:
             message = (
-                f'Unable to parse data block file: '
-                f'{cache_address.filename!s} with error: {exception!s}')
+                f'Unable to parse data block file: {cache_address.filename!s} '
+                f'with error: {exception!s}')
             parser_mediator.ProduceExtractionWarning(message)
             data_block_file_object = None
         data_block_files[cache_address.filename] = data_block_file_object
@@ -469,8 +468,8 @@ class ChromeCacheParser(interface.FileEntryParser):
     except (IOError, errors.ParseError) as exception:
       display_name = parser_mediator.GetDisplayName()
       raise errors.WrongParser(
-          f'[{self.NAME:s}] unable to parse index file '
-          f'{display_name:s} with error: {exception!s}')
+          f'[{self.NAME:s}] unable to parse index file {display_name:s} with '
+          f'error: {exception!s}')
 
     # TODO: create event based on index file creation time.
 

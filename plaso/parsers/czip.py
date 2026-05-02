@@ -46,10 +46,9 @@ class CompoundZIPParser(interface.FileObjectParser):
     # error like a negative seek (IOError). Note that this function can raise
     # many different exceptions.
     except Exception as exception:  # pylint: disable=broad-except
-      error_string = (
+      raise errors.WrongParser(
           f'[{self.NAME:s}] unable to parse file: {display_name:s} '
           f'with error: {exception!s}')
-      raise errors.WrongParser(error_string)
 
     for plugin_name, plugin in self._plugins_per_name.items():
       if parser_mediator.abort:

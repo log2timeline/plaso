@@ -142,16 +142,16 @@ class OneDriveLogFileParser(
     key = json_data[0].get('Key', None)
     if not key:
       parser_mediator.ProduceExtractionWarning(
-          f'OneDrive keystore file: {file_entry.name!s} '
-          f'does not contain a key value.')
+          f'OneDrive keystore file: {file_entry.name!s} does not contain a key '
+          f'value.')
       return None
 
     decoded_key = base64.b64decode(key)
 
     if len(decoded_key) != self._AES_KEY_LENGTH:
       parser_mediator.ProduceExtractionWarning((
-          f'OneDrive keystore file: {file_entry.name!s} does not '
-          f'contain a key value of size: 32.'))
+          f'OneDrive keystore file: {file_entry.name!s} does not contain a key '
+          f'value of size: 32.'))
       return None
 
     return decoded_key
@@ -362,8 +362,9 @@ class OneDriveLogFileParser(
       raise ValueError(
           f'Invalid padding size: {padding_size:d} value out of bounds')
 
-    for byte_index in range(2, padding_size + 1):
-      check_padding_size = padded_data[-byte_index]
+    for padding_value in range(2, padding_size + 1):
+      byte_index = -padding_value
+      check_padding_size = padded_data[byte_index]
       if check_padding_size != padding_size:
         raise ValueError((
             f'Mismatch in padding size: {padding_size:d} and: '
@@ -453,9 +454,8 @@ class OneDriveLogFileParser(
                 data_block_stream, stream_offset, odl_data_block_header_map))
       except (ValueError, errors.ParseError) as exception:
         parser_mediator.ProduceExtractionWarning((
-            f'unable to parse data block header at '
-            f'stream offset: 0x{stream_offset:08x} '
-            f'with error: {exception!s}'))
+            f'unable to parse data block header at stream offset: '
+            f'0x{stream_offset:08x} with error: {exception!s}'))
         return
 
       stream_offset += header_data_size
@@ -465,9 +465,8 @@ class OneDriveLogFileParser(
             data_block_stream, stream_offset, odl_data_block_map)
       except (ValueError, errors.ParseError) as exception:
         parser_mediator.ProduceExtractionWarning((
-            f'unable to parse data block at '
-            f'stream offset: 0x{stream_offset:08x} with error: '
-            f'{exception!s}'))
+            f'unable to parse data block at stream offset: '
+            f'0x{stream_offset:08x} with error: {exception!s}'))
         return
 
       # read the raw function parameter data

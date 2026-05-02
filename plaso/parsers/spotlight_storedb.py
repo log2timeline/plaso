@@ -729,6 +729,7 @@ class SpotlightStoreDatabaseParser(
       _, padding_size = divmod(index_size, 4)
 
       page_value_size += bytes_read + padding_size
+      index_offset = page_data_offset + page_value_size
       index_size -= padding_size
 
       context = dtfabric_data_maps.DataTypeMapContext(values={
@@ -736,13 +737,12 @@ class SpotlightStoreDatabaseParser(
 
       try:
         index_values = index_values_data_type_map.MapByteStream(
-            page_data[page_data_offset + page_value_size:], context=context)
+            page_data[index_offset:], context=context)
 
       except dtfabric_errors.MappingError as exception:
         raise errors.ParseError((
-            f'Unable to parse index data at offset: '
-            f'0x{page_data_offset + page_value_size:08x} with error: '
-            f'{exception!s}'))
+            f'Unable to parse index data at offset: 0x{index_offset:08x} with '
+            f'error: {exception!s}'))
 
       page_value_size += index_size
 
@@ -1299,7 +1299,6 @@ class SpotlightStoreDatabaseParser(
       raise errors.ParseError(
           f'Unsupported property table type: '
           f'0x{page_header.property_table_type:08x}')
-
 
     page_data = file_object.read(page_header.page_size - bytes_read)
 

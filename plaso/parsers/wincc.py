@@ -83,8 +83,8 @@ class SIMATICLogParser(interface.FileObjectParser):
     """
     number_of_values = len(values)
     if number_of_values < 2:
-      error_string = f'Expected at least two values on line {line_number:d}'
-      raise errors.WrongParser(error_string)
+      raise errors.WrongParser(
+          f'Expected at least two values on line {line_number:d}')
 
     # The first lines seem to  always follow the following format:
     #
@@ -93,24 +93,21 @@ class SIMATICLogParser(interface.FileObjectParser):
     # 2019-05-27 10:05:43,419 INFO     | LogFileCount  : 3
     if line_number == 0:
       if not values[1].endswith(self._EXPECTED_FIRST_LINE_STRING):
-        error_string = (
-            f'Expected first line to end with '
-            f'"{self._EXPECTED_FIRST_LINE_STRING:s}""{values[1]!s}"')
-        raise errors.WrongParser(error_string)
+        raise errors.WrongParser(
+            f'Expected first line to end with: '
+            f'"{self._EXPECTED_FIRST_LINE_STRING:s}"')
 
     if line_number == 1:
       if values[1].find(self._EXPECTED_SECOND_LINE_STRING) < 0:
-        error_string = (
-            f'Expected second line to contain '
+        raise errors.WrongParser(
+            f'Expected second line to contain: '
             f'"{self._EXPECTED_SECOND_LINE_STRING:s}"')
-        raise errors.WrongParser(error_string)
 
     if line_number == 2:
       if values[1].find(self._EXPECTED_THIRD_LINE_STRING) < 0:
-        error_string = (
-            f'Expected third line to contain '
-            f'{self._EXPECTED_THIRD_LINE_STRING:s}')
-        raise errors.WrongParser(error_string)
+        raise errors.WrongParser(
+            f'Expected third line to contain: '
+            f'"{self._EXPECTED_THIRD_LINE_STRING:s}"')
 
     event_data = SIMATICS7EventData()
     try:

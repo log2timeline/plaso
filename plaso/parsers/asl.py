@@ -132,7 +132,7 @@ class ASLParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
     if additional_data_size % 8 != 0:
       raise errors.ParseError(
-          f'Invalid record additional data size: {additional_data_size:d}.')
+          f'Unsupported record additional data size: {additional_data_size:d}.')
 
     additional_data = self._ReadData(
         file_object, file_offset, additional_data_size)
@@ -161,8 +161,7 @@ class ASLParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
     event_data = ASLEventData()
     event_data.computer_name = hostname
     event_data.extra_information = ', '.join([
-        f'{name:s}: {value!s}'
-        for name, value in sorted(extra_fields.items())])
+        f'{name:s}: {value!s}' for name, value in sorted(extra_fields.items())])
     event_data.facility = facility
     event_data.group_identifier = record.group_identifier
     event_data.level = record.alert_level
@@ -202,8 +201,8 @@ class ASLParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
           byte_stream, file_offset, extra_field_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError((
-          f'Unable to parse record extra field at offset: '
-          f'0x{file_offset:08x} with error: {exception!s}'))
+          f'Unable to parse record extra field at offset: 0x{file_offset:08x} '
+          f'with error: {exception!s}'))
 
     return record_extra_field
 
@@ -240,8 +239,7 @@ class ASLParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         return string_data[:string_size].decode('utf-8')
       except UnicodeDecodeError as exception:
         raise errors.ParseError(
-            f'Unable to decode inline record string with error: '
-            f'{exception!s}.')
+            f'Unable to decode inline record string with error: {exception!s}.')
 
     record_string_map = self._GetDataTypeMap('asl_record_string')
 

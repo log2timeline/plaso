@@ -359,9 +359,8 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
             context=context)
       except (ValueError, errors.ParseError) as exception:
         raise errors.ParseError(
-            f'Unable to read message table entry: '
-            f'{entry_index:d} at offset: {data_offset:d} '
-            f'with error: {exception!s}')
+            f'Unable to read message table entry: {entry_index:d} at offset: '
+            f'{data_offset:d} with error: {exception!s}')
 
       data_offset += context.byte_size
 
@@ -374,8 +373,8 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         except (ValueError, errors.ParseError) as exception:
           raise errors.ParseError((
               f'Unable to read message table string: '
-              f'0x{message_identifier:08x} at offset: '
-              f'{string_offset:d} with error: {exception!s}'))
+              f'0x{message_identifier:08x} at offset: {string_offset:d} with '
+              f'error: {exception!s}'))
 
         if message_table_string.flags & 0x01:
           string_encoding = 'utf-16-le'
@@ -386,10 +385,9 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
           string = message_table_string.data.decode(string_encoding)
         except UnicodeDecodeError:
           raise errors.ParseError((
-              'Unable to decode {0:s} encoded message table string: 0x{1:08x} '
-              'at offset: {2:d} with error: {3!s}').format(
-                  string_encoding, message_identifier, string_offset,
-                  exception))
+              f'Unable to decode {string_encoding:s} encoded message table '
+              f'string: 0x{message_identifier:08x} at offset: '
+              f'{string_offset:d} with error: {exception!s}'))
 
         string_offset += message_table_string.data_size
 
@@ -466,8 +464,8 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
           data, 0, wevt_manifest_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError((
-          'Unable to read WEVT instrumentation manifest with error: '
-          '{0!s}').format(exception))
+          f'Unable to read WEVT instrumentation manifest with error: '
+          f'{exception!s}'))
 
     for event_provider_descriptor in manifest.event_provider_descriptors:
       data_offset = event_provider_descriptor.data_offset
@@ -476,11 +474,10 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
             data[data_offset:], data_offset, wevt_event_provider_map)
       except (ValueError, errors.ParseError) as exception:
         raise errors.ParseError(
-            'Unable to read WEVT event provider with error: {0!s}'.format(
-                exception))
+            f'Unable to read WEVT event provider with error: {exception!s}')
 
-      provider_identifier = '{{{0!s}}}'.format(
-          event_provider_descriptor.provider_identifier)
+      provider_identifier = (
+          f'{{{event_provider_descriptor.provider_identifier!s}}}')
 
       for provider_element_descriptor in (
           event_provider.provider_element_descriptors):
@@ -493,8 +490,9 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
                 data[data_offset:], data_offset, wevt_event_definitions_map)
           except (ValueError, errors.ParseError) as exception:
             raise errors.ParseError((
-                'Unable to read WEVT event definitions with error: '
-                '{0!s}').format(exception))
+                f'Unable to read WEVT event definitions with error: '
+                f'{exception!s}'))
+
           for event_definition in event_definitions.definitions:
             event_definition = artifacts.WindowsWevtTemplateEvent(
                 identifier=event_definition.identifier,
@@ -567,7 +565,7 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       pefile_object.parse_data_directories(directories=self._PE_DIRECTORIES)
     except Exception as exception:
       raise errors.WrongParser(
-          'Unable to read PE file with error: {0!s}'.format(exception))
+          f'Unable to read PE file with error: {exception!s}')
 
     event_data = PEFileEventData()
     # Note that the result of get_imphash() is an empty string if there is no

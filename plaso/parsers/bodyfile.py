@@ -83,8 +83,7 @@ class BodyfileParser(interface.FileObjectParser):
 
   _NON_PRINTABLE_CHARACTERS = list(range(0, 0x20)) + list(range(0x7f, 0xa0))
   _ESCAPE_CHARACTERS = str.maketrans({
-      value: f'\\x{value:02x}'
-      for value in _NON_PRINTABLE_CHARACTERS})
+      value: f'\\x{value:02x}' for value in _NON_PRINTABLE_CHARACTERS})
 
   def _GetDateTimeFromTimestamp(self, float_value):
     """Retrieves a date time object from the floating-point timestamp.
