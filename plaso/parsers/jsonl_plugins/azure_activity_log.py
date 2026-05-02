@@ -75,8 +75,8 @@ class AzureActivityLogJSONLPlugin(interface.JSONLPlugin):
         date_time.CopyFromStringISO8601(event_timestamp)
       except ValueError as exception:
         parser_mediator.ProduceExtractionWarning(
-            'Unable to parse time string: {0:s} with error: {1!s}'.format(
-                event_timestamp, exception))
+            f'Unable to parse time string: {event_timestamp:s} with error: '
+            f'{exception!s}')
         date_time = None
 
     event_name_json = self._GetJSONValue(

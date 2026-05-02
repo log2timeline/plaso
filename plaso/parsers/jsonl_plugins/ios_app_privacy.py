@@ -72,7 +72,7 @@ class IOSAppPrivacPlugin(interface.JSONLPlugin):
 
     if event_type not in ('access', 'networkActivity'):
       parser_mediator.ProduceExtractionWarning(
-          'Unsupported event type: {0:s}.'.format(event_type))
+          f'Unsupported event type: {event_type:s}.')
       return
 
     date_time = None
@@ -84,8 +84,8 @@ class IOSAppPrivacPlugin(interface.JSONLPlugin):
         date_time.CopyFromStringISO8601(event_timestamp)
       except ValueError as exception:
         parser_mediator.ProduceExtractionWarning(
-            'Unable to parse time string: {0:s} with error: {1!s}'.format(
-                event_timestamp, exception))
+            f'Unable to parse time string: {event_timestamp:s} with error: '
+            f'{exception!s}')
         date_time = None
 
     if event_type == 'access':
