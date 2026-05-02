@@ -57,7 +57,7 @@ class OLECFParser(interface.FileObjectParser):
       olecf_file.open_file_object(file_object)
     except (IOError, TypeError) as exception:
       parser_mediator.ProduceExtractionWarning(
-          'unable to open file with error: {0!s}'.format(exception))
+          f'unable to open file with error: {exception!s}')
       return
 
     root_item = olecf_file.root_item
@@ -91,12 +91,13 @@ class OLECFParser(interface.FileObjectParser):
           parser_mediator.SampleFormatCheckStopTiming(profiling_name)
 
         if not result:
-          logger.debug('Skipped parsing file: {0:s} with plugin: {1:s}'.format(
-              display_name, plugin_name))
+          logger.debug(
+              f'Skipped parsing file: {display_name:s} with plugin: '
+              f'{plugin_name:s}')
           continue
 
-        logger.debug('Parsing file: {0:s} with plugin: {1:s}'.format(
-            display_name, plugin_name))
+        logger.debug(
+            f'Parsing file: {display_name:s} with plugin: {plugin_name:s}')
 
         parser_mediator.SampleStartTiming(profiling_name)
 
@@ -104,9 +105,9 @@ class OLECFParser(interface.FileObjectParser):
           plugin.UpdateChainAndProcess(parser_mediator, root_item=root_item)
 
         except Exception as exception:  # pylint: disable=broad-except
-          parser_mediator.ProduceExtractionWarning((
-              'plugin: {0:s} unable to parse OLECF file with error: '
-              '{1!s}').format(plugin_name, exception))
+          parser_mediator.ProduceExtractionWarning(
+              f'plugin: {plugin_name:s} unable to parse OLECF file with error: '
+              f'{exception!s}')
 
         finally:
           parser_mediator.SampleStopTiming(profiling_name)
@@ -121,9 +122,9 @@ class OLECFParser(interface.FileObjectParser):
               parser_mediator, root_item=root_item)
 
         except Exception as exception:  # pylint: disable=broad-except
-          parser_mediator.ProduceExtractionWarning((
-              'plugin: {0:s} unable to parse OLECF file with error: '
-              '{1!s}').format(self._default_plugin_name, exception))
+          parser_mediator.ProduceExtractionWarning(
+              f'plugin: {self._default_plugin_name:s} unable to parse OLECF '
+              f'file with error: {exception!s}')
 
         finally:
           parser_mediator.SampleStopTiming(profiling_name)
