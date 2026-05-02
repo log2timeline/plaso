@@ -99,8 +99,8 @@ class MacOSUserPlistPlugin(interface.PlistPlugin):
       date_time.CopyFromStringISO8601(time_string)
     except (TypeError, ValueError):
       parser_mediator.ProduceExtractionWarning(
-          'unable to parse value: {0:s} time string: {1!s}'.format(
-              value_name, time_string))
+          f'unable to parse value: {value_name:s} time string: '
+          f'{time_string!s}')
       return None
 
     return date_time
@@ -131,8 +131,7 @@ class MacOSUserPlistPlugin(interface.PlistPlugin):
         property_list = plistlib.loads(shadow_hash_data[0])
       except plistlib.InvalidFileException as exception:
         parser_mediator.ProduceExtractionWarning(
-            'unable to parse ShadowHashData with error: {0!s}'.format(
-                exception))
+            f'unable to parse ShadowHashData with error: {exception!s}')
         property_list = {}
 
       salted_hash = property_list.get('SALTED-SHA512-PBKDF2', None)
@@ -141,18 +140,19 @@ class MacOSUserPlistPlugin(interface.PlistPlugin):
         salt_string = codecs.decode(salt_hex_bytes, 'ascii')
         entropy_hex_bytes = codecs.encode(salted_hash['entropy'], 'hex')
         entropy_string = codecs.decode(entropy_hex_bytes, 'ascii')
-        password_hash = '$ml${0:d}${1:s}${2:s}'.format(
-            salted_hash['iterations'], salt_string, entropy_string)
+        password_hash = (
+            f'$ml${salted_hash["iterations"]:d}'
+            f'${salt_string:s}${entropy_string:s}')
 
     for policy in match.get('passwordpolicyoptions', []):
       try:
         xml_policy = ElementTree.fromstring(policy)
       except (LookupError, ElementTree.ParseError,
               expat.ExpatError) as exception:
-        logger.error((
-            'Unable to parse XML structure for an user policy, username: '
-            '{0:s} and UID: {1!s}, with error: {2!s}').format(
-                username, user_identifier, exception))
+        logger.error(
+            f'Unable to parse XML structure for an user policy, '
+            f'username: {username:s} and UID: {user_identifier!s}, '
+            f'with error: {exception!s}')
         continue
 
       for dict_elements in xml_policy.iterfind('dict'):
