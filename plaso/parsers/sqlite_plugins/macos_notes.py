@@ -62,7 +62,7 @@ class MacOSNotesEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(MacOSNotesEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.creation_time = None
     self.modification_time = None
     self.text = None

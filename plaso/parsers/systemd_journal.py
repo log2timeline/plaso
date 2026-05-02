@@ -32,7 +32,7 @@ class SystemdJournalEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(SystemdJournalEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.body = None
     self.hostname = None
     self.pid = None
@@ -82,7 +82,7 @@ class SystemdJournalParser(
 
   def __init__(self):
     """Initializes a parser."""
-    super(SystemdJournalParser, self).__init__()
+    super().__init__()
     self._maximum_journal_file_offset = 0
     self._is_compact = False
 

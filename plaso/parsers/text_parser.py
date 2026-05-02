@@ -12,7 +12,7 @@ from plaso.parsers import logger
 from plaso.parsers import manager
 
 
-class EncodedTextReader(object):
+class EncodedTextReader:
   """Encoded text reader.
 
   Attributes:
@@ -36,7 +36,7 @@ class EncodedTextReader(object):
     """
     stream_reader_class = codecs.getreader(encoding)
 
-    super(EncodedTextReader, self).__init__()
+    super().__init__()
     self._file_object = file_object
     self._stream_reader = stream_reader_class(
         file_object, errors=encoding_errors)
@@ -129,7 +129,7 @@ class TextLogParser(interface.FileObjectParser):
 
   def __init__(self):
     """Initializes a text-based log parser."""
-    super(TextLogParser, self).__init__()
+    super().__init__()
     self._plugins_per_encoding = {}
     self._format_scanner = None
     self._non_sigscan_plugin_names = None

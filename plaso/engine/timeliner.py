@@ -16,7 +16,7 @@ from plaso.engine import yaml_timeliner_file
 from plaso.lib import definitions
 
 
-class EventDataTimeliner(object):
+class EventDataTimeliner:
   """The event data timeliner.
 
   Attributes:
@@ -44,7 +44,7 @@ class EventDataTimeliner(object):
       system_configurations (Optional[list[SystemConfigurationArtifact]]):
           system configurations.
     """
-    super(EventDataTimeliner, self).__init__()
+    super().__init__()
     self._attribute_mappings = {}
     self._base_dates = {}
     self._current_date = self._GetCurrentDate()

@@ -1,7 +1,7 @@
 """Windows languages helper."""
 
 
-class WindowsLanguageHelper(object):
+class WindowsLanguageHelper:
   """Windows languages helper."""
 
   _TAG_PER_LCID = {

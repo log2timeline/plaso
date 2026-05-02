@@ -30,7 +30,7 @@ class MacOSBackgroundItemEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(MacOSBackgroundItemEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.name = None
     self.target_creation_time = None
     self.target_path = None
@@ -59,7 +59,7 @@ class MacOSBackgroundItemsPlistPlugin(
 
   def __init__(self):
     """Initializes a plist parser plugin for Mac OS background items."""
-    super(MacOSBackgroundItemsPlistPlugin, self).__init__()
+    super().__init__()
     self._decoder = interface.NSKeyedArchiverDecoder()
 
   def _ParseBookmarkData(self, bookmark_data, event_data):

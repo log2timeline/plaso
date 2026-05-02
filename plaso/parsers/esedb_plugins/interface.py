@@ -52,7 +52,7 @@ class ESEDBPlugin(plugins.BasePlugin, dtfabric_helper.DtFabricHelper):
 
   def __init__(self):
     """Initializes the ESE database plugin."""
-    super(ESEDBPlugin, self).__init__()
+    super().__init__()
     self._tables = {}
     self._tables.update(self.REQUIRED_TABLES)
     self._tables.update(self.OPTIONAL_TABLES)
@@ -358,7 +358,7 @@ class ESEDBPlugin(plugins.BasePlugin, dtfabric_helper.DtFabricHelper):
       raise ValueError('Invalid database.')
 
     # This will raise if unhandled keyword arguments are passed.
-    super(ESEDBPlugin, self).Process(parser_mediator)
+    super().Process(parser_mediator)
 
     self._ParseESEDatabase(
         parser_mediator, cache=cache, database=database, **kwargs)

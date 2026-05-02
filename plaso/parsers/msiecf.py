@@ -29,7 +29,7 @@ class MSIECFLeakEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(MSIECFLeakEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.cached_filename = None
     self.cached_file_size = None
     self.cache_directory_index = None
@@ -52,7 +52,7 @@ class MSIECFRedirectedEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(MSIECFRedirectedEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.offset = None
     self.recovered = None
     self.url = None
@@ -94,7 +94,7 @@ class MSIECFURLEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(MSIECFURLEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.access_time = None
     self.creation_time = None
     self.cached_filename = None

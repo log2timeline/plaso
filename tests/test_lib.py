@@ -178,12 +178,12 @@ class ImportCheckTestCase(BaseTestCase):
             '{0:s} not imported in {1:s}'.format(module_name, init_path))
 
 
-class TempDirectory(object):
+class TempDirectory:
   """Class that implements a temporary directory."""
 
   def __init__(self):
     """Initializes a temporary directory."""
-    super(TempDirectory, self).__init__()
+    super().__init__()
     self.name = ''
 
   def __enter__(self):

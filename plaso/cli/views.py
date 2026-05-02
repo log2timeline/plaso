@@ -8,7 +8,7 @@ except ImportError:
   win32console = None
 
 
-class BaseTableView(object):
+class BaseTableView:
   """Table view interface."""
 
   def __init__(self, column_names=None, title=None, title_level=3):
@@ -19,7 +19,7 @@ class BaseTableView(object):
       title (Optional[str]): title.
       title_level (Optional[int]): title heading level.
     """
-    super(BaseTableView, self).__init__()
+    super().__init__()
     self._columns = column_names or []
     self._number_of_columns = len(self._columns)
     self._rows = []
@@ -72,7 +72,7 @@ class CLITableView(BaseTableView):
       title (Optional[str]): title.
       title_level (Optional[int]): title heading level.
     """
-    super(CLITableView, self).__init__(
+    super().__init__(
         column_names=column_names, title=title, title_level=title_level)
     if self._columns:
       self._column_width = len(self._columns[0])
@@ -161,7 +161,7 @@ class CLITableView(BaseTableView):
     Raises:
       ValueError: if the number of values is out of bounds.
     """
-    super(CLITableView, self).AddRow(values)
+    super().AddRow(values)
 
     self._column_width = max(self._column_width, len(values[0]))
 
@@ -217,7 +217,7 @@ class CLITabularTableView(BaseTableView):
           of the next tab.
       title (Optional[str]): title.
     """
-    super(CLITabularTableView, self).__init__(
+    super().__init__(
         column_names=column_names, title=title)
     self._column_sizes = column_sizes or []
 
@@ -355,7 +355,7 @@ class MarkdownTableView(BaseTableView):
     output_writer.Write('\n')
 
 
-class ViewsFactory(object):
+class ViewsFactory:
   """Views factory."""
 
   FORMAT_TYPE_CLI = 'cli'

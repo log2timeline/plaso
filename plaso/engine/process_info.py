@@ -3,7 +3,7 @@
 import psutil
 
 
-class ProcessInfo(object):
+class ProcessInfo:
   """Provides information about a running process."""
 
   def __init__(self, pid):

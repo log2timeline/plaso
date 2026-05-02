@@ -35,7 +35,7 @@ class TextPlugin(plugins.BasePlugin):
 
   def __init__(self):
     """Initializes a parser."""
-    super(TextPlugin, self).__init__()
+    super().__init__()
     self._current_offset = 0
     self._parser_mediator = None
     self._pyparsing_grammar = None
@@ -346,7 +346,7 @@ class TextPlugin(plugins.BasePlugin):
       file_object (Optional[dfvfs.FileIO]): a file-like object.
     """
     # This will raise if unhandled keyword arguments are passed.
-    super(TextPlugin, self).Process(parser_mediator)
+    super().Process(parser_mediator)
 
     # Keep a reference to the parser mediator for the encoding error handler.
     self._parser_mediator = parser_mediator
@@ -394,7 +394,7 @@ class TextPluginWithLineContinuation(TextPlugin):
 
   def __init__(self):
     """Initializes a text parser plugin."""
-    super(TextPluginWithLineContinuation, self).__init__()
+    super().__init__()
     self._last_string_match = None
 
   def _ParseString(self, string):

@@ -3,12 +3,12 @@
 import heapq
 
 
-class EventHeap(object):
+class EventHeap:
   """Event heap."""
 
   def __init__(self):
     """Initializes an event heap."""
-    super(EventHeap, self).__init__()
+    super().__init__()
     self._heap = []
 
   @property

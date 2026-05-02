@@ -7,7 +7,7 @@ from plaso.lib import errors
 from plaso.parsers import logger
 
 
-class ParserPreset(object):
+class ParserPreset:
   """Parser and parser plugin preset.
 
   Attributes:
@@ -26,19 +26,19 @@ class ParserPreset(object):
       name (str): name of the preset.
       parsers (list[str]): names of parser and parser plugins.
     """
-    super(ParserPreset, self).__init__()
+    super().__init__()
     self.deprecated = False
     self.name = name
     self.operating_systems = []
     self.parsers = parsers
 
 
-class ParserPresetsManager(object):
+class ParserPresetsManager:
   """The parsers and plugin presets manager."""
 
   def __init__(self):
     """Initializes a parser and parser plugin presets manager."""
-    super(ParserPresetsManager, self).__init__()
+    super().__init__()
     self._definitions = {}
 
   def _ReadOperatingSystemArtifactValues(self, operating_system_values):

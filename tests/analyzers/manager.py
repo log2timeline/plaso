@@ -17,7 +17,7 @@ class TestAnalyzer(interface.BaseAnalyzer):
 
   def __init__(self):
     """Initializes a test analyzer."""
-    super(TestAnalyzer, self).__init__()
+    super().__init__()
     self._results = []
 
   def _AddResult(self):

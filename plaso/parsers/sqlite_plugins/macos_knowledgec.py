@@ -23,7 +23,7 @@ class MacOSKnowledgeCApplicationEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(MacOSKnowledgeCApplicationEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.bundle_identifier = None
     self.creation_time = None
@@ -50,7 +50,7 @@ class MacOSKnowledgeCSafariEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(MacOSKnowledgeCSafariEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.bundle_identifier = None
     self.creation_time = None

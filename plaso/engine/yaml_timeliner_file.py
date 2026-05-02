@@ -5,7 +5,7 @@ import yaml
 from plaso.lib import errors
 
 
-class TimelinerDefinition(object):
+class TimelinerDefinition:
   """Timeliner definition.
 
   Attributes:
@@ -23,13 +23,13 @@ class TimelinerDefinition(object):
     Args:
       data_type (str): event data type indicator.
     """
-    super(TimelinerDefinition, self).__init__()
+    super().__init__()
     self.attribute_mappings = {}
     self.data_type = data_type
     self.place_holder_event = True
 
 
-class YAMLTimelinerConfigurationFile(object):
+class YAMLTimelinerConfigurationFile:
   """YAML-based timeliner configuration file.
 
   A YAML-based timeliner configuration file contains one or more timeliner

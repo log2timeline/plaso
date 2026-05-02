@@ -5,7 +5,7 @@ import abc
 from plaso.lib import definitions
 
 
-class BaseAnalyzer(object):
+class BaseAnalyzer:
   """Class that provides the interface for whole-file analysis."""
 
   NAME = 'base_analyzer'

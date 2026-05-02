@@ -8,7 +8,7 @@ projects that may want to use the Plaso plugin system.
 """
 
 
-class BasePlugin(object):
+class BasePlugin:
   """A plugin is a lightweight parser that makes use of a common data structure.
 
   When a data structure is common among several artifacts or files a plugin
@@ -81,7 +81,7 @@ class BasePlugin(object):
       parser_mediator.PopFromParserChain()
 
 
-class BasePluginCache(object):
+class BasePluginCache:
   """A generic cache for parser plugins."""
 
   def GetResults(self, attribute, default_value=None):

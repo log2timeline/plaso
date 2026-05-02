@@ -23,7 +23,7 @@ class TransmissionEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(TransmissionEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.added_time = None
     self.destination = None
     self.downloaded_time = None
@@ -54,7 +54,7 @@ class TransmissionBencodePlugin(interface.BencodePlugin):
       bencode_file (Optional[BencodeFile]): bencode file.
     """
     # This will raise if unhandled keyword arguments are passed.
-    super(TransmissionBencodePlugin, self).Process(parser_mediator, **kwargs)
+    super().Process(parser_mediator, **kwargs)
 
     root_values = bencode_file.GetValues()
 

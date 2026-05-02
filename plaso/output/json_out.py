@@ -14,7 +14,7 @@ class JSONOutputModule(shared_json.SharedJSONOutputModule):
 
   def __init__(self):
     """Initializes an output module."""
-    super(JSONOutputModule, self).__init__()
+    super().__init__()
     self._event_counter = 0
 
   def WriteFieldValues(self, output_mediator, field_values):

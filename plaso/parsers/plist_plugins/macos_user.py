@@ -51,7 +51,7 @@ class MacOSUserEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(MacOSUserEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.fullname = None
     self.home_directory = None
     self.last_login_attempt_time = None

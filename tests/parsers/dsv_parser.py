@@ -24,7 +24,7 @@ class TestDSVParser(dsv_parser.DSVParser):
 
   def __init__(self):
     """Initializes a DSV parser."""
-    super(TestDSVParser, self).__init__()
+    super().__init__()
     self.row_offsets = []
     self.rows = []
 

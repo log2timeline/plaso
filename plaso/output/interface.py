@@ -5,7 +5,7 @@ import abc
 from plaso.output import logger
 
 
-class OutputModule(object):
+class OutputModule:
   """Output module interface."""
 
   NAME = ''

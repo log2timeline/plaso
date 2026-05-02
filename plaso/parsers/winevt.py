@@ -38,7 +38,7 @@ class WinEvtRecordEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(WinEvtRecordEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.creation_time = None
     self.computer_name = None
     self.event_category = None

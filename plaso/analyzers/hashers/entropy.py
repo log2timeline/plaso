@@ -16,7 +16,7 @@ class EntropyHasher(interface.BaseHasher):
 
   def __init__(self):
     """Initializes the entropy hasher."""
-    super(EntropyHasher, self).__init__()
+    super().__init__()
     self._byte_frequency_counter = collections.Counter()
     self._file_length = 0
 

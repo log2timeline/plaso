@@ -3,7 +3,7 @@
 from plaso.analysis import definitions
 
 
-class AnalysisPluginManager(object):
+class AnalysisPluginManager:
   """Analysis plugin manager."""
 
   _plugin_classes = {}

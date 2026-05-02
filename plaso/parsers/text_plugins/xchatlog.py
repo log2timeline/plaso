@@ -75,7 +75,7 @@ class XChatLogEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(XChatLogEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.added_time = None
     self.nickname = None
     self.text = None
@@ -162,7 +162,7 @@ class XChatLogTextPlugin(
 
   def __init__(self):
     """Initializes a text parser plugin."""
-    super(XChatLogTextPlugin, self).__init__()
+    super().__init__()
     self._year = None
 
   def _ParseLogLine(self, parser_mediator, structure):

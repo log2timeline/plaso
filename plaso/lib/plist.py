@@ -3,7 +3,7 @@
 import plistlib
 
 
-class PlistFile(object):
+class PlistFile:
   """Class that defines a plist file.
 
   Attributes:
@@ -12,7 +12,7 @@ class PlistFile(object):
 
   def __init__(self):
     """Initializes the plist file object."""
-    super(PlistFile, self).__init__()
+    super().__init__()
     self.root_key = None
 
   def GetValueByPath(self, path_segments):

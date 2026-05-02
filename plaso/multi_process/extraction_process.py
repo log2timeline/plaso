@@ -39,7 +39,7 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
           specifications.
       kwargs: keyword arguments to pass to multiprocessing.Process.
     """
-    super(ExtractionWorkerProcess, self).__init__(
+    super().__init__(
         processing_configuration, **kwargs)
     self._abort = False
     self._buffer_size = 0

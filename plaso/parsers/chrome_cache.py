@@ -14,7 +14,7 @@ from plaso.parsers import interface
 from plaso.parsers import manager
 
 
-class CacheAddress(object):
+class CacheAddress:
   """Chrome cache address.
 
   Attributes:
@@ -44,7 +44,7 @@ class CacheAddress(object):
     Args:
       cache_address (int): cache address.
     """
-    super(CacheAddress, self).__init__()
+    super().__init__()
     self.block_number = None
     self.block_offset = None
     self.block_size = None
@@ -73,7 +73,7 @@ class CacheAddress(object):
         self.block_offset = 8192 + (self.block_number * file_block_size)
 
 
-class CacheEntry(object):
+class CacheEntry:
   """Chrome cache entry.
 
   Attributes:
@@ -88,7 +88,7 @@ class CacheEntry(object):
 
   def __init__(self):
     """Initializes a cache entry."""
-    super(CacheEntry, self).__init__()
+    super().__init__()
     self.creation_time = None
     self.hash = None
     self.key = None
@@ -113,7 +113,7 @@ class ChromeCacheIndexFileParser(
 
   def __init__(self):
     """Initializes an index file."""
-    super(ChromeCacheIndexFileParser, self).__init__()
+    super().__init__()
     self.creation_time = None
     self.index_table = []
 
@@ -305,7 +305,7 @@ class ChromeCacheEntryEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(ChromeCacheEntryEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.creation_time = None
     self.original_url = None
 
@@ -318,7 +318,7 @@ class ChromeCacheParser(interface.FileEntryParser):
 
   def __init__(self):
     """Initializes a Chrome Cache files parser."""
-    super(ChromeCacheParser, self).__init__()
+    super().__init__()
     self._data_block_file_parser = ChromeCacheDataBlockFileParser()
 
   def _ParseCacheEntries(self, parser_mediator, index_table, data_block_files):

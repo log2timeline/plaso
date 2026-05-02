@@ -33,7 +33,7 @@ class AppleAccountEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(AppleAccountEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.account_name = None
     self.creation_time = None
     self.first_name = None

@@ -32,7 +32,7 @@ class VirusTotalAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
 
   def __init__(self):
     """Initializes a VirusTotal analysis plugin."""
-    super(VirusTotalAnalysisPlugin, self).__init__()
+    super().__init__()
     self._api_key = None
 
   def _Analyze(self, hashes):

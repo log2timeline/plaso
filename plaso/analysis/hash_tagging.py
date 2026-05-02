@@ -12,7 +12,7 @@ from plaso.containers import events
 from plaso.lib import errors
 
 
-class HashAnalysis(object):
+class HashAnalysis:
   """Analysis information about a hash.
 
   Attributes:
@@ -51,7 +51,7 @@ class HashTaggingAnalysisPlugin(interface.AnalysisPlugin):
 
   def __init__(self):
     """Initializes a hash tagging analysis plugin."""
-    super(HashTaggingAnalysisPlugin, self).__init__()
+    super().__init__()
     self._batch_of_lookup_hashes = []
     self._data_stream_identifiers = set()
     self._data_streams_by_hash = collections.defaultdict(set)
@@ -194,7 +194,7 @@ class HashTaggingAnalysisPlugin(interface.AnalysisPlugin):
 
       self._batch_of_lookup_hashes = []
 
-    return super(HashTaggingAnalysisPlugin, self).CompileReport(
+    return super().CompileReport(
         analysis_mediator)
 
   def ExamineEvent(

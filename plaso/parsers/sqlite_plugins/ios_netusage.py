@@ -25,7 +25,7 @@ class IOSNetusageProcessEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(IOSNetusageProcessEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.process_name = None
     self.start_time = None
     self.wifi_in = None
@@ -53,7 +53,7 @@ class IOSNetusageRouteEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(IOSNetusageRouteEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.bytes_in = None
     self.bytes_out = None
     self.network_identifier = None

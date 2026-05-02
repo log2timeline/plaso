@@ -65,6 +65,6 @@ class CompoundZIPPlugin(plugins.BasePlugin):
       raise ValueError('Invalid ZIP file.')
 
     # This will raise if unhandled keyword arguments are passed.
-    super(CompoundZIPPlugin, self).Process(parser_mediator)
+    super().Process(parser_mediator)
 
     self._ParseZIPFile(parser_mediator, zip_file)

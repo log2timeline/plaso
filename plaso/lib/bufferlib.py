@@ -1,7 +1,7 @@
 """Circular buffer for storing event objects."""
 
 
-class CircularBuffer(object):
+class CircularBuffer:
   """Class that defines a circular buffer for storing event objects."""
 
   def __init__(self, size):
@@ -10,7 +10,7 @@ class CircularBuffer(object):
     Args:
       size (int): number of elements in the buffer.
     """
-    super(CircularBuffer, self).__init__()
+    super().__init__()
     self._index = 0
     self._list = []
     self._size = size

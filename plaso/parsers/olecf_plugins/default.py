@@ -21,7 +21,7 @@ class OLECFItemEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(OLECFItemEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.creation_time = None
     self.modification_time = None
     self.name = None
@@ -68,7 +68,7 @@ class DefaultOLECFPlugin(interface.OLECFPlugin):
       ValueError: If the root item is not set.
     """
     # This will raise if unhandled keyword arguments are passed.
-    super(DefaultOLECFPlugin, self).Process(parser_mediator, **kwargs)
+    super().Process(parser_mediator, **kwargs)
 
     if not root_item:
       raise ValueError('Root item not set.')

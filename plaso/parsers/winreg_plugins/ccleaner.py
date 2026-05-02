@@ -27,7 +27,7 @@ class CCleanerConfigurationEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(CCleanerConfigurationEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.configuration = None
     self.key_path = None
@@ -47,7 +47,7 @@ class CCleanerUpdateEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(CCleanerUpdateEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.key_path = None
     self.update_time = None
 

@@ -19,7 +19,7 @@ class DockerLayerConfigurationEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(DockerLayerConfigurationEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.command = None
     self.creation_time = None

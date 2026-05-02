@@ -25,7 +25,7 @@ class MacOSApplicationUsageEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(MacOSApplicationUsageEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.application = None
     self.application_version = None

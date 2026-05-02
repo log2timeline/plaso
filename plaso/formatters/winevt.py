@@ -17,7 +17,7 @@ class WindowsEventLogMessageFormatterHelper(
 
   def __init__(self):
     """Initialized a indows EventLog message formatter helper."""
-    super(WindowsEventLogMessageFormatterHelper, self).__init__()
+    super().__init__()
     self._winevt_resources_helper = None
 
   def FormatEventValues(self, output_mediator, event_values):

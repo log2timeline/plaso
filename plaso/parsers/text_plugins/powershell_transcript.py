@@ -39,7 +39,7 @@ class PowerShellTranscriptLogEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(PowerShellTranscriptLogEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.build_version = None
     self.clr_version = None
@@ -130,7 +130,7 @@ class PowerShellTranscriptLogTextPlugin(interface.TextPlugin):
 
   def __init__(self):
     """Initializes a text parser plugin."""
-    super(PowerShellTranscriptLogTextPlugin, self).__init__()
+    super().__init__()
     self._command_history = []
     self._event_data = None
     self._in_command_history = False

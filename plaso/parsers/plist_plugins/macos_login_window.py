@@ -22,7 +22,7 @@ class MacOSLoginWindowEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(MacOSLoginWindowEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.login_hook = None
     self.logout_hook = None
 
@@ -44,7 +44,7 @@ class MacOSLoginWindowManagedLoginItemEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(MacOSLoginWindowManagedLoginItemEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.is_hidden = None
     self.path = None

@@ -19,7 +19,7 @@ class MacOSLaunchdEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(MacOSLaunchdEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.name = None
     self.group_name = None
     self.program = None
@@ -70,7 +70,7 @@ class MacOSLaunchdPlistPlugin(interface.PlistPlugin):
     Returns:
       bool: True if this is the correct plugin, False otherwise.
     """
-    if not super(MacOSLaunchdPlistPlugin, self).CheckRequiredFormat(top_level):
+    if not super().CheckRequiredFormat(top_level):
       return False
 
     return 'Program' in top_level or 'ProgramArguments' in top_level

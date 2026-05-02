@@ -6,7 +6,7 @@ import sys
 from plaso.lib import errors
 
 
-class ArgumentsHelper(object):
+class ArgumentsHelper:
   """CLI arguments helper."""
 
   NAME = 'baseline'

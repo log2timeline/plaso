@@ -8,7 +8,7 @@ from plaso.helpers.windows import time_zones
 from plaso.preprocessors import logger
 
 
-class PreprocessMediator(object):
+class PreprocessMediator:
   """Preprocess mediator.
 
   Attributes:
@@ -25,7 +25,7 @@ class PreprocessMediator(object):
       storage_writer (StorageWriter): storage writer, to store preprocessing
           information in.
     """
-    super(PreprocessMediator, self).__init__()
+    super().__init__()
     self._available_time_zones = {}
     self._environment_variables = {}
     self._file_entry = None

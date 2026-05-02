@@ -41,7 +41,7 @@ class USBStorDeviceInstanceEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(USBStorDeviceInstanceEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.device_last_arrival_time = None
     self.device_last_removal_time = None

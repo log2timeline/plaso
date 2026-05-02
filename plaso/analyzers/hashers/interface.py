@@ -3,7 +3,7 @@
 import abc
 
 
-class BaseHasher(object):
+class BaseHasher:
   """Base class for objects that calculate hashes."""
 
   NAME = 'base_hasher'

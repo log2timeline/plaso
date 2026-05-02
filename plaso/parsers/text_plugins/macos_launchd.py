@@ -25,7 +25,7 @@ class MacOSLaunchdEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(MacOSLaunchdEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.body = None
     self.process_name = None
     self.severity = None

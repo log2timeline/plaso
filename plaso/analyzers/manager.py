@@ -1,7 +1,7 @@
 """This file contains a class for managing digest analyzers for Plaso."""
 
 
-class AnalyzersManager(object):
+class AnalyzersManager:
   """Class that implements the analyzers manager."""
 
   _analyzer_classes = {}

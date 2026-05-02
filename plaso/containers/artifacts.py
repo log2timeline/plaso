@@ -40,7 +40,7 @@ class EnvironmentVariableArtifact(ArtifactAttributeContainer):
       name (Optional[str]): environment variable name.
       value (Optional[str]): environment variable value.
     """
-    super(EnvironmentVariableArtifact, self).__init__()
+    super().__init__()
     self.case_sensitive = case_sensitive
     self.name = name
     self.value = value
@@ -71,7 +71,7 @@ class HostnameArtifact(ArtifactAttributeContainer):
       name (Optional[str]): name of the host according to the naming schema.
       schema (Optional[str]): naming schema.
     """
-    super(HostnameArtifact, self).__init__()
+    super().__init__()
     self.name = name
     self.schema = schema
 
@@ -138,7 +138,7 @@ class OperatingSystemArtifact(ArtifactAttributeContainer):
       version (Optional[str]): version, such as "10.14.1" or "5.1". This value
           is typically obtained from the source data.
     """
-    super(OperatingSystemArtifact, self).__init__()
+    super().__init__()
     self.family = family
     self.name = None
     self.product = product
@@ -260,7 +260,7 @@ class PathArtifact(ArtifactAttributeContainer):
       path (Optional[str]): a path.
       path_segment_separator (Optional[str]): path segment separator.
     """
-    super(PathArtifact, self).__init__()
+    super().__init__()
     self.data_stream = data_stream
     self.path_segment_separator = path_segment_separator
     self.path_segments = self._SplitPath(path, path_segment_separator)
@@ -437,7 +437,7 @@ class SourceConfigurationArtifact(ArtifactAttributeContainer):
       path (Optional[str]): path of the source.
       source_type (Optional[str]): type of source.
     """
-    super(SourceConfigurationArtifact, self).__init__()
+    super().__init__()
     self.path = path
     self.source_type = source_type
 
@@ -490,7 +490,7 @@ class SystemConfigurationArtifact(ArtifactAttributeContainer):
       language (Optional[str]): system language.
       time_zone (Optional[str]): system time zone.
     """
-    super(SystemConfigurationArtifact, self).__init__()
+    super().__init__()
     # TODO: kept for backwards compatibility.
     self.available_time_zones = []
     self.code_page = code_page
@@ -541,7 +541,7 @@ class TimeZoneArtifact(ArtifactAttributeContainer):
           Standard Time".
       offset (Optional[int]): time zone offset in number of minutes from UTC.
     """
-    super(TimeZoneArtifact, self).__init__()
+    super().__init__()
     self.localized_name = localized_name
     self.mui_form = mui_form
     self.name = name
@@ -586,7 +586,7 @@ class UserAccountArtifact(ArtifactAttributeContainer):
           directory.
       username (Optional[str]): name uniquely identifying the user.
     """
-    super(UserAccountArtifact, self).__init__()
+    super().__init__()
     self._path_separator = path_separator
     self.full_name = full_name
     self.group_identifier = group_identifier
@@ -629,7 +629,7 @@ class WindowsEventLogMessageFileArtifact(ArtifactAttributeContainer):
       windows_path (Optional[str]): path as defined by the Window EventLog
           provider.
     """
-    super(WindowsEventLogMessageFileArtifact, self).__init__()
+    super().__init__()
     self.path = path
     self.windows_path = windows_path
 
@@ -663,7 +663,7 @@ class WindowsEventLogMessageStringArtifact(ArtifactAttributeContainer):
       message_identifier (Optional[int]): message identifier.
       string (Optional[str]): string.
     """
-    super(WindowsEventLogMessageStringArtifact, self).__init__()
+    super().__init__()
     self._message_file_identifier = None
     self.language_identifier = language_identifier
     self.message_identifier = message_identifier
@@ -735,7 +735,7 @@ class WindowsEventLogProviderArtifact(ArtifactAttributeContainer):
       parameter_message_files (Optional[list[str]]): filenames of the parameter
           message files.
     """
-    super(WindowsEventLogProviderArtifact, self).__init__()
+    super().__init__()
     self._system_configuration_identifier = None
     self.additional_identifier = None
     self.category_message_files = category_message_files or []
@@ -777,7 +777,7 @@ class WindowsMountedDeviceArtifact(ArtifactAttributeContainer):
     Args:
       identifier (Optional[str]): identifier.
     """
-    super(WindowsMountedDeviceArtifact, self).__init__()
+    super().__init__()
     self.device = None
     self.disk_identity = None
     self.identifier = identifier
@@ -818,7 +818,7 @@ class WindowsServiceConfigurationArtifact(ArtifactAttributeContainer):
       service_type (Optional[int]): service (or driver) type.
       start_type (Optional[int]): service (or driver) start type.
     """
-    super(WindowsServiceConfigurationArtifact, self).__init__()
+    super().__init__()
     self.error_control = None
     self.image_path = None
     self.name = name
@@ -863,7 +863,7 @@ class WindowsWevtTemplateEvent(ArtifactAttributeContainer):
           contains a GUID.
       version (Optional[int]): event version.
     """
-    super(WindowsWevtTemplateEvent, self).__init__()
+    super().__init__()
     self._message_file_identifier = None
     self.identifier = identifier
     self.message_identifier = message_identifier

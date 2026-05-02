@@ -19,7 +19,7 @@ class WindowsTimezoneSettingsEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(WindowsTimezoneSettingsEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.configuration = None
     self.key_path = None

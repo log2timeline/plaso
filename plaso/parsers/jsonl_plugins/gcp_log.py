@@ -68,7 +68,7 @@ class GCPLogEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(GCPLogEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.caller_ip = None
     self.container = None
     self.dcsa_emails = None

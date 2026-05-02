@@ -29,7 +29,7 @@ class WindowsRegistryServiceEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(WindowsRegistryServiceEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.error_control = None
     self.image_path = None

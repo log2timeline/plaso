@@ -12,7 +12,7 @@ from plaso.filters import value_types
 from plaso.lib import errors
 
 
-class Filter(object):
+class Filter:
   """Filter interface.
 
   Attributes:
@@ -29,7 +29,7 @@ class Filter(object):
     """
     logger.debug('Adding {0!s}'.format(arguments))
 
-    super(Filter, self).__init__()
+    super().__init__()
     self.args = arguments or []
 
   def _CopyValueToString(self, value):
@@ -181,7 +181,7 @@ class BinaryOperator(Operator):
           '{0:s} only supports 2 operands, provided were {1:d} '
           'operands.').format(self.__class__.__name__, len(arguments)))
 
-    super(BinaryOperator, self).__init__(arguments=arguments, **kwargs)
+    super().__init__(arguments=arguments, **kwargs)
     self.left_operand = arguments[0]
     self.right_operand = arguments[1]
 
@@ -216,7 +216,7 @@ class GenericBinaryOperator(BinaryOperator):
     Args:
       arguments (Optional[list[str, object]]): operands of the filter.
     """
-    super(GenericBinaryOperator, self).__init__(arguments=arguments, **kwargs)
+    super().__init__(arguments=arguments, **kwargs)
     self._bool_value = True
 
   @abc.abstractmethod
@@ -479,7 +479,7 @@ class Regexp(GenericBinaryOperator):
     Raises:
       ValueError: if the regular expression is malformed.
     """
-    super(Regexp, self).__init__(arguments=arguments, **kwargs)
+    super().__init__(arguments=arguments, **kwargs)
 
     # Note that right_operand is not necessarily a string.
     logger.debug('Compiled: {0!s}'.format(self.right_operand))
@@ -528,7 +528,7 @@ class RegexpInsensitive(Regexp):
     Raises:
       ValueError: if the regular expression is malformed.
     """
-    super(RegexpInsensitive, self).__init__(arguments=arguments, **kwargs)
+    super().__init__(arguments=arguments, **kwargs)
 
     # Note that right_operand is not necessarily a string.
     logger.debug('Compiled: {0!s}'.format(self.right_operand))

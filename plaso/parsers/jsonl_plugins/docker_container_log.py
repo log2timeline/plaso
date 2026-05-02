@@ -22,7 +22,7 @@ class DockerContainerLogEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(DockerContainerLogEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.container_identifier = None
     self.log_line = None
     self.log_source = None
@@ -41,7 +41,7 @@ class DockerContainerLogJSONLPlugin(interface.JSONLPlugin):
 
   def __init__(self):
     """Initializes a JSON-L parser plugin."""
-    super(DockerContainerLogJSONLPlugin, self).__init__()
+    super().__init__()
     self._container_identifier = None
 
   def _GetContainerIdentifierFromPath(self, parser_mediator):

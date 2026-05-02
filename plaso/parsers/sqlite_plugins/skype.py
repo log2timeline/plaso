@@ -36,7 +36,7 @@ class SkypeAccountEventData(events.EventData):
 
   def __init__(self):
     """Initialize event data."""
-    super(SkypeAccountEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.authentication_request_time = None
     self.authentication_request_sent_time = None
     self.country = None
@@ -74,7 +74,7 @@ class SkypeCallEventData(events.EventData):
 
   def __init__(self):
     """Initialize event data."""
-    super(SkypeCallEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.attempt_time = None
     self.call_type = None
     self.dst_call = None
@@ -105,7 +105,7 @@ class SkypeChatEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(SkypeChatEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.from_account = None
     self.query = None
     self.recorded_time = None
@@ -129,7 +129,7 @@ class SkypeSMSEventData(events.EventData):
 
   def __init__(self):
     """Initialize event data."""
-    super(SkypeSMSEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.number = None
     self.query = None
     self.recorded_time = None
@@ -161,7 +161,7 @@ class SkypeTransferFileEventData(events.EventData):
 
   def __init__(self):
     """Initialize event data."""
-    super(SkypeTransferFileEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.accept_time = None
     self.destination = None
     self.end_time = None

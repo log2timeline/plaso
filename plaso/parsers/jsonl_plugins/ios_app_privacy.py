@@ -23,7 +23,7 @@ class IOSAppPrivacyAccessEvent(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(IOSAppPrivacyAccessEvent, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.accessor_identifier = None
     self.accessor_identifier_type = None
     self.recorded_time = None
@@ -44,7 +44,7 @@ class IOSAppPrivacyNetworkEvent(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(IOSAppPrivacyNetworkEvent, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.bundle_identifier = None
     self.domain = None
     self.recorded_time = None

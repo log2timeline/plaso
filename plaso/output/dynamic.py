@@ -156,7 +156,7 @@ class DynamicOutputModule(shared_dsv.DSVOutputModule):
   def __init__(self):
     """Initializes an output module."""
     field_formatting_helper = DynamicFieldFormattingHelper()
-    super(DynamicOutputModule, self).__init__(
+    super().__init__(
         field_formatting_helper, self._DEFAULT_NAMES)
 
 

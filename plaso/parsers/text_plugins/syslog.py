@@ -31,7 +31,7 @@ class SyslogCommentEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(SyslogCommentEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.body = None
     self.last_written_time = None
 
@@ -59,7 +59,7 @@ class SyslogLineEventData(events.EventData):
     Args:
       data_type (Optional[str]): event data type indicator.
     """
-    super(SyslogLineEventData, self).__init__(data_type=data_type)
+    super().__init__(data_type=data_type)
     self.body = None
     self.facility = None
     self.hostname = None
@@ -84,7 +84,7 @@ class SyslogCronTaskRunEventData(SyslogLineEventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(SyslogCronTaskRunEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.command = None
     self.last_written_time = None
     self.username = None
@@ -106,7 +106,7 @@ class SyslogSSHEventData(SyslogLineEventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(SyslogSSHEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.authentication_method = None
     self.fingerprint = None
     self.ip_address = None

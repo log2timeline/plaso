@@ -22,7 +22,7 @@ class AndroidTurboBatteryEvent(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(AndroidTurboBatteryEvent, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.battery_level = None
     self.battery_saver = None
     self.charge_type = None

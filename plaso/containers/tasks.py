@@ -59,7 +59,7 @@ class Task(interface.AttributeContainer):
       session_identifier (Optional[str]): identifier of the session the task
           is part of.
     """
-    super(Task, self).__init__()
+    super().__init__()
     self.aborted = False
     self.completion_time = None
     self.file_entry_type = None

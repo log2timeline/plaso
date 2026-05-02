@@ -9,7 +9,7 @@ from plaso.helpers.windows import shell_folders
 from plaso.lib import definitions
 
 
-class ShellItemsParser(object):
+class ShellItemsParser:
   """Parses for Windows NT shell items."""
 
   NAME = 'shell_items'
@@ -23,7 +23,7 @@ class ShellItemsParser(object):
     Args:
       origin (str): origin of the event.
     """
-    super(ShellItemsParser, self).__init__()
+    super().__init__()
     self._origin = origin
     self._path_escape_characters = str.maketrans(self._PATH_ESCAPE_CHARACTERS)
     self._path_segments = []

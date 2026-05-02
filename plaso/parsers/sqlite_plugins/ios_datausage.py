@@ -24,7 +24,7 @@ class IOSDatausageEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(IOSDatausageEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.bundle_identifier = None
     self.process_name = None
     self.start_time = None

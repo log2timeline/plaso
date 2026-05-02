@@ -6,7 +6,7 @@ from dfvfs.resolver import resolver as path_spec_resolver
 from plaso.containers import events
 
 
-class DateLessLogFormatHelper(object):
+class DateLessLogFormatHelper:
   """Date-less log format helper mix-in."""
 
   _MONTH_DICT = {
@@ -33,7 +33,7 @@ class DateLessLogFormatHelper(object):
 
   def __init__(self):
     """Initializes the date-less log format helper mix-in."""
-    super(DateLessLogFormatHelper, self).__init__()
+    super().__init__()
     self._base_date = None
     self._date = (0, 0, 0)
     self._granularity = self._GRANULARITY_NO_YEAR

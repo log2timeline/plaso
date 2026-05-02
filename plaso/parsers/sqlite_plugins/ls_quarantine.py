@@ -24,7 +24,7 @@ class MacOSLSQuarantineEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(MacOSLSQuarantineEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.agent = None
     self.data = None
     self.downloaded_time = None

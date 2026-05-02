@@ -3,7 +3,7 @@
 import os
 
 
-class BinaryLineReader(object):
+class BinaryLineReader:
   """Line reader for binary file-like objects.
 
   Attributes:
@@ -23,7 +23,7 @@ class BinaryLineReader(object):
       file_object (FileIO): a file-like object to read from.
       end_of_line (Optional[bytes]): end of line indicator.
     """
-    super(BinaryLineReader, self).__init__()
+    super().__init__()
     self._file_object = file_object
     self._file_object_size = file_object.get_size()
     self.end_of_line = end_of_line
@@ -175,7 +175,7 @@ class BinaryLineReader(object):
     return self._current_offset
 
 
-class BinaryDSVReader(object):
+class BinaryDSVReader:
   """Basic reader for delimiter separated text files of unknown encoding.
 
   This is used for reading data from text files where the content is unknown, or
@@ -189,7 +189,7 @@ class BinaryDSVReader(object):
       binary_line_reader (BinaryLineReader): a binary file reader
       delimiter (bytes): field delimiter.
     """
-    super(BinaryDSVReader, self).__init__()
+    super().__init__()
     self._line_reader = binary_line_reader
     self._delimiter = delimiter
 

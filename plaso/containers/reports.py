@@ -26,7 +26,7 @@ class AnalysisReport(interface.AttributeContainer):
           the report.
       text (Optional[str]): report text.
     """
-    super(AnalysisReport, self).__init__()
+    super().__init__()
     self.analysis_counter = None
     self.event_filter = None
     self.plugin_name = plugin_name

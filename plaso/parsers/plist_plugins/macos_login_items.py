@@ -33,7 +33,7 @@ class MacOSLoginItemEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(MacOSLoginItemEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.hidden = None
     self.name = None
     self.target_creation_time = None

@@ -15,7 +15,7 @@ class MD5Hasher(interface.BaseHasher):
 
   def __init__(self):
     """Initializes the MD5 hasher."""
-    super(MD5Hasher, self).__init__()
+    super().__init__()
     self._md5_context = hashlib.md5()
 
   def GetStringDigest(self):

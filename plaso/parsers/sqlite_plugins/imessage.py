@@ -33,7 +33,7 @@ class IMessageEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(IMessageEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.attachment_location = None
     self.client_version = None
     self.creation_time = None

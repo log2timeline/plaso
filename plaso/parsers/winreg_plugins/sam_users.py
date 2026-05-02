@@ -33,7 +33,7 @@ class SAMUsersWindowsRegistryEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(SAMUsersWindowsRegistryEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.account_rid = None
     self.comments = None

@@ -8,7 +8,7 @@ from plaso.engine import logger
 from plaso.lib import definitions
 
 
-class PathHelper(object):
+class PathHelper:
   """Class that implements the path helper."""
 
   _RECURSIVE_GLOB_LIMIT = 10

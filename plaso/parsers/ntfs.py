@@ -47,7 +47,7 @@ class NTFSFileStatEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(NTFSFileStatEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.access_time = None
     self.attribute_type = None
     self.creation_time = None
@@ -86,7 +86,7 @@ class NTFSUSNChangeEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(NTFSUSNChangeEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.file_attribute_flags = None
     self.filename = None
     self.file_reference = None

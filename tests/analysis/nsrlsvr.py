@@ -16,7 +16,7 @@ from plaso.lib import definitions
 from tests.analysis import test_lib
 
 
-class _MockNsrlsvrSocket(object):
+class _MockNsrlsvrSocket:
   """Mock socket object for testing."""
 
   _EXPECTED_DATA = (
@@ -25,7 +25,7 @@ class _MockNsrlsvrSocket(object):
 
   def __init__(self):
     """Initializes a mock socket."""
-    super(_MockNsrlsvrSocket, self).__init__()
+    super().__init__()
     self._data = None
 
   # Note: that the following functions do not follow the style guide

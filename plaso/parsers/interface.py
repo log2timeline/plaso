@@ -6,7 +6,7 @@ import os
 from plaso.lib import errors
 
 
-class BaseFileEntryFilter(object):
+class BaseFileEntryFilter:
   """File entry filter interface."""
 
   # pylint: disable=redundant-returns-doc
@@ -31,7 +31,7 @@ class FileNameFileEntryFilter(BaseFileEntryFilter):
     Args:
       filename (str): name of the file.
     """
-    super(FileNameFileEntryFilter, self).__init__()
+    super().__init__()
     self._filename = filename.lower()
 
   def Match(self, file_entry):
@@ -50,7 +50,7 @@ class FileNameFileEntryFilter(BaseFileEntryFilter):
     return filename == self._filename
 
 
-class BaseParser(object):
+class BaseParser:
   """The parser interface."""
 
   # The name of the parser. This is the name that is used in the registration
@@ -85,7 +85,7 @@ class BaseParser(object):
     The default plugin, named "{self.NAME:s}_default", if it exists, is always
     enabled and cannot be disabled.
     """
-    super(BaseParser, self).__init__()
+    super().__init__()
     self._default_plugin = None
     self._default_plugin_name = '{0:s}_default'.format(self.NAME)
     self._plugins_per_name = None

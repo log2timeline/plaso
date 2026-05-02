@@ -39,7 +39,7 @@ class WindowsDistributedLinkTrackingEventData(events.EventData):
         uuid.hex[20:22], uuid.hex[22:24], uuid.hex[24:26], uuid.hex[26:28],
         uuid.hex[28:30], uuid.hex[30:32])
 
-    super(WindowsDistributedLinkTrackingEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.creation_time = dfdatetime_uuid_time.UUIDTime(timestamp=uuid.time)
     self.mac_address = mac_address
@@ -63,7 +63,7 @@ class WindowsRegistryEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(WindowsRegistryEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.key_path = None
     self.last_written_time = None
     self.values = None
@@ -92,7 +92,7 @@ class WindowsShellItemFileEntryEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(WindowsShellItemFileEntryEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.access_time = None
     self.creation_time = None
@@ -120,7 +120,7 @@ class WindowsVolumeEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(WindowsVolumeEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.creation_time = None
     self.device_path = None
     # TODO: replace origin with something machine readable.

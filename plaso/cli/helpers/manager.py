@@ -3,7 +3,7 @@
 from plaso.lib import errors
 
 
-class ArgumentHelperManager(object):
+class ArgumentHelperManager:
   """Class that implements the CLI argument helper manager."""
 
   _helper_classes = {}

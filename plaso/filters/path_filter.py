@@ -9,7 +9,7 @@ The scan tree is used in the filter to filter provided paths.
 """
 
 
-class _PathFilterTable(object):
+class _PathFilterTable:
   """Path filter table.
 
   The path filter table is used to construct a scan tree.
@@ -24,7 +24,7 @@ class _PathFilterTable(object):
           index of the first path segment relative from the root.
       path_segment_separator (Optional[str]): path segment separator.
     """
-    super(_PathFilterTable, self).__init__()
+    super().__init__()
     self._path_segment_separator = path_segment_separator
     self.path_segments_per_index = {}
     self.paths = list(paths)
@@ -93,7 +93,7 @@ class _PathFilterTable(object):
     return '\n'.join(text_parts)
 
 
-class _PathSegmentWeights(object):
+class _PathSegmentWeights:
   """Path segment weights.
 
   The path segment weights are used to determine the most significant path
@@ -102,7 +102,7 @@ class _PathSegmentWeights(object):
 
   def __init__(self):
     """Initializes path segment weights."""
-    super(_PathSegmentWeights, self).__init__()
+    super().__init__()
     self._indexes_per_weight = {}
     self._weight_per_index = {}
 
@@ -233,7 +233,7 @@ class _PathSegmentWeights(object):
     return '\n'.join(text_parts)
 
 
-class PathFilterScanTree(object):
+class PathFilterScanTree:
   """Path filter scan tree."""
 
   def __init__(self, paths, case_sensitive=True, path_segment_separator='/'):
@@ -245,7 +245,7 @@ class PathFilterScanTree(object):
           sensitive.
       path_segment_separator (Optional[str]): path segment separator.
     """
-    super(PathFilterScanTree, self).__init__()
+    super().__init__()
     self._case_sensitive = case_sensitive
     self._path_segment_separator = path_segment_separator
     self._root_node = None
@@ -550,7 +550,7 @@ class PathFilterScanTree(object):
     return filter_path_segments == path_segments
 
 
-class PathFilterScanTreeNode(object):
+class PathFilterScanTreeNode:
   """Class that implements a path filter scan tree node.
 
   The path filter scan tree node defines the path segments for a specific
@@ -572,7 +572,7 @@ class PathFilterScanTreeNode(object):
     Args:
       path_segment_index (int): path segment index.
     """
-    super(PathFilterScanTreeNode, self).__init__()
+    super().__init__()
     self._path_segments = {}
     self.default_value = None
     self.parent = None

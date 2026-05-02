@@ -7,7 +7,7 @@ from plaso.filters import event_filter
 from plaso.lib import errors
 
 
-class TaggingFile(object):
+class TaggingFile:
   """Tagging file that defines one or more event tagging rules."""
 
   # A line with no indent is a tag name.
@@ -26,7 +26,7 @@ class TaggingFile(object):
     Args:
       path (str): path to a file that contains one or more event tagging rules.
     """
-    super(TaggingFile, self).__init__()
+    super().__init__()
     self._path = path
 
   def GetEventTaggingRules(self):

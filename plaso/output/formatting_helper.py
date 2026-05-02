@@ -13,7 +13,7 @@ from plaso.formatters import default
 from plaso.output import logger
 
 
-class EventFormattingHelper(object):
+class EventFormattingHelper:
   """Output module event formatting helper."""
 
   @abc.abstractmethod
@@ -34,7 +34,7 @@ class EventFormattingHelper(object):
     """
 
 
-class FieldFormattingHelper(object):
+class FieldFormattingHelper:
   """Output module field formatting helper."""
 
   _DEFAULT_MESSAGE_FORMATTER = default.DefaultEventFormatter()
@@ -46,7 +46,7 @@ class FieldFormattingHelper(object):
     """Initializes a field formatting helper."""
     event_data_stream = events.EventDataStream()
 
-    super(FieldFormattingHelper, self).__init__()
+    super().__init__()
     self._callback_functions = {}
     self._event_data_stream_field_names = event_data_stream.GetAttributeNames()
     self._event_tag_field_names = []

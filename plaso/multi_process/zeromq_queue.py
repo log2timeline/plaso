@@ -68,7 +68,7 @@ class ZeroMQQueue(plaso_queue.Queue):
         and not port):
       raise ValueError('No port specified to connect to.')
 
-    super(ZeroMQQueue, self).__init__()
+    super().__init__()
     self._closed_event = None
     self._high_water_mark = maximum_items
     self._linger_seconds = linger_seconds
@@ -584,14 +584,14 @@ class ZeroMQBufferedQueue(ZeroMQQueue):
 
     # We need to set up the internal buffer queue before we call super, so that
     # if the call to super opens the ZMQSocket, the backing thread will work.
-    super(ZeroMQBufferedQueue, self).__init__(
+    super().__init__(
         delay_open=delay_open, linger_seconds=linger_seconds,
         maximum_items=maximum_items, name=name, port=port,
         timeout_seconds=timeout_seconds)
 
   def _CreateZMQSocket(self):
     """Creates a ZeroMQ socket as well as a regular queue and a thread."""
-    super(ZeroMQBufferedQueue, self)._CreateZMQSocket()
+    super()._CreateZMQSocket()
     if not self._zmq_thread:
       thread_name = f'{self.name:s}_zmq_responder'
       self._zmq_thread = threading.Thread(

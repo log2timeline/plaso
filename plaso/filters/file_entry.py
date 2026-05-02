@@ -10,7 +10,7 @@ from dfdatetime import time_elements
 from plaso.filters import logger
 
 
-class FileEntryFilter(object):
+class FileEntryFilter:
   """File entry filter interface."""
 
   # pylint: disable=redundant-returns-doc
@@ -54,7 +54,7 @@ class DateTimeFileEntryFilter(FileEntryFilter):
 
   def __init__(self):
     """Initializes a date and time-based file entry filter."""
-    super(DateTimeFileEntryFilter, self).__init__()
+    super().__init__()
     self._date_time_ranges = []
 
   def AddDateTimeRange(
@@ -179,7 +179,7 @@ class ExtensionsFileEntryFilter(FileEntryFilter):
     Args:
       extensions (list[str]): a list of extension strings.
     """
-    super(ExtensionsFileEntryFilter, self).__init__()
+    super().__init__()
     self._extensions = extensions
 
   def Matches(self, file_entry):
@@ -222,7 +222,7 @@ class NamesFileEntryFilter(FileEntryFilter):
     Args:
       names (list[str]): names.
     """
-    super(NamesFileEntryFilter, self).__init__()
+    super().__init__()
     self._names = names
 
   def Matches(self, file_entry):
@@ -260,7 +260,7 @@ class SignaturesFileEntryFilter(FileEntryFilter):
       specification_store (FormatSpecificationStore): a specification store.
       signature_identifiers (list[str]): signature identifiers.
     """
-    super(SignaturesFileEntryFilter, self).__init__()
+    super().__init__()
     self._file_scanner = None
     self._signature_identifiers = []
 
@@ -346,12 +346,12 @@ class SignaturesFileEntryFilter(FileEntryFilter):
           ', '.join(self._signature_identifiers)))
 
 
-class FileEntryFilterCollection(object):
+class FileEntryFilterCollection:
   """Collection of file entry filters."""
 
   def __init__(self):
     """Initializes a file entry filter collection."""
-    super(FileEntryFilterCollection, self).__init__()
+    super().__init__()
     self._artifacts_trie = None
     self._filters = []
 

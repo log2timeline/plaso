@@ -104,7 +104,7 @@ class SharedJSONOutputModule(text_file.TextFileOutputModule):
 
   def __init__(self):
     """Initializes an output module."""
-    super(SharedJSONOutputModule, self).__init__()
+    super().__init__()
     self._field_formatting_helper = JSONFieldFormattingHelper()
 
   def GetFieldValues(

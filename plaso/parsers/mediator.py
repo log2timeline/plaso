@@ -13,7 +13,7 @@ from plaso.helpers import language_tags
 from plaso.helpers.windows import languages
 
 
-class ParserMediator(object):
+class ParserMediator:
   """Parser mediator.
 
   Attributes:
@@ -49,7 +49,7 @@ class ParserMediator(object):
       system_configurations (Optional[list[SystemConfigurationArtifact]]):
           system configurations.
     """
-    super(ParserMediator, self).__init__()
+    super().__init__()
     self._abort = False
     self._cached_parser_chain = None
     self._environment_variables_per_path_spec = None

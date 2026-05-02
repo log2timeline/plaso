@@ -39,7 +39,7 @@ class SELinuxLogEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(SELinuxLogEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.audit_type = None
     self.body = None
     self.last_written_time = None

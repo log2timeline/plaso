@@ -35,7 +35,7 @@ class StorageWriter(reader.StorageReader):
     Args:
       storage_type (Optional[str]): storage type.
     """
-    super(StorageWriter, self).__init__()
+    super().__init__()
     self._attribute_containers_counter = collections.Counter()
     self._event_tag_per_event_identifier = collections.OrderedDict()
     self._storage_type = storage_type

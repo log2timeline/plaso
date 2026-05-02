@@ -37,7 +37,7 @@ class AppCompatCacheEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(AppCompatCacheEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.entry_index = None
     self.file_entry_modification_time = None
     self.key_path = None
@@ -49,22 +49,22 @@ class AppCompatCacheEventData(events.EventData):
     self.control_set = None
 
 
-class AppCompatCacheHeader(object):
+class AppCompatCacheHeader:
   """Application Compatibility Cache header."""
 
   def __init__(self):
     """Initializes the header object."""
-    super(AppCompatCacheHeader, self).__init__()
+    super().__init__()
     self.number_of_cached_entries = 0
     self.header_size = 0
 
 
-class AppCompatCacheCachedEntry(object):
+class AppCompatCacheCachedEntry:
   """Application Compatibility Cache cached entry."""
 
   def __init__(self):
     """Initializes the cached entry object."""
-    super(AppCompatCacheCachedEntry, self).__init__()
+    super().__init__()
     self.cached_entry_size = 0
     self.data = None
     self.file_size = None
@@ -132,7 +132,7 @@ class AppCompatCacheWindowsRegistryPlugin(
 
   def __init__(self):
     """Initializes a Application Compatibility Cache Registry plugin."""
-    super(AppCompatCacheWindowsRegistryPlugin, self).__init__()
+    super().__init__()
     self._cached_entry_data_type_map = None
 
   def _CheckSignature(self, value_data):

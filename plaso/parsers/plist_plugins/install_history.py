@@ -20,7 +20,7 @@ class MacOSInstallHistoryEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(MacOSInstallHistoryEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.identifiers = None
     self.name = None
     self.process_name = None

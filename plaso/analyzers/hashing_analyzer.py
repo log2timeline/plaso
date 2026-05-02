@@ -25,7 +25,7 @@ class HashingAnalyzer(interface.BaseAnalyzer):
 
   def __init__(self):
     """Initializes a hashing analyzer."""
-    super(HashingAnalyzer, self).__init__()
+    super().__init__()
     self._hasher_names_string = ''
     self._hashers = []
 

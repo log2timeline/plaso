@@ -24,7 +24,7 @@ class WindowsPushNotificationEventData(events.EventData):
 
   def __init__(self):
     """Initialize event data."""
-    super(WindowsPushNotificationEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.arrival_time = None
     self.boot_time = None
@@ -52,7 +52,7 @@ class WindowsPushNotificationHandlerEventData(events.EventData):
 
   def __init__(self):
     """Initialize event data."""
-    super(WindowsPushNotificationHandlerEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.creation_time = None
     self.handler_type = None

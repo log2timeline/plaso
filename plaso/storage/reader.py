@@ -5,7 +5,7 @@ from plaso.containers import sessions
 from plaso.storage import logger
 
 
-class StorageReader(object):
+class StorageReader:
   """Storage reader interface."""
 
   _CONTAINER_TYPE_SESSION = sessions.Session.CONTAINER_TYPE
@@ -13,7 +13,7 @@ class StorageReader(object):
 
   def __init__(self):
     """Initializes a storage reader."""
-    super(StorageReader, self).__init__()
+    super().__init__()
     self._serializers_profiler = None
     self._storage_profiler = None
     self._store = None

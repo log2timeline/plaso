@@ -21,7 +21,7 @@ class DSVEventFormattingHelper(formatting_helper.EventFormattingHelper):
       field_names (list[str]): names of the fields to output.
       field_delimiter (Optional[str]): field delimiter.
     """
-    super(DSVEventFormattingHelper, self).__init__()
+    super().__init__()
     self._custom_fields = {}
     self._field_names = field_names
     self._field_formatting_helper = field_formatting_helper
@@ -134,7 +134,7 @@ class DSVOutputModule(text_file.SortedTextFileOutputModule):
     """
     event_formatting_helper = DSVEventFormattingHelper(
         field_formatting_helper, names, field_delimiter=delimiter)
-    super(DSVOutputModule, self).__init__(event_formatting_helper)
+    super().__init__(event_formatting_helper)
     self._header = header
 
   def _GetString(self, output_mediator, field_values):

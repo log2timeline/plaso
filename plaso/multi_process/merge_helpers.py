@@ -8,7 +8,7 @@ from plaso.containers import reports
 from plaso.containers import warnings
 
 
-class BaseTaskMergeHelper(object):
+class BaseTaskMergeHelper:
   """Interface of heler for merging task related attribute containers.
 
   Attributes:
@@ -24,7 +24,7 @@ class BaseTaskMergeHelper(object):
       task_storage_reader (StorageReader): task storage reader.
       task_identifier (str): identifier of the task that is merged.
     """
-    super(BaseTaskMergeHelper, self).__init__()
+    super().__init__()
     self._container_identifier_mappings = {}
     self._generator = self._GetAttributeContainers(task_storage_reader)
     self._task_storage_reader = task_storage_reader

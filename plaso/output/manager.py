@@ -1,7 +1,7 @@
 """Output plugin manager."""
 
 
-class OutputManager(object):
+class OutputManager:
   """Output module manager."""
 
   _disabled_output_classes = {}

@@ -25,7 +25,7 @@ class DefaultEventFormatter(interface.BasicEventFormatter):
 
   def __init__(self):
     """Initializes a default event formatter."""
-    super(DefaultEventFormatter, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE, format_string=self.FORMAT_STRING,
         format_string_short=self.FORMAT_STRING_SHORT)
 
@@ -59,5 +59,5 @@ class DefaultEventFormatter(interface.BasicEventFormatter):
 
       text_pieces.append(f'{name:s}: {value!s}')
 
-    return super(DefaultEventFormatter, self)._FormatMessage(
+    return super()._FormatMessage(
         format_string, {'attribute_values': ' '.join(text_pieces)})

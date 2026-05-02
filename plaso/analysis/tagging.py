@@ -12,7 +12,7 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
 
   def __init__(self):
     """Initializes a tagging analysis plugin."""
-    super(TaggingAnalysisPlugin, self).__init__()
+    super().__init__()
     self._tagging_rules = None
 
   def ExamineEvent(

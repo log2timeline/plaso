@@ -15,7 +15,7 @@ class SHA1Hasher(interface.BaseHasher):
 
   def __init__(self):
     """Initializes the SHA-1 hasher."""
-    super(SHA1Hasher, self).__init__()
+    super().__init__()
     self._sha1_context = hashlib.sha1()
 
   def GetStringDigest(self):

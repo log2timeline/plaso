@@ -62,7 +62,7 @@ class CupsIppEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(CupsIppEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.application = None
     self.computer_name = None
     self.copies = None
@@ -148,7 +148,7 @@ class CupsIppParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
   def __init__(self):
     """Initializes a CUPS IPP file parser."""
-    super(CupsIppParser, self).__init__()
+    super().__init__()
     self._last_charset_attribute = 'ascii'
 
   def _GetStringValue(self, cupp_ipp_values, name, default_value=None):

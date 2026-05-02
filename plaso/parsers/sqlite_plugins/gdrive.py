@@ -27,7 +27,7 @@ class GoogleDriveSnapshotCloudEntryEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(GoogleDriveSnapshotCloudEntryEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.creation_time = None
     self.document_type = None
@@ -54,7 +54,7 @@ class GoogleDriveSnapshotLocalEntryEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(GoogleDriveSnapshotLocalEntryEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.modification_time = None
     self.path = None

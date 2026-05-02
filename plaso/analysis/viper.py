@@ -25,7 +25,7 @@ class ViperAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
 
   def __init__(self):
     """Initializes a Viper analysis plugin."""
-    super(ViperAnalysisPlugin, self).__init__()
+    super().__init__()
     self._host = None
     self._port = None
     self._protocol = None

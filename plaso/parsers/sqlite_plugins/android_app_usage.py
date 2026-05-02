@@ -20,7 +20,7 @@ class AndroidAppUsage(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(AndroidAppUsage, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.package_name = None
     self.start_time = None
 

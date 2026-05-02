@@ -70,7 +70,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       output_writer (Optional[OutputWriter]): output writer, where None
           indicates that the stdout output writer should be used.
     """
-    super(Log2TimelineTool, self).__init__(
+    super().__init__(
         input_reader=input_reader, output_writer=output_writer)
     self._storage_serializer_format = definitions.SERIALIZER_FORMAT_JSON
 

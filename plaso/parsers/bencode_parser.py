@@ -13,7 +13,7 @@ from plaso.parsers import logger
 from plaso.parsers import manager
 
 
-class BencodeValues(object):
+class BencodeValues:
   """Bencode values."""
 
   def __init__(self, decoded_values):
@@ -23,7 +23,7 @@ class BencodeValues(object):
       decoded_values (collections.OrderedDict[bytes|str, object]): decoded
           values.
     """
-    super(BencodeValues, self).__init__()
+    super().__init__()
     self._decoded_values = decoded_values
 
   def GetDateTimeValue(self, name):
@@ -76,12 +76,12 @@ class BencodeValues(object):
       yield key, value
 
 
-class BencodeFile(object):
+class BencodeFile:
   """Bencode file."""
 
   def __init__(self):
     """Initializes a bencode file."""
-    super(BencodeFile, self).__init__()
+    super().__init__()
     self._decoded_values = None
     self._key_names = set()
 

@@ -51,7 +51,7 @@ class BodyfileEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(BodyfileEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.access_time = None
     self.change_time = None
     self.creation_time = None

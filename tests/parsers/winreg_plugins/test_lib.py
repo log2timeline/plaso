@@ -12,7 +12,7 @@ from plaso.parsers import mediator as parsers_mediator
 from tests.parsers import test_lib
 
 
-class TestFileEntry(object):
+class TestFileEntry:
   """File entry object for testing purposes.
 
   Attributes:
@@ -26,7 +26,7 @@ class TestFileEntry(object):
     Args:
       name (str): the file entry name.
     """
-    super(TestFileEntry, self).__init__()
+    super().__init__()
     self.name = name
     self.path_spec = fake_path_spec.FakePathSpec(location=name)
 

@@ -1,7 +1,7 @@
 """Windows shell folders helper."""
 
 
-class WindowsShellFoldersHelper(object):
+class WindowsShellFoldersHelper:
   """Windows shell folders helper."""
 
   _DESCRIPTION_PER_GUID = {

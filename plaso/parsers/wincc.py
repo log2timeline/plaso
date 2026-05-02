@@ -23,7 +23,7 @@ class SIMATICS7EventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(SIMATICS7EventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.body = None
     self.creation_time = None
 
@@ -45,7 +45,7 @@ class WinCCSysLogEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(WinCCSysLogEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.body = None
     self.creation_time = None
     self.event_number = None

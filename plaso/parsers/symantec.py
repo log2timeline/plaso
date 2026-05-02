@@ -81,7 +81,7 @@ class SymantecEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(SymantecEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.access = None
     self.action0 = None
     self.action1 = None

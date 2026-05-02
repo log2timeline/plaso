@@ -3,12 +3,12 @@
 from plaso.filters import expression_parser
 
 
-class EventObjectFilter(object):
+class EventObjectFilter:
   """Event filter."""
 
   def __init__(self):
     """Initializes an event filter."""
-    super(EventObjectFilter, self).__init__()
+    super().__init__()
     self._event_filter = None
     self._filter_expression = None
 

@@ -28,7 +28,7 @@ class MsieWebCacheContainersEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(MsieWebCacheContainersEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.access_time = None
     self.container_identifier = None
@@ -67,7 +67,7 @@ class MsieWebCacheContainerEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(MsieWebCacheContainerEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.access_count = None
     self.access_time = None
@@ -109,7 +109,7 @@ class MsieWebCacheCookieData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(MsieWebCacheCookieData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.container_identifier = None
     self.cookie_hash = None
     self.cookie_name = None
@@ -135,7 +135,7 @@ class MsieWebCacheLeakFilesEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(MsieWebCacheLeakFilesEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.cached_filename = None
     self.creation_time = None
@@ -157,7 +157,7 @@ class MsieWebCachePartitionsEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(MsieWebCachePartitionsEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.directory = None
     self.partition_identifier = None

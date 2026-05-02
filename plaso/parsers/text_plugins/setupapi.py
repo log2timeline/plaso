@@ -32,7 +32,7 @@ class SetupAPILogEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(SetupAPILogEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.end_time = None
     self.entry_type = None
     self.exit_status = None
@@ -139,7 +139,7 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
 
   def __init__(self):
     """Initializes a text parser plugin."""
-    super(SetupAPILogTextPlugin, self).__init__()
+    super().__init__()
     self._event_data = None
 
   def _ParseHeader(self, parser_mediator, text_reader):

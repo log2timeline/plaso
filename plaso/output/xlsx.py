@@ -39,7 +39,7 @@ class XLSXOutputModule(interface.OutputModule):
 
   def __init__(self):
     """Initializes an output module."""
-    super(XLSXOutputModule, self).__init__()
+    super().__init__()
     self._column_widths = []
     self._current_row = 0
     self._custom_fields = {}

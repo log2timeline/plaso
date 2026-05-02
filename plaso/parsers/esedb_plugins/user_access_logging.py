@@ -39,7 +39,7 @@ class UserAccessLoggingClientsEventsData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(UserAccessLoggingClientsEventsData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.access_time = None
     self.authenticated_username = None
@@ -66,7 +66,7 @@ class UserAccessLoggingDNSEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(UserAccessLoggingDNSEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.hostname = None
     self.ip_address = None
@@ -89,7 +89,7 @@ class UserAccessLoggingRoleAccessEventsData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(UserAccessLoggingRoleAccessEventsData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.first_seen_time = None
     self.last_seen_time = None
@@ -112,7 +112,7 @@ class UserAccessLoggingSystemIdentityEventdata(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(UserAccessLoggingSystemIdentityEventdata, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.creation_time = None
     self.operating_system_build = None
@@ -137,7 +137,7 @@ class UserAccessLoggingVirtualMachinesEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(UserAccessLoggingVirtualMachinesEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.bios_identifier = None
     self.creation_time = None
@@ -178,7 +178,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
 
   def __init__(self):
     """Initializes an UAL ESE database file parser plugin."""
-    super(UserAccessLoggingESEDBPlugin, self).__init__()
+    super().__init__()
     self._role_mappings = {}
 
   def _ConvertDNSAddressValue(self, value):

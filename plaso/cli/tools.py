@@ -23,7 +23,7 @@ from plaso.lib import definitions
 from plaso.lib import errors
 
 
-class CLITool(object):
+class CLITool:
   """Command line interface tool.
 
   Attributes:
@@ -50,7 +50,7 @@ class CLITool(object):
       output_writer (Optional[CLIOutputWriter]): output writer, where None
           indicates that the stdout output writer should be used.
     """
-    super(CLITool, self).__init__()
+    super().__init__()
 
     preferred_encoding = locale.getpreferredencoding()
     if not preferred_encoding:
@@ -437,7 +437,7 @@ class CLITool(object):
     self._output_writer.Write('\n')
 
 
-class CLIInputReader(object):
+class CLIInputReader:
   """Command line interface input reader interface."""
 
   def __init__(self, encoding='utf-8'):
@@ -446,7 +446,7 @@ class CLIInputReader(object):
     Args:
       encoding (Optional[str]): input encoding.
     """
-    super(CLIInputReader, self).__init__()
+    super().__init__()
     self._encoding = encoding
 
   # pylint: disable=redundant-returns-doc
@@ -459,7 +459,7 @@ class CLIInputReader(object):
     """
 
 
-class CLIOutputWriter(object):
+class CLIOutputWriter:
   """Command line interface output writer interface."""
 
   def __init__(self, encoding='utf-8'):
@@ -468,7 +468,7 @@ class CLIOutputWriter(object):
     Args:
       encoding (Optional[str]): output encoding.
     """
-    super(CLIOutputWriter, self).__init__()
+    super().__init__()
     self._encoding = encoding
 
   @abc.abstractmethod
@@ -493,7 +493,7 @@ class FileObjectInputReader(CLIInputReader):
       file_object (file): file-like object to read from.
       encoding (Optional[str]): input encoding.
     """
-    super(FileObjectInputReader, self).__init__(encoding=encoding)
+    super().__init__(encoding=encoding)
     self._errors = 'strict'
     self._file_object = file_object
 
@@ -533,7 +533,7 @@ class StdinInputReader(FileObjectInputReader):
     Args:
       encoding (Optional[str]): input encoding.
     """
-    super(StdinInputReader, self).__init__(sys.stdin, encoding=encoding)
+    super().__init__(sys.stdin, encoding=encoding)
 
   def Read(self):
     """Reads a string from the input.
@@ -545,7 +545,7 @@ class StdinInputReader(FileObjectInputReader):
     # for input.
     sys.stdout.flush()
 
-    return super(StdinInputReader, self).Read()
+    return super().Read()
 
 
 class FileObjectOutputWriter(CLIOutputWriter):
@@ -561,7 +561,7 @@ class FileObjectOutputWriter(CLIOutputWriter):
       file_object (file): file-like object to read from.
       encoding (Optional[str]): output encoding.
     """
-    super(FileObjectOutputWriter, self).__init__(encoding=encoding)
+    super().__init__(encoding=encoding)
     self._errors = 'strict'
     self._file_object = file_object
 
@@ -598,7 +598,7 @@ class StdoutOutputWriter(FileObjectOutputWriter):
     Args:
       encoding (Optional[str]): output encoding.
     """
-    super(StdoutOutputWriter, self).__init__(sys.stdout, encoding=encoding)
+    super().__init__(sys.stdout, encoding=encoding)
 
   def Write(self, string):
     """Writes a string to the output.

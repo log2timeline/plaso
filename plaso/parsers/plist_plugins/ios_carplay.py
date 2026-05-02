@@ -24,7 +24,7 @@ class IOSCarPlayHistoryEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(IOSCarPlayHistoryEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.application_identifier = None
     self.last_run_time = None
 

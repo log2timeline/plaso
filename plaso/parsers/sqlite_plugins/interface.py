@@ -39,7 +39,7 @@ class SQLitePlugin(plugins.BasePlugin):
 
   def __init__(self):
     """Initializes a SQLite parser plugin."""
-    super(SQLitePlugin, self).__init__()
+    super().__init__()
     self._keys_per_query = {}
 
   def _GetDateTimeStringRowValue(self, query_hash, row, value_name):
@@ -239,7 +239,7 @@ class SQLitePlugin(plugins.BasePlugin):
       raise ValueError('Missing database value.')
 
     # This will raise if unhandled keyword arguments are passed.
-    super(SQLitePlugin, self).Process(parser_mediator)
+    super().Process(parser_mediator)
 
     for query, callback_method in self.QUERIES:
       if parser_mediator.abort:

@@ -26,7 +26,7 @@ class UTorrentEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(UTorrentEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.added_time = None
     self.caption = None
     self.destination = None
@@ -63,7 +63,7 @@ class UTorrentBencodePlugin(interface.BencodePlugin):
       bencode_file (Optional[BencodeFile]): bencode file.
     """
     # This will raise if unhandled keyword arguments are passed.
-    super(UTorrentBencodePlugin, self).Process(parser_mediator, **kwargs)
+    super().Process(parser_mediator, **kwargs)
 
     root_values = bencode_file.GetValues()
 

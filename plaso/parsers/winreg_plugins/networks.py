@@ -30,7 +30,7 @@ class WindowsRegistryNetworkListEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(WindowsRegistryNetworkListEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.connection_type = None
     self.creation_time = None

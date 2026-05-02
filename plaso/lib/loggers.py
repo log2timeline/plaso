@@ -17,7 +17,7 @@ class CompressedFileHandler(logging.FileHandler):
     """
     if 't' not in mode and encoding:
       mode = '{0:s}t'.format(mode)
-    super(CompressedFileHandler, self).__init__(
+    super().__init__(
         filename, mode=mode, encoding=encoding, delay=True)
 
   def _open(self):

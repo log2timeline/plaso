@@ -34,7 +34,7 @@ class FirefoxDownloadEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(FirefoxDownloadEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.end_time = None
     self.full_path = None
     self.mime_type = None
@@ -79,7 +79,7 @@ class Firefox118DownloadEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(Firefox118DownloadEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.deleted = None
     self.download_state = None
     self.end_time = None

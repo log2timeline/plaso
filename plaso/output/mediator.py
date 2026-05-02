@@ -12,7 +12,7 @@ from plaso.lib import definitions
 from plaso.output import winevt_rc
 
 
-class OutputMediator(object):
+class OutputMediator:
   """Output mediator.
 
   Attributes:
@@ -40,7 +40,7 @@ class OutputMediator(object):
           represented in their granularity or semantically.
       preferred_encoding (Optional[str]): preferred encoding to output.
     """
-    super(OutputMediator, self).__init__()
+    super().__init__()
     self._dynamic_time = dynamic_time
     self._hostname = None
     self._language_tag = None

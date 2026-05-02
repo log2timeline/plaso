@@ -20,7 +20,7 @@ class BloomAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
 
   def __init__(self):
     """Initializes a bloom database analysis plugin."""
-    super(BloomAnalysisPlugin, self).__init__()
+    super().__init__()
     self._bloom_database_path = None
     self._bloom_filter_object = None
     self._label = self.DEFAULT_LABEL

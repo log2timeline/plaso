@@ -30,7 +30,7 @@ class BSMEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(BSMEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.event_type = None
     self.extra_tokens = None
     self.offset = None

@@ -35,7 +35,7 @@ class ChromeHistoryFileDownloadedEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(ChromeHistoryFileDownloadedEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.danger_type = None
     self.end_time = None
@@ -75,7 +75,7 @@ class ChromeHistoryPageVisitedEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(ChromeHistoryPageVisitedEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.from_visit = None
     self.last_visited_time = None

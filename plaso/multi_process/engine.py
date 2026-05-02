@@ -39,7 +39,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
   def __init__(self):
     """Initializes a multi-process engine."""
-    super(MultiProcessEngine, self).__init__()
+    super().__init__()
     self._debug_output = False
     self._name = 'Main'
     self._last_worker_number = 0

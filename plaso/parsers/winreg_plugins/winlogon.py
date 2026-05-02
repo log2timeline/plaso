@@ -22,7 +22,7 @@ class WinlogonEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(WinlogonEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.application = None
     self.command = None
     self.handler = None

@@ -31,7 +31,7 @@ class WinRecycleBinEventData(events.EventData):
 
   def __init__(self):
     """Initializes Windows Recycle Bin event data."""
-    super(WinRecycleBinEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.deletion_time = None
     self.drive_number = None
     self.file_size = None

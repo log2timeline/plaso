@@ -61,7 +61,7 @@ class Session(interface.AttributeContainer):
 
   def __init__(self):
     """Initializes a session attribute container."""
-    super(Session, self).__init__()
+    super().__init__()
     self.aborted = False
     self.artifact_filters = None
     self.command_line_arguments = None

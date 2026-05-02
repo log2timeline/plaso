@@ -17,7 +17,7 @@ class FakeStore(acstore_fake_store.FakeAttributeContainerStore):
 
   def __init__(self):
     """Initializes a fake (in-memory only) store."""
-    super(FakeStore, self).__init__()
+    super().__init__()
     self._serializers_profiler = None
     self.serialization_format = None
 

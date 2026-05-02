@@ -39,7 +39,7 @@ class KeychainInternetRecordEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(KeychainInternetRecordEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.account_name = None
     self.comments = None
@@ -74,7 +74,7 @@ class KeychainApplicationRecordEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(KeychainApplicationRecordEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.account_name = None
     self.comments = None
@@ -85,7 +85,7 @@ class KeychainApplicationRecordEventData(events.EventData):
     self.text_description = None
 
 
-class KeychainDatabaseColumn(object):
+class KeychainDatabaseColumn:
   """MacOS keychain database column.
 
   Attributes:
@@ -96,13 +96,13 @@ class KeychainDatabaseColumn(object):
 
   def __init__(self):
     """Initializes a MacOS keychain database column."""
-    super(KeychainDatabaseColumn, self).__init__()
+    super().__init__()
     self.attribute_data_type = None
     self.attribute_identifier = None
     self.attribute_name = None
 
 
-class KeychainDatabaseTable(object):
+class KeychainDatabaseTable:
   """MacOS keychain database table.
 
   Attributes:
@@ -114,7 +114,7 @@ class KeychainDatabaseTable(object):
 
   def __init__(self):
     """Initializes a MacOS keychain database table."""
-    super(KeychainDatabaseTable, self).__init__()
+    super().__init__()
     self.columns = []
     self.records = []
     self.relation_identifier = None

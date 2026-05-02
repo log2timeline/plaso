@@ -3,7 +3,7 @@
 import re
 
 
-class WindowsResourceFileHelper(object):
+class WindowsResourceFileHelper:
   """Windows PE/COFF resource file helper."""
 
   # Message string specifiers that are considered white space.

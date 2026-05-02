@@ -24,7 +24,7 @@ class IOSSysdiagnoseLogdData(events.EventData):
 
   def __init__(self):
     """Initializes iOS sysdiagnose logd event data."""
-    super(IOSSysdiagnoseLogdData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.body = None
     self.logger = None
     self.written_time = None

@@ -34,7 +34,7 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
 
   def __init__(self):
     """Initializes a SQLite-based storage file."""
-    super(SQLiteStorageFile, self).__init__()
+    super().__init__()
     self._serializer = json_serializer.JSONAttributeContainerSerializer
     self._serializers_profiler = None
 
@@ -53,7 +53,7 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       IOError: if the format version or the serializer format is not supported.
       OSError: if the format version or the serializer format is not supported.
     """
-    super(SQLiteStorageFile, self)._CheckStorageMetadata(
+    super()._CheckStorageMetadata(
         metadata_values, check_readable_only=check_readable_only)
 
     compression_format = metadata_values.get('compression_format', None)
@@ -75,7 +75,7 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
     """
     schema = self._GetAttributeContainerSchema(container_type)
     if schema and container_type != self._CONTAINER_TYPE_EVENT_DATA:
-      return super(SQLiteStorageFile, self)._CreateAttributeContainerFromRow(
+      return super()._CreateAttributeContainerFromRow(
           container_type, column_names, row, first_column_index)
 
     if self.compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
@@ -106,7 +106,7 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
     """
     schema = self._GetAttributeContainerSchema(container_type)
     if schema and container_type != self._CONTAINER_TYPE_EVENT_DATA:
-      super(SQLiteStorageFile, self)._CreateAttributeContainerTable(
+      super()._CreateAttributeContainerTable(
           container_type)
     else:
       if self.compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
@@ -276,7 +276,7 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
     """
     schema = self._GetAttributeContainerSchema(container.CONTAINER_TYPE)
     if schema and container.CONTAINER_TYPE != self._CONTAINER_TYPE_EVENT_DATA:
-      super(SQLiteStorageFile, self)._WriteNewAttributeContainer(container)
+      super()._WriteNewAttributeContainer(container)
     else:
       next_sequence_number = self._GetAttributeContainerNextSequenceNumber(
           container.CONTAINER_TYPE)
@@ -328,7 +328,7 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
     """
     schema = self._GetAttributeContainerSchema(container_type)
     if schema and container_type != self._CONTAINER_TYPE_EVENT_DATA:
-      container = super(SQLiteStorageFile, self).GetAttributeContainerByIndex(
+      container = super().GetAttributeContainerByIndex(
           container_type, index)
 
       # TODO: the YearLessLogHelper attribute container is kept for backwards
@@ -401,7 +401,7 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
     """
     schema = self._GetAttributeContainerSchema(container_type)
     if schema and container_type != self._CONTAINER_TYPE_EVENT_DATA:
-      for container in super(SQLiteStorageFile, self).GetAttributeContainers(
+      for container in super().GetAttributeContainers(
           container_type, filter_expression=filter_expression):
         # TODO: the YearLessLogHelper attribute container is kept for backwards
         # compatibility remove once storage format 20230327 is obsolete.

@@ -34,7 +34,7 @@ class PostgreSQLEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(PostgreSQLEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.log_line = None
     self.pid = None
     self.recorded_time = None

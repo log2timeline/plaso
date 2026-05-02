@@ -50,7 +50,7 @@ class AMCacheFileEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(AMCacheFileEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.application_key_last_written_time = None
     self.company_name = None
     self.file_creation_time = None
@@ -95,7 +95,7 @@ class AMCacheProgramEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(AMCacheProgramEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.entry_type = None
     self.file_paths = None
     self.files = None

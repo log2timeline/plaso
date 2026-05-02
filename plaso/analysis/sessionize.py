@@ -14,7 +14,7 @@ class SessionizeAnalysisPlugin(interface.AnalysisPlugin):
 
   def __init__(self):
     """Initializes a sessionize analysis plugin."""
-    super(SessionizeAnalysisPlugin, self).__init__()
+    super().__init__()
     self._current_session_number = 0
     self._maximum_pause_microseconds = self._DEFAULT_MAXIMUM_PAUSE
     self._session_end_timestamp = None

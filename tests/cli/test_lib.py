@@ -27,10 +27,10 @@ class SortedArgumentsHelpFormatter(argparse.HelpFormatter):
       actions (list[argparse._StoreAction]): command line actions.
     """
     actions = sorted(actions, key=operator.attrgetter('option_strings'))
-    super(SortedArgumentsHelpFormatter, self).add_arguments(actions)
+    super().add_arguments(actions)
 
 
-class TestOptions(object):
+class TestOptions:
   """Class to define test options."""
 
 
@@ -44,7 +44,7 @@ class TestOutputWriter(tools.FileObjectOutputWriter):
       encoding (Optional[str]): output encoding.
     """
     file_object = io.StringIO()
-    super(TestOutputWriter, self).__init__(file_object, encoding=encoding)
+    super().__init__(file_object, encoding=encoding)
     self._read_offset = 0
 
   def Flush(self):
@@ -87,7 +87,7 @@ class TestBinaryOutputWriter(tools.FileObjectOutputWriter):
       encoding (Optional[str]): output encoding.
     """
     file_object = io.BytesIO()
-    super(TestBinaryOutputWriter, self).__init__(file_object, encoding=encoding)
+    super().__init__(file_object, encoding=encoding)
     self._read_offset = 0
 
   def ReadOutput(self):

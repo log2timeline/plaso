@@ -48,7 +48,7 @@ class SRUMApplicationResourceUsageEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(SRUMApplicationResourceUsageEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.application = None
     self.background_bytes_read = None
@@ -95,7 +95,7 @@ class SRUMNetworkConnectivityUsageEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(SRUMNetworkConnectivityUsageEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.application = None
     self.identifier = None
@@ -130,7 +130,7 @@ class SRUMNetworkDataUsageEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(SRUMNetworkDataUsageEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.application = None
     self.bytes_received = None

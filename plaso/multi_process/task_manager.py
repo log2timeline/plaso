@@ -14,12 +14,12 @@ from plaso.engine import profilers
 from plaso.multi_process import logger
 
 
-class _PendingMergeTaskHeap(object):
+class _PendingMergeTaskHeap:
   """Heap to manage pending merge tasks."""
 
   def __init__(self):
     """Initializes a pending merge task heap."""
-    super(_PendingMergeTaskHeap, self).__init__()
+    super().__init__()
     self._heap = []
     self._task_identifiers = set()
 
@@ -97,7 +97,7 @@ class _PendingMergeTaskHeap(object):
     self._task_identifiers.add(task.identifier)
 
 
-class TaskManager(object):
+class TaskManager:
   """Manages tasks and tracks their completion and status.
 
   A task being tracked by the manager must be in exactly one of the
@@ -136,7 +136,7 @@ class TaskManager(object):
 
   def __init__(self):
     """Initializes a task manager."""
-    super(TaskManager, self).__init__()
+    super().__init__()
     self._lock = threading.Lock()
 
     # This dictionary maps task identifiers to tasks that have been abandoned,

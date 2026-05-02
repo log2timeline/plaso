@@ -45,7 +45,7 @@ class IISEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(IISEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.cs_cookie = None
     self.cs_host = None
     self.cs_referrer = None
@@ -232,7 +232,7 @@ class WinIISTextPlugin(interface.TextPlugin):
 
   def __init__(self):
     """Initializes a parser."""
-    super(WinIISTextPlugin, self).__init__()
+    super().__init__()
     self._day_of_month = None
     self._month = None
     self._year = None

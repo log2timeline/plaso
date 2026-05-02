@@ -26,7 +26,7 @@ class NetworkMinerEventData(events.EventData):
   DATA_TYPE = 'networkminer:fileinfos:file'
 
   def __init__(self):
-    super(NetworkMinerEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.destination_ip = None
     self.destination_port = None
     self.file_details = None

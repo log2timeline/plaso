@@ -31,7 +31,7 @@ class OperaGlobalHistoryEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(OperaGlobalHistoryEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.description = None
     self.last_visited_time = None
     self.popularity_index = None
@@ -56,7 +56,7 @@ class OperaTypedHistoryEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(OperaTypedHistoryEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.entry_selection = None
     self.entry_type = None
     self.last_typed_time = None

@@ -25,7 +25,7 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
 
   def __init__(self):
     """Initializes an Chrome extension analysis plugin."""
-    super(ChromeExtensionPlugin, self).__init__()
+    super().__init__()
 
     # Saved list of already looked up extensions.
     self._extensions = {}
@@ -130,7 +130,7 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
 
         self._analysis_counter[username] += 1
 
-    return super(ChromeExtensionPlugin, self).CompileReport(analysis_mediator)
+    return super().CompileReport(analysis_mediator)
 
   # pylint: disable=unused-argument
   def ExamineEvent(

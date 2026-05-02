@@ -13,7 +13,7 @@ from plaso.helpers.windows import resource_files
 from plaso.output import logger
 
 
-class Sqlite3DatabaseFile(object):
+class Sqlite3DatabaseFile:
   """Class that defines a sqlite3 database file."""
 
   _HAS_TABLE_QUERY = (
@@ -22,7 +22,7 @@ class Sqlite3DatabaseFile(object):
 
   def __init__(self):
     """Initializes the database file object."""
-    super(Sqlite3DatabaseFile, self).__init__()
+    super().__init__()
     self._connection = None
     self._cursor = None
     self.filename = None
@@ -144,12 +144,12 @@ class Sqlite3DatabaseFile(object):
     return True
 
 
-class WinevtResourcesSqlite3DatabaseReader(object):
+class WinevtResourcesSqlite3DatabaseReader:
   """Windows EventLog resources SQLite database reader."""
 
   def __init__(self):
     """Initializes a Windows EventLog resources SQLite database reader."""
-    super(WinevtResourcesSqlite3DatabaseReader, self).__init__()
+    super().__init__()
     self._database_file = Sqlite3DatabaseFile()
     self._resouce_file_helper = resource_files.WindowsResourceFileHelper
     self._string_format = 'wrc'
@@ -369,7 +369,7 @@ class WinevtResourcesEventLogProvider(containers_interface.AttributeContainer):
 
   def __init__(self):
     """Initializes the Windows Event Log provider."""
-    super(WinevtResourcesEventLogProvider, self).__init__()
+    super().__init__()
     self.additional_identifier = None
     self.category_message_files = set()
     self.event_message_files = set()
@@ -411,7 +411,7 @@ class WinevtResourcesMessageFile(containers_interface.AttributeContainer):
           provider.
       windows_version (Optional[str]): Windows version.
     """
-    super(WinevtResourcesMessageFile, self).__init__()
+    super().__init__()
     self.file_version = file_version
     self.product_version = product_version
     self.windows_path = windows_path
@@ -444,7 +444,7 @@ class WinevtResourcesMessageString(containers_interface.AttributeContainer):
       message_identifier (Optional[int]): message identifier.
       text (Optional[int]): message text.
     """
-    super(WinevtResourcesMessageString, self).__init__()
+    super().__init__()
     self._message_table_identifier = None
     self.message_identifier = message_identifier
     self.text = text
@@ -502,7 +502,7 @@ class WinevtResourcesMessageStringMapping(
       message_identifier (Optional[int]): message identifier.
       provider_identifier (Optional[str]): Event Log provider identifier.
     """
-    super(WinevtResourcesMessageStringMapping, self).__init__()
+    super().__init__()
     self._message_file_identifier = None
     self.event_identifier = event_identifier
     self.event_version = event_version
@@ -550,7 +550,7 @@ class WinevtResourcesMessageTable(containers_interface.AttributeContainer):
     Args:
       language_identifier (Optional[int]): language identifier (LCID).
     """
-    super(WinevtResourcesMessageTable, self).__init__()
+    super().__init__()
     self._message_file_identifier = None
     self.language_identifier = language_identifier
 
@@ -595,7 +595,7 @@ class WinevtResourcesAttributeContainerStore(
       string_format (Optional[str]): string format. The default is the Windows
           Resource (wrc) format.
     """
-    super(WinevtResourcesAttributeContainerStore, self).__init__()
+    super().__init__()
     self.string_format = string_format
 
     self._containers_manager.RegisterAttributeContainers([
@@ -630,7 +630,7 @@ class WinevtResourcesAttributeContainerStore(
     self.string_format = metadata_values['string_format']
 
 
-class WinevtResourcesHelper(object):
+class WinevtResourcesHelper:
   """Windows EventLog resources helper."""
 
   # LCID 0x0409 is en-US.
@@ -656,7 +656,7 @@ class WinevtResourcesHelper(object):
     language_tag = languages.WindowsLanguageHelper.GetLanguageTagForLCID(
         lcid or self.DEFAULT_LCID)
 
-    super(WinevtResourcesHelper, self).__init__()
+    super().__init__()
     self._data_location = data_location
     self._environment_variables = None
     self._language_tag = language_tag.lower()

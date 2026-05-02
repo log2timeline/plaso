@@ -23,7 +23,7 @@ class BashHistoryEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(BashHistoryEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.command = None
     self.written_time = None
 
@@ -54,7 +54,7 @@ class BashHistoryTextPlugin(interface.TextPluginWithLineContinuation):
 
   def __init__(self):
     """Initializes a text parser plugin."""
-    super(BashHistoryTextPlugin, self).__init__()
+    super().__init__()
     self._command_lines = None
     self._event_data = None
 

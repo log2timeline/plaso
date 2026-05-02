@@ -28,7 +28,7 @@ class PlsRecallEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(PlsRecallEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.database_name = None
     self.offset = None
     self.query = None
@@ -68,7 +68,7 @@ class PlsRecallParser(
 
   def __init__(self):
     """Initializes a PL/SQL Recall file parser."""
-    super(PlsRecallParser, self).__init__()
+    super().__init__()
     self._record_map = self._GetDataTypeMap('pls_recall_record')
 
   def _ParseTDateTimeValue(self, tdatetime_value):

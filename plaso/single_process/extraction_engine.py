@@ -38,7 +38,7 @@ class SingleProcessEngine(engine.BaseEngine):
       status_update_callback (Optional[function]): callback function for status
           updates.
     """
-    super(SingleProcessEngine, self).__init__()
+    super().__init__()
     self._current_display_name = ''
     self._event_data_timeliner = None
     self._extraction_worker = None

@@ -212,7 +212,7 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
 
   def __init__(self):
     """Initializes an output module."""
-    super(SharedOpenSearchOutputModule, self).__init__()
+    super().__init__()
     self._client = None
     self._custom_fields = {}
     self._event_documents = []

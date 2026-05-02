@@ -267,7 +267,7 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
           search_term=search_term)
       analysis_mediator.ProduceAnalysisResult(analysis_result)
 
-    return super(BrowserSearchPlugin, self).CompileReport(analysis_mediator)
+    return super().CompileReport(analysis_mediator)
 
   def ExamineEvent(
       self, analysis_mediator, event, event_data, event_data_stream):

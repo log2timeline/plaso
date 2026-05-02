@@ -5,12 +5,12 @@ from plaso.parsers import cookie_plugins  # pylint: disable=unused-import
 from plaso.parsers.cookie_plugins import manager as cookie_plugins_manager
 
 
-class CookiePluginsHelper(object):
+class CookiePluginsHelper:
   """Cookie plugins helper mix-in."""
 
   def __init__(self):
     """Initializes the cookie plugins helper mix-in."""
-    super(CookiePluginsHelper, self).__init__()
+    super().__init__()
     self._cookie_plugins = (
         cookie_plugins_manager.CookiePluginsManager.GetPlugins())
 

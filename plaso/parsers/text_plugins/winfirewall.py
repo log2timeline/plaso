@@ -38,7 +38,7 @@ class WinFirewallEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(WinFirewallEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.action = None
     self.destination_ip = None
     self.destination_port = None
@@ -171,7 +171,7 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
 
   def __init__(self):
     """Initializes a text parser plugin."""
-    super(WinFirewallLogTextPlugin, self).__init__()
+    super().__init__()
     self._use_local_time = False
 
   def _ParseFieldsMetadata(self, parser_mediator, fields):
