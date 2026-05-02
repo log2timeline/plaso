@@ -77,8 +77,8 @@ class BinaryCookieParser(
           page_data[string_offset:], string_offset, cstring_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError((
-          'Unable to map string data at offset: 0x{0:08x} with error: '
-          '{1!s}').format(string_offset, exception))
+          f'Unable to map string data at offset: 0x{string_offset:08x} '
+          f'with error: {exception!s}'))
 
     return value_string.rstrip('\x00')
 
@@ -101,8 +101,8 @@ class BinaryCookieParser(
           page_data, file_offset, page_header_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError((
-          'Unable to map page header data at offset: 0x{0:08x} with error: '
-          '{1!s}').format(file_offset, exception))
+          f'Unable to map page header data at offset: 0x{file_offset:08x} '
+          f'with error: {exception!s}'))
 
     for record_offset in page_header.offsets:
       if parser_mediator.abort:
@@ -129,8 +129,8 @@ class BinaryCookieParser(
           page_data[record_offset:], record_offset, record_header_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError((
-          'Unable to map record header data at offset: 0x{0:08x} with error: '
-          '{1!s}').format(record_offset, exception))
+          f'Unable to map record header data at offset: 0x{record_offset:08x} '
+          f'with error: {exception!s}'))
 
     event_data = SafariBinaryCookieEventData()
     event_data.flags = record_header.flags
@@ -195,7 +195,7 @@ class BinaryCookieParser(
           file_object, 0, file_header_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.WrongParser(
-          'Unable to read file header with error: {0!s}.'.format(exception))
+          f'Unable to read file header with error: {exception!s}.')
 
     file_offset = file_header_data_size
 
@@ -215,8 +215,8 @@ class BinaryCookieParser(
           page_sizes_data, file_offset, page_sizes_map, context=context)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError((
-          'Unable to map page sizes data at offset: 0x{0:08x} with error: '
-          '{1!s}').format(file_offset, exception))
+          f'Unable to map page sizes data at offset: 0x{file_offset:08x} '
+          f'with error: {exception!s}'))
 
     file_offset += page_sizes_data_size
 
@@ -227,7 +227,7 @@ class BinaryCookieParser(
       page_data = file_object.read(page_size)
       if len(page_data) != page_size:
         parser_mediator.ProduceExtractionWarning(
-            'unable to read page: {0:d}'.format(page_number))
+            f'unable to read page: {page_number:d}')
         break
 
       self._ParsePage(parser_mediator, file_offset, page_data)

@@ -170,7 +170,7 @@ class CupsIppParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
     for index, value in enumerate(values):
       if ',' in value:
-        values[index] = '"{0:s}"'.format(value)
+        values[index] = f'"{value:s}"'
 
     return ', '.join(values)
 
@@ -194,7 +194,7 @@ class CupsIppParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
           file_object, file_offset, attribute_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError(
-          'Unable to parse attribute with error: {0!s}'.format(exception))
+          f'Unable to parse attribute with error: {exception!s}')
 
     if attribute.tag_value == self._TAG_VALUE_NONE:
       value = None
@@ -253,8 +253,8 @@ class CupsIppParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       elif (tag_value != self._DELIMITER_TAG_END_OF_ATTRIBUTES and
             tag_value not in self._DELIMITER_TAGS):
         raise errors.ParseError((
-            'Unsupported attributes groups start tag value: '
-            '0x{0:02x}.').format(tag_value))
+            f'Unsupported attributes groups start tag value: '
+            f'0x{tag_value:02x}.'))
 
   def _ParseBooleanValue(self, byte_stream):
     """Parses a boolean value.
@@ -297,7 +297,7 @@ class CupsIppParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
           byte_stream, file_offset, datetime_value_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError(
-          'Unable to parse datetime value with error: {0!s}'.format(exception))
+          f'Unable to parse datetime value with error: {exception!s}')
 
     direction_from_utc = chr(value.direction_from_utc)
     rfc2579_date_time_tuple = (
@@ -328,7 +328,7 @@ class CupsIppParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
           byte_stream, file_offset, data_type_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError(
-          'Unable to parse integer value with error: {0!s}'.format(exception))
+          f'Unable to parse integer value with error: {exception!s}')
 
   def _ParseHeader(self, parser_mediator, file_object):
     """Parses a CUPS IPP header from a file-like object.
@@ -347,23 +347,20 @@ class CupsIppParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       header, _ = self._ReadStructureFromFileObject(file_object, 0, header_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.WrongParser(
-          '[{0:s}] Unable to parse header with error: {1!s}'.format(
-              self.NAME, exception))
+          f'[{self.NAME:s}] Unable to parse header with error: {exception!s}')
 
-    format_version = '{0:d}.{1:d}'.format(
-        header.major_version, header.minor_version)
+    format_version = f'{header.major_version:d}.{header.minor_version:d}'
     if format_version not in self._SUPPORTED_FORMAT_VERSIONS:
       raise errors.WrongParser(
-          '[{0:s}] Unsupported format version {1:s}.'.format(
-              self.NAME, format_version))
+          f'[{self.NAME:s}] Unsupported format version {format_version:s}.')
 
     if header.operation_identifier != 5:
       # TODO: generate ExtractionWarning instead of printing debug output.
       display_name = parser_mediator.GetDisplayName()
-      logger.debug((
-          '[{0:s}] Non-standard operation identifier: 0x{1:08x} in file header '
-          'of: {2:s}.').format(
-              self.NAME, header.operation_identifier, display_name))
+      logger.debug(
+          f'[{self.NAME:s}] Non-standard operation identifier: '
+          f'0x{header.operation_identifier:08x} in file header '
+          f'of: {display_name:s}.')
 
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses a CUPS IPP file-like object.
@@ -396,7 +393,7 @@ class CupsIppParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
     except (ValueError, errors.ParseError) as exception:
       error_message = (
-          'unable to parse attribute group with error: {0!s}').format(exception)
+          f'unable to parse attribute group with error: {exception!s}')
       if is_first_attribute_group:
         raise errors.WrongParser(error_message)
 

@@ -114,22 +114,21 @@ class ChromePreferencesParser(interface.FileObjectParser):
       install_time = extension.get('install_time', None)
       if not install_time:
         parser_mediator.ProduceExtractionWarning(
-            'installation time missing for extension ID {0:s}'.format(
-                extension_id))
+            f'installation time missing for extension ID {extension_id!s}')
         continue
 
       try:
         install_time = int(install_time, 10)
       except ValueError:
         parser_mediator.ProduceExtractionWarning((
-            'unable to convert installation time for extension ID '
-            '{0:s}').format(extension_id))
+            f'unable to convert installation time for extension ID '
+            f'{extension_id!s}'))
         continue
 
       manifest = extension.get('manifest', None)
       if not manifest:
         parser_mediator.ProduceExtractionWarning(
-            'manifest missing for extension ID {0:s}'.format(extension_id))
+            f'manifest missing for extension ID {extension_id!s}')
         continue
 
       event_data = ChromeExtensionInstallationEventData()
@@ -189,9 +188,9 @@ class ChromePreferencesParser(interface.FileObjectParser):
     # First pass check for initial character being open brace.
     if file_object.read(1) != b'{':
       display_name = parser_mediator.GetDisplayName()
-      raise errors.WrongParser((
-          '[{0:s}] {1:s} is not a valid Preference file, missing opening '
-          'brace.').format(self.NAME, display_name))
+      raise errors.WrongParser(
+          f'[{self.NAME!s}] {display_name!s} is not a valid Preference '
+          f'file, missing opening brace.')
 
     file_object.seek(0, os.SEEK_SET)
 
@@ -202,9 +201,9 @@ class ChromePreferencesParser(interface.FileObjectParser):
       file_content = codecs.decode(file_content, self._ENCODING)
     except UnicodeDecodeError:
       display_name = parser_mediator.GetDisplayName()
-      raise errors.WrongParser((
-          '[{0:s}] {1:s} is not a valid Preference file, unable to decode '
-          'UTF-8.').format(self.NAME, display_name))
+      raise errors.WrongParser(
+          f'[{self.NAME!s}] {display_name!s} is not a valid Preference '
+          f'file, unable to decode UTF-8.')
 
     # Second pass to verify it's valid JSON
     try:
@@ -212,15 +211,15 @@ class ChromePreferencesParser(interface.FileObjectParser):
 
     except ValueError as exception:
       display_name = parser_mediator.GetDisplayName()
-      raise errors.WrongParser((
-          '[{0:s}] Unable to parse file {1:s} as JSON: {2!s}').format(
-              self.NAME, display_name, exception))
+      raise errors.WrongParser(
+          f'[{self.NAME!s}] Unable to parse file '
+          f'{display_name!s} as JSON: {exception!s}')
 
     except IOError as exception:
       display_name = parser_mediator.GetDisplayName()
-      raise errors.WrongParser((
-          '[{0:s}] Unable to open file {1:s} for parsing as JSON: '
-          '{2!s}').format(self.NAME, display_name, exception))
+      raise errors.WrongParser(
+          f'[{self.NAME!s}] Unable to open file '
+          f'{display_name!s} for parsing as JSON: {exception!s}')
 
     # Third pass to verify the file has the correct keys in it for Preferences
     if not set(self.REQUIRED_KEYS).issubset(set(json_dict.keys())):
@@ -229,16 +228,16 @@ class ChromePreferencesParser(interface.FileObjectParser):
     extensions_setting_dict = json_dict.get('extensions')
     if not extensions_setting_dict:
       display_name = parser_mediator.GetDisplayName()
-      raise errors.WrongParser((
-          '[{0:s}] {1:s} is not a valid Preference file, does not contain '
-          'extensions value.').format(self.NAME, display_name))
+      raise errors.WrongParser(
+          f'[{self.NAME!s}] {display_name!s} is not a valid Preference '
+          f'file, does not contain extensions value.')
 
     extensions_dict = extensions_setting_dict.get('settings')
     if not extensions_dict:
       display_name = parser_mediator.GetDisplayName()
-      raise errors.WrongParser((
-          '[{0:s}] {1:s} is not a valid Preference file, does not contain '
-          'extensions settings value.').format(self.NAME, display_name))
+      raise errors.WrongParser(
+          f'[{self.NAME!s}] {display_name!s} is not a valid Preference '
+          f'file, does not contain extensions settings value.')
 
     extensions_autoupdate_dict = extensions_setting_dict.get('autoupdate')
     if extensions_autoupdate_dict:
