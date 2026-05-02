@@ -77,9 +77,10 @@ class ParserFilterExpressionHelper(object):
     if missing_parser_filters:
       missing_parser_filters = self._GetParserAndPluginsList({
           name: excludes[name] for name in missing_parser_filters})
+      filters_string = ','.join(missing_parser_filters)
       raise RuntimeError(
-          f'Parser filters: {",".join(missing_parser_filters):s} '
-          f'defined to be excluded but no corresponding include expression')
+          f'Parser filters: {filters_string:s} defined to be excluded but no '
+          f'corresponding include expression')
 
     overlapping_parser_filters = set(included_parsers_and_plugins).intersection(
         set(excluded_parsers_and_plugins))
@@ -88,8 +89,7 @@ class ParserFilterExpressionHelper(object):
           set(included_parsers_and_plugins) - overlapping_parser_filters)
 
     parser_filters = [
-        f'!{parser_filter:s}'
-        for parser_filter in excluded_parsers_and_plugins]
+        f'!{parser_filter:s}' for parser_filter in excluded_parsers_and_plugins]
     parser_filters.extend(included_parsers_and_plugins)
     return ','.join(parser_filters)
 
@@ -116,8 +116,8 @@ class ParserFilterExpressionHelper(object):
     plugins = parsers_and_plugins.get(preset_name, None)
     if plugins != set(['*']):
       raise RuntimeError(
-          f'{preset_name:s} cannot be used as a preset name '
-          f'and plugin name at same time.')
+          f'{preset_name:s} cannot be used as a preset name and plugin name at '
+          f'same time.')
 
     del parsers_and_plugins[preset_name]
 

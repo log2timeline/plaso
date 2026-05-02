@@ -211,8 +211,8 @@ class ExtensionsFileEntryFilter(FileEntryFilter):
       output_writer (CLIOutputWriter): output writer.
     """
     if self._extensions:
-      output_writer.Write(
-          f'\textensions: {", ".join(self._extensions):s}\n')
+      extensions = ', '.join(self._extensions)
+      output_writer.Write(f'\textensions: {extensions:s}\n')
 
 
 class NamesFileEntryFilter(FileEntryFilter):
@@ -248,8 +248,8 @@ class NamesFileEntryFilter(FileEntryFilter):
       output_writer (CLIOutputWriter): output writer.
     """
     if self._names:
-      output_writer.Write(
-          f'\tnames: {", ".join(self._names):s}\n')
+      names = ', '.join(self._names)
+      output_writer.Write(f'\tnames: {names:s}\n')
 
 
 class SignaturesFileEntryFilter(FileEntryFilter):

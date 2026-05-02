@@ -36,5 +36,4 @@ class DateTimeValueType(dfdatetime_posix_time.PosixTimeInMicroseconds):
 
         self.CopyFromDateTimeString(value)
       except (TypeError, ValueError):
-        raise ValueError(
-            f'Unsupported date time string value: {value!s}')
+        raise ValueError(f'Unsupported date time string value: {value!s}')

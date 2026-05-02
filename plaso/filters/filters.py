@@ -177,10 +177,12 @@ class BinaryOperator(Operator):
       InvalidNumberOfOperands: if the number of operands provided is not
           supported.
     """
-    if len(arguments) != 2:
+    number_of_arguments = len(arguments)
+    if number_of_arguments != 2:
+      class_name = self.__class__.__name__
       raise errors.InvalidNumberOfOperands(
-          f'{self.__class__.__name__!s} only supports 2 operands, '
-          f'provided were {len(arguments):d} operands.')
+          f'{class_name:s} only supports 2 operands, provided were '
+          f'{number_of_arguments:d} operands.')
 
     super(BinaryOperator, self).__init__(arguments=arguments, **kwargs)
     self.left_operand = arguments[0]
@@ -248,8 +250,8 @@ class GenericBinaryOperator(BinaryOperator):
     """
     if attribute_name in self._UNSUPPORTED_ATTRIBUTE_NAMES:
       logger.warning(
-          f'Expansion of {attribute_name:s} in event filter '
-          f'no longer supported')
+          f'Expansion of {attribute_name:s} in event filter no longer '
+          f'supported')
 
     if attribute_name in self._EVENT_ATTRIBUTE_NAMES:
       attribute_value = getattr(event, attribute_name, None)

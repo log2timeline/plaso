@@ -86,7 +86,8 @@ class _PathFilterTable(object):
     """
     text_parts = ['Path segment index\tPath segments(s)']
     for index, segments in self.path_segments_per_index.items():
-      text_parts.append(f'{index:d}\t\t\t[{", ".join(segments):s}]')
+      segments_string = ', '.join(segments)
+      text_parts.append(f'{index:d}\t\t\t[{segments_string:s}]')
 
     text_parts.append('')
 
