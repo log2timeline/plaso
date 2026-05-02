@@ -143,7 +143,7 @@ class GoogleAnalyticsUtmaPlugin(interface.BaseCookiePlugin):
 
     if number_of_fields not in (1, 6):
       parser_mediator.ProduceExtractionWarning(
-          f'unexpected number of fields: {number_of_fields:d} in cookie: '
+          f'unsupported number of fields: {number_of_fields:d} in cookie: '
           f'{self.COOKIE_NAME:s}')
       return
 
@@ -230,7 +230,7 @@ class GoogleAnalyticsUtmbPlugin(interface.BaseCookiePlugin):
 
     if number_of_fields not in (1, 4):
       parser_mediator.ProduceExtractionWarning(
-          f'unexpected number of fields: {number_of_fields:d} in cookie: '
+          f'unsupported number of fields: {number_of_fields:d} in cookie: '
           f'{self.COOKIE_NAME:s}')
       return
 
@@ -294,7 +294,7 @@ class GoogleAnalyticsUtmtPlugin(interface.BaseCookiePlugin):
 
     if number_of_fields != 1:
       parser_mediator.ProduceExtractionWarning(
-          f'unexpected number of fields: {number_of_fields:d} in cookie: '
+          f'unsupported number of fields: {number_of_fields:d} in cookie: '
           f'{self.COOKIE_NAME:s}')
       return
 
@@ -349,7 +349,7 @@ class GoogleAnalyticsUtmzPlugin(interface.BaseCookiePlugin):
 
     if number_of_fields not in (1, 5):
       parser_mediator.ProduceExtractionWarning(
-          f'unexpected number of fields: {number_of_fields:d} in cookie: '
+          f'unsupported number of fields: {number_of_fields:d} in cookie: '
           f'{self.COOKIE_NAME:s}')
       return
 

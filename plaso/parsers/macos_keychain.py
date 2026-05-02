@@ -138,9 +138,9 @@ class KeychainParser(
   # TODO: add more protocols.
   _PROTOCOL_TRANSLATION_DICT = {
       'htps': 'https',
-      'smtp': 'smtp',
+      'http': 'http',
       'imap': 'imap',
-      'http': 'http'}
+      'smtp': 'smtp'}
 
   _RECORD_TYPE_CSSM_DL_DB_SCHEMA_INFO = 0x00000000
   _RECORD_TYPE_CSSM_DL_DB_SCHEMA_INDEXES = 0x00000001
@@ -358,8 +358,7 @@ class KeychainParser(
     """
     table = tables.get(record_type, None)
     if not table:
-      raise errors.ParseError(
-          f'Missing table for relation identifier: 0x{record_type:08}')
+      raise errors.ParseError(f'Missing table for record type: {record_type:d}')
 
     record_header = self._ReadRecordHeader(file_object, record_offset)
 
@@ -501,7 +500,7 @@ class KeychainParser(
     table = tables.get(relation_identifier, None)
     if not table:
       raise errors.ParseError(
-          f'Missing table for relation identifier: 0x{relation_identifier:08}')
+          f'Missing table for relation identifier: {relation_identifier:d}')
 
     if attribute_name is None and attribute_value_offsets[1] != 0:
       attribute_value_offset = attribute_value_offsets[1]
@@ -704,7 +703,7 @@ class KeychainParser(
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       date_time_value (str): date time value
           (CSSM_DB_ATTRIBUTE_FORMAT_TIME_DATE) in the format: "YYYYMMDDhhmmssZ".
 
@@ -717,7 +716,7 @@ class KeychainParser(
 
     if date_time_value[14] != 'Z':
       parser_mediator.ProduceExtractionWarning(
-          f'invalid date and time value: {date_time_value!s}')
+          f'unsupported date and time value: {date_time_value!s}')
       return None
 
     try:
@@ -729,7 +728,7 @@ class KeychainParser(
       seconds = int(date_time_value[12:14], 10)
     except (TypeError, ValueError):
       parser_mediator.ProduceExtractionWarning(
-          f'invalid date and time value: {date_time_value!s}')
+          f'unsupported date and time value: {date_time_value!s}')
       return None
 
     time_elements_tuple = (year, month, day_of_month, hours, minutes, seconds)
@@ -739,7 +738,7 @@ class KeychainParser(
           time_elements_tuple=time_elements_tuple)
     except ValueError:
       parser_mediator.ProduceExtractionWarning(
-          f'invalid date and time value: {date_time_value!s}')
+          f'unsupported date and time value: {date_time_value!s}')
       return None
 
   def _ParseBinaryDataAsString(self, parser_mediator, binary_data_value):
@@ -747,7 +746,7 @@ class KeychainParser(
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       binary_data_value (bytes): binary data value
           (CSSM_DB_ATTRIBUTE_FORMAT_BLOB)
 
@@ -761,8 +760,9 @@ class KeychainParser(
     try:
       return binary_data_value.decode('utf-8')
     except UnicodeDecodeError:
+      binary_data_string = repr(binary_data_value)
       parser_mediator.ProduceExtractionWarning(
-          f'invalid binary data string value: {repr(binary_data_value)!s}')
+          f'unable to decode binary data value: {binary_data_string:s}')
       return None
 
   def _ParseIntegerTagString(self, integer_value):
@@ -787,7 +787,7 @@ class KeychainParser(
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       record (dict[str, object]): database record.
 
     Raises:
@@ -822,7 +822,7 @@ class KeychainParser(
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       record (dict[str, object]): database record.
 
     Raises:
@@ -834,7 +834,8 @@ class KeychainParser(
           'Unsupported Internet password record key value does not start '
           'with: "ssgp".'))
 
-    protocol_string = codecs.decode(f'{record["ptcl"]:08x}', 'hex')
+    protocol_value = record["ptcl"]
+    protocol_string = codecs.decode(f'{protocol_value:08x}', 'hex')
     protocol_string = codecs.decode(protocol_string, 'utf-8')
 
     event_data = KeychainInternetRecordEventData()
@@ -876,7 +877,7 @@ class KeychainParser(
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       file_object (dfvfs.FileIO): a file-like object.
 
     Raises:

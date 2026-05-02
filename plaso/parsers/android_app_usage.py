@@ -85,7 +85,7 @@ class AndroidAppUsageParser(interface.FileObjectParser):
           last_resume_time = int(last_resume_time, 10)
         except ValueError:
           parser_mediator.ProduceExtractionWarning(
-              f'unexpected last resume time: {last_resume_time:s}.')
+              f'unsupported last resume time: {last_resume_time:s}.')
           continue
 
         event_data = AndroidAppUsageEventData()

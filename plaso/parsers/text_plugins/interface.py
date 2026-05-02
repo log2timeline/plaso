@@ -61,13 +61,13 @@ class TextPlugin(plugins.BasePlugin):
     if not isinstance(exception, UnicodeDecodeError):
       raise TypeError('Unsupported exception type.')
 
+    byte_value = exception.object[exception.start]
     if self._parser_mediator:
-      self._parser_mediator.ProduceExtractionWarning((
-          f'error decoding 0x{exception.object[exception.start]:02x} at '
-          f'offset: {self._current_offset + exception.start:d}'))
+      offset = self._current_offset + exception.start
+      self._parser_mediator.ProduceExtractionWarning(
+          f'error decoding 0x{byte_value:02x} at offset: {offset:d}')
 
-    escaped = f'\\x{exception.object[exception.start]:2x}'
-    return escaped, exception.start + 1
+    return f'\\x{byte_value:2x}', exception.start + 1
 
   def _GetDecimalValueFromStructure(self, structure, name):
     """Retrieves a decimal integer value from a Pyparsing structure.
@@ -163,9 +163,8 @@ class TextPlugin(plugins.BasePlugin):
       self._current_offset = text_reader.get_offset()
     except UnicodeDecodeError as exception:
       parser_mediator.ProduceExtractionWarning((
-          f'unable to read and decode log line at offset '
-          f'{self._current_offset:d} with error: '
-          f'{exception!s}'))
+          f'unable to read and decode log line at offset: '
+          f'{self._current_offset:d} with error: {exception!s}'))
       return
 
     while text_reader.lines:
@@ -191,7 +190,8 @@ class TextPlugin(plugins.BasePlugin):
         logger.debug(f'unable to parse string with error: {exception!s}')
 
         if len(line) > 80:
-          line = f'{line[:77]:s}...'
+          truncated_line = line[:77]
+          line = f'{truncated_line:s}...'
 
         parser_mediator.ProduceExtractionWarning(
             f'unable to parse log line: {text_reader.line_number:d} '
@@ -218,9 +218,8 @@ class TextPlugin(plugins.BasePlugin):
         self._current_offset = text_reader.get_offset()
       except UnicodeDecodeError as exception:
         parser_mediator.ProduceExtractionWarning((
-            f'unable to read and decode log line at offset '
-            f'{self._current_offset:d} with error: '
-            f'{exception!s}'))
+            f'unable to read and decode log line at offset: '
+            f'{self._current_offset:d} with error: {exception!s}'))
         break
 
   @abc.abstractmethod
@@ -368,9 +367,8 @@ class TextPlugin(plugins.BasePlugin):
         self._current_offset = text_reader.get_offset()
       except UnicodeDecodeError as exception:
         parser_mediator.ProduceExtractionWarning((
-            f'unable to read and decode log line at offset '
-            f'{self._current_offset:d} with error: '
-            f'{exception!s}'))
+            f'unable to read and decode log line at offset: '
+            f'{self._current_offset:d} with error: {exception!s}'))
         return
 
       try:

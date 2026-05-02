@@ -126,8 +126,8 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
 
       if number_of_values > number_of_columns:
         raise errors.WrongParser(
-            f'Expected at most {number_of_columns:d} values, '
-            f'found {number_of_values:d}')
+            f'Expected at most {number_of_columns:d} values, found '
+            f'{number_of_values:d}')
 
       yield dict(zip(self.COLUMNS, values))
 
@@ -157,14 +157,16 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
       return dfdatetime_posix_time.PosixTime(timestamp=timestamp)
 
     # The timestamp is not available; parse the local date and time instead.
+    date_value = row['date']
+    time_value = row['time']
     try:
-      date_time = self._ConvertToTimestamp(row['date'], row['time'])
+      date_time = self._ConvertToTimestamp(date_value, time_value)
     except ValueError as exception:
-      date_time = None
       parser_mediator.ProduceExtractionWarning((
-          f'Unable to parse time string: "{repr(row["date"]):s} '
-          f'{repr(row["time"]):s}" with error: '
-          f'{exception!s}'))
+          f'Unable to parse time string: "{date_value!s} {time_value!s}" with '
+          f'error: {exception!s}'))
+
+      date_time = None
 
     return date_time
 
