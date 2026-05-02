@@ -68,8 +68,8 @@ class WindowsPCABaseParser(dsv_parser.DSVParser):
     try:
       date_time.CopyFromDateTimeString(date_time_string)
     except ValueError:
-      raise errors.ParseError('Unsupported date and time string: {0!s}'.format(
-          date_time_string))
+      raise errors.ParseError(
+          f'Unsupported date and time string: {date_time_string!s}')
 
     return date_time
 
@@ -116,11 +116,12 @@ class WindowsPCADB0Parser(WindowsPCABaseParser):
       row_offset (int): offset of the line from which the row was extracted.
       row (dict[str, str]): fields of a single row, as specified in COLUMNS.
     """
+    datetime_value = row['datetime']
     try:
-      last_execution_time = self._ParseDateTime(row['datetime'])
+      last_execution_time = self._ParseDateTime(datetime_value)
     except errors.ParseError:
       parser_mediator.ProduceExtractionWarning(
-          'Unsupported date and time string: {0!s}'.format(row['datetime']))
+          f'Unsupported date and time string: {datetime_value!s}')
 
     event_data = WindowsPCAEventData()
     event_data.description = row['description']
@@ -154,11 +155,12 @@ class WindowsPCADicParser(WindowsPCABaseParser):
       row_offset (int): offset of the line from which the row was extracted.
       row (dict[str, str]): fields of a single row, as specified in COLUMNS.
     """
+    datetime_value = row['datetime']
     try:
-      last_execution_time = self._ParseDateTime(row['datetime'])
+      last_execution_time = self._ParseDateTime(datetime_value)
     except errors.ParseError:
       parser_mediator.ProduceExtractionWarning(
-          'Unsupported date and time string: {0!s}'.format(row['datetime']))
+          f'Unsupported date and time string: {datetime_value!s}')
 
     event_data = WindowsPCAEventData()
     event_data.executable = row['program']

@@ -540,7 +540,7 @@ class SkypePlugin(interface.SQLitePlugin):
 
     # TODO: Move this to the formatter, and ensure username is rendered
     # properly when fullname and/or display_name is None.
-    username = '{0!s} <{1!s}>'.format(fullname, display_name)
+    username = f'{fullname!s} <{display_name!s}>'
 
     event_data = SkypeAccountEventData()
     event_data.authentication_request_time = self._GetDateTimeRowValue(

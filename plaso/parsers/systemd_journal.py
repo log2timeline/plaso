@@ -112,20 +112,21 @@ class SystemdJournalParser(
           file_object, file_offset, data_object_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError((
-          'Unable to parse data object at offset: 0x{0:08x} with error: '
-          '{1!s}').format(file_offset, exception))
+          f'Unable to parse data object at offset: 0x{file_offset:08x} '
+          f'with error: {exception!s}'))
 
     if data_object.object_type != self._OBJECT_TYPE_DATA:
-      raise errors.ParseError('Unsupported object type: {0:d}.'.format(
-          data_object.object_type))
+      raise errors.ParseError(
+          f'Unsupported object type: {data_object.object_type:d}')
 
     if data_object.object_flags not in (
         0, self._OBJECT_COMPRESSED_FLAG_XZ, self._OBJECT_COMPRESSED_FLAG_LZ4,
         self._OBJECT_COMPRESSED_FLAG_ZSTD):
-      raise errors.ParseError('Unsupported object flags: 0x{0:02x}.'.format(
-          data_object.object_flags))
+      raise errors.ParseError(
+          f'Unsupported object flags: 0x{data_object.object_flags:02x}')
 
     # The data is read separately for performance reasons.
+    data_offset = file_offset + data_object_header_size
     data_size = data_object.data_size - data_object_header_size
     data = file_object.read(data_size)
 
@@ -137,12 +138,11 @@ class SystemdJournalParser(
 
       try:
         uncompressed_size = self._ReadStructureFromByteStream(
-            data, file_offset + data_object_header_size, uncompressed_size_map)
+            data, data_offset, uncompressed_size_map)
       except (ValueError, errors.ParseError) as exception:
         raise errors.ParseError((
-            'Unable to parse LZ4 uncompressed size at offset: 0x{0:08x} with '
-            'error: {1!s}').format(
-                file_offset + data_object_header_size, exception))
+            f'Unable to parse LZ4 uncompressed size at offset: '
+            f'0x{data_offset:08x} with error: {exception!s}'))
 
       data = lz4_block.decompress(data[8:], uncompressed_size=uncompressed_size)
 
@@ -151,8 +151,8 @@ class SystemdJournalParser(
         data = zstd.decompress(data)
       except zstd.Error as exception:
         raise errors.ParseError((
-            'Unable to decompress ZSTD at offset: 0x{0:08x} with error: '
-            '{1!s}').format(file_offset + data_object_header_size, exception))
+            f'Unable to decompress ZSTD at offset: 0x{data_offset:08x} with '
+            f'error: {exception!s}'))
 
     return data
 
@@ -182,16 +182,16 @@ class SystemdJournalParser(
           file_object, file_offset, entry_array_object_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError((
-          'Unable to parse entry array object at offset: 0x{0:08x} with error: '
-          '{1!s}').format(file_offset, exception))
+          f'Unable to parse entry array object at offset: 0x{file_offset:08x} '
+          f'with error: {exception!s}'))
 
     if entry_array_object.object_type != self._OBJECT_TYPE_ENTRY_ARRAY:
-      raise errors.ParseError('Unsupported object type: {0:d}.'.format(
-          entry_array_object.object_type))
+      raise errors.ParseError(
+          f'Unsupported object type: {entry_array_object.object_type:d}')
 
     if entry_array_object.object_flags != 0:
-      raise errors.ParseError('Unsupported object flags: 0x{0:02x}.'.format(
-          entry_array_object.object_flags))
+      raise errors.ParseError(
+          f'Unsupported object flags: 0x{entry_array_object.object_flags:02x}')
 
     return entry_array_object
 
@@ -216,16 +216,16 @@ class SystemdJournalParser(
           file_object, file_offset, entry_object_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError((
-          'Unable to parse entry object at offset: 0x{0:08x} with error: '
-          '{1!s}').format(file_offset, exception))
+          f'Unable to parse entry object at offset: 0x{file_offset:08x} '
+          f'with error: {exception!s}'))
 
     if entry_object.object_type != self._OBJECT_TYPE_ENTRY:
-      raise errors.ParseError('Unsupported object type: {0:d}.'.format(
-          entry_object.object_type))
+      raise errors.ParseError(
+          f'Unsupported object type: {entry_object.object_type:d}')
 
     if entry_object.object_flags != 0:
-      raise errors.ParseError('Unsupported object flags: 0x{0:02x}.'.format(
-          entry_object.object_flags))
+      raise errors.ParseError(
+          f'Unsupported object flags: 0x{entry_object.object_flags:02x}')
 
     return entry_object
 
@@ -286,15 +286,16 @@ class SystemdJournalParser(
             file_object, file_offset, entry_item_map)
       except (ValueError, errors.ParseError) as exception:
         raise errors.ParseError((
-            'Unable to parse entry item at offset: 0x{0:08x} with error: '
-            '{1!s}').format(file_offset, exception))
+            f'Unable to parse entry item at offset: 0x{file_offset:08x} '
+            f'with error: {exception!s}'))
 
       file_offset += entry_item_data_size
 
       if entry_item.object_offset < self._maximum_journal_file_offset:
-        raise errors.ParseError(
-            'object offset should be after hash tables ({0:d} < {1:d})'.format(
-                entry_item.object_offset, self._maximum_journal_file_offset))
+        raise errors.ParseError((
+            f'object offset should be after hash tables '
+            f'({entry_item.object_offset:d} < '
+            f'{self._maximum_journal_file_offset:d})'))
 
       event_data = self._ParseDataObject(file_object, entry_item.object_offset)
       event_string = event_data.decode('utf-8')
@@ -331,13 +332,11 @@ class SystemdJournalParser(
           file_object, 0, file_header_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.WrongParser(
-          'Unable to parse file header with error: {0!s}'.format(
-              exception))
+          f'Unable to parse file header with error: {exception!s}')
 
     if file_header.header_size not in self._SUPPORTED_FILE_HEADER_SIZES:
       raise errors.WrongParser(
-          'Unsupported file header size: {0:d}.'.format(
-              file_header.header_size))
+          f'Unsupported file header size: {file_header.header_size:d}')
 
     if file_header.incompatible_flags & self._HEADER_INCOMPATIBLE_COMPACT:
       self._is_compact = True
@@ -362,8 +361,8 @@ class SystemdJournalParser(
         fields = self._ParseJournalEntry(file_object, entry_object_offset)
       except errors.ParseError as exception:
         parser_mediator.ProduceExtractionWarning((
-            'Unable to parse journal entry at offset: 0x{0:08x} with '
-            'error: {1!s}').format(entry_object_offset, exception))
+            f'Unable to parse journal entry at offset: '
+            f'0x{entry_object_offset:08x} with error: {exception!s}'))
         return
 
       date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(

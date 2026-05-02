@@ -4440,7 +4440,7 @@ class UnifiedLoggingParser(interface.FileEntryParser):
       tracev3_file.Open(file_entry)
     except errors.ParseError as exception:
       raise errors.WrongParser(
-          'Unable to open tracev3 file with error: {0!s}'.format(exception))
+          f'Unable to open tracev3 file with error: {exception!s}')
 
     try:
       for log_entry in tracev3_file.ReadLogEntries():

@@ -567,7 +567,7 @@ class MacOSKnowledgeCPlugin(interface.SQLitePlugin):
     else:
       if action not in self._KNOWN_ACTION_TYPES:
         parser_mediator.ProduceExtractionWarning(
-            'unsupported action type: {0:s}'.format(action))
+            f'unsupported action type: {action:s}')
       return
 
     event_data.creation_time = self._GetDateTimeRowValue(

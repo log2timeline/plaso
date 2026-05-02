@@ -122,7 +122,7 @@ class BaseFirefoxCookiePlugin(
       url_scheme = 'http'
 
     path = self._GetRowValue(query_hash, row, 'path')
-    url = '{0:s}://{1:s}{2:s}'.format(url_scheme, hostname, path)
+    url = f'{url_scheme:s}://{hostname:s}{path:s}'
 
     event_data = FirefoxCookieEventData()
     event_data.access_time = self._GetPosixTimeInMicrosecondsDateTimeRowValue(

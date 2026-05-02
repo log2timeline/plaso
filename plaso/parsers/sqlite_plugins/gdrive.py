@@ -188,18 +188,19 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
     if not path:
       return root_value
 
-    paths = []
+    path_segments = []
     while path:
-      paths.append(path)
+      path_segments.append(path)
       parent, path = local_path.get(parent, [None, None])
 
-    if not paths:
+    if not path_segments:
       return root_value
 
-    # Paths are built top level to root so we need to reverse the list to
-    # represent them in the traditional order.
-    paths.reverse()
-    return root_value + '/'.join(paths)
+    # The path segments are stored leaf to root so we need to reverse the list
+    # to reconstruct the original path.
+    path_segments.reverse()
+
+    return root_value + '/'.join(path_segments)
 
   def GetCloudPath(self, resource_id, cache, database):
     """Return cloud path given a resource id.
@@ -237,7 +238,8 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
     # Paths are built top level to root so we need to reverse the list to
     # represent them in the traditional order.
     paths.reverse()
-    return '/{0:s}/'.format('/'.join(paths))
+    path_string = '/'.join(paths)
+    return f'/{path_string:s}/'
 
   def ParseCloudEntryRow(
       self, parser_mediator, query, row, cache=None, database=None,
