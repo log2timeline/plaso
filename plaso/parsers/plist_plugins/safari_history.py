@@ -67,8 +67,8 @@ class SafariHistoryPlugin(interface.PlistPlugin):
       timestamp = float(timestamp_string)
     except (TypeError, ValueError):
       parser_mediator.ProduceExtractionWarning((
-          'unable to convert Cocoa timestamp: {0:s} to a floating-point '
-          'value').format(timestamp_string))
+          f'unable to convert Cocoa timestamp: '
+          f'{timestamp_string:s} to a floating-point value'))
       return None
 
     return dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
@@ -85,7 +85,7 @@ class SafariHistoryPlugin(interface.PlistPlugin):
     format_version = match.get('WebHistoryFileVersion', None)
     if format_version != 1:
       parser_mediator.ProduceExtractionWarning(
-          'unsupported Safari history version: {0!s}'.format(format_version))
+          f'unsupported Safari history version: {format_version!s}')
       return
 
     for history_entry in match.get('WebHistoryDates', {}):

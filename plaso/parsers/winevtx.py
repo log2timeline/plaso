@@ -85,8 +85,8 @@ class WinEvtxParser(interface.FileObjectParser):
       event_data.record_number = evtx_record.identifier
     except OverflowError as exception:
       warning_message = (
-          'unable to read record identifier from event record: {0:d} '
-          'with error: {1!s}').format(record_index, exception)
+          f'unable to read record identifier from event record: '
+          f'{record_index:d} with error: {exception!s}')
       if recovered:
         parser_mediator.ProduceRecoveryWarning(warning_message)
       else:
@@ -96,8 +96,8 @@ class WinEvtxParser(interface.FileObjectParser):
       event_identifier = evtx_record.event_identifier
     except OverflowError as exception:
       warning_message = (
-          'unable to read event identifier from event record: {0:d} '
-          'with error: {1!s}').format(record_index, exception)
+          f'unable to read event identifier from event record: '
+          f'{record_index:d} with error: {exception!s}')
       if recovered:
         parser_mediator.ProduceRecoveryWarning(warning_message)
       else:
@@ -109,8 +109,8 @@ class WinEvtxParser(interface.FileObjectParser):
       event_identifier_qualifiers = evtx_record.event_identifier_qualifiers
     except OverflowError as exception:
       warning_message = (
-          'unable to read event identifier qualifiers from event record: '
-          '{0:d} with error: {1!s}').format(record_index, exception)
+          f'unable to read event identifier qualifiers from event record: '
+          f'{record_index:d} with error: {exception!s}')
       if recovered:
         parser_mediator.ProduceRecoveryWarning(warning_message)
       else:
@@ -164,8 +164,8 @@ class WinEvtxParser(interface.FileObjectParser):
       creation_time = evtx_record.get_creation_time_as_integer()
     except OverflowError as exception:
       warning_message = (
-          'unable to read creation time from event record: {0:d} '
-          'with error: {1!s}').format(record_index, exception)
+          f'unable to read creation time from event record: {record_index:d} '
+          f'with error: {exception!s}')
       if recovered:
         parser_mediator.ProduceRecoveryWarning(warning_message)
       else:
@@ -181,8 +181,8 @@ class WinEvtxParser(interface.FileObjectParser):
       written_time = evtx_record.get_written_time_as_integer()
     except OverflowError as exception:
       warning_message = (
-          'unable to read written time from event record: {0:d} '
-          'with error: {1!s}').format(record_index, exception)
+          f'unable to read written time from event record: {record_index:d} '
+          f'with error: {exception!s}')
       if recovered:
         parser_mediator.ProduceRecoveryWarning(warning_message)
       else:
@@ -219,8 +219,8 @@ class WinEvtxParser(interface.FileObjectParser):
 
       except IOError as exception:
         parser_mediator.ProduceExtractionWarning(
-            'unable to parse event record: {0:d} with error: {1!s}'.format(
-                record_index, exception))
+            f'unable to parse event record: {record_index:d} with error: '
+            f'{exception!s}')
 
     for record_index in range(evtx_file.number_of_recovered_records):
       if parser_mediator.abort:
@@ -232,9 +232,9 @@ class WinEvtxParser(interface.FileObjectParser):
             parser_mediator, record_index, evtx_record, recovered=True)
 
       except IOError as exception:
-        parser_mediator.ProduceRecoveryWarning((
-            'unable to parse recovered event record: {0:d} with error: '
-            '{1!s}').format(record_index, exception))
+        parser_mediator.ProduceRecoveryWarning(
+            f'unable to parse recovered event record: {record_index:d} with '
+            f'error: {exception!s}')
 
   @classmethod
   def GetFormatSpecification(cls):
@@ -264,7 +264,7 @@ class WinEvtxParser(interface.FileObjectParser):
       evtx_file.open_file_object(file_object)
     except IOError as exception:
       parser_mediator.ProduceExtractionWarning(
-          'unable to open file with error: {0!s}'.format(exception))
+          f'unable to open file with error: {exception!s}')
       return
 
     try:

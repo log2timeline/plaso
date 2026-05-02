@@ -69,7 +69,7 @@ class MacOSSoftwareUpdatePlistPlugin(interface.PlistPlugin):
         product_key = update_property.get('Product Key', None)
 
         recommended_updates.append(
-            '{0:s} ({1:s})'.format(identifier, product_key))
+            f'{identifier:s} ({product_key:s})')
 
     event_data = MacOSSoftwareUpdateEventData()
     event_data.full_update_time = self._GetDateTimeValueFromPlistKey(

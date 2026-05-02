@@ -798,8 +798,7 @@ class PlistPlugin(plugins.BasePlugin):
     """
     if depth < 1:
       logger.debug(
-          'Maximum recursion depth of 15 reached for key: {0:s}'.format(
-              key_path))
+          f'Maximum recursion depth of 15 reached for key: {key_path:s}')
 
     elif isinstance(plist_item, (list, tuple)):
       for sub_plist_item in plist_item:

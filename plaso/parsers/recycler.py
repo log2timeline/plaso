@@ -81,8 +81,7 @@ class WinRecycleBinParser(
           file_object, file_offset, data_type_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError(
-          'Unable to parse original filename with error: {0!s}'.format(
-              exception))
+          f'Unable to parse original filename with error: {exception!s}')
 
     if format_version == 1:
       return original_filename.rstrip('\x00')
@@ -113,14 +112,14 @@ class WinRecycleBinParser(
       file_header, _ = self._ReadStructureFromFileObject(
           file_object, 0, file_header_map)
     except (ValueError, errors.ParseError) as exception:
-      raise errors.WrongParser((
-          'Unable to parse Windows Recycle.Bin metadata file header with '
-          'error: {0!s}').format(exception))
+      raise errors.WrongParser(
+          f'Unable to parse Windows Recycle.Bin metadata file header with '
+          f'error: {exception!s}')
 
     if file_header.format_version not in self._SUPPORTED_FORMAT_VERSIONS:
       raise errors.WrongParser(
-          'Unsupported format version: {0:d}.'.format(
-              file_header.format_version))
+          f'Unsupported format version: '
+          f'{file_header.format_version:d}.')
 
     event_data = WinRecycleBinEventData()
     event_data.file_size = file_header.original_file_size
@@ -130,8 +129,7 @@ class WinRecycleBinParser(
           file_object, file_header.format_version)
     except (ValueError, errors.ParseError) as exception:
       parser_mediator.ProduceExtractionWarning(
-          'unable to parse original filename with error: {0!s}.'.format(
-              exception))
+          f'unable to parse original filename with error: {exception!s}.')
 
     if file_header.deletion_time:
       event_data.deletion_time = dfdatetime_filetime.Filetime(
