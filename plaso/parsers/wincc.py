@@ -270,11 +270,8 @@ class WinCCSysLogParser(interface.FileObjectParser):
             parser_mediator, first_line, exception, error_string)
       for character in self._DISALLOWED_HOSTNAME_CHARS:
         if character in hostname:
-          error_string = (
-              'Hostname ({0!s}) can\'t contain the character {1:s} on line'
-              '{2:d}').format(hostname, character, line_number)
-          self._ParseValuesFail(
-              parser_mediator, first_line, exception, error_string)
+          self._ParseValuesFail(parser_mediator, first_line, exception, (
+              f'Unsupported hostname: "{hostname!s}" on line: {line_number:d}'))
 
     event_data.log_hostname = hostname
 

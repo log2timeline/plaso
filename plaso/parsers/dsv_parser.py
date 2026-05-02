@@ -209,9 +209,9 @@ class DSVParser(interface.FileObjectParser):
 
     if encoding and self._encoding and encoding != self._encoding:
       display_name = parser_mediator.GetDisplayName()
-      raise errors.WrongParser((
-          '[{0:s}] Unable to parse DSV file: {1:s} encoding does not match the '
-          'one required by the parser.').format(self._encoding, display_name))
+      raise errors.WrongParser(
+          f'[{self.NAME:s}] Unable to parse DSV file: {display_name:s} '
+          f'encoding does not match the one required by the parser.')
 
     encoding = self._encoding
     if not encoding:
@@ -222,15 +222,15 @@ class DSVParser(interface.FileObjectParser):
     try:
       if not self._HasExpectedLineLength(file_object, encoding=encoding):
         display_name = parser_mediator.GetDisplayName()
-        raise errors.WrongParser((
-            '[{0:s}] Unable to parse DSV file: {1:s} with error: '
-            'unexpected line length.').format(self.NAME, display_name))
+        raise errors.WrongParser(
+            f'[{self.NAME:s}] Unable to parse DSV file: {display_name:s} with '
+            f'error: unexpected line length.')
 
     except UnicodeDecodeError as exception:
       display_name = parser_mediator.GetDisplayName()
       raise errors.WrongParser(
-          '[{0:s}] Unable to parse DSV file: {1:s} with error: {2!s}.'.format(
-              self.NAME, display_name, exception))
+          f'[{self.NAME:s}] Unable to parse DSV file: {display_name:s} with '
+          f'error: {exception!s}.')
 
     try:
       line_reader = self._CreateLineReader(file_object, encoding=encoding)
@@ -240,32 +240,31 @@ class DSVParser(interface.FileObjectParser):
     except (StopIteration, UnicodeDecodeError, csv.Error) as exception:
       display_name = parser_mediator.GetDisplayName()
       raise errors.WrongParser(
-          '[{0:s}] Unable to parse DSV file: {1:s} with error: {2!s}.'.format(
-              self.NAME, display_name, exception))
+          f'[{self.NAME:s}] Unable to parse DSV file: {display_name:s} with '
+          f'error: {exception!s}.')
 
     number_of_columns = len(self.COLUMNS)
     number_of_records = len(row)
 
     if number_of_records != number_of_columns:
       display_name = parser_mediator.GetDisplayName()
-      raise errors.WrongParser((
-          '[{0:s}] Unable to parse DSV file: {1:s}. Wrong number of '
-          'records (expected: {2:d}, got: {3:d})').format(
-              self.NAME, display_name, number_of_columns,
-              number_of_records))
+      raise errors.WrongParser(
+          f'[{self.NAME:s}] Unable to parse DSV file: {display_name:s}. Wrong '
+          f'number of records (expected: {number_of_columns:d}, got: '
+          f'{number_of_records:d})')
 
     for key, value in row.items():
       if self._MAGIC_TEST_STRING in (key, value):
         display_name = parser_mediator.GetDisplayName()
-        raise errors.WrongParser((
-            '[{0:s}] Unable to parse DSV file: {1:s}. Signature '
-            'mismatch.').format(self.NAME, display_name))
+        raise errors.WrongParser(
+            f'[{self.NAME:s}] Unable to parse DSV file: {display_name:s}. '
+            f'Signature mismatch.')
 
     if not self.VerifyRow(parser_mediator, row):
       display_name = parser_mediator.GetDisplayName()
-      raise errors.WrongParser((
-          '[{0:s}] Unable to parse DSV file: {1:s}. Verification '
-          'failed.').format(self.NAME, display_name))
+      raise errors.WrongParser(
+          f'[{self.NAME:s}] Unable to parse DSV file: {display_name:s}. '
+          f'Verification failed.')
 
     self.ParseRow(parser_mediator, row_offset, row)
     row_offset = line_reader.tell()
@@ -288,8 +287,7 @@ class DSVParser(interface.FileObjectParser):
 
       except csv.Error as exception:
         parser_mediator.ProduceExtractionWarning(
-            'unable to parse line: {0:d} with error: {1!s}'.format(
-                line_number, exception))
+            f'unable to parse line: {line_number:d} with error: {exception!s}')
         break
 
   @abc.abstractmethod

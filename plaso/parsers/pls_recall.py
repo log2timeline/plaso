@@ -165,9 +165,9 @@ class PlsRecallParser(
         if file_offset == 0:
           raise errors.WrongParser('Unable to parse first record.')
 
-        parser_mediator.ProduceExtractionWarning((
-            'unable to parse record at offset: 0x{0:08x} with error: '
-            '{1!s}').format(file_offset, exception))
+        parser_mediator.ProduceExtractionWarning(
+            f'unable to parse record at offset: 0x{file_offset:08x} with '
+            f'error: {exception!s}')
         break
 
       if file_offset == 0 and not self._VerifyFirstRecord(
@@ -185,9 +185,9 @@ class PlsRecallParser(
         event_data.written_time = self._ParseTDateTimeValue(
             pls_record.last_written_time)
       except errors.ParseError:
-        parser_mediator.ProduceExtractionWarning((
-            'unable to parse TDateTime value of record at offset: 0x{0:08x} '
-            'with error: {1!s}').format(file_offset, exception))
+        parser_mediator.ProduceExtractionWarning(
+            f'unable to parse TDateTime value of record at offset: '
+            f'0x{file_offset:08x} with error: {exception!s}')
 
       parser_mediator.ProduceEventData(event_data)
 

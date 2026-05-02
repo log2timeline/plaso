@@ -54,8 +54,8 @@ class BasePlugin(object):
       ValueError: when there are unused keyword arguments.
     """
     if kwargs:
-      raise ValueError('Unused keyword arguments: {0:s}.'.format(
-          ', '.join(kwargs.keys())))
+      names = ', '.join(kwargs.keys())
+      raise ValueError(f'Unused keyword arguments: {names:s}')
 
   def UpdateChainAndProcess(self, parser_mediator, **kwargs):
     """Extracts events using a parser plugin and synchronizes the parser chain.

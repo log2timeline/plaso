@@ -88,7 +88,7 @@ class BaseParser(object):
     """
     super(BaseParser, self).__init__()
     self._default_plugin = None
-    self._default_plugin_name = '{0:s}_default'.format(self.NAME)
+    self._default_plugin_name = f'{self.NAME:s}_default'
     self._plugins_per_name = None
     self.EnablePlugins(self.ALL_PLUGINS)
 
@@ -106,9 +106,7 @@ class BaseParser(object):
     """
     plugin_name = plugin_class.NAME.lower()
     if plugin_name not in cls._plugin_classes:
-      raise KeyError(
-          'Plugin class not set for name: {0:s}.'.format(
-              plugin_class.NAME))
+      raise KeyError(f'Plugin class not set for name: {plugin_class.NAME:s}')
 
     del cls._plugin_classes[plugin_name]
 
@@ -196,9 +194,8 @@ class BaseParser(object):
     """
     plugin_name = plugin_class.NAME.lower()
     if plugin_name in cls._plugin_classes:
-      raise KeyError((
-          'Plugin class already set for name: {0:s}.').format(
-              plugin_class.NAME))
+      raise KeyError(
+          f'Plugin class already set for name: {plugin_class.NAME:s}')
 
     cls._plugin_classes[plugin_name] = plugin_class
 
@@ -305,14 +302,14 @@ class FileObjectParser(BaseParser):
     if (self._MINIMUM_FILE_SIZE is not None and
         file_size < self._MINIMUM_FILE_SIZE):
       raise errors.WrongParser(
-          'File size: {0:d} too small, minimum: {1:d}.'.format(
-              file_size, self._MINIMUM_FILE_SIZE))
+          f'File size: {file_size:d} too small, minimum: '
+          f'{self._MINIMUM_FILE_SIZE:d}')
 
     if (self._MAXIMUM_FILE_SIZE is not None and
         file_size > self._MAXIMUM_FILE_SIZE):
       raise errors.WrongParser(
-          'File size: {0:d} too large, maximum: {1:d}.'.format(
-              file_size, self._MAXIMUM_FILE_SIZE))
+          f'File size: {file_size:d} too large, maximum: '
+          f'{self._MAXIMUM_FILE_SIZE:d}')
 
     if self._INITIAL_FILE_OFFSET is not None:
       file_object.seek(self._INITIAL_FILE_OFFSET, os.SEEK_SET)

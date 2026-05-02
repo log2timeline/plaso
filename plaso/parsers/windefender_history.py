@@ -211,7 +211,7 @@ class WinDefenderHistoryParser(
       value_object = value.data
     else:
       parser_mediator.ProduceExtractionWarning(
-          'unknown value data type: {0!s}'.format(value.data_type))
+          f'unknown value data type: {value.data_type!s}')
       value_object = value.data
 
     return value_object
@@ -254,10 +254,9 @@ class WinDefenderHistoryParser(
 
       else:
         description = self._VALUE_DESCRIPTIONS[value_index_set].get(
-            value_index, 'UNKNOWN_{0:d}_{1:d}'.format(
-                value_index_set, value_index))
+            value_index, f'UNKNOWN_{value_index_set:d}_{value_index:d}')
 
-        value_string = '{0!s}'.format(value_object)
+        value_string = f'{value_object!s}'
 
         if description == 'Resource type':
           resource_name = value_string
