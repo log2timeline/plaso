@@ -1327,6 +1327,12 @@ attribute_mappings:
   description: 'Unknown Time'
 place_holder_event: true
 ---
+data_type: 'ivanti:connect_secure:vc0:record'
+attribute_mappings:
+- name: 'recorded_time'
+  description: 'Recorded Time'
+place_holder_event: true
+---
 data_type: 'teamviewer:application_log:entry'
 attribute_mappings:
 - name: 'recorded_time'
