@@ -97,7 +97,7 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
     for key, value in data_dict.items():
       if key in ('body', 'datetime', 'type', 'room', 'rooms', 'id'):
         continue
-      ret_list.append('{0:s} = {1!s}'.format(key, value))
+      ret_list.append(f'{key:s} = {value!s}')
 
     return ret_list
 
@@ -119,7 +119,7 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
       data_part, _, _ = first_part.partition(']')
     elif jquery_raw.startswith('//'):
       _, _, first_part = jquery_raw.partition('{')
-      data_part = '{{{0:s}'.format(first_part)
+      data_part = f'{{{first_part:s}'
     elif '({' in jquery_raw:
       _, _, first_part = jquery_raw.partition('(')
       data_part, _, _ = first_part.rpartition(')')
@@ -160,8 +160,8 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
       date_time.CopyFromDateTimeString(time_value)
     except ValueError as exception:
       parser_mediator.ProduceExtractionWarning(
-          'Unable to parse time string: {0:s} with error: {1!s}'.format(
-              time_value, exception))
+          f'Unable to parse time string: {time_value:s} with error: '
+          f'{exception!s}')
       return None
 
     return date_time
@@ -182,8 +182,7 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
       if body.startswith('//') and '{' in body:
         body_dict = self._ExtractJQuery(body)
         title, _, _ = body.partition('{')
-        body = '{0:s} <{1!s}>'.format(
-            title[2:], self._DictToListOfStrings(body_dict))
+        body = f'{title[2]:s} <{self._DictToListOfStrings(body_dict)!s}>'
     else:
       body = 'No text.'
 
@@ -241,7 +240,7 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
       description = 'Account Activity'
       _, _, activity = key_url.partition('#')
       if activity:
-        data['text'] = 'Action started: {0:s}'.format(activity)
+        data['text'] = f'Action started: {activity:s}'
       else:
         data['text'] = 'Unknown activity.'
 

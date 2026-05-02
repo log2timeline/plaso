@@ -186,36 +186,34 @@ class NTFSMFTParser(interface.FileObjectParser):
       event_data.access_time = self._GetDateTime(filetime)
     except OverflowError as exception:
       parser_mediator.ProduceExtractionWarning((
-          'unable to read the access timestamp from MFT attribute: '
-          '0x{0:08x} with error: {1!s}').format(
-              exception, mft_attribute.attribute_type))
+          f'unable to read the access timestamp from MFT attribute: '
+          f'0x{mft_attribute.attribute_type:08x} with error: {exception!s}'))
 
     try:
       filetime = mft_attribute.get_creation_time_as_integer()
       event_data.creation_time = self._GetDateTime(filetime)
     except OverflowError as exception:
       parser_mediator.ProduceExtractionWarning((
-          'unable to read the creation timestamp from MFT attribute: '
-          '0x{0:08x} with error: {1!s}').format(
-              mft_attribute.attribute_type, exception))
+          f'unable to read the creation timestamp from MFT attribute: '
+          f'0x{mft_attribute.attribute_type:08x} with error: {exception!s}'))
 
     try:
       filetime = mft_attribute.get_entry_modification_time_as_integer()
       event_data.entry_modification_time = self._GetDateTime(filetime)
     except OverflowError as exception:
       parser_mediator.ProduceExtractionWarning((
-          'unable to read the entry modification timestamp from MFT '
-          'attribute: 0x{0:08x} with error: {1!s}').format(
-              mft_attribute.attribute_type, exception))
+          f'unable to read the entry modification timestamp from MFT '
+          f'attribute: 0x{mft_attribute.attribute_type:08x} with error: '
+          f'{exception!s}'))
 
     try:
       filetime = mft_attribute.get_modification_time_as_integer()
       event_data.modification_time = self._GetDateTime(filetime)
     except OverflowError as exception:
       parser_mediator.ProduceExtractionWarning((
-          'unable to read the modification timestamp from MFT attribute: '
-          '0x{0:08x} with error: {1!s}').format(
-              mft_attribute.attribute_type, exception))
+          f'unable to read the modification timestamp from MFT attribute: '
+          f'0x{mft_attribute.attribute_type:08x} '
+          f'with error: {exception!s}'))
 
     parser_mediator.ProduceEventData(event_data)
 
@@ -229,9 +227,9 @@ class NTFSMFTParser(interface.FileObjectParser):
       mft_entry (pyfsntfs.file_entry): MFT entry.
       mft_attribute (pyfsntfs.attribute): MFT attribute.
     """
-    display_name = '$MFT: {0:d}-{1:d}'.format(
-        mft_entry.file_reference & 0xffffffffffff,
-        mft_entry.file_reference >> 48)
+    display_name = (
+        f'$MFT: {mft_entry.file_reference & 0xffffffffffff:d}-'
+        f'{mft_entry.file_reference >> 48:d}')
 
     if mft_attribute.droid_file_identifier:
       try:
@@ -241,9 +239,9 @@ class NTFSMFTParser(interface.FileObjectParser):
 
       except (TypeError, ValueError) as exception:
         parser_mediator.ProduceExtractionWarning((
-            'unable to read droid file identifier from attribute: 0x{0:08x} '
-            'with error: {1!s}').format(
-                mft_attribute.attribute_type, exception))
+            f'unable to read droid file identifier from attribute: '
+            f'0x{mft_attribute.attribute_type:08x} '
+            f'with error: {exception!s}'))
 
     if mft_attribute.birth_droid_file_identifier:
       try:
@@ -253,9 +251,9 @@ class NTFSMFTParser(interface.FileObjectParser):
 
       except (TypeError, ValueError) as exception:
         parser_mediator.ProduceExtractionWarning((
-            'unable to read birth droid file identifier from attribute: '
-            '0x{0:08x} with error: {1!s}').format(
-                mft_attribute.attribute_type, exception))
+            f'unable to read birth droid file identifier from attribute: '
+            f'0x{mft_attribute.attribute_type:08x} '
+            f'with error: {exception!s}'))
 
   def _ParseMFTEntry(self, parser_mediator, mft_entry):
     """Extracts data from a NFTS $MFT entry.
@@ -294,8 +292,8 @@ class NTFSMFTParser(interface.FileObjectParser):
 
       except IOError as exception:
         parser_mediator.ProduceExtractionWarning((
-            'unable to parse MFT attribute: {0:d} with error: {1!s}').format(
-                attribute_index, exception))
+            f'unable to parse MFT attribute: {attribute_index:d} '
+            f'with error: {exception!s}'))
 
     if standard_information_attribute:
       path_hints_with_data_streams = []
@@ -310,8 +308,7 @@ class NTFSMFTParser(interface.FileObjectParser):
             if not data_stream_name:
               path_hint_with_data_stream = path_hint
             else:
-              path_hint_with_data_stream = '{0:s}:{1:s}'.format(
-                  path_hint, data_stream_name)
+              path_hint_with_data_stream = f'{path_hint:s}:{data_stream_name:s}'
 
             path_hints_with_data_streams.append(path_hint_with_data_stream)
 
@@ -321,8 +318,9 @@ class NTFSMFTParser(interface.FileObjectParser):
             path_hints_with_data_streams)
       except IOError as exception:
         parser_mediator.ProduceExtractionWarning((
-            'unable to parse MFT attribute: {0:d} with error: {1!s}').format(
-                standard_information_attribute_index, exception))
+            f'unable to parse MFT attribute: '
+            f'{standard_information_attribute_index:d} '
+            f'with error: {exception!s}'))
 
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses a NTFS $MFT metadata file-like object.
@@ -338,7 +336,7 @@ class NTFSMFTParser(interface.FileObjectParser):
       mft_metadata_file.open_file_object(file_object)
     except IOError as exception:
       parser_mediator.ProduceExtractionWarning(
-          'unable to open $MFT file with error: {0!s}'.format(exception))
+          f'unable to open $MFT file with error: {exception!s}')
       return
 
     for entry_index in range(0, mft_metadata_file.number_of_file_entries):
@@ -350,8 +348,8 @@ class NTFSMFTParser(interface.FileObjectParser):
 
       except IOError as exception:
         parser_mediator.ProduceExtractionWarning((
-            'unable to parse MFT entry: {0:d} with error: {1!s}').format(
-                entry_index, exception))
+            f'unable to parse MFT entry: {entry_index:d} '
+            f'with error: {exception!s}'))
 
     mft_metadata_file.close()
 
@@ -411,8 +409,8 @@ class NTFSUsnJrnlParser(
             usn_record_data, current_offset, usn_record_map)
       except (ValueError, errors.ParseError) as exception:
         raise errors.ParseError((
-            'Unable to parse USN record at offset: 0x{0:08x} with error: '
-            '{1!s}').format(current_offset, exception))
+            f'Unable to parse USN record at offset: 0x{current_offset:08x} '
+            f'with error: {exception!s}'))
 
       # Per MSDN we need to use name offset for forward compatibility.
       name_offset = usn_record.name_offset - 60
@@ -423,9 +421,9 @@ class NTFSUsnJrnlParser(
       except (UnicodeDecodeError, UnicodeEncodeError) as exception:
         name_string = utf16_stream.decode('utf-16-le', errors='replace')
         parser_mediator.ProduceExtractionWarning((
-            'unable to decode USN record name string with error: '
-            '{0:s}. Characters that cannot be decoded will be replaced '
-            'with "?" or "\\ufffd".').format(exception))
+            f'unable to decode USN record name string with error: '
+            f'{exception!s}. Characters that cannot be decoded will be '
+            f'replaced with "?" or "\\ufffd".'))
 
       event_data = NTFSUSNChangeEventData()
       event_data.file_attribute_flags = usn_record.file_attribute_flags
@@ -455,7 +453,7 @@ class NTFSUsnJrnlParser(
       fsntfs_volume.open_file_object(file_object)
     except IOError as exception:
       parser_mediator.ProduceExtractionWarning(
-          'unable to open NTFS volume with error: {0!s}'.format(exception))
+          f'unable to open NTFS volume with error: {exception!s}')
       return
 
     try:

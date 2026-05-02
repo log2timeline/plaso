@@ -139,7 +139,7 @@ class WinJobParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
             system_time_tuple=system_time_tuple)
       except ValueError:
         parser_mediator.ProduceExtractionWarning(
-            'invalid last run time: {0!s}'.format(system_time_tuple))
+            f'invalid last run time: {system_time_tuple!s}')
 
     return date_time
 
@@ -190,7 +190,7 @@ class WinJobParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
       except ValueError:
         parser_mediator.ProduceExtractionWarning(
-            'invalid trigger end time: {0!s}'.format(time_elements_tuple))
+            f'invalid trigger end time: {time_elements_tuple!s}')
 
     return date_time
 
@@ -222,7 +222,7 @@ class WinJobParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
       except ValueError:
         parser_mediator.ProduceExtractionWarning(
-            'invalid trigger start time: {0!s}'.format(time_elements_tuple))
+            f'invalid trigger start time: {time_elements_tuple!s}')
 
     return date_time
 
@@ -245,18 +245,18 @@ class WinJobParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
           file_object, 0, fixed_section_data_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.WrongParser(
-          'Unable to parse fixed-length data section with error: {0!s}'.format(
-              exception))
+          f'Unable to parse fixed-length data section with error: '
+          f'{exception!s}')
 
     if not fixed_length_section.product_version in self._PRODUCT_VERSIONS:
       raise errors.WrongParser(
-          'Unsupported product version in: 0x{0:04x}'.format(
-              fixed_length_section.product_version))
+          f'Unsupported product version in: '
+          f'0x{fixed_length_section.product_version:04x}')
 
     if not fixed_length_section.format_version == 1:
       raise errors.WrongParser(
-          'Unsupported format version in: {0:d}'.format(
-              fixed_length_section.format_version))
+          f'Unsupported format version in: '
+          f'{fixed_length_section.format_version!s}')
 
     variable_section_data_map = self._GetDataTypeMap(
         'job_variable_length_data_section')
@@ -265,9 +265,9 @@ class WinJobParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       variable_length_section, data_size = self._ReadStructureFromFileObject(
           file_object, file_offset, variable_section_data_map)
     except (ValueError, errors.ParseError) as exception:
-      raise errors.WrongParser((
-          'Unable to parse variable-length data section with error: '
-          '{0!s}').format(exception))
+      raise errors.WrongParser(
+          f'Unable to parse variable-length data section with error: '
+          f'{exception!s}')
 
     file_offset += data_size
 
@@ -284,9 +284,9 @@ class WinJobParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         trigger, data_size = self._ReadStructureFromFileObject(
             file_object, file_offset, trigger_data_map)
       except (ValueError, errors.ParseError) as exception:
-        parser_mediator.ProduceExtractionWarning((
-            'unable to parse trigger: {0:d} with error: {1!s}').format(
-                trigger_index, exception))
+        parser_mediator.ProduceExtractionWarning(
+            f'unable to parse trigger: {trigger_index:d} with '
+            f'error: {exception!s}')
         break
 
       file_offset += data_size
