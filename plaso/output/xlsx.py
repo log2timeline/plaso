@@ -155,9 +155,8 @@ class XLSXOutputModule(interface.OutputModule):
       raise ValueError('Missing filename.')
 
     if os.path.isfile(path):
-      raise IOError((
-          'Unable to use an already existing file for output '
-          f'[{path:s}]'))
+      raise IOError(
+          f'Unable to use an already existing file for output [{path:s}]')
 
     options = {
         'constant_memory': True,

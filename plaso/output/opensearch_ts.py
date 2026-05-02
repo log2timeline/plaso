@@ -65,8 +65,7 @@ class OpenSearchTimesketchOutputModule(
       timeline_identifier (int): timeline identifier.
     """
     self._timeline_identifier = timeline_identifier
-    logger.info(
-        f'Timeline identifier: {self._timeline_identifier:d}')
+    logger.info(f'Timeline identifier: {self._timeline_identifier:d}')
 
   def WriteHeader(self, output_mediator):
     """Connects to the OpenSearch server and creates the index.
