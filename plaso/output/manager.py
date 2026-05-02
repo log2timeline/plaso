@@ -28,9 +28,7 @@ class OutputManager(object):
       class_dict = cls._output_classes
 
     if output_class_name not in class_dict:
-      raise KeyError(
-          'Output class not set for name: {0:s}.'.format(
-              output_class.NAME))
+      raise KeyError(f'Output class not set for name: {output_class.NAME!s}')
 
     del class_dict[output_class_name]
 

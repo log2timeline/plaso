@@ -43,13 +43,13 @@ class KMLOutputModule(rawpy.NativePythonOutputModule):
 
     description_xml_element = ElementTree.SubElement(
         placemark_xml_element, 'description')
-    description_xml_element.text = '{0:s}\n'.format(description_text)
+    description_xml_element.text = f'{description_text:s}\n'
 
     point_xml_element = ElementTree.SubElement(placemark_xml_element, 'Point')
 
     coordinates_xml_element = ElementTree.SubElement(
         point_xml_element, 'coordinates')
-    coordinates_xml_element.text = '{0!s},{1!s}'.format(longitude, latitude)
+    coordinates_xml_element.text = f'{longitude!s},{latitude!s}'
 
     # Note that ElementTree.tostring() will appropriately escape the input data.
     output_text = ElementTree.tostring(placemark_xml_element)
@@ -69,11 +69,9 @@ class KMLOutputModule(rawpy.NativePythonOutputModule):
       output_mediator (OutputMediator): mediates interactions between output
           modules and other components, such as storage and dfVFS.
     """
-    xml_string = (
-        '<?xml version="1.0" encoding="{0:s}"?>'
-        '<kml xmlns="http://www.opengis.net/kml/2.2"><Document>'.format(
-            output_mediator.encoding))
-    self.WriteText(xml_string)
+    self.WriteText((
+        f'<?xml version="1.0" encoding="{output_mediator.encoding:s}"?>'
+        f'<kml xmlns="http://www.opengis.net/kml/2.2"><Document>'))
 
 
 manager.OutputManager.RegisterOutput(KMLOutputModule)

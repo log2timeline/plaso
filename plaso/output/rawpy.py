@@ -66,17 +66,18 @@ class NativePythonOutputModule(text_file.TextFileOutputModule):
           '_event_identifier', '_event_tag_labels', '_timestamp', 'path_spec'):
         continue
 
-      field_string = '  {{{0!s}}} {1!s}'.format(field_name, field_value)
+      field_string = f'  {{{field_name!s}}} {field_value!s}'
 
       if field_name in self._RESERVED_FIELDS:
         reserved_attributes.append(field_string)
       else:
         additional_attributes.append(field_string)
 
+    timestamp_value = field_values["_timestamp"]
     lines_of_text = [
         '+-' * 40,
         '[Timestamp]:',
-        '  {0:s}'.format(field_values['_timestamp'])]
+        f'  {timestamp_value:s}']
 
     path_specification = field_values.get('path_spec', None)
     if path_specification:
@@ -84,7 +85,7 @@ class NativePythonOutputModule(text_file.TextFileOutputModule):
           '',
           '[Pathspec]:'])
       lines_of_text.extend([
-          '  {0:s}'.format(line)
+          f'  {line:s}'
           for line in path_specification.comparable.split('\n')])
 
       # Remove additional empty line.
@@ -102,12 +103,11 @@ class NativePythonOutputModule(text_file.TextFileOutputModule):
 
     event_tag_labels = field_values.get('_event_tag_labels', None)
     if event_tag_labels:
-      labels = ', '.join([
-          '\'{0:s}\''.format(label) for label in event_tag_labels])
+      labels_string = ', '.join(f'\'{label:s}\'' for label in event_tag_labels)
       lines_of_text.extend([
           '',
           '[Tag]:',
-          '  {{labels}} [{0:s}]'.format(labels)])
+          f'  {{labels}} [{labels_string:s}]'])
 
     lines_of_text.append('')
 
@@ -163,9 +163,9 @@ class NativePythonOutputModule(text_file.TextFileOutputModule):
       if isinstance(attribute_value, bytes):
         attribute_value = attribute_value.decode('utf-8', 'replace')
         logger.warning(
-            'Found bytes value for attribute "{0:s}" for data type: '
-            '{1!s}. Value was converted to UTF-8: "{2:s}"'.format(
-                attribute_name, event_data.data_type, attribute_value))
+            f'Found bytes value for attribute "{attribute_name:s}" for data '
+            f'type: {event_data.data_type!s}. Value was converted to UTF-8: '
+            f'"{attribute_value:s}"')
 
       # Output _parser_chain as parser for backwards compatibility.
       if attribute_name == '_parser_chain':
