@@ -194,8 +194,7 @@ class MSIECFParser(interface.FileObjectParser):
 
       except IOError as exception:
         parser_mediator.ProduceExtractionWarning(
-            'Unable to parse item: {0:d} with error: {1!s}'.format(
-                item_index, exception))
+            f'Unable to parse item: {item_index:d} with error: {exception!s}')
 
     for item_index in range(0, msiecf_file.number_of_recovered_items):
       try:
@@ -214,8 +213,8 @@ class MSIECFParser(interface.FileObjectParser):
 
       except IOError as exception:
         parser_mediator.ProduceRecoveryWarning(
-            'Unable to parse recovered item: {0:d} with error: {1!s}'.format(
-                item_index, exception))
+            f'Unable to parse recovered item: {item_index:d} with error: '
+            f'{exception!s}')
 
   def _ParseRedirected(
       self, parser_mediator, msiecf_item, recovered=False):
@@ -384,7 +383,7 @@ class MSIECFParser(interface.FileObjectParser):
       msiecf_file.open_file_object(file_object)
     except IOError as exception:
       parser_mediator.ProduceExtractionWarning(
-          'unable to open file with error: {0!s}'.format(exception))
+          f'unable to open file with error: {exception!s}')
       return
 
     try:

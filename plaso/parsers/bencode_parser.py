@@ -173,9 +173,9 @@ class BencodeParser(interface.FileObjectParser):
     try:
       bencode_file.Open(file_object)
     except IOError as exception:
-      raise errors.WrongParser(
-          '[{0:s}] unable to parse file: {1:s} with error: {2!s}'.format(
-              self.NAME, display_name, exception))
+      raise errors.WrongParser((
+          f'[{self.NAME:s}] unable to parse file: {display_name:s} '
+          f'with error: {exception!s}'))
 
     if bencode_file.IsEmpty():
       parser_mediator.ProduceExtractionWarning('missing decoded Bencode values')
@@ -196,12 +196,13 @@ class BencodeParser(interface.FileObjectParser):
           parser_mediator.SampleFormatCheckStopTiming(profiling_name)
 
         if not result:
-          logger.debug('Skipped parsing file: {0:s} with plugin: {1:s}'.format(
-              display_name, plugin_name))
+          logger.debug(
+              f'Skipped parsing file: {display_name:s} with plugin: '
+              f'{plugin_name:s}')
           continue
 
-        logger.debug('Parsing file: {0:s} with plugin: {1:s}'.format(
-            display_name, plugin_name))
+        logger.debug(
+            f'Parsing file: {display_name:s} with plugin: {plugin_name:s}')
 
         parser_mediator.SampleStartTiming(profiling_name)
 
@@ -211,8 +212,8 @@ class BencodeParser(interface.FileObjectParser):
 
         except Exception as exception:  # pylint: disable=broad-except
           parser_mediator.ProduceExtractionWarning((
-              'plugin: {0:s} unable to parse Bencode file with error: '
-              '{1!s}').format(plugin_name, exception))
+              f'plugin: {plugin_name:s} unable to parse Bencode file with '
+              f'error: {exception!s}'))
 
         finally:
           parser_mediator.SampleStopTiming(profiling_name)

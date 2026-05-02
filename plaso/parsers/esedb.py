@@ -111,7 +111,7 @@ class ESEDBParser(interface.FileObjectParser):
       database.Open(file_object)
     except (IOError, ValueError) as exception:
       parser_mediator.ProduceExtractionWarning(
-          'unable to open file with error: {0!s}'.format(exception))
+          f'unable to open file with error: {exception!s}')
       return
 
     display_name = parser_mediator.GetDisplayName()
@@ -133,12 +133,13 @@ class ESEDBParser(interface.FileObjectParser):
           parser_mediator.SampleFormatCheckStopTiming(profiling_name)
 
         if not result:
-          logger.debug('Skipped parsing file: {0:s} with plugin: {1:s}'.format(
-              display_name, plugin_name))
+          logger.debug(
+              f'Skipped parsing file: {display_name:s} with plugin: '
+              f'{plugin_name:s}')
           continue
 
-        logger.debug('Parsing file: {0:s} with plugin: {1:s}'.format(
-            display_name, plugin_name))
+        logger.debug(f'Parsing file: {display_name:s} with plugin: '
+                     f'{plugin_name:s}')
 
         parser_mediator.SampleStartTiming(profiling_name)
 
@@ -148,8 +149,8 @@ class ESEDBParser(interface.FileObjectParser):
 
         except Exception as exception:  # pylint: disable=broad-except
           parser_mediator.ProduceExtractionWarning((
-              'plugin: {0:s} unable to parse ESE database with error: '
-              '{1!s}').format(plugin_name, exception))
+              f'plugin: {plugin_name:s} unable to parse ESE database '
+              f'with error: {exception!s}'))
 
         finally:
           parser_mediator.SampleStopTiming(profiling_name)
