@@ -1055,6 +1055,23 @@ short_source: 'LOG'
 source: 'Systemd journal'
 ---
 type: 'conditional'
+data_type: 'ivanti:connect_secure:vc0:record'
+message:
+- '[{message_code}]'
+- '{log_file_type}'
+- '{body}'
+- 'Hostname: {hostname}'
+- 'Realm: {realm}'
+- 'IP address: {ip_address}'
+- 'Username: {username}'
+short_message:
+- '[{message_code}]'
+- '{log_file_type}'
+- '{body}'
+source: 'Ivanti Connect Secure VC0 log'
+short_source: 'LOG'
+---
+type: 'conditional'
 data_type: 'teamviewer:application_log:entry'
 message:
 - '[pid: {process_identifier}]'
