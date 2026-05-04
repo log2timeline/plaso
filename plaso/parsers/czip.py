@@ -46,8 +46,8 @@ class CompoundZIPParser(interface.FileObjectParser):
     # many different exceptions.
     except Exception as exception:  # pylint: disable=broad-except
       raise errors.WrongParser(
-          '[{0:s}] unable to parse file: {1:s} with error: {2!s}'.format(
-              self.NAME, display_name, exception))
+          f'[{self.NAME:s}] unable to parse file: {display_name:s} '
+          f'with error: {exception!s}')
 
     for plugin_name, plugin in self._plugins_per_name.items():
       if parser_mediator.abort:

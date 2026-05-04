@@ -66,8 +66,8 @@ class OneDriveLogFileParser(
   _DEFINITION_FILE = os.path.join(
       os.path.dirname(__file__), 'onedrive.yaml')
   _DELIMITERS = [r'%', r'\\', r'/', r'://', r'\?', r':', r'\.']
-  _DELIMITERS_REGEX_PATTERN = '({0:s})'.format('|'.join(_DELIMITERS))
-  _DELIMITERS_REGEX = re.compile(_DELIMITERS_REGEX_PATTERN)
+  _DELIMITERS_STRING = '|'.join(_DELIMITERS)
+  _DELIMITERS_REGEX = re.compile(f"({_DELIMITERS_STRING:s})")
   _FIRST_DATA_BLOCK_OFFSET = 256
   _GENERAL_KEYSTORE_FILE_NAME = 'general.keystore'
   _MAXIMUM_FILE_SIZE = 5 * 1024 * 1024
@@ -135,23 +135,22 @@ class OneDriveLogFileParser(
     json_data = json.loads(general_keystore_data)
     if not json_data or not isinstance(json_data, list):
       parser_mediator.ProduceExtractionWarning(
-          'Unable to parse OneDrive keystore file: {0:s}'.format(
-              file_entry.name))
+          f'Unable to parse OneDrive keystore file: {file_entry.name!s}')
       return None
 
     key = json_data[0].get('Key', None)
     if not key:
       parser_mediator.ProduceExtractionWarning(
-          'OneDrive keystore file: {0:s} does not contain a key value.'.format(
-              file_entry.name))
+          f'OneDrive keystore file: {file_entry.name!s} does not contain a key '
+          f'value.')
       return None
 
     decoded_key = base64.b64decode(key)
 
     if len(decoded_key) != self._AES_KEY_LENGTH:
       parser_mediator.ProduceExtractionWarning((
-          'OneDrive keystore file: {0:s} does not contain a key value of '
-          'size: 32.').format(file_entry.name))
+          f'OneDrive keystore file: {file_entry.name!s} does not contain a key '
+          f'value of size: 32.'))
       return None
 
     return decoded_key
@@ -267,9 +266,7 @@ class OneDriveLogFileParser(
           data = self._RemovePKCS7Padding(plaintext, block_size=128)
         except ValueError as exception:
           parser_mediator.ProduceExtractionWarning(
-              'unable to remove PKCS#7 padding with error: {0!s}'.format(
-                  exception))
-
+              f'unable to remove PKCS#7 padding with error: {exception!s}')
           output_string_parts.append(token)
           continue
 
@@ -277,8 +274,7 @@ class OneDriveLogFileParser(
           decoded_string = data.decode('utf-16-le')
         except UnicodeError as exception:
           parser_mediator.ProduceExtractionWarning(
-              'unable to decode string with error: {0!s}'.format(exception))
-
+              f'unable to decode string with error: {exception!s}')
           output_string_parts.append(token)
           continue
 
@@ -363,15 +359,15 @@ class OneDriveLogFileParser(
 
     if padding_size <= 0 or padding_size > block_size:
       raise ValueError(
-          'Invalid padding size: {0:d} value out of bounds'.format(
-              padding_size))
+          f'Invalid padding size: {padding_size:d} value out of bounds')
 
-    for byte_index in range(2, padding_size + 1):
-      check_padding_size = padded_data[-byte_index]
+    for padding_value in range(2, padding_size + 1):
+      byte_index = -padding_value
+      check_padding_size = padded_data[byte_index]
       if check_padding_size != padding_size:
         raise ValueError((
-            'Mismatch in padding size: {0:d} and: {1:d} at byte index: '
-            '{2:d}').format(padding_size, check_padding_size, -byte_index))
+            f'Mismatch in padding size: {padding_size:d} and: '
+            f'{check_padding_size:d} at byte index: {byte_index:d}'))
 
     return padded_data[:-padding_size]
 
@@ -397,8 +393,8 @@ class OneDriveLogFileParser(
           file_object, 0, onedrivelog_file_header_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.WrongParser(
-          'Unable to parse OneDrive Log file header with error: {0!s}'.format(
-              exception))
+          f'Unable to parse OneDrive Log file header with error: '
+          f'{exception!s}')
 
     # skip to the first data block offset and check the signature
     file_object.seek(self._FIRST_DATA_BLOCK_OFFSET, os.SEEK_SET)
@@ -414,7 +410,7 @@ class OneDriveLogFileParser(
             raw_data_block, wbits = zlib.MAX_WBITS | 16)
       except zlib.error as zlib_error:
         raise errors.ParseError(
-            'Error decompressing data block: {0!s}'.format(str(zlib_error)))
+            f'Error decompressing data block: {zlib_error!s}')
 
       data_block_stream = io.BytesIO(raw_data_block)
       data_block_size = len(data_block_stream.getbuffer())
@@ -457,8 +453,8 @@ class OneDriveLogFileParser(
                 data_block_stream, stream_offset, odl_data_block_header_map))
       except (ValueError, errors.ParseError) as exception:
         parser_mediator.ProduceExtractionWarning((
-            'unable to parse data block header at stream offset: 0x{0:08x} '
-            'with error: {1!s}').format(stream_offset, exception))
+            f'unable to parse data block header at stream offset: '
+            f'0x{stream_offset:08x} with error: {exception!s}'))
         return
 
       stream_offset += header_data_size
@@ -468,8 +464,8 @@ class OneDriveLogFileParser(
             data_block_stream, stream_offset, odl_data_block_map)
       except (ValueError, errors.ParseError) as exception:
         parser_mediator.ProduceExtractionWarning((
-            'unable to parse data block at stream offset: 0x{0:08x} with '
-            'error: {1!s}').format(stream_offset, exception))
+            f'unable to parse data block at stream offset: '
+            f'0x{stream_offset:08x} with error: {exception!s}'))
         return
 
       # read the raw function parameter data
