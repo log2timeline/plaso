@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Windows Registry custom event formatter helpers."""
 
 from plaso.formatters import interface

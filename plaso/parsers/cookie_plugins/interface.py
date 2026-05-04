@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This file contains an interface for browser cookie plugins."""
 
 import abc

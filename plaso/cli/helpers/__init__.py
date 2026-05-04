@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This file imports Python modules that register CLI helpers."""
 
 from plaso.cli.helpers import analysis_plugins

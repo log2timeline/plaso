@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The VirusTotal analysis plugin CLI arguments helper."""
 
 from plaso.lib import errors

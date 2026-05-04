@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Imports for the plist parser plugins."""
 
 from plaso.parsers.plist_plugins import airport

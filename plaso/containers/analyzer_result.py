@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Analyzer result attribute container."""
 
 from acstore.containers import interface

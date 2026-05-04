@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parser for the Microsoft User Access Logging (UAL) ESE database.
 
 User Access Logging (UAL) is present in Windows Server editions starting with

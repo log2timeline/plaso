@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parser for the Sleuthkit (TSK) bodyfile format.
 
 Sleuthkit version 3 format:

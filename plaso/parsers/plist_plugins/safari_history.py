@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Plist parser plugin for Safari history plist files."""
 
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time

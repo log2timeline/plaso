@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The artifact knowledge base object.
 
 The knowledge base is filled by user provided input and the pre-processing

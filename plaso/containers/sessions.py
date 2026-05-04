@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Session related attribute container definitions."""
 
 import time

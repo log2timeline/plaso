@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Tests for MacOS notes plugin."""
 
 import unittest

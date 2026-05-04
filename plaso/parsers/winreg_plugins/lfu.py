@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Plug-in to collect the Less Frequently Used (LFU) keys."""
 
 from plaso.containers import events

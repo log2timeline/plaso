@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Preprocessor."""
 
 from plaso.preprocessors import generic

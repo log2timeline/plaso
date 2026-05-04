@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The engine sub module logger."""
 
 import logging

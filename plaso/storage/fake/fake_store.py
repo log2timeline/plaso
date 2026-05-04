@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Fake (in-memory only) store for testing."""
 
 from acstore import fake_store as acstore_fake_store

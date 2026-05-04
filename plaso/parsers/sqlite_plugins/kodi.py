@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """SQLite parser plugin for Kodi videos database files."""
 
 from plaso.containers import events

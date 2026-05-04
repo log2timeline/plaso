@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This file contains basic interface for plugins within Plaso.
 
 This library serves a basis for all plugins in Plaso, whether that are Windows

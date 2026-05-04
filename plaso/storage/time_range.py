@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Storage time range objects."""
 
 

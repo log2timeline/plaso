@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The multi-processing sub module logger."""
 
 import logging

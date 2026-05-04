@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Text file parser plugin for Container Runtime Interface (CRI) log format.
 
 This is a text-based log format used in kubernetes/GKE.

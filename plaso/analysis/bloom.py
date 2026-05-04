@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Analysis plugin to look up file hashes in bloom database."""
 
 import flor  # pylint: disable=import-error

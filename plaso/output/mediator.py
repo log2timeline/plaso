@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The output mediator object."""
 
 import glob

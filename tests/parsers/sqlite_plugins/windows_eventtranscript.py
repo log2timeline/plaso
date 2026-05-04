@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Tests for the Windows Diagnosis EventTranscript database plugin."""
 
 import unittest

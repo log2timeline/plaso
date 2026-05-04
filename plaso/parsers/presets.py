@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The parser and parser plugin presets."""
 
 import yaml

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parser for Windows Recycle files, INFO2 and $I/$R pairs."""
 
 import os

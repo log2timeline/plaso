@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Redis-based storage writer."""
 
 from plaso.storage import writer

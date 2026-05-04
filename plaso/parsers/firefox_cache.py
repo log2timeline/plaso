@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Implements a parser for Firefox cache 1 and 2 files."""
 
 import collections

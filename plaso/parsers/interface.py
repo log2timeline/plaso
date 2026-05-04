@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The parsers and plugins interface classes."""
 
 import abc

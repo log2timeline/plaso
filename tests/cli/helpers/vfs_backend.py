@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Tests for the VFS back-end CLI arguments helper."""
 
 import sys

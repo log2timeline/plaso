@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This file contains classes used for preprocessing in plaso."""
 
 import abc

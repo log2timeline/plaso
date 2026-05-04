@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """MountPoints2 Windows Registry parser plugin."""
 
 from plaso.containers import events

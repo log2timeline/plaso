@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """SQLite parser plugin for Google Drive snapshot database files."""
 
 from dfdatetime import posix_time as dfdatetime_posix_time

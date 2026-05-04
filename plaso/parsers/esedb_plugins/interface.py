@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This file contains the interface for ESE database plugins."""
 
 import os

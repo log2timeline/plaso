@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Text parser plugin for Apache access log (access.log) files.
 
 Parser based on the two default apache formats, common and combined log format

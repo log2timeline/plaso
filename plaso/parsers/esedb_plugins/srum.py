@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parser for the System Resource Usage Monitor (SRUM) ESE database."""
 
 import pyfwnt

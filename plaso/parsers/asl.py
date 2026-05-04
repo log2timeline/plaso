@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The Apple System Log (ASL) file parser."""
 
 import os

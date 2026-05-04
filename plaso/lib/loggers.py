@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Logging related classes and functions."""
 
 import gzip

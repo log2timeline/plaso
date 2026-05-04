@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Warning attribute containers."""
 
 from acstore.containers import interface

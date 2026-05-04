@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Extractor classes, used to extract information from sources."""
 
 import copy

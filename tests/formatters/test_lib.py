@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Event formatter related functions and classes for testing."""
 
 from plaso.output import mediator

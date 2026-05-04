@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Tests for the line-based JSON (JSON-L) log format parser."""
 
 import unittest

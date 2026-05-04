@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This file contains a class for managing digest hashers for Plaso."""
 
 

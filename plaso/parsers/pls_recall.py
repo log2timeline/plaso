@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parser for PL/SQL Developer Recall files."""
 
 import os

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The event filters CLI arguments helper."""
 
 from dfdatetime import time_elements as dfdatetime_time_elements

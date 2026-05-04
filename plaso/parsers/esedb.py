@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parser for Extensible Storage Engine (ESE) database files (EDB)."""
 
 import pyesedb

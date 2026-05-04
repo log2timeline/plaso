@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Helper for parser and plugin filter expressions."""
 
 

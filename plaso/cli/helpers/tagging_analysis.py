@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The tagging analysis plugin CLI arguments helper."""
 
 import os

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Manages custom event formatter helpers."""
 
 

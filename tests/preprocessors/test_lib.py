@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Preprocessing related functions and classes for testing."""
 
 from artifacts import reader as artifacts_reader

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """JSON-L parser plugin for Docker layer configuration files."""
 
 from plaso.containers import events

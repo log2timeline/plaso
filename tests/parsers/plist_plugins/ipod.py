@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Tests for the iPod, iPad and iPhone storage plist plugin."""
 
 import unittest

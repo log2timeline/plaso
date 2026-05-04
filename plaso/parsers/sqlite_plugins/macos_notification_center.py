@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """SQLite parser plugin for MacOS Notification Center database files."""
 
 import plistlib

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Text parser plugin for XChat log files.
 
 Information updated 24 July 2013.

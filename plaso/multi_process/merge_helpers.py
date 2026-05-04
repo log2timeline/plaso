@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Classes to assist in merging attribute containers of tasks."""
 
 from plaso.containers import analysis_results

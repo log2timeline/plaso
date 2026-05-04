@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Windows drivers and services Registry key parser plugin."""
 
 from plaso.containers import events

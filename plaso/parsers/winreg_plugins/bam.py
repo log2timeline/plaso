@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Windows Registry plugin to parse the Background Activity Moderator keys."""
 
 import os

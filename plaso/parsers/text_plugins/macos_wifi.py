@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Text parser plugin for MacOS Wi-Fi log (wifi.log) files."""
 
 import re

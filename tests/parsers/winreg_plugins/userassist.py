@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Tests for the UserAssist Windows Registry plugin."""
 
 import unittest

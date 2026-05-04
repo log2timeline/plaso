@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Plug-in to collect information about the Windows version."""
 
 from dfdatetime import posix_time as dfdatetime_posix_time

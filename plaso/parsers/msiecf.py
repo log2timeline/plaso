@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parser for Microsoft Internet Explorer (MSIE) Cache Files (CF)."""
 
 import pymsiecf

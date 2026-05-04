@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The filters shared test library."""
 
 from plaso.filters import event_filter

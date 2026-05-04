@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Tests for the Windows 10 push notification SQLite database plugin."""
 
 import unittest

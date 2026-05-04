@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Analysis plugin to look up file hashes in nsrlsvr and tag events."""
 
 import socket

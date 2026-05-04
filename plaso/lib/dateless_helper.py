@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The date-less log format helper mix-in."""
 
 from dfvfs.lib import definitions as dfvfs_definitions

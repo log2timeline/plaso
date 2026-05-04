@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The VFS back-end CLI arguments helper."""
 
 from plaso.cli import tools

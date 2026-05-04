@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Shared functionality for OpenSearch output modules."""
 
 import logging

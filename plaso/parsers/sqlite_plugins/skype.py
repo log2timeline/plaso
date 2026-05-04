@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """SQLite parser plugin for Skype database files."""
 
 from dfdatetime import posix_time as dfdatetime_posix_time

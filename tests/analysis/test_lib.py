@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Analysis plugin related functions and classes for testing."""
 
 from plaso.analysis import mediator as analysis_mediator

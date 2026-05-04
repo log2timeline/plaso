@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Trie structure for storing artifact paths."""
 
 import fnmatch

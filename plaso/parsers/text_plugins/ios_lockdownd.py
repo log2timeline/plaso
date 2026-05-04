@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Text parser plugin for iOS lockdown daemon log files (ios_lockdownd.log)."""
 
 import pyparsing

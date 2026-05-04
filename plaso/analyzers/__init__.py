@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This file imports Python modules that register analyzers."""
 
 from plaso.analyzers import hashing_analyzer

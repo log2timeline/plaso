@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Sphinx build configuration file."""
 
 import os

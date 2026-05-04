@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """A simple dump information gathered from a plaso storage container.
 
 pinfo stands for Plaso INniheldurFleiriOrd or plaso contains more words.

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Tests for the Windows Restore Point (rp.log) file parser."""
 
 import unittest

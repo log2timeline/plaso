@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parser for Java Cache IDX files."""
 
 # TODO:

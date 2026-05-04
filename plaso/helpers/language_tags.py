@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Language tags helper.
 
 For a list of language tags see:

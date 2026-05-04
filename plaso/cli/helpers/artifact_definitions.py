@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The artifact definitions CLI arguments helper."""
 
 import os

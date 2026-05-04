@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This file contains an Outlook search MRU Registry parser."""
 
 from plaso.containers import events

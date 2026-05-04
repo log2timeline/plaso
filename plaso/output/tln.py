@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Output module for the TLN format.
 
 For documentation on the TLN format see:

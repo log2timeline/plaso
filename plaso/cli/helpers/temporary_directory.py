@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The temporary directory CLI arguments helper."""
 
 import os

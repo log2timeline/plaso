@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parsers for Opera Browser history files."""
 
 import os

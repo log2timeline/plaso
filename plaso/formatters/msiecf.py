@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """MSIE cache file custom event formatter helpers."""
 
 from plaso.formatters import interface

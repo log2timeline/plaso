@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Fake (in-memory only) storage writer for testing."""
 
 from plaso.lib import definitions

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """YAML-based formatters file."""
 
 import yaml

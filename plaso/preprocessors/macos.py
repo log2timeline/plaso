@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """MacOS preprocessor plugins."""
 
 import abc

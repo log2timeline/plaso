@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This file imports Python modules that register output modules."""
 
 from plaso.output import dynamic

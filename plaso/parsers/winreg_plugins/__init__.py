@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Imports for the Windows Registry parser."""
 
 from plaso.parsers.winreg_plugins import amcache

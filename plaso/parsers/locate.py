@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parser for locate database (updatedb) files."""
 
 import os

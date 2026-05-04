@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """SQLite parser plugin for Google Chrome cookies database files."""
 
 from dfdatetime import webkit_time as dfdatetime_webkit_time

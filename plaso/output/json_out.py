@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Output module that saves data into a JSON format."""
 
 import json

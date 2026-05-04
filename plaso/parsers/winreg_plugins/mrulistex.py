@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Windows Registry plugin to parse the MRUListEx Registry values.
 
 Also see:

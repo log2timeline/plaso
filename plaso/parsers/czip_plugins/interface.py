@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Interface for compound ZIP file plugins."""
 
 import abc

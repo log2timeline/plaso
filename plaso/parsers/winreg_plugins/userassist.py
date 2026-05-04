@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The UserAssist Windows Registry plugin."""
 
 import codecs

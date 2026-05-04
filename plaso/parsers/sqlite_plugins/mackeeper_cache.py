@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """SQLite parser plugin for MacOS MacKeeper cache database files."""
 
 import codecs

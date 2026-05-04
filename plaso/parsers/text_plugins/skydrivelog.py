@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Text parser plugins for SkyDrive version 1 and 2 log files."""
 
 import pyparsing

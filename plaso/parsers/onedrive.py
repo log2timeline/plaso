@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parser for OneDrive Log (ODL/ODLGZ) files.
 
 Reference: https://forensics.wiki/microsoft_onedrive/

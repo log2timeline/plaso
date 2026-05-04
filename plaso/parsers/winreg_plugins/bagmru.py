@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Windows Registry plugin to parse the BagMRU (or ShellBags) key."""
 
 import os

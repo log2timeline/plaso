@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Text parser plugin for Atlassian Confluence log files.
 
 This is for the atlassian-confluence.log file, one of multiple log files

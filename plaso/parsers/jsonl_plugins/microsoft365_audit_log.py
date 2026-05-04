@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """JSON-L parser plugin for Microsoft (Office) 365 audit log files."""
 
 

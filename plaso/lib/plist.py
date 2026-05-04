@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The plist file object."""
 
 import plistlib

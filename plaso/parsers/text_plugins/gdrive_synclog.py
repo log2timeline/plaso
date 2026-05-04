@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Text parser plugin for Google Drive Sync log files."""
 
 import pyparsing

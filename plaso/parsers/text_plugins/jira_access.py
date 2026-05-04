@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Text plugin for Jira access log (jira_access_log[DATE].log) files.
 
 Also see:

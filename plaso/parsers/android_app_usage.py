@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parser for the Android usage history (usage-history.xml) files."""
 
 import os

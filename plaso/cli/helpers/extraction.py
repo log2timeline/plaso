@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The extraction CLI arguments helper."""
 
 from plaso.cli import tools

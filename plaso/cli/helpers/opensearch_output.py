@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The OpenSearch output module CLI arguments helper."""
 
 import getpass

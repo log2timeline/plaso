@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parsers for MacOS fseventsd files.
 
 Also see:

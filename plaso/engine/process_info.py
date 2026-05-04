@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Information about running process."""
 
 import psutil

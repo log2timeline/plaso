@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """The Viper analysis plugin CLI arguments helper."""
 
 from plaso.analysis import viper

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Bencode plugin related functions and classes for testing."""
 
 from tests.parsers import test_lib

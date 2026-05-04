@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Compound ZIP file plugin related functions and classes for testing."""
 
 import zipfile

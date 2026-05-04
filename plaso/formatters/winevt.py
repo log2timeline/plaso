@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Windows EventLog custom event formatter helpers."""
 
 import re

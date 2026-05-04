@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Engine related functions and classes for testing."""
 
 from plaso.storage.fake import writer as fake_writer

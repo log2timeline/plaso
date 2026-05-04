@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Shared functionality for text file based output modules."""
 
 import abc
