@@ -74,8 +74,8 @@ class Microsoft365AuditLogJSONLPlugin(interface.JSONLPlugin):
         date_time.CopyFromStringISO8601(creation_time)
       except ValueError as exception:
         parser_mediator.ProduceExtractionWarning(
-            'Unable to parse event time: {0:s} with error: {1!s}'.format(
-                creation_time, exception))
+            f'Unable to parse event time: {creation_time:s} with error: '
+            f'{exception!s}')
         date_time = None
 
     event_data = Microsoft365AuditLogEventData()

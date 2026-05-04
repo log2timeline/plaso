@@ -142,8 +142,8 @@ class GoogleAnalyticsUtmaPlugin(interface.BaseCookiePlugin):
 
     if number_of_fields not in (1, 6):
       parser_mediator.ProduceExtractionWarning(
-          'unsupported number of fields: {0:d} in cookie: {1:s}'.format(
-              number_of_fields, self.COOKIE_NAME))
+          f'unsupported number of fields: {number_of_fields:d} in cookie: '
+          f'{self.COOKIE_NAME:s}')
       return
 
     visited_times = []
@@ -229,8 +229,8 @@ class GoogleAnalyticsUtmbPlugin(interface.BaseCookiePlugin):
 
     if number_of_fields not in (1, 4):
       parser_mediator.ProduceExtractionWarning(
-          'unsupported number of fields: {0:d} in cookie: {1:s}'.format(
-              number_of_fields, self.COOKIE_NAME))
+          f'unsupported number of fields: {number_of_fields:d} in cookie: '
+          f'{self.COOKIE_NAME:s}')
       return
 
     if number_of_fields == 1:
@@ -293,8 +293,8 @@ class GoogleAnalyticsUtmtPlugin(interface.BaseCookiePlugin):
 
     if number_of_fields != 1:
       parser_mediator.ProduceExtractionWarning(
-          'unsupported number of fields: {0:d} in cookie: {1:s}'.format(
-              number_of_fields, self.COOKIE_NAME))
+          f'unsupported number of fields: {number_of_fields:d} in cookie: '
+          f'{self.COOKIE_NAME:s}')
       return
 
     event_data = GoogleAnalyticsUtmtEventData()
@@ -348,8 +348,8 @@ class GoogleAnalyticsUtmzPlugin(interface.BaseCookiePlugin):
 
     if number_of_fields not in (1, 5):
       parser_mediator.ProduceExtractionWarning(
-          'unsupported number of fields: {0:d} in cookie: {1:s}'.format(
-              number_of_fields, self.COOKIE_NAME))
+          f'unsupported number of fields: {number_of_fields:d} in cookie: '
+          f'{self.COOKIE_NAME:s}')
       return
 
     if number_of_fields == 1:

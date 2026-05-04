@@ -111,8 +111,8 @@ class ASLParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
           file_object, record_offset, record_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError((
-          'Unable to parse record at offset: 0x{0:08x} with error: '
-          '{1!s}').format(record_offset, exception))
+          f'Unable to parse record at offset: 0x{record_offset:08x} '
+          f'with error: {exception!s}'))
 
     hostname = self._ParseRecordString(
         file_object, record.hostname_string_offset)

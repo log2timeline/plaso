@@ -125,7 +125,7 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
         property_value = property_value.decode('utf-8')
       except UnicodeDecodeError:
         parser_mediator.ProduceExtractionWarning(
-            'unable to decode property: {0:s}'.format(name))
+            f'unable to decode property: {name:s}')
 
     return property_value
 
@@ -207,8 +207,8 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
       date_time.CopyFromStringISO8601(iso8601_string)
     except ValueError as exception:
       parser_mediator.ProduceExtractionWarning((
-          'Unable to parse value: {0:s} ISO8601 string: {1:s} with error: '
-          '{2!s}').format(name, iso8601_string, exception))
+          f'Unable to parse value: {name:s} ISO8601 string: '
+          f'{iso8601_string:s} with error: {exception!s}'))
       return None
 
     return date_time
@@ -289,8 +289,8 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
             ValueError, ElementTree.ParseError, expat.ExpatError,
             zipfile.BadZipfile) as exception:
       parser_mediator.ProduceExtractionWarning((
-          'Unable to parse relationships XML file: _rels/.rels with error: '
-          '{0!s}').format(exception))
+          f'Unable to parse relationships XML file: _rels/.rels with error: '
+          f'{exception!s}'))
       return
 
     metadata = {}
@@ -303,8 +303,8 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
               ValueError, ElementTree.ParseError, expat.ExpatError,
               zipfile.BadZipfile) as exception:
         parser_mediator.ProduceExtractionWarning((
-            'Unable to parse properties XML file: {0:s} with error: '
-            '{1!s}').format(path, exception))
+            f'Unable to parse properties XML file: {path:s} with error: '
+            f'{exception!s}'))
         continue
 
       metadata.update(properties)

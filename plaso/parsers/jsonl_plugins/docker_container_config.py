@@ -73,8 +73,8 @@ class DockerContainerConfigurationJSONLPlugin(interface.JSONLPlugin):
       date_time.CopyFromStringISO8601(iso8601_string)
     except ValueError as exception:
       parser_mediator.ProduceExtractionWarning((
-          'Unable to parse value: {0:s} ISO8601 string: {1:s} with error: '
-          '{2!s}').format(name, iso8601_string, exception))
+          f'Unable to parse value: {name:s} ISO8601 string: '
+          f'{iso8601_string:s} with error: {exception!s}'))
       return None
 
     return date_time

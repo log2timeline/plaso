@@ -358,8 +358,9 @@ class SkyDriveLog2TextPlugin(interface.TextPluginWithLineContinuation):
     event_data.added_time = self._ParseHeaderTimeElements(
         time_elements_structure)
     # TODO: refactor detail to individual event data attributes.
-    event_data.detail = '{0!s} {1!s} {2!s} {3!s} {4!s}'.format(
-        log_start, version_string, version_number, local_time_string, detail)
+    event_data.detail = (
+        f'{log_start!s} {version_string!s} {version_number!s} '
+        f'{local_time_string!s} {detail!s}')
 
     parser_mediator.ProduceEventData(event_data)
 

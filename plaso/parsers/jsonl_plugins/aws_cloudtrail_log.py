@@ -68,8 +68,8 @@ class AWSCloudTrailLogJSONLPlugin(interface.JSONLPlugin):
         date_time.CopyFromDateTimeString(event_time)
       except ValueError as exception:
         parser_mediator.ProduceExtractionWarning(
-            'Unable to parse EventTime value: {0:s} with error: {1!s}'.format(
-               event_time, exception))
+            f'Unable to parse EventTime value: {event_time:s} with error: '
+            f'{exception!s}')
         date_time = None
 
     resource_list = self._GetJSONValue(
@@ -84,8 +84,7 @@ class AWSCloudTrailLogJSONLPlugin(interface.JSONLPlugin):
       cloud_trail_event_json = json.loads(cloud_trail_event)
     except json_decoder.JSONDecodeError as exception:
       parser_mediator.ProduceExtractionWarning(
-          'Unable to decode CloudTrail event with error: {0!s}'.format(
-              exception))
+          f'Unable to decode CloudTrail event with error: {exception!s}')
       cloud_trail_event_json = {}
 
     user_identity_json = self._GetJSONValue(

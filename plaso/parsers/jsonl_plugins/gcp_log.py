@@ -388,16 +388,14 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
       ip_protocol = self._GetJSONValue(allowed, 'IPProtocol')
       ports = self._GetJSONValue(allowed, 'ports', default_value='all')
 
-      firewall_rule = 'ALLOW: {0:s} {1!s}'.format(ip_protocol, ports)
-      firewall_rules.append(firewall_rule)
+      firewall_rules.append(f'ALLOW: {ip_protocol:s} {ports!s}')
 
     denieds = self._GetJSONValue(request, 'denieds', default_value=[])
     for denied in denieds:
       ip_protocol = self._GetJSONValue(denied, 'IPProtocol')
       ports = self._GetJSONValue(denied, 'ports', default_value='all')
 
-      firewall_rule = 'DENY: {0:s} {1!s}'.format(ip_protocol, ports)
-      firewall_rules.append(firewall_rule)
+      firewall_rules.append(f'DENY: {ip_protocol:s} {ports!s}')
 
     event_data.firewall_rules = firewall_rules or None
 
@@ -431,8 +429,7 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
       member = self._GetJSONValue(binding_delta_value, 'member') or 'N/A'
       role = self._GetJSONValue(binding_delta_value, 'role') or 'N/A'
 
-      policy_delta = '{0:s} {1:s} with role {2:s}'.format(action, member, role)
-      policy_deltas.append(policy_delta)
+      policy_deltas.append(f'{action:s} {member:s} with role {role:s}')
 
     event_data.policy_deltas = policy_deltas or None
 
@@ -447,8 +444,7 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
     resource = self._GetJSONValue(json_dict, 'resource', default_value={})
     labels = self._GetJSONValue(resource, 'labels', default_value={})
 
-    resource_labels = [
-        '{0:s}: {1!s}'.format(name, value) for name, value in labels.items()]
+    resource_labels = [f'{name:s}: {value!s}' for name, value in labels.items()]
 
     event_data = GCPLogEventData()
     event_data.log_name = self._GetJSONValue(json_dict, 'logName')
