@@ -64,12 +64,10 @@ class MultiProcessEngine(engine.BaseEngine):
           None represents no timeout.
     """
     for pid, process in self._processes_per_pid.items():
-      logger.debug('Waiting for process: {0:s} (PID: {1:d}).'.format(
-          process.name, pid))
+      logger.debug(f'Waiting for process: {process.name:s} (PID: {pid:d}).')
       process.join(timeout=timeout)
       if not process.is_alive():
-        logger.debug('Process {0:s} (PID: {1:d}) stopped.'.format(
-            process.name, pid))
+        logger.debug(f'Process {process.name:s} (PID: {pid:d}) stopped.')
 
   def _AbortKill(self):
     """Aborts all registered processes by sending a SIGKILL or equivalent."""
@@ -77,8 +75,7 @@ class MultiProcessEngine(engine.BaseEngine):
       if not process.is_alive():
         continue
 
-      logger.warning('Killing process: {0:s} (PID: {1:d}).'.format(
-          process.name, pid))
+      logger.warning(f'Killing process: {process.name:s} (PID: {pid:d}).')
       self._KillProcess(pid)
 
   def _AbortTerminate(self):
@@ -87,8 +84,7 @@ class MultiProcessEngine(engine.BaseEngine):
       if not process.is_alive():
         continue
 
-      logger.warning('Terminating process: {0:s} (PID: {1:d}).'.format(
-          process.name, pid))
+      logger.warning(f'Terminating process: {process.name:s} (PID: {pid:d}).')
       process.terminate()
 
   def _CheckStatusWorkerProcess(self, pid):
@@ -120,9 +116,8 @@ class MultiProcessEngine(engine.BaseEngine):
 
     if self._worker_memory_limit and used_memory > self._worker_memory_limit:
       logger.warning((
-          'Process: {0:s} (PID: {1:d}) killed because it exceeded the '
-          'memory limit: {2:d}.').format(
-              process.name, pid, self._worker_memory_limit))
+          f'Process: {process.name:s} (PID: {pid:d}) killed because it '
+          f'exceeded the memory limit: {self._worker_memory_limit:d}.'))
       self._KillProcess(pid)
 
     if isinstance(process_status, dict):
@@ -139,9 +134,8 @@ class MultiProcessEngine(engine.BaseEngine):
       if process_is_alive:
         rpc_port = process.rpc_port.value
         logger.warning((
-            'Unable to retrieve process: {0:s} (PID: {1:d}) status via '
-            'RPC socket: http://localhost:{2:d}').format(
-                process.name, pid, rpc_port))
+            f'Unable to retrieve process: {process.name:s} (PID: {pid:d}) '
+            f'status via RPC socket: http://localhost:{rpc_port:d}'))
 
         processing_status_string = 'RPC error'
         status_indicator = definitions.STATUS_INDICATOR_RUNNING
@@ -163,19 +157,19 @@ class MultiProcessEngine(engine.BaseEngine):
 
     if status_indicator in definitions.ERROR_STATUS_INDICATORS:
       logger.error((
-          'Process {0:s} (PID: {1:d}) is not functioning correctly. '
-          'Status code: {2!s}.').format(process.name, pid, status_indicator))
+          f'Process {process.name:s} (PID: {pid:d}) is not functioning '
+          f'correctly. Status code: {status_indicator!s}.'))
 
       self._TerminateProcessByPid(pid)
 
       replacement_process = None
-      replacement_process_name = 'Worker_{0:02d}'.format(
-          self._last_worker_number)
+      replacement_process_name = f'Worker_{self._last_worker_number:02d}'
       for replacement_process_attempt in range(
           self._MAXIMUM_REPLACEMENT_RETRIES):
+        attempt = replacement_process_attempt + 1
         logger.info((
-            'Attempt: {0:d} to start replacement worker process for '
-            '{1:s}').format(replacement_process_attempt + 1, process.name))
+            f'Attempt: {attempt:d} to start replacement worker process for '
+            f'{process.name:s}'))
 
         replacement_process = self._StartWorkerProcess(replacement_process_name)
         if replacement_process:
@@ -184,9 +178,9 @@ class MultiProcessEngine(engine.BaseEngine):
         time.sleep(self._REPLACEMENT_WORKER_RETRY_DELAY)
 
       if not replacement_process:
-        logger.error(
-            'Unable to create replacement worker process for: {0:s}'.format(
-                process.name))
+        logger.error((
+            f'Unable to create replacement worker process for: '
+            f'{process.name:s}'))
 
   def _KillProcess(self, pid):
     """Issues a SIGKILL or equivalent to the process.
@@ -205,8 +199,8 @@ class MultiProcessEngine(engine.BaseEngine):
       try:
         os.kill(pid, signal.SIGKILL)
       except OSError as exception:
-        logger.error('Unable to kill process {0:d} with error: {1!s}'.format(
-            pid, exception))
+        logger.error(
+            f'Unable to kill process {pid:d} with error: {exception!s}')
 
   def _QueryProcessStatus(self, process):
     """Queries a process to determine its status.
@@ -234,8 +228,7 @@ class MultiProcessEngine(engine.BaseEngine):
       KeyError: if the process is not monitored by the engine.
     """
     if pid not in self._process_information_per_pid:
-      raise KeyError(
-          'Process (PID: {0:d}) not monitored by engine.'.format(pid))
+      raise KeyError(f'Process (PID: {pid:d}) not monitored by engine.')
 
   def _RaiseIfNotRegistered(self, pid):
     """Raises if the process is not registered with the engine.
@@ -247,8 +240,7 @@ class MultiProcessEngine(engine.BaseEngine):
       KeyError: if the process is not registered with the engine.
     """
     if pid not in self._processes_per_pid:
-      raise KeyError(
-          'Process (PID: {0:d}) not registered with engine'.format(pid))
+      raise KeyError(f'Process (PID: {pid:d}) not registered with engine.')
 
   def _RegisterProcess(self, process):
     """Registers a process with the engine.
@@ -265,8 +257,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
     if process.pid in self._processes_per_pid:
       raise KeyError(
-          'Already managing process: {0!s} (PID: {1:d})'.format(
-              process.name, process.pid))
+          f'Already managing process: {process.name!s} (PID: {process.pid:d})')
 
     self._processes_per_pid[process.pid] = process
 
@@ -301,12 +292,10 @@ class MultiProcessEngine(engine.BaseEngine):
     pid = process.pid
 
     if pid in self._process_information_per_pid:
-      raise KeyError(
-          'Already monitoring process (PID: {0:d}).'.format(pid))
+      raise KeyError(f'Already monitoring process (PID: {pid:d}).')
 
     if pid in self._rpc_clients_per_pid:
-      raise KeyError(
-          'RPC client (PID: {0:d}) already exists'.format(pid))
+      raise KeyError(f'RPC client (PID: {pid:d}) already exists.')
 
     rpc_client = plaso_xmlrpc.XMLProcessStatusRPCClient()
 
@@ -321,15 +310,14 @@ class MultiProcessEngine(engine.BaseEngine):
 
       if time_waited_for_process >= self._RPC_SERVER_TIMEOUT:
         raise IOError(
-            'RPC client unable to determine server (PID: {0:d}) port.'.format(
-                pid))
+            f'RPC client unable to determine server (PID: {pid:d}) port.')
 
     hostname = 'localhost'
 
     if not rpc_client.Open(hostname, rpc_port):
       raise IOError((
-          'RPC client unable to connect to server (PID: {0:d}) '
-          'http://{1:s}:{2:d}').format(pid, hostname, rpc_port))
+          f'RPC client unable to connect to server (PID: {pid:d}) '
+          f'http://{hostname:s}:{rpc_port:d}'))
 
     self._rpc_clients_per_pid[pid] = rpc_client
     self._process_information_per_pid[pid] = process_info.ProcessInfo(pid)
@@ -374,8 +362,7 @@ class MultiProcessEngine(engine.BaseEngine):
     if pid in self._rpc_errors_per_pid:
       del self._rpc_errors_per_pid[pid]
 
-    logger.debug('Stopped monitoring process: {0:s} (PID: {1:d})'.format(
-        process.name, pid))
+    logger.debug('Stopped monitoring process: {process.name:s} (PID: {pid:d}).')
 
   def _StopMonitoringProcesses(self):
     """Stops monitoring all processes."""
@@ -423,14 +410,14 @@ class MultiProcessEngine(engine.BaseEngine):
       process (MultiProcessBaseProcess): process to terminate.
     """
     pid = process.pid
-    logger.warning('Terminating process: (PID: {0:d}).'.format(pid))
+    logger.warning('Terminating process: (PID: {pid:d}).')
     process.terminate()
 
     # Wait for the process to exit.
     process.join(timeout=self._PROCESS_JOIN_TIMEOUT)
 
     if process.is_alive():
-      logger.warning('Killing process: (PID: {0:d}).'.format(pid))
+      logger.warning('Killing process: (PID: {pid:d}).')
       self._KillProcess(pid)
 
   @abc.abstractmethod

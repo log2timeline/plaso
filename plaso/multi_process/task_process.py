@@ -72,8 +72,8 @@ class MultiProcessTaskProcess(base_process.MultiProcessBaseProcess):
         os.rename(storage_file_path, processed_storage_file_path)
       except OSError as exception:
         raise IOError((
-            'Unable to rename task storage file: {0:s} with error: '
-            '{1!s}').format(storage_file_path, exception))
+            f'Unable to rename task storage file: {storage_file_path:s} with '
+            f'error: {exception!s}'))
 
   def _GetProcessedRedisHashName(self, session_identifier):
     """Retrieves the Redis hash name of a processed task store.
@@ -85,7 +85,7 @@ class MultiProcessTaskProcess(base_process.MultiProcessBaseProcess):
     Returns:
       str: Redis hash name of a task store.
     """
-    return '{0:s}-processed'.format(session_identifier)
+    return f'{session_identifier:s}-processed'
 
   def _GetProcessedStorageFilePath(self, task_storage_format, task):
     """Retrieves the path of a task storage file in the processed directory.
@@ -99,7 +99,7 @@ class MultiProcessTaskProcess(base_process.MultiProcessBaseProcess):
           not est.
     """
     if task_storage_format == definitions.STORAGE_FORMAT_SQLITE:
-      filename = '{0:s}.plaso'.format(task.identifier)
+      filename = f'{task.identifier:s}.plaso'
       return os.path.join(self._processed_task_storage_path, filename)
 
     return None
@@ -116,7 +116,7 @@ class MultiProcessTaskProcess(base_process.MultiProcessBaseProcess):
           not set.
     """
     if task_storage_format == definitions.STORAGE_FORMAT_SQLITE:
-      filename = '{0:s}.plaso'.format(task.identifier)
+      filename = f'{task.identifier:s}.plaso'
       return os.path.join(self._task_storage_path, filename)
 
     return None

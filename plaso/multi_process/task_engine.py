@@ -106,7 +106,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     Returns:
       str: Redis hash name of a task store.
     """
-    return '{0:s}-merge'.format(task.session_identifier)
+    return f'{task.session_identifier:s}-merge'
 
   def _GetMergeTaskStorageFilePath(self, task_storage_format, task):
     """Retrieves the path of a task storage file in the merge directory.
@@ -120,7 +120,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           not set.
     """
     if task_storage_format == definitions.STORAGE_FORMAT_SQLITE:
-      filename = '{0:s}.plaso'.format(task.identifier)
+      filename = f'{task.identifier:s}.plaso'
       return os.path.join(self._merge_task_storage_path, filename)
 
     return None
@@ -135,7 +135,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     Returns:
       str: Redis hash name of a task store.
     """
-    return '{0:s}-processed'.format(session_identifier)
+    return f'{session_identifier:s}-processed'
 
   def _GetProcessedStorageFilePath(self, task):
     """Retrieves the path of a task storage file in the processed directory.
@@ -146,8 +146,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     Returns:
       str: path of a task storage file in the processed directory.
     """
-    filename = '{0:s}.plaso'.format(task.identifier)
-    return os.path.join(self._processed_task_storage_path, filename)
+    return os.path.join(
+        self._processed_task_storage_path, f'{task.identifier:s}.plaso')
 
   def _GetProcessedTaskIdentifiers(
       self, task_storage_format, session_identifier):
@@ -209,8 +209,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       number_of_results = self._redis_client.hdel(
           redis_hash_name, task.identifier)
       if number_of_results == 0:
-        raise IOError('Task identifier {0:s} was not processed'.format(
-            task.identifier))
+        raise IOError(f'Task identifier {task.identifier:s} was not processed')
 
       redis_hash_name = self._GetMergeTaskStorageRedisHashName(task)
       # TODO: set timestamp as value.
@@ -228,8 +227,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         os.rename(processed_storage_file_path, merge_storage_file_path)
       except OSError as exception:
         raise IOError((
-            'Unable to rename task storage file: {0:s} with error: '
-            '{1!s}').format(processed_storage_file_path, exception))
+            f'Unable to rename task storage file: '
+            f'{processed_storage_file_path:s} with error: {exception!s}'))
 
   def _RemoveMergeTaskStorage(self, task_storage_format, task):
     """Removes a merge task storage.
@@ -243,8 +242,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       OSError: if a SQLite task storage file cannot be removed.
     """
     if task_storage_format == definitions.STORAGE_FORMAT_REDIS:
-      redis_hash_pattern = '{0:s}-{1:s}-*'.format(
-          task.session_identifier, task.identifier)
+      redis_hash_pattern = f'{task.session_identifier:s}-{task.identifier:s}-*'
 
       for redis_hash_name in self._redis_client.keys(redis_hash_pattern):
         self._redis_client.delete(redis_hash_name)
@@ -257,8 +255,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         os.remove(merge_storage_file_path)
       except OSError as exception:
         raise IOError((
-            'Unable to remove merge task storage file: {0:s} with error: '
-            '{1!s}').format(merge_storage_file_path, exception))
+            f'Unable to remove merge task storage file: '
+            f'{merge_storage_file_path:s} with error: {exception!s}'))
 
   def _RemoveProcessedTaskStorage(self, task_storage_format, task):
     """Removes a processed task storage.
@@ -272,8 +270,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       OSError: if a SQLite task storage file cannot be removed.
     """
     if task_storage_format == definitions.STORAGE_FORMAT_REDIS:
-      redis_hash_pattern = '{0:s}-{1:s}-*'.format(
-          task.session_identifier, task.identifier)
+      redis_hash_pattern = f'{task.session_identifier:s}-{task.identifier:s}-*'
 
       for redis_hash_name in self._redis_client.keys(redis_hash_pattern):
         self._redis_client.delete(redis_hash_name)
@@ -285,8 +282,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         os.remove(processed_storage_file_path)
       except OSError as exception:
         raise IOError((
-            'Unable to remove processed task storage file: {0:s} with error: '
-            '{1!s}').format(processed_storage_file_path, exception))
+            f'Unable to remove processed task storage file: '
+            f'{processed_storage_file_path:s} with error: {exception!s}'))
 
   def _StartTaskStorage(self, task_storage_format):
     """Starts the task storage.
@@ -333,7 +330,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       abort (Optional[bool]): True to indicate the stop is issued on abort.
     """
     if task_storage_format == definitions.STORAGE_FORMAT_REDIS:
-      redis_hash_pattern = '{0:s}-*'.format(session_identifier)
+      redis_hash_pattern = f'{session_identifier:s}-*'
 
       for redis_hash_name in self._redis_client.keys(redis_hash_pattern):
         self._redis_client.delete(redis_hash_name)

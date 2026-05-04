@@ -183,8 +183,7 @@ class TaskManager(object):
       tasks_to_abandon = []
       for task_identifier, task in self._tasks_processing.items():
         if task.last_processing_time < inactive_time:
-          logger.debug('Abandoned processing task: {0:s}.'.format(
-              task_identifier))
+          logger.debug(f'Abandoned processing task: {task_identifier:s}')
 
           self.SampleTaskStatus(task, 'abandoned_processing')
           tasks_to_abandon.append((task_identifier, task))
@@ -203,7 +202,7 @@ class TaskManager(object):
     # dict while iterating over it.
     tasks_to_abandon = []
     for task_identifier, task in self._tasks_queued.items():
-      logger.debug('Abandoned queued task: {0:s}.'.format(task_identifier))
+      logger.debug(f'Abandoned queued task: {task_identifier:s}')
       tasks_to_abandon.append((task_identifier, task))
 
     for task_identifier, task in tasks_to_abandon:
@@ -278,8 +277,7 @@ class TaskManager(object):
       is_queued = task.identifier in self._tasks_queued
 
       if not is_queued and not is_processing and not is_abandoned:
-        raise KeyError('Status of task {0:s} is unknown.'.format(
-            task.identifier))
+        raise KeyError(f'Status of task {task.identifier:s} is unknown.')
 
       return is_queued or is_processing or is_abandoned and not task.has_retry
 
@@ -299,8 +297,9 @@ class TaskManager(object):
       # identified in CheckTaskToMerge and UpdateTaskAsPendingMerge.
 
       retry_task = abandoned_task.CreateRetryTask()
-      logger.debug('Retrying task {0:s} as {1:s}.'.format(
-          abandoned_task.identifier, retry_task.identifier))
+      logger.debug((
+          f'Retrying task {abandoned_task.identifier:s} as '
+          f'{retry_task.identifier:s}.'))
 
       self._tasks_queued[retry_task.identifier] = retry_task
       self._total_number_of_tasks += 1
@@ -326,7 +325,7 @@ class TaskManager(object):
     """
     task = tasks.Task(session_identifier)
     task.storage_format = storage_format
-    logger.debug('Created task: {0:s}.'.format(task.identifier))
+    logger.debug(f'Created task: {task.identifier:s}')
 
     with self._lock:
       self._tasks_queued[task.identifier] = task
@@ -349,13 +348,13 @@ class TaskManager(object):
     """
     with self._lock:
       if task.identifier not in self._tasks_merging:
-        raise KeyError('Task {0:s} was not merging.'.format(task.identifier))
+        raise KeyError(f'Task {task.identifier:s} was not merging.')
 
       self.SampleTaskStatus(task, 'completed')
 
       del self._tasks_merging[task.identifier]
 
-      logger.debug('Completed task {0:s}.'.format(task.identifier))
+      logger.debug(f'Completed task {task.identifier:s}.')
 
   def GetFailedTasks(self):
     """Retrieves all failed tasks.
@@ -391,8 +390,7 @@ class TaskManager(object):
       if not task:
         task = self._tasks_abandoned.get(task_identifier, None)
       if not task:
-        raise KeyError('Status of task {0:s} is unknown'.format(
-            task_identifier))
+        raise KeyError(f'Status of task {task_identifier:s} is unknown.')
 
     return task
 
@@ -502,16 +500,15 @@ class TaskManager(object):
     """
     with self._lock:
       if task.identifier not in self._tasks_abandoned:
-        raise KeyError('Task {0:s} was not abandoned.'.format(task.identifier))
+        raise KeyError(f'Task {task.identifier:s} was not abandoned.')
 
       if not task.has_retry:
         raise KeyError(
-            'Will not remove a task {0:s} without retry task.'.format(
-                task.identifier))
+            f'Will not remove a task {task.identifier:s} without retry task.')
 
       del self._tasks_abandoned[task.identifier]
 
-      logger.debug('Removed task {0:s}.'.format(task.identifier))
+      logger.debug(f'Removed task {task.identifier:s}')
 
   def SampleTaskStatus(self, task, status):
     """Takes a sample of the status of the task for profiling.
@@ -560,26 +557,22 @@ class TaskManager(object):
       is_queued = task.identifier in self._tasks_queued
 
       if not is_queued and not is_processing and not is_abandoned:
-        raise KeyError('Status of task {0:s} is unknown.'.format(
-            task.identifier))
+        raise KeyError(f'Status of task {task.identifier:s} is unknown.')
 
       if is_abandoned and task.has_retry:
-        raise KeyError('Will not merge a task {0:s} with retry task.'.format(
-            task.identifier))
+        raise KeyError(
+            f'Will not merge a task {task.identifier:s} with retry task.')
 
       if is_queued:
-        logger.debug('Task {0:s} was queued, now merging.'.format(
-            task.identifier))
+        logger.debug(f'Task {task.identifier:s} was queued, now merging.')
         del self._tasks_queued[task.identifier]
 
       if is_processing:
-        logger.debug('Task {0:s} was processing, now merging.'.format(
-            task.identifier))
+        logger.debug(f'Task {task.identifier:s} was processing, now merging.')
         del self._tasks_processing[task.identifier]
 
       if is_abandoned:
-        logger.debug('Task {0:s} was abandoned, now merging.'.format(
-            task.identifier))
+        logger.debug(f'Task {task.identifier:s} was abandoned, now merging.')
         del self._tasks_abandoned[task.identifier]
 
       self._tasks_pending_merge.PushTask(task)
@@ -607,8 +600,7 @@ class TaskManager(object):
 
       task_queued = self._tasks_queued.get(task_identifier, None)
       if task_queued:
-        logger.debug('Task {0:s} was queued, now processing.'.format(
-            task_identifier))
+        logger.debug(f'Task {task_identifier:s} was queued, now processing.')
         self._tasks_processing[task_identifier] = task_queued
         del self._tasks_queued[task_identifier]
 
@@ -620,8 +612,8 @@ class TaskManager(object):
       if task_abandoned:
         del self._tasks_abandoned[task_identifier]
         self._tasks_processing[task_identifier] = task_abandoned
-        logger.debug('Task {0:s} was abandoned, but now processing.'.format(
-            task_identifier))
+        logger.debug(
+            f'Task {task_identifier:s} was abandoned, but now processing.')
 
         task_abandoned.UpdateProcessingTime()
         self._UpdateLatestProcessingTime(task_abandoned)
@@ -633,4 +625,4 @@ class TaskManager(object):
         return
 
     # If we get here, we don't know what state the tasks is in, so raise.
-    raise KeyError('Status of task {0:s} is unknown.'.format(task_identifier))
+    raise KeyError(f'Status of task {task_identifier:s} is unknown.')
