@@ -312,8 +312,8 @@ class FieldFormattingHelper:
         event_data.data_type)
     if not message_formatter:
       logger.warning(
-          'Using default message formatter for data type: {0:s}'.format(
-              event_data.data_type))
+          f'Using default message formatter for data type: '
+          f'{event_data.data_type:s}')
       message_formatter = self._DEFAULT_MESSAGE_FORMATTER
 
     event_values = event_data.CopyToDict()
