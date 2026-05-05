@@ -117,7 +117,7 @@ class SQLitePlugin(plugins.BasePlugin):
     values = []
     for value in row:
       try:
-        value = '{0!s}'.format(value)
+        value = f'{value!s}'
       except UnicodeDecodeError:
         # In Python 2, blobs are "read-write buffer" and will cause a
         # UnicodeDecodeError exception if we try format it as a string.
@@ -147,8 +147,8 @@ class SQLitePlugin(plugins.BasePlugin):
 
     except sqlite3.DatabaseError as exception:
       parser_mediator.ProduceExtractionWarning(
-          'unable to run query: {0:s} on database with error: {1!s}'.format(
-              query, exception))
+          f'unable to run query: {query:s} on database with error: '
+          f'{exception!s}')
       return
 
     for index, row in enumerate(rows):
@@ -164,9 +164,8 @@ class SQLitePlugin(plugins.BasePlugin):
 
       except Exception as exception:  # pylint: disable=broad-except
         parser_mediator.ProduceExtractionWarning((
-            'unable to parse row: {0:d} with callback: {1:s} on database '
-            'with error: {2!s}').format(
-                index, callback.__name__, exception))
+            f'unable to parse row: {index:d} with callback: '
+            f'{callback.__name__:s} on database with error: {exception!s}'))
         # TODO: consider removing return.
         return
 
@@ -248,8 +247,8 @@ class SQLitePlugin(plugins.BasePlugin):
       callback = getattr(self, callback_method, None)
       if callback is None:
         logger.warning(
-            '[{0:s}] missing callback method: {1:s} for query: {2:s}'.format(
-                self.NAME, callback_method, query))
+            f'[{self.NAME:s}] missing callback method: '
+            f'{callback_method:s} for query: {query:s}')
         continue
 
       self._ParseSQLiteDatabase(
