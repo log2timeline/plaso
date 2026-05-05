@@ -87,8 +87,7 @@ class MacOSTimeMachinePlistPlugin(
 
         except (ValueError, TypeError, errors.ParseError) as exception:
           parser_mediator.ProduceExtractionWarning(
-              f'unable to parse backup alias value with error: '
-              f'{exception!s}')
+              f'unable to parse backup alias value with error: {exception!s}')
 
       for datetime_value in destination.get('SnapshotDates', []):
         # dfDateTime relies on the time zone but since plistlib does not set

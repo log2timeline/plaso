@@ -132,13 +132,13 @@ class ESEDBParser(interface.FileObjectParser):
           parser_mediator.SampleFormatCheckStopTiming(profiling_name)
 
         if not result:
-          logger.debug(
+          logger.debug((
               f'Skipped parsing file: {display_name:s} with plugin: '
-              f'{plugin_name:s}')
+              f'{plugin_name:s}'))
           continue
 
-        logger.debug(f'Parsing file: {display_name:s} with plugin: '
-                     f'{plugin_name:s}')
+        logger.debug(
+            f'Parsing file: {display_name:s} with plugin: {plugin_name:s}')
 
         parser_mediator.SampleStartTiming(profiling_name)
 

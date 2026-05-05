@@ -99,8 +99,7 @@ class MacOSUserPlistPlugin(interface.PlistPlugin):
       date_time.CopyFromStringISO8601(time_string)
     except (TypeError, ValueError):
       parser_mediator.ProduceExtractionWarning(
-          f'unable to parse value: {value_name:s} time string: '
-          f'{time_string!s}')
+          f'unable to parse value: {value_name:s} time string: {time_string!s}')
       return None
 
     return date_time
@@ -140,9 +139,10 @@ class MacOSUserPlistPlugin(interface.PlistPlugin):
         salt_string = codecs.decode(salt_hex_bytes, 'ascii')
         entropy_hex_bytes = codecs.encode(salted_hash['entropy'], 'hex')
         entropy_string = codecs.decode(entropy_hex_bytes, 'ascii')
+
+        number_of_iterations = salted_hash["iterations"]
         password_hash = (
-            f'$ml${salted_hash["iterations"]:d}'
-            f'${salt_string:s}${entropy_string:s}')
+            f'$ml${number_of_iterations:d}${salt_string:s}${entropy_string:s}')
 
     for policy in match.get('passwordpolicyoptions', []):
       try:
@@ -150,9 +150,9 @@ class MacOSUserPlistPlugin(interface.PlistPlugin):
       except (LookupError, ElementTree.ParseError,
               expat.ExpatError) as exception:
         logger.error(
-            f'Unable to parse XML structure for an user policy, '
-            f'username: {username:s} and UID: {user_identifier!s}, '
-            f'with error: {exception!s}')
+            f'Unable to parse XML structure for an user policy, username: '
+            f'{username:s} and UID: {user_identifier!s}, with error: '
+            f'{exception!s}')
         continue
 
       for dict_elements in xml_policy.iterfind('dict'):
