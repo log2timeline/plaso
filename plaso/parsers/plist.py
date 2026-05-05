@@ -117,7 +117,7 @@ class PlistParser(interface.FileObjectParser):
     except (AttributeError, binascii.Error, expat.ExpatError,
             plistlib.InvalidFileException) as exception:
       raise errors.WrongParser(
-          'Unable to parse plist with error: {0!s}'.format(exception))
+          f'Unable to parse plist with error: {exception!s}')
 
     except (LookupError, ValueError) as exception:
       # LookupError will be raised in cases where the plist is an XML file
@@ -125,7 +125,7 @@ class PlistParser(interface.FileObjectParser):
       # ValueError will be raised in cases where the plist is an XML file
       # that contains an unsupported date and time value.
       parser_mediator.ProduceExtractionWarning(
-          'unable to parse XML plist with error: {0!s}'.format(exception))
+          f'unable to parse XML plist with error: {exception!s}')
       return
 
     if not top_level_object:
@@ -166,19 +166,19 @@ class PlistParser(interface.FileObjectParser):
           required_format = plugin.CheckRequiredFormat(top_level_object)
         except Exception as exception:  # pylint: disable=broad-except
           parser_mediator.ProduceExtractionWarning((
-              'plugin: {0:s} unable to parse plist file with error: '
-              '{1!s}').format(plugin_name, exception))
+              f'plugin: {plugin_name:s} unable to parse plist file with error: '
+              f'{exception!s}'))
 
       finally:
         parser_mediator.SampleFormatCheckStopTiming(profiling_name)
 
       if not path_filter_match or not required_format:
-        logger.debug('Skipped parsing file: {0:s} with plugin: {1:s}'.format(
-            display_name, plugin_name))
+        logger.debug(f'Skipped parsing file: {display_name:s} '
+                     f'with plugin: {plugin_name:s}')
         continue
 
-      logger.debug('Parsing file: {0:s} with plugin: {1:s}'.format(
-          display_name, plugin_name))
+      logger.debug(
+          f'Parsing file: {display_name:s} with plugin: {plugin_name:s}')
 
       parser_mediator.SampleStartTiming(profiling_name)
 
@@ -189,8 +189,8 @@ class PlistParser(interface.FileObjectParser):
 
       except Exception as exception:  # pylint: disable=broad-except
         parser_mediator.ProduceExtractionWarning((
-            'plugin: {0:s} unable to parse plist file with error: '
-            '{1!s}').format(plugin_name, exception))
+            f'plugin: {plugin_name:s} unable to parse plist file with error: '
+            f'{exception!s}'))
 
       finally:
         parser_mediator.SampleStopTiming(profiling_name)

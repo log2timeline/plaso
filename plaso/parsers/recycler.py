@@ -173,8 +173,8 @@ class WinRecyclerInfo2Parser(
           record_data, record_offset, record_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.ParseError((
-          'Unable to map record data at offset: 0x{0:08x} with error: '
-          '{1!s}').format(record_offset, exception))
+          f'Unable to map record data at offset: 0x{record_offset:08x} '
+          f'with error: {exception!s}'))
 
     code_page = parser_mediator.GetCodePage()
 
@@ -201,8 +201,8 @@ class WinRecyclerInfo2Parser(
             record_data[280:], record_offset, utf16_string_map)
       except (ValueError, errors.ParseError) as exception:
         raise errors.ParseError((
-            'Unable to map record data at offset: 0x{0:08x} with error: '
-            '{1!s}').format(record_offset, exception))
+            f'Unable to map record data at offset: 0x{record_offset:08x} '
+            f'with error: {exception!s}'))
 
     event_data = WinRecycleBinEventData()
     event_data.drive_number = record.drive_number
@@ -246,8 +246,8 @@ class WinRecyclerInfo2Parser(
           file_object, 0, file_header_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.WrongParser((
-          'Unable to parse Windows Recycler INFO2 file header with '
-          'error: {0!s}').format(exception))
+          f'Unable to parse Windows Recycler INFO2 file header with '
+          f'error: {exception!s}'))
 
     if file_header.unknown1 != 5:
       parser_mediator.ProduceExtractionWarning('unsupported format signature.')
@@ -256,7 +256,7 @@ class WinRecyclerInfo2Parser(
     file_entry_size = file_header.file_entry_size
     if file_entry_size not in (280, 800):
       parser_mediator.ProduceExtractionWarning(
-          'unsupported file entry size: {0:d}'.format(file_entry_size))
+          f'unsupported file entry size: {file_entry_size:d}')
       return
 
     file_offset = file_object.get_offset()
