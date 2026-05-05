@@ -95,8 +95,8 @@ class WinEvtParser(interface.FileObjectParser):
       event_data.record_number = evt_record.identifier
     except OverflowError as exception:
       warning_message = (
-          'unable to read record identifier from event record: {0:d} '
-          'with error: {1!s}').format(record_index, exception)
+          f'unable to read record identifier from event record: '
+          f'{record_index:d} with error: {exception!s}')
       if recovered:
         parser_mediator.ProduceRecoveryWarning(warning_message)
       else:
@@ -106,8 +106,8 @@ class WinEvtParser(interface.FileObjectParser):
       event_identifier = evt_record.event_identifier
     except OverflowError as exception:
       warning_message = (
-          'unable to read event identifier from event record: {0:d} '
-          'with error: {1!s}').format(record_index, exception)
+          f'unable to read event identifier from event record: '
+          f'{record_index:d} with error: {exception!s}')
       if recovered:
         parser_mediator.ProduceRecoveryWarning(warning_message)
       else:
@@ -157,8 +157,8 @@ class WinEvtParser(interface.FileObjectParser):
       creation_time = evt_record.get_creation_time_as_integer()
     except OverflowError as exception:
       warning_message = (
-          'unable to read creation time from event record: {0:d} '
-          'with error: {1!s}').format(record_index, exception)
+          f'unable to read creation time from event record: '
+          f'{record_index:d} with error: {exception!s}')
       if recovered:
         parser_mediator.ProduceRecoveryWarning(warning_message)
       else:
@@ -174,8 +174,8 @@ class WinEvtParser(interface.FileObjectParser):
       written_time = evt_record.get_written_time_as_integer()
     except OverflowError as exception:
       warning_message = (
-          'unable to read written time from event record: {0:d} '
-          'with error: {1!s}').format(record_index, exception)
+          f'unable to read written time from event record: '
+          f'{record_index:d} with error: {exception!s}')
       if recovered:
         parser_mediator.ProduceRecoveryWarning(warning_message)
       else:
@@ -211,8 +211,8 @@ class WinEvtParser(interface.FileObjectParser):
         self._ParseRecord(parser_mediator, record_index, evt_record)
       except IOError as exception:
         parser_mediator.ProduceExtractionWarning(
-            'unable to parse event record: {0:d} with error: {1!s}'.format(
-                record_index, exception))
+            f'unable to parse event record: {record_index:d} '
+            f'with error: {exception!s}')
 
     for record_index in range(evt_file.number_of_recovered_records):
       if parser_mediator.abort:
@@ -223,9 +223,9 @@ class WinEvtParser(interface.FileObjectParser):
         self._ParseRecord(
             parser_mediator, record_index, evt_record, recovered=True)
       except IOError as exception:
-        parser_mediator.ProduceRecoveryWarning((
-            'unable to parse recovered event record: {0:d} with error: '
-            '{1!s}').format(record_index, exception))
+        parser_mediator.ProduceRecoveryWarning(
+            f'unable to parse recovered event record: {record_index:d} '
+            f'with error: {exception!s}')
 
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses a Windows EventLog (EVT) file-like object.
@@ -244,7 +244,7 @@ class WinEvtParser(interface.FileObjectParser):
       evt_file.open_file_object(file_object)
     except IOError as exception:
       parser_mediator.ProduceExtractionWarning(
-          'unable to open file with error: {0!s}'.format(exception))
+          f'unable to open file with error: {exception!s}')
       return
 
     try:

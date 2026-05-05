@@ -134,8 +134,7 @@ class BodyfileParser(interface.FileObjectParser):
       try:
         integer_value = int(integer_value, 10)
       except ValueError:
-        error_string = 'invalid {0:s} value in line: {1:d}'.format(
-            description, line_number)
+        error_string = f'invalid {description:s} value in line: {line_number:d}'
         if first_line:
           raise errors.WrongParser(error_string)
 
@@ -169,8 +168,7 @@ class BodyfileParser(interface.FileObjectParser):
       try:
         float_value = float(float_value)
       except ValueError:
-        error_string = 'invalid {0:s} value in line: {1:d}'.format(
-            description, line_number)
+        error_string = f'invalid {description:s} value in line: {line_number:d}'
         if first_line:
           raise errors.WrongParser(error_string)
 
@@ -198,8 +196,9 @@ class BodyfileParser(interface.FileObjectParser):
     """
     number_of_values = len(values)
     if number_of_values < 11:
-      error_string = ('invalid number of values: {0:d} in line: {1:d}').format(
-          number_of_values, line_number)
+      error_string = (
+          f'invalid number of values: {number_of_values:d} in line: '
+          f'{line_number:d}')
       if first_line:
         raise errors.WrongParser(error_string)
 
@@ -211,8 +210,8 @@ class BodyfileParser(interface.FileObjectParser):
     if md5_value == '0':
       md5_value = None
     elif md5_value and not self._MD5_RE.match(md5_value):
-      error_string = 'invalid MD5 value: {0:s} in line: {1:d}'.format(
-          md5_value, line_number)
+      error_string = (
+          f'invalid MD5 value: {md5_value:s} in line: {line_number:d}')
       if first_line:
         raise errors.WrongParser(error_string)
 
@@ -239,7 +238,7 @@ class BodyfileParser(interface.FileObjectParser):
     if uid_value is not None:
       # Note that the owner_identifier attribute of BodyfileEventData
       # is expected to be a string or None.
-      uid_value = '{0:d}'.format(uid_value)
+      uid_value = f'{uid_value:d}'
 
     mode_as_string_value = values.pop(-1) or None
 
@@ -252,8 +251,7 @@ class BodyfileParser(interface.FileObjectParser):
     except (TypeError, ValueError):
       inode_value = None
       parser_mediator.ProduceRecoveryWarning(
-          'invalid inode value: {0!s} in line: {1:d}'.format(
-              inode_value, line_number))
+          f'invalid inode value: {inode_value!s} in line: {line_number:d}')
 
     # Determine if the inode value is actually a 64-bit NTFS file
     # reference.
@@ -265,13 +263,13 @@ class BodyfileParser(interface.FileObjectParser):
     filename = '|'.join(values)
     escaped_filename = filename.translate(self._ESCAPE_CHARACTERS)
     if filename != escaped_filename:
-      parser_mediator.ProduceRecoveryWarning((
-          'filename in line: {0:d} contains unescaped control '
-          'characters').format(line_number))
+      parser_mediator.ProduceRecoveryWarning(
+          f'filename in line: {line_number:d} contains unescaped control '
+          f'characters')
 
     else:
       for character in self._NON_PRINTABLE_CHARACTERS:
-        escaped_character = '\\x{0:02x}'.format(character)
+        escaped_character = f'\\x{character:02x}'
         filename = filename.replace(escaped_character, chr(character))
 
       filename = filename.replace('\\|', '|')
@@ -324,8 +322,7 @@ class BodyfileParser(interface.FileObjectParser):
       line = line_reader.readline()
     except UnicodeDecodeError as exception:
       raise errors.WrongParser(
-          'unable to read line: {0:d} with error: {1!s}'.format(
-              line_number, exception))
+          f'unable to read line: {line_number:d} with error: {exception!s}')
 
     while line:
       # Lines that start with '#' are ignored and treated as comments.
@@ -351,8 +348,7 @@ class BodyfileParser(interface.FileObjectParser):
         line = line_reader.readline()
       except UnicodeDecodeError as exception:
         parser_mediator.ProduceExtractionWarning(
-            'unable to read line: {0:d} with error: {1!s}'.format(
-                line_number, exception))
+            f'unable to read line: {line_number:d} with error: {exception!s}')
         break
 
 

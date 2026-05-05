@@ -118,7 +118,7 @@ class FileStatParser(interface.FileEntryParser):
       except TypeError:
         # Older version of pytsk3 can raise:
         # TypeError: unhashable type: 'pytsk3.TSK_FS_TYPE_ENUM'
-        type_string = '{0!s}'.format(tsk_fs_type)
+        type_string = f'{tsk_fs_type!s}'
         if type_string.startswith('TSK_FS_TYPE_'):
           type_string = type_string[12:]
         if type_string.endswith('_DETECT'):
