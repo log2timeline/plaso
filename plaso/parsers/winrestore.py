@@ -26,7 +26,7 @@ class RestorePointEventData(events.EventData):
 
   def __init__(self):
     """Initializes Windows Recycle Bin event data."""
-    super(RestorePointEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.creation_time = None
     self.description = None
     self.restore_point_event_type = None

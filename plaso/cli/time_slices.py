@@ -1,7 +1,7 @@
 """The time slice."""
 
 
-class TimeSlice(object):
+class TimeSlice:
   """Time slice.
 
   The time slice is used to provide a context of events around an event
@@ -23,7 +23,7 @@ class TimeSlice(object):
           The default is 5, which represent 2.5 minutes before and 2.5 minutes
           after the event timestamp.
     """
-    super(TimeSlice, self).__init__()
+    super().__init__()
     self.duration = duration
     self.event_timestamp = event_timestamp
 

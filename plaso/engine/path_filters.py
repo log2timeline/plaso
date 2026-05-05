@@ -10,7 +10,7 @@ from plaso.engine import logger
 from plaso.engine import path_helper
 
 
-class PathFilter(object):
+class PathFilter:
   """Path filter.
 
   Attributes:
@@ -42,14 +42,14 @@ class PathFilter(object):
     if filter_type not in (self.FILTER_TYPE_EXCLUDE, self.FILTER_TYPE_INCLUDE):
       raise ValueError(f'Unsupported filter type: {filter_type!s}')
 
-    super(PathFilter, self).__init__()
+    super().__init__()
     self.description = description
     self.filter_type = filter_type
     self.path_separator = path_separator
     self.paths = paths or []
 
 
-class PathCollectionFiltersHelper(object):
+class PathCollectionFiltersHelper:
   """Path collection filters helper.
 
   Attributes:
@@ -61,7 +61,7 @@ class PathCollectionFiltersHelper(object):
 
   def __init__(self):
     """Initializes a collection filters helper."""
-    super(PathCollectionFiltersHelper, self).__init__()
+    super().__init__()
     self.excluded_file_system_find_specs = []
     self.included_file_system_find_specs = []
 

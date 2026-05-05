@@ -45,7 +45,7 @@ class NativePythonOutputModule(text_file.TextFileOutputModule):
 
   def __init__(self):
     """Initializes an output module."""
-    super(NativePythonOutputModule, self).__init__()
+    super().__init__()
     self._field_formatting_helper = dynamic.DynamicFieldFormattingHelper()
 
   def _GetString(self, field_values):

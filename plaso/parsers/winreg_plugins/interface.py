@@ -8,7 +8,7 @@ from plaso.containers import windows_events
 from plaso.parsers import plugins
 
 
-class BaseWindowsRegistryKeyFilter(object):
+class BaseWindowsRegistryKeyFilter:
   """The Windows Registry key filter interface."""
 
   @property
@@ -48,7 +48,7 @@ class WindowsRegistryKeyPathFilter(BaseWindowsRegistryKeyFilter):
     Args:
       key_path (str): key path.
     """
-    super(WindowsRegistryKeyPathFilter, self).__init__()
+    super().__init__()
 
     key_path.rstrip('\\')
     self._key_path = key_path
@@ -131,7 +131,7 @@ class WindowsRegistryKeyPathPrefixFilter(BaseWindowsRegistryKeyFilter):
     Args:
       key_path_prefix (str): the key path prefix.
     """
-    super(WindowsRegistryKeyPathPrefixFilter, self).__init__()
+    super().__init__()
     self._key_path_prefix = key_path_prefix
 
   def Match(self, registry_key):
@@ -155,7 +155,7 @@ class WindowsRegistryKeyPathSuffixFilter(BaseWindowsRegistryKeyFilter):
     Args:
       key_path_suffix (str): the key path suffix.
     """
-    super(WindowsRegistryKeyPathSuffixFilter, self).__init__()
+    super().__init__()
     self._key_path_suffix = key_path_suffix
 
   def Match(self, registry_key):
@@ -181,7 +181,7 @@ class WindowsRegistryKeyWithValuesFilter(BaseWindowsRegistryKeyFilter):
     Args:
       value_names (list[str]): name of values that should be present in the key.
     """
-    super(WindowsRegistryKeyWithValuesFilter, self).__init__()
+    super().__init__()
     self._value_names = frozenset(value_names)
 
   def Match(self, registry_key):
@@ -356,7 +356,7 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
       raise ValueError('Windows Registry key is not set.')
 
     # This will raise if unhandled keyword arguments are passed.
-    super(WindowsRegistryPlugin, self).Process(parser_mediator, **kwargs)
+    super().Process(parser_mediator, **kwargs)
 
     self.ExtractEvents(parser_mediator, registry_key, **kwargs)
 

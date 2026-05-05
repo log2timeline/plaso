@@ -41,7 +41,7 @@ class OneDriveLogEvent(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(OneDriveLogEvent, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.code_filename = None
     self.code_function_name = None
     self.decoded_parameters = None

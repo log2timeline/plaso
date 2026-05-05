@@ -21,12 +21,12 @@ import tempfile
 __file__ = os.path.abspath(__file__)
 
 
-class TempDirectory(object):
+class TempDirectory:
   """Temporary directory."""
 
   def __init__(self):
     """Initializes a temporary directory."""
-    super(TempDirectory, self).__init__()
+    super().__init__()
     self.name = ''
 
   def __enter__(self):
@@ -39,7 +39,7 @@ class TempDirectory(object):
     shutil.rmtree(self.name, True)
 
 
-class TestCase(object):
+class TestCase:
   """Test case interface.
 
   The test case defines what aspect of the plaso tools to test. A test
@@ -61,7 +61,7 @@ class TestCase(object):
       test_results_path (str): path to store test results.
       debug_output (Optional[bool]): True if debug output should be generated.
     """
-    super(TestCase, self).__init__()
+    super().__init__()
     self._debug_output = debug_output
     self._test_references_path = test_references_path
     self._test_results_path = test_results_path
@@ -150,7 +150,7 @@ class TestCase(object):
     """
 
 
-class TestCasesManager(object):
+class TestCasesManager:
   """Test cases manager."""
 
   _test_case_classes = {}
@@ -246,7 +246,7 @@ class TestCasesManager(object):
       cls.RegisterTestCase(test_case_class)
 
 
-class TestDefinition(object):
+class TestDefinition:
   """Test definition.
 
   Attributes:
@@ -260,12 +260,12 @@ class TestDefinition(object):
     Args:
       name (str): name of the test.
     """
-    super(TestDefinition, self).__init__()
+    super().__init__()
     self.case = ''
     self.name = name
 
 
-class TestDefinitionReader(object):
+class TestDefinitionReader:
   """Test definition reader.
 
   The test definition reader reads tests definitions from a configuration file.
@@ -283,7 +283,7 @@ class TestDefinitionReader(object):
       test_results_path (str): path to store test results.
       debug_output (Optional[bool]): True if debug output should be generated.
     """
-    super(TestDefinitionReader, self).__init__()
+    super().__init__()
     self._config_parser = None
     self._debug_output = debug_output
     self._test_references_path = test_references_path
@@ -377,7 +377,7 @@ class TestDefinitionReader(object):
       self._config_parser = None
 
 
-class TestLauncher(object):
+class TestLauncher:
   """Test launcher.
 
   The test launcher reads the test definitions from a file, looks up the
@@ -397,7 +397,7 @@ class TestLauncher(object):
       test_results_path (str): path to store test results.
       debug_output (Optional[bool]): True if debug output should be generated.
     """
-    super(TestLauncher, self).__init__()
+    super().__init__()
     self._debug_output = debug_output
     self._test_definitions = []
     self._test_references_path = test_references_path
@@ -468,7 +468,7 @@ class StorageFileTestCase(TestCase):
       test_results_path (str): path to store test results.
       debug_output (Optional[bool]): True if debug output should be generated.
     """
-    super(StorageFileTestCase, self).__init__(
+    super().__init__(
         tools_path, test_sources_path, test_references_path,
         test_results_path, debug_output=debug_output)
     self._pinfo_path = None
@@ -738,7 +738,7 @@ class ExtractAndOutputTestCase(StorageFileTestCase):
       test_results_path (str): path to store test results.
       debug_output (Optional[bool]): True if debug output should be generated.
     """
-    super(ExtractAndOutputTestCase, self).__init__(
+    super().__init__(
         tools_path, test_sources_path, test_references_path,
         test_results_path, debug_output=debug_output)
     self._log2timeline_path = None
@@ -953,7 +953,7 @@ class ExtractAndOutputWithPstealTestCase(StorageFileTestCase):
       test_results_path (str): path to store test results.
       debug_output (Optional[bool]): True if debug output should be generated.
     """
-    super(ExtractAndOutputWithPstealTestCase, self).__init__(
+    super().__init__(
         tools_path, test_sources_path, test_references_path,
         test_results_path, debug_output=debug_output)
     self._psteal_path = None
@@ -1145,7 +1145,7 @@ class ExtractAndAnalyzeTestCase(ExtractAndOutputTestCase):
     Returns:
       bool: True if the read was successful.
     """
-    if not super(ExtractAndAnalyzeTestCase, self).ReadAttributes(
+    if not super().ReadAttributes(
         test_definition_reader, test_definition):
       return False
 
@@ -1218,7 +1218,7 @@ class ExtractAndTagTestCase(ExtractAndOutputTestCase):
     Returns:
       bool: True if the read was successful.
     """
-    if not super(ExtractAndTagTestCase, self).ReadAttributes(
+    if not super().ReadAttributes(
         test_definition_reader, test_definition):
       return False
 
@@ -1300,7 +1300,7 @@ class ImageExportTestCase(TestCase):
       test_results_path (str): path to store test results.
       debug_output (Optional[bool]): True if debug output should be generated.
     """
-    super(ImageExportTestCase, self).__init__(
+    super().__init__(
         tools_path, test_sources_path, test_references_path,
         test_results_path, debug_output=debug_output)
     self._image_export_path = None
@@ -1734,7 +1734,7 @@ class AnalyzeAndOutputTestCase(StorageFileTestCase):
       test_results_path (str): path to store test results.
       debug_output (Optional[bool]): True if debug output should be generated.
     """
-    super(AnalyzeAndOutputTestCase, self).__init__(
+    super().__init__(
         tools_path, test_sources_path, test_references_path,
         test_results_path, debug_output=debug_output)
     self._InitializePsortPath()

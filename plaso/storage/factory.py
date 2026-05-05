@@ -14,7 +14,7 @@ except ModuleNotFoundError:
   redis_writer = None
 
 
-class StorageFactory(object):
+class StorageFactory:
   """Storage factory."""
 
   @classmethod

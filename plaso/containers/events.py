@@ -115,7 +115,7 @@ class DateLessLogHelper(interface.AttributeContainer):
 
   def __init__(self):
     """Initializes a date-less log helper attribute container."""
-    super(DateLessLogHelper, self).__init__()
+    super().__init__()
     self._event_data_stream_identifier = None
     self.earliest_date = None
     self.granularity = self.GRANULARITY_NO_YEAR
@@ -225,7 +225,7 @@ class EventData(interface.AttributeContainer):
     Args:
       data_type (Optional[str]): event data type indicator.
     """
-    super(EventData, self).__init__()
+    super().__init__()
     self._event_data_stream_identifier = None
     self._event_values_hash = None
     self._parser_chain = None
@@ -314,7 +314,7 @@ class EventDataStream(interface.AttributeContainer):
 
   def __init__(self):
     """Initializes an event data attribute container."""
-    super(EventDataStream, self).__init__()
+    super().__init__()
     self.file_entropy = None
     self.md5_hash = None
     self.path_spec = None
@@ -351,7 +351,7 @@ class EventObject(interface.AttributeContainer):
 
   def __init__(self):
     """Initializes an event attribute container."""
-    super(EventObject, self).__init__()
+    super().__init__()
     self._event_data_identifier = None
     self.date_time = None
     self.timestamp = None
@@ -419,7 +419,7 @@ class EventTag(interface.AttributeContainer):
 
   def __init__(self):
     """Initializes an event tag attribute container."""
-    super(EventTag, self).__init__()
+    super().__init__()
     self._event_identifier = None
     self.labels = []
 
@@ -517,7 +517,7 @@ class EventTripple(interface.AttributeContainer):
 
   def __init__(self):
     """Initializes an event tripple."""
-    super(EventTripple, self).__init__()
+    super().__init__()
     self.event = None
     self.event_data = None
     self.event_data_stream = None
@@ -549,7 +549,7 @@ class YearLessLogHelper(interface.AttributeContainer):
 
   def __init__(self):
     """Initializes a year-less log helper attribute container."""
-    super(YearLessLogHelper, self).__init__()
+    super().__init__()
     self._event_data_stream_identifier = None
     self.earliest_year = None
     self.last_relative_year = None

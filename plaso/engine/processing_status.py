@@ -3,7 +3,7 @@
 import time
 
 
-class ProcessStatus(object):
+class ProcessStatus:
   """The status of an individual process.
 
   Attributes:
@@ -59,7 +59,7 @@ class ProcessStatus(object):
 
   def __init__(self):
     """Initializes a process status."""
-    super(ProcessStatus, self).__init__()
+    super().__init__()
     self.display_name = None
     self.identifier = None
     self.number_of_consumed_event_data = 0
@@ -247,7 +247,7 @@ class ProcessStatus(object):
       self.number_of_produced_event_tags = number_of_produced_event_tags
 
 
-class ProcessingStatus(object):
+class ProcessingStatus:
   """The status of the overall extraction process (processing).
 
   Attributes:
@@ -263,7 +263,7 @@ class ProcessingStatus(object):
 
   def __init__(self):
     """Initializes a processing status."""
-    super(ProcessingStatus, self).__init__()
+    super().__init__()
     self._workers_status = {}
 
     self.aborted = False
@@ -461,7 +461,7 @@ class ProcessingStatus(object):
         number_of_consumed_reports, number_of_produced_reports)
 
 
-class EventsStatus(object):
+class EventsStatus:
   """The status of the events.
 
   Attributes:
@@ -476,7 +476,7 @@ class EventsStatus(object):
 
   def __init__(self):
     """Initializes an events status."""
-    super(EventsStatus, self).__init__()
+    super().__init__()
     self.number_of_duplicate_events = 0
     self.number_of_events_from_time_slice = 0
     self.number_of_filtered_events = 0
@@ -484,7 +484,7 @@ class EventsStatus(object):
     self.total_number_of_events = 0
 
 
-class TasksStatus(object):
+class TasksStatus:
   """The status of the tasks.
 
   Attributes:
@@ -497,7 +497,7 @@ class TasksStatus(object):
 
   def __init__(self):
     """Initializes a tasks status."""
-    super(TasksStatus, self).__init__()
+    super().__init__()
     self.number_of_abandoned_tasks = 0
     self.number_of_queued_tasks = 0
     self.number_of_tasks_pending_merge = 0

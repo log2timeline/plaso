@@ -25,7 +25,7 @@ class TestXMLOutputModule(interface.OutputModule):
 
   def __init__(self):
     """Initializes a XML output module for testing."""
-    super(TestXMLOutputModule, self).__init__()
+    super().__init__()
     self._field_formatting_helper = formatting_helper.FieldFormattingHelper()
     self.file_object = io.StringIO()
 

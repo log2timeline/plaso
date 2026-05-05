@@ -7,7 +7,7 @@ from plaso.engine import path_filters
 from plaso.lib import errors
 
 
-class YAMLFilterFile(object):
+class YAMLFilterFile:
   """YAML-based filter file.
 
   A YAML-based filter file contains one or more path filters.

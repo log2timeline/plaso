@@ -9,7 +9,7 @@ from dtfabric.runtime import fabric as dtfabric_fabric
 from plaso.lib import errors
 
 
-class DtFabricHelper(object):
+class DtFabricHelper:
   """dtFabric format definition helper mix-in.
 
   dtFabric defines its data format structures in dtFabric definition file,
@@ -56,7 +56,7 @@ class DtFabricHelper(object):
 
   def __init__(self):
     """Initializes the dtFabric format definition helper mix-in."""
-    super(DtFabricHelper, self).__init__()
+    super().__init__()
     self._data_type_maps = {}
     self._fabric = self._ReadDefinitionFile(self._DEFINITION_FILE)
 

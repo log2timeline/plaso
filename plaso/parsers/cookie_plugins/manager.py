@@ -3,7 +3,7 @@
 # pylint: disable=redundant-returns-doc
 
 
-class CookiePluginsManager(object):
+class CookiePluginsManager:
   """Class that implements the cookie plugins manager."""
 
   _plugin_classes = {}

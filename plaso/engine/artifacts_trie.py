@@ -8,7 +8,7 @@ from plaso.engine import logger
 from plaso.engine import path_helper
 
 
-class TrieNode(object):
+class TrieNode:
   """Represents a node in the Trie.
 
   Attributes:
@@ -26,14 +26,14 @@ class TrieNode(object):
           in the Trie, default is '/'.
       is_root (Optional[bool]): True if this node is the root node.
     """
-    super(TrieNode, self).__init__()
+    super().__init__()
     self.artifacts_names = []
     self.children = {}
     self.is_root = is_root
     self.path_separator = path_separator
 
 
-class ArtifactsTrie(object):
+class ArtifactsTrie:
   """Trie structure for storing artifact paths.
 
   Attributes:
@@ -44,7 +44,7 @@ class ArtifactsTrie(object):
 
   def __init__(self):
     """Initializes an artifact trie object."""
-    super(ArtifactsTrie, self).__init__()
+    super().__init__()
     self.artifacts_paths = {}
     self.root = TrieNode(is_root=True)
 

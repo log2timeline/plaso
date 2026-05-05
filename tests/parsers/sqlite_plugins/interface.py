@@ -26,7 +26,7 @@ class TestSQLitePlugin(interface.SQLitePlugin):
 
   def __init__(self):
     """Initializes a SQLite plugin."""
-    super(TestSQLitePlugin, self).__init__()
+    super().__init__()
     self.results = []
 
   # pylint: disable=unused-argument

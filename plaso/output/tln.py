@@ -126,7 +126,7 @@ class TLNOutputModule(shared_dsv.DSVOutputModule):
   def __init__(self):
     """Initializes an output module."""
     field_formatting_helper = TLNFieldFormattingHelper()
-    super(TLNOutputModule, self).__init__(
+    super().__init__(
         field_formatting_helper, self._FIELD_NAMES, delimiter='|',
         header=self._HEADER)
 
@@ -157,7 +157,7 @@ class L2TTLNOutputModule(shared_dsv.DSVOutputModule):
   def __init__(self):
     """Initializes an output module."""
     field_formatting_helper = TLNFieldFormattingHelper()
-    super(L2TTLNOutputModule, self).__init__(
+    super().__init__(
         field_formatting_helper, self._FIELD_NAMES, delimiter='|',
         header=self._HEADER)
 

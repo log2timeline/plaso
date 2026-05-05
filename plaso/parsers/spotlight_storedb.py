@@ -22,7 +22,7 @@ from plaso.parsers import interface
 from plaso.parsers import manager
 
 
-class SpotlightStoreIndexValue(object):
+class SpotlightStoreIndexValue:
   """Index value.
 
   Attributes:
@@ -32,7 +32,7 @@ class SpotlightStoreIndexValue(object):
 
   def __init__(self):
     """Initializes an index value."""
-    super(SpotlightStoreIndexValue, self).__init__()
+    super().__init__()
     self.table_index = None
     self.values_list = []
 
@@ -78,7 +78,7 @@ class SpotlightStoreMetadataItemEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(SpotlightStoreMetadataItemEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.added_time = None
     self.attribute_change_time = None
@@ -98,7 +98,7 @@ class SpotlightStoreMetadataItemEventData(events.EventData):
     self.used_times = None
 
 
-class SpotlightStoreMetadataAttribute(object):
+class SpotlightStoreMetadataAttribute:
   """Metadata attribute.
 
   Attributes:
@@ -110,14 +110,14 @@ class SpotlightStoreMetadataAttribute(object):
 
   def __init__(self):
     """Initializes a metadata attribute."""
-    super(SpotlightStoreMetadataAttribute, self).__init__()
+    super().__init__()
     self.key = None
     self.property_type = None
     self.value = None
     self.value_type = None
 
 
-class SpotlightStoreMetadataItem(object):
+class SpotlightStoreMetadataItem:
   """Metadata item.
 
   Attributes:
@@ -133,7 +133,7 @@ class SpotlightStoreMetadataItem(object):
 
   def __init__(self):
     """Initializes a record."""
-    super(SpotlightStoreMetadataItem, self).__init__()
+    super().__init__()
     self.attributes = {}
     self.data_size = 0
     self.flags = 0
@@ -151,7 +151,7 @@ class BaseSpotlightFile(dtfabric_helper.DtFabricHelper):
 
   def __init__(self):
     """Initializes a Apple Spotlight file."""
-    super(BaseSpotlightFile, self).__init__()
+    super().__init__()
     self._file_entry = None
     self._file_object = None
 
@@ -213,7 +213,7 @@ class SpotlightStreamsMapDataFile(BaseSpotlightFile):
       ranges (list[tuple[int, int]]): offset and size pairs of the stream value
           data ranges.
     """
-    super(SpotlightStreamsMapDataFile, self).__init__()
+    super().__init__()
     self._data_size = data_size
     self._ranges = ranges
     self.stream_values = []
@@ -284,7 +284,7 @@ class SpotlightStreamsMapHeaderFile(BaseSpotlightFile):
 
   def __init__(self):
     """Initializes a database streams map header file."""
-    super(SpotlightStreamsMapHeaderFile, self).__init__()
+    super().__init__()
     self.data_size = None
     self.number_of_buckets = None
     self.number_of_offsets = None
@@ -324,7 +324,7 @@ class SpotlightStreamsMapOffsetsFile(BaseSpotlightFile):
       data_size (int): data size.
       number_of_entries (int): number of entries in the offsets file.
     """
-    super(SpotlightStreamsMapOffsetsFile, self).__init__()
+    super().__init__()
     self._data_size = data_size
     self._number_of_entries = number_of_entries
     self.ranges = []
@@ -385,7 +385,7 @@ class SpotlightStoreDatabaseParser(
 
   def __init__(self):
     """Initializes an Apple Spotlight store database parser."""
-    super(SpotlightStoreDatabaseParser, self).__init__()
+    super().__init__()
     self._map_values = []
     self._metadata_lists = {}
     self._metadata_localized_strings = {}

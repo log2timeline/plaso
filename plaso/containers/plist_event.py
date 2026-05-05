@@ -17,7 +17,7 @@ class PlistTimeEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(PlistTimeEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.key = None
     self.root = None
     self.written_time = None

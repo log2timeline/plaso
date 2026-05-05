@@ -122,7 +122,7 @@ class AWSELBEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(AWSELBEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.actions_executed = None
     self.alpn_back_end_protocol = None
     self.alpn_client_preference_list = None

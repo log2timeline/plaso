@@ -10,7 +10,7 @@ from dfvfs.helpers import file_system_searcher
 from plaso.lib import errors
 
 
-class ArtifactPreprocessorPlugin(object):
+class ArtifactPreprocessorPlugin:
   """The artifact preprocessor plugin interface.
 
   The artifact preprocessor determines preprocessing attributes based on an
@@ -311,7 +311,7 @@ class WindowsRegistryValueArtifactPreprocessorPlugin(
 
 
 # TODO: rename class.
-class KnowledgeBasePreprocessorPlugin(object):
+class KnowledgeBasePreprocessorPlugin:
   """The knowledge base preprocessor plugin interface.
 
   The knowledge base preprocessor determines preprocessing attributes based on

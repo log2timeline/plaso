@@ -28,7 +28,7 @@ class SkyDriveLogEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(SkyDriveLogEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.added_time = None
     self.detail = None
     self.log_level = None
@@ -100,7 +100,7 @@ class SkyDriveLog1TextPlugin(interface.TextPlugin):
 
   def __init__(self):
     """Initializes a text parser plugin."""
-    super(SkyDriveLog1TextPlugin, self).__init__()
+    super().__init__()
     self._event_data = None
 
   def _ParseLoglineVersion1(self, parser_mediator, structure):
@@ -314,7 +314,7 @@ class SkyDriveLog2TextPlugin(interface.TextPluginWithLineContinuation):
 
   def __init__(self):
     """Initializes a text parser plugin."""
-    super(SkyDriveLog2TextPlugin, self).__init__()
+    super().__init__()
     self._detail_lines = None
     self._event_data = None
 

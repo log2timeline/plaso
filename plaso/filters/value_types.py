@@ -24,7 +24,7 @@ class DateTimeValueType(dfdatetime_posix_time.PosixTimeInMicroseconds):
       except (TypeError, ValueError):
         timestamp = None
 
-    super(DateTimeValueType, self).__init__(timestamp=timestamp)
+    super().__init__(timestamp=timestamp)
 
     if timestamp is None:
       try:

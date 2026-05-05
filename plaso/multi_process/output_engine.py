@@ -14,12 +14,12 @@ from plaso.output import mediator as output_mediator
 from plaso.storage import time_range as storage_time_range
 
 
-class PsortEventHeap(object):
+class PsortEventHeap:
   """Psort event heap."""
 
   def __init__(self):
     """Initializes a psort events heap."""
-    super(PsortEventHeap, self).__init__()
+    super().__init__()
     self._heap = []
 
   @property
@@ -106,7 +106,7 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
 
   def __init__(self):
     """Initializes an output and formatting multi-processing engine."""
-    super(OutputAndFormattingMultiProcessEngine, self).__init__()
+    super().__init__()
     # The export event heap is used to make sure the events are sorted in
     # a deterministic way.
     self._events_status = processing_status.EventsStatus()

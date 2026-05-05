@@ -31,7 +31,7 @@ from plaso.multi_process import task_manager
 from plaso.multi_process import zeromq_queue
 
 
-class _EventSourceHeap(object):
+class _EventSourceHeap:
   """Class that defines an event source heap."""
 
   def __init__(self, maximum_number_of_items=50000):
@@ -41,7 +41,7 @@ class _EventSourceHeap(object):
       maximum_number_of_items (Optional[int]): maximum number of items
           in the heap.
     """
-    super(_EventSourceHeap, self).__init__()
+    super().__init__()
     self._heap = []
     self._maximum_number_of_items = maximum_number_of_items
 
@@ -162,7 +162,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     if not worker_timeout:
       worker_timeout = definitions.DEFAULT_WORKER_TIMEOUT
 
-    super(ExtractionMultiProcessEngine, self).__init__()
+    super().__init__()
     self._enable_sigsegv_handler = False
     self._event_data_timeliner = None
     self._extraction_worker = None

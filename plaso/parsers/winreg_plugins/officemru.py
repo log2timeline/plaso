@@ -23,7 +23,7 @@ class OfficeMRUWindowsRegistryEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(OfficeMRUWindowsRegistryEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.key_path = None
     self.last_written_time = None
@@ -44,7 +44,7 @@ class OfficeMRUListWindowsRegistryEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(OfficeMRUListWindowsRegistryEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.entries = None
     self.key_path = None

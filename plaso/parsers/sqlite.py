@@ -19,7 +19,7 @@ class SQLiteCache(plugins.BasePluginCache):
 
   def __init__(self):
     """Initializes a SQLite cache."""
-    super(SQLiteCache, self).__init__()
+    super().__init__()
     self._row_caches = {}
 
   def CacheQueryResults(
@@ -104,7 +104,7 @@ class SQLiteCache(plugins.BasePluginCache):
     return self._row_caches[query_hash]
 
 
-class SQLiteDatabase(object):
+class SQLiteDatabase:
   """SQLite database.
 
   Attributes:
@@ -128,7 +128,7 @@ class SQLiteDatabase(object):
       temporary_directory (Optional[str]): path of the directory for temporary
           files.
     """
-    super(SQLiteDatabase, self).__init__()
+    super().__init__()
     self._database = None
     self._filename = filename
     self._temp_db_file_path = ''

@@ -1,7 +1,7 @@
 """Helper for parser and plugin filter expressions."""
 
 
-class ParserFilterExpressionHelper(object):
+class ParserFilterExpressionHelper:
   """Helper for parser and plugin filter expressions.
 
   A parser filter expression is a comma separated value string that denotes

@@ -20,7 +20,7 @@ from plaso.parsers import interface as parsers_interface
 from plaso.parsers import plugins as parsers_plugins
 
 
-class DataFormatDescriptor(object):
+class DataFormatDescriptor:
   """Descriptor of a specific data format.
 
   Attributes:
@@ -41,14 +41,14 @@ class DataFormatDescriptor(object):
         Extension activity database".
       url (Optional[str]): URL to more information about the data format.
     """
-    super(DataFormatDescriptor, self).__init__()
+    super().__init__()
     # TODO: add data format name aliases.
     self.category = category
     self.name = name
     self.url = url
 
 
-class DataFormatInformationExtractor(object):
+class DataFormatInformationExtractor:
   """Data format information extractor."""
 
   _CATEGORIES_OUTPUT_ORDER = [

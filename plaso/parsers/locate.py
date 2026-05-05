@@ -26,7 +26,7 @@ class LocateDatabaseEvent(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(LocateDatabaseEvent, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.entries = None
     self.path = None
     self.written_time = None
@@ -44,7 +44,7 @@ class LocateDatabaseParser(
 
   def __init__(self):
     """Initializes a locate database (updatedb) file parser."""
-    super(LocateDatabaseParser, self).__init__()
+    super().__init__()
     self._cstring_map = self._GetDataTypeMap('cstring')
     self._directory_entry_header_map = self._GetDataTypeMap(
         'directory_entry_header')

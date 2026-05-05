@@ -32,7 +32,7 @@ class MRUListEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(MRUListEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.entries = None
     self.key_path = None
     self.last_written_time = None
@@ -49,7 +49,7 @@ class MRUListStringRegistryKeyFilter(
 
   def __init__(self):
     """Initializes a Windows Registry key filter object."""
-    super(MRUListStringRegistryKeyFilter, self).__init__(self._VALUE_NAMES)
+    super().__init__(self._VALUE_NAMES)
 
   def Match(self, registry_key):
     """Determines if a Windows Registry key matches the filter.
@@ -66,7 +66,7 @@ class MRUListStringRegistryKeyFilter(
       if key_path.endswith(ignore_key_path_suffix):
         return False
 
-    return super(MRUListStringRegistryKeyFilter, self).Match(registry_key)
+    return super().Match(registry_key)
 
 
 class BaseMRUListWindowsRegistryPlugin(

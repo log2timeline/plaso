@@ -24,7 +24,7 @@ class FileHistoryNamespaceEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(FileHistoryNamespaceEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.creation_time = None
     self.file_attribute = None

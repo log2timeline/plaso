@@ -33,7 +33,7 @@ class TestOutputModule(output_interface.OutputModule):
 
   def __init__(self):
     """Initializes an output module."""
-    super(TestOutputModule, self).__init__()
+    super().__init__()
     self.events = []
     self.macb_groups = []
 

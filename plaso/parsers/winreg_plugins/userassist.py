@@ -31,7 +31,7 @@ class UserAssistWindowsRegistryEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(UserAssistWindowsRegistryEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.application_focus_count = None
     self.application_focus_duration = None
@@ -57,7 +57,7 @@ class UserAssistWindowsRegistryKeyPathFilter(
       user_assist_guid (str): UserAssist GUID.
     """
     key_path = self._KEY_PATH_FORMAT.format(user_assist_guid)
-    super(UserAssistWindowsRegistryKeyPathFilter, self).__init__(key_path)
+    super().__init__(key_path)
 
 
 class UserAssistPlugin(

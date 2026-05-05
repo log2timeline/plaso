@@ -25,7 +25,7 @@ class IOSLockdowndLogData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(IOSLockdowndLogData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.body = None
     self.process_identifier = None
     self.written_time = None
@@ -72,7 +72,7 @@ class IOSLockdowndLogTextPlugin(interface.TextPluginWithLineContinuation):
 
   def __init__(self):
     """Initializes a text parser plugin."""
-    super(IOSLockdowndLogTextPlugin, self).__init__()
+    super().__init__()
     self._body_lines = None
     self._event_data = None
 

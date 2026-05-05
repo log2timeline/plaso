@@ -13,7 +13,7 @@ from plaso.filters import logger
 from plaso.lib import errors
 
 
-class Token(object):
+class Token:
   """An event filter expression parser token.
 
   Attributes:
@@ -37,7 +37,7 @@ class Token(object):
           EventFilterExpressionParser to call.
       next_state (str): next state we transition to if this Token matches.
     """
-    super(Token, self).__init__()
+    super().__init__()
     self._regex = re.compile(regex, re.DOTALL | re.I | re.M | re.S | re.U)
     self.actions = []
     self.next_state = next_state
@@ -59,7 +59,7 @@ class Token(object):
     return self._regex.match(expression)
 
 
-class EventFilterExpressionParser(object):
+class EventFilterExpressionParser:
   """Event filter expression parser.
 
   Examples of valid syntax:
@@ -153,7 +153,7 @@ class EventFilterExpressionParser(object):
 
   def __init__(self):
     """Initializes an event filter expression parser."""
-    super(EventFilterExpressionParser, self).__init__()
+    super().__init__()
     self._buffer = ''
     self._datetime_value = None
     self._current_expression = None

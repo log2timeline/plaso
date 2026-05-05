@@ -33,7 +33,7 @@ class Microsoft365AuditLogEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(Microsoft365AuditLogEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.audit_record_identifier = None
     self.application_access_context = None

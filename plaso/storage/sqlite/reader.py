@@ -13,7 +13,7 @@ class SQLiteStorageReader(reader.StorageReader):
     Args:
       path (str): path to the input SQLite database.
     """
-    super(SQLiteStorageReader, self).__init__()
+    super().__init__()
     self._path = path
     self._store = sqlite_file.SQLiteStorageFile()
     self._store.Open(path=path)

@@ -106,7 +106,7 @@ class PopularityContestSessionEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(PopularityContestSessionEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.details = None
     self.end_time = None
@@ -132,7 +132,7 @@ class PopularityContestEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(PopularityContestEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.access_time = None
     self.change_time = None
     self.mru = None
@@ -191,7 +191,7 @@ class PopularityContestTextPlugin(interface.TextPlugin):
 
   def __init__(self):
     """Initializes a text parser plugin."""
-    super(PopularityContestTextPlugin, self).__init__()
+    super().__init__()
     self._session_event_data = None
 
   def _GetDateTimeValueFromStructure(self, structure, name):

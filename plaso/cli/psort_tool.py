@@ -56,7 +56,7 @@ class PsortTool(
       output_writer (Optional[OutputWriter]): output writer, where None
           indicates that the stdout output writer should be used.
     """
-    super(PsortTool, self).__init__(
+    super().__init__(
         input_reader=input_reader, output_writer=output_writer)
     self._deduplicate_events = True
     self._preferred_language = None
@@ -203,7 +203,7 @@ class PsortTool(
     Raises:
       BadConfigOption: if the options are invalid.
     """
-    super(PsortTool, self)._ParseInformationalOptions(options)
+    super()._ParseInformationalOptions(options)
 
     self._quiet_mode = getattr(options, 'quiet', False)
 

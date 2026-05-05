@@ -1,7 +1,7 @@
 """MacOS Darwin helpers."""
 
 
-class DarwinSystemErrorHelper(object):
+class DarwinSystemErrorHelper:
   """Darwin system error helper.
 
   Also see:

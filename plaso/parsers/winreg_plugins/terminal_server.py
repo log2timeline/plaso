@@ -22,7 +22,7 @@ class TerminalServerClientConnectionEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(TerminalServerClientConnectionEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.entries = None
     self.key_path = None
@@ -44,7 +44,7 @@ class TerminalServerClientMRUEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(TerminalServerClientMRUEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.entries = None
     self.key_path = None

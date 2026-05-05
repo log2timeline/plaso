@@ -18,7 +18,7 @@ from plaso.output import manager as output_manager
 # in mix-ins.
 
 
-class AnalysisPluginOptions(object):
+class AnalysisPluginOptions:
   """Analysis plugin options mix-in."""
 
   # pylint: disable=no-member
@@ -63,14 +63,14 @@ class AnalysisPluginOptions(object):
     table_view.Write(self._output_writer)
 
 
-class HashersOptions(object):
+class HashersOptions:
   """Hashers options mix-in."""
 
   # pylint: disable=no-member
 
   def __init__(self):
     """Initializes hasher options."""
-    super(HashersOptions, self).__init__()
+    super().__init__()
     self._hasher_file_size_limit = None
     self._hasher_names_string = None
 
@@ -87,7 +87,7 @@ class HashersOptions(object):
     table_view.Write(self._output_writer)
 
 
-class OutputModuleOptions(object):
+class OutputModuleOptions:
   """Output module options mix-in.
 
   Attributes:
@@ -102,7 +102,7 @@ class OutputModuleOptions(object):
 
   def __init__(self):
     """Initializes output module options."""
-    super(OutputModuleOptions, self).__init__()
+    super().__init__()
     self._output_additional_fields = []
     self._output_custom_fields = []
     self._output_custom_formatters_path = None
@@ -350,14 +350,14 @@ class OutputModuleOptions(object):
     table_view.Write(self._output_writer)
 
 
-class ProfilingOptions(object):
+class ProfilingOptions:
   """Profiling options mix-in."""
 
   # pylint: disable=no-member
 
   def __init__(self):
     """Initializes profiling options."""
-    super(ProfilingOptions, self).__init__()
+    super().__init__()
     self._profilers = set()
     self._profiling_directory = None
     self._profiling_sample_rate = (
@@ -376,7 +376,7 @@ class ProfilingOptions(object):
     table_view.Write(self._output_writer)
 
 
-class StorageFileOptions(object):
+class StorageFileOptions:
   """Storage file options mix-in."""
 
   def AddStorageOptions(self, argument_parser):

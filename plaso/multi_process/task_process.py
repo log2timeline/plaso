@@ -37,7 +37,7 @@ class MultiProcessTaskProcess(base_process.MultiProcessBaseProcess):
       processed_task_storage_path = os.path.join(
           processing_configuration.task_storage_path, 'processed')
 
-    super(MultiProcessTaskProcess, self).__init__(
+    super().__init__(
         processing_configuration, **kwargs)
     self._processed_task_storage_path = processed_task_storage_path
     self._storage_factory = storage_factory.StorageFactory

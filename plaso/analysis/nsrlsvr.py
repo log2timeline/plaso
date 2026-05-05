@@ -26,7 +26,7 @@ class NsrlsvrAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
 
   def __init__(self):
     """Initializes an nsrlsvr analysis plugin."""
-    super(NsrlsvrAnalysisPlugin, self).__init__()
+    super().__init__()
     self._host = None
     self._label = self.DEFAULT_LABEL
     self._port = None

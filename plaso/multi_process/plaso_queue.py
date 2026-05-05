@@ -11,11 +11,11 @@ scalability.
 import abc
 
 
-class QueueAbort(object):
+class QueueAbort:
   """Class that implements a queue abort."""
 
 
-class Queue(object):
+class Queue:
   """Class that implements the queue interface."""
 
   @abc.abstractmethod

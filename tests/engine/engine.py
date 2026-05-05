@@ -33,7 +33,7 @@ class TestEngine(engine.BaseEngine):
     file_system_builder.AddFileReadData(
         '/Windows/System32/config/SYSTEM', test_file_path)
 
-    super(TestEngine, self).__init__()
+    super().__init__()
     self._file_system = file_system_builder.file_system
     self._mount_point = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_FAKE, location='/')

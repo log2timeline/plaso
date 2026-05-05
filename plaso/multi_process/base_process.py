@@ -38,7 +38,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
       kwargs (dict[str,object]): keyword arguments to pass to
           multiprocessing.Process.
     """
-    super(MultiProcessBaseProcess, self).__init__(**kwargs)
+    super().__init__(**kwargs)
     self._analyzers_profiler = None
     self._debug_output = False
     self._enable_sigsegv_handler = enable_sigsegv_handler

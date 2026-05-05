@@ -1,7 +1,7 @@
 """Manages custom event formatter helpers."""
 
 
-class FormattersManager(object):
+class FormattersManager:
   """Custom event formatter helpers manager."""
 
   _custom_formatter_helpers = {}

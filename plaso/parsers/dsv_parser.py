@@ -48,7 +48,7 @@ class DSVParser(interface.FileObjectParser):
 
   def __init__(self):
     """Initializes a delimiter separated values (DSV) parser."""
-    super(DSVParser, self).__init__()
+    super().__init__()
     self._encoding = self._ENCODING
     self._end_of_line = '\n'
     self._maximum_line_length = (

@@ -37,7 +37,7 @@ class PEDLLImportEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(PEDLLImportEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.delayed_import = None
     self.modification_time = None
     self.name = None
@@ -63,7 +63,7 @@ class PEFileEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(PEFileEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.creation_time = None
     self.export_dll_name = None
     self.export_table_modification_time = None
@@ -87,7 +87,7 @@ class PEResourceEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(PEResourceEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.identifier = None
     self.modification_time = None
     self.name = None
@@ -111,7 +111,7 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
   def __init__(self):
     """Initializes a PE parser."""
-    super(PEParser, self).__init__()
+    super().__init__()
     self._resource_file_helper = resource_files.WindowsResourceFileHelper
 
   def _GetPEType(self, pefile_object):

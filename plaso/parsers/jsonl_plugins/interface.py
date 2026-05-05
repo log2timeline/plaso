@@ -99,7 +99,7 @@ class JSONLPlugin(plugins.BasePlugin):
       file_object (Optional[dfvfs.FileIO]): a file-like object.
     """
     # This will raise if unhandled keyword arguments are passed.
-    super(JSONLPlugin, self).Process(parser_mediator)
+    super().Process(parser_mediator)
 
     file_object.seek(0, os.SEEK_SET)
     text_file_object = text_file.TextFile(file_object)

@@ -54,7 +54,7 @@ class WinLnkLinkEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(WinLnkLinkEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.access_time = None
     self.birth_droid_file_identifier = None
     self.birth_droid_volume_identifier = None
@@ -91,7 +91,7 @@ class WinLnkParser(interface.FileObjectParser):
 
   def __init__(self):
     """Initializes a Windows Shortcut (LNK) file parser."""
-    super(WinLnkParser, self).__init__()
+    super().__init__()
     self._path_escape_characters = str.maketrans(self._PATH_ESCAPE_CHARACTERS)
 
   def _GetDateTime(self, filetime):

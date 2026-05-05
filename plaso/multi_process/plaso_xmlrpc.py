@@ -18,7 +18,7 @@ class XMLRPCClient(rpc.RPCClient):
 
   def __init__(self):
     """Initializes a RPC client."""
-    super(XMLRPCClient, self).__init__()
+    super().__init__()
     self._xmlrpc_proxy = None
 
   def CallFunction(self):
@@ -79,7 +79,7 @@ class ThreadedXMLRPCServer(rpc.RPCServer):
       callback (function): callback function to invoke on get status RPC
           request.
     """
-    super(ThreadedXMLRPCServer, self).__init__(callback)
+    super().__init__(callback)
     self._rpc_thread = None
     self._xmlrpc_server = None
 

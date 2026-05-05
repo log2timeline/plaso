@@ -30,7 +30,7 @@ class MacOSNotificationCenterEventData(events.EventData):
 
   def __init__(self):
     """Initialize event data."""
-    super(MacOSNotificationCenterEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.body = None
     self.bundle_name = None

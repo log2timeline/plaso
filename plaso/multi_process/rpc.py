@@ -3,7 +3,7 @@
 import abc
 
 
-class RPCClient(object):
+class RPCClient:
   """RPC client interface."""
 
   @abc.abstractmethod
@@ -28,7 +28,7 @@ class RPCClient(object):
     """
 
 
-class RPCServer(object):
+class RPCServer:
   """RPC server interface."""
 
   def __init__(self, callback):
@@ -37,7 +37,7 @@ class RPCServer(object):
     Args:
       callback (function): callback to invoke on get status RPC request.
     """
-    super(RPCServer, self).__init__()
+    super().__init__()
     self._callback = callback
 
   # pylint: disable=redundant-returns-doc

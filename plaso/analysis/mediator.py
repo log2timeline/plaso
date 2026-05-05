@@ -7,7 +7,7 @@ from plaso.containers import warnings
 from plaso.engine import path_helper
 
 
-class AnalysisMediator(object):
+class AnalysisMediator:
   """Analysis plugin mediator.
 
   Attributes:
@@ -34,7 +34,7 @@ class AnalysisMediator(object):
           analysis.
       user_accounts (Optional[list[UserAccountArtifact]]): user accounts.
     """
-    super(AnalysisMediator, self).__init__()
+    super().__init__()
     self._abort = False
     self._data_location = data_location
     self._event_filter_expression = None

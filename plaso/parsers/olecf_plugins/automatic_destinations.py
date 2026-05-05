@@ -36,7 +36,7 @@ class AutomaticDestinationsDestListEntryEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(AutomaticDestinationsDestListEntryEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.birth_droid_file_identifier = None
     self.birth_droid_volume_identifier = None
@@ -204,7 +204,7 @@ class AutomaticDestinationsOLECFPlugin(
       ValueError: If the root_item is not set.
     """
     # This will raise if unhandled keyword arguments are passed.
-    super(AutomaticDestinationsOLECFPlugin, self).Process(
+    super().Process(
         parser_mediator, **kwargs)
 
     if not root_item:

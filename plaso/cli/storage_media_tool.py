@@ -37,7 +37,7 @@ class StorageMediaToolVolumeScannerOptions(
 
   def __init__(self):
     """Initializes volume scanner options."""
-    super(StorageMediaToolVolumeScannerOptions, self).__init__()
+    super().__init__()
     self.snapshots_only = False
 
 
@@ -56,7 +56,7 @@ class StorageMediaToolMediator(dfvfs_command_line.CLIVolumeScannerMediator):
       dfvfs.ScannerError: if a volume cannot be resolved from the volume
           identifier.
     """
-    super(StorageMediaToolMediator, self)._PrintAPFSVolumeIdentifiersOverview(
+    super()._PrintAPFSVolumeIdentifiersOverview(
         volume_system, volume_identifiers)
     self._output_writer.Write('\n')
 
@@ -72,7 +72,7 @@ class StorageMediaToolMediator(dfvfs_command_line.CLIVolumeScannerMediator):
       dfvfs.ScannerError: if a volume cannot be resolved from the volume
           identifier.
     """
-    super(StorageMediaToolMediator, self)._PrintLVMVolumeIdentifiersOverview(
+    super()._PrintLVMVolumeIdentifiersOverview(
         volume_system, volume_identifiers)
     self._output_writer.Write('\n')
 
@@ -88,7 +88,7 @@ class StorageMediaToolMediator(dfvfs_command_line.CLIVolumeScannerMediator):
       dfvfs.ScannerError: if a volume cannot be resolved from the volume
           identifier.
     """
-    super(StorageMediaToolMediator, self)._PrintPartitionIdentifiersOverview(
+    super()._PrintPartitionIdentifiersOverview(
         volume_system, volume_identifiers)
     self._output_writer.Write('\n')
 
@@ -104,7 +104,7 @@ class StorageMediaToolMediator(dfvfs_command_line.CLIVolumeScannerMediator):
       dfvfs.ScannerError: if a volume cannot be resolved from the volume
           identifier.
     """
-    super(StorageMediaToolMediator, self)._PrintVSSStoreIdentifiersOverview(
+    super()._PrintVSSStoreIdentifiersOverview(
         volume_system, volume_identifiers)
     self._output_writer.Write('\n')
 
@@ -168,7 +168,7 @@ class StorageMediaToolVolumeScanner(dfvfs_volume_scanner.VolumeScanner):
     Args:
       mediator (Optional[VolumeScannerMediator]): a volume scanner mediator.
     """
-    super(StorageMediaToolVolumeScanner, self).__init__(mediator=mediator)
+    super().__init__(mediator=mediator)
     self._credential_configurations = []
     self._snapshots_only = False
 
@@ -238,7 +238,7 @@ class StorageMediaToolVolumeScanner(dfvfs_volume_scanner.VolumeScanner):
           supported, the scan node is invalid or there are no credentials
           defined for the format.
     """
-    super(StorageMediaToolVolumeScanner, self)._ScanEncryptedVolume(
+    super()._ScanEncryptedVolume(
         scan_context, scan_node, options)
 
     if not scan_context.IsLockedScanNode(scan_node.path_spec):
@@ -382,7 +382,7 @@ class StorageMediaTool(tools.CLITool):
       output_writer (Optional[OutputWriter]): output writer, where None
           indicates that the stdout output writer should be used.
     """
-    super(StorageMediaTool, self).__init__(
+    super().__init__(
         input_reader=input_reader, output_writer=output_writer)
     self._custom_artifacts_path = None
     self._artifact_definitions_path = None

@@ -13,7 +13,7 @@ from plaso.engine import logger
 from plaso.engine import path_helper
 
 
-class ArtifactDefinitionsFiltersHelper(object):
+class ArtifactDefinitionsFiltersHelper:
   """Helper to create collection filters based on artifact definitions.
 
   Builds collection filters from forensic artifact definitions.
@@ -51,7 +51,7 @@ class ArtifactDefinitionsFiltersHelper(object):
       artifacts_registry (artifacts.ArtifactDefinitionsRegistry): artifact
           definitions registry.
     """
-    super(ArtifactDefinitionsFiltersHelper, self).__init__()
+    super().__init__()
     self._artifacts_registry = artifacts_registry
 
     self.artifacts_trie = artifacts_trie.ArtifactsTrie()

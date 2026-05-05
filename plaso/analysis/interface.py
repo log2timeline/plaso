@@ -12,7 +12,7 @@ from plaso.containers import reports
 from plaso.lib import definitions
 
 
-class AnalysisPlugin(object):
+class AnalysisPlugin:
   """Class that defines the analysis plugin interface."""
 
   # The name of the plugin. This is the name that is matched against when
@@ -25,7 +25,7 @@ class AnalysisPlugin(object):
 
   def __init__(self):
     """Initializes an analysis plugin."""
-    super(AnalysisPlugin, self).__init__()
+    super().__init__()
     self._analysis_counter = collections.Counter()
     self.plugin_type = analysis_definitions.PLUGIN_TYPE_REPORT
 

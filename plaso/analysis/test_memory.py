@@ -14,7 +14,7 @@ class TestMemoryAnalysisPlugin(interface.AnalysisPlugin):
 
   def __init__(self):
     """Initializes an analysis plugin for testing memory consumption."""
-    super(TestMemoryAnalysisPlugin, self).__init__()
+    super().__init__()
     self._objects = []
 
   def CompileReport(self, analysis_mediator):

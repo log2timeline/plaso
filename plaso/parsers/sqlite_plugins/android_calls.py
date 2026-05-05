@@ -27,7 +27,7 @@ class AndroidCallEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(AndroidCallEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.call_type = None
     self.duration = None
     self.end_time = None

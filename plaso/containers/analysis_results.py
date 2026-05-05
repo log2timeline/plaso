@@ -30,7 +30,7 @@ class BrowserSearchAnalysisResult(interface.AttributeContainer):
       search_engine (Optional[str]): search engine that was queried.
       search_term (Optional[str]): term searched for.
     """
-    super(BrowserSearchAnalysisResult, self).__init__()
+    super().__init__()
     self.number_of_queries = number_of_queries
     self.search_engine = search_engine
     self.search_term = search_term
@@ -62,7 +62,7 @@ class ChromeExtensionAnalysisResult(interface.AttributeContainer):
       username (Optional[str]): name of a user that has installed the Chrome
           extension.
     """
-    super(ChromeExtensionAnalysisResult, self).__init__()
+    super().__init__()
     self.extension = extension
     self.extension_identifier = extension_identifier
     self.username = username

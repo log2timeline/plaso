@@ -6,7 +6,7 @@ from plaso.formatters import interface
 from plaso.lib import errors
 
 
-class YAMLFormattersFile(object):
+class YAMLFormattersFile:
   """YAML-based formatters file.
 
   A YAML-based formatters file contains one or more event formatter

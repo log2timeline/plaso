@@ -36,8 +36,7 @@ class AndroidTwitterContactEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(AndroidTwitterContactEventData,
-          self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.creation_time = None
     self.description = None
     self.followers = None
@@ -70,7 +69,7 @@ class AndroidTwitterSearchEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(AndroidTwitterSearchEventData,self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.creation_time = None
     self.name = None
     self.query = None
@@ -96,7 +95,7 @@ class AndroidTwitterStatusEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(AndroidTwitterStatusEventData,self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.author_identifier = None
     self.content = None
     self.creation_time = None

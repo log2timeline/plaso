@@ -16,7 +16,7 @@ import re
 from plaso.formatters import logger
 
 
-class EventFormatterHelper(object):
+class EventFormatterHelper:
   """Base class of helper for formatting event data."""
 
   @abc.abstractmethod
@@ -54,7 +54,7 @@ class BooleanEventFormatterHelper(EventFormatterHelper):
       value_if_false (str): output value if the boolean input value is False.
       value_if_true (str): output value if the boolean input value is True.
     """
-    super(BooleanEventFormatterHelper, self).__init__()
+    super().__init__()
     self.input_attribute = input_attribute
     self.output_attribute = output_attribute
     self.value_if_false = value_if_false
@@ -118,7 +118,7 @@ class EnumerationEventFormatterHelper(EventFormatterHelper):
       values (Optional[dict[str, str]]): mapping of enumeration input and
           output values.
     """
-    super(EnumerationEventFormatterHelper, self).__init__()
+    super().__init__()
     self.default = default
     self.input_attribute = input_attribute
     self.output_attribute = output_attribute
@@ -167,7 +167,7 @@ class FlagsEventFormatterHelper(EventFormatterHelper):
       values (Optional[dict[str, str]]): mapping of flags input and output
           values.
     """
-    super(FlagsEventFormatterHelper, self).__init__()
+    super().__init__()
     self.input_attribute = input_attribute
     self.output_attribute = output_attribute
     self.values = values or {}
@@ -191,7 +191,7 @@ class FlagsEventFormatterHelper(EventFormatterHelper):
     event_values[self.output_attribute] = ', '.join(output_values)
 
 
-class EventFormatter(object):
+class EventFormatter:
   """Base class to format event values.
 
   Attributes:
@@ -212,7 +212,7 @@ class EventFormatter(object):
       data_type (Optional[str]): unique identifier for the event data supported
           by the formatter.
     """
-    super(EventFormatter, self).__init__()
+    super().__init__()
     self._data_type = data_type
     self._format_string_attribute_names = None
 
@@ -360,7 +360,7 @@ class BasicEventFormatter(EventFormatter):
       format_string (Optional[str]): (long) message format string.
       format_string_short (Optional[str]): short message format string.
     """
-    super(BasicEventFormatter, self).__init__(data_type=data_type)
+    super().__init__(data_type=data_type)
     self._format_string_attribute_names = None
     self._format_string = format_string
     self._format_string_short = format_string_short
@@ -440,7 +440,7 @@ class ConditionalEventFormatter(EventFormatter):
     if format_string_separator is None:
       format_string_separator = self._DEFAULT_FORMAT_STRING_SEPARATOR
 
-    super(ConditionalEventFormatter, self).__init__(data_type=data_type)
+    super().__init__(data_type=data_type)
     self._format_string_pieces = format_string_pieces or []
     self._format_string_pieces_map = []
     self._format_string_separator = format_string_separator

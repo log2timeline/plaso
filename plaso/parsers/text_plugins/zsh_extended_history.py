@@ -24,7 +24,7 @@ class ZshHistoryEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(ZshHistoryEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.command = None
     self.elapsed_seconds = None
     self.last_written_time = None
@@ -61,7 +61,7 @@ class ZshExtendedHistoryTextPlugin(interface.TextPluginWithLineContinuation):
 
   def __init__(self):
     """Initializes a text parser plugin."""
-    super(ZshExtendedHistoryTextPlugin, self).__init__()
+    super().__init__()
     self._command_lines = None
     self._event_data = None
 

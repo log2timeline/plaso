@@ -29,7 +29,7 @@ class AnalysisWarning(interface.AttributeContainer):
       plugin_name (Optional[str]): name of the analysis plugin to which the
           warning applies.
     """
-    super(AnalysisWarning, self).__init__()
+    super().__init__()
     self.message = message
     self.plugin_name = plugin_name
 
@@ -63,7 +63,7 @@ class ExtractionWarning(interface.AttributeContainer):
       path_spec (Optional[dfvfs.PathSpec]): path specification of the file entry
           to which the warning applies.
     """
-    super(ExtractionWarning, self).__init__()
+    super().__init__()
     self.message = message
     self.parser_chain = parser_chain
     self.path_spec = path_spec
@@ -100,7 +100,7 @@ class PreprocessingWarning(interface.AttributeContainer):
       plugin_name (Optional[str]): name of the preprocessing plugin to which the
           warning applies.
     """
-    super(PreprocessingWarning, self).__init__()
+    super().__init__()
     self.message = message
     self.path_spec = path_spec
     self.plugin_name = plugin_name
@@ -134,7 +134,7 @@ class RecoveryWarning(interface.AttributeContainer):
       path_spec (Optional[dfvfs.PathSpec]): path specification of the file entry
           to which the warning applies.
     """
-    super(RecoveryWarning, self).__init__()
+    super().__init__()
     self.message = message
     self.parser_chain = parser_chain
     self.path_spec = path_spec
@@ -169,7 +169,7 @@ class TimeliningWarning(interface.AttributeContainer):
       path_spec (Optional[dfvfs.PathSpec]): path specification of the file entry
           to which the warning applies.
     """
-    super(TimeliningWarning, self).__init__()
+    super().__init__()
     self.message = message
     self.parser_chain = parser_chain
     self.path_spec = path_spec

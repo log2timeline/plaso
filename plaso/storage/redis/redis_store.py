@@ -38,7 +38,7 @@ class BaseRedisAttributeContainerStore(
 
   def __init__(self):
     """Initializes a Redis attribute container store."""
-    super(BaseRedisAttributeContainerStore, self).__init__()
+    super().__init__()
     self._json_serializer = (
         containers_json_serializer.AttributeContainerJSONSerializer)
     self._redis_client = None
@@ -346,7 +346,7 @@ class RedisAttributeContainerStore(BaseRedisAttributeContainerStore):
 
   def __init__(self):
     """Initializes a Redis attribute container store."""
-    super(RedisAttributeContainerStore, self).__init__()
+    super().__init__()
     self._serializer = json_serializer.JSONAttributeContainerSerializer
     self._serializers_profiler = None
 
@@ -428,8 +428,7 @@ class RedisAttributeContainerStore(BaseRedisAttributeContainerStore):
     """
     schema = self._GetAttributeContainerSchema(container.CONTAINER_TYPE)
     if schema:
-      super(RedisAttributeContainerStore, self)._WriteNewAttributeContainer(
-          container)
+      super()._WriteNewAttributeContainer(container)
     else:
       next_sequence_number = self._GetAttributeContainerNextSequenceNumber(
           container.CONTAINER_TYPE)
@@ -470,9 +469,7 @@ class RedisAttributeContainerStore(BaseRedisAttributeContainerStore):
     """
     schema = self._GetAttributeContainerSchema(container_type)
     if schema:
-      return super(
-          RedisAttributeContainerStore, self).GetAttributeContainerByIndex(
-              container_type, index)
+      return super().GetAttributeContainerByIndex(container_type, index)
 
     identifier = containers_interface.AttributeContainerIdentifier(
         name=container_type, sequence_number=index + 1)
@@ -512,9 +509,8 @@ class RedisAttributeContainerStore(BaseRedisAttributeContainerStore):
     """
     schema = self._GetAttributeContainerSchema(container_type)
     if schema:
-      yield from super(
-          RedisAttributeContainerStore, self).GetAttributeContainers(
-              container_type, filter_expression=filter_expression)
+      yield from super().GetAttributeContainers(
+          container_type, filter_expression=filter_expression)
     else:
       redis_hash_name = self._GetRedisHashName(container_type)
       for redis_key, serialized_data in self._redis_client.hscan_iter(

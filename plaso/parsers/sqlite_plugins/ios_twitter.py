@@ -32,7 +32,7 @@ class IOSTwitterContactEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(IOSTwitterContactEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.creation_time = None
     self.description = None
     self.followers_count = None
@@ -68,7 +68,7 @@ class IOSTwitterStatusEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(IOSTwitterStatusEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.creation_time = None
     self.favorite_count = None
     self.favorited = None

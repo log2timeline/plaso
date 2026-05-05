@@ -50,7 +50,7 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     if worker_memory_limit is None:
       worker_memory_limit = definitions.DEFAULT_WORKER_MEMORY_LIMIT
 
-    super(AnalysisMultiProcessEngine, self).__init__()
+    super().__init__()
     self._analysis_plugins = {}
     self._completed_analysis_processes = set()
     self._data_location = None

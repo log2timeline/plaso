@@ -81,7 +81,7 @@ class PstealTool(
       output_writer (Optional[OutputWriter]): output writer, where None
           indicates that the stdout output writer should be used.
     """
-    super(PstealTool, self).__init__(
+    super().__init__(
         input_reader=input_reader, output_writer=output_writer)
     self._artifacts_registry = None
     self._deduplicate_events = True

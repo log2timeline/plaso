@@ -21,7 +21,7 @@ class MacOSSoftwareUpdateEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(MacOSSoftwareUpdateEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.full_update_time = None
     self.recommended_updates = None
     self.system_version = None

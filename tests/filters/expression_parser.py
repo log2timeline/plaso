@@ -26,7 +26,7 @@ class TestBinaryOperator(filters.GenericBinaryOperator):
     Args:
       arguments (Optional[object]): operands of the filter.
     """
-    super(TestBinaryOperator, self).__init__(arguments=arguments, **kwargs)
+    super().__init__(arguments=arguments, **kwargs)
     self.values = []
 
   def _CompareValue(self, event_value, filter_value):

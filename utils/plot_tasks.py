@@ -14,7 +14,7 @@ import numpy
 from matplotlib import pyplot
 
 
-class TaskMeasurements(object):
+class TaskMeasurements:
   """Measurements of a task.
 
   Attributes:
@@ -36,7 +36,7 @@ class TaskMeasurements(object):
 
   def __init__(self):
     """Initializes a task measurement."""
-    super(TaskMeasurements, self).__init__()
+    super().__init__()
     self.completed_time = None
     self.created_time = None
     self.merging_duration = None

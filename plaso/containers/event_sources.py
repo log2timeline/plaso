@@ -31,7 +31,7 @@ class EventSource(interface.AttributeContainer):
       file_entry_type (Optional[str]): dfVFS file entry type.
       path_spec (Optional[dfvfs.PathSpec]): path specification.
     """
-    super(EventSource, self).__init__()
+    super().__init__()
     self.data_type = self.DATA_TYPE
     self.file_entry_type = file_entry_type
     self.path_spec = path_spec

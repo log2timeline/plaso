@@ -29,7 +29,7 @@ class APTHistoryLogEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(APTHistoryLogEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.command = None
     self.command_line = None
     self.end_time = None
@@ -91,7 +91,7 @@ class APTHistoryLogTextPlugin(interface.TextPlugin):
 
   def __init__(self):
     """Initializes a text parser plugin."""
-    super(APTHistoryLogTextPlugin, self).__init__()
+    super().__init__()
     self._event_data = None
 
   def _ParseRecord(self, parser_mediator, key, structure):

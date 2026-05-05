@@ -284,7 +284,7 @@ class L2TCSVOutputModule(text_file.SortedTextFileOutputModule):
     field_formatting_helper = L2TCSVFieldFormattingHelper()
     event_formatting_helper = L2TCSVEventFormattingHelper(
         field_formatting_helper, self._FIELD_NAMES)
-    super(L2TCSVOutputModule, self).__init__(event_formatting_helper)
+    super().__init__(event_formatting_helper)
 
   def _GetString(self, output_mediator, field_values):
     """Retrieves an output string.

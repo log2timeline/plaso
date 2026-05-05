@@ -44,7 +44,7 @@ class FileStatEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(FileStatEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.access_time = None
     self.added_time = None
     self.attribute_names = None

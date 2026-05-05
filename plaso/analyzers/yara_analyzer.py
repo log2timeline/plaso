@@ -36,7 +36,7 @@ class YaraAnalyzer(interface.BaseAnalyzer):
 
   def __init__(self):
     """Initializes the Yara analyzer."""
-    super(YaraAnalyzer, self).__init__()
+    super().__init__()
     self._matches = []
     self._rules = None
 

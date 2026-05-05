@@ -24,7 +24,7 @@ from plaso.preprocessors import manager as preprocess_manager
 from plaso.preprocessors import mediator as preprocess_mediator
 
 
-class BaseEngine(object):
+class BaseEngine:
   """Processing engine interface.
 
   Attributes:
@@ -36,7 +36,7 @@ class BaseEngine(object):
 
   def __init__(self):
     """Initializes an engine."""
-    super(BaseEngine, self).__init__()
+    super().__init__()
     self._abort = False
     self._analyzers_profiler = None
     self._artifacts_registry = None

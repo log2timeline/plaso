@@ -16,7 +16,7 @@ from plaso.parsers import interface as parsers_interface
 from plaso.parsers import manager as parsers_manager
 
 
-class EventDataExtractor(object):
+class EventDataExtractor:
   """The event data extractor."""
 
   _PARSE_RESULT_FAILURE = 1
@@ -36,7 +36,7 @@ class EventDataExtractor(object):
           denotes which parsers and plugins should be used. See
           filters/parser_filter.py for details of the expression syntax.
     """
-    super(EventDataExtractor, self).__init__()
+    super().__init__()
     self._filestat_parser = None
     self._force_parser = force_parser
     self._format_scanner = None
@@ -338,7 +338,7 @@ class EventDataExtractor(object):
           file_object=volume_file_object)
 
 
-class PathSpecExtractor(object):
+class PathSpecExtractor:
   """Path specification extractor.
 
   A path specification extractor extracts path specification from a source

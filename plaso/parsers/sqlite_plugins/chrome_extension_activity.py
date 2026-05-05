@@ -29,7 +29,7 @@ class ChromeExtensionActivityEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(ChromeExtensionActivityEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.action_type = None
     self.activity_id = None

@@ -22,12 +22,12 @@ from tests import test_lib as shared_test_lib
 from tests.cli import test_lib
 
 
-class TestInputReader(object):
+class TestInputReader:
   """Test input reader."""
 
   def __init__(self):
     """Initialize the reader."""
-    super(TestInputReader, self).__init__()
+    super().__init__()
     self.read_called = False
 
   def Read(self):

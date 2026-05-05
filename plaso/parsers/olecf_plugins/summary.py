@@ -48,7 +48,7 @@ class OLECFDocumentSummaryInformationEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(OLECFDocumentSummaryInformationEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.application_version = None
     self.category = None
@@ -112,7 +112,7 @@ class OLECFSummaryInformationEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(OLECFSummaryInformationEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.application = None
     self.author = None
@@ -136,7 +136,7 @@ class OLECFSummaryInformationEventData(events.EventData):
     self.title = None
 
 
-class OLECFPropertySetStream(object):
+class OLECFPropertySetStream:
   """OLECF property set stream.
 
   Attributes:
@@ -162,7 +162,7 @@ class OLECFPropertySetStream(object):
     Args:
       olecf_item (pyolecf.property_set_stream): OLECF item.
     """
-    super(OLECFPropertySetStream, self).__init__()
+    super().__init__()
     self._properties = {}
     self.date_time_properties = {}
 
@@ -344,7 +344,7 @@ class DocumentSummaryInformationOLECFPlugin(interface.OLECFPlugin):
       ValueError: If the root item is not set.
     """
     # This will raise if unhandled keyword arguments are passed.
-    super(DocumentSummaryInformationOLECFPlugin, self).Process(
+    super().Process(
         parser_mediator, **kwargs)
 
     if not root_item:
@@ -385,7 +385,7 @@ class SummaryInformationOLECFPlugin(interface.OLECFPlugin):
       ValueError: If the root item is not set.
     """
     # This will raise if unhandled keyword arguments are passed.
-    super(SummaryInformationOLECFPlugin, self).Process(
+    super().Process(
         parser_mediator, **kwargs)
 
     if not root_item:

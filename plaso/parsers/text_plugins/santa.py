@@ -32,7 +32,7 @@ class SantaMountEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(SantaMountEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.action = None
     self.appearance_time = None
     self.bsd_name = None
@@ -79,7 +79,7 @@ class SantaExecutionEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(SantaExecutionEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.action = None
     self.certificate_common_name = None
     self.certificate_hash = None
@@ -127,7 +127,7 @@ class SantaFileSystemEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(SantaFileSystemEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.action = None
     self.file_new_path = None
     self.file_path = None
@@ -162,7 +162,7 @@ class SantaProcessExitEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(SantaProcessExitEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.action = None
     self.exit_time = None
     self.gid = None

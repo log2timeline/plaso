@@ -26,7 +26,7 @@ class ShutdownWindowsRegistryEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(ShutdownWindowsRegistryEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.key_path = None
     self.last_shutdown_time = None

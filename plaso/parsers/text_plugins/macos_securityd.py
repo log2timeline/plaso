@@ -30,7 +30,7 @@ class MacOSSecuritydLogEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(MacOSSecuritydLogEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.added_time = None
     self.caller = None
     self.facility = None
@@ -108,7 +108,7 @@ class MacOSSecuritydLogTextPlugin(
 
   def __init__(self):
     """Initializes a text parser plugin."""
-    super(MacOSSecuritydLogTextPlugin, self).__init__()
+    super().__init__()
     self._repeated_structure = None
 
   def _ParseRecord(self, parser_mediator, key, structure):

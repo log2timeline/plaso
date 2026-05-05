@@ -9,12 +9,12 @@ from plaso.parsers import manager
 from plaso.parsers import plugins
 
 
-class ESEDatabase(object):
+class ESEDatabase:
   """Extensible Storage Engine (ESE) database."""
 
   def __init__(self):
     """Initializes an Extensible Storage Engine (ESE) database."""
-    super(ESEDatabase, self).__init__()
+    super().__init__()
     self._esedb_file = None
     self._table_names = []
 

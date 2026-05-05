@@ -19,7 +19,7 @@ class OpenSearchTimesketchOutputModule(
 
   def __init__(self):
     """Initializes an output module."""
-    super(OpenSearchTimesketchOutputModule, self).__init__()
+    super().__init__()
     self._timeline_identifier = None
 
   def WriteFieldValues(self, output_mediator, field_values):

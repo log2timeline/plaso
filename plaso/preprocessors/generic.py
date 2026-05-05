@@ -24,7 +24,7 @@ class DetermineOperatingSystemPlugin(
 
   def __init__(self):
     """Initializes a plugin to determine the operating system."""
-    super(DetermineOperatingSystemPlugin, self).__init__()
+    super().__init__()
     self._find_specs = [
         file_system_searcher.FindSpec(
             case_sensitive=False, location='/etc',

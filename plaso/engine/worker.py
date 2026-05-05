@@ -57,7 +57,7 @@ class EventExtractionWorkerVolumeScanner(dfvfs_volume_scanner.VolumeScanner):
     return self._GetBasePathSpecs(scan_context, options)
 
 
-class EventExtractionWorker(object):
+class EventExtractionWorker:
   """Event extraction worker.
 
   The event extraction worker determines which parsers are suitable for parsing
@@ -144,7 +144,7 @@ class EventExtractionWorker(object):
           This function does not support presets, and requires a parser
           filter expression where presets have been expanded.
     """
-    super(EventExtractionWorker, self).__init__()
+    super().__init__()
     self._abort = False
     self._analyzers = []
     self._analyzers_profiler = None

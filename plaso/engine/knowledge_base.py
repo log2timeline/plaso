@@ -12,14 +12,14 @@ import pytz
 from plaso.engine import logger
 
 
-class KnowledgeBase(object):
+class KnowledgeBase:
   """The knowledge base."""
 
   _DEFAULT_ACTIVE_SESSION = '00000000000000000000000000000000'
 
   def __init__(self):
     """Initializes a knowledge base."""
-    super(KnowledgeBase, self).__init__()
+    super().__init__()
     self._active_session = self._DEFAULT_ACTIVE_SESSION
     self._codepage = 'cp1252'
     self._environment_variables = {}

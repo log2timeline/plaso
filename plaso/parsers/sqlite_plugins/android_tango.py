@@ -38,7 +38,7 @@ class AndroidTangoContactEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(AndroidTangoContactEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.access_time = None
     self.birthday = None
     self.distance = None
@@ -64,7 +64,7 @@ class AndroidTangoConversationEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(AndroidTangoConversationEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.conversation_identifier = None
 
@@ -84,7 +84,7 @@ class AndroidTangoMessageEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(AndroidTangoMessageEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.creation_time = None
     self.direction = None
     self.message_identifier = None

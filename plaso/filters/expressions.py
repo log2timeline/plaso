@@ -10,7 +10,7 @@ from plaso.filters import value_types
 from plaso.lib import errors
 
 
-class Expression(object):
+class Expression:
   """An event filter parser expression.
 
   Attributes:
@@ -26,7 +26,7 @@ class Expression(object):
 
   def __init__(self):
     """Initializes an event filter parser expression."""
-    super(Expression, self).__init__()
+    super().__init__()
     self.attribute = None
     self.args = []
     self.number_of_args = 1
@@ -87,7 +87,7 @@ class BinaryExpression(Expression):
     Args:
       operator (str): operator, such as "and" or "&&".
     """
-    super(BinaryExpression, self).__init__()
+    super().__init__()
     self.args = []
     self.operator = operator
 
@@ -179,7 +179,7 @@ class EventExpression(Expression):
 
   def __init__(self):
     """Initializes an event expression."""
-    super(EventExpression, self).__init__()
+    super().__init__()
     self._bool_value = True
 
   def __repr__(self):

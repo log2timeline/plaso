@@ -27,7 +27,7 @@ class IOSScreenTimeEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(IOSScreenTimeEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.bundle_identifier = None
     self.device_identifier = None
     self.device_name = None

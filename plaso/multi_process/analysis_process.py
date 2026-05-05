@@ -37,7 +37,7 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
           should be loaded from.
       event_filter_expression (Optional[str]): event filter expression.
     """
-    super(AnalysisProcess, self).__init__(processing_configuration, **kwargs)
+    super().__init__(processing_configuration, **kwargs)
     self._abort = False
     self._analysis_mediator = None
     self._analysis_plugin = analysis_plugin

@@ -1,7 +1,7 @@
 """Windows EventLog providers helper."""
 
 
-class WindowsEventLogProvidersHelper(object):
+class WindowsEventLogProvidersHelper:
   """Windows EventLog providers helper."""
 
   def _GetNormalizedPath(self, path):

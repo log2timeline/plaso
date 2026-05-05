@@ -27,7 +27,7 @@ class GoogleAnalyticsUtmaEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(GoogleAnalyticsUtmaEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.cookie_name = None
     self.domain_hash = None
     self.sessions = None
@@ -52,7 +52,7 @@ class GoogleAnalyticsUtmbEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(GoogleAnalyticsUtmbEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.cookie_name = None
     self.domain_hash = None
     self.last_visited_time = None
@@ -74,7 +74,7 @@ class GoogleAnalyticsUtmtEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(GoogleAnalyticsUtmtEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.cookie_name = None
     self.last_visited_time = None
     self.url = None
@@ -97,7 +97,7 @@ class GoogleAnalyticsUtmzEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(GoogleAnalyticsUtmzEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.cookie_name = None
     self.domain_hash = None
     self.last_visited_time = None

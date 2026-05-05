@@ -11,7 +11,7 @@ import sys
 from plaso.containers import events
 
 
-class EventDataAttributeContainersSchemaExtractor(object):
+class EventDataAttributeContainersSchemaExtractor:
   """Event data attribute containers schema extractor."""
 
   def FormatSchema(self, attribute_containers):

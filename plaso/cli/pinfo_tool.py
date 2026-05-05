@@ -90,7 +90,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
       output_writer (Optional[OutputWriter]): output writer, where None
           indicates that the stdout output writer should be used.
     """
-    super(PinfoTool, self).__init__(
+    super().__init__(
         input_reader=input_reader, output_writer=output_writer)
     self._compare_storage_file_path = None
     self._output_filename = None

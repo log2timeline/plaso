@@ -39,7 +39,7 @@ class ASLEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(ASLEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.computer_name = None
     self.extra_information = None
     self.facility = None
@@ -70,7 +70,7 @@ class ASLFileEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(ASLFileEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.creation_time = None
     self.format_version = None
     self.is_dirty = None

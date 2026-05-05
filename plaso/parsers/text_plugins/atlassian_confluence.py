@@ -30,7 +30,7 @@ class AtlassianConfluenceEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(AtlassianConfluenceEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.body = None
     self.level = None
     self.logger_class = None

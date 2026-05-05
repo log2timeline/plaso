@@ -124,6 +124,6 @@ class BaseCookiePlugin(plugins.BasePlugin):
           f'Plugin: {self.NAME:s} does not support: {cookie_name:s}')
 
     # This will raise if unhandled keyword arguments are passed.
-    super(BaseCookiePlugin, self).Process(parser_mediator)
+    super().Process(parser_mediator)
 
     self._ParseCookieData(parser_mediator, cookie_data=cookie_data, url=url)

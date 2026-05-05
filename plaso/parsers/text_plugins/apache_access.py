@@ -36,7 +36,7 @@ class ApacheAccessLogEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(ApacheAccessLogEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.http_request = None
     self.http_request_referer = None
     self.http_request_user_agent = None

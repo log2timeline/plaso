@@ -6,7 +6,7 @@ from plaso.filters import parser_filter
 from plaso.lib import specification
 
 
-class ParsersManager(object):
+class ParsersManager:
   """The parsers and plugins manager."""
 
   ALL_PLUGINS = set(['*'])

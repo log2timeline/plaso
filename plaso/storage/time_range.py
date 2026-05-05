@@ -1,7 +1,7 @@
 """Storage time range objects."""
 
 
-class TimeRange(object):
+class TimeRange:
   """Date and time range.
 
   The timestamp are integers containing the number of microseconds
@@ -34,7 +34,7 @@ class TimeRange(object):
       raise ValueError(
           'Invalid start must be earlier than end timestamp.')
 
-    super(TimeRange, self).__init__()
+    super().__init__()
     self.duration = end_timestamp - start_timestamp
     self.end_timestamp = end_timestamp
     self.start_timestamp = start_timestamp

@@ -1,7 +1,7 @@
 """Windows known folders helper."""
 
 
-class WindowsKnownFoldersHelper(object):
+class WindowsKnownFoldersHelper:
   """Windows known folders helper."""
 
   # pylint: disable=line-too-long

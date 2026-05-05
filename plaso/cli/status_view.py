@@ -19,7 +19,7 @@ from plaso.cli import views
 from plaso.lib import definitions
 
 
-class StatusView(object):
+class StatusView:
   """Processing status view."""
 
   MODE_FILE = 'file'
@@ -54,7 +54,7 @@ class StatusView(object):
       output_writer (OutputWriter): output writer.
       tool_name (str): name of the tool.
     """
-    super(StatusView, self).__init__()
+    super().__init__()
     self._artifact_filters = None
     self._filter_file = None
     self._have_ansi_support = not win32console

@@ -5,7 +5,7 @@ For a list of language tags see:
 """
 
 
-class LanguageTagHelper(object):
+class LanguageTagHelper:
   """Language tags helper."""
 
   _LANGUAGE_PER_TAG = {

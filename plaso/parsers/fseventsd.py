@@ -33,7 +33,7 @@ class FseventsdEventData(events.EventData):
 
   def __init__(self):
     """Initializes an Fseventsd event data."""
-    super(FseventsdEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.event_identifier = None
     self.file_entry_modification_time = None
     self.flags = None

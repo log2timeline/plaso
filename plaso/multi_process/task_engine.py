@@ -28,7 +28,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
   def __init__(self):
     """Initializes a task-based multi-process engine."""
-    super(TaskMultiProcessEngine, self).__init__()
+    super().__init__()
     self._merge_task_storage_path = None
     self._processing_configuration = None
     self._processed_task_storage_path = None

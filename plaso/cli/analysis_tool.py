@@ -36,7 +36,7 @@ class AnalysisTool(
       output_writer (Optional[OutputWriter]): output writer, where None
           indicates that the stdout output writer should be used.
     """
-    super(AnalysisTool, self).__init__(
+    super().__init__(
         input_reader=input_reader, output_writer=output_writer)
     self._analysis_manager = analysis_manager.AnalysisPluginManager
     self._analysis_plugins = None

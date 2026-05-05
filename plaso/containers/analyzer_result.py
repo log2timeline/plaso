@@ -21,7 +21,7 @@ class AnalyzerResult(interface.AttributeContainer):
 
   def __init__(self):
     """Initializes an analyzer result."""
-    super(AnalyzerResult, self).__init__()
+    super().__init__()
     self.analyzer_name = None
     self.attribute_name = None
     self.attribute_value = None

@@ -28,7 +28,7 @@ class ChromeContentSettingsExceptionsEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(ChromeContentSettingsExceptionsEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.last_visited_time = None
     self.permission = None
@@ -49,7 +49,7 @@ class ChromeExtensionsAutoupdaterEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(ChromeExtensionsAutoupdaterEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     # TODO: refactor this in something more descriptive.
     self.message = None
@@ -71,7 +71,7 @@ class ChromeExtensionInstallationEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(ChromeExtensionInstallationEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.extension_identifier = None
     self.extension_name = None

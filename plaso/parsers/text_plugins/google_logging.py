@@ -45,7 +45,7 @@ class GoogleLogEventData(events.EventData):
     Args:
       data_type (Optional[str]): event data type indicator.
     """
-    super(GoogleLogEventData, self).__init__(data_type=data_type)
+    super().__init__(data_type=data_type)
     self.file_name = None
     self.last_written_time = None
     self.line_number = None

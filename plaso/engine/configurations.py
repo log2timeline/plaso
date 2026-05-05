@@ -22,7 +22,7 @@ class CredentialConfiguration(interface.AttributeContainer):
       credential_type (Optional[str]): credential type.
       path_spec (Optional[dfvfs.PathSpec]): path specification.
     """
-    super(CredentialConfiguration, self).__init__()
+    super().__init__()
     self.credential_data = credential_data
     self.credential_type = credential_type
     self.path_spec = path_spec
@@ -41,7 +41,7 @@ class EventExtractionConfiguration(interface.AttributeContainer):
 
   def __init__(self):
     """Initializes an event extraction configuration object."""
-    super(EventExtractionConfiguration, self).__init__()
+    super().__init__()
     self.filter_object = None
 
 
@@ -69,7 +69,7 @@ class ExtractionConfiguration(interface.AttributeContainer):
 
   def __init__(self):
     """Initializes an extraction configuration object."""
-    super(ExtractionConfiguration, self).__init__()
+    super().__init__()
     self.archive_types_string = None
     self.extract_winevt_resources = True
     self.extract_winreg_binary = False
@@ -103,7 +103,7 @@ class ProfilingConfiguration(interface.AttributeContainer):
 
   def __init__(self):
     """Initializes a profiling configuration object."""
-    super(ProfilingConfiguration, self).__init__()
+    super().__init__()
     self.directory = None
     self.profilers = set()
     self.sample_rate = 1000
@@ -224,7 +224,7 @@ class ProcessingConfiguration(interface.AttributeContainer):
 
   def __init__(self):
     """Initializes a process configuration object."""
-    super(ProcessingConfiguration, self).__init__()
+    super().__init__()
     self.artifact_definitions_path = None
     self.artifact_filters = None
     self.credentials = []

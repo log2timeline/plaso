@@ -27,7 +27,7 @@ class MacOSTimeMachineBackupEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(MacOSTimeMachineBackupEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.backup_alias = None
     self.destination_identifier = None
@@ -62,7 +62,7 @@ class MacOSTimeMachinePlistPlugin(
 
   def __init__(self):
     """Initializes a plist parser plugin."""
-    super(MacOSTimeMachinePlistPlugin, self).__init__()
+    super().__init__()
     self._backup_alias_map = self._GetDataTypeMap('timemachine_backup_alias')
 
   # pylint: disable=arguments-differ

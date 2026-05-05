@@ -7,14 +7,14 @@ import os
 from plaso.output import interface
 
 
-class SortedStringHeap(object):
+class SortedStringHeap:
   """Heap to sort output strings."""
 
   _MAXIMUM_NUMBER_OF_STRINGS = 100000
 
   def __init__(self):
     """Initializes a heap."""
-    super(SortedStringHeap, self).__init__()
+    super().__init__()
     self._heap = []
 
   def IsFull(self):
@@ -68,7 +68,7 @@ class TextFileOutputModule(interface.OutputModule):
 
   def __init__(self):
     """Initializes an output module that writes to a text file."""
-    super(TextFileOutputModule, self).__init__()
+    super().__init__()
     self._file_object = None
 
   def Close(self):
@@ -153,7 +153,7 @@ class SortedTextFileOutputModule(TextFileOutputModule):
     Args:
       event_formatting_helper (EventFormattingHelper): event formatting helper.
     """
-    super(SortedTextFileOutputModule, self).__init__()
+    super().__init__()
     self._event_formatting_helper = event_formatting_helper
     self._last_primary_sort_key = None
     self._sorted_strings_heap = SortedStringHeap()

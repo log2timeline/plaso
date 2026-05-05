@@ -22,7 +22,7 @@ class WindowsRegistryMotherboardInfoEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(WindowsRegistryMotherboardInfoEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.bios_release_date = None
     self.bios_version = None

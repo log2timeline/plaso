@@ -35,7 +35,7 @@ class TrendMicroAVEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(TrendMicroAVEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.action = None
     self.filename = None
     self.offset = None
@@ -68,7 +68,7 @@ class TrendMicroUrlEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(TrendMicroUrlEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.application_name = None
     self.block_mode = None
     self.credibility_rating = None

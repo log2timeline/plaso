@@ -15,7 +15,7 @@ class SHA256Hasher(interface.BaseHasher):
 
   def __init__(self):
     """Initializes the SHA-256 hasher."""
-    super(SHA256Hasher, self).__init__()
+    super().__init__()
     self._sha256_context = hashlib.sha256()
 
   def GetStringDigest(self):

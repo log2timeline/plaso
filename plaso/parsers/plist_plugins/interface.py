@@ -21,7 +21,7 @@ from plaso.parsers import logger
 from plaso.parsers import plugins
 
 
-class NSKeyedArchiverDecoder(object):
+class NSKeyedArchiverDecoder:
   """Decoder for NSKeyedArchiver encoded plists.
 
   Also see:
@@ -621,7 +621,7 @@ class NSKeyedArchiverDecoder(object):
     return archiver == 'NSKeyedArchiver' and version == 100000
 
 
-class PlistPathFilter(object):
+class PlistPathFilter:
   """The plist path filter."""
 
   def __init__(self, filename):
@@ -630,7 +630,7 @@ class PlistPathFilter(object):
     Args:
       filename (str): expected file name of the plist.
     """
-    super(PlistPathFilter, self).__init__()
+    super().__init__()
     self._filename_lower_case = filename.lower()
 
   def Match(self, filename_lower_case):
@@ -875,7 +875,7 @@ class PlistPlugin(plugins.BasePlugin):
       top_level (Optional[dict[str, object]]): plist top-level item.
     """
     # This will raise if unhandled keyword arguments are passed.
-    super(PlistPlugin, self).Process(parser_mediator)
+    super().Process(parser_mediator)
 
     match = self._GetKeys(top_level, self.PLIST_KEYS)
     self._ParsePlist(parser_mediator, match=match, top_level=top_level)

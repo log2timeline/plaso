@@ -1,7 +1,7 @@
 """This file contains a class for managing digest hashers for Plaso."""
 
 
-class HashersManager(object):
+class HashersManager:
   """Class that implements the hashers manager."""
 
   _hasher_classes = {}

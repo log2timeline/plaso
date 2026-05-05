@@ -23,7 +23,7 @@ class ZeitgeistActivityEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(ZeitgeistActivityEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.offset = None
     self.query = None
     self.recorded_time = None

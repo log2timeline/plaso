@@ -25,7 +25,7 @@ class FileSystemWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
       environment_variables (Optional[list[EnvironmentVariableArtifact]]):
           environment variables.
     """
-    super(FileSystemWinRegistryFileReader, self).__init__()
+    super().__init__()
     self._file_system = file_system
     self._path_resolver = self._CreateWindowsPathResolver(
         file_system, mount_point, environment_variables=environment_variables)
@@ -117,7 +117,7 @@ class FileSystemWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
     return self._OpenPathSpec(path_specification)
 
 
-class PreprocessPluginsManager(object):
+class PreprocessPluginsManager:
   """Preprocess plugins manager."""
 
   _plugins = {}
