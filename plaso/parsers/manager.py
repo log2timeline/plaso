@@ -153,8 +153,7 @@ class ParsersManager:
     """
     parser_name = parser_class.NAME.lower()
     if parser_name not in cls._parser_classes:
-      raise KeyError('Parser class not set for name: {0:s}.'.format(
-          parser_class.NAME))
+      raise KeyError(f'Parser class not set for name: {parser_class.NAME:s}.')
 
     del cls._parser_classes[parser_name]
 

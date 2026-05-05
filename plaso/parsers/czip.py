@@ -35,8 +35,8 @@ class CompoundZIPParser(interface.FileObjectParser):
 
     if not zipfile.is_zipfile(file_object):
       raise errors.WrongParser(
-          '[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
-              self.NAME, display_name, 'Not a Zip file.'))
+          f'[{self.NAME:s}] unable to parse file: {display_name:s} with error: '
+          f'Not a Zip file.')
 
     try:
       zip_file = zipfile.ZipFile(file_object, 'r', allowZip64=True)  # pylint: disable=consider-using-with
@@ -63,12 +63,13 @@ class CompoundZIPParser(interface.FileObjectParser):
         parser_mediator.SampleFormatCheckStopTiming(profiling_name)
 
       if not result:
-        logger.debug('Skipped parsing file: {0:s} with plugin: {1:s}'.format(
-            display_name, plugin_name))
+        logger.debug(
+            f'Skipped parsing file: {display_name:s} with plugin: '
+            f'{plugin_name:s}')
         continue
 
-      logger.debug('Parsing file: {0:s} with plugin: {1:s}'.format(
-          display_name, plugin_name))
+      logger.debug(
+          f'Parsing file: {display_name:s} with plugin: {plugin_name:s}')
 
       parser_mediator.SampleStartTiming(profiling_name)
 
@@ -76,9 +77,9 @@ class CompoundZIPParser(interface.FileObjectParser):
         plugin.UpdateChainAndProcess(parser_mediator, zip_file=zip_file)
 
       except Exception as exception:  # pylint: disable=broad-except
-        parser_mediator.ProduceExtractionWarning((
-            'plugin: {0:s} unable to parse ZIP file: {1:s} with error: '
-            '{2!s}').format(plugin_name, display_name, exception))
+        parser_mediator.ProduceExtractionWarning(
+            f'plugin: {plugin_name:s} unable to parse ZIP file: '
+            f'{display_name:s} with error: {exception!s}')
 
       finally:
         parser_mediator.SampleStopTiming(profiling_name)

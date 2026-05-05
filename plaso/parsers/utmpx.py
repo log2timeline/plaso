@@ -79,12 +79,12 @@ class UtmpxParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       entry, _ = self._ReadStructureFromFileObject(
           file_object, file_offset, entry_map)
     except (ValueError, errors.ParseError) as exception:
-      raise errors.ParseError((
-          'Unable to parse utmpx entry at offset: 0x{0:08x} with error: '
-          '{1!s}.').format(file_offset, exception))
+      raise errors.ParseError(
+          f'Unable to parse utmpx entry at offset: 0x{file_offset:08x} with '
+          f'error: {exception!s}')
 
     if entry.type not in self._SUPPORTED_TYPES:
-      raise errors.ParseError('Unsupported type: {0:d}'.format(entry.type))
+      raise errors.ParseError(f'Unsupported type: {entry.type:d}')
 
     code_page = parser_mediator.GetCodePage()
 
@@ -162,8 +162,7 @@ class UtmpxParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       event_data = self._ReadEntry(parser_mediator, file_object, file_offset)
     except errors.ParseError as exception:
       raise errors.WrongParser(
-          'Unable to parse utmpx file header with error: {0!s}'.format(
-              exception))
+          f'Unable to parse utmpx file header with error: {exception!s}')
 
     if event_data.username != self._FILE_HEADER_USERNAME:
       raise errors.WrongParser(

@@ -117,8 +117,7 @@ class LocateDatabaseParser(
           file_object, 0, locate_database_header_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.WrongParser(
-          'Unable to parse locate database header with error: {0!s}'.format(
-              exception))
+          f'Unable to parse locate database header with error: {exception!s}')
 
     # Skip configuration block for now.
     file_offset += locate_database_header.configuration_block_size
@@ -129,9 +128,9 @@ class LocateDatabaseParser(
         directory_header, data_size = self._ReadStructureFromFileObject(
             file_object, file_offset, self._directory_header_map)
       except (ValueError, errors.ParseError) as exception:
-        parser_mediator.ProduceExtractionWarning((
-            'unable to parse locate directory header at offset: 0x{0:08x} with '
-            'error: {1!s}').format(file_offset, exception))
+        parser_mediator.ProduceExtractionWarning(
+            f'unable to parse locate directory header at offset: '
+            f'0x{file_offset:08x} with error: {exception!s}')
         return
 
       file_offset += data_size
@@ -146,9 +145,9 @@ class LocateDatabaseParser(
         file_offset += data_size
 
       except (ValueError, errors.ParseError) as exception:
-        parser_mediator.ProduceExtractionWarning((
-            'unable to parse directory entry at offset: 0x{0:08x} with '
-            'error: {1!s}').format(file_offset, exception))
+        parser_mediator.ProduceExtractionWarning(
+            f'unable to parse directory entry at offset: '
+            f'0x{file_offset:08x} with error: {exception!s}')
         return
 
       event_data = LocateDatabaseEvent()

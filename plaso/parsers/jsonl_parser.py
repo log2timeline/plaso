@@ -87,9 +87,9 @@ class JSONLParser(interface.FileObjectParser):
             parser_mediator, file_object=file_object)
 
       except Exception as exception:  # pylint: disable=broad-except
-        parser_mediator.ProduceExtractionWarning((
-            'plugin: {0:s} unable to parse JSON-L file with error: '
-            '{1!s}').format(plugin_name, exception))
+        parser_mediator.ProduceExtractionWarning(
+            f'plugin: {plugin_name:s} unable to parse JSON-L file with error: '
+            f'{exception!s}')
 
       finally:
         parser_mediator.SampleStopTiming(profiling_name)

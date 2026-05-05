@@ -281,13 +281,14 @@ class MSIECFParser(interface.FileObjectParser):
             http_headers = msiecf_item.data[:-1].decode('ascii')
           except UnicodeDecodeError:
             warning_message = (
-                'unable to decode HTTP headers of URL record at offset: '
-                '0x{0:08x}. Characters that cannot be decoded will be '
-                'replaced with "?" or "\\ufffd".').format(msiecf_item.offset)
+                f'unable to decode HTTP headers of URL record at offset: '
+                f'0x{msiecf_item.offset:08x}. Characters that cannot be '
+                f'decoded will be replaced with "?" or "\\ufffd".')
             if recovered:
               parser_mediator.ProduceRecoveryWarning(warning_message)
             else:
               parser_mediator.ProduceExtractionWarning(warning_message)
+
             http_headers = msiecf_item.data[:-1].decode(
                 'ascii', errors='replace')
 
