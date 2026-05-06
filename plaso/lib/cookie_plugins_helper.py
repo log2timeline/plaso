@@ -36,5 +36,5 @@ class CookiePluginsHelper:
 
         except Exception as exception:  # pylint: disable=broad-except
           parser_mediator.ProduceExtractionWarning(
-              'plugin: {0:s} unable to parse cookie with error: {1!s}'.format(
-                  cookie_plugin.NAME, exception))
+              f'plugin: {cookie_plugin.NAME:s} unable to parse cookie with '
+              f'error: {exception!s}')

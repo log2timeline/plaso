@@ -110,8 +110,8 @@ class OperaTypedHistoryParser(interface.FileObjectParser):
         date_time.CopyFromStringISO8601(last_typed_time)
       except ValueError as exception:
         parser_mediator.ProduceExtractionWarning(
-            'unsupported last typed time: {0:s} with error: {1!s}.'.format(
-                last_typed_time, exception))
+            f'unsupported last typed time: {last_typed_time!s} '
+            f'with error: {exception!s}.')
         continue
 
       event_data = OperaTypedHistoryEventData()
@@ -197,7 +197,7 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
       timestamp = int(timestamp, 10)
     except ValueError:
       parser_mediator.ProduceExtractionWarning(
-          'unable to convert timestamp: {0:s}'.format(timestamp))
+          f'unable to convert timestamp: {timestamp!s}')
       timestamp = None
 
     popularity_index = popularity_index.strip()
@@ -205,7 +205,7 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
       popularity_index = int(popularity_index, 10)
     except ValueError:
       parser_mediator.ProduceExtractionWarning(
-          'unable to convert popularity index: {0:s}'.format(popularity_index))
+          f'unable to convert popularity index: {popularity_index!s}')
       popularity_index = None
 
     event_data = OperaGlobalHistoryEventData()

@@ -130,10 +130,9 @@ class ParserPresetsManager:
       except errors.MalformedPresetError as exception:
         error_location = 'At start'
         if last_preset_definition:
-          error_location = 'After: {0:s}'.format(last_preset_definition.name)
+          error_location = f'After: {last_preset_definition.name!s}'
 
-        raise errors.MalformedPresetError(
-            '{0:s} {1!s}'.format(error_location, exception))
+        raise errors.MalformedPresetError(f'{error_location!s} {exception!s}')
 
       yield preset_definition
       last_preset_definition = preset_definition
@@ -161,12 +160,12 @@ class ParserPresetsManager:
     lookup_name = preset_name.lower()
     preset_definition = self._definitions.get(lookup_name, None)
     if preset_definition is None:
-      raise KeyError('Preset: {0:s} is not defined'.format(preset_name))
+      raise KeyError(f'Preset: {preset_name!s} is not defined')
 
     if preset_definition.deprecated:
-      logger.warning((
-          'Preset: {0:s} is deprecated and will be removed in a future '
-          'version').format(preset_name))
+      logger.warning(
+          f'Preset: {preset_name!s} is deprecated and will be removed '
+          f'in a future version')
 
     return sorted(preset_definition.parsers)
 

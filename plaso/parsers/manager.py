@@ -246,9 +246,9 @@ class ParsersManager:
           data_format = getattr(plugin_class, 'DATA_FORMAT', '')
           if data_format:
             if data_format.endswith(' file'):
-              description = 'Parser for {0:s}s.'.format(data_format)
+              description = f'Parser for {data_format}s.'
             else:
-              description = 'Parser for {0:s}.'.format(data_format)
+              description = f'Parser for {data_format:s}.'
 
           parser_plugins_information.append((plugin_name, description))
 
@@ -308,9 +308,9 @@ class ParsersManager:
       data_format = getattr(parser_class, 'DATA_FORMAT', '')
       if data_format:
         if data_format.endswith(' file'):
-          description = 'Parser for {0:s}s.'.format(data_format)
+          description = f'Parser for {data_format}s.'
         else:
-          description = 'Parser for {0:s}.'.format(data_format)
+          description = f'Parser for {data_format:s}.'
 
       parsers_information.append((parser_class.NAME, description))
 
@@ -330,8 +330,8 @@ class ParsersManager:
     """
     parser_name = parser_class.NAME.lower()
     if parser_name in cls._parser_classes:
-      raise KeyError('Parser class already set for name: {0:s}.'.format(
-          parser_class.NAME))
+      raise KeyError(f'Parser class already set for name: '
+                     f'{parser_class.NAME:s}.')
 
     cls._parser_classes[parser_name] = parser_class
 

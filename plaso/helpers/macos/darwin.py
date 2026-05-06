@@ -133,4 +133,4 @@ class DarwinSystemErrorHelper:
     Returns:
       str: description of the error.
     """
-    return cls._ERROR_CODES.get(error_code, 'UNKNOWN: {0:d}'.format(error_code))
+    return cls._ERROR_CODES.get(error_code, f'UNKNOWN: {error_code:d}')

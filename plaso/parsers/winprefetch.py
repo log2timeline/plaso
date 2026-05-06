@@ -122,16 +122,15 @@ class WinPrefetchParser(interface.FileObjectParser):
       mapped_file_string = file_metrics.filename
       if not mapped_file_string:
         parser_mediator.ProduceExtractionWarning(
-            'missing filename for file metrics entry: {0:d}'.format(
-                entry_index))
+            f'missing filename for file metrics entry: {entry_index:d}')
         continue
 
       file_reference = file_metrics.file_reference
       if file_reference:
+        mft_entry_index = file_reference & 0xffffffffffff
+        sequence_number = file_reference >> 48
         mapped_file_string = (
-            '{0:s} [{1:d}-{2:d}]').format(
-                mapped_file_string, file_reference & 0xffffffffffff,
-                file_reference >> 48)
+            f'{mapped_file_string:s} [{mft_entry_index:d}-{sequence_number:d}]')
 
       mapped_files.append(mapped_file_string)
 
@@ -180,14 +179,14 @@ class WinPrefetchParser(interface.FileObjectParser):
       scca_file.open_file_object(file_object)
     except IOError as exception:
       parser_mediator.ProduceExtractionWarning(
-          'unable to open file with error: {0!s}'.format(exception))
+          f'unable to open file with error: {exception!s}')
       return
 
     try:
       self._ParseSCCAFile(parser_mediator, scca_file)
     except IOError as exception:
       parser_mediator.ProduceExtractionWarning(
-          'unable to parse file with error: {0!s}'.format(exception))
+          f'unable to parse file with error: {exception!s}')
     finally:
       scca_file.close()
 

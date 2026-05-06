@@ -82,8 +82,8 @@ class BinaryLineReader:
 
     if size is not None and size > self.MAXIMUM_READ_BUFFER_SIZE:
       raise ValueError(
-          'Invalid size value exceeds maximum value {0:d}.'.format(
-              self.MAXIMUM_READ_BUFFER_SIZE))
+          f'Invalid size value exceeds maximum value '
+          f'{self.MAXIMUM_READ_BUFFER_SIZE:d}')
 
     if not self._lines:
       if self._lines_buffer_offset >= self._file_object_size:

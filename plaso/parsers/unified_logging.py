@@ -1575,7 +1575,7 @@ class SignpostDescriptionAttributeFormatStringDecoder(BaseFormatStringDecoder):
       else:
         float_value = struct.unpack('<d', value)
 
-      string_value = '{0:.16g}'.format(float_value[0])
+      string_value = f'{float_value[0]:.16g}'
 
     elif specifier in ('c', 'C', 'o', 'O', 'p', 'u', 'U', 'x', 'X'):
       if value_size not in (1, 2, 4, 8):
@@ -1709,7 +1709,7 @@ class SignpostTelemetryNumberFormatStringDecoder(BaseFormatStringDecoder):
       else:
         float_value = struct.unpack('<d', value)
 
-      string_value = '{0:.16g}'.format(float_value[0])
+      string_value = f'{float_value[0]:.16g}'
 
     elif specifier in ('c', 'C', 'o', 'O', 'p', 'u', 'U', 'x', 'X'):
       if value_size not in (1, 2, 4, 8):
