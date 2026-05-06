@@ -1,6 +1,5 @@
 """Shared functions and classes for testing."""
 
-import io
 import os
 import shutil
 import re
@@ -144,7 +143,7 @@ class BaseTestCase(unittest.TestCase):
     """
     if not os.path.exists(path):
       filename = os.path.basename(path)
-      raise unittest.SkipTest('missing test file: {0:s}'.format(filename))
+      raise unittest.SkipTest(f'missing test file: {filename:s}')
 
 
 class ImportCheckTestCase(BaseTestCase):
@@ -161,21 +160,22 @@ class ImportCheckTestCase(BaseTestCase):
       ignorable_files (list[str]): names of Python files that don't need to
           appear in __init__.py. For example, 'manager.py'.
     """
-    init_path = '{0:s}/__init__.py'.format(path)
-    with io.open(init_path, mode='r', encoding='utf-8') as init_file:
+    init_path = f'{path:s}/__init__.py'
+    with open(init_path, encoding='utf-8') as init_file:
       init_content = init_file.read()
 
     for file_path in os.listdir(path):
       filename = os.path.basename(file_path)
       if filename in ignorable_files:
         continue
+
       if self._FILENAME_REGEXP.search(filename):
         module_name, _, _ = filename.partition('.')
-        import_expression = re.compile(r' import {0:s}\b'.format(module_name))
+        import_expression = re.compile(f' import {module_name:s}\\b')
 
         self.assertRegex(
             init_content, import_expression,
-            '{0:s} not imported in {1:s}'.format(module_name, init_path))
+            f'{module_name:s} not imported in {init_path:s}')
 
 
 class TempDirectory:

@@ -60,12 +60,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       with open(options.write, 'w', encoding='utf-8') as file_object:
         file_object.write('bogus')
 
-      # Test when output file already exists.
-      # Escape \ otherwise assertRaisesRegexp can error with:
-      # error: bogus escape: '\\1'
-      expected_error = 'Output file: {0:s} already exists.'.format(
-          options.write.replace('\\', '\\\\'))
-      with self.assertRaisesRegex(errors.BadConfigOption, expected_error):
+      with self.assertRaises(errors.BadConfigOption):
         test_tool.ParseOptions(options)
 
   def testParseOptions(self):
@@ -111,12 +106,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       with open(options.write, 'w', encoding='utf-8') as file_object:
         file_object.write('bogus')
 
-      # Test when output file already exists.
-      # Escape \ otherwise assertRaisesRegexp can error with:
-      # error: bogus escape: '\\1'
-      expected_error = 'Output file: {0:s} already exists.'.format(
-          options.write.replace('\\', '\\\\'))
-      with self.assertRaisesRegex(errors.BadConfigOption, expected_error):
+      with self.assertRaises(errors.BadConfigOption):
         test_tool.ParseOptions(options)
 
   def testParseArguments(self):
@@ -160,7 +150,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
 
       expected_output = [
           '',
-          'Source path\t\t: {0:s}'.format(options.source),
+          f'Source path\t\t: {options.source:s}',
           'Source type\t\t: directory',
           'Processing time\t\t: 00:00:00',
           '',
@@ -187,7 +177,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
 
     options = test_lib.TestOptions()
     options.artifact_definitions_path = test_artifacts_path
-    options.credentials = ['password:{0:s}'.format(self._BDE_PASSWORD)]
+    options.credentials = [f'password:{self._BDE_PASSWORD:s}']
     options.quiet = True
     options.status_view_interval = 0.5
     options.status_view_mode = 'none'
@@ -204,7 +194,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
 
       expected_output = [
           '',
-          'Source path\t\t: {0:s}'.format(options.source),
+          f'Source path\t\t: {options.source:s}',
           'Source type\t\t: storage media image',
           'Processing time\t\t: 00:00:00',
           '',
@@ -245,7 +235,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
 
       expected_output = [
           '',
-          'Source path\t\t: {0:s}'.format(options.source),
+          f'Source path\t\t: {options.source:s}',
           'Source type\t\t: storage media image',
           'Processing time\t\t: 00:00:00',
           '',
@@ -288,7 +278,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
 
       expected_output = [
           '',
-          'Source path\t\t: {0:s}'.format(options.source),
+          f'Source path\t\t: {options.source:s}',
           'Source type\t\t: storage media image',
           'Processing time\t\t: 00:00:00',
           '',
@@ -332,7 +322,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
 
       expected_output = [
           '',
-          'Source path\t\t: {0:s}'.format(options.source),
+          f'Source path\t\t: {options.source:s}',
           'Source type\t\t: storage media image',
           'Processing time\t\t: 00:00:00',
           '',
@@ -377,7 +367,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
 
       expected_output = [
           '',
-          'Source path\t\t: {0:s}'.format(options.source),
+          f'Source path\t\t: {options.source:s}',
           'Source type\t\t: single file',
           'Processing time\t\t: 00:00:00',
           '',

@@ -400,7 +400,7 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
 
   def testReadAndWriteSerializedTask(self):
     """Test ReadSerialized and WriteSerialized of Task."""
-    session_identifier = '{0:s}'.format(uuid.uuid4().hex)
+    session_identifier = f'{uuid.uuid4().hex:s}'
 
     expected_task = tasks.Task(session_identifier=session_identifier)
 

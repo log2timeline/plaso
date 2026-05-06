@@ -135,7 +135,7 @@ class OutputModuleOptionsTest(test_lib.CLIToolTestCase):
   _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
 
   if _PYTHON3_13_OR_LATER:
-    _EXPECTED_OUTPUT_TIME_ZONE_OPTION = """\
+    _EXPECTED_OUTPUT_TIME_ZONE_OPTION = f"""\
 usage: tool_options.py [--additional_fields ADDITIONAL_FIELDS]
                        [--custom_fields CUSTOM_FIELDS]
                        [--custom_formatter_definitions PATH] [--dynamic_time]
@@ -143,7 +143,7 @@ usage: tool_options.py [--additional_fields ADDITIONAL_FIELDS]
 
 Test argument parser.
 
-{0:s}:
+{test_lib.ARGPARSE_OPTIONS}:
   --additional_fields, --additional-fields ADDITIONAL_FIELDS
                         Defines additional fields to be included in the output
                         besides the default fields. Multiple additional field
@@ -173,10 +173,9 @@ Test argument parser.
                         to see a list of available time zones. Output formats
                         that support an output time zone are: dynamic and
                         l2t_csv.
-""".format(test_lib.ARGPARSE_OPTIONS)
-
+"""
   else:
-    _EXPECTED_OUTPUT_TIME_ZONE_OPTION = """\
+    _EXPECTED_OUTPUT_TIME_ZONE_OPTION = f"""\
 usage: tool_options.py [--additional_fields ADDITIONAL_FIELDS]
                        [--custom_fields CUSTOM_FIELDS]
                        [--custom_formatter_definitions PATH] [--dynamic_time]
@@ -184,7 +183,7 @@ usage: tool_options.py [--additional_fields ADDITIONAL_FIELDS]
 
 Test argument parser.
 
-{0:s}:
+{test_lib.ARGPARSE_OPTIONS}:
   --additional_fields ADDITIONAL_FIELDS, --additional-fields ADDITIONAL_FIELDS
                         Defines additional fields to be included in the output
                         besides the default fields. Multiple additional field
@@ -214,7 +213,7 @@ Test argument parser.
                         to see a list of available time zones. Output formats
                         that support an output time zone are: dynamic and
                         l2t_csv.
-""".format(test_lib.ARGPARSE_OPTIONS)
+"""
 
   def testGetOutputModulesInformation(self):
     """Tests the _GetOutputModulesInformation function."""

@@ -669,7 +669,7 @@ class StorageMediaToolVolumeScannerTest(test_lib.CLIToolTestCase):
     test_scanner = storage_media_tool.StorageMediaToolVolumeScanner()
 
     options = storage_media_tool.StorageMediaToolVolumeScannerOptions()
-    options.credentials = [('password', '{0:s}'.format(self._APFS_PASSWORD))]
+    options.credentials = [('password', f'{self._APFS_PASSWORD:s}')]
     options.scan_mode = options.SCAN_MODE_ALL
     options.partitions = ['all']
     options.volumes = ['all']
@@ -1159,12 +1159,12 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
   _APFS_PASSWORD = 'apfs-TEST'
   _BDE_PASSWORD = 'bde-TEST'
 
-  _EXPECTED_OUTPUT_CREDENTIAL_OPTIONS = """\
+  _EXPECTED_OUTPUT_CREDENTIAL_OPTIONS = f"""\
 usage: storage_media_tool_test.py [--credential TYPE:DATA]
 
 Test argument parser.
 
-{0:s}:
+{test_lib.ARGPARSE_OPTIONS}:
   --credential TYPE:DATA
                         Define a credentials that can be used to unlock
                         encrypted volumes e.g. BitLocker. The credential is
@@ -1175,16 +1175,16 @@ Test argument parser.
                         (hexadecimal). WARNING credentials passed via command
                         line arguments can end up in logs, so use this option
                         with care.
-""".format(test_lib.ARGPARSE_OPTIONS)
+"""
 
   if _PYTHON3_13_OR_LATER:
-    _EXPECTED_OUTPUT_STORAGE_MEDIA_OPTIONS = """\
+    _EXPECTED_OUTPUT_STORAGE_MEDIA_OPTIONS = f"""\
 usage: storage_media_tool_test.py [--partitions PARTITIONS]
                                   [--volumes VOLUMES]
 
 Test argument parser.
 
-{0:s}:
+{test_lib.ARGPARSE_OPTIONS}:
   --partitions, --partition PARTITIONS
                         Define partitions to be processed. A range of
                         partitions can be defined as: "3..5". Multiple
@@ -1198,16 +1198,16 @@ Test argument parser.
                         as: "1,3,5" (a list of comma separated values). Ranges
                         and lists can also be combined as: "1,3..5". The first
                         volume is 1. All volumes can be specified with: "all".
-""".format(test_lib.ARGPARSE_OPTIONS)
+"""
 
   else:
-    _EXPECTED_OUTPUT_STORAGE_MEDIA_OPTIONS = """\
+    _EXPECTED_OUTPUT_STORAGE_MEDIA_OPTIONS = f"""\
 usage: storage_media_tool_test.py [--partitions PARTITIONS]
                                   [--volumes VOLUMES]
 
 Test argument parser.
 
-{0:s}:
+{test_lib.ARGPARSE_OPTIONS}:
   --partitions PARTITIONS, --partition PARTITIONS
                         Define partitions to be processed. A range of
                         partitions can be defined as: "3..5". Multiple
@@ -1221,16 +1221,16 @@ Test argument parser.
                         as: "1,3,5" (a list of comma separated values). Ranges
                         and lists can also be combined as: "1,3..5". The first
                         volume is 1. All volumes can be specified with: "all".
-""".format(test_lib.ARGPARSE_OPTIONS)
+"""
 
   if _PYTHON3_13_OR_LATER:
-    _EXPECTED_OUTPUT_VSS_PROCESSING_OPTIONS = """\
+    _EXPECTED_OUTPUT_VSS_PROCESSING_OPTIONS = f"""\
 usage: storage_media_tool_test.py [--no_vss] [--vss_only]
                                   [--vss_stores VSS_STORES]
 
 Test argument parser.
 
-{0:s}:
+{test_lib.ARGPARSE_OPTIONS}:
   --no_vss, --no-vss    Do not scan for Volume Shadow Snapshots (VSS). This
                         means that Volume Shadow Snapshots (VSS) are not
                         processed. WARNING: this option is deprecated use
@@ -1246,16 +1246,16 @@ Test argument parser.
                         and lists can also be combined as: "1,3..5". The first
                         snapshot is 1. All snapshots can be defined as: "all"
                         and no snapshots as: "none".
-""".format(test_lib.ARGPARSE_OPTIONS)
+"""
 
   else:
-    _EXPECTED_OUTPUT_VSS_PROCESSING_OPTIONS = """\
+    _EXPECTED_OUTPUT_VSS_PROCESSING_OPTIONS = f"""\
 usage: storage_media_tool_test.py [--no_vss] [--vss_only]
                                   [--vss_stores VSS_STORES]
 
 Test argument parser.
 
-{0:s}:
+{test_lib.ARGPARSE_OPTIONS}:
   --no_vss, --no-vss    Do not scan for Volume Shadow Snapshots (VSS). This
                         means that Volume Shadow Snapshots (VSS) are not
                         processed. WARNING: this option is deprecated use
@@ -1271,7 +1271,7 @@ Test argument parser.
                         and lists can also be combined as: "1,3..5". The first
                         snapshot is 1. All snapshots can be defined as: "all"
                         and no snapshots as: "none".
-""".format(test_lib.ARGPARSE_OPTIONS)
+"""
 
   def _GetTestScanNode(self, scan_context):
     """Retrieves the scan node for testing.

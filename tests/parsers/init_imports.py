@@ -28,9 +28,7 @@ class ParserImportTest(test_lib.ImportCheckTestCase):
 
   def testPluginsImported(self):
     """Tests that all plugins are imported."""
-    parsers_glob = '{0:s}/*_plugins/'.format(test_lib.PARSERS_PATH)
-    plugin_directories = glob.glob(parsers_glob)
-    for plugin_directory in plugin_directories:
+    for plugin_directory in glob.glob(f'{test_lib.PARSERS_PATH:s}/*_plugins/'):
       plugin_directory_path = os.path.join(
           test_lib.PARSERS_PATH, plugin_directory)
       self._AssertFilesImportedInInit(

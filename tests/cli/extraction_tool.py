@@ -22,37 +22,37 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
   _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
 
   if _PYTHON3_13_OR_LATER:
-    _EXPECTED_PERFORMANCE_OPTIONS = """\
+    _EXPECTED_PERFORMANCE_OPTIONS = f"""\
 usage: extraction_tool_test.py [--buffer_size BUFFER_SIZE]
                                [--queue_size QUEUE_SIZE]
 
 Test argument parser.
 
-{0:s}:
+{test_lib.ARGPARSE_OPTIONS}:
   --buffer_size, --buffer-size, --bs BUFFER_SIZE
                         The buffer size for the output (defaults to 196MiB).
   --queue_size, --queue-size QUEUE_SIZE
                         The maximum number of queued items per worker
                         (defaults to 125000)
-""".format(test_lib.ARGPARSE_OPTIONS)
+"""
   else:
-    _EXPECTED_PERFORMANCE_OPTIONS = """\
+    _EXPECTED_PERFORMANCE_OPTIONS = f"""\
 usage: extraction_tool_test.py [--buffer_size BUFFER_SIZE]
                                [--queue_size QUEUE_SIZE]
 
 Test argument parser.
 
-{0:s}:
+{test_lib.ARGPARSE_OPTIONS}:
   --buffer_size BUFFER_SIZE, --buffer-size BUFFER_SIZE, --bs BUFFER_SIZE
                         The buffer size for the output (defaults to 196MiB).
   --queue_size QUEUE_SIZE, --queue-size QUEUE_SIZE
                         The maximum number of queued items per worker
                         (defaults to 125000)
-""".format(test_lib.ARGPARSE_OPTIONS)
+"""
 
   if resource is None:
     if _PYTHON3_13_OR_LATER:
-      _EXPECTED_PROCESSING_OPTIONS = """\
+      _EXPECTED_PROCESSING_OPTIONS = f"""\
 usage: extraction_tool_test.py [--single_process]
                                [--temporary_directory DIRECTORY]
                                [--vfs_back_end TYPE]
@@ -61,7 +61,7 @@ usage: extraction_tool_test.py [--single_process]
 
 Test argument parser.
 
-{0:s}:
+{test_lib.ARGPARSE_OPTIONS}:
   --single_process, --single-process
                         Indicate that the tool should run in a single process.
   --temporary_directory, --temporary-directory DIRECTORY
@@ -85,9 +85,9 @@ Test argument parser.
   --workers WORKERS     Number of worker processes. The default is the number
                         of available system CPUs minus one, for the main
                         (foreman) process.
-""".format(test_lib.ARGPARSE_OPTIONS)
+"""
     else:
-      _EXPECTED_PROCESSING_OPTIONS = """\
+      _EXPECTED_PROCESSING_OPTIONS = f"""\
 usage: extraction_tool_test.py [--single_process]
                                [--temporary_directory DIRECTORY]
                                [--vfs_back_end TYPE]
@@ -96,7 +96,7 @@ usage: extraction_tool_test.py [--single_process]
 
 Test argument parser.
 
-{0:s}:
+{test_lib.ARGPARSE_OPTIONS}:
   --single_process, --single-process
                         Indicate that the tool should run in a single process.
   --temporary_directory DIRECTORY, --temporary-directory DIRECTORY
@@ -120,11 +120,10 @@ Test argument parser.
   --workers WORKERS     Number of worker processes. The default is the number
                         of available system CPUs minus one, for the main
                         (foreman) process.
-""".format(test_lib.ARGPARSE_OPTIONS)
-
+"""
   else:
     if _PYTHON3_13_OR_LATER:
-      _EXPECTED_PROCESSING_OPTIONS = """\
+      _EXPECTED_PROCESSING_OPTIONS = f"""\
 usage: extraction_tool_test.py [--single_process]
                                [--process_memory_limit SIZE]
                                [--temporary_directory DIRECTORY]
@@ -134,7 +133,7 @@ usage: extraction_tool_test.py [--single_process]
 
 Test argument parser.
 
-{0:s}:
+{test_lib.ARGPARSE_OPTIONS}:
   --process_memory_limit, --process-memory-limit SIZE
                         Maximum amount of memory (data segment) a process is
                         allowed to allocate in bytes, where 0 represents no
@@ -166,10 +165,9 @@ Test argument parser.
   --workers WORKERS     Number of worker processes. The default is the number
                         of available system CPUs minus one, for the main
                         (foreman) process.
-""".format(test_lib.ARGPARSE_OPTIONS)
-
+"""
     else:
-      _EXPECTED_PROCESSING_OPTIONS = """\
+      _EXPECTED_PROCESSING_OPTIONS = f"""\
 usage: extraction_tool_test.py [--single_process]
                                [--process_memory_limit SIZE]
                                [--temporary_directory DIRECTORY]
@@ -179,7 +177,7 @@ usage: extraction_tool_test.py [--single_process]
 
 Test argument parser.
 
-{0:s}:
+{test_lib.ARGPARSE_OPTIONS}:
   --process_memory_limit SIZE, --process-memory-limit SIZE
                         Maximum amount of memory (data segment) a process is
                         allowed to allocate in bytes, where 0 represents no
@@ -211,17 +209,16 @@ Test argument parser.
   --workers WORKERS     Number of worker processes. The default is the number
                         of available system CPUs minus one, for the main
                         (foreman) process.
-""".format(test_lib.ARGPARSE_OPTIONS)
-
+"""
 
   if _PYTHON3_13_OR_LATER:
-    _EXPECTED_TIME_ZONE_OPTION = """\
+    _EXPECTED_TIME_ZONE_OPTION = f"""\
 usage: extraction_tool_test.py [--codepage CODEPAGE] [--language LANGUAGE_TAG]
                                [--no_extract_winevt_resources] [-z TIME_ZONE]
 
 Test argument parser.
 
-{0:s}:
+{test_lib.ARGPARSE_OPTIONS}:
   --codepage CODEPAGE   The preferred codepage, which is used for decoding
                         single-byte or multi-byte character extracted strings.
   --language LANGUAGE_TAG
@@ -243,16 +240,15 @@ Test argument parser.
                         time zone is determined based on the source data where
                         possible otherwise it will default to UTC. Use "list"
                         to see a list of available time zones.
-""".format(test_lib.ARGPARSE_OPTIONS)
-
+"""
   else:
-    _EXPECTED_TIME_ZONE_OPTION = """\
+    _EXPECTED_TIME_ZONE_OPTION = f"""\
 usage: extraction_tool_test.py [--codepage CODEPAGE] [--language LANGUAGE_TAG]
                                [--no_extract_winevt_resources] [-z TIME_ZONE]
 
 Test argument parser.
 
-{0:s}:
+{test_lib.ARGPARSE_OPTIONS}:
   --codepage CODEPAGE   The preferred codepage, which is used for decoding
                         single-byte or multi-byte character extracted strings.
   --language LANGUAGE_TAG
@@ -274,7 +270,7 @@ Test argument parser.
                         time zone is determined based on the source data where
                         possible otherwise it will default to UTC. Use "list"
                         to see a list of available time zones.
-""".format(test_lib.ARGPARSE_OPTIONS)
+"""
 
   _STORAGE_FILENAME_TEMPLATE = r'\d{{8}}T\d{{6}}-{filename}.plaso'
 
