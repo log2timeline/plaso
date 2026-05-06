@@ -100,36 +100,37 @@ class KMLOutputTest(test_lib.OutputModuleTestCase):
       # sure the drive letter is in the same case.
       expected_os_location = os.path.abspath(expected_os_location)
 
-    expected_event_body = (
-        f'<Placemark><name>{event_identifier_string!s}</name><description>'
-        f'+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-\n'
-        f'[Timestamp]:\n'
-        f'  2012-06-27T18:17:01.000000+00:00\n'
-        f'\n'
-        f'[Pathspec]:\n'
-        f'  type: OS, location: {expected_os_location!s}\n'
-        f'  type: TSK, inode: 15, location: /var/log/syslog.1\n'
-        f'\n'
-        f'[Reserved attributes]:\n'
-        f'  {{data_type}} test:output\n'
-        f'  {{display_name}} TSK:/var/log/syslog.1\n'
-        f'  {{filename}} /var/log/syslog.1\n'
-        f'  {{hostname}} ubuntu\n'
-        f'  {{inode}} 15\n'
-        f'  {{username}} root\n'
-        f'\n'
-        f'[Additional attributes]:\n'
-        f'  {{latitude}} 37.4222899014\n'
-        f'  {{longitude}} -122.082203543\n'
-        f'  {{text}} Reporter &lt;CRON&gt; PID: |8442| '
-        f'(pam_unix(cron:session): session\n'
-        f' closed for user root)\n'
-        f'\n'
-        f'</description>'
-        f'<Point><coordinates>-122.082203543,37.4222899014</coordinates>'
-        f'</Point></Placemark>')
+    expected_event_body_lines = [
+        (f'<Placemark><name>{event_identifier_string!s}</name><description>'
+         f'+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-'
+         f'+-+-+-+-+-+-'),
+        '[Timestamp]:',
+        '  2012-06-27T18:17:01.000000+00:00',
+        '',
+        '[Pathspec]:',
+        f'  type: OS, location: {expected_os_location!s}',
+        '  type: TSK, inode: 15, location: /var/log/syslog.1',
+        '',
+        '[Reserved attributes]:',
+        '  {data_type} test:output',
+        '  {display_name} TSK:/var/log/syslog.1',
+        '  {filename} /var/log/syslog.1',
+        '  {hostname} ubuntu',
+        '  {inode} 15',
+        '  {username} root',
+        '',
+        '[Additional attributes]:',
+        '  {latitude} 37.4222899014',
+        '  {longitude} -122.082203543',
+        ('  {text} Reporter &lt;CRON&gt; PID: |8442| (pam_unix(cron:session): '
+         'session'),
+        ' closed for user root)',
+        '',
+        ('</description>'
+         '<Point><coordinates>-122.082203543,37.4222899014</coordinates>'
+         '</Point></Placemark>')]
 
-    self.assertEqual(event_body.split('\n'), expected_event_body.split('\n'))
+    self.assertEqual(event_body.split('\n'), expected_event_body_lines)
 
   def testWriteFooter(self):
     """Tests the WriteFooter function."""
