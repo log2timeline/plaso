@@ -157,7 +157,7 @@ class DateLessLogFormatHelper:
       ValueError: if month contains an unsupported value.
     """
     if month not in self._VALID_MONTHS:
-      raise ValueError('Invalid month: {0!s}'.format(month))
+      raise ValueError(f'Invalid month: {month!s}')
 
     self._date = (year, month, 0)
     self._granularity = self._GRANULARITY_NO_YEAR
@@ -173,7 +173,7 @@ class DateLessLogFormatHelper:
       ValueError: if month contains an unsupported value.
     """
     if month not in self._VALID_MONTHS:
-      raise ValueError('Invalid month: {0!s}'.format(month))
+      raise ValueError(f'Invalid month: {month!s}')
 
     last_year, last_month, _ = self._date
 

@@ -34,7 +34,7 @@ class WindowsResourceFileHelper:
     for group in match_object.groups():
       try:
         place_holder_number = int(group, 10) - 1
-        expanded_group = '{{{0:d}:s}}'.format(place_holder_number)
+        expanded_group = f'{{{place_holder_number:d}:s}}'
       except ValueError:
         expanded_group = group
 

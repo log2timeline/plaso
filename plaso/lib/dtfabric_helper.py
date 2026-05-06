@@ -69,7 +69,7 @@ class DtFabricHelper:
     Returns:
       str: human readable IPv4 address.
     """
-    return '.'.join(['{0:d}'.format(octet) for octet in packed_ip_address[:4]])
+    return '.'.join([f'{octet:d}' for octet in packed_ip_address[:4]])
 
   def _FormatPackedIPv6Address(self, packed_ip_address):
     """Formats a packed IPv6 address as a human readable string.
@@ -84,8 +84,7 @@ class DtFabricHelper:
     octet_pairs = zip(packed_ip_address[0::2], packed_ip_address[1::2])
     octet_pairs = [octet1 << 8 | octet2 for octet1, octet2 in octet_pairs]
     # TODO: omit ":0000" from the string.
-    return ':'.join([
-        '{0:04x}'.format(octet_pair) for octet_pair in octet_pairs])
+    return ':'.join([f'{octet_pair:04x}' for octet_pair in octet_pairs])
 
   def _GetDataTypeMap(self, name):
     """Retrieves a data type map defined by the definition file.
@@ -138,12 +137,12 @@ class DtFabricHelper:
         read_error = 'missing data'
 
     except IOError as exception:
-      read_error = '{0!s}'.format(exception)
+      read_error = f'{exception!s}'
 
     if read_error:
       raise errors.ParseError(
-          'Unable to read data at offset: 0x{0:08x} with error: {1:s}'.format(
-              file_offset, read_error))
+          f'Unable to read data at offset: 0x{file_offset:08x} '
+          f'with error: {read_error:s}')
 
     return data
 
@@ -197,9 +196,9 @@ class DtFabricHelper:
       return data_type_map.MapByteStream(byte_stream, context=context)
     except (dtfabric_errors.ByteStreamTooSmallError,
             dtfabric_errors.MappingError) as exception:
-      raise errors.ParseError((
-          'Unable to map {0:s} data at offset: 0x{1:08x} with error: '
-          '{2!s}').format(data_type_map.name or '', file_offset, exception))
+      raise errors.ParseError(
+          f'Unable to map {data_type_map.name or ""!s} data at offset: '
+          f'0x{file_offset:08x} with error: {exception!s}')
 
   def _ReadStructureFromFileObject(
       self, file_object, file_offset, data_type_map):
@@ -248,13 +247,12 @@ class DtFabricHelper:
         pass
 
       except dtfabric_errors.MappingError as exception:
-        raise errors.ParseError((
-            'Unable to map {0:s} data at offset: 0x{1:08x} with error: '
-            '{2!s}').format(data_type_map.name, file_offset, exception))
+        raise errors.ParseError(
+            f'Unable to map {data_type_map.name!s} data at offset: '
+            f'0x{file_offset:08x} with error: {exception!s}')
 
       last_data_size = data_size
       data_size = data_type_map.GetSizeHint(context=context)
 
     raise errors.ParseError(
-        'Unable to read {0:s} at offset: 0x{1:08x}'.format(
-            data_type_map.name, file_offset))
+        f'Unable to read {data_type_map.name!s} at offset: 0x{file_offset:08x}')
