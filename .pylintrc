@@ -449,7 +449,6 @@ confidence=HIGH,
 # --disable=W".
 disable=assignment-from-none,
         bad-inline-option,
-        consider-using-f-string,
         deprecated-pragma,
         duplicate-code,
         file-ignored,
