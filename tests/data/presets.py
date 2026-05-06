@@ -26,9 +26,8 @@ class PresetsDataTest(shared_test_lib.BaseTestCase):
       _, invalid_parser_elements = (
           parsers_manager.ParsersManager.CheckFilterExpression(expanded_preset))
 
-      error_message = 'Invalid parser/plugin name(s) in preset: {0:s}'.format(
-          name)
-      self.assertFalse(invalid_parser_elements, msg=error_message)
+      self.assertFalse(invalid_parser_elements, msg=(
+          f'Invalid parser/plugin name(s) in preset: {name:s}'))
 
 
 if __name__ == '__main__':

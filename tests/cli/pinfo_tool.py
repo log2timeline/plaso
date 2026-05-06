@@ -818,7 +818,7 @@ Storage files are different.
     table_view.AddRow([session_identifier, session_start_time])
     table_view.Write(output_writer)
 
-    title = 'Session: {0!s}'.format(session_identifier)
+    title = f'Session: {session_identifier!s}'
     table_view = cli_views.ViewsFactory.GetTableView(
         cli_views.ViewsFactory.FORMAT_TYPE_CLI, title=title)
     table_view.AddRow(['Start time', session_start_time])
@@ -845,15 +845,15 @@ Storage files are different.
 
     expected_output = output_writer.ReadOutput()
 
-    expected_output = (
-        '{0:s}'
+    expected_output = ''.join([
+        expected_output,
         '\n'
         'No events labels stored.\n'
         '\n'
         'No warnings stored.\n'
         '\n'
         'No analysis reports stored.\n'
-        '\n').format(expected_output)
+        '\n'])
 
     test_file_path = self._GetTestFilePath([test_filename])
     self._SkipIfPathNotExists(test_file_path)

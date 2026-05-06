@@ -34,7 +34,7 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
     Return:
       str: parser chain of the parser plugin.
     """
-    return 'winreg/{0:s}'.format(plugin_name)
+    return f'winreg/{plugin_name:s}'
 
   def testEnablePlugins(self):
     """Tests the EnablePlugins function."""

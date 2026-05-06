@@ -50,8 +50,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
 
     display_name = parser_mediator.GetDisplayName(file_entry=file_entry)
 
-    expected_display_name = 'OS:{0:s}'.format(test_file_path)
-    self.assertEqual(display_name, expected_display_name)
+    self.assertEqual(display_name, f'OS:{test_file_path:s}')
 
     gzip_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_GZIP, parent=os_path_spec)
@@ -59,8 +58,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
 
     display_name = parser_mediator.GetDisplayName(file_entry=file_entry)
 
-    expected_display_name = 'GZIP:{0:s}'.format(test_file_path)
-    self.assertEqual(display_name, expected_display_name)
+    self.assertEqual(display_name, f'GZIP:{test_file_path:s}')
 
     test_file_path = self._GetTestFilePath(['vsstest.qcow2'])
     self._SkipIfPathNotExists(test_file_path)
@@ -97,9 +95,8 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
 
-    expected_display_name = 'OS:{0:s}'.format(test_file_path)
     display_name = parser_mediator.GetDisplayNameForPathSpec(os_path_spec)
-    self.assertEqual(display_name, expected_display_name)
+    self.assertEqual(display_name, f'OS:{test_file_path:s}')
 
   def testGetFileEntry(self):
     """Tests the GetFileEntry function."""

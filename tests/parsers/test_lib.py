@@ -33,8 +33,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     """
     resolver_context = dfvfs_context.Context()
 
-    location = '/{0:s}'.format(filename)
-    test_path_spec = fake_path_spec.FakePathSpec(location=location)
+    test_path_spec = fake_path_spec.FakePathSpec(location=f'/{filename:s}')
     file_object = fake_file_io.FakeFile(resolver_context, test_path_spec, data)
     file_object.Open()
 
@@ -146,7 +145,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
 
     else:
       parser_type = type(parser)
-      self.fail('Unsupported parser type: {0!s}'.format(parser_type))
+      self.fail(f'Unsupported parser type: {parser_type!s}')
 
     return storage_writer
 
@@ -172,9 +171,8 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
         value = [date_time_value.CopyToDateTimeStringISO8601()
                  for date_time_value in value]
 
-      error_message = (
-          'event value: "{0:s}" does not match expected value').format(name)
-      self.assertEqual(value, expected_value, error_message)
+      self.assertEqual(value, expected_value, (
+          f'event value: "{name:s}" does not match expected value'))
 
   def CheckEventValues(self, storage_writer, event, expected_event_values):
     """Asserts that an event and its event data matches the expected values.
@@ -208,9 +206,8 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
           date_time_value = value.CopyToDateTimeString()
         value = date_time_value
 
-      error_message = (
-          'event value: "{0:s}" does not match expected value').format(name)
-      self.assertEqual(value, expected_value, error_message)
+      self.assertEqual(value, expected_value, (
+          f'event value: "{name:s}" does not match expected value'))
 
   def CheckTimestamp(self, timestamp, expected_date_time):
     """Asserts that a timestamp value matches the expected date and time.

@@ -53,9 +53,7 @@ class RedisAttributeContainerStoreTest(test_lib.StorageTestCase):
       session_identifier (str): the identifier of the session the tasks are
           part of.
     """
-    redis_hash_pattern = '{0:s}-*'.format(session_identifier)
-
-    for redis_hash_name in redis_client.keys(redis_hash_pattern):
+    for redis_hash_name in redis_client.keys(f'{session_identifier:s}-*'):
       redis_client.delete(redis_hash_name)
 
   def testGetRedisHashName(self):
@@ -76,9 +74,9 @@ class RedisAttributeContainerStoreTest(test_lib.StorageTestCase):
       redis_hash_name = test_store._GetRedisHashName(
           event_data_stream.CONTAINER_TYPE)
 
-      expected_redis_hash_name = '{0:s}-{1:s}-{2:s}'.format(
-          task.session_identifier, task.identifier,
-          event_data_stream.CONTAINER_TYPE)
+      expected_redis_hash_name = (
+          f'{task.session_identifier:s}-{task.identifier:s}-'
+          f'{event_data_stream.CONTAINER_TYPE:s}')
       self.assertEqual(redis_hash_name, expected_redis_hash_name)
 
     finally:

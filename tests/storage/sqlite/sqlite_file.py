@@ -60,7 +60,7 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
       metadata_values = {
           'compression_format': definitions.COMPRESSION_FORMAT_ZLIB,
-          'format_version': '{0:d}'.format(test_store._FORMAT_VERSION),
+          'format_version': f'{test_store._FORMAT_VERSION:d}',
           'serialization_format': definitions.SERIALIZER_FORMAT_JSON}
       test_store._CheckStorageMetadata(metadata_values)
 
@@ -72,8 +72,7 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       with self.assertRaises(IOError):
         test_store._CheckStorageMetadata(metadata_values)
 
-      metadata_values['format_version'] = '{0:d}'.format(
-          test_store._FORMAT_VERSION)
+      metadata_values['format_version'] = f'{test_store._FORMAT_VERSION:d}'
       metadata_values['compression_format'] = None
       with self.assertRaises(IOError):
         test_store._CheckStorageMetadata(metadata_values)

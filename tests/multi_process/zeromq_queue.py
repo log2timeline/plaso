@@ -52,9 +52,10 @@ class ZeroMQQueuesTest(shared_test_lib.BaseTestCase):
 
   def _testItemTransferred(self, push_queue, pop_queue):
     """Tests than item can be transferred between two queues."""
-    item = 'This is an item going from {0:s} to {1:s}.'.format(
-        push_queue.name, pop_queue.name)
+    item = (f'This is an item going from {push_queue.name:s} to '
+            f'{pop_queue.name:s}')
     push_queue.PushItem(item)
+
     popped_item = pop_queue.PopItem()
     self.assertEqual(item, popped_item)
 
@@ -89,10 +90,11 @@ class ZeroMQQueuesTest(shared_test_lib.BaseTestCase):
   def testQueueStart(self):
     """Tests that delayed creation of ZeroMQ sockets occurs correctly."""
     for queue_class in self._QUEUE_CLASSES:
-      queue_name = 'queuestart_{0:s}'.format(queue_class.__name__)
+      queue_name = f'queuestart_{queue_class.__name__:s}'
       test_queue = queue_class(
           name=queue_name, delay_open=True, linger_seconds=1)
-      message = '{0:s} socket already exists.'.format(queue_name)
+
+      message = f'{queue_name:s} socket already exists.'
       self.assertIsNone(test_queue._zmq_socket, message)
       test_queue.Open()
       self.assertIsNotNone(test_queue._zmq_socket)
@@ -144,7 +146,7 @@ class ZeroMQQueuesTest(shared_test_lib.BaseTestCase):
   def testSocketCreation(self):
     """Tests that ZeroMQ sockets are created when a new queue is created."""
     for queue_class in self._QUEUE_CLASSES:
-      queue_name = 'socket_creation_{0:s}'.format(queue_class.__name__)
+      queue_name = f'socket_creation_{queue_class.__name__:s}'
       test_queue = queue_class(
           name=queue_name, delay_open=False, linger_seconds=1)
       self.assertIsNotNone(test_queue._zmq_socket)

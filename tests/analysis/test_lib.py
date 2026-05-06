@@ -132,7 +132,8 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
       parser.Parse(parser_mediator, file_object)
 
     else:
-      self.fail('Got unexpected parser type: {0!s}'.format(type(parser)))
+      parser_type = type(parser)
+      self.fail(f'Got unexpected parser type: {parser_type!s}')
 
     self._ProcessEventData(storage_writer)
 

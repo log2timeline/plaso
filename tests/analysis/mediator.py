@@ -23,9 +23,8 @@ class AnalysisMediatorTest(test_lib.AnalysisPluginTestCase):
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
 
-    expected_display_name = 'OS:{0:s}'.format(test_path)
     display_name = analysis_mediator.GetDisplayNameForPathSpec(os_path_spec)
-    self.assertEqual(display_name, expected_display_name)
+    self.assertEqual(display_name, f'OS:{test_path:s}')
 
   def testGetUsernameForPath(self):
     """Tests the GetUsernameForPath function."""

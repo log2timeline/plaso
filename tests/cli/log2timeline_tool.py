@@ -59,7 +59,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
     options.source = source_path
 
     if password:
-      options.credentials = ['password:{0:s}'.format(password)]
+      options.credentials = [f'password:{password:s}']
 
     return options
 
@@ -188,7 +188,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
       expected_output = [
           '',
-          'Source path\t\t: {0:s}'.format(options.source),
+          f'Source path\t\t: {options.source:s}',
           'Source type\t\t: directory',
           'Processing time\t\t: 00:00:00',
           '',
@@ -221,7 +221,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
       expected_output = [
           '',
-          'Source path\t\t: {0:s}'.format(options.source),
+          f'Source path\t\t: {options.source:s}',
           'Source type\t\t: storage media image',
           'Processing time\t\t: 00:00:00',
           '',
@@ -255,7 +255,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
       expected_output = [
           '',
-          'Source path\t\t: {0:s}'.format(options.source),
+          f'Source path\t\t: {options.source:s}',
           'Source type\t\t: storage media image',
           'Processing time\t\t: 00:00:00',
           '',
@@ -288,7 +288,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
       expected_output = [
           '',
-          'Source path\t\t: {0:s}'.format(options.source),
+          f'Source path\t\t: {options.source:s}',
           'Source type\t\t: storage media image',
           'Processing time\t\t: 00:00:00',
           '',
@@ -321,7 +321,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
       expected_output = [
           '',
-          'Source path\t\t: {0:s}'.format(options.source),
+          f'Source path\t\t: {options.source:s}',
           'Source type\t\t: storage media image',
           'Processing time\t\t: 00:00:00',
           '',
@@ -356,7 +356,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
       expected_output = [
           '',
-          'Source path\t\t: {0:s}'.format(options.source),
+          f'Source path\t\t: {options.source:s}',
           'Source type\t\t: storage media image',
           'Processing time\t\t: 00:00:00',
           '',
@@ -391,7 +391,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
       expected_output = [
           '',
-          'Source path\t\t: {0:s}'.format(options.source),
+          f'Source path\t\t: {options.source:s}',
           'Source type\t\t: storage media image',
           'Processing time\t\t: 00:00:00',
           '',
@@ -428,7 +428,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
       expected_output = [
           '',
-          'Source path\t\t: {0:s}'.format(options.source),
+          f'Source path\t\t: {options.source:s}',
           'Source type\t\t: single file',
           'Processing time\t\t: 00:00:00',
           '',
@@ -465,7 +465,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
       expected_output = [
           '',
-          'Source path\t\t: {0:s}'.format(options.source),
+          f'Source path\t\t: {options.source:s}',
           'Source type\t\t: directory',
           'Processing time\t\t: 00:00:00',
           '',
@@ -500,7 +500,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
       expected_output = [
           '',
-          'Source path\t\t: {0:s}'.format(options.source),
+          f'Source path\t\t: {options.source:s}',
           'Source type\t\t: single file',
           'Processing time\t\t: 00:00:00',
           '',
@@ -534,9 +534,9 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
       try:
         storage_file.Open(path=options.storage_file, read_only=True)
       except IOError as exception:
-        self.fail((
-            'Unable to open storage file after processing with error: '
-            '{0!s}.').format(exception))
+        self.fail(
+            f'Unable to open storage file after processing with error: '
+            f'{exception!s}')
 
       # There should be 3 filestat and 3 pe parser generated events.
       # Typically there are 3 filestat events, but there can be 4 on platforms

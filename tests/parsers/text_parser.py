@@ -39,10 +39,10 @@ class EncodedTextReaderTest(test_lib.ParserTestCase):
       raise TypeError('Unsupported exception type.')
 
     # pylint: disable=attribute-defined-outside-init,no-member
-    self._encoding_errors.append(
-        (exception.start, exception.object[exception.start]))
-    escaped = '\\x{0:2x}'.format(exception.object[exception.start])
-    return (escaped, exception.start + 1)
+    byte_value = exception.object[exception.start]
+
+    self._encoding_errors.append((exception.start, byte_value))
+    return (f'\\x{byte_value:2x}', exception.start + 1)
 
   def testReadLine(self):
     """Tests the ReadLine function."""
