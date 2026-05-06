@@ -130,6 +130,8 @@ class KMLOutputTest(test_lib.OutputModuleTestCase):
          '<Point><coordinates>-122.082203543,37.4222899014</coordinates>'
          '</Point></Placemark>')]
 
+    # Compare the output as list of lines which makes it easier to spot
+    # differences.
     self.assertEqual(event_body.split('\n'), expected_event_body_lines)
 
   def testWriteFooter(self):
