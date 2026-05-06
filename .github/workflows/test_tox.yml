@@ -1,4 +1,4 @@
-# Run tox tests on Ubuntu Docker images using GIFT PPA
+# Run tox tests on Ubuntu Docker images using the deadsnakes and GIFT PPAs
 name: test_tox
 on:
   pull_request:
@@ -15,19 +15,19 @@ jobs:
       matrix:
         include:
         - python-version: '3.10'
-          toxenv: 'py310,wheel'
+          toxenv: 'py310'
         - python-version: '3.11'
-          toxenv: 'py311,wheel'
+          toxenv: 'py311'
         - python-version: '3.12'
-          toxenv: 'py312,wheel'
+          toxenv: 'py312'
         - python-version: '3.13'
-          toxenv: 'py313,wheel'
+          toxenv: 'py313'
         - python-version: '3.14'
-          toxenv: 'py314,wheel'
+          toxenv: 'py314'
     container:
       image: ubuntu:24.04
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Set up container
       env:
         DEBIAN_FRONTEND: noninteractive
@@ -49,18 +49,16 @@ jobs:
       env:
         LANG: en_US.UTF-8
       run: |
-        tox -e${{ matrix.toxenv }}
+        tox -e ${{ matrix.toxenv }},wheel
   coverage:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        include:
-        - python-version: '3.12'
-          toxenv: 'coverage'
+        python-version: ['3.12']
     container:
       image: ubuntu:24.04
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Set up container
       env:
         DEBIAN_FRONTEND: noninteractive
@@ -77,27 +75,25 @@ jobs:
         add-apt-repository -y ppa:deadsnakes/ppa
         add-apt-repository -y ppa:gift/dev
         apt-get update -q
-        apt-get install -y build-essential git libffi-dev libssl-dev pkg-config python${{ matrix.python-version }} python${{ matrix.python-version }}-dev python${{ matrix.python-version }}-venv libbde-python3 libcaes-python3 libcreg-python3 libesedb-python3 libevt-python3 libevtx-python3 libewf-python3 libfcrypto-python3 libfsapfs-python3 libfsext-python3 libfsfat-python3 libfshfs-python3 libfsntfs-python3 libfsxfs-python3 libfvde-python3 libfwnt-python3 libfwsi-python3 liblnk-python3 libluksde-python3 libmodi-python3 libmsiecf-python3 libolecf-python3 libphdi-python3 libqcow-python3 libregf-python3 libscca-python3 libsigscan-python3 libsmdev-python3 libsmraw-python3 libvhdi-python3 libvmdk-python3 libvsapm-python3 libvsgpt-python3 libvshadow-python3 libvslvm-python3 python3-acstore python3-artifacts python3-bencode python3-certifi python3-chardet python3-dateutil python3-defusedxml python3-dfdatetime python3-dfvfs python3-dfwinreg python3-dtfabric python3-fakeredis python3-flor python3-lz4 python3-opensearch python3-pefile python3-pip python3-psutil python3-pyparsing python3-pytsk3 python3-redis python3-requests python3-setuptools python3-tz python3-urllib3 python3-xattr python3-xlsxwriter python3-yaml python3-yara python3-zmq python3-zstd tox
+        apt-get install -y build-essential curl git libffi-dev libssl-dev pkg-config python${{ matrix.python-version }} python${{ matrix.python-version }}-dev python${{ matrix.python-version }}-venv libbde-python3 libcaes-python3 libcreg-python3 libesedb-python3 libevt-python3 libevtx-python3 libewf-python3 libfcrypto-python3 libfsapfs-python3 libfsext-python3 libfsfat-python3 libfshfs-python3 libfsntfs-python3 libfsxfs-python3 libfvde-python3 libfwnt-python3 libfwsi-python3 liblnk-python3 libluksde-python3 libmodi-python3 libmsiecf-python3 libolecf-python3 libphdi-python3 libqcow-python3 libregf-python3 libscca-python3 libsigscan-python3 libsmdev-python3 libsmraw-python3 libvhdi-python3 libvmdk-python3 libvsapm-python3 libvsgpt-python3 libvshadow-python3 libvslvm-python3 python3-acstore python3-artifacts python3-bencode python3-certifi python3-chardet python3-dateutil python3-defusedxml python3-dfdatetime python3-dfvfs python3-dfwinreg python3-dtfabric python3-fakeredis python3-flor python3-lz4 python3-opensearch python3-pefile python3-pip python3-psutil python3-pyparsing python3-pytsk3 python3-redis python3-requests python3-setuptools python3-tz python3-urllib3 python3-xattr python3-xlsxwriter python3-yaml python3-yara python3-zmq python3-zstd tox
     - name: Run tests with coverage
       env:
         LANG: en_US.UTF-8
       run: |
-        tox -e${{ matrix.toxenv }}
+        tox -e coverage
     - name: Upload coverage report to Codecov
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v6
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
   lint:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        include:
-        - python-version: '3.12'
-          toxenv: 'lint'
+        python-version: ['3.12']
     container:
       image: ubuntu:24.04
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Set up container
       env:
         DEBIAN_FRONTEND: noninteractive
@@ -119,4 +115,4 @@ jobs:
       env:
         LANG: en_US.UTF-8
       run: |
-        tox -e${{ matrix.toxenv }}
+        tox -e lint

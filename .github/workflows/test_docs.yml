@@ -1,4 +1,4 @@
-# Run docs tox tests on Ubuntu Docker images using GIFT PPA
+# Run docs tox tests on Ubuntu Docker images using the deadsnakes and GIFT PPAs
 name: test_docs
 on:
   pull_request:
@@ -13,13 +13,11 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        include:
-        - python-version: '3.12'
-          toxenv: 'docs'
+        python-version: ['3.12']
     container:
       image: ubuntu:24.04
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Set up container
       env:
         DEBIAN_FRONTEND: noninteractive
@@ -41,4 +39,4 @@ jobs:
       env:
         LANG: en_US.UTF-8
       run: |
-        tox -e${{ matrix.toxenv }}
+        tox -e docs
