@@ -175,13 +175,15 @@ class OperatingSystemArtifact(ArtifactAttributeContainer):
       if product_lower_case[segment_index] in ('(r)', 'server', 'web'):
         segment_index += 1
 
-      # Check if the version has a suffix.
+      product_version = product[segment_index]
+
+      # Check if the product version has a suffix.
       suffix_segment_index = segment_index + 1
       if (suffix_segment_index < number_of_segments and
           product_lower_case[suffix_segment_index] == 'r2'):
-        return 'Windows {0:s} R2'.format(product[segment_index])
+        return f'Windows {product_version:s} R2'
 
-      return 'Windows {0:s}'.format(product[segment_index])
+      return f'Windows {product_version:s}'
 
     return None
 

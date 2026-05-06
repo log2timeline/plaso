@@ -35,9 +35,9 @@ class WindowsDistributedLinkTrackingEventData(events.EventData):
     if uuid.version != 1:
       raise ValueError('Unsupported UUID version.')
 
-    mac_address = '{0:s}:{1:s}:{2:s}:{3:s}:{4:s}:{5:s}'.format(
-        uuid.hex[20:22], uuid.hex[22:24], uuid.hex[24:26], uuid.hex[26:28],
-        uuid.hex[28:30], uuid.hex[30:32])
+    mac_address = (f'{uuid.hex[20:22]:s}:{uuid.hex[22:24]:s}:'
+                   f'{uuid.hex[24:26]:s}:{uuid.hex[26:28]:s}:'
+                   f'{uuid.hex[28:30]:s}:{uuid.hex[30:32]:s}')
 
     super().__init__(
         data_type=self.DATA_TYPE)
@@ -45,7 +45,7 @@ class WindowsDistributedLinkTrackingEventData(events.EventData):
     self.mac_address = mac_address
     # TODO: replace origin my something machine readable.
     self.origin = origin
-    self.uuid = '{0!s}'.format(uuid)
+    self.uuid = f'{uuid!s}'
 
 
 class WindowsRegistryEventData(events.EventData):

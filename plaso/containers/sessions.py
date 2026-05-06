@@ -69,7 +69,7 @@ class Session(interface.AttributeContainer):
     self.debug_mode = False
     self.enabled_parser_names = None
     self.filter_file = None
-    self.identifier = '{0:s}'.format(uuid.uuid4().hex)
+    self.identifier = f'{uuid.uuid4().hex:s}'
     self.parser_filter_expression = None
     self.preferred_codepage = None
     self.preferred_encoding = 'utf-8'

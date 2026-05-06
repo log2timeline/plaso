@@ -23,9 +23,11 @@ def Main():
     return 1
 
   if tool.show_troubleshooting:
-    print('Using Python version {0!s}'.format(sys.version))
+    path = os.path.abspath(__file__)
+
+    print(f'Using Python version {sys.version!s}')
     print()
-    print('Path: {0:s}'.format(os.path.abspath(__file__)))
+    print(f'Path: {path!s}')
     print()
     print(tool.GetVersionInformation())
     print()
@@ -60,8 +62,8 @@ def Main():
   try:
     tool.ProcessSource()
 
-  # Writing to stdout and stderr will raise BrokenPipeError if it
-  # receives a SIGPIPE.
+  # Writing to stdout and stderr will raise BrokenPipeError if it receives a
+  # SIGPIPE.
   except BrokenPipeError:
     pass
 
@@ -74,10 +76,9 @@ def Main():
     return 1
 
   except errors.SourceScannerError as exception:
-    logging.warning((
-        'Unable to scan for a supported file system with error: {0!s}\n'
-        'Most likely the image format is not supported by the '
-        'tool.').format(exception))
+    logging.warning(
+        f'Unable to scan for a supported file system with error: '
+        f'{exception!s}\nMost likely the image format is not supported.')
     return 1
 
   return 0
