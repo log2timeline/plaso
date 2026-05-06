@@ -10,8 +10,8 @@ The default log format (logback pattern: %date %-5level [%thread] %request
 
 With the optional %request context fields between [thread] and logger_class:
 
-  YYYY-MM-DD HH:MM:SS,mmm LEVEL [thread] user request_id session_id ip
-  "action" logger_class message
+  YYYY-MM-DD HH:MM:SS,mmm LEVEL [thread] user request_identifier
+  session_identifier ip_address "action" logger_class message
 
 All %request fields are optional and may be absent. In practice, lines often
 omit some or all of these fields depending on the context of the log event.
@@ -45,9 +45,9 @@ class AtlassianBitbucketEventData(events.EventData):
         logging the event (e.g. c.a.b.m.r.DefaultRepositoryManager).
     request_action (str): the request action string (e.g.
         "TransactionService/Transact"), if present.
-    request_id (str): the unique request identifier (e.g.
+    request_identifier (str): the unique request identifier (e.g.
         2CM38K4Fx339x113x2), if present.
-    session_id (str): the session identifier, if present.
+    session_identifier (str): the session identifier, if present.
     thread (str): the JVM thread name from which the log event originated.
     user_name (str): the name of the user associated with the request, if
         present in the log line.
@@ -64,8 +64,8 @@ class AtlassianBitbucketEventData(events.EventData):
     self.level = None
     self.logger_class = None
     self.request_action = None
-    self.request_id = None
-    self.session_id = None
+    self.request_identifier = None
+    self.session_identifier = None
     self.thread = None
     self.user_name = None
     self.written_time = None
@@ -108,10 +108,12 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
       pyparsing.SkipTo(']').set_results_name('thread') +
       pyparsing.Suppress(']'))
 
-  # Logger class: abbreviated or full Java class name. Matches patterns like:
-  # c.a.b.m.r.DefaultRepositoryManager,
-  # com.atlassian.bitbucket.internal.boot.log.BuildInfoLogger,
-  # o.h.i.ExceptionMapperStandardImpl, org.hibernate.SQL
+  # Logger class, which can be abbreviated or full Java class name, such as:
+  #     c.a.b.m.r.DefaultRepositoryManager
+  #     com.atlassian.bitbucket.internal.boot.log.BuildInfoLogger
+  #     o.h.i.ExceptionMapperStandardImpl
+  #     org.hibernate.SQL
+  #
   # The class name must start with a letter and contain at least one dot.
   _BITBUCKET_LOGGER = pyparsing.Regex(
       r'[a-zA-Z][a-zA-Z0-9_$]*(?:\.[a-zA-Z][a-zA-Z0-9_$]*)+').set_results_name(
@@ -122,28 +124,28 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
       pyparsing.LineEnd()).set_results_name('body')
 
   # The %request context block between [thread] and logger_class is optional.
-  # It may contain: user, request_id, session_id, ip_address, "action".
-  # We capture everything between ']' and the logger class as raw text and
+  # It may contain: user, request_identifier, session_identifier, ip_address,
+  # "action".
+  # We capture everything between ']' and the logger class as original text and
   # parse it afterwards.
-  _REQUEST_CONTEXT_RAW = pyparsing.SkipTo(
-      _BITBUCKET_LOGGER).set_results_name('request_context_raw')
+  _REQUEST_CONTEXT_TEXT = pyparsing.SkipTo(
+      _BITBUCKET_LOGGER).set_results_name('request_context_text')
 
   # Complete log line structure:
   # <timestamp> <level> [<thread>] [optional request context] <logger> <body>
   _BITBUCKET_LOG_LINE = (
       _DATE_TIME + _LOG_LEVEL + _BITBUCKET_THREAD +
-      _REQUEST_CONTEXT_RAW + _BITBUCKET_LOGGER + _BITBUCKET_LOG_MESSAGE)
+      _REQUEST_CONTEXT_TEXT + _BITBUCKET_LOGGER + _BITBUCKET_LOG_MESSAGE)
 
   _LINE_STRUCTURES = [('log_entry', _BITBUCKET_LOG_LINE)]
 
-  VERIFICATION_GRAMMAR = _BITBUCKET_LOG_LINE
-
   # Sub-patterns for parsing the raw request context string.
-  # Request ID: alphanumeric token with 'x' separators.
-  _RE_REQUEST_ID = pyparsing.Regex(r'[0-9A-Za-z]{6,}x[0-9]+x[0-9]+x[0-9]+')
+  # Request identifier: alphanumeric token with 'x' separators.
+  _REQUEST_IDENTIFIER = pyparsing.Regex(r'[0-9A-Za-z]{6,}x[0-9]+x[0-9]+x[0-9]+')
 
-  # Session ID: @/*/alphanumeric token, optionally comma-separated with mesh.
-  _RE_SESSION_ID = pyparsing.Regex(
+  # Session identifier: @/*/alphanumeric token, optionally comma-separated with
+  # mesh.
+  _SESSION_IDENTIFIER = pyparsing.Regex(
       r'[@*][A-Za-z0-9_x]+(?:,[A-Za-z0-9_x]+)?')
 
   # IPv4 or IPv6 address.
@@ -159,10 +161,10 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
   _REQUEST_CONTEXT_GRAMMAR = (
       pyparsing.Optional(_RE_USER_NAME.copy().set_results_name(
           'request_user')) +
-      pyparsing.Optional(_RE_REQUEST_ID.copy().set_results_name(
-          'request_id')) +
-      pyparsing.Optional(_RE_SESSION_ID.copy().set_results_name(
-          'session_id')) +
+      pyparsing.Optional(_REQUEST_IDENTIFIER.copy().set_results_name(
+          'request_identifier')) +
+      pyparsing.Optional(_SESSION_IDENTIFIER.copy().set_results_name(
+          'session_identifier')) +
       pyparsing.Optional(_RE_IP_ADDRESS.copy().set_results_name(
           'ip_address')) +
       pyparsing.Optional(_RE_REQUEST_ACTION.copy().set_results_name(
@@ -189,8 +191,8 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
     time_elements_structure = self._GetValueFromStructure(
         structure, 'date_time')
 
-    request_context_raw = self._GetValueFromStructure(
-        structure, 'request_context_raw', default_value='').strip()
+    request_context_text = self._GetValueFromStructure(
+        structure, 'request_context_text', default_value='').strip()
 
     event_data = AtlassianBitbucketEventData()
     event_data.body = self._GetValueFromStructure(
@@ -200,14 +202,16 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
         structure, 'logger_class')
     event_data.thread = self._GetValueFromStructure(structure, 'thread')
 
-    if request_context_raw:
-      ctx = self._REQUEST_CONTEXT_GRAMMAR.parse_string(
-          request_context_raw, parse_all=False)
-      event_data.user_name = ctx.get('request_user') or None
-      event_data.request_id = ctx.get('request_id') or None
-      event_data.session_id = ctx.get('session_id') or None
-      event_data.ip_address = ctx.get('ip_address') or None
-      event_data.request_action = ctx.get('request_action') or None
+    if request_context_text:
+      request_context = self._REQUEST_CONTEXT_GRAMMAR.parse_string(
+          request_context_text, parse_all=False)
+      event_data.user_name = request_context.get('request_user') or None
+      event_data.request_identifier = request_context.get(
+          'request_identifier') or None
+      event_data.session_identifier = request_context.get(
+          'session_identifier') or None
+      event_data.ip_address = request_context.get('ip_address') or None
+      event_data.request_action = request_context.get('request_action') or None
 
     event_data.written_time = self._ParseTimeElements(time_elements_structure)
 
@@ -239,17 +243,21 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
       raise errors.ParseError(
           f'Unable to parse time elements with error: {exception!s}')
 
-  # Regex to verify a line is a valid Bitbucket application log line.
-  # Requires: YYYY-MM-DD HH:MM:SS,mmm LEVEL [thread] ... logger.Class body
-  # The dotted logger class name must NOT be enclosed in square brackets
-  # (which would indicate Confluence format). It appears as a bare token
-  # anywhere after [thread], either immediately or after request context fields.
+  # A valid Bitbucket application log line requires:
+  #     YYYY-MM-DD HH:MM:SS,mmm LEVEL [thread] ... logger.Class body
+  #
+  # The dotted logger class name must not be enclosed in square brackets, which
+  # would indicate Confluence format. It appears as a bare token anywhere after
+  # [thread], either immediately or after request context fields.
+
   _VERIFICATION_REGEX = re.compile(
       r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3} '
       r'(?:DEBUG|ERROR|FATAL|INFO|TRACE|WARN) '
       r'\[[^\]]+\] '
       r'(?:(?!\[)[^\n])*'
       r'[a-zA-Z][a-zA-Z0-9_$]*(?:\.[a-zA-Z][a-zA-Z0-9_$]*)+')
+
+  VERIFICATION_GRAMMAR = _BITBUCKET_LOG_LINE
 
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the plugin.

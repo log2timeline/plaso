@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Tests for the Atlassian Bitbucket application log text parser plugin."""
 
+import io
 import unittest
-import unittest.mock
 
 from plaso.lib import errors
 from plaso.parsers import mediator as parsers_mediator
@@ -14,6 +14,51 @@ from tests.parsers.text_plugins import test_lib
 
 class AtlassianBitbucketTextPluginTest(test_lib.TextPluginTestCase):
   """Tests for the Atlassian Bitbucket application log text parser plugin."""
+
+  # pylint: disable=protected-access
+
+  def testCheckRequiredFormat(self):
+    """Tests the CheckRequiredFormat function."""
+    plugin = atlassian_bitbucket.AtlassianBitbucketTextPlugin()
+    parser_mediator = parsers_mediator.ParserMediator()
+
+    # Check non-matching syslog.
+    file_entry = self._GetTestFileEntry(['syslog', 'syslog'])
+    file_object = file_entry.GetFileObject()
+    text_reader = text_parser.EncodedTextReader(
+        file_object, encoding=plugin.ENCODING)
+
+    self.assertFalse(plugin.CheckRequiredFormat(parser_mediator, text_reader))
+
+    # Check non-matching Confluence log.
+    file_entry = self._GetTestFileEntry(['atlassian-confluence.log'])
+    file_object = file_entry.GetFileObject()
+    text_reader = text_parser.EncodedTextReader(
+        file_object, encoding=plugin.ENCODING)
+
+    self.assertFalse(plugin.CheckRequiredFormat(parser_mediator, text_reader))
+
+    # Check when only 1 line matches but 2 are expected.
+    file_object = io.BytesIO(
+        b'2020-09-08 07:53:45,084 INFO [main] '
+        b'com.atlassian.bitbucket.internal.boot.log.BuildInfoLogger '
+        b'Starting Bitbucket 7.4.0\n'
+        b'Jan 22 07:52:33 not-a-bitbucket-line\n')
+    text_reader = text_parser.EncodedTextReader(
+        file_object, encoding=plugin.ENCODING)
+
+    self.assertFalse(plugin.CheckRequiredFormat(parser_mediator, text_reader))
+
+    # Check when when first non-empty line does not match verification grammar.
+    file_object = io.BytesIO(
+        b'\n'
+        b'Jan 22 07:52:33 hostname sshd[123]: connection\n'
+        b'2020-09-08 07:53:45,084 INFO [main] '
+        b'com.atlassian.bitbucket.log.Logger Starting\n')
+    text_reader = text_parser.EncodedTextReader(
+        file_object, encoding=plugin.ENCODING)
+
+    self.assertFalse(plugin.CheckRequiredFormat(parser_mediator, text_reader))
 
   def testParse(self):
     """Tests the Process function."""
@@ -44,8 +89,8 @@ class AtlassianBitbucketTextPluginTest(test_lib.TextPluginTestCase):
         'logger_class': (
             'com.atlassian.bitbucket.internal.boot.log.BuildInfoLogger'),
         'request_action': None,
-        'request_id': None,
-        'session_id': None,
+        'request_identifier': None,
+        'session_identifier': None,
         'thread': 'main',
         'user_name': None,
         'written_time': '2020-09-08T07:53:45.084'}
@@ -63,8 +108,8 @@ class AtlassianBitbucketTextPluginTest(test_lib.TextPluginTestCase):
         'level': 'INFO',
         'logger_class': 'c.a.b.m.r.DefaultRepositoryManager',
         'request_action': 'TransactionService/Transact',
-        'request_id': '2CM38K4Fx339x113x2',
-        'session_id': '@5XDWX5x339x568x0,4SJOMSOBx339x40x2',
+        'request_identifier': '2CM38K4Fx339x113x2',
+        'session_identifier': '@5XDWX5x339x568x0,4SJOMSOBx339x40x2',
         'thread': 'tx:thread-2',
         'user_name': 'admin',
         'written_time': '2022-04-12T05:39:57.408'}
@@ -83,8 +128,8 @@ class AtlassianBitbucketTextPluginTest(test_lib.TextPluginTestCase):
         'level': 'INFO',
         'logger_class': 'c.a.b.m.repair.DefaultRepairManager',
         'request_action': 'ManagementService/RepairRepository',
-        'request_id': '2CM38K4Fx339x114x2',
-        'session_id': '@5XDWX5x339x568x0',
+        'request_identifier': '2CM38K4Fx339x114x2',
+        'session_identifier': '@5XDWX5x339x568x0',
         'thread': 'grpc-server:thread-16',
         'user_name': 'admin',
         'written_time': '2022-04-12T05:39:57.766'}
@@ -103,8 +148,8 @@ class AtlassianBitbucketTextPluginTest(test_lib.TextPluginTestCase):
         'level': 'WARN',
         'logger_class': 'c.a.s.i.p.s.OsgiBundledPathScanner',
         'request_action': None,
-        'request_id': None,
-        'session_id': None,
+        'request_identifier': None,
+        'session_identifier': None,
         'thread': 'spring-startup',
         'user_name': None,
         'written_time': '2022-12-01T14:03:28.717'}
@@ -123,8 +168,8 @@ class AtlassianBitbucketTextPluginTest(test_lib.TextPluginTestCase):
         'level': 'DEBUG',
         'logger_class': 'org.hibernate.SQL',
         'request_action': None,
-        'request_id': None,
-        'session_id': None,
+        'request_identifier': None,
+        'session_identifier': None,
         'thread': 'clusterScheduler_Worker-8',
         'user_name': None,
         'written_time': '2014-12-04T19:39:39.749'}
@@ -132,92 +177,19 @@ class AtlassianBitbucketTextPluginTest(test_lib.TextPluginTestCase):
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 4)
     self.CheckEventData(event_data, expected_event_values)
 
-
-  def _CheckRequiredFormat(self, plugin, path_segments):
-    """Helper to call CheckRequiredFormat on a test file."""
-    parser_mediator = parsers_mediator.ParserMediator()
-    storage_writer = self._CreateStorageWriter()
-    parser_mediator.SetStorageWriter(storage_writer)
-    file_entry = self._GetTestFileEntry(path_segments)
-    parser_mediator.SetFileEntry(file_entry)
-    parser_mediator.AppendToParserChain('text')
-    encoding = plugin.ENCODING or parser_mediator.GetCodePage()
-    file_object = file_entry.GetFileObject()
-    text_reader = text_parser.EncodedTextReader(file_object, encoding=encoding)
-    text_reader.ReadLines()
-    return plugin.CheckRequiredFormat(parser_mediator, text_reader)
-
-  def testCheckRequiredFormat(self):
-    """Tests the CheckRequiredFormat function."""
+  def testParseRecord(self):
+    """Tests the _ParseRecord function."""
     plugin = atlassian_bitbucket.AtlassianBitbucketTextPlugin()
 
-    # Non-Bitbucket file (syslog) should be rejected: first line is
-    # 'Jan 22 ...' which does not match the YYYY-MM-DD timestamp format.
-    self.assertFalse(
-        self._CheckRequiredFormat(plugin, ['syslog', 'syslog']))
+    with self.assertRaises(errors.ParseError):
+      plugin._ParseRecord(None, 'unknown_key', {})
 
-    # Confluence log (with bracketed logger class) should be rejected.
-    self.assertFalse(
-        self._CheckRequiredFormat(plugin, ['atlassian-confluence.log']))
-
-  def testParseErrors(self):
-    """Tests _ParseRecord and _ParseTimeElements error paths."""
+  def testParseTimeElements(self):
+    """Tests the _ParseTimeElements function."""
     plugin = atlassian_bitbucket.AtlassianBitbucketTextPlugin()
 
-    # _ParseTimeElements raises ParseError on an invalid string input.
     with self.assertRaises(errors.ParseError):
-      plugin._ParseTimeElements('invalid')  # pylint: disable=protected-access
-
-    # _ParseRecord raises ParseError on unknown key.
-    with self.assertRaises(errors.ParseError):
-      plugin._ParseRecord(  # pylint: disable=protected-access
-          None, 'unknown_key', {})
-
-    # CheckRequiredFormat returns False when only 1 matching line (needs 2).
-    text_reader = unittest.mock.Mock()
-    text_reader.lines = (
-        '2020-09-08 07:53:45,084 INFO [main] '
-        'com.atlassian.bitbucket.internal.boot.log.BuildInfoLogger '
-        'Starting Bitbucket 7.4.0\n'
-        'Jan 22 07:52:33 not-a-bitbucket-line\n')
-    self.assertFalse(plugin.CheckRequiredFormat(
-        unittest.mock.Mock(), text_reader))
-
-    # CheckRequiredFormat returns False when first non-empty line doesn't match.
-    text_reader2 = unittest.mock.Mock()
-    text_reader2.lines = (
-        '\n'
-        'Jan 22 07:52:33 hostname sshd[123]: connection\n'
-        '2020-09-08 07:53:45,084 INFO [main] '
-        'com.atlassian.bitbucket.log.Logger Starting\n')
-    self.assertFalse(plugin.CheckRequiredFormat(
-        unittest.mock.Mock(), text_reader2))
-
-    # CheckRequiredFormat returns False when _VerifyString raises ParseError.
-    with unittest.mock.patch.object(
-        plugin, '_VerifyString',
-        side_effect=errors.ParseError('test')):
-      text_reader3 = unittest.mock.Mock()
-      text_reader3.lines = (
-          '2020-09-08 07:53:45,084 INFO [main] '
-          'com.atlassian.bitbucket.log.BuildInfoLogger Starting\n'
-          '2022-04-12 05:39:57,408 INFO [tx:thread-2] '
-          'c.a.b.m.r.DefaultRepositoryManager Created\n')
-      self.assertFalse(plugin.CheckRequiredFormat(
-          unittest.mock.Mock(), text_reader3))
-
-    # CheckRequiredFormat returns False when _ParseTimeElements raises.
-    with unittest.mock.patch.object(
-        plugin, '_ParseTimeElements',
-        side_effect=errors.ParseError('test')):
-      text_reader4 = unittest.mock.Mock()
-      text_reader4.lines = (
-          '2020-09-08 07:53:45,084 INFO [main] '
-          'com.atlassian.bitbucket.log.BuildInfoLogger Starting\n'
-          '2022-04-12 05:39:57,408 INFO [tx:thread-2] '
-          'c.a.b.m.r.DefaultRepositoryManager Created\n')
-      self.assertFalse(plugin.CheckRequiredFormat(
-          unittest.mock.Mock(), text_reader4))
+      plugin._ParseTimeElements('invalid')
 
 
 if __name__ == '__main__':
