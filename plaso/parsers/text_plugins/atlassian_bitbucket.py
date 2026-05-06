@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Text parser plugin for Atlassian Bitbucket log files.
 
 This is for the atlassian-bitbucket.log file, one of multiple log files
@@ -59,8 +58,7 @@ class AtlassianBitbucketEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(AtlassianBitbucketEventData, self).__init__(
-        data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.body = None
     self.ip_address = None
     self.level = None

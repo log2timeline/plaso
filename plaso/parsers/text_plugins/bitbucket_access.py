@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Text parser plugin for Atlassian Bitbucket access log files.
 
 This is for the atlassian-bitbucket-access.log file, one of multiple log
@@ -62,7 +61,7 @@ class BitbucketAccessEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(BitbucketAccessEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.http_request_method = None
     self.http_request_uri = None
     self.http_request_user_agent = None

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Text parser plugin for Atlassian Bitbucket audit log files.
 
 This is for the atlassian-bitbucket-audit.log file, one of multiple log files
@@ -48,7 +47,7 @@ class BitbucketAuditEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(BitbucketAuditEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.details = None
     self.entity = None
     self.event_name = None

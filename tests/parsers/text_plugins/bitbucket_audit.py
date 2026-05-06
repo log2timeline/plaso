@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Tests for the Atlassian Bitbucket audit log text parser plugin."""
 
 import unittest
