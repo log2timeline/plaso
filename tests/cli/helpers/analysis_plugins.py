@@ -15,17 +15,17 @@ class AnalysisPluginsArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
 
   # pylint: disable=no-member,protected-access
 
-  _EXPECTED_OUTPUT = """\
+  _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--analysis PLUGIN_LIST]
 
 Test argument parser.
 
-{0:s}:
+{cli_test_lib.ARGPARSE_OPTIONS:s}:
   --analysis PLUGIN_LIST
                         A comma separated list of analysis plugin names to be
                         loaded or "--analysis list" to see a list of available
                         plugins.
-""".format(cli_test_lib.ARGPARSE_OPTIONS)
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

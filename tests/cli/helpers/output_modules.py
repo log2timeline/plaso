@@ -19,34 +19,34 @@ class OutputModulesArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
 
   if _PYTHON3_13_OR_LATER:
-    _EXPECTED_OUTPUT = """\
+    _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [-o FORMAT] [-w OUTPUT_FILE] [--fields FIELDS]
 
 Test argument parser.
 
-{0:s}:
+{cli_test_lib.ARGPARSE_OPTIONS:s}:
   --fields FIELDS       Defines which fields should be included in the output.
   -o, --output_format, --output-format FORMAT
                         The output format. Use "-o list" to see a list of
                         available output formats.
   -w, --write OUTPUT_FILE
                         Output filename.
-""".format(cli_test_lib.ARGPARSE_OPTIONS)
+"""
 
   else:
-    _EXPECTED_OUTPUT = """\
+    _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [-o FORMAT] [-w OUTPUT_FILE] [--fields FIELDS]
 
 Test argument parser.
 
-{0:s}:
+{cli_test_lib.ARGPARSE_OPTIONS:s}:
   --fields FIELDS       Defines which fields should be included in the output.
   -o FORMAT, --output_format FORMAT, --output-format FORMAT
                         The output format. Use "-o list" to see a list of
                         available output formats.
   -w OUTPUT_FILE, --write OUTPUT_FILE
                         Output filename.
-""".format(cli_test_lib.ARGPARSE_OPTIONS)
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

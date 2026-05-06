@@ -15,15 +15,15 @@ class CodepagergumentsHelperTest(cli_test_lib.CLIToolTestCase):
 
   # pylint: disable=no-member,protected-access
 
-  _EXPECTED_OUTPUT = """\
+  _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--codepage CODEPAGE]
 
 Test argument parser.
 
-{0:s}:
+{cli_test_lib.ARGPARSE_OPTIONS:s}:
   --codepage CODEPAGE  The preferred codepage, which is used for decoding
                        single-byte or multi-byte character extracted strings.
-""".format(cli_test_lib.ARGPARSE_OPTIONS)
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

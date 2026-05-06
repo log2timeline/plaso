@@ -27,13 +27,13 @@ class BloomAnalysisArgumentsHelperTest(
   _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
 
   if _PYTHON3_13_OR_LATER:
-    _EXPECTED_OUTPUT = """\
+    _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--bloom-file PATH] [--bloom-hash HASH]
                      [--bloom-label LABEL]
 
 Test argument parser.
 
-{0:s}:
+{cli_test_lib.ARGPARSE_OPTIONS:s}:
   --bloom-file, --bloom_file PATH
                         Path to the bloom database file, the default is:
                         hashlookup-full.bloom
@@ -45,16 +45,16 @@ Test argument parser.
   --bloom-label, --bloom_label LABEL
                         Label to apply to events, the default is:
                         bloom_present.
-""".format(cli_test_lib.ARGPARSE_OPTIONS)
+"""
 
   else:
-    _EXPECTED_OUTPUT = """\
+    _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--bloom-file PATH] [--bloom-hash HASH]
                      [--bloom-label LABEL]
 
 Test argument parser.
 
-{0:s}:
+{cli_test_lib.ARGPARSE_OPTIONS:s}:
   --bloom-file PATH, --bloom_file PATH
                         Path to the bloom database file, the default is:
                         hashlookup-full.bloom
@@ -66,7 +66,7 @@ Test argument parser.
   --bloom-label LABEL, --bloom_label LABEL
                         Label to apply to events, the default is:
                         bloom_present.
-""".format(cli_test_lib.ARGPARSE_OPTIONS)
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

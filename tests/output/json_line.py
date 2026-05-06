@@ -23,9 +23,10 @@ class JSONLinesOutputTest(test_lib.OutputModuleTestCase):
 
   # pylint: disable=protected-access
 
+  _OS_LOCATION = os.path.join(os.path.sep, 'cases', 'image.dd')
+
   _OS_PATH_SPEC = path_spec_factory.Factory.NewPathSpec(
-      dfvfs_definitions.TYPE_INDICATOR_OS, location='{0:s}{1:s}'.format(
-          os.path.sep, os.path.join('cases', 'image.dd')))
+      dfvfs_definitions.TYPE_INDICATOR_OS, location=_OS_LOCATION)
 
   _TEST_EVENTS = [
       {'_parser_chain': 'test',
@@ -66,14 +67,11 @@ class JSONLinesOutputTest(test_lib.OutputModuleTestCase):
     expected_timestamp = shared_test_lib.CopyTimestampFromString(
         '2012-06-27 18:17:01')
 
+    expected_os_location = os.path.join(os.path.sep, 'cases', 'image.dd')
     if sys.platform.startswith('win'):
-      # The dict comparison is very picky on Windows hence we
-      # have to make sure the drive letter is in the same case.
-      expected_os_location = os.path.abspath('\\{0:s}'.format(
-          os.path.join('cases', 'image.dd')))
-    else:
-      expected_os_location = '{0:s}{1:s}'.format(
-          os.path.sep, os.path.join('cases', 'image.dd'))
+      # The dict comparison is very picky on Windows hence we have to make
+      # sure the drive letter is in the same case.
+      expected_os_location = os.path.abspath(expected_os_location)
 
     expected_json_dict = {
         '__container_type__': 'event',

@@ -129,7 +129,7 @@ class PathSpecExtractorTest(test_lib.EngineTestCase):
       location = getattr(path_spec, 'location', None)
       if location is not None:
         if data_stream:
-          location = '{0:s}:{1:s}'.format(location, data_stream)
+          location = f'{location:s}:{data_stream:s}'
         file_paths.append(location)
 
     return file_paths

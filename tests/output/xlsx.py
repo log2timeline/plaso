@@ -58,8 +58,7 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
     with zipfile.ZipFile(filename) as zip_file:
       if self._SHEET1 not in zip_file.namelist():
         # Fail if we cannot find the expected first sheet.
-        raise ValueError('Unable to locate expected sheet: {0:s}'.format(
-            self._SHEET1))
+        raise ValueError(f'Unable to locate expected sheet: {self._SHEET1!s}')
 
       # Generate a reference table of shared strings if available.
       strings = []

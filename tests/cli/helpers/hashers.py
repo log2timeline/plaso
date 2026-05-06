@@ -19,12 +19,12 @@ class HashersArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
 
   if _PYTHON3_13_OR_LATER:
-    _EXPECTED_OUTPUT = """\
+    _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--hasher_file_size_limit SIZE] [--hashers HASHER_LIST]
 
 Test argument parser.
 
-{0:s}:
+{cli_test_lib.ARGPARSE_OPTIONS:s}:
   --hasher_file_size_limit, --hasher-file-size-limit SIZE
                         Define the maximum file size in bytes that hashers
                         should process. Any larger file will be skipped. A
@@ -36,15 +36,15 @@ Test argument parser.
                         hashers should be enabled. "none" disables all
                         hashers. Use "--hashers list" or "--info" to list the
                         available hashers.
-""".format(cli_test_lib.ARGPARSE_OPTIONS)
+"""
 
   else:
-    _EXPECTED_OUTPUT = """\
+    _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--hasher_file_size_limit SIZE] [--hashers HASHER_LIST]
 
 Test argument parser.
 
-{0:s}:
+{cli_test_lib.ARGPARSE_OPTIONS:s}:
   --hasher_file_size_limit SIZE, --hasher-file-size-limit SIZE
                         Define the maximum file size in bytes that hashers
                         should process. Any larger file will be skipped. A
@@ -56,7 +56,7 @@ Test argument parser.
                         hashers should be enabled. "none" disables all
                         hashers. Use "--hashers list" or "--info" to list the
                         available hashers.
-""".format(cli_test_lib.ARGPARSE_OPTIONS)
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

@@ -19,7 +19,7 @@ class EventFiltersArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
 
   if _PYTHON3_13_OR_LATER:
-    _EXPECTED_OUTPUT = """\
+    _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--slice DATE_TIME] [--slice_size SLICE_SIZE] [--slicer]
                      [FILTER]
 
@@ -32,7 +32,7 @@ positional arguments:
                         /plaso.readthedocs.io/en/latest/sources/user/Event-
                         filters.html
 
-{0:s}:
+{cli_test_lib.ARGPARSE_OPTIONS:s}:
   --slice DATE_TIME     Date and time to create a time slice around. This
                         parameter, if defined, will display all events that
                         happened X minutes before and after the defined date,
@@ -52,10 +52,10 @@ positional arguments:
                         parameter, if defined will save all X events before
                         and after a filter match has been made. X is defined
                         by the --slice_size parameter.
-""".format(cli_test_lib.ARGPARSE_OPTIONS)
+"""
 
   else:
-    _EXPECTED_OUTPUT = """\
+    _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--slice DATE_TIME] [--slice_size SLICE_SIZE] [--slicer]
                      [FILTER]
 
@@ -68,7 +68,7 @@ positional arguments:
                         /plaso.readthedocs.io/en/latest/sources/user/Event-
                         filters.html
 
-{0:s}:
+{cli_test_lib.ARGPARSE_OPTIONS:s}:
   --slice DATE_TIME     Date and time to create a time slice around. This
                         parameter, if defined, will display all events that
                         happened X minutes before and after the defined date,
@@ -88,7 +88,7 @@ positional arguments:
                         parameter, if defined will save all X events before
                         and after a filter match has been made. X is defined
                         by the --slice_size parameter.
-""".format(cli_test_lib.ARGPARSE_OPTIONS)
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

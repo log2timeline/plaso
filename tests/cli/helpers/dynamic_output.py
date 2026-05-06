@@ -17,14 +17,14 @@ class DynamicOutputArgumentsHelperTest(
 
   # pylint: disable=no-member,protected-access
 
-  _EXPECTED_OUTPUT = """\
+  _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--fields FIELDS]
 
 Test argument parser.
 
-{0:s}:
+{cli_test_lib.ARGPARSE_OPTIONS:s}:
   --fields FIELDS  Defines which fields should be included in the output.
-""".format(cli_test_lib.ARGPARSE_OPTIONS)
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

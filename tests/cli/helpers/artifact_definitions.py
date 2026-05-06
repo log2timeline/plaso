@@ -17,13 +17,13 @@ class ArtifactDefinitionsArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   # pylint: disable=no-member,protected-access
 
   if sys.version_info[0:2] < (3, 13):
-    _EXPECTED_OUTPUT = """\
+    _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--artifact_definitions PATH]
                      [--custom_artifact_definitions PATH]
 
 Test argument parser.
 
-{0:s}:
+{cli_test_lib.ARGPARSE_OPTIONS:s}:
   --artifact_definitions PATH, --artifact-definitions PATH
                         Path to a directory or file containing artifact
                         definitions, which are .yaml files. Artifact
@@ -36,16 +36,16 @@ Test argument parser.
                         definitions can be used to describe and quickly
                         collect data of interest, such as specific files or
                         Windows Registry keys.
-""".format(cli_test_lib.ARGPARSE_OPTIONS)
+"""
 
   else:
-    _EXPECTED_OUTPUT = """\
+    _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--artifact_definitions PATH]
                      [--custom_artifact_definitions PATH]
 
 Test argument parser.
 
-{0:s}:
+{cli_test_lib.ARGPARSE_OPTIONS:s}:
   --artifact_definitions, --artifact-definitions PATH
                         Path to a directory or file containing artifact
                         definitions, which are .yaml files. Artifact
@@ -58,7 +58,7 @@ Test argument parser.
                         definitions can be used to describe and quickly
                         collect data of interest, such as specific files or
                         Windows Registry keys.
-""".format(cli_test_lib.ARGPARSE_OPTIONS)
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

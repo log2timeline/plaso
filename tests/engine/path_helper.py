@@ -289,18 +289,16 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
 
-    expected_display_name = 'OS:{0:s}'.format(test_path)
     display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
         os_path_spec)
-    self.assertEqual(display_name, expected_display_name)
+    self.assertEqual(display_name, f'OS:{test_path:s}')
 
     gzip_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_GZIP, parent=os_path_spec)
 
-    expected_display_name = 'GZIP:{0:s}'.format(test_path)
     display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
         gzip_path_spec)
-    self.assertEqual(display_name, expected_display_name)
+    self.assertEqual(display_name, f'GZIP:{test_path:s}')
 
     test_path = self._GetTestFilePath(['syslog.bz2'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -311,10 +309,9 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
         compression_method=dfvfs_definitions.COMPRESSION_METHOD_BZIP2,
         parent=os_path_spec)
 
-    expected_display_name = 'BZIP2:{0:s}'.format(test_path)
     display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
         compressed_stream_path_spec)
-    self.assertEqual(display_name, expected_display_name)
+    self.assertEqual(display_name, f'BZIP2:{test_path:s}')
 
     test_path = self._GetTestFilePath(['syslog.xz'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -325,10 +322,9 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
         compression_method=dfvfs_definitions.COMPRESSION_METHOD_XZ,
         parent=os_path_spec)
 
-    expected_display_name = 'XZ:{0:s}'.format(test_path)
     display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
         compressed_stream_path_spec)
-    self.assertEqual(display_name, expected_display_name)
+    self.assertEqual(display_name, f'XZ:{test_path:s}')
 
     test_path = self._GetTestFilePath(['vsstest.qcow2'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -400,10 +396,9 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
     # Test path specification with data stream.
     os_path_spec.data_stream = 'MYDATA'
 
-    expected_relative_path = '{0:s}:MYDATA'.format(test_path)
     relative_path = path_helper.PathHelper.GetRelativePathForPathSpec(
         os_path_spec)
-    self.assertEqual(relative_path, expected_relative_path)
+    self.assertEqual(relative_path, f'{test_path:s}:MYDATA')
 
     # Test without path specification.
     display_name = path_helper.PathHelper.GetRelativePathForPathSpec(None)

@@ -21,9 +21,10 @@ class TLNFieldFormattingHelperTest(test_lib.OutputModuleTestCase):
 
   # pylint: disable=protected-access
 
+  _OS_LOCATION = os.path.join(os.path.sep, 'cases', 'image.dd')
+
   _OS_PATH_SPEC = path_spec_factory.Factory.NewPathSpec(
-      dfvfs_definitions.TYPE_INDICATOR_OS, location='{0:s}{1:s}'.format(
-          os.path.sep, os.path.join('cases', 'image.dd')))
+      dfvfs_definitions.TYPE_INDICATOR_OS, location=_OS_LOCATION)
 
   _TEST_EVENTS = [
       {'data_type': 'test:event',
@@ -94,9 +95,10 @@ class TLNOutputModuleTest(test_lib.OutputModuleTestCase):
 
   # pylint: disable=protected-access
 
+  _OS_LOCATION = os.path.join(os.path.sep, 'cases', 'image.dd')
+
   _OS_PATH_SPEC = path_spec_factory.Factory.NewPathSpec(
-      dfvfs_definitions.TYPE_INDICATOR_OS, location='{0:s}{1:s}'.format(
-          os.path.sep, os.path.join('cases', 'image.dd')))
+      dfvfs_definitions.TYPE_INDICATOR_OS, location=_OS_LOCATION)
 
   _TEST_EVENTS = [
       {'data_type': 'test:event',
@@ -199,9 +201,10 @@ class L2TTLNOutputModuleTest(test_lib.OutputModuleTestCase):
 
   # pylint: disable=protected-access
 
+  _OS_LOCATION = os.path.join(os.path.sep, 'cases', 'image.dd')
+
   _OS_PATH_SPEC = path_spec_factory.Factory.NewPathSpec(
-      dfvfs_definitions.TYPE_INDICATOR_OS, location='{0:s}{1:s}'.format(
-          os.path.sep, os.path.join('cases', 'image.dd')))
+      dfvfs_definitions.TYPE_INDICATOR_OS, location=_OS_LOCATION)
 
   _TEST_EVENTS = [
       {'data_type': 'test:event',

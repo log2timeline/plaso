@@ -21,9 +21,10 @@ class KMLOutputTest(test_lib.OutputModuleTestCase):
 
   # pylint: disable=protected-access
 
+  _OS_LOCATION = os.path.join(os.path.sep, 'cases', 'image.dd')
+
   _OS_PATH_SPEC = path_spec_factory.Factory.NewPathSpec(
-      dfvfs_definitions.TYPE_INDICATOR_OS, location='{0:s}{1:s}'.format(
-          os.path.sep, os.path.join('cases', 'image.dd')))
+      dfvfs_definitions.TYPE_INDICATOR_OS, location=_OS_LOCATION)
 
   _TEST_EVENTS = [
       {'data_type': 'test:output',
@@ -93,45 +94,40 @@ class KMLOutputTest(test_lib.OutputModuleTestCase):
     event_identifier = event.GetIdentifier()
     event_identifier_string = event_identifier.CopyToString()
 
+    expected_os_location = os.path.join(os.path.sep, 'cases', 'image.dd')
     if sys.platform.startswith('win'):
-      # The dict comparison is very picky on Windows hence we
-      # have to make sure the drive letter is in the same case.
-      expected_os_location = os.path.abspath('\\{0:s}'.format(
-          os.path.join('cases', 'image.dd')))
-    else:
-      expected_os_location = '{0:s}{1:s}'.format(
-          os.path.sep, os.path.join('cases', 'image.dd'))
+      # The dict comparison is very picky on Windows hence we have to make
+      # sure the drive letter is in the same case.
+      expected_os_location = os.path.abspath(expected_os_location)
 
     expected_event_body = (
-        '<Placemark><name>{0:s}</name><description>'
-        '+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-'
-        '+-+-+-+-+-+-\n'
-        '[Timestamp]:\n'
-        '  2012-06-27T18:17:01.000000+00:00\n'
-        '\n'
-        '[Pathspec]:\n'
-        '  type: OS, location: {1:s}\n'
-        '  type: TSK, inode: 15, location: /var/log/syslog.1\n'
-        '\n'
-        '[Reserved attributes]:\n'
-        '  {{data_type}} test:output\n'
-        '  {{display_name}} TSK:/var/log/syslog.1\n'
-        '  {{filename}} /var/log/syslog.1\n'
-        '  {{hostname}} ubuntu\n'
-        '  {{inode}} 15\n'
-        '  {{username}} root\n'
-        '\n'
-        '[Additional attributes]:\n'
-        '  {{latitude}} 37.4222899014\n'
-        '  {{longitude}} -122.082203543\n'
-        '  {{text}} Reporter &lt;CRON&gt; PID: |8442| '
-        '(pam_unix(cron:session): session\n'
-        ' closed for user root)\n'
-        '\n'
-        '</description>'
-        '<Point><coordinates>-122.082203543,37.4222899014</coordinates>'
-        '</Point></Placemark>').format(
-            event_identifier_string, expected_os_location)
+        f'<Placemark><name>{event_identifier_string!s}</name><description>'
+        f'+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-\n'
+        f'[Timestamp]:\n'
+        f'  2012-06-27T18:17:01.000000+00:00\n'
+        f'\n'
+        f'[Pathspec]:\n'
+        f'  type: OS, location: {expected_os_location!s}\n'
+        f'  type: TSK, inode: 15, location: /var/log/syslog.1\n'
+        f'\n'
+        f'[Reserved attributes]:\n'
+        f'  {{data_type}} test:output\n'
+        f'  {{display_name}} TSK:/var/log/syslog.1\n'
+        f'  {{filename}} /var/log/syslog.1\n'
+        f'  {{hostname}} ubuntu\n'
+        f'  {{inode}} 15\n'
+        f'  {{username}} root\n'
+        f'\n'
+        f'[Additional attributes]:\n'
+        f'  {{latitude}} 37.4222899014\n'
+        f'  {{longitude}} -122.082203543\n'
+        f'  {{text}} Reporter &lt;CRON&gt; PID: |8442| '
+        f'(pam_unix(cron:session): session\n'
+        f' closed for user root)\n'
+        f'\n'
+        f'</description>'
+        f'<Point><coordinates>-122.082203543,37.4222899014</coordinates>'
+        f'</Point></Placemark>')
 
     self.assertEqual(event_body.split('\n'), expected_event_body.split('\n'))
 
