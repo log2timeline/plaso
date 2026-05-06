@@ -32,9 +32,11 @@ def Main():
     return 1
 
   if tool.show_troubleshooting:
-    print('Using Python version {0!s}'.format(sys.version))
+    path = os.path.abspath(__file__)
+
+    print(f'Using Python version {sys.version!s}')
     print()
-    print('Path: {0:s}'.format(os.path.abspath(__file__)))
+    print(f'Path: {path!s}')
     print()
     print(tool.GetVersionInformation())
     print()

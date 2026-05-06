@@ -87,8 +87,7 @@ class JavaIDXParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
           file_object, 0, file_header_map)
     except (ValueError, errors.ParseError) as exception:
       raise errors.WrongParser(
-          'Unable to parse file header with error: {0!s}'.format(
-              exception))
+          f'Unable to parse file header with error: {exception!s}')
 
     if not file_header.format_version in self._SUPPORTED_FORMAT_VERSIONS:
       raise errors.WrongParser('Unsupported format version.')
@@ -106,9 +105,9 @@ class JavaIDXParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       section1, data_size = self._ReadStructureFromFileObject(
           file_object, file_offset, section1_map)
     except (ValueError, errors.ParseError) as exception:
-      raise errors.WrongParser((
-          'Unable to parse section 1 (format version: {0:d}) with error: '
-          '{1!s}').format(file_header.format_version, exception))
+      raise errors.WrongParser(
+          f'Unable to parse section 1 (format version: '
+          f'{file_header.format_version:d}) with error: {exception!s}')
 
     file_offset += data_size
 
@@ -124,9 +123,9 @@ class JavaIDXParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
       section2, data_size = self._ReadStructureFromFileObject(
           file_object, file_offset, section2_map)
     except (ValueError, errors.ParseError) as exception:
-      raise errors.WrongParser((
-          'Unable to parse section 2 (format version: {0:d}) with error: '
-          '{1!s}').format(file_header.format_version, exception))
+      raise errors.WrongParser(
+          f'Unable to parse section 2 (format version: '
+          f'{file_header.format_version:d}) with error: {exception!s}')
 
     file_offset += data_size
 
@@ -141,8 +140,7 @@ class JavaIDXParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
             file_object, file_offset, http_header_map)
       except (ValueError, errors.ParseError) as exception:
         parser_mediator.ProduceExtractionWarning(
-            'Unable to parse HTTP header value at offset: 0x{0:08x}'.format(
-                file_offset))
+            f'Unable to parse HTTP header value at offset: 0x{file_offset:08x}')
         break
 
       file_offset += data_size
@@ -161,9 +159,9 @@ class JavaIDXParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         downloaded_time = dfdatetime_time_elements.TimeElements()
         downloaded_time.CopyFromStringRFC1123(date_http_header.value)
       except ValueError as exception:
-        parser_mediator.ProduceExtractionWarning((
-            'Unable to parse date HTTP header string: {0:s} with error: '
-            '{1!s}').format(date_http_header.value, exception))
+        parser_mediator.ProduceExtractionWarning(
+            f'Unable to parse date HTTP header string: '
+            f'{date_http_header.value:s} with error: {exception!s}')
 
     event_data = JavaIDXEventData()
     event_data.downloaded_time = downloaded_time

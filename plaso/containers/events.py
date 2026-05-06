@@ -23,7 +23,7 @@ def CalculateEventValuesHash(event_data, event_data_stream):
   Raises:
     RuntimeError: if the event values hash cannot be determined.
   """
-  attributes = ['data_type: {0:s}'.format(event_data.data_type)]
+  attributes = [f'data_type: {event_data.data_type:s}']
 
   for attribute_name, attribute_value in sorted(event_data.GetAttributes()):
     if attribute_value is None or attribute_name in (
@@ -42,16 +42,13 @@ def CalculateEventValuesHash(event_data, event_data_stream):
 
     if not isinstance(attribute_value, (bool, float, int, list, str)):
       raise RuntimeError(
-          'Unsupported attribute: {0:s} value type: {1!s}'.format(
-              attribute_name, type(attribute_value)))
+          f'Unsupported attribute: {attribute_name:s} value type: '
+          f'{type(attribute_value)!s}')
 
     try:
-      attribute_string = '{0:s}: {1!s}'.format(
-          attribute_name, attribute_value)
-      attributes.append(attribute_string)
+      attributes.append(f'{attribute_name:s}: {attribute_value!s}')
     except UnicodeDecodeError:
-      raise RuntimeError(
-          'Failed to decode attribute {0:s}'.format(attribute_name))
+      raise RuntimeError(f'Failed to decode attribute {attribute_name:s}')
 
   if event_data_stream:
     for attribute_name, attribute_value in sorted(
@@ -62,16 +59,13 @@ def CalculateEventValuesHash(event_data, event_data_stream):
 
       elif not isinstance(attribute_value, (bool, float, int, list, str)):
         raise RuntimeError(
-            'Unsupported attribute: {0:s} value type: {1!s}'.format(
-                attribute_name, type(attribute_value)))
+            f'Unsupported attribute: {attribute_name:s} value type: '
+            f'{type(attribute_value)!s}')
 
       try:
-        attribute_string = '{0:s}: {1!s}'.format(
-            attribute_name, attribute_value)
-        attributes.append(attribute_string)
+        attributes.append(f'{attribute_name:s}: {attribute_value!s}')
       except UnicodeDecodeError:
-        raise RuntimeError(
-            'Failed to decode attribute {0:s}'.format(attribute_name))
+        raise RuntimeError(f'Failed to decode attribute {attribute_name:s}')
 
   content = ', '.join(attributes)
   content_data = content.encode('utf-8')
@@ -249,16 +243,13 @@ class EventData(interface.AttributeContainer):
 
       if isinstance(attribute_value, bytes):
         raise TypeError(
-            'Attribute: {0:s} value of type bytes not supported.'.format(
-                attribute_name))
+            f'Attribute: {attribute_name:s} value of type bytes not supported.')
 
       if isinstance(attribute_value, dict):
         raise TypeError(
-            'Attribute: {0:s} value of type dict not supported.'.format(
-                attribute_name))
+            f'Attribute: {attribute_name:s} value of type dict not supported.')
 
-      attribute_string = '{0:s}: {1!s}'.format(attribute_name, attribute_value)
-      attributes.append(attribute_string)
+      attributes.append(f'{attribute_name:s}: {attribute_value!s}')
 
     return ', '.join(attributes)
 
@@ -434,13 +425,12 @@ class EventTag(interface.AttributeContainer):
       ValueError: if a label is malformed.
     """
     if not isinstance(label, str):
-      raise TypeError('label is not a string type. Is {0!s}'.format(
-          type(label)))
+      raise TypeError(f'label is not a string type. Is {type(label)!s}')
 
     if not self._VALID_LABEL_REGEX.match(label):
-      raise ValueError((
-          'Unsupported label: "{0:s}". A label must only consist of '
-          'alphanumeric characters or underscores.').format(label))
+      raise ValueError(
+          f'Unsupported label: "{label:s}". A label must only consist of '
+          f'alphanumeric characters or underscores.')
 
     if label not in self.labels:
       self.labels.append(label)
@@ -456,9 +446,9 @@ class EventTag(interface.AttributeContainer):
     """
     for label in labels:
       if not label or not self._VALID_LABEL_REGEX.match(label):
-        raise ValueError((
-            'Unsupported label: "{0!s}". A label must only consist of '
-            'alphanumeric characters or underscores.').format(label))
+        raise ValueError(
+            f'Unsupported label: "{label:s}". A label must only consist of '
+            f'alphanumeric characters or underscores.')
 
     for label in labels:
       if label not in self.labels:
@@ -478,8 +468,7 @@ class EventTag(interface.AttributeContainer):
     Returns:
       str: label.
     """
-    text = '{0:s}{1:s}'.format(prefix, text)
-    return cls._INVALID_LABEL_CHARACTERS_REGEX.sub('_', text)
+    return cls._INVALID_LABEL_CHARACTERS_REGEX.sub('_', f'{prefix:s}{text:s}')
 
   def GetEventIdentifier(self):
     """Retrieves the identifier of the associated event.

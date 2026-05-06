@@ -168,7 +168,7 @@ class TextLogParser(interface.FileObjectParser):
           encoding = parser_mediator.GetCodePage()
 
         for index, literal in enumerate(plugin.VERIFICATION_LITERALS):
-          identifier = '{0:s}{1:d}'.format(plugin_name, index)
+          identifier = f'{plugin_name:s}{index:d}'
           encoded_literal = literal.encode(encoding)
           scanner_object.add_signature(
               identifier, 0, encoded_literal,
@@ -269,8 +269,8 @@ class TextLogParser(interface.FileObjectParser):
 
         try:
           logger.debug(
-              'Checking required format of: {0:s} in encoding: {1:s}'.format(
-                  plugin.NAME, encoding))
+              f'Checking required format of: {plugin.NAME:s} in encoding: '
+              f'{encoding:s}')
 
           result = False
           if (plugin.NAME in plugins_with_matching_literals or
@@ -291,8 +291,7 @@ class TextLogParser(interface.FileObjectParser):
 
         except UnicodeDecodeError:
           logger.debug(
-              'Unable to read text-based log file with encoding: {0:s}'.format(
-                  encoding))
+              f'Unable to read text-based log file with encoding: {encoding:s}')
           result = False
 
         finally:
@@ -308,8 +307,8 @@ class TextLogParser(interface.FileObjectParser):
                 parser_mediator, file_object=file_object)
           except Exception as exception:  # pylint: disable=broad-except
             parser_mediator.ProduceExtractionWarning((
-                'plugin: {0:s} unable to parse text file with error: '
-                '{1!s}').format(plugin.NAME, exception))
+                f'plugin: {plugin.NAME:s} unable to parse text file with '
+                f'error: {exception!s}'))
             continue
 
           finally:

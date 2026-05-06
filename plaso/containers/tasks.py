@@ -64,7 +64,7 @@ class Task(interface.AttributeContainer):
     self.completion_time = None
     self.file_entry_type = None
     self.has_retry = False
-    self.identifier = '{0:s}'.format(uuid.uuid4().hex)
+    self.identifier = f'{uuid.uuid4().hex:s}'
     self.last_processing_time = None
     self.merge_priority = None
     self.path_spec = None
