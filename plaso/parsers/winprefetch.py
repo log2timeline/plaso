@@ -130,8 +130,7 @@ class WinPrefetchParser(interface.FileObjectParser):
         mft_entry_index = file_reference & 0xffffffffffff
         sequence_number = file_reference >> 48
         mapped_file_string = (
-            f'{mapped_file_string:s} [{mft_entry_index:d}-'
-            f'{sequence_number >> 48:d}]')
+            f'{mapped_file_string:s} [{mft_entry_index:d}-{sequence_number:d}]')
 
       mapped_files.append(mapped_file_string)
 
