@@ -19,13 +19,13 @@ class ArtifactFiltersArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
 
   if _PYTHON3_13_OR_LATER:
-    _EXPECTED_OUTPUT = """\
+    _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--artifact_filters ARTIFACT_FILTERS]
                      [--artifact_filters_file PATH]
 
 Test argument parser.
 
-{0:s}:
+{cli_test_lib.ARGPARSE_OPTIONS:s}:
   --artifact_filters, --artifact-filters ARTIFACT_FILTERS
                         Names of forensic artifact definitions, provided on
                         the command command line (comma separated). Forensic
@@ -46,16 +46,16 @@ Test argument parser.
                         can be used to describe and quickly collect data of
                         interest, such as specific files or Windows Registry
                         keys.
-""".format(cli_test_lib.ARGPARSE_OPTIONS)
+"""
 
   else:
-    _EXPECTED_OUTPUT = """\
+    _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--artifact_filters ARTIFACT_FILTERS]
                      [--artifact_filters_file PATH]
 
 Test argument parser.
 
-{0:s}:
+{cli_test_lib.ARGPARSE_OPTIONS:s}:
   --artifact_filters ARTIFACT_FILTERS, --artifact-filters ARTIFACT_FILTERS
                         Names of forensic artifact definitions, provided on
                         the command command line (comma separated). Forensic
@@ -76,7 +76,7 @@ Test argument parser.
                         can be used to describe and quickly collect data of
                         interest, such as specific files or Windows Registry
                         keys.
-""".format(cli_test_lib.ARGPARSE_OPTIONS)
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

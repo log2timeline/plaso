@@ -60,12 +60,14 @@ class TestXMLOutputModule(interface.OutputModule):
           modules and other components, such as storage and dfVFS.
       field_values (dict[str, str]): output field values per name.
     """
+    datetime_value = field_values['datetime']
+    entry_value = field_values['entry']
+
     output_text = (
-        '<Event>\n'
-        '\t<DateTime>{0:s}</DateTime>\n'
-        '\t<Entry>{1:s}</Entry>\n'
-        '</Event>\n').format(
-            field_values['datetime'], field_values['entry'])
+        f'<Event>\n'
+        f'\t<DateTime>{datetime_value!s}</DateTime>\n'
+        f'\t<Entry>{entry_value!s}</Entry>\n'
+        f'</Event>\n')
 
     self.file_object.write(output_text)
 

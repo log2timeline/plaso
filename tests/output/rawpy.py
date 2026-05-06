@@ -22,9 +22,10 @@ class NativePythonOutputTest(test_lib.OutputModuleTestCase):
 
   # pylint: disable=protected-access
 
+  _OS_LOCATION = os.path.join(os.path.sep, 'cases', 'image.dd')
+
   _OS_PATH_SPEC = path_spec_factory.Factory.NewPathSpec(
-      dfvfs_definitions.TYPE_INDICATOR_OS, location='{0:s}{1:s}'.format(
-          os.path.sep, os.path.join('cases', 'image.dd')))
+      dfvfs_definitions.TYPE_INDICATOR_OS, location=_OS_LOCATION)
 
   _TEST_EVENTS = [
       {'data_type': 'test:output',
@@ -91,44 +92,42 @@ class NativePythonOutputTest(test_lib.OutputModuleTestCase):
 
     output_module.WriteFieldValues(output_mediator, field_values)
 
+    expected_os_location = os.path.join(os.path.sep, 'cases', 'image.dd')
     if sys.platform.startswith('win'):
-      # The dict comparison is very picky on Windows hence we
-      # have to make sure the drive letter is in the same case.
-      expected_os_location = os.path.abspath('\\{0:s}'.format(
-          os.path.join('cases', 'image.dd')))
-    else:
-      expected_os_location = '{0:s}{1:s}'.format(
-          os.path.sep, os.path.join('cases', 'image.dd'))
+      # The dict comparison is very picky on Windows hence we have to make
+      # sure the drive letter is in the same case.
+      expected_os_location = os.path.abspath(expected_os_location)
 
-    expected_event_body = (
-        '+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-'
-        '+-+-+-+-+-+-\n'
-        '[Timestamp]:\n'
-        '  2012-06-27T18:17:01.000000+00:00\n'
-        '\n'
-        '[Pathspec]:\n'
-        '  type: OS, location: {0:s}\n'
-        '  type: TSK, inode: 15, location: /var/log/syslog.1\n'
-        '\n'
-        '[Reserved attributes]:\n'
-        '  {{data_type}} test:output\n'
-        '  {{display_name}} TSK:/var/log/syslog.1\n'
-        '  {{filename}} /var/log/syslog.1\n'
-        '  {{hostname}} ubuntu\n'
-        '  {{inode}} 15\n'
-        '  {{username}} root\n'
-        '\n'
-        '[Additional attributes]:\n'
-        '  {{text}} Reporter <CRON> PID: |8442| (pam_unix(cron:session): '
-        'session\n'
-        ' closed for user root)\n'
-        '\n').format(expected_os_location)
+    expected_event_body_lines = [
+        ('+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-'
+         '+-+-+-+-+-+-+-+-+-'),
+        '[Timestamp]:',
+        '  2012-06-27T18:17:01.000000+00:00',
+        '',
+        '[Pathspec]:',
+        f'  type: OS, location: {expected_os_location!s}',
+        '  type: TSK, inode: 15, location: /var/log/syslog.1',
+        '',
+        '[Reserved attributes]:',
+        '  {data_type} test:output',
+        '  {display_name} TSK:/var/log/syslog.1',
+        '  {filename} /var/log/syslog.1',
+        '  {hostname} ubuntu',
+        '  {inode} 15',
+        '  {username} root',
+        '',
+        '[Additional attributes]:',
+        ('  {text} Reporter <CRON> PID: |8442| (pam_unix(cron:session): '
+         'session'),
+        ' closed for user root)',
+        '',
+        '']
 
     event_body = test_file_object.getvalue()
 
     # Compare the output as list of lines which makes it easier to spot
     # differences.
-    self.assertEqual(event_body.split('\n'), expected_event_body.split('\n'))
+    self.assertEqual(event_body.split('\n'), expected_event_body_lines)
 
 
 if __name__ == '__main__':

@@ -15,12 +15,12 @@ class LanguagergumentsHelperTest(cli_test_lib.CLIToolTestCase):
 
   # pylint: disable=no-member,protected-access
 
-  _EXPECTED_OUTPUT = """\
+  _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--language LANGUAGE_TAG]
 
 Test argument parser.
 
-{0:s}:
+{cli_test_lib.ARGPARSE_OPTIONS:s}:
   --language LANGUAGE_TAG
                         The preferred language, which is used for extracting
                         and formatting Windows EventLog message strings. Use "
@@ -29,7 +29,7 @@ Test argument parser.
                         fallback if preprocessing could not determine the
                         system language or no language information is
                         available in the winevt-rc.db database.
-""".format(cli_test_lib.ARGPARSE_OPTIONS)
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

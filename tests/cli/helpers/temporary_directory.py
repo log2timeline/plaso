@@ -19,28 +19,28 @@ class TemporaryDirectoryArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
 
   if _PYTHON3_13_OR_LATER:
-    _EXPECTED_OUTPUT = """\
+    _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--temporary_directory DIRECTORY]
 
 Test argument parser.
 
-{0:s}:
+{cli_test_lib.ARGPARSE_OPTIONS:s}:
   --temporary_directory, --temporary-directory DIRECTORY
                         Path to the directory that should be used to store
                         temporary files created during processing.
-""".format(cli_test_lib.ARGPARSE_OPTIONS)
+"""
 
   else:
-    _EXPECTED_OUTPUT = """\
+    _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--temporary_directory DIRECTORY]
 
 Test argument parser.
 
-{0:s}:
+{cli_test_lib.ARGPARSE_OPTIONS:s}:
   --temporary_directory DIRECTORY, --temporary-directory DIRECTORY
                         Path to the directory that should be used to store
                         temporary files created during processing.
-""".format(cli_test_lib.ARGPARSE_OPTIONS)
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

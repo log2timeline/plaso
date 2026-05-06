@@ -19,12 +19,12 @@ class ProcessResourcesArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
 
   if _PYTHON3_13_OR_LATER:
-    _EXPECTED_OUTPUT = """\
+    _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--process_memory_limit SIZE]
 
 Test argument parser.
 
-{0:s}:
+{cli_test_lib.ARGPARSE_OPTIONS:s}:
   --process_memory_limit, --process-memory-limit SIZE
                         Maximum amount of memory (data segment) a process is
                         allowed to allocate in bytes, where 0 represents no
@@ -33,15 +33,15 @@ Test argument parser.
                         worker processes. This limit is enforced by the
                         operating system and will supersede the worker memory
                         limit (--worker_memory_limit).
-""".format(cli_test_lib.ARGPARSE_OPTIONS)
+"""
 
   else:
-    _EXPECTED_OUTPUT = """\
+    _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--process_memory_limit SIZE]
 
 Test argument parser.
 
-{0:s}:
+{cli_test_lib.ARGPARSE_OPTIONS:s}:
   --process_memory_limit SIZE, --process-memory-limit SIZE
                         Maximum amount of memory (data segment) a process is
                         allowed to allocate in bytes, where 0 represents no
@@ -50,7 +50,7 @@ Test argument parser.
                         worker processes. This limit is enforced by the
                         operating system and will supersede the worker memory
                         limit (--worker_memory_limit).
-""".format(cli_test_lib.ARGPARSE_OPTIONS)
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

@@ -19,34 +19,34 @@ class FilterFileArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
 
   if _PYTHON3_13_OR_LATER:
-    _EXPECTED_OUTPUT = """\
+    _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [-f FILE_FILTER]
 
 Test argument parser.
 
-{0:s}:
+{cli_test_lib.ARGPARSE_OPTIONS:s}:
   -f, --filter-file, --filter_file, --file-filter, --file_filter FILE_FILTER
                         List of files to include for targeted collection of
                         files to parse, one line per file path, setup is
                         /path|file - where each element can contain either a
                         variable set in the preprocessing stage or a regular
                         expression.
-""".format(cli_test_lib.ARGPARSE_OPTIONS)
+"""
 
   else:
-    _EXPECTED_OUTPUT = """\
+    _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [-f FILE_FILTER]
 
 Test argument parser.
 
-{0:s}:
+{cli_test_lib.ARGPARSE_OPTIONS:s}:
   -f FILE_FILTER, --filter-file FILE_FILTER, --filter_file FILE_FILTER, --file-filter FILE_FILTER, --file_filter FILE_FILTER
                         List of files to include for targeted collection of
                         files to parse, one line per file path, setup is
                         /path|file - where each element can contain either a
                         variable set in the preprocessing stage or a regular
                         expression.
-""".format(cli_test_lib.ARGPARSE_OPTIONS)
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

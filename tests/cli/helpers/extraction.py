@@ -19,13 +19,13 @@ class ExtractionArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
 
   if _PYTHON3_13_OR_LATER:
-    _EXPECTED_OUTPUT = """\
+    _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--extract_winreg_binary] [--preferred_year YEAR]
                      [--skip_compressed_streams]
 
 Test argument parser.
 
-{0:s}:
+{cli_test_lib.ARGPARSE_OPTIONS:s}:
   --extract_winreg_binary, --extract-winreg-binary
                         Extract binary Windows Registry values. WARNING: This
                         can make processing significantly slower.
@@ -36,16 +36,16 @@ Test argument parser.
   --skip_compressed_streams, --skip-compressed-streams
                         Skip processing file content within compressed
                         streams, such as syslog.gz and syslog.bz2.
-""".format(cli_test_lib.ARGPARSE_OPTIONS)
+"""
 
   else:
-    _EXPECTED_OUTPUT = """\
+    _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--extract_winreg_binary] [--preferred_year YEAR]
                      [--skip_compressed_streams]
 
 Test argument parser.
 
-{0:s}:
+{cli_test_lib.ARGPARSE_OPTIONS:s}:
   --extract_winreg_binary, --extract-winreg-binary
                         Extract binary Windows Registry values. WARNING: This
                         can make processing significantly slower.
@@ -56,7 +56,7 @@ Test argument parser.
   --skip_compressed_streams, --skip-compressed-streams
                         Skip processing file content within compressed
                         streams, such as syslog.gz and syslog.bz2.
-""".format(cli_test_lib.ARGPARSE_OPTIONS)
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

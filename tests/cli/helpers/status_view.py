@@ -20,13 +20,13 @@ class StatusViewArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
 
   if _PYTHON3_13_OR_LATER:
-    _EXPECTED_OUTPUT = """\
+    _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--status_view TYPE] [--status_view_file PATH]
                      [--status_view_interval SECONDS]
 
 Test argument parser.
 
-{0:s}:
+{cli_test_lib.ARGPARSE_OPTIONS:s}:
   --status_view, --status-view TYPE
                         The processing status view mode: "file", "linear",
                         "none" or "window".
@@ -34,16 +34,16 @@ Test argument parser.
                         The name of the status view file.
   --status_view_interval, --status-view-interval SECONDS
                         Number of seconds to update the status view.
-""".format(cli_test_lib.ARGPARSE_OPTIONS)
+"""
 
   else:
-    _EXPECTED_OUTPUT = """\
+    _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--status_view TYPE] [--status_view_file PATH]
                      [--status_view_interval SECONDS]
 
 Test argument parser.
 
-{0:s}:
+{cli_test_lib.ARGPARSE_OPTIONS:s}:
   --status_view TYPE, --status-view TYPE
                         The processing status view mode: "file", "linear",
                         "none" or "window".
@@ -51,7 +51,7 @@ Test argument parser.
                         The name of the status view file.
   --status_view_interval SECONDS, --status-view-interval SECONDS
                         Number of seconds to update the status view.
-""".format(cli_test_lib.ARGPARSE_OPTIONS)
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

@@ -21,13 +21,13 @@ class NsrlsvrAnalysisArgumentsHelperTest(
   _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
 
   if _PYTHON3_13_OR_LATER:
-    _EXPECTED_OUTPUT = """\
+    _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--nsrlsvr-hash HASH] [--nsrlsvr-host HOST]
                      [--nsrlsvr-label LABEL] [--nsrlsvr-port PORT]
 
 Test argument parser.
 
-{0:s}:
+{cli_test_lib.ARGPARSE_OPTIONS:s}:
   --nsrlsvr-hash, --nsrlsvr_hash HASH
                         Type of hash to use to query nsrlsvr instance, the
                         default is: md5. Supported options: md5, sha1
@@ -40,16 +40,16 @@ Test argument parser.
   --nsrlsvr-port, --nsrlsvr_port PORT
                         Port number of the nsrlsvr instance to query, the
                         default is: 9120.
-""".format(cli_test_lib.ARGPARSE_OPTIONS)
+"""
 
   else:
-    _EXPECTED_OUTPUT = """\
+    _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--nsrlsvr-hash HASH] [--nsrlsvr-host HOST]
                      [--nsrlsvr-label LABEL] [--nsrlsvr-port PORT]
 
 Test argument parser.
 
-{0:s}:
+{cli_test_lib.ARGPARSE_OPTIONS:s}:
   --nsrlsvr-hash HASH, --nsrlsvr_hash HASH
                         Type of hash to use to query nsrlsvr instance, the
                         default is: md5. Supported options: md5, sha1
@@ -62,7 +62,7 @@ Test argument parser.
   --nsrlsvr-port PORT, --nsrlsvr_port PORT
                         Port number of the nsrlsvr instance to query, the
                         default is: 9120.
-""".format(cli_test_lib.ARGPARSE_OPTIONS)
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

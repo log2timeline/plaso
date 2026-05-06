@@ -21,13 +21,13 @@ class ViperAnalysisArgumentsHelperTest(
   _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
 
   if _PYTHON3_13_OR_LATER:
-    _EXPECTED_OUTPUT = """\
+    _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--viper-hash HASH] [--viper-host HOST]
                      [--viper-port PORT] [--viper-protocol PROTOCOL]
 
 Test argument parser.
 
-{0:s}:
+{cli_test_lib.ARGPARSE_OPTIONS:s}:
   --viper-hash, --viper_hash HASH
                         Type of hash to use to query the Viper server, the
                         default is: sha256. Supported options: md5, sha256
@@ -40,16 +40,16 @@ Test argument parser.
   --viper-protocol, --viper_protocol PROTOCOL
                         Protocol to use to query Viper, the default is: http.
                         Supported options: http, https
-""".format(cli_test_lib.ARGPARSE_OPTIONS)
+"""
 
   else:
-    _EXPECTED_OUTPUT = """\
+    _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--viper-hash HASH] [--viper-host HOST]
                      [--viper-port PORT] [--viper-protocol PROTOCOL]
 
 Test argument parser.
 
-{0:s}:
+{cli_test_lib.ARGPARSE_OPTIONS:s}:
   --viper-hash HASH, --viper_hash HASH
                         Type of hash to use to query the Viper server, the
                         default is: sha256. Supported options: md5, sha256
@@ -62,7 +62,7 @@ Test argument parser.
   --viper-protocol PROTOCOL, --viper_protocol PROTOCOL
                         Protocol to use to query Viper, the default is: http.
                         Supported options: http, https
-""".format(cli_test_lib.ARGPARSE_OPTIONS)
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

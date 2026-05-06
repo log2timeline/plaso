@@ -20,12 +20,12 @@ class DateFiltersArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
   _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
 
   if _PYTHON3_13_OR_LATER:
-    _EXPECTED_OUTPUT = """\
+    _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--date-filter TYPE_START_END]
 
 Test argument parser.
 
-{0:s}:
+{cli_test_lib.ARGPARSE_OPTIONS:s}:
   --date-filter, --date_filter TYPE_START_END
                         Filter based on file entry date and time ranges. This
                         parameter is formatted as
@@ -45,15 +45,15 @@ Test argument parser.
                         2013-01-01 23:12:14, 2013-02-23". This parameter can
                         be repeated as needed to add additional date
                         boundaries, e.g. once for atime, once for crtime, etc.
-""".format(cli_test_lib.ARGPARSE_OPTIONS)
+"""
 
   else:
-    _EXPECTED_OUTPUT = """\
+    _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--date-filter TYPE_START_END]
 
 Test argument parser.
 
-{0:s}:
+{cli_test_lib.ARGPARSE_OPTIONS:s}:
   --date-filter TYPE_START_END, --date_filter TYPE_START_END
                         Filter based on file entry date and time ranges. This
                         parameter is formatted as
@@ -73,7 +73,7 @@ Test argument parser.
                         2013-01-01 23:12:14, 2013-02-23". This parameter can
                         be repeated as needed to add additional date
                         boundaries, e.g. once for atime, once for crtime, etc.
-""".format(cli_test_lib.ARGPARSE_OPTIONS)
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""

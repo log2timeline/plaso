@@ -33,13 +33,13 @@ class VirusTotalAnalysisArgumentsHelperTest(
   _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
 
   if _PYTHON3_13_OR_LATER:
-    _EXPECTED_OUTPUT = """\
+    _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--virustotal-api-key API_KEY]
                      [--virustotal-free-rate-limit] [--virustotal-hash HASH]
 
 Test argument parser.
 
-{0:s}:
+{cli_test_lib.ARGPARSE_OPTIONS:s}:
   --virustotal-api-key, --virustotal_api_key API_KEY
                         Specify the API key for use with VirusTotal.
   --virustotal-free-rate-limit, --virustotal_free_rate_limit
@@ -49,16 +49,16 @@ Test argument parser.
   --virustotal-hash, --virustotal_hash HASH
                         Type of hash to query VirusTotal, the default is:
                         sha256
-""".format(cli_test_lib.ARGPARSE_OPTIONS)
+"""
 
   else:
-    _EXPECTED_OUTPUT = """\
+    _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--virustotal-api-key API_KEY]
                      [--virustotal-free-rate-limit] [--virustotal-hash HASH]
 
 Test argument parser.
 
-{0:s}:
+{cli_test_lib.ARGPARSE_OPTIONS:s}:
   --virustotal-api-key API_KEY, --virustotal_api_key API_KEY
                         Specify the API key for use with VirusTotal.
   --virustotal-free-rate-limit, --virustotal_free_rate_limit
@@ -68,7 +68,7 @@ Test argument parser.
   --virustotal-hash HASH, --virustotal_hash HASH
                         Type of hash to query VirusTotal, the default is:
                         sha256
-""".format(cli_test_lib.ARGPARSE_OPTIONS)
+"""
 
   def testAddArguments(self):
     """Tests the AddArguments function."""
