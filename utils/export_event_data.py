@@ -30,13 +30,13 @@ class EventDataAttributeContainersSchemaExtractor:
       try:
         event_data = cls()
       except TypeError:
-        logging.warning('Unable to inspect: {0:s}'.format(cls.DATA_TYPE))
+        logging.warning(f'Unable to inspect: {cls.DATA_TYPE:s}')
         continue
 
-      lines.append('{0:s}'.format(event_data.data_type))
+      lines.append(f'{event_data.data_type:s}')
       for name in sorted(event_data.GetAttributeNames()):
         if name and name[0] != '_':
-          lines.append('  {0:s}'.format(name))
+          lines.append(f'  {name:s}')
       lines.append('')
 
     return '\n'.join(lines)

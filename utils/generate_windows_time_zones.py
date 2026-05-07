@@ -40,7 +40,7 @@ def Main():
       time_zone_mappings[windows_name] = windows_time_zone.attrib['type']
 
   for windows_name, python_name in sorted(time_zone_mappings.items()):
-    print('    \'{0:s}\': \'{1:s}\''.format(windows_name, python_name))
+    print(f'    \'{windows_name:s}\': \'{python_name:s}\'')
 
   return True
 

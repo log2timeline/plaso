@@ -36,7 +36,7 @@ def Main():
   options = argument_parser.parse_args()
 
   if not os.path.isdir(options.profile_path):
-    print('No such directory: {0:s}'.format(options.profile_path))
+    print(f'No such directory: {options.profile_path:s}')
     return False
 
   names = ['time', 'queued', 'processing', 'to_merge', 'abandoned', 'total']
