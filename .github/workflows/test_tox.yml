@@ -25,7 +25,7 @@ jobs:
         - python-version: '3.14'
           toxenv: 'py314'
     container:
-      image: ubuntu:24.04
+      image: ubuntu:26.04
     steps:
     - uses: actions/checkout@v6
     - name: Set up container
@@ -54,9 +54,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.12']
+        python-version: ['3.14']
     container:
-      image: ubuntu:24.04
+      image: ubuntu:26.04
     steps:
     - uses: actions/checkout@v6
     - name: Set up container
@@ -89,9 +89,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.12']
+        python-version: ['3.14']
     container:
-      image: ubuntu:24.04
+      image: ubuntu:26.04
     steps:
     - uses: actions/checkout@v6
     - name: Set up container
