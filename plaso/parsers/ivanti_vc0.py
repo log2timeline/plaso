@@ -38,7 +38,7 @@ class IvantiVC0EventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(IvantiVC0EventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.body = None
     self.hostname = None
     self.ip_address = None
