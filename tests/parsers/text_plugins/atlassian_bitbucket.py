@@ -3,10 +3,11 @@
 
 import io
 import unittest
+import unittest.mock
 
 from plaso.lib import errors
 from plaso.parsers import mediator as parsers_mediator
-from plaso.parsers import text_parser
+from plaso.parsers import text_parser as plaso_text_parser
 from plaso.parsers.text_plugins import atlassian_bitbucket
 
 from tests.parsers.text_plugins import test_lib
@@ -14,8 +15,22 @@ from tests.parsers.text_plugins import test_lib
 
 class AtlassianBitbucketTextPluginTest(test_lib.TextPluginTestCase):
   """Tests for the Atlassian Bitbucket application log text parser plugin."""
-
   # pylint: disable=protected-access
+
+  def _CheckRequiredFormat(self, plugin, path_segments):
+    """Helper to call CheckRequiredFormat on a test file."""
+    parser_mediator = parsers_mediator.ParserMediator()
+    storage_writer = self._CreateStorageWriter()
+    parser_mediator.SetStorageWriter(storage_writer)
+    file_entry = self._GetTestFileEntry(path_segments)
+    parser_mediator.SetFileEntry(file_entry)
+    parser_mediator.AppendToParserChain('text')
+    encoding = plugin.ENCODING or parser_mediator.GetCodePage()
+    file_object = file_entry.GetFileObject()
+    text_reader = plaso_text_parser.EncodedTextReader(
+        file_object, encoding=encoding)
+    text_reader.ReadLines()
+    return plugin.CheckRequiredFormat(parser_mediator, text_reader)
 
   def testCheckRequiredFormat(self):
     """Tests the CheckRequiredFormat function."""
@@ -25,7 +40,7 @@ class AtlassianBitbucketTextPluginTest(test_lib.TextPluginTestCase):
     # Check non-matching syslog.
     file_entry = self._GetTestFileEntry(['syslog', 'syslog'])
     file_object = file_entry.GetFileObject()
-    text_reader = text_parser.EncodedTextReader(
+    text_reader = plaso_text_parser.EncodedTextReader(
         file_object, encoding=plugin.ENCODING)
 
     self.assertFalse(plugin.CheckRequiredFormat(parser_mediator, text_reader))
@@ -33,7 +48,7 @@ class AtlassianBitbucketTextPluginTest(test_lib.TextPluginTestCase):
     # Check non-matching Confluence log.
     file_entry = self._GetTestFileEntry(['atlassian-confluence.log'])
     file_object = file_entry.GetFileObject()
-    text_reader = text_parser.EncodedTextReader(
+    text_reader = plaso_text_parser.EncodedTextReader(
         file_object, encoding=plugin.ENCODING)
 
     self.assertFalse(plugin.CheckRequiredFormat(parser_mediator, text_reader))
@@ -44,7 +59,7 @@ class AtlassianBitbucketTextPluginTest(test_lib.TextPluginTestCase):
         b'com.atlassian.bitbucket.internal.boot.log.BuildInfoLogger '
         b'Starting Bitbucket 7.4.0\n'
         b'Jan 22 07:52:33 not-a-bitbucket-line\n')
-    text_reader = text_parser.EncodedTextReader(
+    text_reader = plaso_text_parser.EncodedTextReader(
         file_object, encoding=plugin.ENCODING)
 
     self.assertFalse(plugin.CheckRequiredFormat(parser_mediator, text_reader))
@@ -55,10 +70,23 @@ class AtlassianBitbucketTextPluginTest(test_lib.TextPluginTestCase):
         b'Jan 22 07:52:33 hostname sshd[123]: connection\n'
         b'2020-09-08 07:53:45,084 INFO [main] '
         b'com.atlassian.bitbucket.log.Logger Starting\n')
-    text_reader = text_parser.EncodedTextReader(
+    text_reader = plaso_text_parser.EncodedTextReader(
         file_object, encoding=plugin.ENCODING)
 
     self.assertFalse(plugin.CheckRequiredFormat(parser_mediator, text_reader))
+
+    # CheckRequiredFormat returns False when _ParseTimeElements raises.
+    with unittest.mock.patch.object(
+        plugin, '_ParseTimeElements',
+        side_effect=errors.ParseError('test')):
+      text_reader_mock = unittest.mock.Mock()
+      text_reader_mock.lines = (
+          '2020-09-08 07:53:45,084 INFO [main] '
+          'com.atlassian.bitbucket.log.BuildInfoLogger Starting\n'
+          '2022-04-12 05:39:57,408 INFO [tx:thread-2] '
+          'c.a.b.m.r.DefaultRepositoryManager Created\n')
+      self.assertFalse(plugin.CheckRequiredFormat(
+          unittest.mock.Mock(), text_reader_mock))
 
   def testParse(self):
     """Tests the Process function."""

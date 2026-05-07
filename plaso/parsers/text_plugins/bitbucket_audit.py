@@ -28,10 +28,10 @@ class BitbucketAuditEventData(events.EventData):
 
   Attributes:
     details (str): JSON-encoded details of the affected entity.
-    entity (str): the affected entity in the format PRODUCT/key (e.g.
-        BITBUCKET/bitbucket, PROJECT/myproject).
-    event_name (str): the name of the audited event (e.g.
-        RestrictedRefAddedEvent).
+    entity (str): the affected entity in the format PRODUCT/key, such as
+        BITBUCKET/bitbucket or PROJECT/myproject.
+    event_name (str): the name of the audited event, such as
+        RestrictedRefAddedEvent.
     recorded_time (dfdatetime.DateTimeValues): date and time the audit event
         was recorded.
     remote_address (str): remote IP address(es), including X-Forwarded-For
@@ -70,12 +70,12 @@ class BitbucketAuditTextPlugin(interface.TextPlugin):
   _SEP = pyparsing.Suppress(pyparsing.Literal('|'))
 
   # Remote IP address field: one or more IPv4/IPv6 addresses separated by
-  # commas, e.g. "63.246.22.199,172.16.1.187" or "0:0:0:0:0:0:0:1"
+  # commas, such as "63.246.22.199,172.16.1.187" or "0:0:0:0:0:0:0:1"
   _REMOTE_ADDRESS = pyparsing.Combine(
       pyparsing.Word(pyparsing.alphanums + '.:,')
   ).set_results_name('remote_address')
 
-  # Event name: CamelCase Java event class name, e.g. RestrictedRefAddedEvent
+  # Event name: CamelCase Java event class name, such as RestrictedRefAddedEvent
   _EVENT_NAME = pyparsing.Word(
       pyparsing.alphanums + '_').set_results_name('event_name')
 
@@ -84,11 +84,11 @@ class BitbucketAuditTextPlugin(interface.TextPlugin):
       pyparsing.Word(pyparsing.alphanums + '-_./@') |
       pyparsing.Literal('-')).set_results_name('user_name')
 
-  # Timestamp: milliseconds since Unix epoch, e.g. 1400681361906
+  # Timestamp: milliseconds since Unix epoch, such as 1400681361906
   _TIMESTAMP_MS = pyparsing.Word(pyparsing.nums).set_parse_action(
       lambda tokens: int(tokens[0], 10)).set_results_name('timestamp_ms')
 
-  # Entity: PRODUCT/key format, e.g. BITBUCKET/bitbucket, PROJECT/myproject
+  # Entity: PRODUCT/key format, such as BITBUCKET/bitbucket or PROJECT/myproject
   # May also be '-' when not applicable
   _ENTITY = (
       pyparsing.Word(pyparsing.alphanums + '/-_.') |
@@ -99,7 +99,7 @@ class BitbucketAuditTextPlugin(interface.TextPlugin):
   _DETAILS = pyparsing.SkipTo(
       pyparsing.Literal('|')).set_results_name('details')
 
-  # Request ID: e.g. @8KJQAGx969x538x0, *1APC3V1x..., or '-'
+  # Request ID: such as @8KJQAGx969x538x0, *1APC3V1x..., or '-'
   _REQUEST_ID = (
       pyparsing.Word(pyparsing.alphanums + '@*-_x') |
       pyparsing.Literal('-')).set_results_name('request_id')

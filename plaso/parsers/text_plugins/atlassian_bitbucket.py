@@ -22,7 +22,6 @@ Also see:
 """
 
 import re
-
 import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements
@@ -40,14 +39,14 @@ class AtlassianBitbucketEventData(events.EventData):
     body (str): the freeform body of the log line (the log message).
     ip_address (str): the client IP address associated with the request, if
         present in the log line.
-    level (str): the logging level of the event (e.g. INFO, WARN, ERROR).
+    level (str): the logging level of the event, such as INFO, WARN or ERROR.
     logger_class (str): the abbreviated or full class name responsible for
-        logging the event (e.g. c.a.b.m.r.DefaultRepositoryManager).
-    request_action (str): the request action string (e.g.
-        "TransactionService/Transact"), if present.
-    request_identifier (str): the unique request identifier (e.g.
-        2CM38K4Fx339x113x2), if present.
-    session_identifier (str): the session identifier, if present.
+        logging the event, such as c.a.b.m.r.DefaultRepositoryManager.
+    request_action (str): the request action string, such as
+        "TransactionService/Transact", if present.
+    request_id (str): the unique request identifier, such as
+        2CM38K4Fx339x113x2, if present.
+    session_id (str): the session identifier, if present.
     thread (str): the JVM thread name from which the log event originated.
     user_name (str): the name of the user associated with the request, if
         present in the log line.
@@ -131,11 +130,19 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
   _REQUEST_CONTEXT_TEXT = pyparsing.SkipTo(
       _BITBUCKET_LOGGER).set_results_name('request_context_text')
 
+  # Guard that ensures the logger class is NOT preceded by '[', which
+  # would indicate a Confluence-format log line where the logger is wrapped
+  # in brackets: [thread] [logger.class] message.
+  _NOT_BRACKET = pyparsing.NotAny(pyparsing.Literal('['))
+
   # Complete log line structure:
   # <timestamp> <level> [<thread>] [optional request context] <logger> <body>
+  # _NOT_BRACKET before _REQUEST_CONTEXT_RAW ensures the first non-whitespace
+  # character after [thread] is not '[', rejecting Confluence-format lines.
   _BITBUCKET_LOG_LINE = (
       _DATE_TIME + _LOG_LEVEL + _BITBUCKET_THREAD +
       _REQUEST_CONTEXT_TEXT + _BITBUCKET_LOGGER + _BITBUCKET_LOG_MESSAGE)
+
 
   _LINE_STRUCTURES = [('log_entry', _BITBUCKET_LOG_LINE)]
 
@@ -270,32 +277,29 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct plugin, False otherwise.
     """
-    # Fast pre-check: the first non-empty line must match the Bitbucket
-    # timestamp + level + [thread] + unbracketed dotted-class format.
+    # Require at least 2 of the first 20 non-empty lines to successfully parse
+    # with the Bitbucket log grammar. The first non-empty line must match —
+    # if it does not, reject immediately. Requiring 2 matches guards against
+    # false positives from files that incidentally contain one matching line.
     lines = text_reader.lines.splitlines()
     first_checked = False
     matching_lines = 0
     for line in lines[:20]:
       if not line:
         continue
-      if self._VERIFICATION_REGEX.match(line):
-        matching_lines += 1
-        first_checked = True
-        if matching_lines >= 2:
-          break
-      elif not first_checked:
-        # First non-empty line must match.
-        return False
+      try:
+        structure = self._VerifyString(line)
+      except errors.ParseError:
+        if not first_checked:
+          # First non-empty line must match.
+          return False
+        continue
+      first_checked = True
+      matching_lines += 1
+      if matching_lines >= 2:
+        break
 
     if matching_lines < 2:
-      return False
-
-    # Secondary check: use the pyparsing grammar to verify the structure
-    # and extract a parseable timestamp, following the same pattern as the
-    # atlassian_confluence parser.
-    try:
-      structure = self._VerifyString(text_reader.lines)
-    except errors.ParseError:
       return False
 
     time_elements_structure = self._GetValueFromStructure(
