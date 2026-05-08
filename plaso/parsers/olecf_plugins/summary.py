@@ -196,7 +196,7 @@ class OLECFPropertySetStream:
 
     try:
       data = property_value.data
-    except IOError:
+    except OSError:
       data = None
 
     return data

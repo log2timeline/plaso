@@ -257,7 +257,7 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
       if isinstance(process_status, dict):
         self._rpc_errors_per_pid[pid] = 0
-        status_indicator = process_status.get('processing_status', None)
+        status_indicator = process_status.get('processing_status')
 
         if status_indicator == definitions.STATUS_INDICATOR_COMPLETED:
           self._completed_analysis_processes.add(pid)
@@ -358,7 +358,7 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     Returns:
       MultiProcessWorkerProcess: extraction worker process or None on error.
     """
-    analysis_plugin = self._analysis_plugins.get(process_name, None)
+    analysis_plugin = self._analysis_plugins.get(process_name)
     if not analysis_plugin:
       logger.error(f'Missing analysis plugin: {process_name:s}')
       return None
@@ -390,7 +390,7 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     try:
       self._StartMonitoringProcess(process)
-    except (IOError, KeyError) as exception:
+    except (KeyError, OSError) as exception:
       logger.error((
           f'Unable to monitor analysis plugin: {process_name:s} (PID: '
           f'{process.pid:d}) with error: {exception!s}'))
@@ -473,7 +473,7 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     process = self._processes_per_pid[pid]
 
-    status_indicator = process_status.get('processing_status', None)
+    status_indicator = process_status.get('processing_status')
 
     self._RaiseIfNotMonitored(pid)
 
@@ -627,7 +627,7 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           storage_writer, analysis_plugins, event_filter=event_filter)
 
       for key, value in self._event_labels_counter.items():
-        event_label_count = stored_event_labels_counter.get(key, None)
+        event_label_count = stored_event_labels_counter.get(key)
         if event_label_count:
           event_label_count.number_of_events += value
           storage_writer.UpdateAttributeContainer(event_label_count)
@@ -682,7 +682,7 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       self._StopTaskStorage(
           definitions.STORAGE_FORMAT_SQLITE, session.identifier,
           abort=self._abort)
-    except (IOError, OSError) as exception:
+    except OSError as exception:
       logger.error(f'Unable to stop task storage with error: {exception!s}')
 
     if self._abort:

@@ -49,8 +49,8 @@ class MacOSAirportPlistPlugin(interface.PlistPlugin):
       event_data = MacOSAirportEventData()
       event_data.last_connected_time = self._GetDateTimeValueFromPlistKey(
           plist_key, 'LastConnected')
-      event_data.security_type = plist_key.get('SecurityType', None)
-      event_data.ssid = plist_key.get('SSIDString', None)
+      event_data.security_type = plist_key.get('SecurityType')
+      event_data.ssid = plist_key.get('SSIDString')
 
       parser_mediator.ProduceEventData(event_data)
 

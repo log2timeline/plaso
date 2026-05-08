@@ -89,8 +89,8 @@ class FishHistoryParser(interface.FileObjectParser):
       return
 
     for entry_index, history_entry in enumerate(fish_history):
-      command = history_entry.get('cmd', None)
-      timestamp = history_entry.get('when', None)
+      command = history_entry.get('cmd')
+      timestamp = history_entry.get('when')
 
       if None in (command, timestamp):
         parser_mediator.ProduceExtractionWarning(

@@ -62,7 +62,7 @@ class ViperTest(test_lib.AnalysisPluginTestCase):
       MockResponse: mocked response that simulates a real response object
           returned by the requests library from the Viper API.
     """
-    sha256_hash = data.get('sha256', None)
+    sha256_hash = data.get('sha256')
     if sha256_hash != self._EVENT_1_HASH:
       self.fail('Unexpected data in request.post().')
 

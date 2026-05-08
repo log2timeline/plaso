@@ -133,7 +133,7 @@ class CLIToolTestCase(shared_test_lib.BaseTestCase):
     Returns:
       bytes: output of argparse.format_help().
     """
-    columns_environment_variable = os.environ.get('COLUMNS', None)
+    columns_environment_variable = os.environ.get('COLUMNS')
     os.environ['COLUMNS'] = '80'
 
     try:

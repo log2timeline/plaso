@@ -31,10 +31,10 @@ class WindowsEventLogMessageFormatterHelper(
       self._winevt_resources_helper = output_mediator.GetWinevtResourcesHelper()
 
     message_string = None
-    provider_identifier = event_values.get('provider_identifier', None)
-    source_name = event_values.get('source_name', None)
-    message_identifier = event_values.get('message_identifier', None)
-    event_version = event_values.get('event_version', None)
+    provider_identifier = event_values.get('provider_identifier')
+    source_name = event_values.get('source_name')
+    message_identifier = event_values.get('message_identifier')
+    event_version = event_values.get('event_version')
     if (provider_identifier or source_name) and message_identifier:
       message_string_template = self._winevt_resources_helper.GetMessageString(
           provider_identifier, source_name, message_identifier, event_version)

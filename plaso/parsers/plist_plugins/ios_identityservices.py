@@ -50,7 +50,7 @@ class IOSIdstatusachePlistPlugin(interface.PlistPlugin):
       dfdatetime.TimeElementsInMicroseconds: date and time or None if not
           available.
     """
-    timestamp = plist_key.get(plist_value_name, None)
+    timestamp = plist_key.get(plist_value_name)
     if timestamp is None:
       return None
 

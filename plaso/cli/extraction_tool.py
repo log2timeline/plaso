@@ -448,7 +448,7 @@ class ExtractionTool(
 
         logger.debug('Preprocessing done.')
 
-      except IOError as exception:
+      except OSError as exception:
         system_configurations = []
 
         logger.error(f'Unable to preprocess with error: {exception!s}')
@@ -587,7 +587,7 @@ class ExtractionTool(
       type_indicators = (
           dfvfs_analyzer.Analyzer.GetCompressedStreamTypeIndicators(
               path_spec, resolver_context=self._resolver_context))
-    except IOError:
+    except OSError:
       type_indicators = []
 
     if len(type_indicators) > 1:
@@ -617,7 +617,7 @@ class ExtractionTool(
     try:
       type_indicators = dfvfs_analyzer.Analyzer.GetArchiveTypeIndicators(
           path_spec, resolver_context=self._resolver_context)
-    except IOError:
+    except OSError:
       return None
 
     if len(type_indicators) != 1:
@@ -697,7 +697,6 @@ class ExtractionTool(
       BadConfigOption: if the storage file path is invalid, or the storage
           format not supported, or there was a failure to writing to the
           storage.
-      IOError: if the extraction engine could not write to the storage.
       OSError: if the extraction engine could not write to the storage.
       SourceScannerError: if the source scanner could not find a supported
           file system.
@@ -739,8 +738,8 @@ class ExtractionTool(
 
     try:
       storage_writer.Open(path=self._storage_file_path)
-    except IOError as exception:
-      raise IOError(f'Unable to open storage with error: {exception!s}')
+    except OSError as exception:
+      raise OSError(f'Unable to open storage with error: {exception!s}')
 
     processing_status = None
     number_of_extraction_warnings = 0
@@ -757,8 +756,8 @@ class ExtractionTool(
             storage_writer.GetNumberOfAttributeContainers(
                 'extraction_warning') - stored_number_of_extraction_warnings)
 
-    except IOError as exception:
-      raise IOError(f'Unable to write to storage with error: {exception!s}')
+    except OSError as exception:
+      raise OSError(f'Unable to write to storage with error: {exception!s}')
 
     finally:
       storage_writer.Close()

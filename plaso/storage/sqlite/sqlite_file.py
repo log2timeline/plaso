@@ -50,15 +50,14 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
           to see if it can be read and written to.
 
     Raises:
-      IOError: if the format version or the serializer format is not supported.
       OSError: if the format version or the serializer format is not supported.
     """
     super()._CheckStorageMetadata(
         metadata_values, check_readable_only=check_readable_only)
 
-    compression_format = metadata_values.get('compression_format', None)
+    compression_format = metadata_values.get('compression_format')
     if compression_format not in definitions.COMPRESSION_FORMATS:
-      raise IOError(f'Unsupported compression format: {compression_format!s}')
+      raise OSError(f'Unsupported compression format: {compression_format!s}')
 
   def _CreateAttributeContainerFromRow(
       self, container_type, column_names, row, first_column_index):
@@ -99,8 +98,6 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       container_type (str): attribute container type.
 
     Raises:
-      IOError: when there is an error querying the storage file or if
-          an unsupported attribute container is provided.
       OSError: when there is an error querying the storage file or if
           an unsupported attribute container is provided.
     """
@@ -121,7 +118,7 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       try:
         self._cursor.execute(query)
       except (sqlite3.InterfaceError, sqlite3.OperationalError) as exception:
-        raise IOError(f'Unable to query storage file with error: {exception!s}')
+        raise OSError(f'Unable to query storage file with error: {exception!s}')
 
     if container_type == self._CONTAINER_TYPE_EVENT_TAG:
       query = ('CREATE INDEX event_tag_per_event '
@@ -129,7 +126,7 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       try:
         self._cursor.execute(query)
       except (sqlite3.InterfaceError, sqlite3.OperationalError) as exception:
-        raise IOError(f'Unable to query storage file with error: {exception!s}')
+        raise OSError(f'Unable to query storage file with error: {exception!s}')
 
   def _DeserializeAttributeContainer(self, container_type, serialized_data):
     """Deserializes an attribute container.
@@ -142,7 +139,6 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       AttributeContainer: attribute container or None.
 
     Raises:
-      IOError: if the serialized data cannot be decoded.
       OSError: if the serialized data cannot be decoded.
     """
     if not serialized_data:
@@ -156,12 +152,12 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       container = self._serializer.ReadSerialized(serialized_string)
 
     except UnicodeDecodeError as exception:
-      raise IOError(
+      raise OSError(
           f'Unable to decode serialized data with error: {exception!s}')
 
     except (TypeError, ValueError) as exception:
       # TODO: consider re-reading attribute container with error correction.
-      raise IOError(f'Unable to read serialized data with error: {exception!s}')
+      raise OSError(f'Unable to read serialized data with error: {exception!s}')
 
     finally:
       if self._serializers_profiler:
@@ -187,7 +183,6 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
           to see if it can be read and written to.
 
     Raises:
-      IOError: when there is an error querying the attribute container store.
       OSError: when there is an error querying the attribute container store.
     """
     metadata_values = self._ReadMetadata()
@@ -209,7 +204,6 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       bytes: serialized attribute container.
 
     Raises:
-      IOError: if the attribute container cannot be serialized.
       OSError: if the attribute container cannot be serialized.
     """
     if self._serializers_profiler:
@@ -227,12 +221,12 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       try:
         serialized_string = json.dumps(json_dict)
       except TypeError as exception:
-        raise IOError((
+        raise OSError((
             f'Unable to serialize attribute container: '
             f'{container.CONTAINER_TYPE:s} with error: {exception!s}.'))
 
       if not serialized_string:
-        raise IOError((
+        raise OSError((
             f'Unable to serialize attribute container: '
             f'{container.CONTAINER_TYPE:s}'))
 
@@ -248,13 +242,12 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
     """Writes metadata.
 
     Raises:
-      IOError: when there is an error querying the attribute container store.
       OSError: when there is an error querying the attribute container store.
     """
     try:
       self._cursor.execute(self._CREATE_METADATA_TABLE_QUERY)
     except (sqlite3.InterfaceError, sqlite3.OperationalError) as exception:
-      raise IOError((
+      raise OSError((
           f'Unable to query attribute container store with error: '
           f'{exception!s}'))
 
@@ -271,7 +264,6 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       container (AttributeContainer): attribute container.
 
     Raises:
-      IOError: when there is an error querying the storage file.
       OSError: when there is an error querying the storage file.
     """
     schema = self._GetAttributeContainerSchema(container.CONTAINER_TYPE)
@@ -321,8 +313,6 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       AttributeContainer: attribute container or None if not available.
 
     Raises:
-      IOError: when the store is closed or when there is an error querying
-          the storage file.
       OSError: when the store is closed or when there is an error querying
           the storage file.
     """
@@ -359,7 +349,7 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
     try:
       self._cursor.execute(query)
     except (sqlite3.InterfaceError, sqlite3.OperationalError) as exception:
-      raise IOError(f'Unable to query storage file with error: {exception!s}')
+      raise OSError(f'Unable to query storage file with error: {exception!s}')
 
     if self._storage_profiler:
       self._storage_profiler.StartTiming('get_container_by_index')
@@ -396,7 +386,6 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       AttributeContainer: attribute container.
 
     Raises:
-      IOError: when there is an error querying the storage file.
       OSError: when there is an error querying the storage file.
     """
     schema = self._GetAttributeContainerSchema(container_type)

@@ -507,7 +507,7 @@ class EventExtractionWorker:
       type_indicators = (
           dfvfs_analyzer.Analyzer.GetCompressedStreamTypeIndicators(
               path_spec, resolver_context=parser_mediator.resolver_context))
-    except IOError as exception:
+    except OSError as exception:
       type_indicators = []
 
       warning_message = (
@@ -533,7 +533,7 @@ class EventExtractionWorker:
       type_indicators = (
           dfvfs_analyzer.Analyzer.GetStorageMediaImageTypeIndicators(
               path_spec, resolver_context=parser_mediator.resolver_context))
-    except IOError as exception:
+    except OSError as exception:
       type_indicators = []
 
       warning_message = (
@@ -592,7 +592,7 @@ class EventExtractionWorker:
 
         self.last_activity_timestamp = time.time()
 
-    except (IOError, errors.MaximumRecursionDepth) as exception:
+    except (OSError, errors.MaximumRecursionDepth) as exception:
       warning_message = (
           f'unable to process archive file with error: {exception!s}')
       parser_mediator.ProduceExtractionWarning(
@@ -637,7 +637,7 @@ class EventExtractionWorker:
 
         self.last_activity_timestamp = time.time()
 
-    except (IOError, dfvfs_errors.ScannerError) as exception:
+    except (OSError, dfvfs_errors.ScannerError) as exception:
       warning_message = (
           f'unable to process storage media image with error: {exception!s}')
       parser_mediator.ProduceExtractionWarning(
@@ -863,7 +863,7 @@ class EventExtractionWorker:
           results = [scan_result.identifier
                      for scan_result in iter(scan_state.scan_results)]
 
-      except IOError:
+      except OSError:
         pass
 
       if results == ['iso9660']:

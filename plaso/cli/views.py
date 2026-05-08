@@ -383,7 +383,7 @@ class ViewsFactory:
     Raises:
       ValueError: if the format type is not supported.
     """
-    view_class = cls._TABLE_VIEW_FORMAT_CLASSES.get(format_type, None)
+    view_class = cls._TABLE_VIEW_FORMAT_CLASSES.get(format_type)
     if not view_class:
       raise ValueError(f'Unsupported format type: {format_type:s}')
 

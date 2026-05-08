@@ -27,10 +27,9 @@ class ErrorBytesIO(io.BytesIO):
           all remaining bytes.
 
     Raises:
-      IOError: for testing.
       OSError: for testing.
     """
-    raise IOError('Unable to read for testing purposes.')
+    raise OSError('Unable to read for testing purposes.')
 
 
 class ErrorDataTypeMap(dtfabric_data_maps.DataTypeMap):
@@ -140,7 +139,7 @@ members:
     with self.assertRaises(errors.ParseError):
       test_helper._ReadData(file_object, 0, 12)
 
-    # Test with file-like object that raises an IOError.
+    # Test with file-like object that raises a parse error.
     file_object = ErrorBytesIO(
         b'\x01\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00')
 

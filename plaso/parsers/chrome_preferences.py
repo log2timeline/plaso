@@ -1,4 +1,4 @@
-"""A parser for the Chrome preferences file."""
+"""A parser for the Chrome Preferences file."""
 
 import codecs
 import json
@@ -105,12 +105,13 @@ class ChromePreferencesParser(interface.FileObjectParser):
     """Extract extension installation events.
 
     Args:
-      settings_dict (dict[str: object]): settings data from a Preferences file.
+      settings_dict (dict[str: object]): settings data from a Chrome Preferences
+          file.
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
     """
     for extension_id, extension in sorted(settings_dict.items()):
-      install_time = extension.get('install_time', None)
+      install_time = extension.get('install_time')
       if not install_time:
         parser_mediator.ProduceExtractionWarning(
             f'installation time missing for extension ID {extension_id!s}')
@@ -124,7 +125,7 @@ class ChromePreferencesParser(interface.FileObjectParser):
             f'{extension_id!s}'))
         continue
 
-      manifest = extension.get('manifest', None)
+      manifest = extension.get('manifest')
       if not manifest:
         parser_mediator.ProduceExtractionWarning(
             f'manifest missing for extension ID {extension_id!s}')
@@ -132,10 +133,10 @@ class ChromePreferencesParser(interface.FileObjectParser):
 
       event_data = ChromeExtensionInstallationEventData()
       event_data.extension_identifier = extension_id
-      event_data.extension_name = manifest.get('name', None)
+      event_data.extension_name = manifest.get('name')
       event_data.installation_time = dfdatetime_webkit_time.WebKitTime(
           timestamp=install_time)
-      event_data.path = extension.get('path', None)
+      event_data.path = extension.get('path')
 
       parser_mediator.ProduceEventData(event_data)
 
@@ -143,7 +144,8 @@ class ChromePreferencesParser(interface.FileObjectParser):
     """Extracts site specific events.
 
     Args:
-      exceptions_dict (dict): Permission exceptions data from Preferences file.
+      exceptions_dict (dict): Permission exceptions data from Chrome Preferences
+          file.
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
     """
@@ -153,7 +155,7 @@ class ChromePreferencesParser(interface.FileObjectParser):
 
       exception_dict = exceptions_dict.get(permission, {})
       for urls, url_dict in exception_dict.items():
-        last_used = url_dict.get('last_used', None)
+        last_used = url_dict.get('last_used')
         if not last_used:
           continue
 
@@ -184,12 +186,12 @@ class ChromePreferencesParser(interface.FileObjectParser):
     Raises:
       WrongParser: when the file cannot be parsed.
     """
-    # First pass check for initial character being open brace.
+    # First check for initial character being open brace.
     if file_object.read(1) != b'{':
       display_name = parser_mediator.GetDisplayName()
       raise errors.WrongParser(
-          f'[{self.NAME!s}] {display_name!s} is not a valid Preference '
-          f'file, missing opening brace.')
+          f'[{self.NAME!s}] {display_name!s} is not a valid Chrome Preferences '
+          f'file, missing opening brace')
 
     file_object.seek(0, os.SEEK_SET)
 
@@ -201,47 +203,47 @@ class ChromePreferencesParser(interface.FileObjectParser):
     except UnicodeDecodeError:
       display_name = parser_mediator.GetDisplayName()
       raise errors.WrongParser(
-          f'[{self.NAME!s}] {display_name!s} is not a valid Preference '
-          f'file, unable to decode UTF-8.')
+          f'[{self.NAME!s}] {display_name!s} is not a valid Chrome Preferences '
+          f'file, unable to decode as UTF-8')
 
-    # Second pass to verify it's valid JSON
+    # Second verify it is valid JSON.
     try:
       json_dict = json.loads(file_content)
+
+    except OSError as exception:
+      display_name = parser_mediator.GetDisplayName()
+      raise errors.WrongParser(
+          f'[{self.NAME!s}] Unable to open file {display_name!s} with error: '
+          f'{exception!s}')
 
     except ValueError as exception:
       display_name = parser_mediator.GetDisplayName()
       raise errors.WrongParser(
-          f'[{self.NAME!s}] Unable to parse file '
-          f'{display_name!s} as JSON: {exception!s}')
+          f'[{self.NAME!s}] {display_name!s} is not a valid Chrome Preferences '
+          f'file, unable to decode as JSON with error: {exception!s}')
 
-    except IOError as exception:
-      display_name = parser_mediator.GetDisplayName()
-      raise errors.WrongParser(
-          f'[{self.NAME!s}] Unable to open file '
-          f'{display_name!s} for parsing as JSON: {exception!s}')
-
-    # Third pass to verify the file has the correct keys in it for Preferences
+    # Third verify the file has the correct keys for a Chrome Preferences file.
     if not set(self.REQUIRED_KEYS).issubset(set(json_dict.keys())):
-      raise errors.WrongParser('File does not contain Preference data.')
+      raise errors.WrongParser('File does not contain Chrome Preferences data')
 
     extensions_setting_dict = json_dict.get('extensions')
     if not extensions_setting_dict:
       display_name = parser_mediator.GetDisplayName()
       raise errors.WrongParser(
-          f'[{self.NAME!s}] {display_name!s} is not a valid Preference '
-          f'file, does not contain extensions value.')
+          f'[{self.NAME!s}] {display_name!s} is not a valid Chrome Preferences '
+          f'file, does not contain extensions value')
 
     extensions_dict = extensions_setting_dict.get('settings')
     if not extensions_dict:
       display_name = parser_mediator.GetDisplayName()
       raise errors.WrongParser(
-          f'[{self.NAME!s}] {display_name!s} is not a valid Preference '
-          f'file, does not contain extensions settings value.')
+          f'[{self.NAME!s}] {display_name!s} is not a valid Chrome Preferences '
+          f'file, does not contain extensions settings value')
 
     extensions_autoupdate_dict = extensions_setting_dict.get('autoupdate')
     if extensions_autoupdate_dict:
       autoupdate_lastcheck_timestamp = extensions_autoupdate_dict.get(
-          'last_check', None)
+          'last_check')
 
       if autoupdate_lastcheck_timestamp:
         autoupdate_lastcheck = int(autoupdate_lastcheck_timestamp, 10)
@@ -254,7 +256,7 @@ class ChromePreferencesParser(interface.FileObjectParser):
         parser_mediator.ProduceEventData(event_data)
 
       autoupdate_nextcheck_timestamp = extensions_autoupdate_dict.get(
-          'next_check', None)
+          'next_check')
       if autoupdate_nextcheck_timestamp:
         autoupdate_nextcheck = int(autoupdate_nextcheck_timestamp, 10)
 
@@ -265,10 +267,10 @@ class ChromePreferencesParser(interface.FileObjectParser):
 
         parser_mediator.ProduceEventData(event_data)
 
-    browser_dict = json_dict.get('browser', None)
+    browser_dict = json_dict.get('browser')
     if browser_dict and 'last_clear_browsing_data_time' in browser_dict:
       last_clear_history_timestamp = browser_dict.get(
-          'last_clear_browsing_data_time', None)
+          'last_clear_browsing_data_time')
 
       if last_clear_history_timestamp:
         last_clear_history = int(last_clear_history_timestamp, 10)
@@ -282,11 +284,11 @@ class ChromePreferencesParser(interface.FileObjectParser):
 
     self._ExtractExtensionInstallEvents(extensions_dict, parser_mediator)
 
-    profile_dict = json_dict.get('profile', None)
+    profile_dict = json_dict.get('profile')
     if profile_dict:
-      content_settings_dict = profile_dict.get('content_settings', None)
+      content_settings_dict = profile_dict.get('content_settings')
       if content_settings_dict:
-        exceptions_dict = content_settings_dict.get('exceptions', None)
+        exceptions_dict = content_settings_dict.get('exceptions')
         if exceptions_dict:
           self._ExtractContentSettingsExceptions(
               exceptions_dict, parser_mediator)

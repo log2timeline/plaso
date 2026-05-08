@@ -201,7 +201,7 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
     try:
       self._FinalizeTaskStorageWriter(
           definitions.STORAGE_FORMAT_SQLITE, task)
-    except IOError as exception:
+    except OSError as exception:
       logger.warning(
           f'Unable to finalize task storage with error: {exception!s}')
 

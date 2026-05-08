@@ -202,7 +202,7 @@ class FirefoxCacheParser(
 
         return self.FIREFOX_CACHE_CONFIG(block_size, offset)
 
-      except IOError:
+      except OSError:
         logger.debug(
             f'[{self.NAME:s}] {display_name:s}:{offset:d}: Invalid record.')
 
@@ -224,7 +224,6 @@ class FirefoxCacheParser(
       firefox_cache1_entry_header: cache record header structure.
 
     Raises:
-      IOError: if the cache record header cannot be validated.
       OSError: if the cache record header cannot be validated.
       ParseError: if the cache record header cannot be parsed.
     """
@@ -246,7 +245,7 @@ class FirefoxCacheParser(
       # Skip to the next block potentially containing a cache entry.
       file_offset = block_size - header_data_size
       file_object.seek(file_offset, os.SEEK_CUR)
-      raise IOError('Not a valid Firefox cache record.')
+      raise OSError('Not a valid Firefox cache record.')
 
     file_offset += header_data_size
     body_data_size = (
@@ -351,7 +350,7 @@ class FirefoxCacheParser(
             parser_mediator, file_object, display_name,
             firefox_config.block_size)
 
-      except IOError:
+      except OSError:
         file_offset = file_object.get_offset() - self._MINIMUM_BLOCK_SIZE
         logger.debug((
             f'[{self.NAME:s}] Invalid cache record in file: {display_name:s} '

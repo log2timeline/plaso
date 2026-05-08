@@ -151,7 +151,7 @@ class JSONAttributeContainerSerializer(
           attribute container is not supported.
     """
     # Use __container_type__ to indicate the attribute container type.
-    container_type = json_dict.get('__container_type__', None)
+    container_type = json_dict.get('__container_type__')
 
     if container_type not in (
         'event_data', 'event_tripple', 'system_configuration'):
@@ -201,7 +201,7 @@ class JSONAttributeContainerSerializer(
     Raises:
       ValueError: if the encoding is not supported.
     """
-    encoding = json_dict.get('__encoding__', None) or 'base16'
+    encoding = json_dict.get('__encoding__') or 'base16'
     if encoding != 'base16':
       raise ValueError(f'Unsupported byte stream encoding: {encoding:s}')
 
@@ -292,11 +292,11 @@ class JSONAttributeContainerSerializer(
         'PathSpec': cls._ConvertJSONToPathSpec,
         'tuple': cls._ConvertJSONToTuple}
 
-    json_dict_type = json_dict.get('__type__', None)
+    json_dict_type = json_dict.get('__type__')
     if not json_dict_type:
       return json_dict
 
-    convert_function = cls._convert_json_to_value.get(json_dict_type, None)
+    convert_function = cls._convert_json_to_value.get(json_dict_type)
     if not convert_function:
       raise ValueError(f'Unsupported JSON dictionary type: {json_dict_type:s}')
 
@@ -324,7 +324,7 @@ class JSONAttributeContainerSerializer(
     Returns:
       dfvfs.PathSpec: path specification.
     """
-    type_indicator = json_dict.get('type_indicator', None)
+    type_indicator = json_dict.get('type_indicator')
     if type_indicator:
       del json_dict['type_indicator']
 
@@ -340,7 +340,7 @@ class JSONAttributeContainerSerializer(
     if type_indicator == dfvfs_definitions.TYPE_INDICATOR_OS:
       # dfvfs.OSPathSpec() will change the location to an absolute path
       # here we want to preserve the original location.
-      path_spec.location = json_dict.get('location', None)
+      path_spec.location = json_dict.get('location')
 
     return path_spec
 

@@ -17,7 +17,7 @@ class FirefoxHistoryTypedCountFormatterHelper(
       output_mediator (OutputMediator): output mediator.
       event_values (dict[str, object]): event values.
     """
-    typed = event_values.get('typed', None)
+    typed = event_values.get('typed')
     if typed == '1':
       url_typed_string = '(URL directly typed)'
     else:
@@ -39,7 +39,7 @@ class FirefoxHistoryURLHiddenFormatterHelper(
       output_mediator (OutputMediator): output mediator.
       event_values (dict[str, object]): event values.
     """
-    hidden = event_values.get('hidden', None)
+    hidden = event_values.get('hidden')
     if hidden == '1':
       event_values['url_hidden_string'] = '(URL hidden)'
 

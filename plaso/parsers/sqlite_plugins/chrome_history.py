@@ -195,7 +195,7 @@ class BaseGoogleChromeHistoryPlugin(interface.SQLitePlugin):
       sync_cache_results = cache.GetResults('sync')
 
     if sync_cache_results and visit_identifier:
-      results = sync_cache_results.get(visit_identifier, None)
+      results = sync_cache_results.get(visit_identifier)
       if results:
         return results[0]
 

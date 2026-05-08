@@ -232,13 +232,13 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
       return None
 
     event_data = SyslogCronTaskRunEventData()
-    event_data.body = structure.get('body', None)
-    event_data.command = structure.get('command', None)
-    event_data.hostname = structure.get('hostname', None)
-    event_data.pid = structure.get('pid', None)
-    event_data.reporter = structure.get('reporter', None)
-    event_data.severity = structure.get('severity', None)
-    event_data.username = structure.get('username', None)
+    event_data.body = structure.get('body')
+    event_data.command = structure.get('command')
+    event_data.hostname = structure.get('hostname')
+    event_data.pid = structure.get('pid')
+    event_data.reporter = structure.get('reporter')
+    event_data.severity = structure.get('severity')
+    event_data.username = structure.get('username')
 
     return event_data
 
@@ -276,16 +276,16 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
 
     event_data.authentication_method = structure.get(
         'authentication_method', None)
-    event_data.body = structure.get('body', None)
-    event_data.fingerprint = structure.get('fingerprint', None)
-    event_data.hostname = structure.get('hostname', None)
-    event_data.ip_address = structure.get('ip_address', None)
-    event_data.pid = structure.get('pid', None)
-    event_data.protocol = structure.get('protocol', None)
-    event_data.port = structure.get('port', None)
-    event_data.reporter = structure.get('reporter', None)
-    event_data.severity = structure.get('severity', None)
-    event_data.username = structure.get('username', None)
+    event_data.body = structure.get('body')
+    event_data.fingerprint = structure.get('fingerprint')
+    event_data.hostname = structure.get('hostname')
+    event_data.ip_address = structure.get('ip_address')
+    event_data.pid = structure.get('pid')
+    event_data.protocol = structure.get('protocol')
+    event_data.port = structure.get('port')
+    event_data.reporter = structure.get('reporter')
+    event_data.severity = structure.get('severity')
+    event_data.username = structure.get('username')
 
     return event_data
 

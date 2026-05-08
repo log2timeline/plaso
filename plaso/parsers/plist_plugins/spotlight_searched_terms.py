@@ -58,10 +58,10 @@ class SpotlightSearchedTermsPlistPlugin(interface.PlistPlugin):
     shortcuts = match.get('UserShortcuts', {})
     for search_term, plist_key in shortcuts.items():
       event_data = SpotlightSearchedTermsEventData()
-      event_data.display_name = plist_key.get('DISPLAY_NAME', None)
+      event_data.display_name = plist_key.get('DISPLAY_NAME')
       event_data.last_used_time = self._GetDateTimeValueFromPlistKey(
           plist_key, 'LAST_USED')
-      event_data.path = plist_key.get('PATH', None)
+      event_data.path = plist_key.get('PATH')
       event_data.search_term = search_term
 
       parser_mediator.ProduceEventData(event_data)

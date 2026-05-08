@@ -52,10 +52,10 @@ class MacOSInstallHistoryPlistPlugin(interface.PlistPlugin):
     """
     for plist_key in top_level:
       event_data = MacOSInstallHistoryEventData()
-      event_data.identifiers = plist_key.get('packageIdentifiers', None)
-      event_data.name = plist_key.get('displayName', None)
-      event_data.process_name = plist_key.get('processName', None)
-      event_data.version = plist_key.get('displayVersion', None)
+      event_data.identifiers = plist_key.get('packageIdentifiers')
+      event_data.name = plist_key.get('displayName')
+      event_data.process_name = plist_key.get('processName')
+      event_data.version = plist_key.get('displayVersion')
       event_data.written_time = self._GetDateTimeValueFromPlistKey(
           plist_key, 'date')
 

@@ -268,10 +268,10 @@ class Firefox118DownloadsPlugin(interface.SQLitePlugin):
 
     event_data = Firefox118DownloadEventData()
 
-    event_data.deleted = content_data.get('deleted', None)
-    event_data.download_state = content_data.get('state', None)
+    event_data.deleted = content_data.get('deleted')
+    event_data.download_state = content_data.get('state')
 
-    end_time = content_data.get('endTime', None)
+    end_time = content_data.get('endTime')
     if end_time is not None:
       event_data.end_time = dfdatetime_posix_time.PosixTimeInMilliseconds(
           timestamp=end_time)

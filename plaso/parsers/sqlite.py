@@ -164,22 +164,20 @@ class SQLiteDatabase:
     if os.path.exists(self._temp_db_file_path):
       try:
         os.remove(self._temp_db_file_path)
-      except (OSError, IOError) as exception:
+      except OSError as exception:
         logger.warning(
-            f'Unable to remove temporary copy: '
-            f'{self._temp_db_file_path} of SQLite database: '
-            f'{self._filename} with error: {exception!s}')
+            f'Unable to remove temporary copy: {self._temp_db_file_path} of '
+            f'SQLite database: {self._filename} with error: {exception!s}')
 
     self._temp_db_file_path = ''
 
     if os.path.exists(self._temp_wal_file_path):
       try:
         os.remove(self._temp_wal_file_path)
-      except (OSError, IOError) as exception:
+      except OSError as exception:
         logger.warning(
-            f'Unable to remove temporary copy: '
-            f'{self._temp_wal_file_path} of SQLite database: '
-            f'{self._filename} with error: {exception!s}')
+            f'Unable to remove temporary copy: {self._temp_wal_file_path} of '
+            f'SQLite database: {self._filename} with error: {exception!s}')
 
     self._temp_wal_file_path = ''
 
@@ -197,7 +195,6 @@ class SQLiteDatabase:
           Write-Ahead Log (WAL) file.
 
     Raises:
-      IOError: if the file-like object cannot be read.
       OSError: if the file-like object cannot be read.
       sqlite3.DatabaseError: if the database cannot be parsed.
       ValueError: if the file-like object is missing.
@@ -224,7 +221,7 @@ class SQLiteDatabase:
         self._CopyFileObjectToTemporaryFile(file_object, temporary_file)
         self._temp_db_file_path = temporary_file.name
 
-      except IOError:
+      except OSError:
         os.remove(temporary_file.name)
         raise
 
@@ -238,7 +235,7 @@ class SQLiteDatabase:
           self._CopyFileObjectToTemporaryFile(wal_file_object, temporary_file)
           self._temp_wal_file_path = temporary_filename
 
-        except IOError:
+        except OSError:
           os.remove(temporary_filename)
           raise
 
@@ -346,7 +343,7 @@ class SQLiteParser(interface.FileEntryParser):
     try:
       database_wal.Open(database_file_object, wal_file_object=wal_file_object)
 
-    except (IOError, ValueError, sqlite3.DatabaseError) as exception:
+    except (OSError, ValueError, sqlite3.DatabaseError) as exception:
       parser_mediator.ProduceExtractionWarning(
           f'unable to open SQLite database and WAL with error: '
           f'{exception!s}')
@@ -433,7 +430,7 @@ class SQLiteParser(interface.FileEntryParser):
     try:
       database.Open(file_object)
 
-    except (IOError, ValueError, sqlite3.DatabaseError) as exception:
+    except (OSError, ValueError, sqlite3.DatabaseError) as exception:
       parser_mediator.ProduceExtractionWarning(
           f'unable to open SQLite database with error: {exception!s}')
       return

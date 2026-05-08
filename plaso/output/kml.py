@@ -27,8 +27,8 @@ class KMLOutputModule(rawpy.NativePythonOutputModule):
           modules and other components, such as storage and dfVFS.
       field_values (dict[str, str]): output field values per name.
     """
-    latitude = field_values.get('latitude', None)
-    longitude = field_values.get('longitude', None)
+    latitude = field_values.get('latitude')
+    longitude = field_values.get('longitude')
     if None in (latitude, longitude):
       return
 

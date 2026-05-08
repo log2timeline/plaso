@@ -493,7 +493,7 @@ class StringFormatter:
             value not in self._DECODERS_TO_IGNORE and value[:5] != 'name=')]
 
         if not decoder_names:
-          internal_decoder = self._INTERNAL_DECODERS.get(specifier, None)
+          internal_decoder = self._INTERNAL_DECODERS.get(specifier)
           if internal_decoder:
             decoder_names = [internal_decoder]
 
@@ -1976,11 +1976,10 @@ class BaseUnifiedLoggingFile(dtfabric_helper.DtFabricHelper):
     """Closes an Apple Unified Logging (AUL) file.
 
     Raises:
-      IOError: if the file is not opened.
       OSError: if the file is not opened.
     """
     if not self._file_object:
-      raise IOError('File not opened')
+      raise OSError('File not opened')
 
     self._file_object = None
     self._file_entry = None
@@ -1992,11 +1991,10 @@ class BaseUnifiedLoggingFile(dtfabric_helper.DtFabricHelper):
       file_entry (dfvfs.FileEntry): a file entry.
 
     Raises:
-      IOError: if the file is already opened.
       OSError: if the file is already opened.
     """
     if self._file_object:
-      raise IOError('File already opened')
+      raise OSError('File already opened')
 
     self._file_entry = file_entry
 
@@ -2641,7 +2639,7 @@ class TraceV3File(BaseUnifiedLoggingFile):
     if not decoder_names:
       return '<decode: missing decoder>'
 
-    decoder_object = self._FORMAT_STRING_DECODERS.get(decoder_names[0], None)
+    decoder_object = self._FORMAT_STRING_DECODERS.get(decoder_names[0])
     if not decoder_object:
       return f'<decode: unsupported decoder: {decoder_names[0]:s}>'
 
@@ -2694,7 +2692,7 @@ class TraceV3File(BaseUnifiedLoggingFile):
       return data_items, values_data, private_data
 
     lookup_key = f'{proc_id:s}:{data_reference:04x}'
-    oversize_chunk = oversize_chunks.get(lookup_key, None)
+    oversize_chunk = oversize_chunks.get(lookup_key)
     if oversize_chunk:
       return (oversize_chunk.data_items, oversize_chunk.values_data,
               oversize_chunk.private_data)
@@ -2712,7 +2710,7 @@ class TraceV3File(BaseUnifiedLoggingFile):
     Returns:
       DSCFile: a shared-cache strings (DSC) file or None if not available.
     """
-    dsc_file = self._cached_dsc_files.get(uuid_string, None)
+    dsc_file = self._cached_dsc_files.get(uuid_string)
     if not dsc_file:
       dsc_file = self._OpenDSCFile(uuid_string)
       if len(self._cached_dsc_files) >= self._MAXIMUM_CACHED_FILES:
@@ -2790,7 +2788,7 @@ class TraceV3File(BaseUnifiedLoggingFile):
     uuid_string = strings_file_identifier.hex.upper()
 
     lookup_key = f'{uuid_string:s}:0x{string_reference:x}'
-    image_values = self._cached_image_values.get(lookup_key, None)
+    image_values = self._cached_image_values.get(lookup_key)
     if not image_values:
       large_offset_data = getattr(
           tracepoint_data_object, 'large_offset_data', None) or 0
@@ -2955,7 +2953,7 @@ class TraceV3File(BaseUnifiedLoggingFile):
     Returns:
       UUIDTextFile: an uuidtext file or None if not available.
     """
-    uuidtext_file = self._cached_uuidtext_files.get(uuid_string, None)
+    uuidtext_file = self._cached_uuidtext_files.get(uuid_string)
     if not uuidtext_file:
       uuidtext_file = self._OpenUUIDTextFile(uuid_string)
       if len(self._cached_uuidtext_files) >= self._MAXIMUM_CACHED_FILES:
@@ -3323,7 +3321,7 @@ class TraceV3File(BaseUnifiedLoggingFile):
     proc_id = (f'{firehose_header.proc_id_upper:d}@'
                f'{firehose_header.proc_id_lower:d}')
     process_information_entry = (
-        self._catalog_process_information_entries.get(proc_id, None))
+        self._catalog_process_information_entries.get(proc_id))
     if not process_information_entry:
       raise errors.ParseError((
           f'Unable to retrieve process information entry: {proc_id:s} from '
@@ -3910,7 +3908,7 @@ class TraceV3File(BaseUnifiedLoggingFile):
     proc_id = (f'{simpledump_chunk.proc_id_upper:d}@'
                f'{simpledump_chunk.proc_id_lower:d}')
     process_information_entry = (
-        self._catalog_process_information_entries.get(proc_id, None))
+        self._catalog_process_information_entries.get(proc_id))
     if not process_information_entry:
       raise errors.ParseError((
           f'Unable to retrieve process information entry: {proc_id:s} from '
@@ -3970,7 +3968,7 @@ class TraceV3File(BaseUnifiedLoggingFile):
     proc_id = (f'{statedump_chunk.proc_id_upper:d}@'
                f'{statedump_chunk.proc_id_lower:d}')
     process_information_entry = (
-        self._catalog_process_information_entries.get(proc_id, None))
+        self._catalog_process_information_entries.get(proc_id))
     if not process_information_entry:
       raise errors.ParseError((
           f'Unable to retrieve process information entry: {proc_id:s} from '
@@ -3986,7 +3984,7 @@ class TraceV3File(BaseUnifiedLoggingFile):
       decoder_type = decoder_type_data.decode('utf8')
 
       decoder_name = f'{library:s}:{decoder_type:s}'
-      decoder_class = self._FORMAT_STRING_DECODERS.get(decoder_name, None)
+      decoder_class = self._FORMAT_STRING_DECODERS.get(decoder_name)
       if not decoder_class:
         value = f'<decode: unsupported decoder: {decoder_name:s}>'
       else:
@@ -4076,7 +4074,6 @@ class TraceV3File(BaseUnifiedLoggingFile):
     """Closes a tracev3 file.
 
     Raises:
-      IOError: if the file is not opened.
       OSError: if the file is not opened.
     """
     for dsc_file in self._cached_dsc_files.values():

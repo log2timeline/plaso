@@ -101,7 +101,6 @@ class TextFileOutputModule(interface.OutputModule):
       path (Optional[str]): path of the output file.
 
     Raises:
-      IOError: if the specified output file already exists.
       OSError: if the specified output file already exists.
       ValueError: if path is not set.
     """
@@ -109,9 +108,9 @@ class TextFileOutputModule(interface.OutputModule):
       raise ValueError('Missing path.')
 
     if os.path.isfile(path):
-      raise IOError((
+      raise OSError(
           f'Unable to use an already existing file for output '
-          f'[{path:s}]'))
+          f'[{path:s}]')
 
     self._file_object = open(path, 'wt', encoding=self._ENCODING)  # pylint: disable=consider-using-with
 
@@ -204,7 +203,7 @@ class SortedTextFileOutputModule(TextFileOutputModule):
           modules and other components, such as storage and dfVFS.
       field_values (dict[str, str]): output field values per name.
     """
-    primary_sort_key = field_values.get(self._SORT_KEY_FIELD_NAMES[0], None)
+    primary_sort_key = field_values.get(self._SORT_KEY_FIELD_NAMES[0])
     if self._last_primary_sort_key is None:
       self._last_primary_sort_key = primary_sort_key
 
@@ -214,7 +213,7 @@ class SortedTextFileOutputModule(TextFileOutputModule):
 
     output_text = self._GetString(output_mediator, field_values)
     if output_text:
-      sort_key = ' '.join([field_values.get(field_name, None) or ''
+      sort_key = ' '.join([field_values.get(field_name) or ''
                            for field_name in self._SORT_KEY_FIELD_NAMES])
       self._sorted_strings_heap.PushString(sort_key, output_text)
 

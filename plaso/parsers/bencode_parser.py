@@ -50,11 +50,11 @@ class BencodeValues:
     Returns:
       object: decoded value or None if not available.
     """
-    value = self._decoded_values.get(name, None)
+    value = self._decoded_values.get(name)
     if value is None:
       # Work-around for issue in bencode 3.0.1 where keys are bytes.
       name_as_byte_stream = name.encode('utf-8')
-      value = self._decoded_values.get(name_as_byte_stream, None)
+      value = self._decoded_values.get(name_as_byte_stream)
 
     if isinstance(value, bytes):
       # Work-around for issue in bencode 3.0.1 where string values are bytes.
@@ -117,7 +117,6 @@ class BencodeFile:
       file_object (dfvfs.FileIO): file-like object.
 
     Raises:
-      IOError: if the file-like object cannot be read.
       OSError: if the file-like object cannot be read.
       ValueError: if the file-like object is missing.
     """
@@ -129,7 +128,7 @@ class BencodeFile:
     try:
       self._decoded_values = bencode.bread(file_object)
     except bencode.BencodeDecodeError as exception:
-      raise IOError(exception)
+      raise OSError(exception)
 
     self._key_names = set()
     for key in self._decoded_values.keys():
@@ -171,10 +170,10 @@ class BencodeParser(interface.FileObjectParser):
 
     try:
       bencode_file.Open(file_object)
-    except IOError as exception:
-      raise errors.WrongParser((
+    except OSError as exception:
+      raise errors.WrongParser(
           f'[{self.NAME:s}] unable to parse file: {display_name:s} '
-          f'with error: {exception!s}'))
+          f'with error: {exception!s}')
 
     if bencode_file.IsEmpty():
       parser_mediator.ProduceExtractionWarning('missing decoded Bencode values')

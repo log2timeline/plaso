@@ -67,7 +67,7 @@ class BooleanEventFormatterHelper(EventFormatterHelper):
       output_mediator (OutputMediator): output mediator.
       event_values (dict[str, object]): event values.
     """
-    input_value = event_values.get(self.input_attribute, None)
+    input_value = event_values.get(self.input_attribute)
     if input_value:
       output_value = self.value_if_true
     else:
@@ -134,7 +134,7 @@ class EnumerationEventFormatterHelper(EventFormatterHelper):
       output_mediator (OutputMediator): output mediator.
       event_values (dict[str, object]): event values.
     """
-    input_value = event_values.get(self.input_attribute, None)
+    input_value = event_values.get(self.input_attribute)
     if input_value is not None:
       default_value = self.default
       if default_value is None:
@@ -179,7 +179,7 @@ class FlagsEventFormatterHelper(EventFormatterHelper):
       output_mediator (OutputMediator): output mediator.
       event_values (dict[str, object]): event values.
     """
-    input_value = event_values.get(self.input_attribute, None)
+    input_value = event_values.get(self.input_attribute)
     if input_value is None:
       return
 
@@ -239,10 +239,10 @@ class EventFormatter:
       message_string = format_string.format(**event_values)
 
     except KeyError as exception:
-      data_type = event_values.get('data_type', None) or 'N/A'
-      display_name = event_values.get('display_name', None) or 'N/A'
-      event_identifier = event_values.get('uuid', None) or 'N/A'
-      parser_chain = event_values.get('_parser_chain', None) or 'N/A'
+      data_type = event_values.get('data_type') or 'N/A'
+      display_name = event_values.get('display_name') or 'N/A'
+      event_identifier = event_values.get('uuid') or 'N/A'
+      parser_chain = event_values.get('_parser_chain') or 'N/A'
 
       error_message = (
           f'Event: {event_identifier:s} data type: {data_type:s} display '
@@ -257,10 +257,10 @@ class EventFormatter:
       message_string = ' '.join(attribute_values)
 
     except UnicodeDecodeError as exception:
-      data_type = event_values.get('data_type', None) or 'N/A'
-      display_name = event_values.get('display_name', None) or 'N/A'
-      event_identifier = event_values.get('uuid', None) or 'N/A'
-      parser_chain = event_values.get('_parser_chain', None) or 'N/A'
+      data_type = event_values.get('data_type') or 'N/A'
+      display_name = event_values.get('display_name') or 'N/A'
+      event_identifier = event_values.get('uuid') or 'N/A'
+      parser_chain = event_values.get('_parser_chain') or 'N/A'
 
       error_message = (
           f'Event: {event_identifier:s} data type: {data_type:s} display '

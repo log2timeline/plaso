@@ -227,10 +227,10 @@ class WindowsTimelinePlugin(interface.SQLitePlugin):
     payload_json_string = payload_json_bytes.decode('utf-8')
     payload = json.loads(payload_json_string)
 
-    application_display_name = payload.get('appDisplayName', None)
+    application_display_name = payload.get('appDisplayName')
     if not application_display_name:
       # Fall back to displayText if appDisplayName isn't available
-      application_display_name = payload.get('displayText', None)
+      application_display_name = payload.get('displayText')
 
     # AppId is JSON stored as unicode text.
     appid_entries_string = self._GetRowValue(query_hash, row, 'AppId')
@@ -254,7 +254,7 @@ class WindowsTimelinePlugin(interface.SQLitePlugin):
 
     event_data = WindowsTimelineGenericEventData()
     event_data.application_display_name = application_display_name
-    event_data.description = payload.get('description', None)
+    event_data.description = payload.get('description')
     event_data.package_identifier = package_identifier
     event_data.start_time = self._GetDateTimeRowValue(
         query_hash, row, 'StartTime')
@@ -279,7 +279,7 @@ class WindowsTimelinePlugin(interface.SQLitePlugin):
     payload_json_string = payload_json_bytes.decode('utf-8')
     payload = json.loads(payload_json_string)
 
-    active_duration_seconds = payload.get('activeDurationSeconds', None)
+    active_duration_seconds = payload.get('activeDurationSeconds')
     if active_duration_seconds is not None:
       active_duration_seconds = int(active_duration_seconds)
 
@@ -287,7 +287,7 @@ class WindowsTimelinePlugin(interface.SQLitePlugin):
     event_data.active_duration_seconds = active_duration_seconds
     event_data.package_identifier = self._GetRowValue(
         query_hash, row, 'PackageName')
-    event_data.reporting_app = payload.get('reportingApp', None)
+    event_data.reporting_app = payload.get('reportingApp')
     event_data.start_time = self._GetDateTimeRowValue(
         query_hash, row, 'StartTime')
 

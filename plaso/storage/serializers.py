@@ -46,7 +46,7 @@ class JSONPathSpecAttributeSerializer(acstore_interface.AttributeSerializer):
     Returns:
       dfvfs.PathSpec: runtime value.
     """
-    type_indicator = value.get('type_indicator', None)
+    type_indicator = value.get('type_indicator')
     if type_indicator:
       del value['type_indicator']
 
@@ -62,7 +62,7 @@ class JSONPathSpecAttributeSerializer(acstore_interface.AttributeSerializer):
     if type_indicator == dfvfs_definitions.TYPE_INDICATOR_OS:
       # dfvfs.OSPathSpec() will change the location to an absolute path
       # here we want to preserve the original location.
-      path_spec.location = value.get('location', None)
+      path_spec.location = value.get('location')
 
     return path_spec
 

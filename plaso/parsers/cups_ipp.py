@@ -163,7 +163,7 @@ class CupsIppParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
     Returns:
       object: value represented as a string or default value.
     """
-    values = cupp_ipp_values.get(name, None)
+    values = cupp_ipp_values.get(name)
     if not values:
       return default_value
 
@@ -418,8 +418,8 @@ class CupsIppParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
     event_data.creation_time = cupp_ipp_values.get(
         'date-time-at-creation', None)
-    event_data.end_time = cupp_ipp_values.get('date-time-at-completed', None)
-    event_data.start_time = cupp_ipp_values.get('date-time-at-processing', None)
+    event_data.end_time = cupp_ipp_values.get('date-time-at-completed')
+    event_data.start_time = cupp_ipp_values.get('date-time-at-processing')
 
     # CUPS IPP version 1.0 date and time values
 

@@ -128,7 +128,7 @@ class LinuxStandardBaseReleasePlugin(interface.FileArtifactPreprocessorPlugin):
       value = value.strip().strip('"')
       product_values[key] = value
 
-    system_product = product_values.get('DISTRIB_DESCRIPTION', None)
+    system_product = product_values.get('DISTRIB_DESCRIPTION')
     if system_product:
       mediator.SetValue('operating_system_product', system_product)
 
@@ -166,7 +166,7 @@ class LinuxSystemdOperatingSystemPlugin(
       value = value.strip('"')
       product_values[key] = value
 
-    system_product = product_values.get('PRETTY_NAME', None)
+    system_product = product_values.get('PRETTY_NAME')
     if system_product:
       mediator.SetValue('operating_system_product', system_product)
 

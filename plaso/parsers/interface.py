@@ -163,7 +163,7 @@ class BaseParser:
     Returns:
       BasePlugin: a plugin object or None if not available.
     """
-    plugin_class = cls._plugin_classes.get(plugin_name, None)
+    plugin_class = cls._plugin_classes.get(plugin_name)
     if plugin_class:
       return plugin_class()
 

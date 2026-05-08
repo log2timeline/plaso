@@ -78,7 +78,7 @@ class NativePythonOutputModule(text_file.TextFileOutputModule):
         '[Timestamp]:',
         f'  {timestamp_value:s}']
 
-    path_specification = field_values.get('path_spec', None)
+    path_specification = field_values.get('path_spec')
     if path_specification:
       lines_of_text.extend([
           '',
@@ -100,7 +100,7 @@ class NativePythonOutputModule(text_file.TextFileOutputModule):
         '[Additional attributes]:'])
     lines_of_text.extend(additional_attributes)
 
-    event_tag_labels = field_values.get('_event_tag_labels', None)
+    event_tag_labels = field_values.get('_event_tag_labels')
     if event_tag_labels:
       labels_string = ', '.join(f'\'{label:s}\'' for label in event_tag_labels)
       lines_of_text.extend([
@@ -174,7 +174,7 @@ class NativePythonOutputModule(text_file.TextFileOutputModule):
 
     for field_name in self._GENERATED_FIELD_VALUES:
       if field_name not in field_values:
-        field_value = field_values.get(field_name, None)
+        field_value = field_values.get(field_name)
         if field_value is None:
           field_value = self._field_formatting_helper.GetFormattedField(
               output_mediator, field_name, event, event_data, event_data_stream,

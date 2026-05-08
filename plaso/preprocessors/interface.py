@@ -131,7 +131,7 @@ class FileEntryArtifactPreprocessorPlugin(FileSystemArtifactPreprocessorPlugin):
     """
     try:
       file_entry = searcher.GetFileEntryByPathSpec(path_specification)
-    except IOError as exception:
+    except OSError as exception:
       relative_path = searcher.GetRelativePath(path_specification)
       if path_separator != file_system.PATH_SEPARATOR:
         relative_path_segments = file_system.SplitPath(relative_path)
@@ -253,13 +253,13 @@ class WindowsRegistryKeyArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
         for key_path in searcher.Find(find_specs=[find_spec]):
           try:
             registry_key = searcher.GetKeyByPath(key_path)
-          except IOError as exception:
+          except OSError as exception:
             raise errors.PreProcessFail((
                 f'Unable to retrieve Windows Registry key: {key_path:s} with '
                 f'error: {exception!s}'))
 
           if registry_key:
-            value_name = key_value_pair.get('value', None)
+            value_name = key_value_pair.get('value')
             self._ParseKey(mediator, registry_key, value_name)
 
 
@@ -286,7 +286,7 @@ class WindowsRegistryValueArtifactPreprocessorPlugin(
     """
     try:
       registry_value = registry_key.GetValueByName(value_name)
-    except IOError as exception:
+    except OSError as exception:
       raise errors.PreProcessFail((
           f'Unable to retrieve Windows Registry key: {registry_key.path:s} '
           f'value: {value_name:s} with error: {exception!s}'))

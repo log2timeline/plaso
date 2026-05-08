@@ -114,7 +114,7 @@ class FileStatParser(interface.FileEntryParser):
       tsk_fs_type = file_system.GetFsType()
 
       try:
-        type_string = self._TSK_FS_TYPE_MAP.get(tsk_fs_type, None)
+        type_string = self._TSK_FS_TYPE_MAP.get(tsk_fs_type)
       except TypeError:
         # Older version of pytsk3 can raise:
         # TypeError: unhashable type: 'pytsk3.TSK_FS_TYPE_ENUM'

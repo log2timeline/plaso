@@ -65,7 +65,7 @@ class DSVEventFormattingHelper(formatting_helper.EventFormattingHelper):
           event_tag)
 
       if field_value is None and field_name in self._custom_fields:
-        field_value = self._custom_fields.get(field_name, None)
+        field_value = self._custom_fields.get(field_name)
 
       if field_value is None:
         field_value = '-'

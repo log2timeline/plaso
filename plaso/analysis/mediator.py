@@ -85,7 +85,7 @@ class AnalysisMediator:
     """
     path = path.lower()
 
-    username = self._username_by_user_directory.get(path, None)
+    username = self._username_by_user_directory.get(path)
     if not username and self._user_accounts:
       for user_account in self._user_accounts:
         if user_account.user_directory:

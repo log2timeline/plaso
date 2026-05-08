@@ -345,7 +345,7 @@ class ChromeCacheParser(interface.FileEntryParser):
         try:
           cache_entry = self._data_block_file_parser.ParseCacheEntry(
               data_block_file_object, cache_address.block_offset)
-        except (IOError, errors.ParseError) as exception:
+        except (OSError, errors.ParseError) as exception:
           parser_mediator.ProduceExtractionWarning(
               f'Unable to parse cache entry with error: {exception!s}')
           break
@@ -423,7 +423,7 @@ class ChromeCacheParser(interface.FileEntryParser):
           try:
             self._data_block_file_parser.ParseFileObject(
                 parser_mediator, data_block_file_object)
-          except (IOError, errors.ParseError) as exception:
+          except (OSError, errors.ParseError) as exception:
             message = (
                 f'Unable to parse data block file: {cache_address.filename!s} '
                 f'with error: {exception!s}')
@@ -464,7 +464,7 @@ class ChromeCacheParser(interface.FileEntryParser):
 
     try:
       index_file_parser.ParseFileObject(parser_mediator, file_object)
-    except (IOError, errors.ParseError) as exception:
+    except (OSError, errors.ParseError) as exception:
       display_name = parser_mediator.GetDisplayName()
       raise errors.WrongParser(
           f'[{self.NAME:s}] unable to parse index file {display_name:s} with '

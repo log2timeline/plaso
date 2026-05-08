@@ -231,10 +231,10 @@ class MacOSBackgroundItemsPlistPlugin(
     decoded_plist = self._decoder.Decode(top_level)
 
     # Format version 2 is known to use the "backgroundItems" property.
-    background_items = decoded_plist.get('backgroundItems', None)
+    background_items = decoded_plist.get('backgroundItems')
 
     # Format version 4, 7 and 8 are known to use the "store" property.
-    store = decoded_plist.get('store', None)
+    store = decoded_plist.get('store')
 
     if not background_items and not store:
       parser_mediator.ProduceExtractionWarning(
@@ -242,11 +242,11 @@ class MacOSBackgroundItemsPlistPlugin(
       return
 
     if background_items:
-      for container in background_items.get('allContainers', None) or []:
+      for container in background_items.get('allContainers') or []:
         event_data = MacOSBackgroundItemEventData()
 
-        bookmark = container.get('bookmark', None) or {}
-        bookmark_data = bookmark.get('data', None)
+        bookmark = container.get('bookmark') or {}
+        bookmark_data = bookmark.get('data')
         if bookmark_data:
           try:
             self._ParseBookmarkData(bookmark_data, event_data)
@@ -259,10 +259,10 @@ class MacOSBackgroundItemsPlistPlugin(
           parser_mediator.ProduceEventData(event_data)
           event_data = MacOSBackgroundItemEventData()
 
-        internal_items = container.get('internalItems', None) or {}
+        internal_items = container.get('internalItems') or {}
 
-        bookmark = internal_items.get('bookmark', None) or {}
-        bookmark_data = bookmark.get('data', None)
+        bookmark = internal_items.get('bookmark') or {}
+        bookmark_data = bookmark.get('data')
         if bookmark_data:
           try:
             self._ParseBookmarkData(bookmark_data, event_data)
@@ -274,12 +274,12 @@ class MacOSBackgroundItemsPlistPlugin(
         parser_mediator.ProduceEventData(event_data)
 
     else:
-      items_by_user_identifier = store.get('itemsByUserIdentifier', None) or {}
+      items_by_user_identifier = store.get('itemsByUserIdentifier') or {}
       for container in items_by_user_identifier.values():
         for internal_item in container:
           event_data = MacOSBackgroundItemEventData()
 
-          bookmark_data = internal_item.get('bookmark', None)
+          bookmark_data = internal_item.get('bookmark')
           if bookmark_data:
             try:
               self._ParseBookmarkData(bookmark_data, event_data)

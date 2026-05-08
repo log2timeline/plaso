@@ -89,7 +89,7 @@ class MacOSUserPlistPlugin(interface.PlistPlugin):
     Returns:
       dfdatetime.TimeElements: date and time or None if not available.
     """
-    time_string = policy_values.get(value_name, None)
+    time_string = policy_values.get(value_name)
     if not time_string or time_string == '2001-01-01T00:00:00Z':
       return None
 
@@ -122,7 +122,7 @@ class MacOSUserPlistPlugin(interface.PlistPlugin):
     user_identifier = match['uid'][0]
     username = match['name'][0]
 
-    shadow_hash_data = match.get('ShadowHashData', None)
+    shadow_hash_data = match.get('ShadowHashData')
     if isinstance(shadow_hash_data, (list, tuple)):
       # Extract the hash password information, which is stored in
       # the attribute ShadowHashData which is a binary plist data.
@@ -133,7 +133,7 @@ class MacOSUserPlistPlugin(interface.PlistPlugin):
             f'unable to parse ShadowHashData with error: {exception!s}')
         property_list = {}
 
-      salted_hash = property_list.get('SALTED-SHA512-PBKDF2', None)
+      salted_hash = property_list.get('SALTED-SHA512-PBKDF2')
       if salted_hash:
         salt_hex_bytes = codecs.encode(salted_hash['salt'], 'hex')
         salt_string = codecs.decode(salt_hex_bytes, 'ascii')

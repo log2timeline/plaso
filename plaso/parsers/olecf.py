@@ -54,7 +54,7 @@ class OLECFParser(interface.FileObjectParser):
 
     try:
       olecf_file.open_file_object(file_object)
-    except (IOError, TypeError) as exception:
+    except (OSError, TypeError) as exception:
       parser_mediator.ProduceExtractionWarning(
           f'unable to open file with error: {exception!s}')
       return

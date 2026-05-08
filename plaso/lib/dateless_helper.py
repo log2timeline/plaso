@@ -82,7 +82,7 @@ class DateLessLogFormatHelper:
       int: month formatted as an integer, where January is 1.
     """
     # TODO: add support for localization.
-    return self._MONTH_DICT.get(month_string.lower(), None)
+    return self._MONTH_DICT.get(month_string.lower())
 
   def _GetRelativeYear(self):
     """Retrieves the relative year.

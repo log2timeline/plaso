@@ -189,7 +189,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     try:
       digest = self._CalculateDigestHash(file_entry, data_stream_name)
-    except (IOError, dfvfs_errors.BackEndError) as exception:
+    except (OSError, dfvfs_errors.BackEndError) as exception:
       logger.error((
           f'[skipping] unable to read content of file entry: {display_name:s} '
           f'with error: {exception!s}'))
@@ -209,7 +209,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     self._paths_by_hash[digest].append(path)
 
     if skip_duplicates:
-      duplicate_display_name = self._digests.get(digest, None)
+      duplicate_display_name = self._digests.get(digest)
       if duplicate_display_name:
         logger.warning((
             f'[skipping] file entry: {display_name:s} is a duplicate of: '
@@ -237,14 +237,14 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     try:
       self._WriteFileEntry(file_entry, data_stream_name, target_path)
-    except (IOError, dfvfs_errors.BackEndError) as exception:
+    except (OSError, dfvfs_errors.BackEndError) as exception:
       logger.error((
           f'[skipping] unable to export contents of file entry: '
           f'{display_name:s} with error: {exception!s}'))
 
       try:
         os.remove(target_path)
-      except (IOError, OSError):
+      except OSError:
         pass
 
   def _ExtractFileEntry(
@@ -325,7 +325,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
         logger.debug('Preprocessing done.')
 
-      except IOError as exception:
+      except OSError as exception:
         logger.error(f'Unable to preprocess with error: {exception!s}')
 
     # TODO: use system_configurations instead of knowledge base
@@ -437,7 +437,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     try:
       self._ParseSignatureIdentifiers(
           self._data_location, signature_identifiers)
-    except (IOError, ValueError) as exception:
+    except (OSError, ValueError) as exception:
       raise errors.BadConfigOption(exception)
 
     if self._artifact_filters or self._filter_file:
@@ -454,8 +454,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
       signature_identifiers (str): comma separated signature identifiers.
 
     Raises:
-      IOError: if the format specification file could not be read from
-          the specified data location.
       OSError: if the format specification file could not be read from
           the specified data location.
       ValueError: if no data location was specified.
@@ -468,12 +466,12 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     path = os.path.join(data_location, 'signatures.conf')
     if not os.path.exists(path):
-      raise IOError(f'No such format specification file: {path:s}')
+      raise OSError(f'No such format specification file: {path:s}')
 
     try:
       specification_store = self._ReadSpecificationFile(path)
-    except IOError as exception:
-      raise IOError((
+    except OSError as exception:
+      raise OSError((
           f'Unable to read format specification file: {path:s} with error: '
           f'{exception!s}'))
 
@@ -601,7 +599,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     try:
       specification_store = self._ReadSpecificationFile(path)
-    except IOError as exception:
+    except OSError as exception:
       raise errors.BadConfigOption((
           f'Unable to read format specification file: {path:s} with error: '
           f'{exception!s}'))

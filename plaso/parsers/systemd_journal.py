@@ -369,13 +369,13 @@ class SystemdJournalParser(
 
       event_data = SystemdJournalEventData()
 
-      event_data.body = fields.get('MESSAGE', None)
-      event_data.hostname = fields.get('_HOSTNAME', None)
-      event_data.reporter = fields.get('SYSLOG_IDENTIFIER', None)
+      event_data.body = fields.get('MESSAGE')
+      event_data.hostname = fields.get('_HOSTNAME')
+      event_data.reporter = fields.get('SYSLOG_IDENTIFIER')
       event_data.written_time = date_time
 
       if event_data.reporter and event_data.reporter != 'kernel':
-        event_data.pid = fields.get('_PID', fields.get('SYSLOG_PID', None))
+        event_data.pid = fields.get('_PID', fields.get('SYSLOG_PID'))
 
       parser_mediator.ProduceEventData(event_data)
 

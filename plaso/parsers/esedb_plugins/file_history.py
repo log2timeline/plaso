@@ -116,13 +116,13 @@ class FileHistoryESEDBPlugin(interface.ESEDBPlugin):
       event_data = FileHistoryNamespaceEventData()
       event_data.creation_time = self._GetFiletimeRecordValue(
            record_values, 'fileCreated')
-      event_data.file_attribute = record_values.get('fileAttrib', None)
-      event_data.identifier = record_values.get('id', None)
+      event_data.file_attribute = record_values.get('fileAttrib')
+      event_data.identifier = record_values.get('id')
       event_data.modification_time = self._GetFiletimeRecordValue(
           record_values, 'fileModified')
-      event_data.original_filename = strings.get(event_data.identifier, None)
-      event_data.parent_identifier = record_values.get('parentId', None)
-      event_data.usn_number = record_values.get('usn', None)
+      event_data.original_filename = strings.get(event_data.identifier)
+      event_data.parent_identifier = record_values.get('parentId')
+      event_data.usn_number = record_values.get('usn')
 
       parser_mediator.ProduceEventData(event_data)
 

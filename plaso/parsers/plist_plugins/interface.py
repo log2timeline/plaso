@@ -62,7 +62,7 @@ class NSKeyedArchiverDecoder:
       if key == '$class':
         continue
 
-      value_plist_property = plist_property.get(key, None)
+      value_plist_property = plist_property.get(key)
 
       value_plist_uid = self._GetPlistUID(value_plist_property)
       if value_plist_uid is None:
@@ -338,7 +338,7 @@ class NSKeyedArchiverDecoder:
     Raises:
       RuntimeError: if the NSObject cannot be decoded.
     """
-    class_property = plist_property.get('$class', None)
+    class_property = plist_property.get('$class')
     if not class_property:
       raise RuntimeError('$class property missing in NSObject.')
 
@@ -351,20 +351,20 @@ class NSKeyedArchiverDecoder:
       raise RuntimeError(
           f'Missing NSObject.$class with UID: {class_plist_uid:d}.')
 
-    class_name = referenced_property.get('$classname', None)
+    class_name = referenced_property.get('$classname')
     if not class_name:
       raise RuntimeError((
           f'$classname property missing in NSObject.$class with UID: '
           f'{class_plist_uid:d}.'))
 
-    classes = referenced_property.get('$classes', None)
+    classes = referenced_property.get('$classes')
     if not classes:
       raise RuntimeError((
           f'$classes property missing in NSObject.$class with UID: '
           f'{class_plist_uid:d}.'))
 
     for name in classes:
-      callback_method = self._CALLBACKS.get(name, None)
+      callback_method = self._CALLBACKS.get(name)
       if callback_method:
         break
 
@@ -517,7 +517,7 @@ class NSKeyedArchiverDecoder:
     Raises:
       RuntimeError: if the class name cannot be retrieved.
     """
-    class_property = plist_property.get('$class', None)
+    class_property = plist_property.get('$class')
     if not class_property:
       raise RuntimeError('Missing $class property.')
 
@@ -529,7 +529,7 @@ class NSKeyedArchiverDecoder:
     if not referenced_property:
       raise RuntimeError(f'Missing class with UID: {class_plist_uid:d}.')
 
-    class_name = referenced_property.get('$classname', None)
+    class_name = referenced_property.get('$classname')
     if not class_name:
       raise RuntimeError((
           f'$classname property missing in class with UID: '
@@ -708,7 +708,7 @@ class PlistPlugin(plugins.BasePlugin):
       dfdatetime.TimeElementsInMicroseconds: date and time or None if not
           available.
     """
-    datetime_value = plist_key.get(plist_value_name, None)
+    datetime_value = plist_key.get(plist_value_name)
     if not datetime_value:
       return None
 
@@ -754,7 +754,7 @@ class PlistPlugin(plugins.BasePlugin):
 
     if depth == 1:
       for key in keys:
-        match[key] = top_level.get(key, None)
+        match[key] = top_level.get(key)
 
     else:
       for _, parsed_key, parsed_value in self._RecurseKey(

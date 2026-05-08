@@ -17,7 +17,7 @@ class ChromeHistoryTypedCountFormatterHelper(
       output_mediator (OutputMediator): output mediator.
       event_values (dict[str, object]): event values.
     """
-    typed_count = event_values.get('typed_count', None)
+    typed_count = event_values.get('typed_count')
     if typed_count is not None:
       if typed_count == 0:
         url_typed_string = '(URL not typed directly)'

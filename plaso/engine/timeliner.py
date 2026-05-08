@@ -100,7 +100,7 @@ class EventDataTimeliner:
 
     lookup_key = event_data_stream_identifier.CopyToString()
 
-    base_date = self._base_dates.get(lookup_key, None)
+    base_date = self._base_dates.get(lookup_key)
     if base_date:
       return base_date
 
@@ -311,7 +311,7 @@ class EventDataTimeliner:
     if not path_spec or not path_spec.parent:
       return None
 
-    time_zone = self._time_zone_per_path_spec.get(path_spec.parent, None)
+    time_zone = self._time_zone_per_path_spec.get(path_spec.parent)
     if not time_zone:
       return None
 

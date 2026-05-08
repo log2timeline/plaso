@@ -138,7 +138,7 @@ class OneDriveLogFileParser(
           f'Unable to parse OneDrive keystore file: {file_entry.name!s}')
       return None
 
-    key = json_data[0].get('Key', None)
+    key = json_data[0].get('Key')
     if not key:
       parser_mediator.ProduceExtractionWarning(
           f'OneDrive keystore file: {file_entry.name!s} does not contain a key '

@@ -17,7 +17,7 @@ class ChromePreferencesPrimaryURLFormatterHelper(
       output_mediator (OutputMediator): output mediator.
       event_values (dict[str, object]): event values.
     """
-    primary_url = event_values.get('primary_url', None)
+    primary_url = event_values.get('primary_url')
     if primary_url == '':
       event_values['primary_url'] = 'local file'
 
@@ -44,8 +44,8 @@ class ChromePreferencesSecondaryURLFormatterHelper(
     # content_settings_pref.cc(295)] Invalid pattern strings: ,*
     # More research needed, could be related to https://crbug.com/132659
 
-    primary_url = event_values.get('primary_url', None)
-    secondary_url = event_values.get('secondary_url', None)
+    primary_url = event_values.get('primary_url')
+    secondary_url = event_values.get('secondary_url')
     if secondary_url == '':
       secondary_url = 'local file'
 

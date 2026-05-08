@@ -99,7 +99,7 @@ class OperaTypedHistoryParser(interface.FileObjectParser):
     xml = ElementTree.parse(file_object)
 
     for history_item in xml.iterfind('typed_history_item'):
-      last_typed_time = history_item.get('last_typed', None)
+      last_typed_time = history_item.get('last_typed')
       if last_typed_time is None:
         parser_mediator.ProduceExtractionWarning('missing last typed time.')
         continue
@@ -115,9 +115,9 @@ class OperaTypedHistoryParser(interface.FileObjectParser):
         continue
 
       event_data = OperaTypedHistoryEventData()
-      event_data.entry_type = history_item.get('type', None)
+      event_data.entry_type = history_item.get('type')
       event_data.last_typed_time = date_time
-      event_data.url = history_item.get('content', None)
+      event_data.url = history_item.get('content')
 
       if event_data.entry_type == 'selected':
         event_data.entry_selection = 'Filled from autocomplete.'

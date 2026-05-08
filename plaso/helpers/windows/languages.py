@@ -409,7 +409,7 @@ class WindowsLanguageHelper:
     Returns:
       str: language tag or None if not available.
     """
-    return cls._TAG_PER_LCID.get(lcid, None)
+    return cls._TAG_PER_LCID.get(lcid)
 
   @classmethod
   def GetLCIDForLanguageTag(cls, language_tag):
@@ -421,4 +421,4 @@ class WindowsLanguageHelper:
     Returns:
       int: Windows NT language identifier (LCID) or None if not available.
     """
-    return cls._LCID_PER_TAG.get(language_tag.lower(), None)
+    return cls._LCID_PER_TAG.get(language_tag.lower())

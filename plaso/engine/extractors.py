@@ -120,13 +120,13 @@ class EventDataExtractor:
     active_parser_names = ', '.join(sorted(self._parsers.keys()))
     logger.debug(f'Active parsers: {active_parser_names:s}')
 
-    self._filestat_parser = self._parsers.get('filestat', None)
+    self._filestat_parser = self._parsers.get('filestat')
     if 'filestat' in self._parsers:
       del self._parsers['filestat']
 
-    self._mft_parser = self._parsers.get('mft', None)
+    self._mft_parser = self._parsers.get('mft')
 
-    self._usnjrnl_parser = self._parsers.get('usnjrnl', None)
+    self._usnjrnl_parser = self._parsers.get('usnjrnl')
     if 'usnjrnl' in self._parsers:
       del self._parsers['usnjrnl']
 
@@ -186,8 +186,8 @@ class EventDataExtractor:
         parser.Parse(parser_mediator, file_object)
       result = self._PARSE_RESULT_SUCCESS
 
-    # We catch IOError so we can determine the parser that generated the error.
-    except (IOError, dfvfs_errors.BackEndError) as exception:
+    # We catch OSError so we can determine the parser that generated the error.
+    except (OSError, dfvfs_errors.BackEndError) as exception:
       display_name = parser_mediator.GetDisplayName(file_entry=file_entry)
       logger.warning((
           f'{parser.NAME:s} unable to parse file: {display_name:s} with error: '
@@ -229,7 +229,7 @@ class EventDataExtractor:
     """
     parse_results = self._PARSE_RESULT_UNSUPPORTED
     for parser_name in parser_names:
-      parser = self._parsers.get(parser_name, None)
+      parser = self._parsers.get(parser_name)
       if not parser:
         raise RuntimeError(f'Parser object missing for parser: {parser_name:s}')
 
@@ -397,7 +397,7 @@ class PathSpecExtractor:
             sub_file_entry, depth=depth + 1)
 
       except (
-          IOError, dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
+          OSError, dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
           dfvfs_errors.PathSpecError) as exception:
         logger.warning(f'{exception!s}')
 

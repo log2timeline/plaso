@@ -119,7 +119,7 @@ class ParsersManager:
           parser_expression = element[1:]
 
         parser_name, _, plugin_name = parser_expression.partition('/')
-        parser_class = cls._parser_classes.get(parser_name, None)
+        parser_class = cls._parser_classes.get(parser_name)
         if not parser_class:
           unknown_parser_elements.add(element)
           continue

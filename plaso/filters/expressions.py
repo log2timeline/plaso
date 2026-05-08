@@ -203,7 +203,7 @@ class EventExpression(Expression):
       raise errors.ParseError('Missing operator.')
 
     lookup_key = self.operator.lower()
-    operator = self._OPERATORS.get(lookup_key, None)
+    operator = self._OPERATORS.get(lookup_key)
     if not operator:
       raise errors.ParseError(f'Unknown operator: {self.operator:s}.')
 

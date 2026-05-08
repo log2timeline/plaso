@@ -51,7 +51,6 @@ class ESEDatabase:
       file_object (dfvfs.FileIO): file-like object.
 
     Raises:
-      IOError: if the file-like object cannot be read.
       OSError: if the file-like object cannot be read.
       ValueError: if the file-like object is missing.
     """
@@ -108,7 +107,7 @@ class ESEDBParser(interface.FileObjectParser):
 
     try:
       database.Open(file_object)
-    except (IOError, ValueError) as exception:
+    except (OSError, ValueError) as exception:
       parser_mediator.ProduceExtractionWarning(
           f'unable to open file with error: {exception!s}')
       return

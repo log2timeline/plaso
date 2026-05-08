@@ -161,7 +161,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
     with self.assertRaises(ValueError):
       test_tool._ParseSignatureIdentifiers(None, 'gzip')
 
-    with self.assertRaises(IOError):
+    with self.assertRaises(OSError):
       test_path = os.path.join(os.sep, 'bogus')
       test_tool._ParseSignatureIdentifiers(test_path, 'gzip')
 

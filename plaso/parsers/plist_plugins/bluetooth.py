@@ -73,7 +73,7 @@ class MacOSBluetoothPlistPlugin(interface.PlistPlugin):
     for device_identifier, plist_key in match.get('DeviceCache', {}).items():
       event_data = MacOSBluetoothEventData()
       event_data.device_identifier = device_identifier
-      event_data.device_name = plist_key.get('Name', None)
+      event_data.device_name = plist_key.get('Name')
       event_data.inquiry_time = self._GetDateTimeValueFromPlistKey(
           plist_key, 'LastInquiryUpdate')
       event_data.is_paired = device_identifier in paired_devices

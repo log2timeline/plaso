@@ -65,7 +65,7 @@ class WindowsProfilePathEnvironmentVariableArtifactPreprocessorPlugin(
     """
     try:
       registry_value = registry_key.GetValueByName('ProfilesDirectory')
-    except IOError as exception:
+    except OSError as exception:
       raise errors.PreProcessFail((
           f'Unable to retrieve Windows Registry key: {registry_key.path:s} '
           f'value: ProfilesDirectory with error: {exception!s}'))
@@ -78,7 +78,7 @@ class WindowsProfilePathEnvironmentVariableArtifactPreprocessorPlugin(
 
     try:
       registry_value = registry_key.GetValueByName(value_name)
-    except IOError as exception:
+    except OSError as exception:
       raise errors.PreProcessFail((
           f'Unable to retrieve Windows Registry key: {registry_key.path:s} '
           f'value: {value_name:s} with error: {exception!s}'))

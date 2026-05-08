@@ -128,7 +128,7 @@ class XLSXOutputModule(interface.OutputModule):
           event_tag)
 
       if field_value is None and field_name in self._custom_fields:
-        field_value = self._custom_fields.get(field_name, None)
+        field_value = self._custom_fields.get(field_name)
 
       if field_value is None:
         field_value = '-'
@@ -146,7 +146,6 @@ class XLSXOutputModule(interface.OutputModule):
       path (Optional[str]): path of the output file.
 
     Raises:
-      IOError: if the specified output file already exists.
       OSError: if the specified output file already exists.
       ValueError: if path is not set.
     """
@@ -154,7 +153,7 @@ class XLSXOutputModule(interface.OutputModule):
       raise ValueError('Missing filename.')
 
     if os.path.isfile(path):
-      raise IOError(
+      raise OSError(
           f'Unable to use an already existing file for output [{path:s}]')
 
     options = {
@@ -209,7 +208,7 @@ class XLSXOutputModule(interface.OutputModule):
       field_values (dict[str, str]): output field values per name.
     """
     for column_index, field_name in enumerate(self._field_names):
-      field_value = field_values.get(field_name, None)
+      field_value = field_values.get(field_name)
       if field_name == 'datetime' and field_value:
         self._sheet.write_datetime(self._current_row, column_index, field_value)
         column_width = len(self._timestamp_format) + 2

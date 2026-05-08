@@ -78,7 +78,7 @@ class WinPrefetchParser(interface.FileObjectParser):
       scca_file (pyscca.file): Windows Prefetch (SCCA) file
 
     Raises:
-      IOError: if the Windows Prefetch (SCCA) file cannot be parsed.
+      OSError: if the Windows Prefetch (SCCA) file cannot be parsed.
     """
     format_version = scca_file.format_version
     executable_filename = scca_file.executable_filename
@@ -177,14 +177,14 @@ class WinPrefetchParser(interface.FileObjectParser):
 
     try:
       scca_file.open_file_object(file_object)
-    except IOError as exception:
+    except OSError as exception:
       parser_mediator.ProduceExtractionWarning(
           f'unable to open file with error: {exception!s}')
       return
 
     try:
       self._ParseSCCAFile(parser_mediator, scca_file)
-    except IOError as exception:
+    except OSError as exception:
       parser_mediator.ProduceExtractionWarning(
           f'unable to parse file with error: {exception!s}')
     finally:

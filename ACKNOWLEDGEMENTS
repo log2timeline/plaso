@@ -129,20 +129,20 @@ Test data:
 * the contents of the *.exe and *.exe.mui files on bdetogo.raw has been
   filled with 0-byte values.
 
-Copied with permission from [the GRR project](https://github.com/google/grr).
+Copied with permission from [the GRR project](https://github.com/google/grr):
 * History
 * index.dat
 * places.sqlite
 
-Copied with permission granted by Jerome Marty.
+Copied with permission granted by Jerome Marty:
 * WUAUCLT.EXE-830BCC14.pf
 
-Copied with permission granted by Antoine Brodin.
+Copied with permission granted by Antoine Brodin:
 * PartitionsEx-WebCacheV01.dat
 * win10-Amcache.hve
 
-Copied with permission granted by Rob Lee.
 Copyright SANS Institute - Digital Forensics and Incident Response.
+Copied with permission granted by Rob Lee:
 * 1b4dd67f29cb1962.automaticDestinations-ms
 * 5afe4de1b92fc382.customDestinations-ms
 * Catalog1.edb
@@ -156,13 +156,13 @@ Copyright SANS Institute - Digital Forensics and Incident Response.
 * System.evtx
 * Windows.edb
 
-Copied with permission granted by Ange Albertini.
+Copied with permission granted by Ange Albertini:
 * test_driver.sys
 
-Copied with permission from [the Greendale data set](https://github.com/dfirlabs/greendale-specimens).
+Copied with permission from [the Greendale data set](https://github.com/dfirlabs/greendale-specimens):
 * agdb/student-pc1/AgGlGlobalHistory.db
 * mdmp/student-pc1/WER1090.tmp.mdmp
 
-Generated with the [Windows PE/COFF resource file specimens project](https://github.com/dfirlabs/wrc-specimens).
+Generated with the [Windows PE/COFF resource file specimens project](https://github.com/dfirlabs/wrc-specimens):
 * wrc-test-wevt_template.dll
 

@@ -18,11 +18,10 @@ class RedisStorageWriter(writer.StorageWriter):
       EventData: None as there are no newly written event data.
 
     Raises:
-      IOError: if the storage writer is closed.
       OSError: if the storage writer is closed.
     """
     if not self._store:
-      raise IOError('Unable to read from closed storage writer.')
+      raise OSError('Unable to read from closed storage writer.')
 
     return None
 
@@ -34,11 +33,10 @@ class RedisStorageWriter(writer.StorageWriter):
       EventData: None as there are no newly written event data.
 
     Raises:
-      IOError: if the storage writer is closed.
       OSError: if the storage writer is closed.
     """
     if not self._store:
-      raise IOError('Unable to read from closed storage writer.')
+      raise OSError('Unable to read from closed storage writer.')
 
     return None
 
@@ -53,11 +51,10 @@ class RedisStorageWriter(writer.StorageWriter):
       EventSource: None as there are no newly written event sources.
 
     Raises:
-      IOError: if the storage writer is closed.
       OSError: if the storage writer is closed.
     """
     if not self._store:
-      raise IOError('Unable to read from closed storage writer.')
+      raise OSError('Unable to read from closed storage writer.')
 
     return None
 
@@ -69,11 +66,10 @@ class RedisStorageWriter(writer.StorageWriter):
       EventSource: None as there are no newly written event sources.
 
     Raises:
-      IOError: if the storage writer is closed.
       OSError: if the storage writer is closed.
     """
     if not self._store:
-      raise IOError('Unable to read from closed storage writer.')
+      raise OSError('Unable to read from closed storage writer.')
 
     return None
 
@@ -91,11 +87,10 @@ class RedisStorageWriter(writer.StorageWriter):
       task_identifier (Optional[str]): task identifier.
 
     Raises:
-      IOError: if the storage writer is already opened.
       OSError: if the storage writer is already opened.
     """
     if self._store:
-      raise IOError('Storage writer already opened.')
+      raise OSError('Storage writer already opened.')
 
     self._store = redis_store.RedisAttributeContainerStore()
 

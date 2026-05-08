@@ -64,21 +64,19 @@ class BaseRedisAttributeContainerStore(
     """Raises if the attribute container store is not readable.
 
     Raises:
-      IOError: when the attribute container store is closed.
       OSError: when the attribute container store is closed.
     """
     if not self._redis_client:
-      raise IOError('Unable to read, client not connected.')
+      raise OSError('Unable to read, client not connected.')
 
   def _RaiseIfNotWritable(self):
     """Raises if the attribute container store is not writable.
 
     Raises:
-      IOError: when the attribute container store is closed or read-only.
       OSError: when the attribute container store is closed or read-only.
     """
     if not self._redis_client:
-      raise IOError('Unable to write, client not connected.')
+      raise OSError('Unable to write, client not connected.')
 
   @classmethod
   def _SetClientName(cls, redis_client, name):
@@ -115,12 +113,12 @@ class BaseRedisAttributeContainerStore(
     try:
       json_string = json.dumps(json_dict)
     except TypeError as exception:
-      raise IOError((
+      raise OSError((
           f'Unable to serialize attribute container: '
           f'{container.CONTAINER_TYPE:s} with error: {exception!s}.'))
 
     if not json_string:
-      raise IOError((
+      raise OSError((
           f'Unable to serialize attribute container: '
           f'{container.CONTAINER_TYPE:s}'))
 
@@ -147,12 +145,12 @@ class BaseRedisAttributeContainerStore(
     try:
       json_string = json.dumps(json_dict)
     except TypeError as exception:
-      raise IOError((
+      raise OSError((
           f'Unable to serialize attribute container: '
           f'{container.CONTAINER_TYPE:s} with error: {exception!s}.'))
 
     if not json_string:
-      raise IOError((
+      raise OSError((
           f'Unable to serialize attribute container: '
           f'{container.CONTAINER_TYPE:s}'))
 
@@ -174,11 +172,10 @@ class BaseRedisAttributeContainerStore(
     """Closes the store.
 
     Raises:
-      IOError: if the store is already closed.
       OSError: if the store is already closed.
     """
     if not self._redis_client:
-      raise IOError('Store already closed.')
+      raise OSError('Store already closed.')
 
     self._redis_client = None
 
@@ -305,11 +302,10 @@ class BaseRedisAttributeContainerStore(
           DEFAULT_REDIS_URL will be used.
 
     Raises:
-      IOError: if the store is already connected to a Redis instance.
       OSError: if the store is already connected to a Redis instance.
     """
     if self._redis_client:
-      raise IOError('Redis client already connected')
+      raise OSError('Redis client already connected')
 
     if not redis_client:
       if not url:
@@ -361,7 +357,6 @@ class RedisAttributeContainerStore(BaseRedisAttributeContainerStore):
       AttributeContainer: attribute container or None.
 
     Raises:
-      IOError: if the serialized data cannot be decoded.
       OSError: if the serialized data cannot be decoded.
     """
     if not serialized_data:
@@ -375,12 +370,12 @@ class RedisAttributeContainerStore(BaseRedisAttributeContainerStore):
       attribute_container = self._serializer.ReadSerialized(serialized_string)
 
     except UnicodeDecodeError as exception:
-      raise IOError(
+      raise OSError(
           f'Unable to decode serialized data with error: {exception!s}')
 
     except (TypeError, ValueError) as exception:
       # TODO: consider re-reading attribute container with error correction.
-      raise IOError(f'Unable to read serialized data with error: {exception!s}')
+      raise OSError(f'Unable to read serialized data with error: {exception!s}')
 
     finally:
       if self._serializers_profiler:
@@ -398,7 +393,6 @@ class RedisAttributeContainerStore(BaseRedisAttributeContainerStore):
       bytes: serialized attribute container.
 
     Raises:
-      IOError: if the attribute container cannot be serialized.
       OSError: if the attribute container cannot be serialized.
     """
     if self._serializers_profiler:
@@ -409,7 +403,7 @@ class RedisAttributeContainerStore(BaseRedisAttributeContainerStore):
       attribute_container_data = self._serializer.WriteSerialized(
           attribute_container)
       if not attribute_container_data:
-        raise IOError((
+        raise OSError((
             f'Unable to serialize attribute container: '
             f'{attribute_container.CONTAINER_TYPE:s}'))
 

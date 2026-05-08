@@ -57,7 +57,7 @@ class YaraRulesArgumentsHelper(interface.ArgumentsHelper):
         with io.open(path, 'rt', encoding='utf-8') as rules_file:
           yara_rules_string = rules_file.read()
 
-      except IOError as exception:
+      except OSError as exception:
         raise errors.BadConfigOption((
             f'Unable to read Yara rules file: {path:s} with error: '
             f'{exception!s}'))

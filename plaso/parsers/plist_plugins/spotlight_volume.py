@@ -50,7 +50,7 @@ class SpotlightVolumeConfigurationPlistPlugin(interface.PlistPlugin):
       event_data = SpotlightVolumeConfigurationEventData()
       event_data.creation_time = self._GetDateTimeValueFromPlistKey(
           plist_key, 'CreationDate')
-      event_data.partial_path = plist_key.get('PartialPath', None)
+      event_data.partial_path = plist_key.get('PartialPath')
       event_data.volume_identifier = volume_identifier
 
       parser_mediator.ProduceEventData(event_data)
