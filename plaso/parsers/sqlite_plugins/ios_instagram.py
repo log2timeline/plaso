@@ -6,12 +6,9 @@ The iOS Instagram threads database file is typically stored in:
 
 import plistlib
 
-from plistlib import UID
-
-from dfdatetime import cocoa_time as dfdatetime_cocoa_time
-
 from plaso.containers import events
 from plaso.parsers import sqlite
+from plaso.parsers.plist_plugins import interface as plist_interface
 from plaso.parsers.sqlite_plugins import interface
 
 
@@ -23,7 +20,7 @@ class IOSInstagramThreadsEventData(events.EventData):
     query (str): SQL query that was used to obtain the event data.
     sender_identifier (str): unique identifier (or primary key) of the sender
         account.
-    sent_time (dfdatetime.DateTimeValues): Date and time when the message was 
+    sent_time (dfdatetime.DateTimeValues): Date and time when the message was
         sent.
     shared_media_identifier (str): Identifier of the media shared in the thread.
     shared_media_url (str): URL to the media content shared in the thread.
@@ -58,9 +55,10 @@ class IOSInstagramPlugin(interface.SQLitePlugin):
       'messages': frozenset(['message_id', 'archive']),
       'threads': frozenset(['thread_id','metadata'])}
 
+  # Note that the threads table is parsed first to determine the usernames.
   QUERIES = [
-      (('SELECT thread_id, metadata FROM threads'), 'ParseUserRow'),
-      (('SELECT message_id, archive FROM messages'), 'ParseThreadRow')]
+      (('SELECT thread_id, metadata FROM threads'), '_ParseThreadsRow'),
+      (('SELECT message_id, archive FROM messages'), '_ParseMessagesRow')]
 
   SCHEMAS = [{
       'inbox_metadata': (
@@ -94,11 +92,12 @@ class IOSInstagramPlugin(interface.SQLitePlugin):
   def __init__(self):
     """Initializes the plugin."""
     super().__init__()
+    self._plist_decoder = plist_interface.NSKeyedArchiverDecoder()
     self.users = {}
 
-  def ParseUserRow(self, parser_mediator, query, row, **unused_kwargs):
-    """Parses a thread metadata row
-    
+  def _ParseThreadsRow(self, parser_mediator, query, row, **unused_kwargs):
+    """Parses a row in the threads table.
+
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfVFS.
@@ -107,53 +106,46 @@ class IOSInstagramPlugin(interface.SQLitePlugin):
     """
     query_hash = hash(query)
 
-    def GetField(obj, key, objects):
-      val = obj.get(key)
-      return objects[val.data] if isinstance(val, UID) else val
+    thread_identifier = self._GetRowValue(query_hash, row, 'thread_id')
 
-    metadata_blob = self._GetRowValue(query_hash, row, 'metadata')
-    if not metadata_blob or not metadata_blob.startswith(b'bplist'):
+    metadata = self._GetRowValue(query_hash, row, 'metadata')
+    if not metadata:
+      return
+
+    if not metadata.startswith(b'bplist'):
+      parser_mediator.ProduceExtractionWarning(
+          f'Thread: {thread_identifier:s} unsupported metadata - not a binary '
+          f'plist.')
       return
 
     try:
-      plist_data = plistlib.loads(metadata_blob)
-      objects = plist_data["$objects"]
-      root_uid = plist_data["$top"]["root"].data
-      root = objects[root_uid]
+      top_level_object = plistlib.loads(metadata)
 
-      user = GetField(root, "NSArray<IGUser *>*users", objects)
-      if isinstance(user, dict) and "NS.objects" in user:
-        user_uids = user["NS.objects"]
-        for user_uid in user_uids:
-          user_obj = (
-            objects[user_uid.data]
-            if isinstance(user_uid, UID)
-            else user_uid
-        )
-          if isinstance(user_obj, dict):
-            user_pk = GetField(user_obj, "pk", objects)
-            user_full_name = GetField(user_obj, "fullName", objects)
-            if user_full_name:
-              self.users[user_pk] = user_full_name
-            else:
-              self.users[user_pk] = None
-
-      inviter = GetField(root, "IGUser*inviter", objects)
-      if inviter:
-        inviter_pk = GetField(inviter, "pk", objects)
-        inviter_full_name = GetField(inviter, "fullName", objects)
-        if inviter_full_name:
-          self.users[inviter_pk] = inviter_full_name
-        else:
-          self.users[inviter_pk] = None
-
-    except (AttributeError, IndexError, KeyError, TypeError,
-            plistlib.InvalidFileException) as exception:
+    except plistlib.InvalidFileException as exception:
       parser_mediator.ProduceExtractionWarning(
-          f'Unable to parse thread metadata with error: {exception!s}')
+          f'Thread: {thread_identifier:s} unable to parse metadata plist with '
+          f'error: {exception!s}')
+      return
 
-  def ParseThreadRow(self, parser_mediator, query, row, **unused_kwargs):
-    """Parses a message row.
+    if not self._plist_decoder.IsEncoded(top_level_object):
+      parser_mediator.ProduceExtractionWarning(
+          f'Thread: {thread_identifier:s} unsupported metadata plist encoding.')
+      return
+
+    decoded_plist = self._plist_decoder.Decode(top_level_object)
+
+    inviter = decoded_plist.get('IGUser*inviter', {})
+    user_identifier = inviter.get("pk")
+    if user_identifier:
+      self.users[user_identifier] = inviter.get("fullName") or None
+
+    for user in decoded_plist.get('NSArray<IGUser *>*users') or []:
+      user_identifier = user.get("pk")
+      if user_identifier:
+        self.users[user_identifier] = user.get("fullName") or None
+
+  def _ParseMessagesRow(self, parser_mediator, query, row, **unused_kwargs):
+    """Parses a row in the messages table.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
@@ -162,118 +154,67 @@ class IOSInstagramPlugin(interface.SQLitePlugin):
       row (sqlite3.Row): row.
     """
     query_hash = hash(query)
-
-    def GetField(obj, key, objects):
-      val = obj.get(key)
-      return objects[val.data] if isinstance(val, UID) else val
-
-    def GetNestedField(obj, keys, objects):
-      try:
-        for key in keys:
-          obj = GetField(obj, key, objects)
-        return obj
-      except (AttributeError, IndexError, KeyError, TypeError):
-        return None
 
     message_identifier = self._GetRowValue(query_hash, row, 'message_id')
-    archive_blob = self._GetRowValue(query_hash, row, 'archive')
 
-    if not archive_blob or not archive_blob.startswith(b'bplist'):
+    archive = self._GetRowValue(query_hash, row, 'archive')
+    if not archive:
+      parser_mediator.ProduceExtractionWarning(
+          f'Message: {message_identifier:s} missing archive value')
+      return
+
+    if not archive.startswith(b'bplist'):
+      parser_mediator.ProduceExtractionWarning(
+          f'Message: {message_identifier:s} unsupported archive value - not a '
+          f'binary plist.')
       return
 
     try:
-      plist_data = plistlib.loads(archive_blob)
-      objects = plist_data["$objects"]
-      root_uid = plist_data["$top"]["root"].data
-      root = objects[root_uid]
+      top_level_object = plistlib.loads(archive)
 
-      metadata = GetField(
-            root, "IGDirectPublishedMessageMetadata*metadata", objects)
-      if metadata:
-        sender_identifier = GetField(metadata, "NSString*senderPk", objects)
-        server_timestamp_raw = GetField(
-                metadata, "NSDate*serverTimestamp", objects)
-      else:
-        sender_identifier = None
-        server_timestamp_raw = None
-
-      server_timestamp = None
-      if isinstance(
-        server_timestamp_raw, dict) and "NS.time" in server_timestamp_raw:
-        timestamp_value = server_timestamp_raw["NS.time"]
-        server_timestamp = dfdatetime_cocoa_time.CocoaTime(
-                timestamp=timestamp_value)
-
-      content = GetField(
-            root, "IGDirectPublishedMessageContent*content", objects)
-      if content:
-        message = GetField(content, "NSString*string", objects)
-        thread_activity = GetField(
-            content,
-            "IGDirectThreadActivityAnnouncement*threadActivity", 
-            objects
-        )
-        media = GetField(
-                content, "IGDirectPublishedMessageMedia*media", objects)
-      else:
-        message = None
-        thread_activity = None
-        media = None
-
-      if thread_activity:
-        video_chat_title = GetField(
-            thread_activity, "NSString*voipTitle", objects)
-        video_chat_call_identifier = GetField(
-            thread_activity, "NSString*videoCallId", objects)
-      else:
-        video_chat_title = None
-        video_chat_call_identifier = None
-
-      shared_media_identifier = None
-      shared_media_url = None
-      if media:
-        shared_media_identifier = GetNestedField(media, [
-          "IGDirectPublishedMessagePermanentMedia*permanentMedia",
-          "IGPhoto*photo",
-          "kIGPhotoMediaID"
-            ], objects)
-        image_versions = GetNestedField(media, [
-          "IGDirectPublishedMessagePermanentMedia*permanentMedia",
-          "IGPhoto*photo",
-          "imageVersions"
-            ], objects)
-        if isinstance(
-          image_versions, dict) and "NS.objects" in image_versions:
-          first_image_uid = image_versions["NS.objects"][0]
-          if isinstance(first_image_uid, UID):
-            first_image_obj = objects[first_image_uid.data]
-            shared_media_url = GetNestedField(first_image_obj, [
-              "url",
-              "NS.relative"
-            ], objects)
-
-      username = None
-      if sender_identifier:
-        username = self.users.get(sender_identifier)
-
-      event_data = IOSInstagramThreadsEventData()
-      event_data.message = message
-      event_data.query = query
-      event_data.sender_identifier = sender_identifier
-      event_data.sent_time = server_timestamp
-      event_data.shared_media_identifier = shared_media_identifier
-      event_data.shared_media_url = shared_media_url
-      event_data.username = username
-      event_data.video_chat_call_identifier = video_chat_call_identifier
-      event_data.video_chat_title = video_chat_title
-
-      parser_mediator.ProduceEventData(event_data)
-
-    except (AttributeError, IndexError, KeyError, TypeError,
-            plistlib.InvalidFileException) as exception:
+    except plistlib.InvalidFileException as exception:
       parser_mediator.ProduceExtractionWarning(
-          f'Unable to parse archive for message_id {message_identifier:s} '
-          f'with error: {exception!s}')
+          f'Message: {message_identifier:s} unable to parse archive plist with '
+          f'error: {exception!s}')
+      return
+
+    if not self._plist_decoder.IsEncoded(top_level_object):
+      parser_mediator.ProduceExtractionWarning(
+          f'Message: {message_identifier:s} unsupported archive plist '
+          f'encoding.')
+      return
+
+    decoded_plist = self._plist_decoder.Decode(top_level_object)
+
+    content = decoded_plist.get('IGDirectPublishedMessageContent*content', {})
+    metadata = decoded_plist.get(
+        'IGDirectPublishedMessageMetadata*metadata', {})
+
+    media = content.get('IGDirectPublishedMessageMedia*media', {})
+    thread_activity = content.get(
+        'IGDirectThreadActivityAnnouncement*threadActivity', {})
+
+    photo = media.get(
+        'IGDirectPublishedMessagePermanentMedia*permanentMedia', {}).get(
+            'IGPhoto*photo', {})
+    image_versions = photo.get('imageVersions')
+
+    event_data = IOSInstagramThreadsEventData()
+    event_data.message = content.get('NSString*string')
+    event_data.query = query
+    event_data.sender_identifier = metadata.get('NSString*senderPk')
+    event_data.sent_time = metadata.get('NSDate*serverTimestamp')
+    event_data.shared_media_identifier = photo.get('kIGPhotoMediaID')
+    event_data.video_chat_call_identifier = thread_activity.get(
+        'NSString*videoCallId')
+    event_data.video_chat_title = thread_activity.get('NSString*voipTitle')
+
+    if event_data.sender_identifier:
+      event_data.username = self.users.get(event_data.sender_identifier)
+    if image_versions:
+      event_data.shared_media_url = image_versions[0].get("url")
+
+    parser_mediator.ProduceEventData(event_data)
 
 
 sqlite.SQLiteParser.RegisterPlugin(IOSInstagramPlugin)
