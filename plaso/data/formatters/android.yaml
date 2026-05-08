@@ -18,11 +18,9 @@ message:
 - 'Longitude: {longitude}'
 - 'Device name: {device_name}'
 - 'First discovery: {first_discovery}'
-- 'Last seen: {last_seen}'
 short_message:
 - 'Device address: {device_address}'
 - 'Signal strength: {rssi}'
-- 'Last seen: {last_seen}'
 separator: ', '
 short_source: 'AirGuard AirTag Tracker'
 source: 'AirGuard AirTag Tracker event data.'
