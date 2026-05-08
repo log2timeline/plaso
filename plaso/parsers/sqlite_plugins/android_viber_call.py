@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """SQLite parser plugin for Android Viber call history database files."""
 
 from dfdatetime import java_time as dfdatetime_java_time
@@ -25,7 +24,7 @@ class AndroidViberCallEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(AndroidViberCallEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.number = None
     self.type = None
     self.viber_call_type = None
