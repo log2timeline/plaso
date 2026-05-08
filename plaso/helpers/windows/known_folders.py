@@ -115,4 +115,4 @@ class WindowsKnownFoldersHelper:
       str: path represented by the known folder identifier or None of not
           available.
     """
-    return cls._PATH_PER_GUID.get(known_folder_identifier.lower(), None)
+    return cls._PATH_PER_GUID.get(known_folder_identifier.lower())

@@ -75,7 +75,7 @@ class YAMLTimelinerConfigurationFile:
       different_keys = ', '.join(different_keys)
       raise errors.ParseError(f'Undefined keys: {different_keys:s}')
 
-    data_type = timeliner_definition_values.get('data_type', None)
+    data_type = timeliner_definition_values.get('data_type')
     if not data_type:
       raise errors.ParseError(
           'Invalid event timeliner definition missing data type.')

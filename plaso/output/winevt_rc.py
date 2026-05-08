@@ -612,7 +612,6 @@ class WinevtResourcesAttributeContainerStore(
           to see if it can be read and written to.
 
     Raises:
-      IOError: when there is an error querying the attribute container store.
       OSError: when there is an error querying the attribute container store.
     """
     metadata_values = self._ReadMetadata()
@@ -620,10 +619,10 @@ class WinevtResourcesAttributeContainerStore(
     self._CheckStorageMetadata(
         metadata_values, check_readable_only=check_readable_only)
 
-    string_format = metadata_values.get('string_format', None)
+    string_format = metadata_values.get('string_format')
 
     if string_format not in ('pep3101', 'wrc'):
-      raise IOError(f'Unsupported string format: {string_format:s}')
+      raise OSError(f'Unsupported string format: {string_format:s}')
 
     self.format_version = metadata_values['format_version']
     self.serialization_format = metadata_values['serialization_format']
@@ -721,13 +720,13 @@ class WinevtResourcesHelper:
       lookup_key = f'{provider_identifier:s}:0x{message_identifier:08x}'
       if event_version is not None:
         lookup_key = f'{lookup_key:s}:{event_version:d}'
-      message_string = self._message_string_cache.get(lookup_key, None)
+      message_string = self._message_string_cache.get(lookup_key)
 
     if not message_string and log_source:
       lookup_key = f'{log_source:s}:0x{message_identifier:08x}'
       if event_version is not None:
         lookup_key = f'{lookup_key:s}:{event_version:d}'
-      message_string = self._message_string_cache.get(lookup_key, None)
+      message_string = self._message_string_cache.get(lookup_key)
 
     if message_string:
       self._message_string_cache.move_to_end(lookup_key, last=False)
@@ -885,11 +884,11 @@ class WinevtResourcesHelper:
 
     if provider_identifier:
       lookup_key = provider_identifier.lower()
-      provider = self._windows_eventlog_providers.get(lookup_key, None)
+      provider = self._windows_eventlog_providers.get(lookup_key)
 
     if not provider:
       lookup_key = log_source.lower()
-      provider = self._windows_eventlog_providers.get(lookup_key, None)
+      provider = self._windows_eventlog_providers.get(lookup_key)
 
     return provider, lookup_key
 
@@ -923,7 +922,7 @@ class WinevtResourcesHelper:
               WinevtResourcesAttributeContainerStore())
           self._winevt_database_reader.Open(path=database_path, read_only=True)  # pylint: disable=no-value-for-parameter,unexpected-keyword-arg
           result = True
-        except IOError:
+        except OSError:
           result = False
 
       if not result:

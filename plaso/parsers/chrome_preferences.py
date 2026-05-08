@@ -110,7 +110,7 @@ class ChromePreferencesParser(interface.FileObjectParser):
           and other components, such as storage and dfvfs.
     """
     for extension_id, extension in sorted(settings_dict.items()):
-      install_time = extension.get('install_time', None)
+      install_time = extension.get('install_time')
       if not install_time:
         parser_mediator.ProduceExtractionWarning(
             f'installation time missing for extension ID {extension_id!s}')
@@ -124,7 +124,7 @@ class ChromePreferencesParser(interface.FileObjectParser):
             f'{extension_id!s}'))
         continue
 
-      manifest = extension.get('manifest', None)
+      manifest = extension.get('manifest')
       if not manifest:
         parser_mediator.ProduceExtractionWarning(
             f'manifest missing for extension ID {extension_id!s}')
@@ -132,10 +132,10 @@ class ChromePreferencesParser(interface.FileObjectParser):
 
       event_data = ChromeExtensionInstallationEventData()
       event_data.extension_identifier = extension_id
-      event_data.extension_name = manifest.get('name', None)
+      event_data.extension_name = manifest.get('name')
       event_data.installation_time = dfdatetime_webkit_time.WebKitTime(
           timestamp=install_time)
-      event_data.path = extension.get('path', None)
+      event_data.path = extension.get('path')
 
       parser_mediator.ProduceEventData(event_data)
 
@@ -153,7 +153,7 @@ class ChromePreferencesParser(interface.FileObjectParser):
 
       exception_dict = exceptions_dict.get(permission, {})
       for urls, url_dict in exception_dict.items():
-        last_used = url_dict.get('last_used', None)
+        last_used = url_dict.get('last_used')
         if not last_used:
           continue
 
@@ -214,7 +214,7 @@ class ChromePreferencesParser(interface.FileObjectParser):
           f'[{self.NAME!s}] Unable to parse file '
           f'{display_name!s} as JSON: {exception!s}')
 
-    except IOError as exception:
+    except OSError as exception:
       display_name = parser_mediator.GetDisplayName()
       raise errors.WrongParser(
           f'[{self.NAME!s}] Unable to open file '
@@ -265,7 +265,7 @@ class ChromePreferencesParser(interface.FileObjectParser):
 
         parser_mediator.ProduceEventData(event_data)
 
-    browser_dict = json_dict.get('browser', None)
+    browser_dict = json_dict.get('browser')
     if browser_dict and 'last_clear_browsing_data_time' in browser_dict:
       last_clear_history_timestamp = browser_dict.get(
           'last_clear_browsing_data_time', None)
@@ -282,11 +282,11 @@ class ChromePreferencesParser(interface.FileObjectParser):
 
     self._ExtractExtensionInstallEvents(extensions_dict, parser_mediator)
 
-    profile_dict = json_dict.get('profile', None)
+    profile_dict = json_dict.get('profile')
     if profile_dict:
-      content_settings_dict = profile_dict.get('content_settings', None)
+      content_settings_dict = profile_dict.get('content_settings')
       if content_settings_dict:
-        exceptions_dict = content_settings_dict.get('exceptions', None)
+        exceptions_dict = content_settings_dict.get('exceptions')
         if exceptions_dict:
           self._ExtractContentSettingsExceptions(
               exceptions_dict, parser_mediator)

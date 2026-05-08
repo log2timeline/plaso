@@ -355,7 +355,7 @@ class KeychainParser(
     Raises:
       ParseError: if the record cannot be read.
     """
-    table = tables.get(record_type, None)
+    table = tables.get(record_type)
     if not table:
       raise errors.ParseError(f'Missing table for record type: {record_type:d}')
 
@@ -496,7 +496,7 @@ class KeychainParser(
         attribute_values_data, record_offset, attribute_values_data_offset,
         attribute_value_offsets[5])
 
-    table = tables.get(relation_identifier, None)
+    table = tables.get(relation_identifier)
     if not table:
       raise errors.ParseError(
           f'Missing table for relation identifier: {relation_identifier:d}')
@@ -515,7 +515,7 @@ class KeychainParser(
 
     table.columns.append(column)
 
-    table = tables.get(self._RECORD_TYPE_CSSM_DL_DB_SCHEMA_ATTRIBUTES, None)
+    table = tables.get(self._RECORD_TYPE_CSSM_DL_DB_SCHEMA_ATTRIBUTES)
     if not table:
       raise errors.ParseError('Missing CSSM_DL_DB_SCHEMA_ATTRIBUTES table.')
 
@@ -559,7 +559,7 @@ class KeychainParser(
           'CSSM_DL_DB_SCHEMA_INDEXES defines relation identifier not defined '
           'in CSSM_DL_DB_SCHEMA_INFO.')
 
-    table = tables.get(self._RECORD_TYPE_CSSM_DL_DB_SCHEMA_INDEXES, None)
+    table = tables.get(self._RECORD_TYPE_CSSM_DL_DB_SCHEMA_INDEXES)
     if not table:
       raise errors.ParseError('Missing CSSM_DL_DB_SCHEMA_INDEXES table.')
 
@@ -606,7 +606,7 @@ class KeychainParser(
 
     tables[table.relation_identifier] = table
 
-    table = tables.get(self._RECORD_TYPE_CSSM_DL_DB_SCHEMA_INFO, None)
+    table = tables.get(self._RECORD_TYPE_CSSM_DL_DB_SCHEMA_INFO)
     if not table:
       raise errors.ParseError('Missing CSSM_DL_DB_SCHEMA_INFO table.')
 
@@ -792,7 +792,7 @@ class KeychainParser(
     Raises:
       ParseError: if Internet password record cannot be parsed.
     """
-    key = record.get('_key_', None)
+    key = record.get('_key_')
     if not key or not key.startswith(b'ssgp'):
       raise errors.ParseError((
           'Unsupported application password record key value does not start '
@@ -827,7 +827,7 @@ class KeychainParser(
     Raises:
       ParseError: if Internet password record cannot be parsed.
     """
-    key = record.get('_key_', None)
+    key = record.get('_key_')
     if not key or not key.startswith(b'ssgp'):
       raise errors.ParseError((
           'Unsupported Internet password record key value does not start '
@@ -889,12 +889,12 @@ class KeychainParser(
 
     tables = self._ReadTablesArray(file_object, file_header.tables_array_offset)
 
-    table = tables.get(self._RECORD_TYPE_APPLICATION_PASSWORD, None)
+    table = tables.get(self._RECORD_TYPE_APPLICATION_PASSWORD)
     if table:
       for record in table.records:
         self._ParseApplicationPasswordRecord(parser_mediator, record)
 
-    table = tables.get(self._RECORD_TYPE_INTERNET_PASSWORD, None)
+    table = tables.get(self._RECORD_TYPE_INTERNET_PASSWORD)
     if table:
       for record in table.records:
         self._ParseInternetPasswordRecord(parser_mediator, record)

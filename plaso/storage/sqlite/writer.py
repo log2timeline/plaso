@@ -30,11 +30,10 @@ class SQLiteStorageWriter(writer.StorageWriter):
       EventData: event data or None if there are no newly written ones.
 
     Raises:
-      IOError: when the storage writer is closed.
       OSError: when the storage writer is closed.
     """
     if not self._store:
-      raise IOError('Unable to read from closed storage writer.')
+      raise OSError('Unable to read from closed storage writer.')
 
     event_data = self._store.GetAttributeContainerByIndex(
         self._CONTAINER_TYPE_EVENT_DATA, self._first_written_event_data_index)
@@ -50,11 +49,10 @@ class SQLiteStorageWriter(writer.StorageWriter):
       EventData: event data or None if there are no newly written ones.
 
     Raises:
-      IOError: when the storage writer is closed.
       OSError: when the storage writer is closed.
     """
     if not self._store:
-      raise IOError('Unable to read from closed storage writer.')
+      raise OSError('Unable to read from closed storage writer.')
 
     event_data = self._store.GetAttributeContainerByIndex(
         self._CONTAINER_TYPE_EVENT_DATA, self._written_event_data_index)
@@ -72,11 +70,10 @@ class SQLiteStorageWriter(writer.StorageWriter):
       EventSource: event source or None if there are no newly written ones.
 
     Raises:
-      IOError: when the storage writer is closed.
       OSError: when the storage writer is closed.
     """
     if not self._store:
-      raise IOError('Unable to read from closed storage writer.')
+      raise OSError('Unable to read from closed storage writer.')
 
     event_source = self._store.GetAttributeContainerByIndex(
         self._CONTAINER_TYPE_EVENT_SOURCE,
@@ -94,11 +91,10 @@ class SQLiteStorageWriter(writer.StorageWriter):
       EventSource: event source or None if there are no newly written ones.
 
     Raises:
-      IOError: when the storage writer is closed.
       OSError: when the storage writer is closed.
     """
     if not self._store:
-      raise IOError('Unable to read from closed storage writer.')
+      raise OSError('Unable to read from closed storage writer.')
 
     event_source = self._store.GetAttributeContainerByIndex(
         self._CONTAINER_TYPE_EVENT_SOURCE, self._written_event_source_index)
@@ -114,11 +110,10 @@ class SQLiteStorageWriter(writer.StorageWriter):
       path (Optional[str]): path to the output SQLite database.
 
     Raises:
-      IOError: if the storage writer is already opened.
       OSError: if the storage writer is already opened.
     """
     if self._store:
-      raise IOError('Storage writer already opened.')
+      raise OSError('Storage writer already opened.')
 
     self._store = sqlite_file.SQLiteStorageFile()
 

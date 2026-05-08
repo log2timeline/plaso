@@ -237,4 +237,4 @@ class WindowsShellFoldersHelper:
       str: description represented by the shell folder identifier or None of
           not available.
     """
-    return cls._DESCRIPTION_PER_GUID.get(shell_folder_identifier.lower(), None)
+    return cls._DESCRIPTION_PER_GUID.get(shell_folder_identifier.lower())

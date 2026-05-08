@@ -51,7 +51,6 @@ class MultiProcessTaskProcess(base_process.MultiProcessBaseProcess):
       task (Task): task the storage changes are part of.
 
     Raises:
-      IOError: if the SQLite task storage file cannot be renamed.
       OSError: if the SQLite task storage file cannot be renamed.
     """
     if task.storage_format == definitions.STORAGE_FORMAT_REDIS and redis_store:
@@ -71,7 +70,7 @@ class MultiProcessTaskProcess(base_process.MultiProcessBaseProcess):
       try:
         os.rename(storage_file_path, processed_storage_file_path)
       except OSError as exception:
-        raise IOError((
+        raise OSError((
             f'Unable to rename task storage file: {storage_file_path:s} with '
             f'error: {exception!s}'))
 

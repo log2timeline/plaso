@@ -145,7 +145,7 @@ class ESEDBPlugin(plugins.BasePlugin, dtfabric_helper.DtFabricHelper):
     Returns:
       dfdatetime.Filetime: date and time or None if not set.
     """
-    filetime = record_values.get(value_name, None)
+    filetime = record_values.get(value_name)
     if not filetime:
       return None
 

@@ -62,7 +62,7 @@ class YAMLFilterFile:
       different_keys = ', '.join(different_keys)
       raise errors.ParseError(f'Undefined keys: {different_keys:s}')
 
-    filter_type = filter_definition_values.get('type', None)
+    filter_type = filter_definition_values.get('type')
     if not filter_type:
       raise errors.ParseError('Invalid path filter definition missing type.')
 
@@ -72,12 +72,12 @@ class YAMLFilterFile:
       raise errors.ParseError(
           f'Invalid path filter definition unsupported type: {filter_type!s}.')
 
-    paths = filter_definition_values.get('paths', None)
+    paths = filter_definition_values.get('paths')
 
     if not paths:
       raise errors.ParseError('Invalid path filter definition missing paths.')
 
-    description = filter_definition_values.get('description', None)
+    description = filter_definition_values.get('description')
     path_separator = filter_definition_values.get('path_separator', '/')
 
     return path_filters.PathFilter(

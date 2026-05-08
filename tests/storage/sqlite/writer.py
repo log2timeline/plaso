@@ -65,7 +65,7 @@ class SQLiteStorageWriterTest(test_lib.StorageTestCase):
       finally:
         storage_writer.Close()
 
-      with self.assertRaises(IOError):
+      with self.assertRaises(OSError):
         storage_writer.AddAttributeContainer(event_data_stream)
 
   def testAddOrUpdateEventTag(self):
@@ -165,12 +165,12 @@ class SQLiteStorageWriterTest(test_lib.StorageTestCase):
 
       storage_writer.Open(path=test_path)
 
-      with self.assertRaises(IOError):
+      with self.assertRaises(OSError):
         storage_writer.Open(path=test_path)
 
       storage_writer.Close()
 
-      with self.assertRaises(IOError):
+      with self.assertRaises(OSError):
         storage_writer.Close()
 
 

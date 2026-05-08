@@ -357,7 +357,7 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
     try:
       self._FinalizeTaskStorageWriter(
           self._processing_configuration.task_storage_format, task)
-    except IOError:
+    except OSError:
       pass
 
     self._task = None

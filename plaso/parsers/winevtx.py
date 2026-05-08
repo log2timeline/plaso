@@ -216,7 +216,7 @@ class WinEvtxParser(interface.FileObjectParser):
         evtx_record = evtx_file.get_record(record_index)
         self._ParseRecord(parser_mediator, record_index, evtx_record)
 
-      except IOError as exception:
+      except OSError as exception:
         parser_mediator.ProduceExtractionWarning(
             f'unable to parse event record: {record_index:d} with error: '
             f'{exception!s}')
@@ -230,7 +230,7 @@ class WinEvtxParser(interface.FileObjectParser):
         self._ParseRecord(
             parser_mediator, record_index, evtx_record, recovered=True)
 
-      except IOError as exception:
+      except OSError as exception:
         parser_mediator.ProduceRecoveryWarning(
             f'unable to parse recovered event record: {record_index:d} with '
             f'error: {exception!s}')
@@ -261,7 +261,7 @@ class WinEvtxParser(interface.FileObjectParser):
 
     try:
       evtx_file.open_file_object(file_object)
-    except IOError as exception:
+    except OSError as exception:
       parser_mediator.ProduceExtractionWarning(
           f'unable to open file with error: {exception!s}')
       return

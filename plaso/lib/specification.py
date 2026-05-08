@@ -153,4 +153,4 @@ class FormatSpecificationStore:
       FormatSpecification: format specification or None if the signature
           identifier does not exist within the specification store.
     """
-    return self._signature_map.get(signature_identifier, None)
+    return self._signature_map.get(signature_identifier)

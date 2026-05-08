@@ -9,9 +9,9 @@ import glob
 import os
 import sys
 
-import numpy
+import numpy  # pylint: disable=import-error
 
-from matplotlib import pyplot
+from matplotlib import pyplot  # pylint: disable=import-error
 
 
 class TaskMeasurements:

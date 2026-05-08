@@ -16,7 +16,7 @@ class NTFSFileReferenceFormatterHelper(interface.CustomEventFormatterHelper):
       output_mediator (OutputMediator): output mediator.
       event_values (dict[str, object]): event values.
     """
-    file_reference = event_values.get('file_reference', None)
+    file_reference = event_values.get('file_reference')
     if file_reference:
       mft_entry_number = file_reference & 0xffffffffffff
       sequence_number = file_reference >> 48
@@ -37,7 +37,7 @@ class NTFSParentFileReferenceFormatterHelper(
       output_mediator (OutputMediator): output mediator.
       event_values (dict[str, object]): event values.
     """
-    parent_file_reference = event_values.get('parent_file_reference', None)
+    parent_file_reference = event_values.get('parent_file_reference')
     if parent_file_reference:
       mft_entry_number = parent_file_reference & 0xffffffffffff
       sequence_number = parent_file_reference >> 48
@@ -57,7 +57,7 @@ class NTFSPathHintsFormatterHelper(interface.CustomEventFormatterHelper):
       output_mediator (OutputMediator): output mediator.
       event_values (dict[str, object]): event values.
     """
-    path_hints = event_values.get('path_hints', None)
+    path_hints = event_values.get('path_hints')
     if path_hints:
       event_values['path_hints'] = ';'.join(path_hints)
 

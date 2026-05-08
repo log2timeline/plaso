@@ -17,14 +17,14 @@ class WindowsShortcutLinkedPathFormatterHelper(
       output_mediator (OutputMediator): output mediator.
       event_values (dict[str, object]): event values.
     """
-    linked_path = event_values.get('local_path', None)
+    linked_path = event_values.get('local_path')
     if not linked_path:
-      linked_path = event_values.get('network_path', None)
+      linked_path = event_values.get('network_path')
 
     if not linked_path:
-      linked_path = event_values.get('relative_path', None)
+      linked_path = event_values.get('relative_path')
       if linked_path:
-        working_directory = event_values.get('working_directory', None)
+        working_directory = event_values.get('working_directory')
         if working_directory:
           linked_path = '\\'.join([working_directory, linked_path])
 

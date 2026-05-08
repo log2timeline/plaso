@@ -250,7 +250,7 @@ class WinIISTextPlugin(interface.TextPlugin):
       if not member:
         continue
 
-      field_structure = self._LOG_LINE_STRUCTURES.get(member, None)
+      field_structure = self._LOG_LINE_STRUCTURES.get(member)
       if not field_structure:
         field_structure = self._URI
         parser_mediator.ProduceExtractionWarning(

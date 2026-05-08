@@ -148,7 +148,7 @@ class DataFormatInformationExtractor:
       lines.append(f'### {category:s}')
       lines.append('')
 
-      standard_text = self._STANDARD_TEXT_PER_CATEGORY.get(category, None)
+      standard_text = self._STANDARD_TEXT_PER_CATEGORY.get(category)
       if standard_text is not None:
         lines.append(standard_text)
 

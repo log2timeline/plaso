@@ -112,7 +112,7 @@ class ParserFilterExpressionHelper:
     if preset_name not in parsers_and_plugins:
       return
 
-    plugins = parsers_and_plugins.get(preset_name, None)
+    plugins = parsers_and_plugins.get(preset_name)
     if plugins != set(['*']):
       raise RuntimeError(
           f'{preset_name:s} cannot be used as a preset name and plugin name at '

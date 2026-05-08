@@ -166,7 +166,7 @@ class SharedOpenSearchFieldFormattingHelper(
     Returns:
       object: value of the field or None if not set.
     """
-    callback_name = self._FIELD_FORMAT_CALLBACKS.get(field_name, None)
+    callback_name = self._FIELD_FORMAT_CALLBACKS.get(field_name)
     if callback_name == '_FormatTag':
       return self._FormatTag(output_mediator, event_tag)
 
@@ -394,7 +394,7 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
             event_data_stream, event_tag)
 
       if field_value is None and attribute_name in self._custom_fields:
-        field_value = self._custom_fields.get(attribute_name, None)
+        field_value = self._custom_fields.get(attribute_name)
 
       if field_value is None:
         field_value = '-'

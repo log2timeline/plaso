@@ -289,7 +289,7 @@ class NTFSMFTParser(interface.FileObjectParser):
         elif mft_attribute.attribute_type == self._MFT_ATTRIBUTE_DATA:
           data_stream_names.append(mft_attribute.attribute_name)
 
-      except IOError as exception:
+      except OSError as exception:
         parser_mediator.ProduceExtractionWarning((
             f'unable to parse MFT attribute: {attribute_index:d} '
             f'with error: {exception!s}'))
@@ -315,7 +315,7 @@ class NTFSMFTParser(interface.FileObjectParser):
         self._ParseFileStatAttribute(
             parser_mediator, mft_entry, standard_information_attribute,
             path_hints_with_data_streams)
-      except IOError as exception:
+      except OSError as exception:
         parser_mediator.ProduceExtractionWarning((
             f'unable to parse MFT attribute: '
             f'{standard_information_attribute_index:d} '
@@ -333,7 +333,7 @@ class NTFSMFTParser(interface.FileObjectParser):
 
     try:
       mft_metadata_file.open_file_object(file_object)
-    except IOError as exception:
+    except OSError as exception:
       parser_mediator.ProduceExtractionWarning(
           f'unable to open $MFT file with error: {exception!s}')
       return
@@ -345,7 +345,7 @@ class NTFSMFTParser(interface.FileObjectParser):
             mft_entry.base_record_file_reference == 0):
           self._ParseMFTEntry(parser_mediator, mft_entry)
 
-      except IOError as exception:
+      except OSError as exception:
         parser_mediator.ProduceExtractionWarning((
             f'unable to parse MFT entry: {entry_index:d} '
             f'with error: {exception!s}'))
@@ -450,7 +450,7 @@ class NTFSUsnJrnlParser(
     fsntfs_volume = pyfsntfs.volume()
     try:
       fsntfs_volume.open_file_object(file_object)
-    except IOError as exception:
+    except OSError as exception:
       parser_mediator.ProduceExtractionWarning(
           f'unable to open NTFS volume with error: {exception!s}')
       return

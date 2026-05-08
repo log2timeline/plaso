@@ -57,9 +57,9 @@ class ParserPresetsManager:
     if not operating_system_values:
       raise errors.MalformedPresetError('Missing operating system values.')
 
-    family = operating_system_values.get('family', None)
-    product = operating_system_values.get('product', None)
-    version = operating_system_values.get('version', None)
+    family = operating_system_values.get('family')
+    product = operating_system_values.get('product')
+    version = operating_system_values.get('version')
 
     if not family and not product:
       raise errors.MalformedPresetError(
@@ -85,12 +85,12 @@ class ParserPresetsManager:
     if not preset_definition_values:
       raise errors.MalformedPresetError('Missing preset definition values.')
 
-    name = preset_definition_values.get('name', None)
+    name = preset_definition_values.get('name')
     if not name:
       raise errors.MalformedPresetError(
           'Invalid preset definition missing name.')
 
-    parsers = preset_definition_values.get('parsers', None)
+    parsers = preset_definition_values.get('parsers')
     if not parsers:
       raise errors.MalformedPresetError(
           'Invalid preset definition missing parsers.')
@@ -158,7 +158,7 @@ class ParserPresetsManager:
       KeyError: if the preset does not exist.
     """
     lookup_name = preset_name.lower()
-    preset_definition = self._definitions.get(lookup_name, None)
+    preset_definition = self._definitions.get(lookup_name)
     if preset_definition is None:
       raise KeyError(f'Preset: {preset_name!s} is not defined')
 
@@ -179,7 +179,7 @@ class ParserPresetsManager:
       ParserPreset: a parser preset or None if not available.
     """
     lookup_name = name.lower()
-    return self._definitions.get(lookup_name, None)
+    return self._definitions.get(lookup_name)
 
   def GetPresetsByOperatingSystem(self, operating_system):
     """Retrieves preset definitions for a specific operating system.

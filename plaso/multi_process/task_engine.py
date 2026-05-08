@@ -48,7 +48,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       bool: True if the task is ready to be merged.
 
     Raises:
-      IOError: if the size of the SQLite task storage file cannot be determined.
       OSError: if the size of the SQLite task storage file cannot be determined.
     """
     if task_storage_format == definitions.STORAGE_FORMAT_SQLITE:
@@ -56,7 +55,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
       try:
         stat_info = os.stat(processed_storage_file_path)
-      except (IOError, OSError):
+      except OSError:
         return False
 
       task.storage_file_size = stat_info.st_size
@@ -75,8 +74,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       StorageReader: storage reader of the task storage.
 
     Raises:
-      IOError: if the temporary path for the task storage does not exist or
-          if the temporary path for the task storage doe not refers to a file.
       OSError: if the temporary path for the task storage does not exist or
           if the temporary path for the task storage doe not refers to a file.
     """
@@ -85,10 +82,10 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     if task_storage_format == definitions.STORAGE_FORMAT_SQLITE:
       if not self._merge_task_storage_path:
-        raise IOError('Missing merge task storage path.')
+        raise OSError('Missing merge task storage path.')
 
       if not os.path.isfile(merge_storage_file_path):
-        raise IOError('Merge task storage path is not a file.')
+        raise OSError('Merge task storage path is not a file.')
 
     task_storage_reader = (
         storage_factory.StorageFactory.CreateTaskStorageReader(
@@ -162,7 +159,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       list[str]: task identifiers that are processed.
 
     Raises:
-      IOError: if the temporary path for the task storage does not exist.
       OSError: if the temporary path for the task storage does not exist.
     """
     if task_storage_format == definitions.STORAGE_FORMAT_REDIS:
@@ -179,7 +175,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     elif task_storage_format == definitions.STORAGE_FORMAT_SQLITE:
       if not self._processed_task_storage_path:
-        raise IOError('Missing processed task storage path.')
+        raise OSError('Missing processed task storage path.')
 
       task_identifiers = [
           path.replace('.plaso', '')
@@ -198,7 +194,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       task (Task): task the storage changes are part of.
 
     Raises:
-      IOError: if the SQLite task storage file cannot be renamed.
       OSError: if the SQLite task storage file cannot be renamed.
     """
     if task_storage_format == definitions.STORAGE_FORMAT_REDIS:
@@ -209,7 +204,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       number_of_results = self._redis_client.hdel(
           redis_hash_name, task.identifier)
       if number_of_results == 0:
-        raise IOError(f'Task identifier {task.identifier:s} was not processed')
+        raise OSError(f'Task identifier {task.identifier:s} was not processed')
 
       redis_hash_name = self._GetMergeTaskStorageRedisHashName(task)
       # TODO: set timestamp as value.
@@ -226,7 +221,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       try:
         os.rename(processed_storage_file_path, merge_storage_file_path)
       except OSError as exception:
-        raise IOError((
+        raise OSError((
             f'Unable to rename task storage file: '
             f'{processed_storage_file_path:s} with error: {exception!s}'))
 
@@ -238,7 +233,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       task (Task): task the storage changes are part of.
 
     Raises:
-      IOError: if a SQLite task storage file cannot be removed.
       OSError: if a SQLite task storage file cannot be removed.
     """
     if task_storage_format == definitions.STORAGE_FORMAT_REDIS:
@@ -254,7 +248,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       try:
         os.remove(merge_storage_file_path)
       except OSError as exception:
-        raise IOError((
+        raise OSError((
             f'Unable to remove merge task storage file: '
             f'{merge_storage_file_path:s} with error: {exception!s}'))
 
@@ -266,7 +260,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       task (Task): task the storage changes are part of.
 
     Raises:
-      IOError: if a SQLite task storage file cannot be removed.
       OSError: if a SQLite task storage file cannot be removed.
     """
     if task_storage_format == definitions.STORAGE_FORMAT_REDIS:
@@ -281,7 +274,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       try:
         os.remove(processed_storage_file_path)
       except OSError as exception:
-        raise IOError((
+        raise OSError((
             f'Unable to remove processed task storage file: '
             f'{processed_storage_file_path:s} with error: {exception!s}'))
 
@@ -292,7 +285,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       task_storage_format (str): storage format used to store task results.
 
     Raises:
-      IOError: if the temporary path for the SQLite task storage already exists.
       OSError: if the temporary path for the SQLite task storage already exists.
     """
     if task_storage_format == definitions.STORAGE_FORMAT_REDIS and redis_store:
@@ -302,7 +294,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     elif task_storage_format == definitions.STORAGE_FORMAT_SQLITE:
       if self._task_storage_path:
-        raise IOError('SQLite task storage path already exists.')
+        raise OSError('SQLite task storage path already exists.')
 
       output_directory = os.path.dirname(self._storage_file_path)
       self._task_storage_path = tempfile.mkdtemp(dir=output_directory)

@@ -134,13 +134,13 @@ class MacOSNotificationCenterPlugin(interface.SQLitePlugin):
       req_property = {}
 
     event_data = MacOSNotificationCenterEventData()
-    event_data.body = req_property.get('body', None)
+    event_data.body = req_property.get('body')
     event_data.bundle_name = self._GetRowValue(query_hash, row, 'bundle_name')
     event_data.creation_time = self._GetDateTimeRowValue(
         query_hash, row, 'timestamp')
     event_data.presented = self._GetRowValue(query_hash, row, 'presented')
-    event_data.subtitle = req_property.get('subt', None)
-    event_data.title = req_property.get('titl', None)
+    event_data.subtitle = req_property.get('subt')
+    event_data.title = req_property.get('titl')
 
     parser_mediator.ProduceEventData(event_data)
 

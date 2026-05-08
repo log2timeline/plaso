@@ -145,7 +145,7 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
     Returns:
       dfdatetime.interface.DateTimeValue: date and time value or None.
     """
-    timestamp = row.get('timestamp', None)
+    timestamp = row.get('timestamp')
     if timestamp is not None:
       try:
         timestamp = int(timestamp, 10)

@@ -180,7 +180,7 @@ class WinLnkParser(interface.FileObjectParser):
 
     try:
       lnk_file.open_file_object(file_object)
-    except IOError as exception:
+    except OSError as exception:
       parser_mediator.ProduceExtractionWarning(
           f'unable to open file with error: {exception!s}')
       return

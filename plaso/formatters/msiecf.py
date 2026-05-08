@@ -16,9 +16,9 @@ class MSIECFCachedPathFormatterHelper(interface.CustomEventFormatterHelper):
       output_mediator (OutputMediator): output mediator.
       event_values (dict[str, object]): event values.
     """
-    cached_file_path = event_values.get('cached_filename', None)
+    cached_file_path = event_values.get('cached_filename')
     if cached_file_path:
-      cache_directory_name = event_values.get('cache_directory_name', None)
+      cache_directory_name = event_values.get('cache_directory_name')
       if cache_directory_name:
         cached_file_path = '\\'.join([cache_directory_name, cached_file_path])
       event_values['cached_file_path'] = cached_file_path
@@ -37,7 +37,7 @@ class MSIECFHTTPHeadersventFormatterHelper(
       output_mediator (OutputMediator): output mediator.
       event_values (dict[str, object]): event values.
     """
-    http_headers = event_values.get('http_headers', None)
+    http_headers = event_values.get('http_headers')
     if http_headers:
       event_values['http_headers'] = http_headers.replace('\r\n', ' - ')
 

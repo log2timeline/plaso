@@ -58,7 +58,7 @@ class PlistFileArtifactPreprocessorPlugin(
     try:
       plist_file.Read(file_object)
 
-    except IOError as exception:
+    except OSError as exception:
       raise errors.PreProcessFail((
           f'Unable to read: {self.ARTIFACT_DEFINITION_NAME:s} with error: '
           f'{exception!s}'))
@@ -221,7 +221,7 @@ class MacOSUserAccountsPlugin(interface.FileEntryArtifactPreprocessorPlugin):
     """
     match = {}
     for key in set(keys):
-      value = top_level.get(key, None)
+      value = top_level.get(key)
       if value is not None:
         match[key] = value
 
@@ -246,7 +246,7 @@ class MacOSUserAccountsPlugin(interface.FileEntryArtifactPreprocessorPlugin):
       plist_file.Read(file_object)
       match = self._GetTopLevelKeys(plist_file.root_key, self._KEYS)
 
-    except (IOError, plistlib.InvalidFileException) as exception:
+    except (OSError, plistlib.InvalidFileException) as exception:
       mediator.ProducePreprocessingWarning(
           self.ARTIFACT_DEFINITION_NAME,
           f'Unable to read plist with error: {exception!s}')

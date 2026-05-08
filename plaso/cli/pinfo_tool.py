@@ -435,7 +435,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
         attribute_values = analysis_result.CopyToDict()
         for key in attribute_names:
-          value = attribute_values.get(key, None)
+          value = attribute_values.get(key)
           if value is None:
             value = ''
           elif isinstance(value, int):

@@ -209,7 +209,7 @@ class WinEvtParser(interface.FileObjectParser):
       try:
         evt_record = evt_file.get_record(record_index)
         self._ParseRecord(parser_mediator, record_index, evt_record)
-      except IOError as exception:
+      except OSError as exception:
         parser_mediator.ProduceExtractionWarning(
             f'unable to parse event record: {record_index:d} '
             f'with error: {exception!s}')
@@ -222,7 +222,7 @@ class WinEvtParser(interface.FileObjectParser):
         evt_record = evt_file.get_recovered_record(record_index)
         self._ParseRecord(
             parser_mediator, record_index, evt_record, recovered=True)
-      except IOError as exception:
+      except OSError as exception:
         parser_mediator.ProduceRecoveryWarning(
             f'unable to parse recovered event record: {record_index:d} '
             f'with error: {exception!s}')
@@ -242,7 +242,7 @@ class WinEvtParser(interface.FileObjectParser):
 
     try:
       evt_file.open_file_object(file_object)
-    except IOError as exception:
+    except OSError as exception:
       parser_mediator.ProduceExtractionWarning(
           f'unable to open file with error: {exception!s}')
       return

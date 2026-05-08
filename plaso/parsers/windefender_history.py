@@ -106,7 +106,7 @@ class WinDefenderHistoryParser(
       dict[str, str]: Mapping of threat tracking keys to values.
 
     Raises:
-      IOError: if the threat tracking data cannot be read.
+      OSError: if the threat tracking data cannot be read.
     """
     threat_tracking = {}
     data_type_map = self._GetDataTypeMap('uint32le')
@@ -145,7 +145,7 @@ class WinDefenderHistoryParser(
       threat_tracking_header: threat tracking header.
 
     Raises:
-      IOError: if the threat tracking header cannot be read.
+      OSError: if the threat tracking header cannot be read.
     """
     data_type_map = self._GetDataTypeMap('threat_tracking_header')
 
@@ -165,7 +165,7 @@ class WinDefenderHistoryParser(
           data size.
 
     Raises:
-      IOError: if the threat tracking value cannot be read.
+      OSError: if the threat tracking value cannot be read.
     """
     data_type_map = self._GetDataTypeMap('threat_tracking_value')
 
@@ -189,7 +189,7 @@ class WinDefenderHistoryParser(
       object: value.
 
     Raises:
-      IOError: if the value cannot be read.
+      OSError: if the value cannot be read.
       ParseError: when the value data type is unknown.
     """
     data_type_map = self._GetDataTypeMap('detection_history_value')
@@ -276,8 +276,8 @@ class WinDefenderHistoryParser(
         if threat_attribute['Type'] == 'file']
 
     if not filenames:
-      filename = threat_attributes.get('CONTEXT_DATA_FILENAME', None)
-      process_ppid = threat_attributes.get('CONTEXT_DATA_PROCESS_PPID', None)
+      filename = threat_attributes.get('CONTEXT_DATA_FILENAME')
+      process_ppid = threat_attributes.get('CONTEXT_DATA_PROCESS_PPID')
 
       filenames = [','.join(list(filter(None, [filename, process_ppid])))]
 
@@ -302,12 +302,12 @@ class WinDefenderHistoryParser(
     event_data.additional_filenames = additional_filenames
     event_data.container_filenames = container_files
     event_data.filename = filenames[0]
-    event_data.host_and_user = threat_attributes.get('Domain user1', None)
-    event_data.process = threat_attributes.get('Process name', None)
+    event_data.host_and_user = threat_attributes.get('Domain user1')
+    event_data.process = threat_attributes.get('Process name')
     event_data.recorded_time = dfdatetime_filetime.Filetime(
         timestamp=timestamp)
-    event_data.sha256 = threat_attributes.get('ThreatTrackingSha256', None)
-    event_data.threat_name = threat_attributes.get('Threat name', None)
+    event_data.sha256 = threat_attributes.get('ThreatTrackingSha256')
+    event_data.threat_name = threat_attributes.get('Threat name')
     event_data.web_filenames = web_files
 
     parser_mediator.ProduceEventData(event_data)

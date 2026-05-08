@@ -185,7 +185,7 @@ class RedisAttributeContainerStoreTest(test_lib.StorageTestCase):
 
       self._RemoveSessionData(redis_client, session.identifier)
 
-    with self.assertRaises(IOError):
+    with self.assertRaises(OSError):
       test_store.AddAttributeContainer(event_data_stream)
 
   # TODO: add tests for _WriteStorageMetadata

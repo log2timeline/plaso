@@ -159,11 +159,10 @@ class BaseSpotlightFile(dtfabric_helper.DtFabricHelper):
     """Closes an Apple Spotlight file.
 
     Raises:
-      IOError: if the file is not opened.
       OSError: if the file is not opened.
     """
     if not self._file_object:
-      raise IOError('File not opened')
+      raise OSError('File not opened')
 
     self._file_object = None
     self._file_entry = None
@@ -175,11 +174,10 @@ class BaseSpotlightFile(dtfabric_helper.DtFabricHelper):
       file_entry (dfvfs.FileEntry): a file entry.
 
     Raises:
-      IOError: if the file is already opened.
       OSError: if the file is already opened.
     """
     if self._file_object:
-      raise IOError('File already opened')
+      raise OSError('File already opened')
 
     self._file_entry = file_entry
 
@@ -525,7 +523,7 @@ class SpotlightStoreDatabaseParser(
     Returns:
       object: a time value or None if not available.
     """
-    metadata_attribute = metadata_item.attributes.get(name, None)
+    metadata_attribute = metadata_item.attributes.get(name)
     if not metadata_attribute:
       return None
 
@@ -634,7 +632,7 @@ class SpotlightStoreDatabaseParser(
 
         metadata_type_index += relative_metadata_type_index
 
-        metadata_type = self._metadata_types.get(metadata_type_index, None)
+        metadata_type = self._metadata_types.get(metadata_type_index)
         metadata_attribute, bytes_read = self._ReadMetadataAttribute(
             metadata_type, page_data[page_data_offset:])
 
@@ -747,7 +745,7 @@ class SpotlightStoreDatabaseParser(
 
       values_list = []
       for metadata_value_index in index_values:
-        metadata_value = self._metadata_values.get(metadata_value_index, None)
+        metadata_value = self._metadata_values.get(metadata_value_index)
         value_string = getattr(metadata_value, 'value_name', '')
         values_list.append(value_string)
 
@@ -808,7 +806,7 @@ class SpotlightStoreDatabaseParser(
 
       values_list = []
       for metadata_value_index in index_values:
-        metadata_value = self._metadata_values.get(metadata_value_index, None)
+        metadata_value = self._metadata_values.get(metadata_value_index)
         value_string = getattr(metadata_value, 'value_name', '')
         values_list.append(value_string)
 
@@ -1148,11 +1146,11 @@ class SpotlightStoreDatabaseParser(
           value = value.split('\x16\x02')[0]
 
     elif property_type & 0x03 == 0x02:
-      metadata_list = self._metadata_lists.get(table_index, None)
+      metadata_list = self._metadata_lists.get(table_index)
       value = getattr(metadata_list, 'values_list', [])
 
     else:
-      metadata_value = self._metadata_values.get(table_index, None)
+      metadata_value = self._metadata_values.get(table_index)
       value = getattr(metadata_value, 'value_name', '(null)')
 
     return value, bytes_read

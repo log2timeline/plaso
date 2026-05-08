@@ -59,15 +59,15 @@ class IPodPlugin(interface.PlistPlugin):
     for device_identifier, plist_key in devices.items():
       event_data = IPodPlistEventData()
       event_data.device_identifier = device_identifier
-      event_data.device_class = plist_key.get('Device Class', None)
-      event_data.family_identifier = plist_key.get('Family ID', None)
+      event_data.device_class = plist_key.get('Device Class')
+      event_data.family_identifier = plist_key.get('Family ID')
       event_data.firmware_version = plist_key.get(
           'Firmware Version String', None)
-      event_data.imei = plist_key.get('IMEI', None)
+      event_data.imei = plist_key.get('IMEI')
       event_data.last_connected_time = self._GetDateTimeValueFromPlistKey(
           plist_key, 'Connected')
-      event_data.serial_number = plist_key.get('Serial Number', None)
-      event_data.use_count = plist_key.get('Use Count', None)
+      event_data.serial_number = plist_key.get('Serial Number')
+      event_data.use_count = plist_key.get('Use Count')
 
       parser_mediator.ProduceEventData(event_data)
 

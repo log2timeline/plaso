@@ -83,7 +83,7 @@ class JSONFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
     if field_name in self._event_tag_field_names:
       return self._FormatTag(output_mediator, event_tag)
 
-    callback_function = self._callback_functions.get(field_name, None)
+    callback_function = self._callback_functions.get(field_name)
     if callback_function:
       output_value = callback_function(
           output_mediator, event, event_data, event_data_stream)
@@ -178,7 +178,7 @@ class SharedJSONOutputModule(text_file.TextFileOutputModule):
 
     for field_name in self._GENERATED_FIELD_VALUES:
       if field_name not in field_values:
-        field_value = field_values.get(field_name, None)
+        field_value = field_values.get(field_name)
         if field_value is None:
           field_value = self._field_formatting_helper.GetFormattedField(
               output_mediator, field_name, event, event_data, event_data_stream,

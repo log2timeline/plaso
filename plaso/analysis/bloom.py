@@ -88,7 +88,7 @@ class BloomAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
         with open(self._bloom_database_path, 'rb') as file_object:
           bloom_filter.read(file_object)
 
-      except IOError as exception:
+      except OSError as exception:
         bloom_filter = None
         logger.warning((
             f'Unable to open bloom database file: '

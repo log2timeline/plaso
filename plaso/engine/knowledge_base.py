@@ -73,7 +73,7 @@ class KnowledgeBase:
           if there was no value set for the given name.
     """
     name = name.upper()
-    return self._environment_variables.get(name, None)
+    return self._environment_variables.get(name)
 
   def GetEnvironmentVariables(self):
     """Retrieves the environment variables.
@@ -92,7 +92,7 @@ class KnowledgeBase:
     Returns:
       str: hostname.
     """
-    hostname_artifact = self._hostnames.get(self._active_session, None)
+    hostname_artifact = self._hostnames.get(self._active_session)
     if not hostname_artifact:
       return ''
 

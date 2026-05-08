@@ -72,7 +72,7 @@ class NetworkMinerParser(dsv_parser.DSVParser):
       row_offset (int): line number of the row.
       row (dict[str, str]): fields of a single row, as specified in COLUMNS.
     """
-    timestamp = row.get('timestamp', None)
+    timestamp = row.get('timestamp')
     if timestamp == 'Timestamp':
       return
 
@@ -107,7 +107,7 @@ class NetworkMinerParser(dsv_parser.DSVParser):
 
     # Check the date format
     # If it doesn't parse, then this isn't a NetworkMiner .fileinfos file.
-    timestamp_value = row.get('timestamp', None)
+    timestamp_value = row.get('timestamp')
     if timestamp_value != 'Timestamp':
       try:
         date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()

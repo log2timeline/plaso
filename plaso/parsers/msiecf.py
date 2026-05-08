@@ -191,7 +191,7 @@ class MSIECFParser(interface.FileObjectParser):
           self._ParseUrl(
               parser_mediator, format_version, cache_directories, msiecf_item)
 
-      except IOError as exception:
+      except OSError as exception:
         parser_mediator.ProduceExtractionWarning(
             f'Unable to parse item: {item_index:d} with error: {exception!s}')
 
@@ -210,7 +210,7 @@ class MSIECFParser(interface.FileObjectParser):
               parser_mediator, format_version, cache_directories, msiecf_item,
               recovered=True)
 
-      except IOError as exception:
+      except OSError as exception:
         parser_mediator.ProduceRecoveryWarning(
             f'Unable to parse recovered item: {item_index:d} with error: '
             f'{exception!s}')
@@ -381,7 +381,7 @@ class MSIECFParser(interface.FileObjectParser):
 
     try:
       msiecf_file.open_file_object(file_object)
-    except IOError as exception:
+    except OSError as exception:
       parser_mediator.ProduceExtractionWarning(
           f'unable to open file with error: {exception!s}')
       return

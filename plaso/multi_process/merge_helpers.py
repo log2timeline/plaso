@@ -74,7 +74,7 @@ class BaseTaskMergeHelper:
       AttributeContainerIdentifier: attribute container identifier that maps
           to the lookup key or None if not available.
     """
-    return self._container_identifier_mappings.get(lookup_key, None)
+    return self._container_identifier_mappings.get(lookup_key)
 
   def SetAttributeContainerIdentifier(self, lookup_key, identifier):
     """Sets an attribute container.

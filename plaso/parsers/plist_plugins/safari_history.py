@@ -58,7 +58,7 @@ class SafariHistoryPlugin(interface.PlistPlugin):
     Returns:
       dfdatetime.TimeElements: date and time or None if not available.
     """
-    timestamp_string = plist_key.get(plist_value_name, None)
+    timestamp_string = plist_key.get(plist_value_name)
     if not timestamp_string:
       return None
 
@@ -81,22 +81,22 @@ class SafariHistoryPlugin(interface.PlistPlugin):
           and other components, such as storage and dfVFS.
       match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
     """
-    format_version = match.get('WebHistoryFileVersion', None)
+    format_version = match.get('WebHistoryFileVersion')
     if format_version != 1:
       parser_mediator.ProduceExtractionWarning(
           f'unsupported Safari history version: {format_version!s}')
       return
 
     for history_entry in match.get('WebHistoryDates', {}):
-      display_title = history_entry.get('displayTitle', None)
-      title = history_entry.get('title', None)
+      display_title = history_entry.get('displayTitle')
+      title = history_entry.get('title')
 
       event_data = SafariHistoryEventData()
       event_data.last_visited_time = self._GetDateTimeValueFromTimestamp(
           parser_mediator, history_entry, 'lastVisitedDate')
       event_data.title = title
-      event_data.url = history_entry.get('', None)
-      event_data.visit_count = history_entry.get('visitCount', None)
+      event_data.url = history_entry.get('')
+      event_data.visit_count = history_entry.get('visitCount')
       event_data.was_http_non_get = history_entry.get(
           'lastVisitWasHTTPNonGet', None)
 

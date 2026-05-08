@@ -58,14 +58,14 @@ class MacOSSoftwareUpdatePlistPlugin(interface.PlistPlugin):
           and other components, such as storage and dfVFS.
       match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
     """
-    last_full_successful_date = match.get('LastFullSuccessfulDate', None)
-    last_successful_date = match.get('LastSuccessfulDate', None)
+    last_full_successful_date = match.get('LastFullSuccessfulDate')
+    last_successful_date = match.get('LastSuccessfulDate')
 
     recommended_updates = []
-    if match.get('LastUpdatesAvailable', None):
+    if match.get('LastUpdatesAvailable'):
       for update_property in match.get('RecommendedUpdates', []):
-        identifier = update_property.get('Identifier', None)
-        product_key = update_property.get('Product Key', None)
+        identifier = update_property.get('Identifier')
+        product_key = update_property.get('Product Key')
 
         recommended_updates.append(f'{identifier:s} ({product_key:s})')
 
@@ -73,7 +73,7 @@ class MacOSSoftwareUpdatePlistPlugin(interface.PlistPlugin):
     event_data.full_update_time = self._GetDateTimeValueFromPlistKey(
          match, 'LastFullSuccessfulDate')
     event_data.recommended_updates = recommended_updates or None
-    event_data.system_version = match.get('LastAttemptSystemVersion', None)
+    event_data.system_version = match.get('LastAttemptSystemVersion')
 
     # Only set update_time if it differs from full_update_time.
     if (last_successful_date and

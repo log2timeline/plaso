@@ -286,7 +286,7 @@ class OutputMediator:
           formatter if not available.
     """
     data_type = data_type.lower()
-    return self._message_formatters.get(data_type, None)
+    return self._message_formatters.get(data_type)
 
   def GetRelativePathForPathSpec(self, path_spec):
     """Retrieves the relative path for a path specification.

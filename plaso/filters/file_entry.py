@@ -326,7 +326,7 @@ class SignaturesFileEntryFilter(FileEntryFilter):
       scan_state = pysigscan.scan_state()
       self._file_scanner.scan_file_object(scan_state, file_object)
 
-    except IOError as exception:
+    except OSError as exception:
       # TODO: replace location by display name.
       location = getattr(file_entry.path_spec, 'location', '')
       logger.error(

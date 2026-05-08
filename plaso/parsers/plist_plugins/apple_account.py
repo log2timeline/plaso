@@ -68,10 +68,10 @@ class AppleAccountPlistPlugin(interface.PlistPlugin):
       event_data.account_name = account_name
       event_data.creation_time = self._GetDateTimeValueFromPlistKey(
           plist_key, 'CreationDate')
-      event_data.first_name = plist_key.get('FirstName', None)
+      event_data.first_name = plist_key.get('FirstName')
       event_data.last_connected_time = self._GetDateTimeValueFromPlistKey(
           plist_key, 'LastSuccessfulConnect')
-      event_data.last_name = plist_key.get('LastName', None)
+      event_data.last_name = plist_key.get('LastName')
       event_data.validation_time = self._GetDateTimeValueFromPlistKey(
           plist_key, 'ValidationDate')
 

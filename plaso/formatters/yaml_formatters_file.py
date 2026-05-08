@@ -59,18 +59,18 @@ class YAMLFormattersFile:
       ParseError: if the format of the boolean helper definitions are incorrect.
     """
     for boolean_helper in boolean_helpers_definition_values:
-      input_attribute = boolean_helper.get('input_attribute', None)
+      input_attribute = boolean_helper.get('input_attribute')
       if not input_attribute:
         raise errors.ParseError(
             'Invalid boolean helper missing input attribute.')
 
-      output_attribute = boolean_helper.get('output_attribute', None)
+      output_attribute = boolean_helper.get('output_attribute')
       if not output_attribute:
         raise errors.ParseError(
             'Invalid boolean helper missing output attribute.')
 
-      value_if_false = boolean_helper.get('value_if_false', None)
-      value_if_true = boolean_helper.get('value_if_true', None)
+      value_if_false = boolean_helper.get('value_if_false')
+      value_if_true = boolean_helper.get('value_if_true')
 
       helper = interface.BooleanEventFormatterHelper(
           input_attribute=input_attribute, output_attribute=output_attribute,
@@ -90,13 +90,13 @@ class YAMLFormattersFile:
       ParseError: if the format of the custom helper definitions are incorrect.
     """
     for custom_helper in custom_helpers_definition_values:
-      identifier = custom_helper.get('identifier', None)
+      identifier = custom_helper.get('identifier')
       if not identifier:
         raise errors.ParseError(
             'Invalid custom helper missing identifier.')
 
-      input_attribute = custom_helper.get('input_attribute', None)
-      output_attribute = custom_helper.get('output_attribute', None)
+      input_attribute = custom_helper.get('input_attribute')
+      output_attribute = custom_helper.get('output_attribute')
 
       formatter.AddCustomHelper(
           identifier, input_attribute=input_attribute,
@@ -116,21 +116,21 @@ class YAMLFormattersFile:
           incorrect.
     """
     for enumeration_helper in enumeration_helpers_definition_values:
-      input_attribute = enumeration_helper.get('input_attribute', None)
+      input_attribute = enumeration_helper.get('input_attribute')
       if not input_attribute:
         raise errors.ParseError(
             'Invalid enumeration helper missing input attribute.')
 
-      output_attribute = enumeration_helper.get('output_attribute', None)
+      output_attribute = enumeration_helper.get('output_attribute')
       if not output_attribute:
         raise errors.ParseError(
             'Invalid enumeration helper missing output attribute.')
 
-      values = enumeration_helper.get('values', None)
+      values = enumeration_helper.get('values')
       if not values:
         raise errors.ParseError('Invalid enumeration helper missing values.')
 
-      default_value = enumeration_helper.get('default_value', None)
+      default_value = enumeration_helper.get('default_value')
 
       helper = interface.EnumerationEventFormatterHelper(
           default=default_value, input_attribute=input_attribute,
@@ -150,17 +150,17 @@ class YAMLFormattersFile:
       ParseError: if the format of the flags helper definitions are incorrect.
     """
     for flags_helper in flags_helpers_definition_values:
-      input_attribute = flags_helper.get('input_attribute', None)
+      input_attribute = flags_helper.get('input_attribute')
       if not input_attribute:
         raise errors.ParseError(
             'Invalid flags helper missing input attribute.')
 
-      output_attribute = flags_helper.get('output_attribute', None)
+      output_attribute = flags_helper.get('output_attribute')
       if not output_attribute:
         raise errors.ParseError(
             'Invalid flags helper missing output attribute.')
 
-      values = flags_helper.get('values', None)
+      values = flags_helper.get('values')
       if not values:
         raise errors.ParseError('Invalid flags helper missing values.')
 
@@ -192,7 +192,7 @@ class YAMLFormattersFile:
       different_keys = ', '.join(different_keys)
       raise errors.ParseError(f'Undefined keys: {different_keys:s}')
 
-    formatter_type = formatter_definition_values.get('type', None)
+    formatter_type = formatter_definition_values.get('type')
     if not formatter_type:
       raise errors.ParseError(
           'Invalid event formatter definition missing type.')
@@ -202,29 +202,29 @@ class YAMLFormattersFile:
           f'Invalid event formatter definition unsupported type: '
           f'{formatter_type!s}.'))
 
-    data_type = formatter_definition_values.get('data_type', None)
+    data_type = formatter_definition_values.get('data_type')
     if not data_type:
       raise errors.ParseError(
           'Invalid event formatter definition missing data type.')
 
-    message = formatter_definition_values.get('message', None)
+    message = formatter_definition_values.get('message')
     if not message:
       raise errors.ParseError(
           f'Invalid event formatter definition: {data_type:s} missing message.')
 
-    short_message = formatter_definition_values.get('short_message', None)
+    short_message = formatter_definition_values.get('short_message')
     if not short_message:
       raise errors.ParseError((
           f'Invalid event formatter definition: {data_type:s} missing short '
           f'message.'))
 
-    short_source = formatter_definition_values.get('short_source', None)
+    short_source = formatter_definition_values.get('short_source')
     if not short_source:
       raise errors.ParseError((
           f'Invalid event formatter definition: {data_type:s} missing short '
           f'source.'))
 
-    source = formatter_definition_values.get('source', None)
+    source = formatter_definition_values.get('source')
     if not source:
       raise errors.ParseError(
           f'Invalid event formatter definition: {data_type:s} missing source.')
@@ -237,7 +237,7 @@ class YAMLFormattersFile:
           format_string_short=short_message)
 
     elif formatter_type == 'conditional':
-      separator = formatter_definition_values.get('separator', None)
+      separator = formatter_definition_values.get('separator')
       formatter = interface.ConditionalEventFormatter(
           data_type=data_type, format_string_pieces=message,
           format_string_separator=separator,

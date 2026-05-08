@@ -32,11 +32,10 @@ class FakeStore(acstore_fake_store.FakeAttributeContainerStore):
       generator(EventObject): event generator.
 
     Raises:
-      IOError: when the storage writer is closed.
       OSError: when the storage writer is closed.
     """
     if not self._is_open:
-      raise IOError('Unable to read from closed storage writer.')
+      raise OSError('Unable to read from closed storage writer.')
 
     generator = self.GetAttributeContainers(self._CONTAINER_TYPE_EVENT)
     sorted_events = event_heap.EventHeap()

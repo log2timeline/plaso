@@ -544,7 +544,7 @@ class SingleProcessEngine(engine.BaseEngine):
       parser_mediator.StopProfiling()
 
     for key, value in self._event_data_timeliner.parsers_counter.items():
-      parser_count = self._parsers_counter.get(key, None)
+      parser_count = self._parsers_counter.get(key)
       if parser_count:
         parser_count.number_of_events += value
         self._storage_writer.UpdateAttributeContainer(parser_count)
@@ -555,7 +555,7 @@ class SingleProcessEngine(engine.BaseEngine):
 
     # TODO: remove after completion event and event data split.
     for key, value in parser_mediator.parsers_counter.items():
-      parser_count = self._parsers_counter.get(key, None)
+      parser_count = self._parsers_counter.get(key)
       if parser_count:
         parser_count.number_of_events += value
         self._storage_writer.UpdateAttributeContainer(parser_count)

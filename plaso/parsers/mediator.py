@@ -197,7 +197,7 @@ class ParserMediator:
     if not path_spec or not path_spec.parent:
       return None
 
-    return self._environment_variables_per_path_spec.get(path_spec.parent, None)
+    return self._environment_variables_per_path_spec.get(path_spec.parent)
 
   def AddDateLessLogHelper(self, date_less_log_helper):
     """Adds a date-less log helper.

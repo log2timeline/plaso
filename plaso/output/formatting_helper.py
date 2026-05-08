@@ -586,7 +586,7 @@ class FieldFormattingHelper:
     if field_name in self._event_tag_field_names:
       return self._FormatTag(output_mediator, event_tag)
 
-    callback_function = self._callback_functions.get(field_name, None)
+    callback_function = self._callback_functions.get(field_name)
     if callback_function:
       output_value = callback_function(
           output_mediator, event, event_data, event_data_stream)

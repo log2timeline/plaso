@@ -92,7 +92,7 @@ class SQLitePlugin(plugins.BasePlugin):
     Returns:
       object: value or None if not available.
     """
-    keys_name_to_index_map = self._keys_per_query.get(query_hash, None)
+    keys_name_to_index_map = self._keys_per_query.get(query_hash)
     if not keys_name_to_index_map:
       keys_name_to_index_map = {
           name: index for index, name in enumerate(row.keys())}

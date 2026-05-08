@@ -13,11 +13,10 @@ class ProcessInfo:
       pid (int): process identifier (PID).
 
     Raises:
-      IOError: If the process identified by the PID does not exist.
       OSError: If the process identified by the PID does not exist.
     """
     if not psutil.pid_exists(pid):
-      raise IOError(f'Process with PID: {pid:d} does not exist')
+      raise OSError(f'Process with PID: {pid:d} does not exist')
 
     self._process = psutil.Process(pid)
 

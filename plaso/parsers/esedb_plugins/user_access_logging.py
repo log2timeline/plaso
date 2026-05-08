@@ -260,15 +260,15 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
           record_values, 'LastAccess')
       event_data.authenticated_username = record_values.get(
           'AuthenticatedUserName', None)
-      event_data.client_name = record_values.get('ClientName', None)
-      event_data.role_identifier = record_values.get('RoleGuid', None)
+      event_data.client_name = record_values.get('ClientName')
+      event_data.role_identifier = record_values.get('RoleGuid')
       event_data.insert_time = self._GetFiletimeRecordValue(
           record_values, 'InsertDate')
       event_data.role_name = self._role_mappings.get(
           event_data.role_identifier, 'Unknown')
-      event_data.source_ip_address = record_values.get('Address', None)
-      event_data.tenant_identifier = record_values.get('TenantId', None)
-      event_data.total_accesses = record_values.get('TotalAccesses', None)
+      event_data.source_ip_address = record_values.get('Address')
+      event_data.tenant_identifier = record_values.get('TenantId')
+      event_data.total_accesses = record_values.get('TotalAccesses')
 
       parser_mediator.ProduceEventData(event_data)
 
@@ -317,7 +317,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
           record_values, 'FirstSeen')
       event_data.last_seen_time = self._GetFiletimeRecordValue(
           record_values, 'LastSeen')
-      event_data.role_identifier = record_values.get('RoleGuid', None)
+      event_data.role_identifier = record_values.get('RoleGuid')
       event_data.role_name = self._role_mappings.get(
           event_data.role_identifier, 'Unknown')
 
@@ -357,8 +357,8 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
         continue
 
       event_data = UserAccessLoggingDNSEventData()
-      event_data.hostname = record_values.get('HostName', None)
-      event_data.ip_address = record_values.get('Address', None)
+      event_data.hostname = record_values.get('HostName')
+      event_data.ip_address = record_values.get('Address')
       event_data.last_seen_time = self._GetFiletimeRecordValue(
           record_values, 'LastSeen')
 
@@ -398,13 +398,13 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
         continue
 
       event_data = UserAccessLoggingVirtualMachinesEventData()
-      event_data.bios_identifier = record_values.get('BIOSGuid', None)
+      event_data.bios_identifier = record_values.get('BIOSGuid')
       event_data.creation_time = self._GetFiletimeRecordValue(
           record_values, 'CreationTime')
       event_data.last_active_time = self._GetFiletimeRecordValue(
           record_values, 'LastSeenActive')
-      event_data.serial_number = record_values.get('SerialNumber', None)
-      event_data.vm_identifier = record_values.get('VMGuid', None)
+      event_data.serial_number = record_values.get('SerialNumber')
+      event_data.vm_identifier = record_values.get('VMGuid')
 
       parser_mediator.ProduceEventData(event_data)
 
@@ -457,7 +457,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
 
     try:
       database.Open(file_object)
-    except (IOError, ValueError) as exception:
+    except (OSError, ValueError) as exception:
       parser_mediator.ProduceExtractionWarning(
           f'unable to open SystemInformation.mdb with error: {exception!s}')
       return
@@ -512,8 +512,8 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
             f'in table: {table.name:s}'))
         continue
 
-      role_identifier = record_values.get('RoleGuid', None)
-      role_name = record_values.get('RoleName', None)
+      role_identifier = record_values.get('RoleGuid')
+      role_name = record_values.get('RoleName')
       if role_identifier and role_name:
         self._role_mappings[role_identifier] = role_name
 

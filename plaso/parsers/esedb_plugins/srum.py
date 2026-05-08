@@ -289,7 +289,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
     Returns:
       dfdatetime.OLEAutomationDate: date and time or None if not set.
     """
-    timestamp = record_values.get(value_name, None)
+    timestamp = record_values.get(value_name)
     if not timestamp:
       return None
 
@@ -338,7 +338,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
       event_data = event_data_class()
 
       for attribute_name, column_name in values_map.items():
-        record_value = record_values.get(column_name, None)
+        record_value = record_values.get(column_name)
         if attribute_name in ('application', 'user_identifier'):
           # Human readable versions of AppId and UserId values are stored
           # in the SruDbIdMapTable table; also referred to as identifier
@@ -375,20 +375,20 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
     record_values = self._GetRecordValues(
         parser_mediator, table_name, record_index, esedb_record)
 
-    identifier = record_values.get('IdIndex', None)
+    identifier = record_values.get('IdIndex')
     if identifier is None:
       parser_mediator.ProduceExtractionWarning(
           'IdIndex value missing from table: SruDbIdMapTable')
       return None, None
 
-    identifier_type = record_values.get('IdType', None)
+    identifier_type = record_values.get('IdType')
     if identifier_type not in self._SUPPORTED_IDENTIFIER_TYPES:
       parser_mediator.ProduceExtractionWarning((
           f'unsupported IdType value: {identifier_type!s} in table: '
           f'SruDbIdMapTable'))
       return None, None
 
-    mapped_value = record_values.get('IdBlob', None)
+    mapped_value = record_values.get('IdBlob')
     if mapped_value is None:
       parser_mediator.ProduceExtractionWarning(
           'IdBlob value missing from table: SruDbIdMapTable')
@@ -399,7 +399,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
         fwnt_identifier = pyfwnt.security_identifier()
         fwnt_identifier.copy_from_byte_stream(mapped_value)
         mapped_value = fwnt_identifier.get_string()
-      except IOError:
+      except OSError:
         parser_mediator.ProduceExtractionWarning(
             'unable to decode IdBlob value as Windows NT security identifier')
         return None, None

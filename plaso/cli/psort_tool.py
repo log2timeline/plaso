@@ -111,7 +111,7 @@ class PsortTool(
     try:
       storage_file.Open(
           path=storage_file_path, read_only=check_readable_only)
-    except IOError as exception:
+    except OSError as exception:
       raise errors.BadConfigOption((
           f'Unable to open storage file: {storage_file_path:s} with error: '
           f'{exception!s}'))

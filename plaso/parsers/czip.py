@@ -42,7 +42,7 @@ class CompoundZIPParser(interface.FileObjectParser):
       zip_file = zipfile.ZipFile(file_object, 'r', allowZip64=True)  # pylint: disable=consider-using-with
 
     # Some non-ZIP files return true for is_zipfile but will fail with another
-    # error like a negative seek (IOError). Note that this function can raise
+    # error like a negative seek (OSError). Note that this function can raise
     # many different exceptions.
     except Exception as exception:  # pylint: disable=broad-except
       raise errors.WrongParser(

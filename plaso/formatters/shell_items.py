@@ -17,9 +17,9 @@ class ShellItemFileEntryNameFormatterHelper(
       output_mediator (OutputMediator): output mediator.
       event_values (dict[str, object]): event values.
     """
-    event_values['file_entry_name'] = event_values.get('long_name', None)
+    event_values['file_entry_name'] = event_values.get('long_name')
     if not event_values['file_entry_name']:
-      event_values['file_entry_name'] = event_values.get('name', None)
+      event_values['file_entry_name'] = event_values.get('name')
 
 
 manager.FormattersManager.RegisterEventFormatterHelper(

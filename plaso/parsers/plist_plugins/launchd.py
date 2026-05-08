@@ -84,8 +84,8 @@ class MacOSLaunchdPlistPlugin(interface.PlistPlugin):
         and other components, such as storage and dfVFS.
       top_level (Optional[dict[str, object]]): plist top-level item.
     """
-    program = top_level.get('Program', None)
-    program_arguments = top_level.get('ProgramArguments', None)
+    program = top_level.get('Program')
+    program_arguments = top_level.get('ProgramArguments')
     if not (program or program_arguments):
       return
     if program and program_arguments:

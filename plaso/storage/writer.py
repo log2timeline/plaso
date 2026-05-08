@@ -66,12 +66,11 @@ class StorageWriter(reader.StorageReader):
       EventTag: event tag or None if not available.
 
     Raises:
-      IOError: when there is an error querying the storage file.
       OSError: when there is an error querying the storage file.
     """
     lookup_key = event_identifier.CopyToString()
 
-    event_tag = self._event_tag_per_event_identifier.get(lookup_key, None)
+    event_tag = self._event_tag_per_event_identifier.get(lookup_key)
     if not event_tag:
       generator = self._store.GetAttributeContainers(
           self._CONTAINER_TYPE_EVENT_TAG,
@@ -96,11 +95,10 @@ class StorageWriter(reader.StorageReader):
     """Raises if the storage writer is not writable.
 
     Raises:
-      IOError: when the storage writer is closed.
       OSError: when the storage writer is closed.
     """
     if not self._store:
-      raise IOError('Unable to write to closed storage writer.')
+      raise OSError('Unable to write to closed storage writer.')
 
   def AddAttributeContainer(self, container):
     """Adds an attribute container.
@@ -109,7 +107,6 @@ class StorageWriter(reader.StorageReader):
       container (AttributeContainer): attribute container.
 
     Raises:
-      IOError: when the storage writer is closed.
       OSError: when the storage writer is closed.
     """
     self._RaiseIfNotWritable()
@@ -125,7 +122,6 @@ class StorageWriter(reader.StorageReader):
       event_tag (EventTag): event tag.
 
     Raises:
-      IOError: when the storage writer is closed.
       OSError: when the storage writer is closed.
     """
     self._RaiseIfNotWritable()
@@ -151,7 +147,6 @@ class StorageWriter(reader.StorageReader):
     """Closes the storage writer.
 
     Raises:
-      IOError: when the storage writer is closed.
       OSError: when the storage writer is closed.
     """
     self._RaiseIfNotWritable()
@@ -208,7 +203,6 @@ class StorageWriter(reader.StorageReader):
       container (AttributeContainer): attribute container.
 
     Raises:
-      IOError: when the storage writer is closed.
       OSError: when the storage writer is closed.
     """
     self._RaiseIfNotWritable()

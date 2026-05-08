@@ -224,7 +224,7 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
     Returns:
       dfdatetime.DateTimeValues: date and time or None if not set.
     """
-    filetime = record_values.get(value_name, None)
+    filetime = record_values.get(value_name)
     if not filetime:
       return None
 
@@ -273,38 +273,38 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
         if ord(url[0]) < 0x20 or ord(url[0]) == 0x7f:
           url = None
 
-        request_headers = record_values.get('RequestHeaders', None)
+        request_headers = record_values.get('RequestHeaders')
         # Ignore non-Unicode request headers values.
         if not isinstance(request_headers, str):
           request_headers = None
 
-        response_headers = record_values.get('ResponseHeaders', None)
+        response_headers = record_values.get('ResponseHeaders')
         # Ignore non-Unicode response headers values.
         if not isinstance(response_headers, str):
           response_headers = None
 
         event_data = MsieWebCacheContainerEventData()
-        event_data.access_count = record_values.get('AccessCount', None)
+        event_data.access_count = record_values.get('AccessCount')
         event_data.access_time = self._GetDateTimeValue(
             record_values, 'AccessedTime')
-        event_data.cached_filename = record_values.get('Filename', None)
-        event_data.cached_file_size = record_values.get('FileSize', None)
-        event_data.cache_identifier = record_values.get('CacheId', None)
-        event_data.container_identifier = record_values.get('ContainerId', None)
+        event_data.cached_filename = record_values.get('Filename')
+        event_data.cached_file_size = record_values.get('FileSize')
+        event_data.cache_identifier = record_values.get('CacheId')
+        event_data.container_identifier = record_values.get('ContainerId')
         event_data.creation_time = self._GetDateTimeValue(
             record_values, 'CreationTime')
-        event_data.entry_identifier = record_values.get('EntryId', None)
+        event_data.entry_identifier = record_values.get('EntryId')
         event_data.expiration_time = self._GetDateTimeValue(
             record_values, 'ExpiryTime')
-        event_data.file_extension = record_values.get('FileExtension', None)
+        event_data.file_extension = record_values.get('FileExtension')
         event_data.modification_time = self._GetDateTimeValue(
             record_values, 'ModifiedTime')
         event_data.post_check_time = self._GetDateTimeValue(
             record_values, 'PostCheckTime')
-        event_data.redirect_url = record_values.get('RedirectUrl', None)
+        event_data.redirect_url = record_values.get('RedirectUrl')
         event_data.request_headers = request_headers
         event_data.response_headers = response_headers
-        event_data.synchronization_count = record_values.get('SyncCount', None)
+        event_data.synchronization_count = record_values.get('SyncCount')
         event_data.synchronization_time = self._GetDateTimeValue(
             record_values, 'SyncTime')
         event_data.url = url
@@ -339,7 +339,7 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
     Returns:
       str: the hexadecimal formatted binary string or None if not available.
     """
-    cookie_hash = record_values.get(value_name, None)
+    cookie_hash = record_values.get(value_name)
     if cookie_hash is not None:
       return cookie_hash.hex()
     return None
@@ -367,25 +367,25 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
             f'in table: {table.name:s}'))
         continue
 
-      cookie_name = self._CookieHexToAscii(record_values.get('Name', None))
-      cookie_value = self._CookieHexToAscii(record_values.get('Value', None))
+      cookie_name = self._CookieHexToAscii(record_values.get('Name'))
+      cookie_value = self._CookieHexToAscii(record_values.get('Value'))
 
       cookie_hash = self.GetRawCookieValue(record_values, 'CookieHash')
       cookie_value_raw = self.GetRawCookieValue(record_values, 'Value')
 
       event_data = MsieWebCacheCookieData()
-      event_data.container_identifier = record_values.get('ContainerId', None)
+      event_data.container_identifier = record_values.get('ContainerId')
       event_data.cookie_hash = cookie_hash
       event_data.cookie_name = cookie_name
       event_data.cookie_value_raw = cookie_value_raw
       event_data.cookie_value = cookie_value
-      event_data.entry_identifier = record_values.get('EntryId', None)
-      event_data.flags = record_values.get('Flags', None)
+      event_data.entry_identifier = record_values.get('EntryId')
+      event_data.flags = record_values.get('Flags')
       event_data.expiration_time = self._GetDateTimeValue(
           record_values, 'Expires')
       event_data.modification_time = self._GetDateTimeValue(
           record_values, 'LastModified')
-      event_data.request_domain = record_values.get('RDomain', None)
+      event_data.request_domain = record_values.get('RDomain')
       parser_mediator.ProduceEventData(event_data)
 
   def ParseContainersTable(
@@ -417,17 +417,17 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
       event_data = MsieWebCacheContainersEventData()
       event_data.access_time = self._GetDateTimeValue(
           record_values, 'LastAccessTime')
-      event_data.container_identifier = record_values.get('ContainerId', None)
-      event_data.directory = record_values.get('Directory', None)
-      event_data.name = record_values.get('Name', None)
+      event_data.container_identifier = record_values.get('ContainerId')
+      event_data.directory = record_values.get('Directory')
+      event_data.name = record_values.get('Name')
       event_data.scavenge_time = self._GetDateTimeValue(
           record_values, 'LastScavengeTime')
-      event_data.set_identifier = record_values.get('SetId', None)
+      event_data.set_identifier = record_values.get('SetId')
 
       parser_mediator.ProduceEventData(event_data)
 
-      container_identifier = record_values.get('ContainerId', None)
-      container_name = record_values.get('Name', None)
+      container_identifier = record_values.get('ContainerId')
+      container_name = record_values.get('Name')
 
       if not container_identifier or not container_name:
         continue
@@ -475,10 +475,10 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
           parser_mediator, table.name, record_index, esedb_record)
 
       event_data = MsieWebCacheLeakFilesEventData()
-      event_data.cached_filename = record_values.get('Filename', None)
+      event_data.cached_filename = record_values.get('Filename')
       event_data.creation_time = self._GetDateTimeValue(
           record_values, 'CreationTime')
-      event_data.leak_identifier = record_values.get('LeakId', None)
+      event_data.leak_identifier = record_values.get('LeakId')
 
       parser_mediator.ProduceEventData(event_data)
 
@@ -509,12 +509,12 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
           parser_mediator, table.name, record_index, esedb_record)
 
       event_data = MsieWebCachePartitionsEventData()
-      event_data.directory = record_values.get('Directory', None)
-      event_data.partition_identifier = record_values.get('PartitionId', None)
-      event_data.partition_type = record_values.get('PartitionType', None)
+      event_data.directory = record_values.get('Directory')
+      event_data.partition_identifier = record_values.get('PartitionId')
+      event_data.partition_type = record_values.get('PartitionType')
       event_data.scavenge_time = self._GetDateTimeValue(
           record_values, 'LastScavengeTime')
-      event_data.table_identifier = record_values.get('TableId', None)
+      event_data.table_identifier = record_values.get('TableId')
 
       parser_mediator.ProduceEventData(event_data)
 

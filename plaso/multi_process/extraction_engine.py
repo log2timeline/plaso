@@ -592,7 +592,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
           self._task_manager.SampleTaskStatus(task, 'merge_started')
 
-        except IOError as exception:
+        except OSError as exception:
           logger.error((
               f'Unable to merge results of task: {task.identifier:s} with '
               f'error: {exception!s}'))
@@ -810,7 +810,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       self._status = definitions.STATUS_INDICATOR_COMPLETED
 
     for key, value in self._event_data_timeliner.parsers_counter.items():
-      parser_count = stored_parsers_counter.get(key, None)
+      parser_count = stored_parsers_counter.get(key)
       if parser_count:
         parser_count.number_of_events += value
         storage_writer.UpdateAttributeContainer(parser_count)
@@ -897,7 +897,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     try:
       self._StartMonitoringProcess(process)
 
-    except (IOError, KeyError) as exception:
+    except (KeyError, OSError) as exception:
       pid = process.pid
       logger.error((
           f'Unable to monitor replacement worker process: {process_name:s} '
@@ -984,7 +984,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
     process = self._processes_per_pid[pid]
 
-    processing_status = process_status.get('processing_status', None)
+    processing_status = process_status.get('processing_status')
 
     self._RaiseIfNotMonitored(pid)
 
@@ -1202,7 +1202,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
       self._StopTaskStorage(
           self._task_storage_format, session_identifier,
           abort=task_storage_abort)
-    except (IOError, OSError) as exception:
+    except OSError as exception:
       logger.error(f'Unable to stop task storage with error: {exception!s}')
 
     if self._abort:

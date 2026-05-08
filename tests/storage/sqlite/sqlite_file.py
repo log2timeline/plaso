@@ -65,27 +65,27 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       test_store._CheckStorageMetadata(metadata_values)
 
       metadata_values['format_version'] = 'bogus'
-      with self.assertRaises(IOError):
+      with self.assertRaises(OSError):
         test_store._CheckStorageMetadata(metadata_values)
 
       metadata_values['format_version'] = '1'
-      with self.assertRaises(IOError):
+      with self.assertRaises(OSError):
         test_store._CheckStorageMetadata(metadata_values)
 
       metadata_values['format_version'] = f'{test_store._FORMAT_VERSION:d}'
       metadata_values['compression_format'] = None
-      with self.assertRaises(IOError):
+      with self.assertRaises(OSError):
         test_store._CheckStorageMetadata(metadata_values)
 
       metadata_values['compression_format'] = (
           definitions.COMPRESSION_FORMAT_ZLIB)
       metadata_values['serialization_format'] = None
-      with self.assertRaises(IOError):
+      with self.assertRaises(OSError):
         test_store._CheckStorageMetadata(metadata_values)
 
       metadata_values['serialization_format'] = (
           definitions.SERIALIZER_FORMAT_JSON)
-      with self.assertRaises(IOError):
+      with self.assertRaises(OSError):
         test_store._CheckStorageMetadata(metadata_values)
 
   def testCreateAttributeContainerTable(self):
@@ -101,7 +101,7 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
         test_store._CreateAttributeContainerTable(
             event_data_stream.CONTAINER_TYPE)
 
-        with self.assertRaises(IOError):
+        with self.assertRaises(OSError):
           test_store._CreateAttributeContainerTable(
               event_data_stream.CONTAINER_TYPE)
 
@@ -281,7 +281,7 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
       finally:
         test_store.Close()
 
-      with self.assertRaises(IOError):
+      with self.assertRaises(OSError):
         test_store.AddAttributeContainer(event_data_stream)
 
   # TODO: add tests for CheckSupportedFormat
@@ -506,7 +506,7 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
       v2_test_store_rw = _TestSQLiteStorageFileV20221023()
 
-      with self.assertRaises((IOError, OSError)):
+      with self.assertRaises(OSError):
         v2_test_store_rw.Open(path=v1_storage_path, read_only=False)
 
       v2_test_store_ro = _TestSQLiteStorageFileV20221023()

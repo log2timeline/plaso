@@ -16,7 +16,7 @@ class ProcessInfoTest(unittest.TestCase):
     process_information = process_info.ProcessInfo(pid)
     self.assertIsNotNone(process_information)
 
-    with self.assertRaises(IOError):
+    with self.assertRaises(OSError):
       process_info.ProcessInfo(-1)
 
   def testGetUsedMemory(self):

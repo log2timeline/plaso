@@ -26,7 +26,7 @@ class StorageWriterTest(test_lib.StorageTestCase):
     """Tests the _RaiseIfNotWritable function."""
     storage_writer = writer.StorageWriter()
 
-    with self.assertRaises(IOError):
+    with self.assertRaises(OSError):
       storage_writer._RaiseIfNotWritable()
 
   # TODO: add tests for AddAttributeContainer method

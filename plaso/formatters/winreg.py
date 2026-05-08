@@ -17,7 +17,7 @@ class WindowsRegistryValuesFormatterHelper(
       output_mediator (OutputMediator): output mediator.
       event_values (dict[str, object]): event values.
     """
-    values = event_values.get('values', None)
+    values = event_values.get('values')
     if not values:
       values_string = '(empty)'
 

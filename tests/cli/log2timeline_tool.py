@@ -533,7 +533,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
       storage_file = sqlite_file.SQLiteStorageFile()
       try:
         storage_file.Open(path=options.storage_file, read_only=True)
-      except IOError as exception:
+      except OSError as exception:
         self.fail(
             f'Unable to open storage file after processing with error: '
             f'{exception!s}')

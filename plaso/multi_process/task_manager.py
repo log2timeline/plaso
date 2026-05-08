@@ -384,11 +384,11 @@ class TaskManager:
       KeyError: if the task was not processing, queued or abandoned.
     """
     with self._lock:
-      task = self._tasks_processing.get(task_identifier, None)
+      task = self._tasks_processing.get(task_identifier)
       if not task:
-        task = self._tasks_queued.get(task_identifier, None)
+        task = self._tasks_queued.get(task_identifier)
       if not task:
-        task = self._tasks_abandoned.get(task_identifier, None)
+        task = self._tasks_abandoned.get(task_identifier)
       if not task:
         raise KeyError(f'Status of task {task_identifier:s} is unknown.')
 
@@ -592,13 +592,13 @@ class TaskManager:
       KeyError: if the task is not known to the task manager.
     """
     with self._lock:
-      task_processing = self._tasks_processing.get(task_identifier, None)
+      task_processing = self._tasks_processing.get(task_identifier)
       if task_processing:
         task_processing.UpdateProcessingTime()
         self._UpdateLatestProcessingTime(task_processing)
         return
 
-      task_queued = self._tasks_queued.get(task_identifier, None)
+      task_queued = self._tasks_queued.get(task_identifier)
       if task_queued:
         logger.debug(f'Task {task_identifier:s} was queued, now processing.')
         self._tasks_processing[task_identifier] = task_queued
@@ -608,7 +608,7 @@ class TaskManager:
         self._UpdateLatestProcessingTime(task_queued)
         return
 
-      task_abandoned = self._tasks_abandoned.get(task_identifier, None)
+      task_abandoned = self._tasks_abandoned.get(task_identifier)
       if task_abandoned:
         del self._tasks_abandoned[task_identifier]
         self._tasks_processing[task_identifier] = task_abandoned

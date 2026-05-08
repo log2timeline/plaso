@@ -187,14 +187,14 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
 
     data_store['text'] = body
 
-    room = data.get('rooms', None)
+    room = data.get('rooms')
     if not room:
-      room = data.get('room', None)
+      room = data.get('room')
     if room:
       data_store['room'] = room
 
-    data_store['id'] = data.get('id', None)
-    user = data.get('user', None)
+    data_store['id'] = data.get('id')
+    user = data.get('user')
     if user:
       try:
         user_sid = int(user)
@@ -272,15 +272,15 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
     event_data.added_time = self._GetDateTimeRowValue(
         parser_mediator, query_hash, row, 'time_string')
     event_data.description = description
-    event_data.event_type = data.get('event_type', None)
+    event_data.event_type = data.get('event_type')
     event_data.offset = self._GetRowValue(query_hash, row, 'id')
     event_data.query = query
-    event_data.record_id = data.get('id', None)
-    event_data.room = data.get('room', None)
-    event_data.text = data.get('text', None)
+    event_data.record_id = data.get('id')
+    event_data.room = data.get('room')
+    event_data.text = data.get('text')
     event_data.url = key_url
-    event_data.user_name = data.get('user', None)
-    event_data.user_sid = data.get('sid', None)
+    event_data.user_name = data.get('user')
+    event_data.user_sid = data.get('sid')
 
     parser_mediator.ProduceEventData(event_data)
 

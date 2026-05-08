@@ -122,7 +122,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
     if isinstance(process_status, dict):
       self._rpc_errors_per_pid[pid] = 0
-      status_indicator = process_status.get('processing_status', None)
+      status_indicator = process_status.get('processing_status')
 
     else:
       rpc_errors = self._rpc_errors_per_pid.get(pid, 0) + 1
@@ -215,7 +215,7 @@ class MultiProcessEngine(engine.BaseEngine):
     if not process_is_alive:
       return None
 
-    rpc_client = self._rpc_clients_per_pid.get(process.pid, None)
+    rpc_client = self._rpc_clients_per_pid.get(process.pid)
     return rpc_client.CallFunction()
 
   def _RaiseIfNotMonitored(self, pid):
@@ -280,7 +280,6 @@ class MultiProcessEngine(engine.BaseEngine):
       process (MultiProcessBaseProcess): process.
 
     Raises:
-      IOError: if the RPC client cannot connect to the server.
       KeyError: if the process is not registered with the engine or
           if the process is already being monitored.
       OSError: if the RPC client cannot connect to the server.
@@ -309,13 +308,13 @@ class MultiProcessEngine(engine.BaseEngine):
       time_waited_for_process += 0.1
 
       if time_waited_for_process >= self._RPC_SERVER_TIMEOUT:
-        raise IOError(
+        raise OSError(
             f'RPC client unable to determine server (PID: {pid:d}) port.')
 
     hostname = 'localhost'
 
     if not rpc_client.Open(hostname, rpc_port):
-      raise IOError((
+      raise OSError((
           f'RPC client unable to connect to server (PID: {pid:d}) '
           f'http://{hostname:s}:{rpc_port:d}'))
 
@@ -354,7 +353,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
     del self._process_information_per_pid[pid]
 
-    rpc_client = self._rpc_clients_per_pid.get(pid, None)
+    rpc_client = self._rpc_clients_per_pid.get(pid)
     if rpc_client:
       rpc_client.Close()
       del self._rpc_clients_per_pid[pid]

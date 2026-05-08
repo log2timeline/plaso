@@ -140,7 +140,7 @@ class PreprocessMediator:
           provider_identifier, None)
 
     if not existing_provider:
-      existing_provider = self._windows_eventlog_providers.get(log_source, None)
+      existing_provider = self._windows_eventlog_providers.get(log_source)
 
     if existing_provider:
       self._windows_eventlog_providers_helper.Merge(
@@ -173,7 +173,7 @@ class PreprocessMediator:
           if there was no value set for the given name.
     """
     name = name.upper()
-    return self._environment_variables.get(name, None)
+    return self._environment_variables.get(name)
 
   def GetEnvironmentVariables(self):
     """Retrieves the environment variables.
@@ -193,7 +193,7 @@ class PreprocessMediator:
       object: value or None if not available.
     """
     identifier = identifier.lower()
-    return self._values.get(identifier, None)
+    return self._values.get(identifier)
 
   def GetValues(self):
     """Retrieves the values.

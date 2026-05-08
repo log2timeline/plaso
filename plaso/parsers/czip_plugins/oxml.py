@@ -118,7 +118,7 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
     Returns:
       str: property value.
     """
-    property_value = properties.get(name, None)
+    property_value = properties.get(name)
     if isinstance(property_value, bytes):
       try:
         # TODO: get encoding form XML metadata.
@@ -152,7 +152,7 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
     Returns:
       bool: boolean value or None not available.
     """
-    string_value = properties.get(name, None)
+    string_value = properties.get(name)
     if string_value:
       if string_value == 'false':
         return False
@@ -171,7 +171,7 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
     Returns:
       int: integer value or None not available.
     """
-    string_value = properties.get(name, None)
+    string_value = properties.get(name)
     if string_value:
       try:
         return int(string_value, 10)
@@ -193,7 +193,7 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
       dfdatetime.TimeElementsInMicroseconds: date and time value or None if
           not available.
     """
-    iso8601_string = properties.get(name, None)
+    iso8601_string = properties.get(name)
     if not iso8601_string:
       return None
 
@@ -240,7 +240,7 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
       if name == 'lpstr':
         continue
 
-      property_name = self._PROPERTY_NAMES.get(name, None)
+      property_name = self._PROPERTY_NAMES.get(name)
       if not property_name:
         property_name = self._FormatPropertyName(name)
 
@@ -285,7 +285,7 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
     try:
       xml_data = zip_file.read('_rels/.rels')
       property_files = self._ParseRelationshipsXMLFile(xml_data)
-    except (IndexError, IOError, KeyError, LookupError, OverflowError,
+    except (IndexError, KeyError, LookupError, OSError, OverflowError,
             ValueError, ElementTree.ParseError, expat.ExpatError,
             zipfile.BadZipfile) as exception:
       parser_mediator.ProduceExtractionWarning((
@@ -299,7 +299,7 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
       try:
         xml_data = zip_file.read(path)
         properties = self._ParsePropertiesXMLFile(xml_data)
-      except (IndexError, IOError, KeyError, LookupError, OverflowError,
+      except (IndexError, KeyError, LookupError, OSError, OverflowError,
               ValueError, ElementTree.ParseError, expat.ExpatError,
               zipfile.BadZipfile) as exception:
         parser_mediator.ProduceExtractionWarning((

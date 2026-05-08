@@ -58,7 +58,7 @@ class SafariDownloadsPlistPlugin(interface.PlistPlugin):
       event_data = SafariDownloadEventData()
       event_data.end_time = self._GetDateTimeValueFromPlistKey(
           plist_key, 'DownloadEntryDateFinishedKey')
-      event_data.full_path = plist_key.get('DownloadEntryPath', None)
+      event_data.full_path = plist_key.get('DownloadEntryPath')
       event_data.received_bytes = plist_key.get(
           'DownloadEntryProgressBytesSoFar', None)
       event_data.remove_on_completion = plist_key.get(
@@ -67,7 +67,7 @@ class SafariDownloadsPlistPlugin(interface.PlistPlugin):
           plist_key, 'DownloadEntryDateAddedKey')
       event_data.total_bytes = plist_key.get(
           'DownloadEntryProgressTotalToLoad', None)
-      event_data.url = plist_key.get('DownloadEntryURL', None)
+      event_data.url = plist_key.get('DownloadEntryURL')
 
       parser_mediator.ProduceEventData(event_data)
 

@@ -56,11 +56,10 @@ class PlistFile:
       file_object (dfvfs.FileIO): a file-like object containing plist data.
 
     Raises:
-      IOError: if the plist file-like object cannot be read.
       OSError: if the plist file-like object cannot be read.
     """
     try:
       self.root_key = plistlib.load(file_object)
 
     except plistlib.InvalidFileException as exception:
-      raise IOError(exception)
+      raise OSError(exception)
