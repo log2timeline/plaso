@@ -5,6 +5,7 @@ The iOS Instagram threads database file is typically stored in:
 """
 
 import plistlib
+
 from plistlib import UID
 
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
@@ -171,7 +172,7 @@ class IOSInstagramPlugin(interface.SQLitePlugin):
         for key in keys:
           obj = GetField(obj, key, objects)
         return obj
-      except (AttributeError, KeyError, IndexError, TypeError):
+      except (AttributeError, IndexError, KeyError, TypeError):
         return None
 
     message_identifier = self._GetRowValue(query_hash, row, 'message_id')
