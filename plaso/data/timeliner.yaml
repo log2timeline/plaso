@@ -3,9 +3,9 @@
 data_type: 'android:airtag:event'
 attribute_mappings:
 - name: 'first_discovery_time'
-  description: 'First Discovery'
+  description: 'First Discovery Time'
 - name: 'last_seen_time'
-  description: 'Last Seen'
+  description: 'Last Seen Time'
 place_holder_event: true
 ---
 data_type: 'android:app_usage'
