@@ -17,6 +17,6 @@ order, and then a maintainer will review your code.
 
 ## Checklist:
 * [ ] No new [new dependencies](https://plaso.readthedocs.io/en/latest/sources/developer/Adding-a-new-dependency.html) are required or l2tdevtools has been updated.
-* [ ] Test data has a Plaso compatible license. If the test data was not authored by you (the contributor), make sure to mention its orginal source in ACKNOWLEDGEMENTS.
+* [ ] Test data has a Plaso compatible license. If the test data was not authored by you (the contributor), make sure to mention its original source in ACKNOWLEDGEMENTS.
 * [ ] Reviewer assigned.
 * [ ] Automated checks (GitHub Actions, AppVeyor) pass.
