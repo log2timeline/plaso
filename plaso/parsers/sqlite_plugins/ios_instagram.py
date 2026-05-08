@@ -1,5 +1,8 @@
-# -*- coding: utf-8 -*-
-"""SQLite parser plugin for iOS Instagram threads database files."""
+"""SQLite parser plugin for iOS Instagram threads database files.
+
+The iOS Instagram threads database file is typically stored in:
+  9368974384.db
+"""
 
 import plistlib
 from plistlib import UID
@@ -17,13 +20,14 @@ class IOSInstagramThreadsEventData(events.EventData):
   Attributes:
     message (str): Content of the direct message or chat sent in the thread.
     query (str): SQL query that was used to obtain the event data.
-    sender_pk (str): Primary key or unique identifier of the sender account.
+    sender_identifier (str): unique identifier (or primary key) of the sender
+        account.
     sent_time (dfdatetime.DateTimeValues): Date and time when the message was 
         sent.
-    shared_media_id (str): Identifier of the media shared in the thread.
+    shared_media_identifier (str): Identifier of the media shared in the thread.
     shared_media_url (str): URL to the media content shared in the thread.
     username (str): username of the sender or participant in the thread.
-    video_chat_call_id (str): Identifier of the video call session.
+    video_chat_call_identifier (str): Identifier of the video call session.
     video_chat_title (str): Title or description of the video chat.
   """
 
@@ -31,39 +35,31 @@ class IOSInstagramThreadsEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(IOSInstagramThreadsEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.message = None
     self.query = None
-    self.sender_pk = None
-    self.shared_media_id = None
+    self.sender_identifier = None
+    self.shared_media_identifier = None
     self.shared_media_url = None
     self.sent_time = None
     self.username = None
-    self.video_chat_call_id = None
+    self.video_chat_call_identifier = None
     self.video_chat_title = None
 
 
 class IOSInstagramPlugin(interface.SQLitePlugin):
-  """SQLite parser plugin for iOS Instagram threads database files.
-
-  The OS Instagram threads database file is typically stored in:
-  9368974384.db
-  """
+  """SQLite parser plugin for iOS Instagram threads database files."""
 
   NAME = 'instagram_ios'
   DATA_FORMAT = 'iOS Instagram threads SQLite database (9368974384.db) file'
 
   REQUIRED_STRUCTURE = {
-      'messages': frozenset([
-          'message_id', 'archive']),
-      'threads': frozenset([
-          'thread_id','metadata'])}
+      'messages': frozenset(['message_id', 'archive']),
+      'threads': frozenset(['thread_id','metadata'])}
 
   QUERIES = [
-    (('SELECT thread_id, metadata FROM threads'),
-      'ParseUserRow'),
-    (('SELECT message_id, archive FROM messages'),
-      'ParseThreadRow')]
+      (('SELECT thread_id, metadata FROM threads'), 'ParseUserRow'),
+      (('SELECT message_id, archive FROM messages'), 'ParseThreadRow')]
 
   SCHEMAS = [{
       'inbox_metadata': (
@@ -96,7 +92,7 @@ class IOSInstagramPlugin(interface.SQLitePlugin):
 
   def __init__(self):
     """Initializes the plugin."""
-    super(IOSInstagramPlugin, self).__init__()
+    super().__init__()
     self.users = {}
 
   def ParseUserRow(self, parser_mediator, query, row, **unused_kwargs):
@@ -150,15 +146,10 @@ class IOSInstagramPlugin(interface.SQLitePlugin):
         else:
           self.users[inviter_pk] = None
 
-    except (
-      plistlib.InvalidFileException,
-      KeyError,
-      TypeError,
-      AttributeError,
-      IndexError
-    ) as e:
+    except (AttributeError, IndexError, KeyError, TypeError,
+            plistlib.InvalidFileException) as exception:
       parser_mediator.ProduceExtractionWarning(
-        f'Unable to parse thread metadata with error: {e}')
+          f'Unable to parse thread metadata with error: {exception!s}')
 
   def ParseThreadRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a message row.
@@ -183,7 +174,7 @@ class IOSInstagramPlugin(interface.SQLitePlugin):
       except (AttributeError, KeyError, IndexError, TypeError):
         return None
 
-    message_id = self._GetRowValue(query_hash, row, 'message_id')
+    message_identifier = self._GetRowValue(query_hash, row, 'message_id')
     archive_blob = self._GetRowValue(query_hash, row, 'archive')
 
     if not archive_blob or not archive_blob.startswith(b'bplist'):
@@ -198,11 +189,11 @@ class IOSInstagramPlugin(interface.SQLitePlugin):
       metadata = GetField(
             root, "IGDirectPublishedMessageMetadata*metadata", objects)
       if metadata:
-        sender_pk = GetField(metadata, "NSString*senderPk", objects)
+        sender_identifier = GetField(metadata, "NSString*senderPk", objects)
         server_timestamp_raw = GetField(
                 metadata, "NSDate*serverTimestamp", objects)
       else:
-        sender_pk = None
+        sender_identifier = None
         server_timestamp_raw = None
 
       server_timestamp = None
@@ -231,16 +222,16 @@ class IOSInstagramPlugin(interface.SQLitePlugin):
       if thread_activity:
         video_chat_title = GetField(
             thread_activity, "NSString*voipTitle", objects)
-        video_chat_call_id = GetField(
+        video_chat_call_identifier = GetField(
             thread_activity, "NSString*videoCallId", objects)
       else:
         video_chat_title = None
-        video_chat_call_id = None
+        video_chat_call_identifier = None
 
-      shared_media_id = None
+      shared_media_identifier = None
       shared_media_url = None
       if media:
-        shared_media_id = GetNestedField(media, [
+        shared_media_identifier = GetNestedField(media, [
           "IGDirectPublishedMessagePermanentMedia*permanentMedia",
           "IGPhoto*photo",
           "kIGPhotoMediaID"
@@ -261,31 +252,27 @@ class IOSInstagramPlugin(interface.SQLitePlugin):
             ], objects)
 
       username = None
-      if sender_pk:
-        username = self.users.get(sender_pk)
+      if sender_identifier:
+        username = self.users.get(sender_identifier)
 
       event_data = IOSInstagramThreadsEventData()
       event_data.message = message
       event_data.query = query
-      event_data.sender_pk = sender_pk
+      event_data.sender_identifier = sender_identifier
       event_data.sent_time = server_timestamp
-      event_data.shared_media_id = shared_media_id
+      event_data.shared_media_identifier = shared_media_identifier
       event_data.shared_media_url = shared_media_url
       event_data.username = username
-      event_data.video_chat_call_id = video_chat_call_id
+      event_data.video_chat_call_identifier = video_chat_call_identifier
       event_data.video_chat_title = video_chat_title
 
       parser_mediator.ProduceEventData(event_data)
 
-    except (
-      plistlib.InvalidFileException,
-      KeyError,
-      AttributeError,
-      IndexError,
-      TypeError
-    ) as e:
+    except (AttributeError, IndexError, KeyError, TypeError,
+            plistlib.InvalidFileException) as exception:
       parser_mediator.ProduceExtractionWarning(
-        f'Unable to parse archive for message_id {message_id} '
-        f'with error: {e}')
+          f'Unable to parse archive for message_id {message_identifier:s} '
+          f'with error: {exception!s}')
+
 
 sqlite.SQLiteParser.RegisterPlugin(IOSInstagramPlugin)
