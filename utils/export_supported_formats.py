@@ -136,8 +136,7 @@ class DataFormatInformationExtractor:
     lines = [
         '## Supported Formats',
         '',
-        'The information below is based of version {0:s}'.format(
-            plaso.__version__),
+        f'The information below is based of version {plaso.__version__:s}',
         '']
 
     descriptors_per_category = collections.defaultdict(list)
@@ -146,7 +145,7 @@ class DataFormatInformationExtractor:
           data_format_descriptor)
 
     for category in self._CATEGORIES_OUTPUT_ORDER:
-      lines.append('### {0:s}'.format(category))
+      lines.append(f'### {category:s}')
       lines.append('')
 
       standard_text = self._STANDARD_TEXT_PER_CATEGORY.get(category, None)
@@ -163,23 +162,23 @@ class DataFormatInformationExtractor:
         if url.startswith('dtformats:'):
           url = url.split(':')[1]
           url = urllib_parse.quote(url)
-          url = '{0:s}/{1:s}.asciidoc'.format(self._DTFORMATS_URL_PREFIX, url)
-          line = '* [{0:s}]({1:s})'.format(data_format_descriptor.name, url)
+          url = f'{self._DTFORMATS_URL_PREFIX:s}/{url:s}.asciidoc'
+          line = f'* [{data_format_descriptor.name:s}]({url:s})'
 
         elif url.startswith('libyal:'):
           library_name, url = url.split(':')[1:3]
-          library_url = 'https://github.com/libyal/{0:s}'.format(library_name)
+          library_url = f'https://github.com/libyal/{library_name:s}'
           url = urllib_parse.quote(url)
-          url = '{0:s}/blob/main/documentation/{1:s}.asciidoc'.format(
-              library_url, url)
-          line = '* [{0:s}]({1:s}) using [{2:s}]({3:s})'.format(
-              data_format_descriptor.name, url, library_name, library_url)
+          url = f'{library_url:s}/blob/main/documentation/{url:s}.asciidoc'
+          line = (
+              f'* [{data_format_descriptor.name:s}]({url:s}) using '
+              f'[{library_name:s}]({library_url:s})')
 
         elif url.startswith('http:') or url.startswith('https:'):
-          line = '* [{0:s}]({1:s})'.format(data_format_descriptor.name, url)
+          line = f'* [{data_format_descriptor.name:s}]({url:s})'
 
         else:
-          line = '* {0:s}'.format(data_format_descriptor.name)
+          line = f'* {data_format_descriptor.name:s}'
 
         lines_per_category.append(line)
 
@@ -234,8 +233,9 @@ class DataFormatInformationExtractor:
 
             data_format = getattr(cls, 'DATA_FORMAT', None)
             if not data_format:
-              print(('WARNING: parser or plugin: {0:s} missing '
-                     'DATA_FORMAT').format(parser_name))
+              print(
+                  f'WARNING: parser or plugin: {parser_name:s} missing '
+                  f'DATA_FORMAT')
 
             url = ''
 
