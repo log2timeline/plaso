@@ -206,7 +206,7 @@ class ChromePreferencesParser(interface.FileObjectParser):
           f'[{self.NAME!s}] {display_name!s} is not a valid Chrome Preferences '
           f'file, unable to decode as UTF-8')
 
-    # Second verify it is valid JSON
+    # Second verify it is valid JSON.
     try:
       json_dict = json.loads(file_content)
 
@@ -222,8 +222,7 @@ class ChromePreferencesParser(interface.FileObjectParser):
           f'[{self.NAME!s}] {display_name!s} is not a valid Chrome Preferences '
           f'file, unable to decode as JSON with error: {exception!s}')
 
-    # Third pass to verify the file has the correct keys in it for Chrome
-    # Preferences file.
+    # Third verify the file has the correct keys for a Chrome Preferences file.
     if not set(self.REQUIRED_KEYS).issubset(set(json_dict.keys())):
       raise errors.WrongParser('File does not contain Chrome Preferences data')
 
