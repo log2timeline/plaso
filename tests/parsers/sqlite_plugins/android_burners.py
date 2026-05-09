@@ -1,5 +1,5 @@
-# -- coding: utf-8 --
-"""Tests for the Android Burners App plugin."""
+#!/usr/bin/env python3
+"""Tests for the Android Burner plugin."""
 
 import unittest
 
@@ -8,17 +8,18 @@ from plaso.parsers.sqlite_plugins import android_burners
 from tests.parsers.sqlite_plugins import test_lib
 
 
-class AndroidCommunicationInformationPluginTest(test_lib.SQLitePluginTestCase):
-  """Tests for the Android Burners App database plugin."""
+class AndroidBurnerPluginTest(test_lib.SQLitePluginTestCase):
+  """Tests for the Android Burner database plugin."""
 
-  def testParse(self):
+  def testProcess(self):
     """Test the Process function on an Android burners.db file."""
-    plugin = android_burners.AndroidCommunicationInformationPlugin()
-    storage_writer = self._ParseDatabaseFileWithPlugin(['burners.db'], plugin)
+    plugin = android_burners.AndroidBurnerPlugin()
+    storage_writer = self._ParseDatabaseFileWithPlugin([
+        'burners.sqlite'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
-    self.assertEqual(number_of_event_data, 25)
+    self.assertEqual(number_of_event_data, 1)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -29,21 +30,19 @@ class AndroidCommunicationInformationPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(number_of_warnings, 0)
 
     expected_event_values = {
-        'alias': 'Alias Burner',
-        'date_created': '2023-01-15T12:34:56+00:00',
-        'expiration_date': '2024-01-15T12:34:56+00:00',
-        'features': 'Call, Text',
-        'last_updated_date': '2023-12-01T12:34:56+00:00',
-        'name': 'Sample Burner',
-        'phone_number_id': '123456789',
-        'renewal_date': '2024-01-01T00:00:00+00:00',
-        'total_minutes': 500,
-        'user_id': 'user_01',
-        'voicemail_url': 'http://voicemail.url/sample'}
+        'alias': None,
+        'creation_time': '2022-12-01T17:19:27.768+00:00',
+        'expiration_time': '2022-12-31T17:19:27.768+00:00',
+        'last_updated_time': '2022-12-01T17:19:27.768+00:00',
+        'name': 'My Burner',
+        'phone_number': '+19102484781',
+        'total_minutes': 50,
+        'user_identifier': '21d2ca9c-aba1-4ada-b7f5-23b0d97acb47',
+        'voicemail_url': None}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
 
 
-if __name__ == '_main_':
+if __name__ == '__main__':
   unittest.main()
