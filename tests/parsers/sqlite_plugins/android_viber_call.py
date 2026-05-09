@@ -28,12 +28,12 @@ class AndroidViberCallSQLitePluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(number_of_warnings, 0)
 
     expected_event_values = {
-        'type': 2,
+        'call_type': 2,
         'data_type': 'android:viber:call',
         'duration': 105,
-        'number': '+19198887386',
-        'start_time': '2022-11-25T20:43:08.267+00:00',
         'end_time': '2022-11-25T20:44:53.267+00:00',
+        'phone_number': '+19198887386',
+        'start_time': '2022-11-25T20:43:08.267+00:00',
         'viber_call_type': 4}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 3)

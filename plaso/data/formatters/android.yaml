@@ -257,8 +257,8 @@ source: 'Twitter Android Status'
 type: 'conditional'
 data_type: 'android:viber:call'
 enumeration_helpers:
-- input_attribute: 'type'
-  output_attribute: 'type'
+- input_attribute: 'call_type'
+  output_attribute: 'call_type'
   default_value: 'UNKNOWN'
   values:
     1: 'INCOMING'
@@ -270,13 +270,13 @@ enumeration_helpers:
     1: 'AUDIO CALL'
     4: 'VIDEO CALL'
 message:
-- 'Number: {number}'
-- 'Call type: {type}'
+- 'Number: {phone_number}'
+- 'Call type: {call_type}'
 - 'Viber call type: {viber_call_type}'
 - 'Duration: {duration} seconds'
 short_message:
-- '{number}'
-- '{type}'
+- '{phone_number}'
+- '{call_type}'
 - '{viber_call_type}'
 short_source: 'Android Viber'
 source: 'Android Viber Call History'

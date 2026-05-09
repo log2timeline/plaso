@@ -12,12 +12,13 @@ class AndroidViberCallEventData(events.EventData):
   """Android Viber Call event data.
 
   Attributes:
-    number (str): phone number.
-    type (int): type of call, such as: Incoming, or Outgoing.
-    viber_call_type (int): type of call in Viber,(Audio Call, or Video Call).
+    call_type (int): type of call, such as Incoming or Outgoing.
     duration (int): number of seconds the call lasted.
-    start_time (dfdatetime.DateTimeValues): date and time the call was started.
     end_time (dfdatetime.DateTimeValues): date and time the call was stopped.
+    phone_number (str): phone number.
+    start_time (dfdatetime.DateTimeValues): date and time the call was started.
+    viber_call_type (int): type of call in Viber, such as Audio Call, or Video
+        Call.
   """
 
   DATA_TYPE = 'android:viber:call'
@@ -25,12 +26,12 @@ class AndroidViberCallEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super().__init__(data_type=self.DATA_TYPE)
-    self.number = None
-    self.type = None
-    self.viber_call_type = None
+    self.call_type = None
     self.duration = None
-    self.start_time = None
     self.end_time = None
+    self.phone_number = None
+    self.start_time = None
+    self.viber_call_type = None
 
 
 class AndroidViberCallPlugin(interface.SQLitePlugin):
@@ -44,12 +45,12 @@ class AndroidViberCallPlugin(interface.SQLitePlugin):
   DATA_FORMAT = 'Android Viber call history SQLite database (viber_data) file'
 
   REQUIRED_STRUCTURE = {
-      'calls': frozenset(['_id', 'date', 'number', 'duration', 'type',
-                          'viber_call_type'])}
+      'calls': frozenset([
+          '_id', 'date', 'number', 'duration', 'type', 'viber_call_type'])}
 
   QUERIES = [
-      ('SELECT _id AS id, date, number, duration, type, '
-       'viber_call_type FROM calls', 'ParseViberCallsRow')]
+      ('SELECT _id AS id, date, number, duration, type, viber_call_type '
+       'FROM calls', 'ParseViberCallsRow')]
 
   SCHEMAS = [{
     'blockednumbers': (
@@ -120,11 +121,11 @@ class AndroidViberCallPlugin(interface.SQLitePlugin):
     timestamp = self._GetRowValue(query_hash, row, 'date')
 
     event_data = AndroidViberCallEventData()
-    event_data.type = self._GetRowValue(query_hash, row, 'type')
+    event_data.call_type = self._GetRowValue(query_hash, row, 'type')
     event_data.duration = duration
-    event_data.number = self._GetRowValue(query_hash, row, 'number')
-    event_data.viber_call_type = (
-        self._GetRowValue(query_hash, row, 'viber_call_type'))
+    event_data.phone_number = self._GetRowValue(query_hash, row, 'number')
+    event_data.viber_call_type = self._GetRowValue(
+        query_hash, row, 'viber_call_type')
     event_data.start_time = dfdatetime_java_time.JavaTime(timestamp=timestamp)
 
     if duration:
