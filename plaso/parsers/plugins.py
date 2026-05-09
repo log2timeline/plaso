@@ -84,15 +84,24 @@ class BasePlugin:
 class BasePluginCache:
   """A generic cache for parser plugins."""
 
-  def GetResults(self, attribute, default_value=None):
+  def GetResults(self, attribute_name, default_value=None):
     """Retrieves a cached attribute.
 
     Args:
-      attribute (str): name of the cached attribute.
+      attribute_name (str): name of the cached attribute.
       default_value (Optional[object]): default value.
 
     Returns:
       object: value of the cached attribute or default value if the cache
           does not contain the attribute.
     """
-    return getattr(self, attribute, default_value)
+    return getattr(self, attribute_name, default_value)
+
+  def SetResults(self, attribute_name, value):
+    """Sets a cached attribute.
+
+    Args:
+      attribute_name (str): name of the cached attribute.
+      value (object): value of the attribute.
+    """
+    setattr(self, attribute_name, value)

@@ -275,7 +275,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
         identifier_mappings = self._ParseIdentifierMappingsTable(
             parser_mediator, esedb_table)
 
-      cache.StoreDictInCache('SruDbIdMapTable', identifier_mappings)
+      cache.SetResults('SruDbIdMapTable', identifier_mappings)
 
     return identifier_mappings
 

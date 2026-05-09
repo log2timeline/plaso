@@ -440,10 +440,8 @@ class NSKeyedArchiverDecoder:
       raise RuntimeError('Missing UID in NS.relative property of NSURL.')
 
     ns_relative = objects_array[ns_relative_plist_uid]
-    if not ns_relative:
-      raise RuntimeError(
-          f'Missing NSURL.NS.relative with UID: {ns_relative_plist_uid:d}.')
 
+    # Note that ns_relative can be an empty string.
     if not isinstance(ns_relative, str):
       type_string = type(ns_relative)
       raise RuntimeError((

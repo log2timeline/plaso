@@ -26,8 +26,7 @@ class MacOSDocumentVersionsEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super().__init__(
-        data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.creation_time = None
     self.last_seen_time = None
     self.name = None
