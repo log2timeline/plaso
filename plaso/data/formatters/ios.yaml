@@ -131,7 +131,7 @@ short_source: 'Kik iOS'
 source: 'Kik iOS messages'
 ---
 type: 'conditional'
-data_type: 'ios:instagram:thread'
+data_type: 'ios:instagram:message'
 message:
 - 'Sender Identifier: {sender_identifier}'
 - 'Username: {username}'

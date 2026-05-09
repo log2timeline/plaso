@@ -1,4 +1,4 @@
-"""Parser for iOS Discord message files."""
+"""Parser for iOS Discord message (JSON) files."""
 
 import codecs
 import json
