@@ -563,7 +563,7 @@ attribute_mappings:
   description: 'Sent Time'
 place_holder_event: true
 ---
-data_type: 'ios:instagram:thread'
+data_type: 'ios:instagram:message'
 attribute_mappings:
 - name: 'sent_time'
   description: 'Sent Time'
