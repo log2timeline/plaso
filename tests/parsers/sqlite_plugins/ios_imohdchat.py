@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Tests for the IMO HD Chat message database plugin."""
 
 import unittest

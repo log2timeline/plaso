@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """SQLite parser plugin for IMO HD chat message database files."""
 
 from dfdatetime import posix_time as dfdatetime_posix_time
@@ -24,8 +23,7 @@ class IMOHDChatMessageEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(IMOHDChatMessageEventData, self).__init__(
-        data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.alias = None
     self.query = None
     self.recorded_time = None
