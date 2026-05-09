@@ -104,7 +104,7 @@ class FileHistoryESEDBPlugin(interface.ESEDBPlugin):
     if not strings:
       esedb_table = database.GetTableByName('string')
       strings = self._GetDictFromStringsTable(parser_mediator, esedb_table)
-      cache.StoreDictInCache('strings', strings)
+      cache.SetResults('strings', strings)
 
     for record_index, esedb_record in enumerate(table.records):
       if parser_mediator.abort:

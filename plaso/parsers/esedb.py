@@ -64,15 +64,6 @@ class ESEDatabase:
 class ESEDBCache(plugins.BasePluginCache):
   """A cache storing query results for ESEDB plugins."""
 
-  def StoreDictInCache(self, attribute_name, dict_object):
-    """Store a dict object in cache.
-
-    Args:
-      attribute_name (str): name of the attribute.
-      dict_object (dict): dictionary.
-    """
-    setattr(self, attribute_name, dict_object)
-
 
 class ESEDBParser(interface.FileObjectParser):
   """Parses Extensible Storage Engine (ESE) database files (EDB)."""
