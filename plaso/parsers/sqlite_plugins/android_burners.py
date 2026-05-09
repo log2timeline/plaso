@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
-"""SQLite parser plugin for Android communication
-  information (burners) database files."""
+"""SQLite parser plugin for Android Burners App database files."""
 
 from plaso.containers import events
 from plaso.parsers import sqlite
@@ -45,9 +43,9 @@ class AndroidCommunicationInformationEventData(events.EventData):
 
 class AndroidCommunicationInformationPlugin(interface.SQLitePlugin):
   """SQLite parser plugin for Android communication information database files.
-    
-    The Android communication information database file is typically stored in:
-    burners.db
+
+  The Android communication information database file is typically stored in:
+  burners.db
   """
 
   NAME = 'android_communication_information'

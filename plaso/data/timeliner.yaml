@@ -63,12 +63,12 @@ attribute_mappings:
 place_holder_event: false
 ---
 data_type: 'android:burners'
-attribute_mappings: 
+attribute_mappings:
 - name: 'date_created'
   description: 'Creation Time'
 - name: 'expiration_date'
   description: 'Expiration Date'
-- name: 'date_created' 
+- name: 'date_created'
   description: 'Date Created'
 - name: 'last_updated_date'
   description: 'Last Updated Date'

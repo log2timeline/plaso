@@ -35,7 +35,7 @@ message:
 - 'Alias: {alias}'
 - 'Features: {features}'
 - 'Total Minutes: {total_minutes}'
-short_message: 
+short_message:
 - 'Phone Number: {phone_number_id}'
 - 'User: {user_id}'
 short_source: 'SQLITE'
