@@ -31,8 +31,7 @@ class AndroidWebViewCookieEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super().__init__(
-        data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.cookie_name = None
     self.data = None
     self.expiration_time = None

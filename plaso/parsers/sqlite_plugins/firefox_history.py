@@ -30,8 +30,7 @@ class FirefoxPlacesBookmarkEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super().__init__(
-        data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.added_time = None
     self.host = None
     self.modification_time = None
@@ -64,8 +63,7 @@ class FirefoxPlacesBookmarkAnnotationEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super().__init__(
-        data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.added_time = None
     self.content = None
     self.modification_time = None
@@ -93,8 +91,7 @@ class FirefoxPlacesBookmarkFolderEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super().__init__(
-        data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.added_time = None
     self.modification_time = None
     self.offset = None
@@ -125,8 +122,7 @@ class FirefoxPlacesPageVisitedEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super().__init__(
-        data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.from_visit = None
     self.hidden = None
     self.host = None

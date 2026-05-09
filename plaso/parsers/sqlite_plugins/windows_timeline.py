@@ -31,8 +31,7 @@ class WindowsTimelineGenericEventData(events.EventData):
 
   def __init__(self):
     """Initialize event data."""
-    super().__init__(
-        data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.application_display_name = None
     self.description = None
     self.package_identifier = None
@@ -61,8 +60,7 @@ class WindowsTimelineUserEngagedEventData(events.EventData):
 
   def __init__(self):
     """Initialize event data."""
-    super().__init__(
-        data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.active_duration_seconds = None
     self.package_identifier = None
     self.reporting_app = None
