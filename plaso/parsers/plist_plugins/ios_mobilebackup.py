@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Plist parser plugin for Apple iOS Mobile Backup plist files.
 
 The plist contains history of opened applications in the Mobile Backup.
@@ -15,16 +14,16 @@ class IOSMobileBackupEventData(events.EventData):
   Attributes:
     account_enabled_time (dfdatetime.DateTimeValues): date and time the mobile
         backup account was enabled.
+    backup_state (int): backup state.
     backup_state_time (dfdatetime.DateTimeValues): date and time if the backup
         state.
-    backup_state (int): backup state.
   """
 
   DATA_TYPE = 'ios:mobile_backup:entry'
 
   def __init__(self):
     """Initializes event data."""
-    super(IOSMobileBackupEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.account_enabled_time = None
     self.backup_state = None
     self.backup_state_time = None
@@ -42,8 +41,7 @@ class IOSMobileBackupStateEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(IOSMobileBackupStateEventData, self).__init__(
-        data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.backup_time = None
     self.description = None
 
