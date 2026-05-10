@@ -30,17 +30,17 @@ class FilesByGooglePluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(number_of_warnings, 0)
 
     expected_event_values = {
-        'date_modified' : '2021-08-10T23:22:30.000+00:00',
-        'root_path' : '/storage/emulated/0',
-        'root_relative_path' : 'Download/MEGA Downloads/2021-08-10 19.22.30.jpg',
-        'file_name' : '2021-08-10 19.22.30.jpg',
-        'file_size' : 729513,
-        'mime_type' : 'image/jpeg',
-        'media_type' : 1,
-        'uri' : 'content://media/external/file/1000000589',
-        'is_hidden' : 0,
-        'title' : '2021-08-10 19.22.30',
-        'parent_folder' : 'MEGA Downloads'}
+        'file_name': '2021-08-10 19.22.30.jpg',
+        'file_size': 729513,
+        'is_hidden': 0,
+        'media_type': 1,
+        'mime_type': 'image/jpeg',
+        'modification_time': '2021-08-10T23:22:30.000+00:00',
+        'parent_folder': 'MEGA Downloads',
+        'root_path': '/storage/emulated/0',
+        'root_relative_path': 'Download/MEGA Downloads/2021-08-10 19.22.30.jpg',
+        'title': '2021-08-10 19.22.30',
+        'uri': 'content://media/external/file/1000000589'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
