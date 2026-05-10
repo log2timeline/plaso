@@ -1,5 +1,4 @@
-"""Plug-in to collect evidence of execution from RADAR HeapLeakDetection
-Diagnosed Applications."""
+"""Windows Registry plugin to parse the RADAR Diagnosed Applications key."""
 
 from os.path import dirname, join
 
@@ -13,43 +12,42 @@ from plaso.parsers import winreg_parser
 from plaso.parsers.winreg_plugins import interface
 
 
-class WindowsRegistryDiagnosedApplicationsEventData(events.EventData):
-  """Windows Diagnosed Application event data attribute container.
+class DiagnosedApplicationsEventData(events.EventData):
+  """RADAR Diagnosed Application event data attribute container.
 
   Attributes:
-    process_name (str): Name of the process diagnosed by RADAR.
+    key_path (str): Windows Registry key path.
     last_detection_time (dfdatetime.DateTimeValues): process last
         detected by RADAR date and time.
-    key_path (str): Windows Registry key path.
     last_written_time (dfdatetime.DateTimeValues): entry last written date
         and time.
+    process_name (str): Name of the process diagnosed by RADAR.
   """
 
   DATA_TYPE = 'windows:registry:diagnosed_applications'
 
   def __init__(self):
     """Initializes event data."""
-    super().__init__(
-        data_type=self.DATA_TYPE)
-    self.process_name = None
-    self.last_detection_time = None
+    super().__init__(data_type=self.DATA_TYPE)
     self.key_path = None
+    self.last_detection_time = None
     self.last_written_time = None
+    self.process_name = None
 
 
 class DiagnosedApplicationsPlugin(
     interface.WindowsRegistryPlugin, dtfabric_helper.DtFabricHelper):
-  """Plug-in to collect information about the Motherboard and BIOS."""
+  """RADAR Diagnosed Applications Windows Registry plugin."""
 
   NAME = 'diagnosed_applications'
   DATA_FORMAT = 'Diagnosed Applications Registry data'
 
   FILTERS = frozenset([
-    interface.WindowsRegistryKeyPathFilter(
-      'HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\RADAR\\HeapLeakDetection\\'
-      'DiagnosedApplications')])
-  _DEFINITION_FILE = join(
-    dirname(__file__), 'filetime.yaml')
+      interface.WindowsRegistryKeyPathFilter(
+          'HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\RADAR\\HeapLeakDetection\\'
+          'DiagnosedApplications')])
+
+  _DEFINITION_FILE = join(dirname(__file__), 'filetime.yaml')
 
   def _ParseFiletime(self, byte_stream):
     """Parses a FILETIME date and time value from a byte stream.
@@ -90,16 +88,15 @@ class DiagnosedApplicationsPlugin(
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
     for subkey in registry_key.GetSubkeys():
-      event_data = WindowsRegistryDiagnosedApplicationsEventData()
+      last_detection_value = subkey.GetValueByName('LastDetectionTime')
+      date_time = self._ParseFiletime(last_detection_value.data)
 
-      event_data.process_name = subkey.name
-      event_data.last_detection_time = self._ParseFiletime(
-        subkey.GetValueByName(
-          "LastDetectionTime"
-        ).data
-      )
+      event_data = DiagnosedApplicationsEventData()
       event_data.key_path = subkey.path
+      event_data.last_detection_time = date_time
       event_data.last_written_time = subkey.last_written_time
+      event_data.process_name = subkey.name
+
       parser_mediator.ProduceEventData(event_data)
 
 
