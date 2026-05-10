@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Plug-in to collect evidence of execution from RADAR HeapLeakDetection
 Diagnosed Applications."""
 
@@ -30,7 +29,7 @@ class WindowsRegistryDiagnosedApplicationsEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(WindowsRegistryDiagnosedApplicationsEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.process_name = None
     self.last_detection_time = None
