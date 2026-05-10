@@ -158,6 +158,14 @@ plaso.parsers.interface module
    :show-inheritance:
    :undoc-members:
 
+plaso.parsers.ios\_discord module
+---------------------------------
+
+.. automodule:: plaso.parsers.ios_discord
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 plaso.parsers.java\_idx module
 ------------------------------
 

@@ -4,10 +4,26 @@ plaso.parsers.sqlite\_plugins package
 Submodules
 ----------
 
+plaso.parsers.sqlite\_plugins.android\_airtag module
+----------------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.android_airtag
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 plaso.parsers.sqlite\_plugins.android\_app\_usage module
 --------------------------------------------------------
 
 .. automodule:: plaso.parsers.sqlite_plugins.android_app_usage
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+plaso.parsers.sqlite\_plugins.android\_burners module
+-----------------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.android_burners
    :members:
    :show-inheritance:
    :undoc-members:
@@ -56,6 +72,14 @@ plaso.parsers.sqlite\_plugins.android\_twitter module
 -----------------------------------------------------
 
 .. automodule:: plaso.parsers.sqlite_plugins.android_twitter
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+plaso.parsers.sqlite\_plugins.android\_viber\_call module
+---------------------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.android_viber_call
    :members:
    :show-inheritance:
    :undoc-members:
@@ -176,6 +200,22 @@ plaso.parsers.sqlite\_plugins.ios\_datausage module
 ---------------------------------------------------
 
 .. automodule:: plaso.parsers.sqlite_plugins.ios_datausage
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+plaso.parsers.sqlite\_plugins.ios\_imohdchat module
+---------------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.ios_imohdchat
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+plaso.parsers.sqlite\_plugins.ios\_instagram module
+---------------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.ios_instagram
    :members:
    :show-inheritance:
    :undoc-members:
