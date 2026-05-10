@@ -1,7 +1,4 @@
-"""Text parser plugin for Anydesk Ad Trace log (ad.trace) files.
-
-Parser based on the analysis of the ad.trace log file format.
-"""
+"""Text parser plugin for Anydesk trace log (ad.trace) files."""
 
 import pyparsing
 
@@ -11,20 +8,20 @@ from plaso.containers import events
 from plaso.lib import errors
 from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import interface
-from plaso.multi_process import logger
 
 class AnyDeskAdTraceLogEventData(events.EventData):
-  """AnyDesk Ad Trace log event data.
+  """AnyDesk trace log event data.
 
   Attributes:
-    loglevel (str): type of log record ("info", "warning", "error", etc.)
-    recorded_time (dfdatetime.DateTimeValues): date and time the log entry
-        was recorded.
-    appname (str): application source ("back", "ctrl", "front", etc.)
-    pid (int): Process Identifier from where the event is generated
-    threadid (int): Thread Identifier from where the event is generated
+    application_name (str): application source, such as "back", "ctrl", "front".
     function (str): Source/Activity that generates the event
-    message (str): Detailed message 
+    log_level (str): type of log record, such as "info", "warning", "error".
+    message (str): Detailed message.
+    pid (int): Process identifier from where the event is generated
+    recorded_time (dfdatetime.DateTimeValues): date and time the log entry was
+        recorded.
+    thread_identifier (int): Thread identifier from where the event is
+        generated.
   """
 
   DATA_TYPE = 'anydesk:adtrace_log:entry'
@@ -32,19 +29,19 @@ class AnyDeskAdTraceLogEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super().__init__(data_type=self.DATA_TYPE)
-    self.loglevel = None
-    self.recorded_time = None
-    self.appname = None
-    self.pid = None
-    self.threadid = None
+    self.application_name = None
     self.function = None
+    self.log_level = None
     self.message = None
+    self.pid = None
+    self.recorded_time = None
+    self.thread_identifier = None
 
 class AnyDeskAdTraceLogTextPlugin(interface.TextPlugin):
-  """Text parser plugin for AnyDesk Ad Trace log (ad.trace) files."""
+  """Text parser plugin for AnyDesk trace log (ad.trace) files."""
 
   NAME = 'anydesk_adtrace'
-  DATA_FORMAT = 'AnyDesk Ad Trace log (ad.trace) file'
+  DATA_FORMAT = 'AnyDesk trace log (ad.trace) file'
   ENCODING = 'utf-8'
 
   _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
@@ -56,7 +53,7 @@ class AnyDeskAdTraceLogTextPlugin(interface.TextPlugin):
   _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
       lambda tokens: int(tokens[0], 10))
 
-  _LOGLEVEL = pyparsing.Word(pyparsing.alphas).setResultsName('loglevel')
+  _LOG_LEVEL = pyparsing.Word(pyparsing.alphas).setResultsName('loglevel')
 
   # Date and time values are formatted as: 2022-12-29 13:34:22.945
   _DATE_TIME = pyparsing.Group(
@@ -68,7 +65,7 @@ class AnyDeskAdTraceLogTextPlugin(interface.TextPlugin):
       pyparsing.Suppress(':') + _TWO_DIGITS +
       pyparsing.Suppress('.') + _THREE_DIGITS).setResultsName('date_time')
 
-  _APPNAME = pyparsing.Word(pyparsing.alphas).setResultsName('appname')
+  _APPNAME = pyparsing.Word(pyparsing.alphas).setResultsName('application_name')
 
   _INTEGER = pyparsing.Word(pyparsing.nums).setParseAction(
       lambda tokens: int(tokens[0], 10))
@@ -81,13 +78,13 @@ class AnyDeskAdTraceLogTextPlugin(interface.TextPlugin):
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
-  _BASIC_LOG_FORMAT_LINE = ( 
-    _LOGLEVEL +
+  _BASIC_LOG_FORMAT_LINE = (
+    _LOG_LEVEL +
     _DATE_TIME +
     _APPNAME +
     _INTEGER.setResultsName('pid') +
-    _INTEGER.setResultsName('threadid') +
-    _FUNCTION_MESSAGE + 
+    _INTEGER.setResultsName('thread_identifier') +
+    _FUNCTION_MESSAGE +
     _END_OF_LINE
   )
 
@@ -95,10 +92,10 @@ class AnyDeskAdTraceLogTextPlugin(interface.TextPlugin):
 
   _LINE_STRUCTURES = [
       ('basic_log_format', _BASIC_LOG_FORMAT_LINE),
-      ('_separator_line',_SEPARATOR_LINE)
-    ]
+      ('_separator_line',_SEPARATOR_LINE)]
 
-  VERIFICATION_GRAMMAR = pyparsing.ZeroOrMore(_END_OF_LINE) + _BASIC_LOG_FORMAT_LINE
+  VERIFICATION_GRAMMAR = (
+      pyparsing.ZeroOrMore(_END_OF_LINE) + _BASIC_LOG_FORMAT_LINE)
 
   VERIFICATION_LITERALS = None
 
@@ -119,18 +116,19 @@ class AnyDeskAdTraceLogTextPlugin(interface.TextPlugin):
 
     event_data = AnyDeskAdTraceLogEventData()
 
-    loglevel = self._GetValueFromStructure(structure, 'loglevel')
-
-    if not loglevel in ('info', 'warning', 'error'):
+    log_level = self._GetValueFromStructure(structure, 'loglevel')
+    if not log_level in ('error', 'info', 'warning'):
       return
 
-    event_data.loglevel = loglevel
-    event_data.recorded_time = self._ParseTimeElements(time_elements_structure)
-    event_data.appname = self._GetValueFromStructure(structure, 'appname')
-    event_data.pid = self._GetValueFromStructure(structure, 'pid')
-    event_data.threadid = self._GetValueFromStructure(structure, 'pid')
+    event_data.log_level = log_level
+    event_data.application_name = self._GetValueFromStructure(
+        structure, 'application_name')
     event_data.function = self._GetValueFromStructure(structure, 'function')
     event_data.message = self._GetValueFromStructure(structure, 'message')
+    event_data.pid = self._GetValueFromStructure(structure, 'pid')
+    event_data.recorded_time = self._ParseTimeElements(time_elements_structure)
+    event_data.thread_identifier = self._GetValueFromStructure(
+        structure, 'thread_identifier')
 
     parser_mediator.ProduceEventData(event_data)
 
@@ -150,16 +148,17 @@ class AnyDeskAdTraceLogTextPlugin(interface.TextPlugin):
     """
 
     try:
-      (year, month, day, hours, minutes, seconds, millisec) = (
+      (year, month, day, hours, minutes, seconds, milliseconds) = (
           time_elements_structure)
 
-      time_elements_tuple = (year, month, day, hours, minutes, seconds, millisec)
+      time_elements_tuple = (
+          year, month, day, hours, minutes, seconds, milliseconds)
       return dfdatetime_time_elements.TimeElements(
           time_elements_tuple=time_elements_tuple)
 
     except (TypeError, ValueError) as exception:
       raise errors.ParseError(
-          'Unable to parse time elements with error: {0!s}'.format(exception))
+          f'Unable to parse time elements with error: {exception!s}')
 
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the plugin.
@@ -175,7 +174,7 @@ class AnyDeskAdTraceLogTextPlugin(interface.TextPlugin):
 
     try:
       structure = self._VerifyString(text_reader.lines)
-    except errors.ParseError as e:
+    except errors.ParseError:
       return False
 
     time_elements_structure = self._GetValueFromStructure(
@@ -185,6 +184,7 @@ class AnyDeskAdTraceLogTextPlugin(interface.TextPlugin):
       self._ParseTimeElements(time_elements_structure)
     except errors.ParseError:
       return False
+
     return True
 
 

@@ -7,14 +7,14 @@ message:
 - 'recorded_time: {recorded_time}'
 - 'appname: {appname}'
 - 'Process Id: {pid}'
-- 'Thread Id: {threadid}'
+- 'Thread Id: {thread_identifier}'
 - 'Function: {function}'
 - 'Message: {message}'
 short_message:
 - '{function}'
 - 'Message: {message}'
 short_source: 'LOG'
-source: 'AnyDesk Ad Trace Log'
+source: 'AnyDesk Trace Log (ad.trace)'
 ---
 type: 'conditional'
 data_type: 'apache:access_log:entry'
