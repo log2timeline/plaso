@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """SQLite parser plugin for Google Files by Google database (Web Data) files."""
 
 from dfdatetime import posix_time as dfdatetime_posix_time
@@ -31,7 +30,7 @@ class FilesByGoogleEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(FilesByGoogleEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.date_modified = None
     self.root_path = None
     self.root_relative_path = None
