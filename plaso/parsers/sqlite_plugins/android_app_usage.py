@@ -8,7 +8,7 @@ from plaso.parsers.sqlite_plugins import interface
 
 
 class AndroidAppUsage(events.EventData):
-  """Android app usage event data.
+  """Android application usage event data.
 
   Attributes:
     package_name (str): name of the launched package.
