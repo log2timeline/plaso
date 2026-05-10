@@ -23,6 +23,7 @@ from plaso.parsers.sqlite_plugins import firefox_downloads
 from plaso.parsers.sqlite_plugins import firefox_history
 from plaso.parsers.sqlite_plugins import gdrive
 from plaso.parsers.sqlite_plugins import imessage
+from plaso.parsers.sqlite_plugins import ios_accounts
 from plaso.parsers.sqlite_plugins import ios_datausage
 from plaso.parsers.sqlite_plugins import ios_imohdchat
 from plaso.parsers.sqlite_plugins import ios_instagram
