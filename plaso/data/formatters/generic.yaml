@@ -1000,24 +1000,6 @@ short_source: 'LOG'
 source: 'Systemd journal'
 ---
 type: 'conditional'
-data_type: 'systemd:journal:dirty'
-message:
-- '{hostname} '
-- '['
-- '{reporter}'
-- ', pid: {pid}'
-- '] {body}'
-separator: ''
-short_message:
-- '{hostname} '
-- '['
-- '{reporter}'
-- ', pid: {pid}'
-- '] {body}'
-short_source: 'LOG'
-source: 'Systemd journal'
----
-type: 'conditional'
 data_type: 'teamviewer:application_log:entry'
 message:
 - '[pid: {process_identifier}]'
@@ -1058,13 +1040,6 @@ short_message:
 - '{local_account}'
 source: 'TeamViewer outgoing connections log'
 short_source: 'LOG'
----
-type: 'basic'
-data_type: 'text:entry'
-message: '{text}'
-short_message: '{text}'
-short_source: 'LOG'
-source: 'Text File'
 ---
 type: 'conditional'
 data_type: 'viminfo:history'

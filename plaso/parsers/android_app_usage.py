@@ -53,16 +53,15 @@ class AndroidAppUsageParser(interface.FileObjectParser):
     """
     data = file_object.read(self._HEADER_READ_SIZE)
     if not data.startswith(b'<?xml'):
-      raise errors.WrongParser(
-          'Not an Android usage history file [not XML]')
+      raise errors.WrongParser('Not an Android usage history file [not XML]')
 
     _, _, data = data.partition(b'\n')
     if not data.startswith(b'<usage-history'):
       raise errors.WrongParser(
           'Not an Android usage history file [wrong XML root key]')
 
-    # The current offset of the file-like object needs to point at
-    # the start of the file for ElementTree to parse the XML data correctly.
+    # The current offset of the file-like object needs to point at the start of
+    # the file for ElementTree to parse the XML data correctly.
     file_object.seek(0, os.SEEK_SET)
 
     xml = ElementTree.parse(file_object)

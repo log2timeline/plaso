@@ -20,7 +20,7 @@ class WindowsPushNotificationEventData(events.EventData):
     payload (dfdatetime.DateTimeValues): payload.
   """
 
-  DATA_TYPE = 'windows:wpndatabase:notification'
+  DATA_TYPE = 'windows:push_notification:notification'
 
   def __init__(self):
     """Initialize event data."""
@@ -47,7 +47,7 @@ class WindowsPushNotificationHandlerEventData(events.EventData):
         identifier.
   """
 
-  DATA_TYPE = 'windows:wpndatabase:notification_handler'
+  DATA_TYPE = 'windows:push_notification:notification_handler'
 
   def __init__(self):
     """Initialize event data."""

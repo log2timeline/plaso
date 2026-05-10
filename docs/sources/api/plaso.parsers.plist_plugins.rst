@@ -68,6 +68,22 @@ plaso.parsers.plist\_plugins.ios\_identityservices module
    :show-inheritance:
    :undoc-members:
 
+plaso.parsers.plist\_plugins.ios\_mobilebackup module
+-----------------------------------------------------
+
+.. automodule:: plaso.parsers.plist_plugins.ios_mobilebackup
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+plaso.parsers.plist\_plugins.ios\_wifi\_known\_networks module
+--------------------------------------------------------------
+
+.. automodule:: plaso.parsers.plist_plugins.ios_wifi_known_networks
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 plaso.parsers.plist\_plugins.ipod module
 ----------------------------------------
 

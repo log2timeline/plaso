@@ -13,6 +13,7 @@ chrome_preferences | Parser for Google Chrome Preferences files.
 cups_ipp | Parser for CUPS IPP files.
 custom_destinations | Parser for Custom destinations jump list (.customDestinations-ms) files.
 czip | Parser for Compound ZIP files.
+discord_ios | Parser for iOS discord message.
 esedb | Parser for Extensible Storage Engine (ESE) Database File (EDB) format.
 filestat | Parser for file system stat information.
 firefox_cache | Parser for Mozilla Firefox Cache version 1 file (version 31 or earlier).
@@ -113,6 +114,8 @@ airport | Parser for Airport plist files.
 apple_id | Parser for Apple account information plist files.
 ios_carplay | Parser for Apple iOS Car Play application plist files.
 ios_identityservices | Parser for Idstatuscache plist files.
+ios_mobile_backup | Parser for Apple iOS Mobile Backup plist files.
+ios_wifi_known_networks | Parser for Apple iOS WiFi Known Networks plist files.
 ipod_device | Parser for iPod, iPad and iPhone plist files.
 launchd_plist | Parser for Launchd plist files.
 macos_background_items_plist | Parser for Mac OS backgrounditems.btm or BackgroundItems-v[3-9].btm plist files.
@@ -134,10 +137,13 @@ time_machine | Parser for MacOS TimeMachine plist files.
 
 Name | Description
 --- | ---
-android_app_usage | Parser for Android app_usage SQLite database (app_usage) files.
+android_airtag | Parser for AirGuard AirTag Tracker on SQLite database files.
+android_app_usage | Parser for Android application usage SQLite database (app_usage) files.
 android_calls | Parser for Android call history SQLite database (contacts2.db) files.
+android_communication_information | Parser for Android communication information SQLite database files.
 android_sms | Parser for Android text messages (SMS) SQLite database (mmssms.dbs) files.
 android_turbo | Parser for Android turbo SQLite database (turbo.db) files.
+android_viber_call | Parser for Android Viber call history SQLite database (viber_data) files.
 android_webview | Parser for Android WebView SQLite database files.
 android_webviewcache | Parser for Android WebViewCache SQLite database files.
 appusage | Parser for MacOS application usage SQLite database (application_usage.sqlite) files.
@@ -157,7 +163,9 @@ firefox_history | Parser for Mozilla Firefox history SQLite database (places.sql
 google_drive | Parser for Google Drive snapshot SQLite database (snapshot.db) files.
 hangouts_messages | Parser for Google Hangouts conversations SQLite database (babel.db) files.
 imessage | Parser for MacOS and iOS iMessage database (chat.db, sms.db) files.
+instagram_ios | Parser for iOS Instagram threads SQLite database (9368974384.db) files.
 ios_datausage | Parser for iOS data usage SQLite databse (DataUsage.sqlite) file..
+ios_imohdchat_message | Parser for IMO HD chat message SQLite database (IMODb2.sqlite) files.
 ios_netusage | Parser for iOS network usage SQLite database (netusage.sqlite) files.
 ios_powerlog | Parser for iOS powerlog SQLite database (CurrentPowerlog.PLSQL) files.
 ios_screentime | Parser for iOS Screen Time SQLite database (RMAdminStore-Local.sqlite).

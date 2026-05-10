@@ -22,7 +22,7 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file_entry = self._GetTestFileEntry(['SAM'])
+    test_file_entry = self._GetTestFileEntry(['regf', 'SAM'])
     key_path = 'HKEY_LOCAL_MACHINE\\SAM\\SAM\\Domains\\Account\\Users'
 
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
@@ -49,10 +49,10 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         'comments': 'Built-in account for administering the computer/domain',
         'data_type': 'windows:registry:sam_users',
         'key_path': key_path,
-        'last_login_time': '2010-11-20T21:48:12.5692440+00:00',
-        'last_password_set_time': '2010-11-20T21:56:34.7436870+00:00',
-        'last_written_time': '2014-09-24T03:36:06.3588374+00:00',
-        'login_count': 6,
+        'last_login_time': '2014-03-18T10:20:47.3414256+00:00',
+        'last_password_set_time': '2014-03-18T10:20:51.0757954+00:00',
+        'last_written_time': '2015-11-23T02:26:36.0266868+00:00',
+        'login_count': 3,
         'username': 'Administrator'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)

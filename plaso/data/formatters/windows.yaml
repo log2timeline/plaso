@@ -361,7 +361,7 @@ short_source: 'LOG'
 source: 'WinPrefetch'
 ---
 type: 'conditional'
-data_type: 'windows:wpndatabase:notification'
+data_type: 'windows:push_notification:notification'
 message:
 - 'Payload: {payload}'
 short_message:
@@ -370,7 +370,7 @@ short_source: 'Windows Push Notification Database'
 source: 'Windows Push Notification Database'
 ---
 type: 'conditional'
-data_type: 'windows:wpndatabase:notification_handler'
+data_type: 'windows:push_notification:notification_handler'
 message:
 - 'Identifier: {identifier}'
 - 'Type: {handler_type}'

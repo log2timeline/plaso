@@ -162,6 +162,7 @@ Copied with permission from [the Greendale data set](https://github.com/dfirlabs
 * agdb/student-pc1/AgGlGlobalHistory.db
 * evtx/dc1/System.evtx
 * mdmp/student-pc1/WER1090.tmp.mdmp
+* regf/studentpc8/SAM
 
 Generated with the [Windows PE/COFF resource file specimens project](https://github.com/dfirlabs/wrc-specimens):
 * wrc-test-wevt_template.dll
