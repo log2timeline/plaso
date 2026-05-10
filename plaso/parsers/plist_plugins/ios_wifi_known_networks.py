@@ -49,10 +49,10 @@ class IOSWiFiKnownNetworksPlistPlugin(interface.PlistPlugin):
     """Extract WiFi known network entries.
 
     Args:
-        parser_mediator (ParserMediator): mediates interactions between parsers
-            and other components, such as storage and dfVFS.
-        match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
-        top_level (Optional[dict[str: object]]): entire plist file.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
+      top_level (Optional[dict[str: object]]): entire plist file.
     """
     for network_values in top_level.values():
       event_data = IOSWiFiKnownNetworksEventData()
