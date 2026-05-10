@@ -343,7 +343,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     test_artifacts_path = self._GetTestFilePath(['artifacts'])
     self._SkipIfPathNotExists(test_artifacts_path)
 
-    test_file_path = self._GetTestFilePath(['System.evtx'])
+    test_file_path = self._GetTestFilePath(['evtx', 'System.evtx'])
     self._SkipIfPathNotExists(test_file_path)
 
     output_writer = test_lib.TestOutputWriter(encoding='utf-8')

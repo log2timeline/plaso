@@ -193,7 +193,7 @@ class PathSpecExtractorTest(test_lib.EngineTestCase):
 
   def testExtractPathSpecsFileSystemWithFindSpecs(self):
     """Tests the ExtractPathSpecs function with find specifications."""
-    test_file_path = self._GetTestFilePath(['System.evtx'])
+    test_file_path = self._GetTestFilePath(['evtx', 'System.evtx'])
     self._SkipIfPathNotExists(test_file_path)
 
     test_file_path = self._GetTestFilePath(['testdir', 'filter_1.txt'])
@@ -203,8 +203,9 @@ class PathSpecExtractorTest(test_lib.EngineTestCase):
     self._SkipIfPathNotExists(test_file_path)
 
     location_expressions = [
-        '/test_data/testdir/filter_.+.txt',
-        '/test_data/.+evtx',
+        '/test_data/testdir/filter_.+[.]txt',
+        '/test_data/.+[.]evtx',
+        '/test_data/evtx/.+[.]evtx',
         '/AUTHORS',
         '/does_not_exist/some_file_[0-9]+txt']
 
@@ -220,7 +221,7 @@ class PathSpecExtractorTest(test_lib.EngineTestCase):
         resolver_context=resolver_context))
 
     # Two files with test_data/testdir/filter_*.txt, AUTHORS,
-    # test_data/System.evtx and test_data/System2.evtx and
+    # test_data/evtx/System.evtx and test_data/evtx/System2.evtx and
     # a symbolic link test_data/link_to_System.evtx.
     self.assertEqual(len(path_specs), 6)
 
