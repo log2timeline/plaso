@@ -4,14 +4,23 @@
 
 import unittest
 
-from dfvfs.helpers import fake_file_system_builder
-
-from plaso.containers import events
 from plaso.lib import errors
-from plaso.parsers import mediator as parsers_mediator
 from plaso.parsers import ivanti_vc0
 
 from tests.parsers import test_lib
+
+
+class _TestFileEntry(object):
+  """Test file entry."""
+
+  def __init__(self, name):
+    """Initializes a test file entry.
+
+    Args:
+      name (str): file entry name.
+    """
+    super(_TestFileEntry, self).__init__()
+    self.name = name
 
 
 class IvantiVC0ParserTest(test_lib.ParserTestCase):
@@ -26,43 +35,36 @@ class IvantiVC0ParserTest(test_lib.ParserTestCase):
     Returns:
       FakeStorageWriter: storage writer.
     """
-    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
-    file_system_builder.AddFile('/log.events.vc0', data)
-
-    file_entry = file_system_builder.file_system.GetFileEntryByPath(
-        '/log.events.vc0')
-
-    parser_mediator = parsers_mediator.ParserMediator()
-
     storage_writer = self._CreateStorageWriter()
-    parser_mediator.SetStorageWriter(storage_writer)
-    parser_mediator.SetFileEntry(file_entry)
-
-    event_data_stream = events.EventDataStream()
-    event_data_stream.path_spec = file_entry.path_spec
-    parser_mediator.ProduceEventDataStream(event_data_stream)
+    parser_mediator = self._CreateParserMediator(storage_writer)
 
     parser = ivanti_vc0.IvantiVC0Parser()
-    file_object = file_entry.GetFileObject()
+    file_object = self._CreateFileObject('log.events.vc0', data)
     parser.Parse(parser_mediator, file_object)
 
     return storage_writer
 
+  def testFileEntryFilter(self):
+    """Tests the file entry filter."""
+    file_entry_filter = ivanti_vc0.VC0FileEntryFilter()
+
+    for filename in (
+        'log.access.vc0', 'log.admin.vc0', 'log.events.vc0',
+        'log.events.vc0.old', 'LOG.EVENTS.VC0'):
+      self.assertTrue(file_entry_filter.Match(_TestFileEntry(filename)))
+
+    for filename in (
+        'events.vc0', 'log.vc0', 'log.events.txt', 'log.events.vc0.tmp',
+        'random.bin'):
+      self.assertFalse(file_entry_filter.Match(_TestFileEntry(filename)))
+
+    self.assertFalse(file_entry_filter.Match(None))
+
   def testParse(self):
     """Tests the Parse function."""
-    data = b''.join([
-        b'\x05\x00\x00\x00\x01\x00\x00\x00',
-        b'\x00' * 8184,
-        b'\x05',
-        b'65c4a64f.00000001\tics.example.com\tSYS12345\tvc0\tRoot\t',
-        b'203.0.113.10\tjdoe\tUser login succeeded\n',
-        b'66618fe1.00000002\tics.example.com\tADM54321\tvc0\tRoot\t',
-        b'203.0.113.20\tadmin\tConfiguration changed',
-        b'\x05',
-        b'!badtime.00000003\tics.example.com\tSYS12345\tvc0\tRoot\t',
-        b'203.0.113.55\tbaduser\tInvalid timestamp\n'])
-
-    storage_writer = self._ParseData(data)
+    parser = ivanti_vc0.IvantiVC0Parser()
+    storage_writer = self._ParseFile(
+        ['ivanti_vc0', 'log.events.vc0'], parser)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -99,7 +101,7 @@ class IvantiVC0ParserTest(test_lib.ParserTestCase):
         'hostname': 'ics.example.com',
         'ip_address': '203.0.113.20',
         'line_identifier': '00000002',
-        'message_code': 'ADM54321',
+        'message_code': 'SYS54321',
         'recorded_time': '2024-06-06T10:30:57+00:00',
         'username': 'admin'}
 

@@ -4,13 +4,12 @@
 import codecs
 import ipaddress
 import re
-import string
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
+from plaso.lib import definitions
 from plaso.lib import errors
-from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -53,11 +52,33 @@ class IvantiVC0EventData(events.EventData):
     self.username = None
 
 
+class VC0FileEntryFilter(interface.BaseFileEntryFilter):
+  """File entry filter for Ivanti Connect Secure .vc0 log files."""
+
+  _FILENAME_RE = re.compile(r'^log\..+?\.vc0(?:\.old)?$')
+
+  def Match(self, file_entry):
+    """Determines if a file entry is an Ivanti .vc0 log file.
+
+    Args:
+      file_entry (dfvfs.FileEntry): file entry.
+
+    Returns:
+      bool: True if the file entry matches.
+    """
+    if not file_entry:
+      return False
+
+    return bool(self._FILENAME_RE.match(file_entry.name.lower()))
+
+
 class IvantiVC0Parser(interface.FileObjectParser):
   """Parser for Ivanti Connect Secure .vc0 log files."""
 
   NAME = 'ivanti_vc0'
   DATA_FORMAT = 'Ivanti Connect Secure .vc0 log file'
+
+  FILTERS = frozenset([VC0FileEntryFilter()])
 
   _CHUNK_SIZE = 1024 * 1024
   _HEADER_SIZE = 8192
@@ -68,24 +89,13 @@ class IvantiVC0Parser(interface.FileObjectParser):
       r'^log\.(?P<log_file_type>.+?)\.vc0(?:\.old)?$')
   _MESSAGE_CODE_RE = re.compile(r'^[A-Z]{3}\d{5}$')
 
-  _PRINTABLE_CHARACTERS = frozenset(string.printable)
+  _NON_PRINTABLE_CHARACTER_TRANSLATION_TABLE = (
+      definitions.NON_PRINTABLE_CHARACTER_TRANSLATION_TABLE.copy())
+  _NON_PRINTABLE_CHARACTER_TRANSLATION_TABLE.pop(ord('\n'), None)
+  _NON_PRINTABLE_CHARACTER_TRANSLATION_TABLE.pop(ord('\t'), None)
+
   _RECORD_SEPARATOR_RE = re.compile(
       r'[\x17\x15\x13\x12\x05\x04\x03\x02\x01\x00]')
-  _UNWANTED_CONTROL_CHARACTERS_RE = re.compile(
-      r'[\x0b\x1c\x0f\x06\x1e\x08\x10\x1d\x0e\x11\x14\x16\x18\x19\x1f'
-      r'\x7f\x1a\x1b\x0c\ufffd]')
-
-  @classmethod
-  def GetFormatSpecification(cls):
-    """Retrieves the format specification.
-
-    Returns:
-      FormatSpecification: format specification.
-    """
-    format_specification = specification.FormatSpecification(cls.NAME)
-    format_specification.AddNewSignature(cls._HEADER_SIGNATURE, offset=0)
-
-    return format_specification
 
   def _CheckHeader(self, file_object):
     """Checks the .vc0 header signature.
@@ -111,12 +121,7 @@ class IvantiVC0Parser(interface.FileObjectParser):
       str: normalized text.
     """
     text = self._RECORD_SEPARATOR_RE.sub('\n', text)
-    text = text.replace('\x07', ' ')
-    text = self._UNWANTED_CONTROL_CHARACTERS_RE.sub('', text)
-
-    return ''.join([
-        character if character in self._PRINTABLE_CHARACTERS else '?'
-        for character in text])
+    return text.translate(self._NON_PRINTABLE_CHARACTER_TRANSLATION_TABLE)
 
   def _CreateBody(self, record_values, ip_address, realm, username):
     """Builds the short body used by formatters.
