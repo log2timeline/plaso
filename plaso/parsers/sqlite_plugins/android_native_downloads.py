@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """SQLite parser plugin for Android Native Downloads database files."""
 
 from dfdatetime import java_time as dfdatetime_java_time
@@ -60,7 +59,7 @@ class AndroidNativeDownloadsEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(AndroidNativeDownloadsEventData, self).__init__(data_type=
+    super().__init__(data_type=
                                                           self.DATA_TYPE)
     self.lastmod = None
     self.id = None
