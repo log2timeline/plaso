@@ -43,6 +43,16 @@ done < <(grep -rh "DATA_TYPE = " "plaso" --include="*.py" \
     | sed "s/.*DATA_TYPE = ['\"]//;s/['\"].*//" \
     | sort -u)
 
+declare -a missing_entries=()
+
+for entry in "${source_entries[@]}";
+do
+    if [[ -z "${formatter_entries[$entry]}" ]];
+    then
+        missing_entries+=("$entry")
+    fi
+done
+
 declare -a unused_entries=()
 
 for entry in "${formatter_entries[@]}";
@@ -53,15 +63,22 @@ do
     fi
 done
 
-total_count=${#formatter_entries[@]}
-unused_count=${#unused_entries[@]}
-used_count=$((total_count - unused_count))
-
-if [[ ${unused_count} -ne 0 ]];
+if [[ ${#unused_entries[@]} -ne 0 ]];
 then
-    echo "Found unused formatter helper identifiers:"
+    echo "Unused formatter helper entries:"
 
     for entry in "${unused_entries[@]}";
+    do
+        echo "- ${entry}"
+    done
+    exit ${EXIT_FAILURE}
+fi
+
+if [[ ${#missing_entries[@]} -ne 0 ]];
+then
+    echo "Missing formatter helper entries:"
+
+    for entry in "${missing_entries[@]}";
     do
         echo "- ${entry}"
     done
