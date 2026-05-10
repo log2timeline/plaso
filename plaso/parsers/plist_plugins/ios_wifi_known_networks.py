@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Plist parser plugin for Apple iOS WiFi Known Networks plist files.
 
 The plist contains information about WiFi networks the device has connected to.
@@ -25,7 +24,7 @@ class IOSWiFiKnownNetworksEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(IOSWiFiKnownNetworksEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.added_time = None
     self.bssid = None
