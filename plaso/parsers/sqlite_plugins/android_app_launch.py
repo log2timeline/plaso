@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """SQLite parser plugin for Android App Launch (SimpleStorage) database file."""
 
 from dfdatetime import java_time as dfdatetime_java_time
@@ -25,7 +24,7 @@ class AndroidAppLaunch(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(AndroidAppLaunch, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.launch_time = None
     self.package_name = None
     self.launch_location_id = None
