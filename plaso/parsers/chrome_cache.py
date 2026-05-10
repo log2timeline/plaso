@@ -83,6 +83,7 @@ class CacheEntry:
     key (bytes): key.
     next (int): cache address of the next cache entry.
     original_url (str): original URL derived from the key.
+    payloads ([str]): filenames (and offsets) of the cache payloads.
     rankings_node (int): cache address of the rankings node.
   """
 
@@ -94,6 +95,7 @@ class CacheEntry:
     self.key = None
     self.next = None
     self.original_url = None
+    self.payloads = None
     self.rankings_node = None
 
 
@@ -252,10 +254,26 @@ class ChromeCacheDataBlockFileParser(
           f'Unable to parse cache entry at offset: 0x{block_offset:08x} with '
           f'error: {exception!s}'))
 
+    payloads = []
+    for stream in iter(cache_entry.data_stream_addresses):
+      data_stream = CacheAddress(stream)
+      if data_stream.filename is None:
+        continue
+
+      if data_stream.filename.startswith('f_'):
+        payload = data_stream.filename
+      else:
+        payload = (
+            f'{data_stream.filename:s} (offset: '
+            f'0x{data_stream.block_offset:08x})')
+
+        payloads.append(payload)
+
     cache_entry_object = CacheEntry()
 
     cache_entry_object.hash = cache_entry.hash
     cache_entry_object.next = CacheAddress(cache_entry.next_address)
+    cache_entry_object.payloads = payloads
     cache_entry_object.rankings_node = CacheAddress(
         cache_entry.rankings_node_address)
     cache_entry_object.creation_time = cache_entry.creation_time
@@ -293,6 +311,7 @@ class ChromeCacheEntryEventData(events.EventData):
     creation_time (dfdatetime.DateTimeValues): creation date and time of
         the cache entry.
     original_url (str): original URL.
+    payloads ([str]): filenames (and offsets) of the cache payloads.
   """
 
   DATA_TYPE = 'chrome:cache:entry'
@@ -302,6 +321,7 @@ class ChromeCacheEntryEventData(events.EventData):
     super().__init__(data_type=self.DATA_TYPE)
     self.creation_time = None
     self.original_url = None
+    self.payloads = None
 
 
 class ChromeCacheParser(interface.FileEntryParser):
@@ -353,9 +373,10 @@ class ChromeCacheParser(interface.FileEntryParser):
         event_data = ChromeCacheEntryEventData()
         event_data.creation_time = dfdatetime_webkit_time.WebKitTime(
             timestamp=cache_entry.creation_time)
+        event_data.payloads = cache_entry.payloads
 
         # In Chrome Cache v3, doublekey-ing cache entries was introduced
-        # This shows up as r"_dk_{domain}( {domain})* {url}"
+        # This shows up as "_dk_{domain}( {domain})* {url}"
         # https://chromium.googlesource.com/chromium/src/+/
         # 95faad3cfd90169f0a267e979c36e3348476a948/net/http/http_cache.cc#427
         if '_dk_' in cache_entry.original_url[:20]:
@@ -471,7 +492,6 @@ class ChromeCacheParser(interface.FileEntryParser):
           f'error: {exception!s}')
 
     # TODO: create event based on index file creation time.
-
     file_system = file_entry.GetFileSystem()
     self._ParseIndexTable(
         parser_mediator, file_system, file_entry, index_file_parser.index_table)
