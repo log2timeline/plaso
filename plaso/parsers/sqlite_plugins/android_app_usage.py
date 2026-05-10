@@ -1,4 +1,4 @@
-"""SQLite parser plugin for Android app_usage database files."""
+"""SQLite parser plugin for Android application usage database files."""
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
