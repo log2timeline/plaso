@@ -230,9 +230,9 @@ enumeration_helpers:
     2: 'VISIBILITY_HIDDEN'
     3: 'VISIBILITY_VISIBLE_NOTIFY_ONLY_COMPLETION'
 message:
-- 'ID: {id}'
+- 'Identifier: {identifier}'
 - 'URI: {uri}'
-- 'MIME Type: {mimetype}'
+- 'MIME Type: {mime_type}'
 - 'Total Bytes: {total_bytes}'
 - 'Current Bytes: {current_bytes}'
 - 'Download Status: {status_string}'
