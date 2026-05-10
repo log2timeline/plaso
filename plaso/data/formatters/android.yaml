@@ -26,6 +26,22 @@ short_source: 'AirGuard AirTag Tracker'
 source: 'AirGuard AirTag Tracker event data.'
 ---
 type: 'conditional'
+data_type: 'android:burners'
+message:
+- 'Phone Number: {phone_number}'
+- 'Voice Mail: {voicemail_url}'
+- 'User Identifier: {user_identifier}'
+- 'Name: {name} '
+- 'Alias: {alias}'
+- 'Features: {features}'
+- 'Total Minutes: {total_minutes}'
+short_message:
+- 'Phone Number: {phone_number}'
+- 'User: {user_identifier}'
+short_source: 'SQLITE'
+source: 'Android burners database'
+---
+type: 'conditional'
 data_type: 'android:app_usage'
 message:
 - 'Package: {package}'

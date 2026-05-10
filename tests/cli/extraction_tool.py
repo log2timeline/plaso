@@ -423,8 +423,7 @@ Test argument parser.
 
     # Note that the expected line is truncated by the cell wrapping in
     # the table.
-    expected_line = (
-        'chrome_27_history : Parser for Google Chrome 27 and later history')
+    expected_line = 'chrome_27_history : Parser for Google Chrome 27 and later'
     self.assertIn(expected_line, lines)
 
     expected_line = 'winreg_default : Parser for Windows Registry data.'
