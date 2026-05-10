@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Script to check for timeliner.yaml entries that have no corresponding event
+# Script to check for formatters/*.yaml entries that have no corresponding event
 # data class DATA_TYPE.
 
 EXIT_FAILURE=1
@@ -8,19 +8,19 @@ EXIT_SUCCESS=0
 
 set -e
 
-TIMELINER_YAML="plaso/data/timeliner.yaml"
+FORMATTERS_DIRECTORY="plaso/data/formatters"
 
-if [[ ! -f "${TIMELINER_YAML}" ]];
+if [[ ! -d "${FORMATTERS_DIRECTORY}" ]];
 then
-    echo "Missing: ${TIMELINER_YAML}"
+    echo "Missing: ${FORMATTERS_DIRECTORY}"
     exit ${EXIT_FAILURE}
 fi
 
-declare -a timeliner_entries=()
+declare -a formatter_entries=()
 
 while IFS= read -r line;
 do
-    timeliner_entries+=("$line")
+    formatter_entries+=("$line")
 done < <(awk '
     /^[[:space:]]*data_type[[:space:]]*:/ {
         gsub(/.*data_type[[:space:]]*:[[:space:]]*'\''/, "", $0)
@@ -29,7 +29,7 @@ done < <(awk '
         gsub(/^"/, "", $0)
         if ($0 != "") print $0
     }
-' "${TIMELINER_YAML}" 2>/dev/null)
+' ${FORMATTERS_DIRECTORY}/*.yaml 2>/dev/null | sort -u)
 
 declare -A source_entries=()
 
@@ -45,7 +45,7 @@ done < <(grep -rh "DATA_TYPE = " "plaso" --include="*.py" \
 
 declare -a unused_entries=()
 
-for entry in "${timeliner_entries[@]}";
+for entry in "${formatter_entries[@]}";
 do
     if [[ -z "${source_entries[$entry]}" ]];
     then
@@ -53,13 +53,13 @@ do
     fi
 done
 
-total_count=${#timeliner_entries[@]}
+total_count=${#formatter_entries[@]}
 unused_count=${#unused_entries[@]}
 used_count=$((total_count - unused_count))
 
 if [[ ${unused_count} -ne 0 ]];
 then
-    echo "Found unused timeliner.yaml entries:"
+    echo "Found unused formatter helper identifiers:"
 
     for entry in "${unused_entries[@]}";
     do
