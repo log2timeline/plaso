@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """SQLite parser plugin for iOS accounts (Accounts3.db) database files."""
 
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
@@ -25,7 +24,7 @@ class IOSAccountsEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(IOSAccountsEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.account_type = None
     self.creation_time = None
     self.identifier = None
