@@ -38,5 +38,8 @@ PYTHONPATH=. ./plaso/scripts/log2timeline.py --parsers list --use-markdown > doc
 # Regenerate the API documentation.
 tox -edocs
 
+# Check for unused entries in timeliner.yaml.
+./utils/check_unused_timeliner_entries.sh
+
 exit ${EXIT_SUCCESS};
 

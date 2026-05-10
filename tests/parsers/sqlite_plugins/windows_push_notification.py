@@ -31,7 +31,7 @@ class WindowsPushNotificationPluginTest(test_lib.SQLitePluginTestCase):
 
     expected_event_values = {
         'creation_time': '2020-12-11T19:09:13+00:00',
-        'data_type': 'windows:wpndatabase:notification_handler',
+        'data_type': 'windows:push_notification:notification_handler',
         'handler_type': 'app:system',
         'identifier': 'FamilySafety_Settings',
         'modification_time': '2020-12-11T19:09:13+00:00',
@@ -43,7 +43,7 @@ class WindowsPushNotificationPluginTest(test_lib.SQLitePluginTestCase):
     expected_event_values = {
         'arrival_time': '2020-12-11T19:11:35.9025799+00:00',
         'boot_time': '2020-12-11T19:08:54.1636157+00:00',
-        'data_type': 'windows:wpndatabase:notification',
+        'data_type': 'windows:push_notification:notification',
         'expiration_time': '2020-12-11T19:12:35.9025799+00:00',
         'handler_identifier': (
             'windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.'
