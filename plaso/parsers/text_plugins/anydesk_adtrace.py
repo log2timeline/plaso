@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Text parser plugin for Anydesk Ad Trace log (ad.trace) files.
 
 Parser based on the analysis of the ad.trace log file format.
@@ -32,7 +31,7 @@ class AnyDeskAdTraceLogEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(AnyDeskAdTraceLogEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.loglevel = None
     self.recorded_time = None
     self.appname = None
