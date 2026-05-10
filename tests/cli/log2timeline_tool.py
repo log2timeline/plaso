@@ -409,7 +409,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
   def testExtractEventsFromSourcesOnFile(self):
     """Tests the ExtractEventsFromSources function on a file."""
-    test_file_path = self._GetTestFilePath(['System.evtx'])
+    test_file_path = self._GetTestFilePath(['evtx', 'System.evtx'])
     self._SkipIfPathNotExists(test_file_path)
 
     options = self._CreateExtractionOptions(test_file_path)

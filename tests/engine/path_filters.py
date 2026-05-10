@@ -34,22 +34,6 @@ class PathCollectionFiltersHelperTest(shared_test_lib.BaseTestCase):
 
   # pylint: disable=protected-access
 
-  _FILTER_FILE_DATA = '\n'.join([
-      '# 2 hits.',
-      '/test_data/testdir/filter_.+.txt',
-      '# A single hit.',
-      '/test_data/.+evtx',
-      '# A single hit.',
-      '/AUTHORS',
-      '/does_not_exist/some_file_[0-9]+txt',
-      '# Path expansion.',
-      '{systemroot}/Tasks/.+[.]job',
-      '# This should not compile properly, missing file information.',
-      'failing/',
-      '# This should not fail during initial loading, but fail later on.',
-      'bad re (no close on that parenthesis/file',
-      ''])
-
   _YAML_FILTER_FILE_DATA = '\n'.join([
       'type: include',
       'paths:',
@@ -65,13 +49,17 @@ class PathCollectionFiltersHelperTest(shared_test_lib.BaseTestCase):
       '---',
       'type: include',
       'paths:',
-      '- \'/test_data/.+evtx\'',
-      '- \'/test_data/testdir/filter_.+.txt\'',
+      '- \'/test_data/.+[.]evtx\'',
+      '- \'/test_data/evtx/.+[.]evtx\'',
+      '- \'/test_data/testdir/filter_.+[.]txt\'',
       ''])
 
   def testBuildFindSpecsWithYAMLFilterFile(self):
     """Tests the BuildFindSpecs function with YAML filter file."""
-    test_file_path = self._GetTestFilePath(['System.evtx'])
+    test_file_path = self._GetTestFilePath(['evtx', 'System.evtx'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    test_file_path = self._GetTestFilePath(['evtx', 'System2.evtx'])
     self._SkipIfPathNotExists(test_file_path)
 
     test_file_path = self._GetTestFilePath(['testdir', 'filter_1.txt'])
@@ -91,7 +79,7 @@ class PathCollectionFiltersHelperTest(shared_test_lib.BaseTestCase):
     test_helper.BuildFindSpecs(
         test_path_filters, environment_variables=[environment_variable])
 
-    self.assertEqual(len(test_helper.included_file_system_find_specs), 5)
+    self.assertEqual(len(test_helper.included_file_system_find_specs), 6)
 
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location='.')

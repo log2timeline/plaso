@@ -67,7 +67,10 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
 
   def testBuildFindSpecsWithFileSystem(self):
     """Tests the BuildFindSpecs function for file type artifacts."""
-    test_file_path = self._GetTestFilePath(['System.evtx'])
+    test_file_path = self._GetTestFilePath(['evtx', 'System.evtx'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    test_file_path = self._GetTestFilePath(['evtx', 'System2.evtx'])
     self._SkipIfPathNotExists(test_file_path)
 
     test_file_path = self._GetTestFilePath(['testdir', 'filter_1.txt'])
@@ -87,7 +90,7 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
         artifact_filter_names, environment_variables=[environment_variable],
         user_accounts=test_user_accounts)
 
-    self.assertEqual(len(test_filters_helper.file_system_find_specs), 16)
+    self.assertEqual(len(test_filters_helper.file_system_find_specs), 17)
     self.assertEqual(len(test_filters_helper.registry_find_specs), 0)
 
     # Last find_spec should contain the testuser2 profile path.
@@ -116,7 +119,10 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
 
   def testBuildFindSpecsWithFileSystemAndGroup(self):
     """Tests the BuildFindSpecs function for file type artifacts."""
-    test_file_path = self._GetTestFilePath(['System.evtx'])
+    test_file_path = self._GetTestFilePath(['evtx', 'System.evtx'])
+    self._SkipIfPathNotExists(test_file_path)
+
+    test_file_path = self._GetTestFilePath(['evtx', 'System2.evtx'])
     self._SkipIfPathNotExists(test_file_path)
 
     test_file_path = self._GetTestFilePath(['testdir', 'filter_1.txt'])
@@ -136,7 +142,7 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
         artifact_filter_names, environment_variables=[environment_variable],
         user_accounts=test_user_accounts)
 
-    self.assertEqual(len(test_filters_helper.file_system_find_specs), 16)
+    self.assertEqual(len(test_filters_helper.file_system_find_specs), 17)
     self.assertEqual(len(test_filters_helper.registry_find_specs), 0)
 
     path_spec = path_spec_factory.Factory.NewPathSpec(
