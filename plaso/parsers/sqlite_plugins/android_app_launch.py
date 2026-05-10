@@ -1,4 +1,4 @@
-"""SQLite parser plugin for Android App Launch (SimpleStorage) database file."""
+"""SQLite parser plugin for Android application launch database files."""
 
 from dfdatetime import java_time as dfdatetime_java_time
 
@@ -6,18 +6,21 @@ from plaso.containers import events
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
+
 class AndroidAppLaunch(events.EventData):
-  """Android App Launch event data.
-    Attributes:
-      date (dfdatetime.DateTimeValues): date and time the app was launch.
-      package_name (str): The unique package identifier of the app.
-      launch_location_id (int): Id of location where the app was launch.
-      prediction_ui_surface_id (int): Id of UI surface where prediction was 
-      made.
-      prediction_source_id (int): Id that indicates the source of prediction.
-      prediction_rank (int): A value that indicates the relevance of the 
-      prediction.
-      id (int): An identifier.
+  """Android application launch event data.
+
+  Attributes:
+    identifier (int): identifier.
+    launch_location_identifier (int): identifier of the location where the app
+        was launched.
+    package_name (str): name of the package of the app.
+    prediction_rank (int): relevance of the prediction.
+    prediction_source_identifier (int): identifier of the source of prediction.
+    prediction_ui_surface_identifier (int): identifier of the UI surface where
+        prediction was made.
+    start_time (dfdatetime.DateTimeValues): date and time the application was
+        started (or launched).
   """
 
   DATA_TYPE = 'android:sqlite:app_launch'
@@ -25,59 +28,56 @@ class AndroidAppLaunch(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super().__init__(data_type=self.DATA_TYPE)
-    self.launch_time = None
+    self.identifier = None
+    self.launch_location_identifier = None
     self.package_name = None
-    self.launch_location_id = None
-    self.prediction_ui_surface_id = None
-    self.prediction_source_id = None
     self.prediction_rank = None
-    self.id = None
+    self.prediction_source_identifier = None
+    self.prediction_ui_surface_identifier = None
+    self.start_time = None
+
 
 class AndroidAppLaunchPlugin(interface.SQLitePlugin):
-  """
-    SQLite parser plugin for Android App Launch (SimpleStorage) database files.
-  """
+  """SQLite parser plugin for Android application launch database files."""
 
   NAME = 'android_app_launch'
-  DATA_FORMAT = 'Android App Launch SQLite database (SimpleStorage) file'
+  DATA_FORMAT = (
+      'Android application launch SQLite database (SimpleStorage) file')
 
   REQUIRED_STRUCTURE = {
-    'EchoAppLaunchMetricsEvents': frozenset([
-      'timestampMillis', 'packageName', 'launchLocationId', 
-      'predictionUiSurfaceId', 'predictionSourceId', 'predictionRank', 'id'])
-  }
+      'EchoAppLaunchMetricsEvents': frozenset([
+          'timestampMillis', 'packageName', 'launchLocationId',
+          'predictionUiSurfaceId', 'predictionSourceId', 'predictionRank',
+          'id'])}
 
-  QUERIES = [((
-    'SELECT timestampMillis, packageName, launchLocationId, '
-    'predictionUiSurfaceId, predictionSourceId, predictionRank, id '
-    'FROM EchoAppLaunchMetricsEvents'),
-    'ParseAppLaunchRow'
-  )]
+  QUERIES = [(
+      ('SELECT timestampMillis, packageName, launchLocationId, '
+       'predictionUiSurfaceId, predictionSourceId, predictionRank, id '
+       'FROM EchoAppLaunchMetricsEvents'), 'ParseAppLaunchRow')]
 
   SCHEMAS = {
-    'EchoAppLaunchMetricsEvents': (
-      'CREATE TABLE `EchoAppLaunchMetricsEvents` '
-      '(`timestampMillis` INTEGER NOT NULL, `packageName` TEXT NOT NULL, '
-      '`launchLocationId` INTEGER NOT NULL, `predictionUiSurfaceId` '
-      'INTEGER NOT NULL, `predictionSourceId` INTEGER NOT NULL, '
-      '`predictionRank` INTEGER NOT NULL, `id` INTEGER PRIMARY '
-      'KEY AUTOINCREMENT NOT NULL, FOREIGN KEY(`packageName`) REFERENCES '
-      '`Packages`(`packageName`) ON UPDATE CASCADE ON DELETE CASCADE )'
-    ),
-    'Packages': (
-      'CREATE TABLE `Packages` (`packageName` TEXT NOT NULL, '
-      '`loggablePackageName` TEXT NOT NULL, PRIMARY KEY(`packageName`))'
-    )
-  }
+      'EchoAppLaunchMetricsEvents': (
+          'CREATE TABLE `EchoAppLaunchMetricsEvents` '
+          '(`timestampMillis` INTEGER NOT NULL, `packageName` TEXT NOT NULL, '
+          '`launchLocationId` INTEGER NOT NULL, `predictionUiSurfaceId` '
+          'INTEGER NOT NULL, `predictionSourceId` INTEGER NOT NULL, '
+          '`predictionRank` INTEGER NOT NULL, `id` INTEGER PRIMARY '
+          'KEY AUTOINCREMENT NOT NULL, FOREIGN KEY(`packageName`) REFERENCES '
+          '`Packages`(`packageName`) ON UPDATE CASCADE ON DELETE CASCADE )'),
+      'Packages': (
+          'CREATE TABLE `Packages` (`packageName` TEXT NOT NULL, '
+          '`loggablePackageName` TEXT NOT NULL, PRIMARY KEY(`packageName`))')}
 
   def _GetTimeRowValue(self, query_hash, row, value_name):
     """Retrieves a date and time value from the row.
+
     Args:
       query_hash (int): hash of the query, that uniquely identifies the query
-      that produced the row.
+          that produced the row.
       row (sqlite3.Row): row.
-      Returns:
-    dfdatetime.JavaTime: date and time value or None if not available.
+
+    Returns:
+      dfdatetime.JavaTime: date and time value or None if not available.
     """
     timestamp = self._GetRowValue(query_hash, row, value_name)
     if timestamp is None:
@@ -86,33 +86,33 @@ class AndroidAppLaunchPlugin(interface.SQLitePlugin):
     return dfdatetime_java_time.JavaTime(timestamp=timestamp)
 
   # pylint: disable=unused-argument
-  def ParseAppLaunchRow(
-    self, parser_mediator, query, row, **unused_kwargs):
-    """Parses an account row.
-    
+  def ParseAppLaunchRow(self, parser_mediator, query, row, **unused_kwargs):
+    """Parses an event record row.
+
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-      and other components, such as storage and dfVFS.
+          and other components, such as storage and dfVFS.
       query (str): query that created the row.
       row (sqlite3.Row): row.
     """
     query_hash = hash(query)
 
     event_data = AndroidAppLaunch()
-    event_data.launch_time = self._GetTimeRowValue(query_hash, row,
-      'timestampMillis')
+    event_data.identifier = self._GetRowValue(query_hash, row, 'id')
+    event_data.launch_location_identifier = self._GetRowValue(
+        query_hash, row, 'launchLocationId')
     event_data.package_name = self._GetRowValue(query_hash, row, 'packageName')
-    event_data.launch_location_id = self._GetRowValue(query_hash, row,
-      'launchLocationId')
-    event_data.prediction_ui_surface_id = self._GetRowValue(query_hash, row,
-      'predictionUiSurfaceId')
-    event_data.prediction_source_id = self._GetRowValue(query_hash, row,
-      'predictionSourceId')
-    event_data.prediction_rank = self._GetRowValue(query_hash, row,
-      'predictionRank')
-    event_data.id = self._GetRowValue(query_hash, row, 'id')
+    event_data.prediction_rank = self._GetRowValue(
+        query_hash, row, 'predictionRank')
+    event_data.prediction_source_identifier = self._GetRowValue(
+        query_hash, row, 'predictionSourceId')
+    event_data.prediction_ui_surface_identifier = self._GetRowValue(
+        query_hash, row, 'predictionUiSurfaceId')
+    event_data.start_time = self._GetTimeRowValue(
+        query_hash, row, 'timestampMillis')
 
 
     parser_mediator.ProduceEventData(event_data)
+
 
 sqlite.SQLiteParser.RegisterPlugin(AndroidAppLaunchPlugin)
