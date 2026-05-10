@@ -10,8 +10,8 @@ from tests.parsers.sqlite_plugins import test_lib
 class IOSScreenTimePluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the SQLite parser plugin for iOS Screen Time database files."""
 
-  def testParse(self):
-    """Tests the ParseScreenTimeRow method."""
+  def testProcess(self):
+    """Test the Process function on an iOS screentime.sqlite file."""
     plugin = ios_screentime.IOSScreenTimePlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['ios_screentime.sqlite'], plugin)
@@ -22,6 +22,10 @@ class IOSScreenTimePluginTest(test_lib.SQLitePluginTestCase):
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
     expected_event_values = {

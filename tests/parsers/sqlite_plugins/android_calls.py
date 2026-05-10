@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for the Android SMS call history plugin."""
+"""Tests for the Android Call History database plugin."""
 
 import unittest
 

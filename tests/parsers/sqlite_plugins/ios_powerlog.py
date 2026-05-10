@@ -10,8 +10,8 @@ from tests.parsers.sqlite_plugins import test_lib
 class IOSPowerlogApplicationUsagePluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the SQLite parser plugin for iOS powerlog database files."""
 
-  def testParse(self):
-    """Tests the ParseApplicationRunTime method."""
+  def testProcess(self):
+    """Test the Process function on a PLSQL file."""
     plugin = ios_powerlog.IOSPowerlogApplicationUsagePlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         ['powerlog_2021-12-16_05-54_84E2141B.PLSQL'], plugin)
@@ -22,6 +22,10 @@ class IOSPowerlogApplicationUsagePluginTest(test_lib.SQLitePluginTestCase):
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
+
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
     expected_event_values = {
