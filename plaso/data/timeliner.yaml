@@ -64,33 +64,6 @@ place_holder_event: true
 ---
 data_type: 'android:sqlite:app_launch'
 attribute_mappings:
-- name: 'start_time'
-  description: 'Start Time'
-place_holder_event: true
----
-data_type: 'android:sqlite:app_usage'
-attribute_mappings:
-- name: 'start_time'
-  description: 'Start Time'
-place_holder_event: false
----
-data_type: 'android:tango:contact'
-attribute_mappings:
-- name: 'access_time'
-  description: 'Last Access Time'
-- name: 'friend_request_time'
-  description: 'Friend Request Time'
-- name: 'last_active_time'
-  description: 'Last Active Time'
-place_holder_event: false
----
-data_type: 'android:sqlite:downloads'
-attribute_mappings:
-- name: 'modification_time'
-  description: 'Content Modification Time'
----
-data_type: 'android:sqlite:app_launch'
-attribute_mappings:
 - name: 'launch_time'
   description: 'App Launch Time'
 place_holder_event: true
@@ -101,8 +74,24 @@ attribute_mappings:
   description: 'Start Time'
 place_holder_event: false
 ---
+data_type: 'android:sqlite:downloads'
+attribute_mappings:
+- name: 'modification_time'
+  description: 'Content Modification Time'
+place_holder_event: true
+---
 data_type: 'android:tango:conversation'
 place_holder_event: true
+---
+data_type: 'android:tango:contact'
+attribute_mappings:
+- name: 'access_time'
+  description: 'Last Access Time'
+- name: 'friend_request_time'
+  description: 'Friend Request Time'
+- name: 'last_active_time'
+  description: 'Last Active Time'
+place_holder_event: false
 ---
 data_type: 'android:tango:message'
 attribute_mappings:
