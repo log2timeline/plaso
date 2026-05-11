@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Tests for the Apple iOS SIM information plist plugin."""
 
 import unittest

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Plist parser plugin for iOS SIM information."""
 
 import logging
@@ -16,7 +15,7 @@ class IOSSIMInfoEventData(events.EventData):
 
   def __init__(self):
     """Inisialisasi event data."""
-    super(IOSSIMInfoEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.cb_ver = None
     self.eap_aka = None
     self.label_id = None
