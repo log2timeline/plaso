@@ -14,7 +14,7 @@ class IOSScreenTimePluginTest(test_lib.SQLitePluginTestCase):
     """Test the Process function on an iOS screentime.sqlite file."""
     plugin = ios_screentime.IOSScreenTimePlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        ['ios_screentime.sqlite'], plugin)
+        ['ios', 'RMAdminStore-Local.sqlite'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')

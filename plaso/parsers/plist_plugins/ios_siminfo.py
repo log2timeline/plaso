@@ -42,9 +42,9 @@ class IOSSIMInfoPlugin(interface.PlistPlugin):
   PLIST_PATH_FILTERS = frozenset([
       interface.PlistPathFilter('com.apple.commcenter.data.plist')])
 
-  PLIST_KEYS = frozenset([
-      'PersonalWallet', 'PersonalitySlots', 'pw_ver',
-      'unique-sim-label-store'])
+  # Note that there a com.apple.commcenter.data.plist does not have to contain
+  # a PersonalWallet key.
+  PLIST_KEYS = frozenset(['PersonalWallet', 'PersonalitySlots', 'pw_ver'])
 
   # pylint: disable=arguments-differ
   def _ParsePlist(self, parser_mediator, match=None, **unused_kwargs):

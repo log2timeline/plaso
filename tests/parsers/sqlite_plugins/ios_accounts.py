@@ -14,7 +14,7 @@ class IOSAccountsPluginTest(test_lib.SQLitePluginTestCase):
     """Tests the ParseAccountRow method."""
     plugin = ios_accounts.IOSAccountsPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        ['Accounts3.sqlite'], plugin)
+        ['ios', 'Accounts3.sqlite'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')

@@ -15,7 +15,7 @@ class IOSTwitterTest(test_lib.SQLitePluginTestCase):
     """Test the Process function."""
     plugin = ios_twitter.IOSTwitterPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        ['twitter_ios.db'], plugin)
+        ['ios', 'twitter.db'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')

@@ -169,12 +169,12 @@ Generated with the [Windows PE/COFF resource file specimens project](https://git
 
 Copied with permission from [Digital Corpora](https://digitalcorpora.org/):
 * 23AAD8D4-D632-4F99-8E44-152AAB8FA9D6
-* 9368974384.db
-* Accounts3.sqlite
 * attd_db
 * burners.sqlite
-* com.apple.commcenter.data.plist
-* com.apple.MobileBackup.plist
 * files_master_database
-* IMODb2.sqlite
+* ios/9368974384.db
+* ios/Accounts3.sqlite
+* ios/com.apple.commcenter.data.plist
+* ios/com.apple.MobileBackup.plist
+* ios/IMODb2.sqlite
 * viber_data

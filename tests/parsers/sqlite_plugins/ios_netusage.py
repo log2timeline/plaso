@@ -14,7 +14,7 @@ class IOSNetusagePluginTest(test_lib.SQLitePluginTestCase):
     """Test the Process function."""
     plugin = ios_netusage.IOSNetusagePlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        ['netusage.sqlite'], plugin)
+        ['ios', 'netusage.sqlite'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
