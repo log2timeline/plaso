@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """Tests for PowerShell transcript log text parser plugin."""
 
+import io
 import unittest
 
+from plaso.parsers import mediator as parsers_mediator
+from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import powershell_transcript
 
 from tests.parsers.text_plugins import test_lib
@@ -11,7 +14,27 @@ from tests.parsers.text_plugins import test_lib
 class PowerShellTranscriptLogTextPluginTest(test_lib.TextPluginTestCase):
   """Tests for PowerShell transcript log text parser plugin."""
 
-  # TODO: add tests for CheckRequiredFormat
+  def testCheckRequiredFormat(self):
+    """Tests for the CheckRequiredFormat function."""
+    plugin = powershell_transcript.PowerShellTranscriptLogTextPlugin()
+    parser_mediator = parsers_mediator.ParserMediator()
+
+    file_object = io.BytesIO(
+        b'**********************\n'
+        b'Windows PowerShell transcript start\n')
+    text_reader = text_parser.EncodedTextReader(file_object)
+    text_reader.ReadLines()
+
+    self.assertTrue(plugin.CheckRequiredFormat(parser_mediator, text_reader))
+
+    # Check non-matching format.
+    file_object = io.BytesIO(
+        b'Jan 22 07:52:33 myhostname.myhost.com client[30840]: INFO No new '
+        b'content in image.dd.\n')
+    text_reader = text_parser.EncodedTextReader(file_object)
+    text_reader.ReadLines()
+
+    self.assertFalse(plugin.CheckRequiredFormat(parser_mediator, text_reader))
 
   def testProcess(self):
     """Tests the Process function ."""
