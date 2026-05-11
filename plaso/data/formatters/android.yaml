@@ -194,6 +194,23 @@ short_source: 'LOG'
 source: 'Android SMS messages'
 ---
 type: 'conditional'
+data_type: 'android:sqlite:app_launch'
+message:
+- 'Package: {package_name}'
+- 'Launch Location Identifier: {launch_location_identifier}'
+- 'Prediction UI Surface Identifier: {prediction_ui_surface_identifier}'
+- 'Prediction Source Identifier: {prediction_source_identifier}'
+- 'Prediction Rank: {prediction_rank}'
+short_message:
+- 'Package: {package_name}'
+- 'Launch Location Identifier: {launch_location_identifier}'
+- 'Prediction UI Surface Identifier: {prediction_ui_surface_identifier}'
+- 'Prediction Source Identifier: {prediction_source_identifier}'
+- 'Prediction Rank: {prediction_rank}'
+short_source: 'App Launch'
+source: 'Android App launch (Simple Storage)'
+---
+type: 'conditional'
 data_type: 'android:sqlite:app_usage'
 message:
 - 'Package Name: {package_name}'
