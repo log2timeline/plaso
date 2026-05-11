@@ -1,6 +1,7 @@
 """Imports for the text parser."""
 
 from plaso.parsers.text_plugins import android_logcat
+from plaso.parsers.text_plugins import anydesk_adtrace
 from plaso.parsers.text_plugins import apache_access
 from plaso.parsers.text_plugins import apt_history
 from plaso.parsers.text_plugins import atlassian_confluence
