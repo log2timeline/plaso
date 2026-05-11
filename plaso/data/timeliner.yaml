@@ -78,6 +78,12 @@ attribute_mappings:
   description: 'Last Active Time'
 place_holder_event: false
 ---
+data_type: 'android:sqlite:downloads'
+attribute_mappings:
+- name: 'modification_time'
+  description: 'Content Modification Time'
+place_holder_event: true
+---
 data_type: 'android:tango:conversation'
 place_holder_event: true
 ---
