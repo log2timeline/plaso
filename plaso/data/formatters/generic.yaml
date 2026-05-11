@@ -495,7 +495,7 @@ message:
 - 'Height: {image_height}'
 - 'Manufacturer: {manufacturer}'
 - 'Model: {model}'
-- 'Serial: {bodyserialnumber}'
+- 'Serial number: {body_serial_number}'
 - 'Software: {software}'
 - 'Latitude: {latitude}'
 - 'Longitude: {longitude}'
