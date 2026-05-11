@@ -11,6 +11,8 @@ from tests.parsers.text_plugins import test_lib
 class SophosAVLogTextPluginTest(test_lib.TextPluginTestCase):
   """Tests for the Sophos Anti-Virus log (SAV.txt) text parser plugin."""
 
+  # TODO: add tests for CheckRequiredFormat
+
   def testProcess(self):
     """Tests the Process function."""
     plugin = sophos_av.SophosAVLogTextPlugin()

@@ -245,7 +245,7 @@ class GoogleLogTextPlugin(
 
       return date_time
 
-    except (TypeError, ValueError) as exception:
+    except (IndexError, TypeError, ValueError) as exception:
       raise errors.ParseError(
           f'Unable to parse time elements with error: {exception!s}')
 
@@ -282,7 +282,7 @@ class GoogleLogTextPlugin(
       dfdatetime_time_elements.TimeElements(
           time_elements_tuple=time_elements_tuple)
 
-    except (TypeError, ValueError):
+    except (IndexError, TypeError, ValueError):
       return False
 
     self._SetEstimatedYear(parser_mediator)

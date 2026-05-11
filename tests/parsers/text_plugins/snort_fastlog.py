@@ -11,6 +11,8 @@ from tests.parsers.text_plugins import test_lib
 class SnortFastLogTextPluginTest(test_lib.TextPluginTestCase):
   """Tests for Snort3/Suricata fast-log alert log text parser plugin."""
 
+  # TODO: add tests for CheckRequiredFormat
+
   def testProcessWithSnort3Log(self):
     """Tests the Process function with a Snort fast-log alert log file."""
     plugin = snort_fastlog.SnortFastLogTextPlugin()

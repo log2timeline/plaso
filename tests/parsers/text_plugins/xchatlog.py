@@ -11,6 +11,8 @@ from tests.parsers.text_plugins import test_lib
 class XChatLogTextPluginTest(test_lib.TextPluginTestCase):
   """Tests for the xchatlog text parser plugin."""
 
+  # TODO: add tests for CheckRequiredFormat
+
   def testProcess(self):
     """Tests the Process function."""
     plugin = xchatlog.XChatLogTextPlugin()

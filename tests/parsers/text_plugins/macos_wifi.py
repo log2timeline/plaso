@@ -11,6 +11,8 @@ from tests.parsers.text_plugins import test_lib
 class MacOSWiFiLogTextPluginTest(test_lib.TextPluginTestCase):
   """Tests for the MacOS MacOS Wi-Fi log (wifi.log) files text parser plugin."""
 
+  # TODO: add tests for CheckRequiredFormat using fake_file_system_builder
+
   def testProcess(self):
     """Tests the Process function."""
     plugin = macos_wifi.MacOSWiFiLogTextPlugin()

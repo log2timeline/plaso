@@ -30,6 +30,8 @@ IE                  11.1790.17763.0
 AppPath:            C:\\Program Files\\TeamViewer\\TeamViewer_Service.exe
 UserAccount:        SYSTEM"""
 
+  # TODO: add tests for CheckRequiredFormat
+
   def testProcess(self):
     """Tests the Process function."""
     plugin = teamviewer.TeamViewerApplicationLogTextPlugin()

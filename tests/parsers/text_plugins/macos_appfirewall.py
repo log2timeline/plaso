@@ -11,6 +11,8 @@ from tests.parsers.text_plugins import test_lib
 class MacOSAppFirewallTextPluginTest(test_lib.TextPluginTestCase):
   """Tests for the MacOS Application firewall log file text parser plugin."""
 
+  # TODO: add tests for CheckRequiredFormat using fake_file_system_builder
+
   def testProcess(self):
     """Tests the Process function."""
     plugin = macos_appfirewall.MacOSAppFirewallTextPlugin()

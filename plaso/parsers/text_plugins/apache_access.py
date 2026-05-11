@@ -273,7 +273,7 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
           time_elements_tuple=time_elements_tuple,
           time_zone_offset=time_zone_offset)
 
-    except (TypeError, ValueError) as exception:
+    except (IndexError, TypeError, ValueError) as exception:
       raise errors.ParseError(
           f'Unable to parse time elements with error: {exception!s}')
 

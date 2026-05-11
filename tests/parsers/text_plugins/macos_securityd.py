@@ -11,6 +11,8 @@ from tests.parsers.text_plugins import test_lib
 class MacOSSecuritydLogTextPluginTest(test_lib.TextPluginTestCase):
   """Tests the MacOS security daemon (securityd) log file text parser plugin."""
 
+  # TODO: add tests for CheckRequiredFormat using fake_file_system_builder
+
   def testProcess(self):
     """Tests the Process function."""
     plugin = macos_securityd.MacOSSecuritydLogTextPlugin()

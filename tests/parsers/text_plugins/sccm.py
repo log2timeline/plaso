@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*_ coding: utf-8 -*-
 """Tests for the SCCM log text parser plugin."""
 
 import unittest
@@ -18,7 +17,7 @@ class SCCMTextPluginTest(test_lib.TextPluginTestCase):
   """Tests for the SCCM log text parser plugin."""
 
   def testCheckRequiredFormat(self):
-    """Tests for the CheckRequiredFormat method."""
+    """Tests for the CheckRequiredFormat function."""
     plugin = sccm.SCCMTextPlugin()
 
     resolver_context = dfvfs_context.Context()

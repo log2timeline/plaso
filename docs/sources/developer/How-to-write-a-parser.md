@@ -79,7 +79,6 @@ plaso/parsers/safari_cookies.py
 ```
 
 ~~~~python
-# -*- coding: utf-8 -*-
 """Parser for Safari Binary Cookie files."""
 
 from plaso.parsers import interface
@@ -162,7 +161,6 @@ test/parsers/safari_cookies.py
 
 ~~~~python
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Tests for the Safari cookie parser."""
 
 import unittest

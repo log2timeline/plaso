@@ -11,6 +11,8 @@ from tests.parsers.text_plugins import test_lib
 class VsftpdLogTextPluginText(test_lib.TextPluginTestCase):
   """Tests for the vsftpd log file text parser plugin."""
 
+  # TODO: add tests for CheckRequiredFormat
+
   def testProcess(self):
     """Tests the Process function."""
     plugin = vsftpd.VsftpdLogTextPlugin()

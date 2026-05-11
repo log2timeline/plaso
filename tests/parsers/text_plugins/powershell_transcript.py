@@ -11,6 +11,8 @@ from tests.parsers.text_plugins import test_lib
 class PowerShellTranscriptLogTextPluginTest(test_lib.TextPluginTestCase):
   """Tests for PowerShell transcript log text parser plugin."""
 
+  # TODO: add tests for CheckRequiredFormat
+
   def testProcess(self):
     """Tests the Process function ."""
     plugin = powershell_transcript.PowerShellTranscriptLogTextPlugin()

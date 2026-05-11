@@ -165,7 +165,7 @@ class AtlassianJiraTextPlugin(interface.TextPlugin):
 
       return date_time
 
-    except (TypeError, ValueError) as exception:
+    except (IndexError, TypeError, ValueError) as exception:
       raise errors.ParseError(
           f'Unable to parse time elements with error: {exception!s}')
 

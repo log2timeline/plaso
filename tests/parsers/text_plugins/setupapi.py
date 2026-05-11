@@ -11,6 +11,8 @@ from tests.parsers.text_plugins import test_lib
 class SetupAPILogTextPluginTest(test_lib.TextPluginTestCase):
   """Tests for the Windows SetupAPI log text parser plugin."""
 
+  # TODO: add tests for CheckRequiredFormat
+
   def testProcessWithDevLog(self):
     """Tests the Process function with setupapi.dev.log."""
     plugin = setupapi.SetupAPILogTextPlugin()

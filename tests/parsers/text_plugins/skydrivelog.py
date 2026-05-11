@@ -11,6 +11,8 @@ from tests.parsers.text_plugins import test_lib
 class SkyDriveLog1TextPluginTest(test_lib.TextPluginTestCase):
   """Tests for the SkyDrive version 1 log files text parser plugin."""
 
+  # TODO: add tests for CheckRequiredFormat
+
   def testProcess(self):
     """Tests the Process function."""
     plugin = skydrivelog.SkyDriveLog1TextPlugin()
@@ -42,6 +44,8 @@ class SkyDriveLog1TextPluginTest(test_lib.TextPluginTestCase):
 
 class SkyDriveLog2TextPluginTest(test_lib.TextPluginTestCase):
   """Tests for the SkyDrive version 2 log files text parser plugin."""
+
+  # TODO: add tests for CheckRequiredFormat
 
   def testProcess(self):
     """Tests the Process function."""

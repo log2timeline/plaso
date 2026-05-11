@@ -14,6 +14,8 @@ class ViminfoTextPluginTest(test_lib.TextPluginTestCase):
 
   # pylint: disable=protected-access
 
+  # TODO: add tests for CheckRequiredFormat
+
   def testProcess(self):
     """Tests the Process function."""
     plugin = viminfo.VimInfoTextPlugin()

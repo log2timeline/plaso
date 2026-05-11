@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*
 """Tests for the JSON-L parser plugin for Azure activity log files."""
 
 import unittest

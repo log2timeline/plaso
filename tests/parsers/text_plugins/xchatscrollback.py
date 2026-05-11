@@ -17,7 +17,7 @@ class XChatScrollbackLogTextPluginTest(test_lib.TextPluginTestCase):
   """Tests for the xchatscrollback log parser."""
 
   def testCheckRequiredFormat(self):
-    """Tests for the CheckRequiredFormat method."""
+    """Tests for the CheckRequiredFormat function."""
     plugin = xchatscrollback.XChatScrollbackLogTextPlugin()
 
     resolver_context = dfvfs_context.Context()

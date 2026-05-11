@@ -15,7 +15,7 @@ class AndroidLogcatTextPluginTest(test_lib.TextPluginTestCase):
   """Tests for Android logcat text parser plugin."""
 
   def testCheckRequiredFormat(self):
-    """Tests for the CheckRequiredFormat method."""
+    """Tests for the CheckRequiredFormat function."""
     plugin = android_logcat.AndroidLogcatTextPlugin()
 
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()

@@ -11,6 +11,8 @@ from tests.parsers.text_plugins import test_lib
 class SantaTextPluginTest(test_lib.TextPluginTestCase):
   """Tests for Santa log text parser plugin."""
 
+  # TODO: add tests for CheckRequiredFormat
+
   def testProcessWithLegacyFormat(self):
     """Tests the Process function with the legacy Santa log format."""
     plugin = santa.SantaTextPlugin()

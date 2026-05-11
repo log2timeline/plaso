@@ -11,6 +11,8 @@ from tests.parsers.text_plugins import test_lib
 class PopularityContestTextPluginTest(test_lib.TextPluginTestCase):
   """Tests for the Popularity Contest (popcontest) text parser plugin."""
 
+  # TODO: add tests for CheckRequiredFormat
+
   def testProcess(self):
     """Tests the Process function."""
     plugin = popcontest.PopularityContestTextPlugin()
