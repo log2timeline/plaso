@@ -1,6 +1,4 @@
-"""Plist parser plugin for iOS SIM information."""
-
-import logging
+"""Plist parser plugin for Apple iOS SIM information plist files."""
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
@@ -10,66 +8,71 @@ from plaso.parsers.plist import PlistParser
 
 
 class IOSSIMInfoEventData(events.EventData):
-  """Event data untuk iOS SIM Info."""
+  """Apple iOS SIM information event data.
+
+  Attributes:
+    cell_broadcast_version (str): Cell broadcast version.
+    eap_aka_enabled (bool): value to indicate EAP-AKA is enabled.
+    label_identifier (str): label identifier.
+    last_used_time (dfdatetime.DateTimeValues): date and time the SIM was last
+        used.
+    phone_number (str): phone number.
+    sim_type (str): type of SIM
+  """
+
   DATA_TYPE = 'ios:sim:info'
 
   def __init__(self):
-    """Inisialisasi event data."""
+    """Initializes event data."""
     super().__init__(data_type=self.DATA_TYPE)
-    self.cb_ver = None
-    self.eap_aka = None
-    self.label_id = None
-    self.mdn = None
+    self.cell_broadcast_version = None
+    self.eap_aka_enabled = None
+    self.label_identifier = None
+    self.last_used_time = None
+    self.phone_number = None
     self.sim_type = None
-    self.timestamp = None
 
 
 class IOSSIMInfoPlugin(interface.PlistPlugin):
-  """Plugin untuk memproses iOS SIM Info plist."""
+  """Plist parser plugin for Apple iOS SIM information plist files."""
+
   NAME = 'ios_siminfo'
   DATA_FORMAT = 'iOS SIM Info plist file'
 
   PLIST_PATH_FILTERS = frozenset([
       interface.PlistPathFilter('com.apple.commcenter.data.plist')])
 
-  PLIST_KEYS = frozenset(['PersonalWallet'])
+  PLIST_KEYS = frozenset([
+      'PersonalWallet', 'PersonalitySlots', 'pw_ver',
+      'unique-sim-label-store'])
 
   # pylint: disable=arguments-differ
   def _ParsePlist(self, parser_mediator, match=None, **unused_kwargs):
-    """Memproses file plist."""
+    """Extract SIM information entries.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
+    """
     personal_wallet = match.get('PersonalWallet', {})
-
-    if not personal_wallet:
-      logging.warning('PersonalWallet kosong atau tidak ditemukan di match.')
-      return
-
-    for sim_id, sim_data in personal_wallet.items():
-      info = sim_data.get('info', {})
-      if not info:
-        logging.warning(f'Tidak ada info untuk SIM ID: {sim_id}')
-        continue
+    for _, wallet_item in personal_wallet.items():
+      info = wallet_item.get('info', {})
+      timestamp = timestamp=info.get('ts')
 
       event_data = IOSSIMInfoEventData()
-      event_data.mdn = info.get('mdn')
-      event_data.eap_aka = info.get('eap_aka')
+      event_data.cell_broadcast_version = info.get('cb_ver')
+      event_data.eap_aka_enabled = info.get('eap_aka')
+      event_data.label_identifier = info.get('label-id')
+      # Mobile Directory Number.
+      event_data.phone_number = info.get('mdn')
       event_data.sim_type = info.get('type')
-      event_data.cb_ver = info.get('cb_ver')
-      event_data.label_id = info.get('label-id')
-      event_data.timestamp = dfdatetime_posix_time.PosixTime(
-          timestamp=info.get('ts', 0)
-      )
 
-      # Debugging untuk memastikan data diproduksi
-      logging.debug(
-          f'Memproduksi event data: MDN={event_data.mdn}, '
-          f'SIM Type={event_data.sim_type}, CB Ver={event_data.cb_ver}'
-      )
+      if timestamp is not None:
+        event_data.last_used_time = dfdatetime_posix_time.PosixTime(
+            timestamp=timestamp)
 
-      # Pastikan data penting ada sebelum menghasilkan event
-      if event_data.mdn:
-        parser_mediator.ProduceEventData(event_data)
-      else:
-        logging.warning(f'MDN tidak ditemukan untuk SIM ID: {sim_id}')
+      parser_mediator.ProduceEventData(event_data)
 
 
 PlistParser.RegisterPlugin(IOSSIMInfoPlugin)

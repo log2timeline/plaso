@@ -253,13 +253,13 @@ source: 'iOS Screen Time database'
 type: 'conditional'
 data_type: 'ios:sim:info'
 message:
-- 'SIM MDN: {mdn}'
+- 'Phone number: {phone_number}'
 - 'SIM Type: {sim_type}'
-- 'CB Ver: {cb_ver}'
-- 'Label ID: {label_id}'
+- 'Cell broadcast version: {cell_broadcast_version}'
+- 'Label identifier: {label_identifier}'
 short_message:
-- 'SIM MDN: {mdn}'
-short_source: 'IOS'
+- 'Phone number: {phone_number}'
+short_source: 'PLIST'
 source: 'iOS SIM Info'
 ---
 type: 'conditional'
@@ -340,16 +340,3 @@ short_message:
 - 'SSID: {ssid}'
 short_source: 'PLIST'
 source: 'Apple iOS WiFi Known Networks plist file'
----
-#ios_siminfo
-type: 'conditional'
-data_type: 'ios:sim:info'
-message:
-  - 'SIM MDN: {mdn}'
-  - 'SIM Type: {sim_type}'
-  - 'CB Ver: {cb_ver}'
-  - 'Label ID: {label_id}'
-short_message:
-  - 'SIM MDN: {mdn}'
-short_source: 'IOS'
-source: 'iOS SIM Info'

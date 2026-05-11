@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for the Apple iOS SIM information plist plugin."""
+"""Tests for the iOS SIM information plist plugin."""
 
 import unittest
 
@@ -8,42 +8,39 @@ from tests.parsers.plist_plugins import test_lib
 
 
 class IOSSIMInfoPluginTest(test_lib.PlistPluginTestCase):
-  """Test untuk plugin iOS SIM Info."""
+  """Tests for the iOS SIM information plist plugin."""
 
   def testProcess(self):
-    """Menguji proses parsing plist menggunakan plugin iOS SIM Info."""
-    # Nama file plist yang akan diuji
+    """Tests the Process function."""
     plist_name = 'com.apple.commcenter.data.plist'
 
-    # Membuat instance dari plugin
     plugin = ios_siminfo.IOSSIMInfoPlugin()
-
-    # Memproses file plist dengan plugin
     storage_writer = self._ParsePlistFileWithPlugin(
         plugin, [plist_name], plist_name)
 
-    # Mengambil jumlah event_data yang diproses
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
-
-    # Memastikan jumlah event_data yang diproses sesuai
     self.assertEqual(number_of_event_data, 1)
 
-    # Mengambil daftar event_data
-    events = list(storage_writer.GetAttributeContainers('event_data'))
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'extraction_warning')
+    self.assertEqual(number_of_warnings, 0)
 
-    # Memastikan bahwa data di event pertama sesuai dengan yang diharapkan
-    event = events[0]
-    self.assertEqual(event.mdn, '+19195794674')
-    self.assertEqual(event.eap_aka, True)
-    self.assertEqual(event.sim_type, 'sim')
-    self.assertEqual(event.cb_ver, '49.0')
-    self.assertEqual(event.label_id, 'E8B6082D-F391-46CB-9780-0AF46534D89F')
-    self.assertEqual(event.timestamp.timestamp, 1684326382)
+    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+        'recovery_warning')
+    self.assertEqual(number_of_warnings, 0)
 
-    # Memastikan timestamp diubah ke format yang benar
-    self.assertEqual(
-        event.timestamp.CopyToDateTimeString(), '2023-05-17 12:26:22')
+    expected_event_values = {
+        'cell_broadcast_version': '49.0',
+        'data_type': 'ios:sim:info',
+        'eap_aka_enabled': True,
+        'label_identifier': 'E8B6082D-F391-46CB-9780-0AF46534D89F',
+        'last_used_time': '2023-05-17T12:26:22+00:00',
+        'phone_number': '+19195794674',
+        'sim_type': 'sim'}
+
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
+    self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == '__main__':
