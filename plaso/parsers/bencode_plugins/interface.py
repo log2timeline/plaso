@@ -46,6 +46,6 @@ class BencodePlugin(plugins.BasePlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       bencode_file (Optional[BencodeFile]): bencode file.
     """

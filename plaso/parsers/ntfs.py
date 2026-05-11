@@ -144,7 +144,7 @@ class NTFSMFTParser(interface.FileObjectParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       uuid_string (str): UUID string of the Distributed Tracking identifier.
       origin (str): origin of the event (event source).
     """
@@ -161,7 +161,7 @@ class NTFSMFTParser(interface.FileObjectParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       mft_entry (pyfsntfs.file_entry): MFT entry.
       mft_attribute (pyfsntfs.attribute): MFT attribute.
       path_hints (list[str]): hints about the full path of the file.
@@ -222,7 +222,7 @@ class NTFSMFTParser(interface.FileObjectParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       mft_entry (pyfsntfs.file_entry): MFT entry.
       mft_attribute (pyfsntfs.attribute): MFT attribute.
     """
@@ -259,7 +259,7 @@ class NTFSMFTParser(interface.FileObjectParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       mft_entry (pyfsntfs.file_entry): MFT entry.
     """
     data_stream_names = []
@@ -326,7 +326,7 @@ class NTFSMFTParser(interface.FileObjectParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       file_object (dfvfs.FileIO): file-like object.
     """
     mft_metadata_file = pyfsntfs.mft_metadata_file()
@@ -388,7 +388,7 @@ class NTFSUsnJrnlParser(
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       usn_change_journal (pyfsntsfs.usn_change_journal): USN change journal.
 
     Raises:
@@ -444,7 +444,7 @@ class NTFSUsnJrnlParser(
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       file_object (dfvfs.FileIO): file-like object.
     """
     fsntfs_volume = pyfsntfs.volume()

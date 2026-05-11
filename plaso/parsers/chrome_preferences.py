@@ -108,7 +108,7 @@ class ChromePreferencesParser(interface.FileObjectParser):
       settings_dict (dict[str: object]): settings data from a Chrome Preferences
           file.
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
     """
     for extension_id, extension in sorted(settings_dict.items()):
       install_time = extension.get('install_time')
@@ -147,7 +147,7 @@ class ChromePreferencesParser(interface.FileObjectParser):
       exceptions_dict (dict): Permission exceptions data from Chrome Preferences
           file.
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
     """
     for permission in exceptions_dict:
       if permission not in self._EXCEPTIONS_KEYS:
@@ -180,7 +180,7 @@ class ChromePreferencesParser(interface.FileObjectParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       file_object (dfvfs.FileIO): file-like object.
 
     Raises:

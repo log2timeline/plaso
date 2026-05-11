@@ -233,7 +233,7 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
 
     Args:
       mediator (AnalysisMediator): mediates interactions between
-          analysis plugins and other components, such as storage and dfvfs.
+          analysis plugins and other components, such as storage and dfVFS.
       event_tripple (EventTripple): event tripple.
     """
     try:

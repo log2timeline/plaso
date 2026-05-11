@@ -28,7 +28,7 @@ class MockPlugin(interface.PlistPlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
     """
     event_data = plist_event.PlistTimeEventData()
     event_data.key = 'LastInquiryUpdate'

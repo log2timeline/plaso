@@ -141,6 +141,7 @@ android_airtag | Parser for AirGuard AirTag Tracker on SQLite database files.
 android_app_usage | Parser for Android application usage SQLite database (app_usage) files.
 android_calls | Parser for Android call history SQLite database (contacts2.db) files.
 android_communication_information | Parser for Android communication information SQLite database files.
+android_native_downloads | Parser for Android native downloads SQLite database (downloads.db) files.
 android_sms | Parser for Android text messages (SMS) SQLite database (mmssms.dbs) files.
 android_turbo | Parser for Android turbo SQLite database (turbo.db) files.
 android_viber_call | Parser for Android Viber call history SQLite database (viber_data) files.
@@ -155,6 +156,7 @@ chrome_autofill | Parser for Google Chrome autofill SQLite database (Web Data) f
 chrome_extension_activity | Parser for Google Chrome extension activity SQLite database files.
 dropbox | Parser for Dropbox sync history database (sync_history.db) files.
 edge_load_statistics | Parser for SQLite database files.
+files_by_google | Parser for Files by Google SQLite database (files_master_database) files.
 firefox_10_cookies | Parser for Mozilla Firefox cookies SQLite database file version 10.
 firefox_118_downloads | Parser for Mozilla Firefox 118 downloads SQLite database (downloads.sqlite) files.
 firefox_2_cookies | Parser for Mozilla Firefox cookies SQLite database file version 2.
@@ -164,6 +166,7 @@ google_drive | Parser for Google Drive snapshot SQLite database (snapshot.db) fi
 hangouts_messages | Parser for Google Hangouts conversations SQLite database (babel.db) files.
 imessage | Parser for MacOS and iOS iMessage database (chat.db, sms.db) files.
 instagram_ios | Parser for iOS Instagram threads SQLite database (9368974384.db) files.
+ios_accounts | Parser for iOS accounts SQLite database (Accounts3.db) files.
 ios_datausage | Parser for iOS data usage SQLite databse (DataUsage.sqlite) file..
 ios_imohdchat_message | Parser for IMO HD chat message SQLite database (IMODb2.sqlite) files.
 ios_netusage | Parser for iOS network usage SQLite database (netusage.sqlite) files.

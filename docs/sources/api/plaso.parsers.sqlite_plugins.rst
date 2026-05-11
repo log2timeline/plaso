@@ -44,6 +44,14 @@ plaso.parsers.sqlite\_plugins.android\_hangouts module
    :show-inheritance:
    :undoc-members:
 
+plaso.parsers.sqlite\_plugins.android\_native\_downloads module
+---------------------------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.android_native_downloads
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 plaso.parsers.sqlite\_plugins.android\_sms module
 -------------------------------------------------
 
@@ -148,6 +156,14 @@ plaso.parsers.sqlite\_plugins.edge\_load\_statistics module
    :show-inheritance:
    :undoc-members:
 
+plaso.parsers.sqlite\_plugins.files\_by\_google module
+------------------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.files_by_google
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 plaso.parsers.sqlite\_plugins.firefox\_cookies module
 -----------------------------------------------------
 
@@ -192,6 +208,14 @@ plaso.parsers.sqlite\_plugins.interface module
 ----------------------------------------------
 
 .. automodule:: plaso.parsers.sqlite_plugins.interface
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+plaso.parsers.sqlite\_plugins.ios\_accounts module
+--------------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.ios_accounts
    :members:
    :show-inheritance:
    :undoc-members:

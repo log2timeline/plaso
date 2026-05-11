@@ -23,7 +23,7 @@ class CompoundZIPPlugin(plugins.BasePlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       zip_file (zipfile.ZipFile): the ZIP file. It should not be closed in
           this method, but will be closed by the parser logic in czip.py.
     """
@@ -53,7 +53,7 @@ class CompoundZIPPlugin(plugins.BasePlugin):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       zip_file (Optional[zipfile.ZipFile]): the ZIP file. It should not be
           closed in this method, but will be closed by the parser logic in
           czip.py.

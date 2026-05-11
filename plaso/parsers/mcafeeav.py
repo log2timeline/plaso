@@ -121,7 +121,7 @@ class McafeeAccessProtectionParser(dsv_parser.DSVParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       row_offset (int): offset of the line from which the row was extracted.
       row (dict[str, str]): fields of a single row, as specified in COLUMNS.
     """
@@ -153,7 +153,7 @@ class McafeeAccessProtectionParser(dsv_parser.DSVParser):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       row (dict[str, str]): fields of a single row, as specified in COLUMNS.
 
     Returns:

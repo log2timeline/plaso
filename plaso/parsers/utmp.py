@@ -66,7 +66,7 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       file_object (dfvfs.FileIO): a file-like object.
       file_offset (int): offset of the data relative to the start of
           the file-like object.
@@ -152,7 +152,7 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       file_object (dfvfs.FileIO): a file-like object.
 
     Raises:
