@@ -24,12 +24,6 @@ attribute_mappings:
   description: 'Last Updated Time'
 place_holder_event: true
 ---
-data_type: 'android:event:app_launch'
-attribute_mappings:
-- name: 'date'
-  description: 'App Launch Time'
-place_holder_event: true
----
 data_type: 'android:event:battery'
 attribute_mappings:
 - name: 'recorded_time'
