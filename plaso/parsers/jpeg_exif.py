@@ -16,13 +16,14 @@ class JpegExifEventData(events.EventData):
 
   Attributes:
     body_serial_number (str): Body serial number.
-    exif_datetime (dfdatetime.DateTimeValues): exif datetime.
     height (int): image height.
     latitude (str): Latitude.
     longitude (str): Longitude.
     make_and_model (str): Make and model.
     manufacturer (str): Manufacturer/Make.
     model (str): Model.
+    modification_time (dfdatetime.DateTimeValues): EXIF modification date and
+        time.
     software (str): software.
     width (int): image width.
     x_resolution (float): X resolution.
@@ -35,13 +36,13 @@ class JpegExifEventData(events.EventData):
     """Initializes event data."""
     super().__init__(data_type=self.DATA_TYPE)
     self.body_serial_number = None
-    self.exif_datetime = None
     self.height = None
     self.latitude = None
     self.longitude = None
     self.make_and_model = None
     self.manufacturer = None
     self.model = None
+    self.modification_time = None
     self.software = None
     self.width = None
     self.x_resolution = None
@@ -54,63 +55,20 @@ class JpegExifParser(interface.FileObjectParser):
   NAME='jpeg_exif'
   DATA_FORMAT = 'JPEG file'
 
-  _EXIF_TAGS = {
-      0x0000: 'GPS Tag Version',
-      0x0001: 'Latitude Reference',
-      0x0002: 'Latitude',
-      0x0003: 'Longitude Reference',
-      0x0004: 'Longitude',
-      0x0005: 'Altitude Reference',
-      0x0006: 'Altitude',
-      0x0009: 'GPS Receiver Status',
-      0x0012: 'Geodetic Survey Data',
-      0x0100: 'Image Width',
-      0x0101: 'Image Height',
-      0x0102: 'Bits per Sample',
-      0x0103: 'Compression',
-      0x0106: 'Photometric Interpre',
-      0x010f: 'Manufacturer',
-      0x0110: 'Model',
-      0x0112: 'Orientation',
-      0x0115: 'Samples per Pixel',
-      0x011a: 'X-Resolution',
-      0x011b: 'Y-Resolution',
-      0x011c: 'Planar Configuration',
-      0x0128: 'Resolution Unit',
-      0x0131: 'Software',
-      0x0132: 'Date and Time',
-      0x014a: 'SubIFD Offsets',
-      0x02bc: 'XML Packet',
-      0x829a: 'Exposure Time',
-      0x829d: 'F-Number',
-      0x8822: 'Exposure Program',
-      0x8827: 'ISO Speed Ratings',
-      0x9000: 'Exif Version',
-      0x9003: 'Date and Time',
-      0x9004: 'Date and Time (modified)',
-      0x9204: 'Exposure Bias',
-      0x9205: 'Maximum Aperture Val',
-      0x9207: 'Metering Mode',
-      0x9208: 'Light Source',
-      0x9209: 'Flash',
-      0x920a: 'Focal Length',
-      0xa000: 'FlashPixVersion',
-      0xa001: 'Color Space',
-      0xa300: 'File Source',
-      0xa301: 'Scene Type',
-      0xa402: 'Exposure Mode',
-      0xa403: 'White Balance',
-      0xa404: 'Digital Zoom Ratio',
-      0xa405: 'Focal Length in 35mm',
-      0xa406: 'Scene Capture Type',
-      0xa407: 'Gain Control',
-      0xa408: 'Contrast',
-      0xa409: 'Saturation',
-      0xa40a: 'Sharpness',
-      0xa431: 'Body Serial Number',
-      0xa432: 'Lens Specification',
-      0xc614: 'Make and Model',
-      0xc62f: 'Body Serial Number'}
+  _TAG_BODY_SERIAL_NUMBER = 0xa431
+  _TAG_MODIFICATION_DATE = 0x0132
+  _TAG_IMAGE_HEIGHT = 0x0101
+  _TAG_IMAGE_WIDTH = 0x0100
+  _TAG_LATITUDE = 0x0002
+  _TAG_LATITUDE_REFERENCE = 0x0001
+  _TAG_LONGTITUDE = 0x0004
+  _TAG_LONGTITUDE_REFERENCE = 0x0003
+  _TAG_MAKE_AND_MODEL = 0xc614
+  _TAG_MANUFACTURER = 0x010f
+  _TAG_MODEL = 0x0110
+  _TAG_SOFTWARE = 0x0131
+  _TAG_X_RESOLUTION = 0x011a
+  _TAG_Y_RESOLUTION = 0x011b
 
   _TAG_TYPE_BYTE = 1
   _TAG_TYPE_ASCII = 2
@@ -124,23 +82,6 @@ class JpegExifParser(interface.FileObjectParser):
       _TAG_TYPE_SHORT: 2,
       _TAG_TYPE_LONG: 4,
       _TAG_TYPE_RATIONAL: 8}
-
-  def _GetAnnotatedExif(self, values):
-    """TODO.
-
-    Args:
-      values (TODO): TODO.
-
-    Returns:
-      TODO: TODO.
-    """
-    r = {}
-    for tag, value in values.items():
-      tag_name = self._EXIF_TAGS.get(tag, f'Unknown tag ({hex(tag)})')
-      if tag_name == 'XML Packet':
-        continue
-      r[tag_name] = value
-    return r
 
   def _ExtractInlineData(self, value_offset, tag_type, byte_order):
     """Extracts inline data.
@@ -220,7 +161,7 @@ class JpegExifParser(interface.FileObjectParser):
       file_object (dfvfs.FileIO): a file-like object.
 
     Returns:
-      TODO: TODO.
+      dict[int, object]: EXIF data with integer tags as keys.
 
     Raises:
       ValueError: if the EXIF data could not be extracted.
@@ -245,13 +186,13 @@ class JpegExifParser(interface.FileObjectParser):
     raise ValueError('Exif data not found')
 
   def _ParseIfd(self, data, offset, byte_order, base_offset):
-    """TODO.
+    """Parses the Image File Directory (IFD).
 
     Args:
-      data (TODO): TODO.
-      offset (TODO): TODO.
+      data (bytes): TODO.
+      offset (int): TODO.
       byte_order (str): struct byte-order indicator.
-      base_offset (TODO): TODO.
+      base_offset (int): TODO.
 
     Returns:
       TODO: TODO.
@@ -275,7 +216,7 @@ class JpegExifParser(interface.FileObjectParser):
 
       if tag_type == 2 and count * byte_size <= 4:
         value_data = data[entry_offset+8:entry_offset+8+count]
-        value = value_data.rstrip(b'\x00').decode('ascii','ignore')
+        value = value_data.rstrip(b'\x00').decode('ascii', 'ignore')
 
       elif count * byte_size <= 4:  # other inline data
         value = self._ExtractInlineData(value_offset, tag_type, byte_order)
@@ -286,8 +227,8 @@ class JpegExifParser(interface.FileObjectParser):
         if tag in (0x0002, 0x0004):
           # gps latlon, convert from deg/min/sec to decimal degrees
           value = value[0] + value[1] / 60.0 + value[2] / 3600.0
-        elif count==1:
-          value=value[0]
+        elif count == 1:
+          value = value[0]
 
       # Check for subdirectories (ExifIFDPointer, GPSInfo)
       if tag in (0x8769, 0x8825):  # Subdirectory pointers
@@ -327,6 +268,37 @@ class JpegExifParser(interface.FileObjectParser):
 
     return self._ParseIfd(data, ifd_offset, byte_order, 0)
 
+  def _GetDateTimeValue(self, parser_mediator, exif_data, tag):
+    """Retrieves a date and time value.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfVFS.
+      exif_data (dict[int, object]): EXIF data with integer tags as keys.
+      tag (int): EXIF tag.
+
+    Returns:
+      dfdatetime.DateTimeValues: date and time or None if not set.
+    """
+    time_string = exif_data.get(tag)
+    if not time_string:
+      return None
+
+    try:
+      date, time = time_string.split(' ')
+      year, month, day_of_month = [int(value, 10) for value in date.split(':')]
+      hours, minutes, seconds = [int(value, 10) for value in time.split(':')]
+
+      date_time = dfdatetime_time_elements.TimeElements(time_elements_tuple=(
+          year, month, day_of_month, hours, minutes, seconds))
+    except (TypeError, ValueError) as exception:
+      parser_mediator.ProduceExtractionWarning(
+          f'Unable to parse date time value: 0x{tag:02x} with error: '
+          f'{exception!s}')
+      date_time = None
+
+    return date_time
+
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses a JPEG file for EXIF data.
 
@@ -351,41 +323,30 @@ class JpegExifParser(interface.FileObjectParser):
       raise errors.WrongParser(
           f'Unable to parse a JPEG file with error: {exception!s}')
 
-    annotated_exif = self._GetAnnotatedExif(exif_data)
-
     event_data = JpegExifEventData()
 
-    latitude = annotated_exif.get('Latitude', 0.0)
-    latitude_reference = annotated_exif.get('Latitude Reference', '')
-    longitude = annotated_exif.get('Longitude', 0.0)
-    longitude_reference = annotated_exif.get('Longitude Reference', '')
+    latitude = exif_data.get(self._TAG_LATITUDE, 0.0)
+    latitude_reference = exif_data.get(self._TAG_LATITUDE_REFERENCE, '')
+    longitude = exif_data.get(self._TAG_LONGTITUDE, 0.0)
+    longitude_reference = exif_data.get(self._TAG_LONGTITUDE_REFERENCE, '')
 
-    event_data.body_serial_number = annotated_exif.get('Body Serial Number')
-    event_data.height = annotated_exif.get('Image Height')
+    # TODO: add support for 0x9003 DateTimeOriginal
+    # TODO: add support for 0x9004 CreateDate
+    # TODO: add support for 0xc62f CameraSerialNumber
+
+    event_data.body_serial_number = exif_data.get(self._TAG_BODY_SERIAL_NUMBER)
+    event_data.height = exif_data.get(self._TAG_IMAGE_HEIGHT)
     event_data.latitude = f'{latitude:2.5f}{latitude_reference:s}'
     event_data.longitude = f'{longitude:2.5f}{longitude_reference:s}'
-    event_data.make_and_model = annotated_exif.get('Make and Model')
-    event_data.manufacturer = annotated_exif.get('Manufacturer')
-    event_data.model = annotated_exif.get('Model')
-    event_data.software = annotated_exif.get('Software')
-    event_data.width = annotated_exif.get('Image Width')
-    event_data.x_resolution = annotated_exif.get('X-Resolution')
-    event_data.y_resolution = annotated_exif.get('Y-Resolution')
-
-    time_string = annotated_exif.get('Date and Time')
-    if time_string:
-      date, time = time_string.split(' ')
-      year, month, day_of_month = [int(value, 10) for value in date.split(':')]
-      hours, minutes, seconds = [int(value, 10) for value in time.split(':')]
-
-      try:
-        date_time = dfdatetime_time_elements.TimeElements(time_elements_tuple=(
-            year, month, day_of_month, hours, minutes, seconds))
-        event_data.exif_datetime = date_time
-      except (TypeError, ValueError) as exception:
-        error_string = (
-            f'Unable to parse date time value with error: {exception!s}')
-        parser_mediator.ProduceExtractionWarning(error_string)
+    event_data.make_and_model = exif_data.get(self._TAG_MAKE_AND_MODEL)
+    event_data.manufacturer = exif_data.get(self._TAG_MANUFACTURER)
+    event_data.model = exif_data.get(self._TAG_MODEL)
+    event_data.modification_time = self._GetDateTimeValue(
+        parser_mediator, exif_data, self._TAG_MODIFICATION_DATE)
+    event_data.software = exif_data.get(self._TAG_SOFTWARE)
+    event_data.width = exif_data.get(self._TAG_IMAGE_WIDTH)
+    event_data.x_resolution = exif_data.get(self._TAG_X_RESOLUTION)
+    event_data.y_resolution = exif_data.get(self._TAG_Y_RESOLUTION)
 
     parser_mediator.ProduceEventData(event_data)
 

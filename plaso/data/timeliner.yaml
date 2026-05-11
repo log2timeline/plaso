@@ -701,8 +701,8 @@ place_holder_event: true
 ---
 data_type: 'jpeg:exif'
 attribute_mappings:
-- name: 'exif_datetime'
-  description: 'EXIF datetime'
+- name: 'modification_time'
+  description: 'Content Modification Time'
 place_holder_event: true
 ---
 data_type: 'kodi:videos:viewing'
