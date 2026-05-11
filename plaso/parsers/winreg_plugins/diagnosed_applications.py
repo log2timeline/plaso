@@ -1,6 +1,6 @@
 """Windows Registry plugin to parse the RADAR Diagnosed Applications key."""
 
-from os.path import dirname, join
+import os
 
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
@@ -47,7 +47,7 @@ class DiagnosedApplicationsPlugin(
           'HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\RADAR\\HeapLeakDetection\\'
           'DiagnosedApplications')])
 
-  _DEFINITION_FILE = join(dirname(__file__), 'filetime.yaml')
+  _DEFINITION_FILE = os.path.join(os.path.dirname(__file__), 'filetime.yaml')
 
   def _ParseFiletime(self, byte_stream):
     """Parses a FILETIME date and time value from a byte stream.
