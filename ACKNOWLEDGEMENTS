@@ -173,6 +173,7 @@ Copied with permission from [Digital Corpora](https://digitalcorpora.org/):
 * Accounts3.sqlite
 * attd_db
 * burners.sqlite
+* com.apple.commcenter.data.plist
 * com.apple.MobileBackup.plist
 * files_master_database
 * IMODb2.sqlite
