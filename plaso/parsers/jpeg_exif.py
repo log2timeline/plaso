@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parser for JPG exif data."""
 
 from plaso.parsers import interface
@@ -36,7 +35,7 @@ class JpegExifEventData(events.EventData):
   
   def __init__(self):
     """Initializes a JpegExif event data."""
-    super(JpegExifEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.exif_datetime = None
     self.width = None
     self.height = None
