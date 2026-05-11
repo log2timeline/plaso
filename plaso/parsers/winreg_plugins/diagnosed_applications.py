@@ -57,7 +57,7 @@ class DiagnosedApplicationsPlugin(
 
     Returns:
       dfdatetime.DateTimeValues: a FILETIME date and time values or a semantic
-        date and time values if the FILETIME date and time value is not set.
+          date and time values if the FILETIME date and time value is not set.
 
     Raises:
       ParseError: if the FILETIME could not be parsed.
