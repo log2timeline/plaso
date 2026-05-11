@@ -653,6 +653,12 @@ attribute_mappings:
   description: 'Start Time'
 place_holder_event: true
 ---
+data_type: 'ios:sim:info'
+attribute_mappings:
+- name: 'last_used_time'
+  description: 'Last Used Time'
+place_holder_event: true
+---
 data_type: 'ios:sysdiag_log:entry'
 attribute_mappings:
 - name: 'written_time'

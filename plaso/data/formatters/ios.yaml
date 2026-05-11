@@ -251,6 +251,18 @@ short_source: 'HISTORY'
 source: 'iOS Screen Time database'
 ---
 type: 'conditional'
+data_type: 'ios:sim:info'
+message:
+- 'Phone number: {phone_number}'
+- 'SIM Type: {sim_type}'
+- 'Cell broadcast version: {cell_broadcast_version}'
+- 'Label identifier: {label_identifier}'
+short_message:
+- 'Phone number: {phone_number}'
+short_source: 'PLIST'
+source: 'iOS SIM Info'
+---
+type: 'conditional'
 data_type: 'ios:sysdiagnose:logd:line'
 message:
 - 'Logger: {logger}'
