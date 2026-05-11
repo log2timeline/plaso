@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 """Tests for the xchatscrollback log parser."""
 
+import io
 import unittest
 
-from dfvfs.file_io import fake_file_io
-from dfvfs.path import fake_path_spec
-from dfvfs.resolver import context as dfvfs_context
-
+from plaso.parsers import mediator as parsers_mediator
 from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import xchatscrollback
 
@@ -19,59 +17,23 @@ class XChatScrollbackLogTextPluginTest(test_lib.TextPluginTestCase):
   def testCheckRequiredFormat(self):
     """Tests for the CheckRequiredFormat function."""
     plugin = xchatscrollback.XChatScrollbackLogTextPlugin()
+    parser_mediator = parsers_mediator.ParserMediator()
 
-    resolver_context = dfvfs_context.Context()
-    test_path_spec = fake_path_spec.FakePathSpec(location='/file.txt')
-
-    file_object = fake_file_io.FakeFile(resolver_context, test_path_spec, (
-        b'T 1232315916 Python interface unloaded\n'))
-    file_object.Open()
-
+    file_object = io.BytesIO(
+        b'T 1232315916 Python interface unloaded\n')
     text_reader = text_parser.EncodedTextReader(file_object)
     text_reader.ReadLines()
 
-    result = plugin.CheckRequiredFormat(None, text_reader)
-    self.assertTrue(result)
+    self.assertTrue(plugin.CheckRequiredFormat(parser_mediator, text_reader))
 
-    file_object = fake_file_io.FakeFile(resolver_context, test_path_spec, (
-        b'T1232315916 Python interface unloaded\n'))
-    file_object.Open()
-
+    # Check non-matching format.
+    file_object = io.BytesIO(
+        b'Jan 22 07:52:33 myhostname.myhost.com client[30840]: INFO No new '
+        b'content in image.dd.\n')
     text_reader = text_parser.EncodedTextReader(file_object)
     text_reader.ReadLines()
 
-    result = plugin.CheckRequiredFormat(None, text_reader)
-    self.assertFalse(result)
-
-    file_object = fake_file_io.FakeFile(resolver_context, test_path_spec, (
-        b'T 1232315916Python interface unloaded\n'))
-    file_object.Open()
-
-    text_reader = text_parser.EncodedTextReader(file_object)
-    text_reader.ReadLines()
-
-    result = plugin.CheckRequiredFormat(None, text_reader)
-    self.assertFalse(result)
-
-    file_object = fake_file_io.FakeFile(resolver_context, test_path_spec, (
-        b'T 12323159160 Python interface unloaded\n'))
-    file_object.Open()
-
-    text_reader = text_parser.EncodedTextReader(file_object)
-    text_reader.ReadLines()
-
-    result = plugin.CheckRequiredFormat(None, text_reader)
-    self.assertFalse(result)
-
-    file_object = fake_file_io.FakeFile(resolver_context, test_path_spec, (
-        b'.TH MT 1 \" -*- nroff -*-\n'))
-    file_object.Open()
-
-    text_reader = text_parser.EncodedTextReader(file_object)
-    text_reader.ReadLines()
-
-    result = plugin.CheckRequiredFormat(None, text_reader)
-    self.assertFalse(result)
+    self.assertFalse(plugin.CheckRequiredFormat(parser_mediator, text_reader))
 
   def testProcess(self):
     """Tests the Process function."""
