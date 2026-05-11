@@ -29,15 +29,15 @@ class DJIDroneLogParserTest(test_lib.ParserTestCase):
     self.assertEqual(number_of_warnings, 0)
 
     expected_event_values = {
-        'longitude': -106.2163995, 
-        'latitude': 39.9612155,
         'data_type': 'drone:dji:mavic',
-        'timestamp': '2017-08-29T18:58:43+00:00',
         'height': 2481.301,
+        'latitude': 39.9612155,
+        'longitude': -106.2163995,
+        'timestamp': '2017-08-29T18:58:43+00:00',
         'x_velocity': 0.0,
         'y_velocity': 0.01,
         'z_velocity': 0.0}
-    
+
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 26)
     self.CheckEventData(event_data, expected_event_values)
 
