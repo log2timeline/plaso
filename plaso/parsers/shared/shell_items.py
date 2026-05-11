@@ -61,7 +61,7 @@ class ShellItemsParser:
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       shell_item (pyfwsi.item): shell item.
     """
     path_segment = self._ParseShellItemPathSegment(shell_item)
@@ -211,7 +211,7 @@ class ShellItemsParser:
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfvfs.
+          and other components, such as storage and dfVFS.
       byte_stream (bytes): shell items data.
       parent_path_segments (Optional[list[str]]): parent shell item path
           segments.

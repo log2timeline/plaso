@@ -25,7 +25,7 @@ class TestAnalysisPlugin(interface.AnalysisPlugin):
 
     Args:
       mediator (AnalysisMediator): mediates interactions between analysis
-          plugins and other components, such as storage and dfvfs.
+          plugins and other components, such as storage and dfVFS.
     """
     return
 
@@ -35,7 +35,7 @@ class TestAnalysisPlugin(interface.AnalysisPlugin):
 
     Args:
       mediator (AnalysisMediator): mediates interactions between analysis
-          plugins and other components, such as storage and dfvfs.
+          plugins and other components, such as storage and dfVFS.
       event (EventObject): event.
     """
     return

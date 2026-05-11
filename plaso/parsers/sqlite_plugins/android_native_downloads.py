@@ -5,11 +5,9 @@ The Android native downloads database file is typically stored as:
 
 Also see :
   STATUS_* and DESTINATION_* constants:
-    https://android.googlesource.com/platform/frameworks/base/refs/heads/master/core/java/android/provider/Downloads.java
+    https://android.googlesource.com/platform/frameworks/base/+/refs/heads/master/core/java/android/provider/Downloads.java
   ERROR_*, PAUSED_*, and VISIBILITY_* constants:
-    https://android.googlesource.com/platform/frameworks/base/refs/heads/main/core/java/android/app/DownloadManager.java
-  Basis for what columns to extract:
-    https://forensafe.com/blogs/Android_Downloads.html
+    https://android.googlesource.com/platform/frameworks/base/+/HEAD/core/java/android/app/DownloadManager.java
 """
 
 from dfdatetime import java_time as dfdatetime_java_time
