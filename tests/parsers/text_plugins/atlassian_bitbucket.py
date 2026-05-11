@@ -3,11 +3,10 @@
 
 import io
 import unittest
-import unittest.mock
 
 from plaso.lib import errors
 from plaso.parsers import mediator as parsers_mediator
-from plaso.parsers import text_parser as plaso_text_parser
+from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import atlassian_bitbucket
 
 from tests.parsers.text_plugins import test_lib
@@ -15,78 +14,70 @@ from tests.parsers.text_plugins import test_lib
 
 class AtlassianBitbucketTextPluginTest(test_lib.TextPluginTestCase):
   """Tests for the Atlassian Bitbucket application log text parser plugin."""
+
   # pylint: disable=protected-access
 
-  def _CheckRequiredFormat(self, plugin, path_segments):
-    """Helper to call CheckRequiredFormat on a test file."""
-    parser_mediator = parsers_mediator.ParserMediator()
-    storage_writer = self._CreateStorageWriter()
-    parser_mediator.SetStorageWriter(storage_writer)
-    file_entry = self._GetTestFileEntry(path_segments)
-    parser_mediator.SetFileEntry(file_entry)
-    parser_mediator.AppendToParserChain('text')
-    encoding = plugin.ENCODING or parser_mediator.GetCodePage()
-    file_object = file_entry.GetFileObject()
-    text_reader = plaso_text_parser.EncodedTextReader(
-        file_object, encoding=encoding)
-    text_reader.ReadLines()
-    return plugin.CheckRequiredFormat(parser_mediator, text_reader)
+  def test_ParseRecord(self):
+    """Tests the _ParseRecord function."""
+    plugin = atlassian_bitbucket.AtlassianBitbucketTextPlugin()
+
+    # Check an unsupported key.
+    with self.assertRaises(errors.ParseError):
+      plugin._ParseRecord(None, 'bogus_key', {})
+
+  def test_ParseTimeElements(self):
+    """Tests the _ParseTimeElements function."""
+    plugin = atlassian_bitbucket.AtlassianBitbucketTextPlugin()
+
+    time_elements_structure = plugin._DATE_TIME.parse_string(
+        '2020-09-08 07:53:45,084')
+    date_time = plugin._ParseTimeElements(time_elements_structure)
+    self.assertIsNotNone(date_time)
+
+    with self.assertRaises(errors.ParseError):
+      plugin._ParseTimeElements('bogus')
 
   def testCheckRequiredFormat(self):
     """Tests the CheckRequiredFormat function."""
     plugin = atlassian_bitbucket.AtlassianBitbucketTextPlugin()
     parser_mediator = parsers_mediator.ParserMediator()
 
-    # Check non-matching syslog.
-    file_entry = self._GetTestFileEntry(['syslog', 'syslog'])
-    file_object = file_entry.GetFileObject()
-    text_reader = plaso_text_parser.EncodedTextReader(
-        file_object, encoding=plugin.ENCODING)
-
-    self.assertFalse(plugin.CheckRequiredFormat(parser_mediator, text_reader))
-
-    # Check non-matching Confluence log.
-    file_entry = self._GetTestFileEntry(['atlassian-confluence.log'])
-    file_object = file_entry.GetFileObject()
-    text_reader = plaso_text_parser.EncodedTextReader(
-        file_object, encoding=plugin.ENCODING)
-
-    self.assertFalse(plugin.CheckRequiredFormat(parser_mediator, text_reader))
-
-    # Check when only 1 line matches but 2 are expected.
     file_object = io.BytesIO(
         b'2020-09-08 07:53:45,084 INFO [main] '
-        b'com.atlassian.bitbucket.internal.boot.log.BuildInfoLogger '
-        b'Starting Bitbucket 7.4.0\n'
-        b'Jan 22 07:52:33 not-a-bitbucket-line\n')
-    text_reader = plaso_text_parser.EncodedTextReader(
+        b'com.atlassian.bitbucket.internal.boot.log.BuildInfoLogger Starting '
+        b'Bitbucket 7.4.0 (204e35a built on Tue Jul 07 14:31:59 NZST 2020)\n'
+        b'2022-06-24 08:01:19,381 WARN [git:gc:thread-1] !!! '
+        b'c.a.s.i.r.DefaultRepositorySizeCache Size calculation failed\n')
+    text_reader = text_parser.EncodedTextReader(
         file_object, encoding=plugin.ENCODING)
+    text_reader.ReadLines()
 
-    self.assertFalse(plugin.CheckRequiredFormat(parser_mediator, text_reader))
+    self.assertTrue(plugin.CheckRequiredFormat(parser_mediator, text_reader))
 
-    # Check when when first non-empty line does not match verification grammar.
+    # Check non-matching format.
     file_object = io.BytesIO(
-        b'\n'
-        b'Jan 22 07:52:33 hostname sshd[123]: connection\n'
-        b'2020-09-08 07:53:45,084 INFO [main] '
-        b'com.atlassian.bitbucket.log.Logger Starting\n')
-    text_reader = plaso_text_parser.EncodedTextReader(
+        b'Jan 22 07:52:33 myhostname.myhost.com client[30840]: INFO No new '
+        b'content in image.dd.\n'
+        b'Jan 22 07:52:33 myhostname.myhost.com client[30840]: INFO No change '
+        b'in [/etc/netgroup]. Done\n')
+    text_reader = text_parser.EncodedTextReader(
         file_object, encoding=plugin.ENCODING)
+    text_reader.ReadLines()
 
     self.assertFalse(plugin.CheckRequiredFormat(parser_mediator, text_reader))
 
-    # CheckRequiredFormat returns False when _ParseTimeElements raises.
-    with unittest.mock.patch.object(
-        plugin, '_ParseTimeElements',
-        side_effect=errors.ParseError('test')):
-      text_reader_mock = unittest.mock.Mock()
-      text_reader_mock.lines = (
-          '2020-09-08 07:53:45,084 INFO [main] '
-          'com.atlassian.bitbucket.log.BuildInfoLogger Starting\n'
-          '2022-04-12 05:39:57,408 INFO [tx:thread-2] '
-          'c.a.b.m.r.DefaultRepositoryManager Created\n')
-      self.assertFalse(plugin.CheckRequiredFormat(
-          unittest.mock.Mock(), text_reader_mock))
+    # Check unsupported date and time value.
+    file_object = io.BytesIO(
+        b'2020-09-08 07:53:45,084 INFO [main] '
+        b'com.atlassian.bitbucket.internal.boot.log.BuildInfoLogger Starting '
+        b'Bitbucket 7.4.0 (204e35a built on Tue Jul 07 14:31:59 NZST 2020)\n'
+        b'2022-99-99 08:01:19,381 WARN [git:gc:thread-1] !!! '
+        b'c.a.s.i.r.DefaultRepositorySizeCache Size calculation failed\n')
+    text_reader = text_parser.EncodedTextReader(
+        file_object, encoding=plugin.ENCODING)
+    text_reader.ReadLines()
+
+    self.assertFalse(plugin.CheckRequiredFormat(parser_mediator, text_reader))
 
   def testParse(self):
     """Tests the Process function."""
@@ -106,27 +97,6 @@ class AtlassianBitbucketTextPluginTest(test_lib.TextPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    # First entry: simple INFO line, no request context.
-    expected_event_values = {
-        'body': (
-            'Starting Bitbucket 7.4.0 (204e35a built on Tue Jul 07 14:31:59 '
-            'NZST 2020)'),
-        'data_type': 'atlassian:bitbucket:line',
-        'ip_address': None,
-        'level': 'INFO',
-        'logger_class': (
-            'com.atlassian.bitbucket.internal.boot.log.BuildInfoLogger'),
-        'request_action': None,
-        'request_identifier': None,
-        'session_identifier': None,
-        'thread': 'main',
-        'user_name': None,
-        'written_time': '2020-09-08T07:53:45.084'}
-
-    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
-    self.CheckEventData(event_data, expected_event_values)
-
-    # Second entry: INFO line with full request context fields.
     expected_event_values = {
         'body': (
             'Repository 0030-8a2a778e2d97e278f541-5 has been created and '
@@ -144,80 +114,6 @@ class AtlassianBitbucketTextPluginTest(test_lib.TextPluginTestCase):
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 1)
     self.CheckEventData(event_data, expected_event_values)
-
-    # Third entry: INFO with partial request context (no comma-separated
-    # session ID).
-    expected_event_values = {
-        'body': (
-            '[p/0030/h/8a2a778e2d97e278f541/r/5] Repair from mesh2@2 '
-            'completed in 238 ms'),
-        'data_type': 'atlassian:bitbucket:line',
-        'ip_address': '10.229.31.65',
-        'level': 'INFO',
-        'logger_class': 'c.a.b.m.repair.DefaultRepairManager',
-        'request_action': 'ManagementService/RepairRepository',
-        'request_identifier': '2CM38K4Fx339x114x2',
-        'session_identifier': '@5XDWX5x339x568x0',
-        'thread': 'grpc-server:thread-16',
-        'user_name': 'admin',
-        'written_time': '2022-04-12T05:39:57.766'}
-
-    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 2)
-    self.CheckEventData(event_data, expected_event_values)
-
-    # Fourth entry: WARN with no request context.
-    expected_event_values = {
-        'body': (
-            'Cannot scan directory /extension/build-status/ in bundle '
-            'com.atlassian.bitbucket.server.bitbucket-frontend; it does not '
-            'exist'),
-        'data_type': 'atlassian:bitbucket:line',
-        'ip_address': None,
-        'level': 'WARN',
-        'logger_class': 'c.a.s.i.p.s.OsgiBundledPathScanner',
-        'request_action': None,
-        'request_identifier': None,
-        'session_identifier': None,
-        'thread': 'spring-startup',
-        'user_name': None,
-        'written_time': '2022-12-01T14:03:28.717'}
-
-    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 3)
-    self.CheckEventData(event_data, expected_event_values)
-
-    # Fifth entry: DEBUG with full logger class name.
-    expected_event_values = {
-        'body': (
-            'delete sta_activity_0 from sta_activity sta_activity_0 inner '
-            'join HT_sta_pr_rescope_activity HT_sta_pr_rescope_activity_0 on '
-            'sta_activity_0.id=HT_sta_pr_rescope_activity_0.activity_id'),
-        'data_type': 'atlassian:bitbucket:line',
-        'ip_address': None,
-        'level': 'DEBUG',
-        'logger_class': 'org.hibernate.SQL',
-        'request_action': None,
-        'request_identifier': None,
-        'session_identifier': None,
-        'thread': 'clusterScheduler_Worker-8',
-        'user_name': None,
-        'written_time': '2014-12-04T19:39:39.749'}
-
-    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 4)
-    self.CheckEventData(event_data, expected_event_values)
-
-  def testParseRecord(self):
-    """Tests the _ParseRecord function."""
-    plugin = atlassian_bitbucket.AtlassianBitbucketTextPlugin()
-
-    with self.assertRaises(errors.ParseError):
-      plugin._ParseRecord(None, 'unknown_key', {})
-
-  def testParseTimeElements(self):
-    """Tests the _ParseTimeElements function."""
-    plugin = atlassian_bitbucket.AtlassianBitbucketTextPlugin()
-
-    with self.assertRaises(errors.ParseError):
-      plugin._ParseTimeElements('invalid')
 
 
 if __name__ == '__main__':

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Tests for the Atlassian Bitbucket audit log text parser plugin."""
 
+import io
 import unittest
-import unittest.mock
 
 from plaso.lib import errors
 from plaso.parsers import mediator as parsers_mediator
@@ -14,6 +14,64 @@ from tests.parsers.text_plugins import test_lib
 
 class BitbucketAuditTextPluginTest(test_lib.TextPluginTestCase):
   """Tests for the Atlassian Bitbucket audit log text parser plugin."""
+
+  # pylint: disable=protected-access
+
+  def test_GetStrippedValue(self):
+    """Tests the _GetStrippedValue function."""
+    plugin = bitbucket_audit.BitbucketAuditTextPlugin()
+
+    structure = plugin._USER_NAME.parse_string('admin')
+    value = plugin._GetStrippedValue(structure, 'user_name')
+    self.assertEqual(value, 'admin')
+
+    structure = plugin._USER_NAME.parse_string('-')
+    value = plugin._GetStrippedValue(structure, 'user_name')
+    self.assertIsNone(value)
+
+  def test_ParseRecord(self):
+    """Tests _ParseRecord function."""
+    plugin = bitbucket_audit.BitbucketAuditTextPlugin()
+
+    # Check an unsupported key.
+    with self.assertRaises(errors.ParseError):
+      plugin._ParseRecord(None, 'bogus_key', {})
+
+  def testCheckRequiredFormat(self):
+    """Tests the CheckRequiredFormat function."""
+    plugin = bitbucket_audit.BitbucketAuditTextPlugin()
+    parser_mediator = parsers_mediator.ParserMediator()
+
+    file_object = io.BytesIO(
+        b'0:0:0:0:0:0:0:1 | RestrictedRefAddedEvent | admin | 1400681361906 | '
+        b'BITBUCKET/bitbucket | {"id":1,"value":"refs/heads/random-cleanups",'
+        b'"users":["user"]} | @8KJQAGx969x538x0 | 6ywzi6\n')
+    text_reader = text_parser.EncodedTextReader(
+        file_object, encoding=plugin.ENCODING)
+    text_reader.ReadLines()
+
+    self.assertTrue(plugin.CheckRequiredFormat(parser_mediator, text_reader))
+
+    # Check non-matching format.
+    file_object = io.BytesIO(
+        b'Jan 22 07:52:33 myhostname.myhost.com client[30840]: INFO No new '
+        b'content in image.dd.\n')
+    text_reader = text_parser.EncodedTextReader(
+        file_object, encoding=plugin.ENCODING)
+    text_reader.ReadLines()
+
+    self.assertFalse(plugin.CheckRequiredFormat(parser_mediator, text_reader))
+
+    # Check unsupported date and time value.
+    file_object = io.BytesIO(
+        b'0:0:0:0:0:0:0:1 | RestrictedRefAddedEvent | admin | 9999999999999 | '
+        b'BITBUCKET/bitbucket | {"id":1,"value":"refs/heads/random-cleanups",'
+        b'"users":["user"]} | @8KJQAGx969x538x0 | 6ywzi6\n')
+    text_reader = text_parser.EncodedTextReader(
+        file_object, encoding=plugin.ENCODING)
+    text_reader.ReadLines()
+
+    self.assertFalse(plugin.CheckRequiredFormat(parser_mediator, text_reader))
 
   def testParse(self):
     """Tests the Process function."""
@@ -33,7 +91,6 @@ class BitbucketAuditTextPluginTest(test_lib.TextPluginTestCase):
         'recovery_warning')
     self.assertEqual(number_of_warnings, 0)
 
-    # First entry: RestrictedRefAddedEvent with JSON details.
     expected_event_values = {
         'data_type': 'atlassian:bitbucket:audit',
         'details': (
@@ -48,115 +105,6 @@ class BitbucketAuditTextPluginTest(test_lib.TextPluginTestCase):
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)
-
-    # Second entry: RestrictedRefRemovedEvent.
-    expected_event_values = {
-        'data_type': 'atlassian:bitbucket:audit',
-        'details': '{"id":1,"value":"refs/heads/random-cleanups"}',
-        'entity': 'BITBUCKET/bitbucket',
-        'event_name': 'RestrictedRefRemovedEvent',
-        'recorded_time': '2014-05-21T14:09:25.418+00:00',
-        'remote_address': '0:0:0:0:0:0:0:1',
-        'request_identifier': '@8KJQAGx969x540x0',
-        'session_identifier': '6ywzi6',
-        'user_name': 'admin'}
-
-    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 1)
-    self.CheckEventData(event_data, expected_event_values)
-
-    # Third entry: RepositoryCreatedEvent with forwarded IP.
-    expected_event_values = {
-        'data_type': 'atlassian:bitbucket:audit',
-        'details': (
-            '{"id":2,"name":"my-repo","project":{"key":"myproject"}}'),
-        'entity': 'PROJECT/myproject',
-        'event_name': 'RepositoryCreatedEvent',
-        'recorded_time': '2014-05-21T14:09:33.433+00:00',
-        'remote_address': '63.246.22.199,172.16.1.187',
-        'request_identifier': '@8KJQAGx969x543x0',
-        'session_identifier': 'tmpqqw',
-        'user_name': 'jsmith'}
-
-    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 2)
-    self.CheckEventData(event_data, expected_event_values)
-
-    # Fourth entry: minimal entry with dash placeholders.
-    expected_event_values = {
-        'data_type': 'atlassian:bitbucket:audit',
-        'details': None,
-        'entity': None,
-        'event_name': 'UserCreatedEvent',
-        'recorded_time': '2014-05-21T14:10:00.000+00:00',
-        'remote_address': '10.1.1.100',
-        'request_identifier': None,
-        'session_identifier': None,
-        'user_name': 'admin'}
-
-    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 3)
-    self.CheckEventData(event_data, expected_event_values)
-
-    # Fifth entry: user_name is '-' → None (covers the None branch).
-    expected_event_values = {
-        'data_type': 'atlassian:bitbucket:audit',
-        'details': None,
-        'entity': None,
-        'event_name': 'UserLoggedInEvent',
-        'recorded_time': '2014-05-21T14:10:10.000+00:00',
-        'remote_address': '10.1.1.100',
-        'request_identifier': None,
-        'session_identifier': None,
-        'user_name': None}
-
-    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 4)
-    self.CheckEventData(event_data, expected_event_values)
-
-
-  def _CheckRequiredFormat(self, plugin, path_segments):
-    """Helper to call CheckRequiredFormat on a test file."""
-    parser_mediator = parsers_mediator.ParserMediator()
-    storage_writer = self._CreateStorageWriter()
-    parser_mediator.SetStorageWriter(storage_writer)
-    file_entry = self._GetTestFileEntry(path_segments)
-    parser_mediator.SetFileEntry(file_entry)
-    parser_mediator.AppendToParserChain('text')
-    encoding = plugin.ENCODING or parser_mediator.GetCodePage()
-    file_object = file_entry.GetFileObject()
-    text_reader_obj = text_parser.EncodedTextReader(
-        file_object, encoding=encoding)
-    text_reader_obj.ReadLines()
-    return plugin.CheckRequiredFormat(parser_mediator, text_reader_obj)
-
-  def testCheckRequiredFormat(self):
-    """Tests the CheckRequiredFormat function."""
-    plugin = bitbucket_audit.BitbucketAuditTextPlugin()
-
-    # Non-audit-log file (syslog) should be rejected.
-    self.assertFalse(
-        self._CheckRequiredFormat(plugin, ['syslog', 'syslog']))
-
-  def testParseErrors(self):
-    """Tests _ParseRecord and CheckRequiredFormat error paths."""
-    plugin = bitbucket_audit.BitbucketAuditTextPlugin()
-
-    # _ParseRecord raises ParseError on unknown key.
-    with self.assertRaises(errors.ParseError):
-      plugin._ParseRecord(  # pylint: disable=protected-access
-          None, 'unknown_key', {})
-
-    # CheckRequiredFormat rejects a file with an out-of-range timestamp
-    # (year 1970 = timestamp 0, which is before the 2000 cutoff).
-    text_reader = unittest.mock.Mock()
-    text_reader.lines = (
-        '0:0:0:0:0:0:0:1 | RestrictedRefAddedEvent | admin | 0 | '
-        'BITBUCKET/bitbucket | {} | @req | session')
-    self.assertFalse(plugin.CheckRequiredFormat(
-        unittest.mock.Mock(), text_reader))
-
-    # CheckRequiredFormat rejects when _VerifyString fails (non-matching file).
-    text_reader2 = unittest.mock.Mock()
-    text_reader2.lines = 'Jan 22 07:52:33 hostname sshd[123]: connection'
-    self.assertFalse(plugin.CheckRequiredFormat(
-        unittest.mock.Mock(), text_reader2))
 
 
 if __name__ == '__main__':

@@ -21,7 +21,6 @@ Also see:
   https://support.atlassian.com/bitbucket-data-center/kb/how-to-change-the-bitbucket-application-log-format/
 """
 
-import re
 import pyparsing
 
 from dfdatetime import time_elements as dfdatetime_time_elements
@@ -165,18 +164,17 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
   _RE_USER_NAME = pyparsing.Regex(r'[A-Za-z][A-Za-z0-9._\-/]*')
 
   _REQUEST_CONTEXT_GRAMMAR = (
-      pyparsing.Optional(_RE_USER_NAME.copy().set_results_name(
-          'request_user')) +
-      pyparsing.Optional(_REQUEST_IDENTIFIER.copy().set_results_name(
+      pyparsing.Optional(_RE_USER_NAME.set_results_name('request_user')) +
+      pyparsing.Optional(_REQUEST_IDENTIFIER.set_results_name(
           'request_identifier')) +
-      pyparsing.Optional(_SESSION_IDENTIFIER.copy().set_results_name(
+      pyparsing.Optional(_SESSION_IDENTIFIER.set_results_name(
           'session_identifier')) +
-      pyparsing.Optional(_RE_IP_ADDRESS.copy().set_results_name(
-          'ip_address')) +
-      pyparsing.Optional(_RE_REQUEST_ACTION.copy().set_results_name(
-          'request_action')))
+      pyparsing.Optional(_RE_IP_ADDRESS.set_results_name('ip_address')) +
+      pyparsing.Optional(_RE_REQUEST_ACTION.set_results_name('request_action')))
 
   _LINE_STRUCTURES = [('log_entry', _BITBUCKET_LOG_LINE)]
+
+  VERIFICATION_GRAMMAR = _BITBUCKET_LOG_LINE
 
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
@@ -191,8 +189,7 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
       ParseError: if the structure cannot be parsed.
     """
     if key != 'log_entry':
-      raise errors.ParseError(
-          f'Unable to parse record, unknown structure: {key:s}')
+      raise errors.ParseError(f'Unsupported structure: {key:s}')
 
     time_elements_structure = self._GetValueFromStructure(
         structure, 'date_time')
@@ -245,25 +242,9 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
 
       return date_time
 
-    except (TypeError, ValueError) as exception:
+    except (IndexError, TypeError, ValueError) as exception:
       raise errors.ParseError(
           f'Unable to parse time elements with error: {exception!s}')
-
-  # A valid Bitbucket application log line requires:
-  #     YYYY-MM-DD HH:MM:SS,mmm LEVEL [thread] ... logger.Class body
-  #
-  # The dotted logger class name must not be enclosed in square brackets, which
-  # would indicate Confluence format. It appears as a bare token anywhere after
-  # [thread], either immediately or after request context fields.
-
-  _VERIFICATION_REGEX = re.compile(
-      r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3} '
-      r'(?:DEBUG|ERROR|FATAL|INFO|TRACE|WARN) '
-      r'\[[^\]]+\] '
-      r'(?:(?!\[)[^\n])*'
-      r'[a-zA-Z][a-zA-Z0-9_$]*(?:\.[a-zA-Z][a-zA-Z0-9_$]*)+')
-
-  VERIFICATION_GRAMMAR = _BITBUCKET_LOG_LINE
 
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the plugin.
@@ -276,29 +257,24 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
     Returns:
       bool: True if this is the correct plugin, False otherwise.
     """
-    # Require at least 2 of the first 20 non-empty lines to successfully parse
-    # with the Bitbucket log grammar. The first non-empty line must match —
-    # if it does not, reject immediately. Requiring 2 matches guards against
-    # false positives from files that incidentally contain one matching line.
-    lines = text_reader.lines.splitlines()
-    first_checked = False
-    matching_lines = 0
-    for line in lines[:20]:
+    # Require at least 2 non-empty matching lines to guard against false
+    # positives.
+
+    verified_lines = 0
+    for line in text_reader.lines.splitlines():
       if not line:
         continue
+
       try:
         structure = self._VerifyString(line)
       except errors.ParseError:
-        if not first_checked:
-          # First non-empty line must match.
-          return False
-        continue
-      first_checked = True
-      matching_lines += 1
-      if matching_lines >= 2:
+        return False
+
+      verified_lines += 1
+      if verified_lines >= 2:
         break
 
-    if matching_lines < 2:
+    if verified_lines < 2:
       return False
 
     time_elements_structure = self._GetValueFromStructure(

@@ -74,8 +74,8 @@ class BitbucketAuditTextPlugin(interface.TextPlugin):
   # Remote IP address field: one or more IPv4/IPv6 addresses separated by
   # commas, such as "63.246.22.199,172.16.1.187" or "0:0:0:0:0:0:0:1"
   _REMOTE_ADDRESS = pyparsing.Combine(
-      pyparsing.Word(pyparsing.alphanums + '.:,')
-  ).set_results_name('remote_address')
+      pyparsing.Word(pyparsing.alphanums + '.:,')).set_results_name(
+          'remote_address')
 
   # Event name: CamelCase Java event class name, such as RestrictedRefAddedEvent
   _EVENT_NAME = pyparsing.Word(
@@ -179,8 +179,7 @@ class BitbucketAuditTextPlugin(interface.TextPlugin):
       ParseError: if the structure cannot be parsed.
     """
     if key != 'audit_entry':
-      raise errors.ParseError(
-          f'Unable to parse record, unknown structure: {key:s}')
+      raise errors.ParseError(f'Unsupported structure: {key:s}')
 
     details = self._GetValueFromStructure(
         structure, 'details', default_value='').strip()

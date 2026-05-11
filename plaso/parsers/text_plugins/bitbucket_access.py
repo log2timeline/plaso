@@ -122,7 +122,7 @@ class BitbucketAccessTextPlugin(interface.TextPlugin):
   # User name: alphanumeric with common separators, or '-'.
   _USER_NAME = (
       pyparsing.Word(pyparsing.alphanums + '-_./') |
-      pyparsing.Literal('-'))
+      pyparsing.Literal('-')).set_results_name('user_name')
 
   # Session ID: short alphanumeric token or '-'.
   _SESSION_ID = (
@@ -150,7 +150,7 @@ class BitbucketAccessTextPlugin(interface.TextPlugin):
   _HTTP_REQUEST = pyparsing.Group(
       pyparsing.Suppress('"') +
       pyparsing.one_of(_HTTP_METHODS).set_results_name('http_method') +
-      _REQUEST_URI.copy().set_results_name('request_url') +
+      _REQUEST_URI.set_results_name('request_url') +
       pyparsing.Word(pyparsing.alphanums + '/.').set_results_name(
           'http_version') +
       pyparsing.Suppress('"')).set_results_name('http_request')
@@ -195,18 +195,18 @@ class BitbucketAccessTextPlugin(interface.TextPlugin):
       _REMOTE_ADDRESS + _SEPARATOR +
       pyparsing.Word(pyparsing.alphanums).set_results_name('protocol') +
       _SEPARATOR +
-      _REQUEST_ID.copy().set_results_name('request_identifier') + _SEPARATOR +
-      _USER_NAME.copy().set_results_name('user_name') + _SEPARATOR +
+      _REQUEST_ID.set_results_name('request_identifier') + _SEPARATOR +
+      _USER_NAME + _SEPARATOR +
       _DATE_TIME + _SEPARATOR +
-      (_HTTP_REQUEST | _SSH_REQUEST | _GRPC_REQUEST.copy()) +
+      (_HTTP_REQUEST | _SSH_REQUEST | _GRPC_REQUEST) +
       _SEPARATOR +
       _REFERER + _USER_AGENT + _SEPARATOR +
-      _INT_OR_DASH.copy().set_results_name('status_code') + _SEPARATOR +
-      _INT_OR_DASH.copy().set_results_name('bytes_read') + _SEPARATOR +
-      _INT_OR_DASH.copy().set_results_name('bytes_written') + _SEPARATOR +
+      _INT_OR_DASH.set_results_name('status_code') + _SEPARATOR +
+      _INT_OR_DASH.set_results_name('bytes_read') + _SEPARATOR +
+      _INT_OR_DASH.set_results_name('bytes_written') + _SEPARATOR +
       _LABELS + _SEPARATOR +
-      _INT_OR_DASH.copy().set_results_name('request_time') + _SEPARATOR +
-      _SESSION_ID.copy().set_results_name('session_identifier') + _SEPARATOR +
+      _INT_OR_DASH.set_results_name('request_time') + _SEPARATOR +
+      _SESSION_ID.set_results_name('session_identifier') + _SEPARATOR +
       pyparsing.Suppress(pyparsing.LineEnd()))
 
   # gRPC/Mesh access log line:
@@ -214,23 +214,23 @@ class BitbucketAccessTextPlugin(interface.TextPlugin):
   # timestamp | "action" | - | status | bytes_read | bytes_written | mesh_in |
   # mesh_out | duration_ns | session_identifier |
   _GRPC_ACCESS_LOG_LINE = (
-      _REMOTE_ADDRESS.copy() + _SEPARATOR +
+      _REMOTE_ADDRESS + _SEPARATOR +
       pyparsing.Literal('grpc').set_results_name('protocol') + _SEPARATOR +
-      _REQUEST_ID.copy().set_results_name('request_identifier') + _SEPARATOR +
+      _REQUEST_ID.set_results_name('request_identifier') + _SEPARATOR +
       (pyparsing.Word(pyparsing.alphanums + '@*-_x') |
        pyparsing.Literal('-')).set_results_name('mesh_execution_identifier') +
       _SEPARATOR +
-      _USER_NAME.copy().set_results_name('user_name') + _SEPARATOR +
-      _DATE_TIME.copy() + _SEPARATOR +
-      _GRPC_REQUEST.copy() + _SEPARATOR +
+      _USER_NAME + _SEPARATOR +
+      _DATE_TIME + _SEPARATOR +
+      _GRPC_REQUEST + _SEPARATOR +
       pyparsing.Suppress(pyparsing.Literal('-')) + _SEPARATOR +
-      _INT_OR_DASH.copy().set_results_name('status_code') + _SEPARATOR +
-      _INT_OR_DASH.copy().set_results_name('bytes_read') + _SEPARATOR +
-      _INT_OR_DASH.copy().set_results_name('bytes_written') + _SEPARATOR +
-      _INT_OR_DASH.copy().set_results_name('mesh_in') + _SEPARATOR +
-      _INT_OR_DASH.copy().set_results_name('mesh_out') + _SEPARATOR +
-      _INT_OR_DASH.copy().set_results_name('duration_ns') + _SEPARATOR +
-      _SESSION_ID.copy().set_results_name('session_identifier') + _SEPARATOR +
+      _INT_OR_DASH.set_results_name('status_code') + _SEPARATOR +
+      _INT_OR_DASH.set_results_name('bytes_read') + _SEPARATOR +
+      _INT_OR_DASH.set_results_name('bytes_written') + _SEPARATOR +
+      _INT_OR_DASH.set_results_name('mesh_in') + _SEPARATOR +
+      _INT_OR_DASH.set_results_name('mesh_out') + _SEPARATOR +
+      _INT_OR_DASH.set_results_name('duration_ns') + _SEPARATOR +
+      _SESSION_ID.set_results_name('session_identifier') + _SEPARATOR +
       pyparsing.Suppress(pyparsing.LineEnd()))
 
   _LINE_STRUCTURES = [
@@ -272,9 +272,8 @@ class BitbucketAccessTextPlugin(interface.TextPlugin):
     Raises:
       ParseError: if the structure cannot be parsed.
     """
-    if key not in ('http_access_log', 'grpc_access_log'):
-      raise errors.ParseError(
-          f'Unable to parse record, unknown structure: {key:s}')
+    if key not in ('grpc_access_log', 'http_access_log'):
+      raise errors.ParseError(f'Unsupported structure: {key:s}')
 
     time_elements_structure = self._GetValueFromStructure(
         structure, 'date_time')
@@ -291,8 +290,8 @@ class BitbucketAccessTextPlugin(interface.TextPlugin):
         structure, 'bytes_written')
     event_data.http_response_code = self._GetStrippedValue(
         structure, 'status_code')
-    event_data.http_request_user_agent = (
-        self._GetStringValueFromStructure(structure, 'user_agent') or None)
+    event_data.http_request_user_agent = self._GetStringValueFromStructure(
+        structure, 'user_agent') or None
     event_data.labels = None if not labels or labels == '-' else labels
     event_data.mesh_execution_identifier = self._GetStrippedValue(
         structure, 'mesh_execution_identifier')
@@ -339,7 +338,7 @@ class BitbucketAccessTextPlugin(interface.TextPlugin):
 
       return date_time
 
-    except (TypeError, ValueError) as exception:
+    except (IndexError, TypeError, ValueError) as exception:
       raise errors.ParseError(
           f'Unable to parse time elements with error: {exception!s}')
 
