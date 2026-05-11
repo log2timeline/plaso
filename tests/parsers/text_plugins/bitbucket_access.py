@@ -44,13 +44,13 @@ class BitbucketAccessTextPluginTest(test_lib.TextPluginTestCase):
         'http_response_code': 200,
         'http_version': 'HTTP/1.1',
         'labels': 'refs, cache:hit',
-        'mesh_execution_id': None,
+        'mesh_execution_identifier': None,
         'protocol': 'https',
         'recorded_time': '2012-10-29T00:06:26.838',
         'remote_address': '63.246.22.199,172.16.1.187',
-        'request_id': 'o@9K7Z3NNx6x3112x1',
+        'request_identifier': 'o@9K7Z3NNx6x3112x1',
         'request_time': 101,
-        'session_id': 'tmpqqw',
+        'session_identifier': 'tmpqqw',
         'ssh_repository_path': None,
         'user_name': 'eaccru'}
 
@@ -70,13 +70,13 @@ class BitbucketAccessTextPluginTest(test_lib.TextPluginTestCase):
         'http_response_code': 201,
         'http_version': 'HTTP/1.1',
         'labels': None,
-        'mesh_execution_id': None,
+        'mesh_execution_identifier': None,
         'protocol': 'https',
         'recorded_time': '2022-04-12T05:39:57.408',
         'remote_address': '10.229.31.195',
-        'request_id': 'o@2CM38K4Fx339x113x2',
+        'request_identifier': 'o@2CM38K4Fx339x113x2',
         'request_time': 383,
-        'session_id': 'eyoqcd',
+        'session_identifier': 'eyoqcd',
         'ssh_repository_path': None,
         'user_name': 'admin'}
 
@@ -96,13 +96,13 @@ class BitbucketAccessTextPluginTest(test_lib.TextPluginTestCase):
         'http_response_code': 200,
         'http_version': 'HTTP/1.1',
         'labels': None,
-        'mesh_execution_id': None,
+        'mesh_execution_identifier': None,
         'protocol': 'http',
         'recorded_time': '2020-07-21T15:30:52.815',
         'remote_address': '0:0:0:0:0:0:0:1',
-        'request_id': 'o@1APC3V1x930x168705816x2',
+        'request_identifier': 'o@1APC3V1x930x168705816x2',
         'request_time': 47,
-        'session_id': None,
+        'session_identifier': None,
         'ssh_repository_path': None,
         'user_name': None}
 
@@ -120,13 +120,13 @@ class BitbucketAccessTextPluginTest(test_lib.TextPluginTestCase):
         'http_response_code': 200,
         'http_version': 'HTTP/1.1',
         'labels': 'access-token:id:263466287238, async, protocol:2, refs',
-        'mesh_execution_id': None,
+        'mesh_execution_identifier': None,
         'protocol': 'https',
         'recorded_time': '2024-05-02T15:52:07.836',
         'remote_address': '10.229.31.195',
-        'request_id': 'o@1749XX8x952x97182x0',
+        'request_identifier': 'o@1749XX8x952x97182x0',
         'request_time': 43,
-        'session_id': 'eyoqcd',
+        'session_identifier': 'eyoqcd',
         'ssh_repository_path': None,
         'user_name': 'testuser'}
 
@@ -144,20 +144,20 @@ class BitbucketAccessTextPluginTest(test_lib.TextPluginTestCase):
         'http_response_code': 200,
         'http_version': None,
         'labels': 'push',
-        'mesh_execution_id': None,
+        'mesh_execution_identifier': None,
         'protocol': 'ssh',
         'recorded_time': '2020-08-13T10:26:37.907',
         'remote_address': '0:0:0:0:0:0:0:1',
-        'request_id': 'o@1APC3V1x930x168705816x2',
+        'request_identifier': 'o@1APC3V1x930x168705816x2',
         'request_time': 47,
-        'session_id': 'abc123',
+        'session_identifier': 'abc123',
         'ssh_repository_path': '/stash/stash.git',
         'user_name': 'acarlton'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 4)
     self.CheckEventData(event_data, expected_event_values)
 
-    # Sixth entry: gRPC/Mesh log with mesh_execution_id.
+    # Sixth entry: gRPC/Mesh log with mesh_execution_identifier.
     expected_event_values = {
         'data_type': 'atlassian:bitbucket:access',
         'http_request_method': None,
@@ -168,13 +168,13 @@ class BitbucketAccessTextPluginTest(test_lib.TextPluginTestCase):
         'http_response_code': 0,
         'http_version': None,
         'labels': None,
-        'mesh_execution_id': '@5XDWX5x420x2768x0',
+        'mesh_execution_identifier': '@5XDWX5x420x2768x0',
         'protocol': 'grpc',
         'recorded_time': '2022-04-12T07:09:18.086',
         'remote_address': '10.229.31.65',
-        'request_id': 'o@1GGG0Q5Kx420x106x2',
+        'request_identifier': 'o@1GGG0Q5Kx420x106x2',
         'request_time': None,
-        'session_id': '508028',
+        'session_identifier': '508028',
         'ssh_repository_path': None,
         'user_name': 'admin'}
 
@@ -184,7 +184,7 @@ class BitbucketAccessTextPluginTest(test_lib.TextPluginTestCase):
 
     # Seventh entry: input (i@) request with all dash placeholders — covers
     # the status_code == '-', bytes == '-', request_time == '-',
-    # user_name == '-', session_id == '-' branches.
+    # user_name == '-', session_identifier == '-' branches.
     expected_event_values = {
         'data_type': 'atlassian:bitbucket:access',
         'http_request_method': 'GET',
@@ -195,20 +195,20 @@ class BitbucketAccessTextPluginTest(test_lib.TextPluginTestCase):
         'http_response_code': None,
         'http_version': 'HTTP/1.1',
         'labels': None,
-        'mesh_execution_id': None,
+        'mesh_execution_identifier': None,
         'protocol': 'https',
         'recorded_time': '2012-10-29T00:06:26.723',
         'remote_address': '63.246.22.199',
-        'request_id': 'i@9K7Z3NNx6x3112x1',
+        'request_identifier': 'i@9K7Z3NNx6x3112x1',
         'request_time': None,
-        'session_id': None,
+        'session_identifier': None,
         'ssh_repository_path': None,
         'user_name': None}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 6)
     self.CheckEventData(event_data, expected_event_values)
 
-    # Eighth entry: HTTP request where request_id is '-' → None.
+    # Eighth entry: HTTP request where request_identifier is '-' → None.
     expected_event_values = {
         'data_type': 'atlassian:bitbucket:access',
         'http_request_method': 'GET',
@@ -219,13 +219,13 @@ class BitbucketAccessTextPluginTest(test_lib.TextPluginTestCase):
         'http_response_code': 200,
         'http_version': 'HTTP/1.1',
         'labels': 'refs, cache:hit',
-        'mesh_execution_id': None,
+        'mesh_execution_identifier': None,
         'protocol': 'https',
         'recorded_time': '2012-10-29T00:06:26.838',
         'remote_address': '10.0.0.1',
-        'request_id': None,
+        'request_identifier': None,
         'request_time': 45,
-        'session_id': 'tmpqqw',
+        'session_identifier': 'tmpqqw',
         'ssh_repository_path': None,
         'user_name': 'eaccru'}
 

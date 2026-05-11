@@ -143,7 +143,6 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
       _DATE_TIME + _LOG_LEVEL + _BITBUCKET_THREAD +
       _REQUEST_CONTEXT_TEXT + _BITBUCKET_LOGGER + _BITBUCKET_LOG_MESSAGE)
 
-
   _LINE_STRUCTURES = [('log_entry', _BITBUCKET_LOG_LINE)]
 
   # Sub-patterns for parsing the raw request context string.

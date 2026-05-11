@@ -42,8 +42,8 @@ class BitbucketAuditTextPluginTest(test_lib.TextPluginTestCase):
         'event_name': 'RestrictedRefAddedEvent',
         'recorded_time': '2014-05-21T14:09:21.906+00:00',
         'remote_address': '0:0:0:0:0:0:0:1',
-        'request_id': '@8KJQAGx969x538x0',
-        'session_id': '6ywzi6',
+        'request_identifier': '@8KJQAGx969x538x0',
+        'session_identifier': '6ywzi6',
         'user_name': 'admin'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
@@ -57,8 +57,8 @@ class BitbucketAuditTextPluginTest(test_lib.TextPluginTestCase):
         'event_name': 'RestrictedRefRemovedEvent',
         'recorded_time': '2014-05-21T14:09:25.418+00:00',
         'remote_address': '0:0:0:0:0:0:0:1',
-        'request_id': '@8KJQAGx969x540x0',
-        'session_id': '6ywzi6',
+        'request_identifier': '@8KJQAGx969x540x0',
+        'session_identifier': '6ywzi6',
         'user_name': 'admin'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 1)
@@ -73,8 +73,8 @@ class BitbucketAuditTextPluginTest(test_lib.TextPluginTestCase):
         'event_name': 'RepositoryCreatedEvent',
         'recorded_time': '2014-05-21T14:09:33.433+00:00',
         'remote_address': '63.246.22.199,172.16.1.187',
-        'request_id': '@8KJQAGx969x543x0',
-        'session_id': 'tmpqqw',
+        'request_identifier': '@8KJQAGx969x543x0',
+        'session_identifier': 'tmpqqw',
         'user_name': 'jsmith'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 2)
@@ -88,8 +88,8 @@ class BitbucketAuditTextPluginTest(test_lib.TextPluginTestCase):
         'event_name': 'UserCreatedEvent',
         'recorded_time': '2014-05-21T14:10:00.000+00:00',
         'remote_address': '10.1.1.100',
-        'request_id': None,
-        'session_id': None,
+        'request_identifier': None,
+        'session_identifier': None,
         'user_name': 'admin'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 3)
@@ -103,8 +103,8 @@ class BitbucketAuditTextPluginTest(test_lib.TextPluginTestCase):
         'event_name': 'UserLoggedInEvent',
         'recorded_time': '2014-05-21T14:10:10.000+00:00',
         'remote_address': '10.1.1.100',
-        'request_id': None,
-        'session_id': None,
+        'request_identifier': None,
+        'session_identifier': None,
         'user_name': None}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 4)

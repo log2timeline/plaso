@@ -17,6 +17,26 @@ short_source: 'LOG'
 source: 'Apache Access Log'
 ---
 type: 'conditional'
+data_type: 'atlassian:bitbucket:access'
+message:
+- '{http_request_method}'
+- '{http_request_uri}'
+- 'ssh_repo: {ssh_repository_path}'
+- 'from: {remote_address}'
+- 'user: {user_name}'
+- 'protocol: {protocol}'
+- 'code: {http_response_code}'
+- 'User agent: {http_request_user_agent}'
+- 'labels: {labels}'
+- 'Mesh execution identifier: {mesh_execution_identifier}'
+short_message:
+- '{http_request_method}'
+- '{http_request_uri}'
+- 'from: {remote_address}'
+short_source: 'LOG'
+source: 'Atlassian Bitbucket Access Log'
+---
+type: 'conditional'
 data_type: 'atlassian:bitbucket:audit'
 message:
 - '{event_name}'
@@ -30,26 +50,6 @@ short_message:
 - 'from: {remote_address}'
 short_source: 'LOG'
 source: 'Atlassian Bitbucket Audit Log'
----
-type: 'conditional'
-data_type: 'atlassian:bitbucket:access'
-message:
-- '{http_request_method}'
-- '{http_request_uri}'
-- 'ssh_repo: {ssh_repository_path}'
-- 'from: {remote_address}'
-- 'user: {user_name}'
-- 'protocol: {protocol}'
-- 'code: {http_response_code}'
-- 'user_agent: {http_request_user_agent}'
-- 'labels: {labels}'
-- 'mesh_id: {mesh_execution_id}'
-short_message:
-- '{http_request_method}'
-- '{http_request_uri}'
-- 'from: {remote_address}'
-short_source: 'LOG'
-source: 'Atlassian Bitbucket Access Log'
 ---
 type: 'conditional'
 data_type: 'atlassian:bitbucket:line'

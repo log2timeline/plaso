@@ -5,7 +5,7 @@ produced by a Bitbucket DC/Server installation.
 
 The audit log is a pipe-delimited file with the following fields:
   ip_address | event_name | user | timestamp_ms | entity | details |
-  request_id | session_id
+  request_identifier | session_identifier
 
 The timestamp field is milliseconds since the Unix epoch (January 1, 1970).
 
@@ -37,9 +37,10 @@ class BitbucketAuditEventData(events.EventData):
     remote_address (str): remote IP address(es), including X-Forwarded-For
         proxies. Multiple addresses are comma-separated; the first address is
         the originating IP and the last is the directly connected IP.
-    request_id (str): unique identifier for the request that triggered the
-        audit event, correlatable with the access log.
-    session_id (str): session identifier, correlatable with the access log.
+    request_identifier (str): unique identifier for the request that triggered
+        the audit event, correlatable with the access log.
+    session_identifier (str): session identifier, correlatable with the access
+        log.
     user_name (str): the name of the user who triggered the event.
   """
 
@@ -53,8 +54,8 @@ class BitbucketAuditEventData(events.EventData):
     self.event_name = None
     self.recorded_time = None
     self.remote_address = None
-    self.request_id = None
-    self.session_id = None
+    self.request_identifier = None
+    self.session_identifier = None
     self.user_name = None
 
 
@@ -67,7 +68,8 @@ class BitbucketAuditTextPlugin(interface.TextPlugin):
 
   ENCODING = 'utf-8'
 
-  _SEP = pyparsing.Suppress(pyparsing.Literal('|'))
+  # Pipe as field separator.
+  _SEPARATOR = pyparsing.Suppress(pyparsing.Literal('|'))
 
   # Remote IP address field: one or more IPv4/IPv6 addresses separated by
   # commas, such as "63.246.22.199,172.16.1.187" or "0:0:0:0:0:0:0:1"
@@ -99,36 +101,70 @@ class BitbucketAuditTextPlugin(interface.TextPlugin):
   _DETAILS = pyparsing.SkipTo(
       pyparsing.Literal('|')).set_results_name('details')
 
-  # Request ID: such as @8KJQAGx969x538x0, *1APC3V1x..., or '-'
-  _REQUEST_ID = (
+  # Request identifier, such as '@8KJQAGx969x538x0', '*1APC3V1x...' or '-'.
+  _REQUEST_IDENTIFIER = (
       pyparsing.Word(pyparsing.alphanums + '@*-_x') |
-      pyparsing.Literal('-')).set_results_name('request_id')
+      pyparsing.Literal('-')).set_results_name('request_identifier')
 
-  # Session ID: short alphanumeric identifier, or '-'
-  _SESSION_ID = (
+  # Session identifier, short alphanumeric identifier or '-'.
+  _SESSION_IDENTIFIER = (
       pyparsing.Word(pyparsing.alphanums + '-_') |
-      pyparsing.Literal('-')).set_results_name('session_id')
+      pyparsing.Literal('-')).set_results_name('session_identifier')
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
   # Audit log line format (pipe-delimited):
   # ip_address | event_name | user | timestamp_ms | entity | details |
-  # request_id | session_id
+  # request_identifier | session_identifier
   _AUDIT_LOG_LINE = (
-      _REMOTE_ADDRESS + _SEP +
-      _EVENT_NAME + _SEP +
-      _USER_NAME + _SEP +
-      _TIMESTAMP_MS + _SEP +
-      _ENTITY + _SEP +
-      _DETAILS + _SEP +
-      _REQUEST_ID + _SEP +
-      _SESSION_ID +
+      _REMOTE_ADDRESS + _SEPARATOR +
+      _EVENT_NAME + _SEPARATOR +
+      _USER_NAME + _SEPARATOR +
+      _TIMESTAMP_MS + _SEPARATOR +
+      _ENTITY + _SEPARATOR +
+      _DETAILS + _SEPARATOR +
+      _REQUEST_IDENTIFIER + _SEPARATOR +
+      _SESSION_IDENTIFIER +
       _END_OF_LINE)
 
   _LINE_STRUCTURES = [('audit_entry', _AUDIT_LOG_LINE)]
 
   VERIFICATION_GRAMMAR = _AUDIT_LOG_LINE
 
+  def _GetDateTimeValue(self, structure, name):
+    """Retrieves a date and time value from a Pyparsing structure.
+
+    Args:
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
+      name (str): name of the token.
+
+    Returns:
+      dfdatetime.TimeElements: date and time value or None if not available.
+    """
+    timestamp = self._GetValueFromStructure(structure, name)
+    if not timestamp:
+      return None
+
+    return dfdatetime_posix_time.PosixTimeInMilliseconds(
+        timestamp=timestamp)
+
+  def _GetStrippedValue(self, structure, name, default_value=None):
+    """Retrieves a token value from a Pyparsing structure and strips '' or '-'.
+
+    Args:
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
+      name (str): name of the token.
+      default_value (Optional[object]): default value.
+
+    Returns:
+      object: value in the token or default value if the token is not available
+          in the structure.
+    """
+    value = self._GetValueFromStructure(structure, name)
+    if not value or value == '-':
+      return default_value
+
+    return value
 
   def _ParseRecord(self, parser_mediator, key, structure):
     """Parses a pyparsing structure.
@@ -146,47 +182,24 @@ class BitbucketAuditTextPlugin(interface.TextPlugin):
       raise errors.ParseError(
           f'Unable to parse record, unknown structure: {key:s}')
 
-    timestamp_ms = self._GetValueFromStructure(structure, 'timestamp_ms')
-
-    details_raw = self._GetValueFromStructure(
+    details = self._GetValueFromStructure(
         structure, 'details', default_value='').strip()
-    entity = self._GetValueFromStructure(structure, 'entity')
-    request_id = self._GetValueFromStructure(structure, 'request_id')
-    session_id = self._GetValueFromStructure(structure, 'session_id')
-    user_name = self._GetValueFromStructure(structure, 'user_name')
 
     event_data = BitbucketAuditEventData()
-    event_data.remote_address = self._GetValueFromStructure(
-        structure, 'remote_address')
+    event_data.details = None if not details or details == '-' else details
+    event_data.entity = self._GetStrippedValue(structure, 'entity')
     event_data.event_name = self._GetValueFromStructure(
         structure, 'event_name')
-    event_data.user_name = None if user_name == '-' else user_name
-    event_data.entity = None if entity == '-' else entity
-    event_data.details = (
-        None if (not details_raw or details_raw == '-') else details_raw)
-    event_data.request_id = None if request_id == '-' else request_id
-    event_data.session_id = None if session_id == '-' else session_id
-    event_data.recorded_time = self._ParseTimestamp(timestamp_ms)
+    event_data.recorded_time = self._GetDateTimeValue(structure, 'timestamp_ms')
+    event_data.remote_address = self._GetValueFromStructure(
+        structure, 'remote_address')
+    event_data.request_identifier = self._GetStrippedValue(
+        structure, 'request_identifier')
+    event_data.session_identifier = self._GetStrippedValue(
+        structure, 'session_identifier')
+    event_data.user_name = self._GetStrippedValue(structure, 'user_name')
 
     parser_mediator.ProduceEventData(event_data)
-
-  def _ParseTimestamp(self, timestamp_ms):
-    """Parses a Unix millisecond timestamp.
-
-    Args:
-      timestamp_ms (int): number of milliseconds since January 1, 1970.
-
-    Returns:
-      dfdatetime.PosixTimeInMilliseconds: date and time value.
-
-    Raises:
-      ParseError: if a valid date and time value cannot be derived from
-          the timestamp.
-    """
-    date_time = dfdatetime_posix_time.PosixTimeInMilliseconds(
-        timestamp=timestamp_ms)
-
-    return date_time
 
   def CheckRequiredFormat(self, parser_mediator, text_reader):
     """Check if the log record has the minimal structure required by the plugin.
@@ -209,7 +222,8 @@ class BitbucketAuditTextPlugin(interface.TextPlugin):
     # The timestamp must look like a plausible millisecond epoch value.
     # Reject values that are too small (before year 2000) or too large.
     # Year 2000 in ms = 946684800000; year 2100 in ms = 4102444800000
-    if not 946684800000 <= timestamp_ms <= 4102444800000:
+    if (timestamp_ms is None or
+        not 946684800000 <= timestamp_ms <= 4102444800000):
       return False
 
     return True
