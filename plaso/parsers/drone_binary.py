@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """This is Parser for DJI fligh log binary TXT"""
 
 from enum import Enum
@@ -27,7 +26,7 @@ class DroneFlightEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data for drone flight."""
-    super(DroneFlightEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.latitude = None
     self.longitude = None
     self.height = None
