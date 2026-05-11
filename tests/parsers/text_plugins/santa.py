@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """Tests for Santa log text parser plugin."""
 
+import io
 import unittest
 
+from plaso.parsers import mediator as parsers_mediator
+from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import santa
 
 from tests.parsers.text_plugins import test_lib
@@ -11,7 +14,29 @@ from tests.parsers.text_plugins import test_lib
 class SantaTextPluginTest(test_lib.TextPluginTestCase):
   """Tests for Santa log text parser plugin."""
 
-  # TODO: add tests for CheckRequiredFormat
+  def testCheckRequiredFormat(self):
+    """Tests for the CheckRequiredFormat function."""
+    plugin = santa.SantaTextPlugin()
+    parser_mediator = parsers_mediator.ParserMediator()
+
+    file_object = io.BytesIO(
+        b'[2018-08-19T03:09:13.120Z] I santad: action=DISKAPPEAR'
+        b'|mount=|volume=EFI|bsdname=disk0s1|fs=msdos'
+        b'|model=APPLE SSD SM0512G|serial=S29ANYAF566602'
+        b'|bus=PCI|dmgpath=|appearance=2018-08-19T03:09:08.429Z\n')
+    text_reader = text_parser.EncodedTextReader(file_object)
+    text_reader.ReadLines()
+
+    self.assertTrue(plugin.CheckRequiredFormat(parser_mediator, text_reader))
+
+    # Check non-matching format.
+    file_object = io.BytesIO(
+        b'Jan 22 07:52:33 myhostname.myhost.com client[30840]: INFO No new '
+        b'content in image.dd.\n')
+    text_reader = text_parser.EncodedTextReader(file_object)
+    text_reader.ReadLines()
+
+    self.assertFalse(plugin.CheckRequiredFormat(parser_mediator, text_reader))
 
   def testProcessWithLegacyFormat(self):
     """Tests the Process function with the legacy Santa log format."""

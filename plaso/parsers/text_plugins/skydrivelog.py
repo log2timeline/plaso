@@ -65,7 +65,7 @@ class SkyDriveLog1TextPlugin(interface.TextPlugin):
       _TWO_DIGITS + pyparsing.Suppress(':') +
       _TWO_DIGITS + pyparsing.Suppress(':') + _TWO_DIGITS +
       pyparsing.Word('.,', exact=1).suppress() +
-                     _THREE_DIGITS).set_results_name('date_time')
+      _THREE_DIGITS).set_results_name('date_time')
 
   _SOURCE_CODE = pyparsing.Combine(
       pyparsing.CharsNotIn(':') + pyparsing.Literal(':') + _INTEGER +
