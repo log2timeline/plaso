@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parser For DJI Mavic Drone Log Files."""
 import re
 import struct
@@ -22,7 +21,7 @@ class DJIDroneLogEventData(events.EventData):
 
     This container is used to store parsed data fields from each GPS log record.
     """
-    super(DJIDroneLogEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.timestamp = None
     self.longitude = None
     self.latitude = None
@@ -42,7 +41,7 @@ class DJIDroneLogParser(interface.FileObjectParser):
 
     Sets up default values for parsing data and record start position.
     """
-    super(DJIDroneLogParser, self).__init__()
+    super().__init__()
     self.data = None
     self.record_start_pos = None
   # Polinomial 0x1021
