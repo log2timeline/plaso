@@ -31,18 +31,17 @@ class JpegExifParserTest(test_lib.ParserTestCase):
     expected_event_values = {
         "bodyserialnumber": "53HQK520M10K6U",
         "data_type": "jpeg:exif",
+        "height": 3016,
         "latitude": "68.87571N",
         "longitude": "27.76492E",
         "manufacturer": "DJI",
         "model": "FC3582",
         "software": "RawTherapee 5.9",
         "width": 4024,
-        "height": 3016,
-        "xres": "300.0",
-        "yres": "300.0"}
+        "xres": 300.0,
+        "yres": 300.0}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
-    print(str(event_data.__dict__))
     self.CheckEventData(event_data, expected_event_values)
 
 
