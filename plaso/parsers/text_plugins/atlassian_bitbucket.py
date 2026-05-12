@@ -45,7 +45,7 @@ class AtlassianBitbucketEventData(events.EventData):
         "TransactionService/Transact", if present.
     request_id (str): the unique request identifier, such as
         2CM38K4Fx339x113x2, if present.
-    session_id (str): the session identifier, if present.
+    session_identifier (str): the session identifier, if present.
     thread (str): the JVM thread name from which the log event originated.
     user_name (str): the name of the user associated with the request, if
         present in the log line.
