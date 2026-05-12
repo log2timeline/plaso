@@ -177,4 +177,5 @@ Copied with permission from [Digital Corpora](https://digitalcorpora.org/):
 * ios/com.apple.commcenter.data.plist
 * ios/com.apple.MobileBackup.plist
 * ios/IMODb2.sqlite
+* ios/NoteStore.sqlite
 * viber_data
