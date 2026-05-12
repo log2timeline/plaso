@@ -9,6 +9,13 @@ set -e
 
 TEST_DIRECTORY="/tmp/test"
 
+if [ -d "${TEST_DIRECTORY}" ]
+then
+    echo "Test directory: ${TEST_DIRECTORY} already exists"
+
+    exit ${EXIT_FAILURE}
+fi
+
 rm -rf .tox build dist
 
 cp MANIFEST.test_data.in MANIFEST.in
@@ -19,38 +26,33 @@ git checkout MANIFEST.in
 
 if [ $? -ne ${EXIT_SUCCESS} ];
 then
-	echo "Unable to create sdist package"
+    echo "Unable to create sdist package"
 
-	exit ${EXIT_FAILURE}
+    exit ${EXIT_FAILURE}
 fi
 
 SDIST_PACKAGE=$(ls -1 dist/plaso-*.tar.gz | head -n1 | sed 's?^dist/??')
 
 if [ ! -f "dist/${SDIST_PACKAGE}" ]
 then
-	echo "Missing sdist package: dist/${SDIST_PACKAGE}"
+    echo "Missing sdist package: dist/${SDIST_PACKAGE}"
 
-	exit ${EXIT_FAILURE}
+    exit ${EXIT_FAILURE}
 fi
 
 mkdir ${TEST_DIRECTORY}
 
-if [ ! -d "${TEST_DIRECTORY}" ]
-then
-	echo "Missing test directory: ${TEST_DIRECTORY}"
-
-	exit ${EXIT_FAILURE}
-fi
-
 cp dist/${SDIST_PACKAGE} ${TEST_DIRECTORY}
+
+OLD_PWD=${PWD}
 
 pushd ${TEST_DIRECTORY}
 
 if [ ! -f "${SDIST_PACKAGE}" ]
 then
-	echo "Missing sdist package: ${SDIST_PACKAGE}"
+    echo "Missing sdist package: ${SDIST_PACKAGE}"
 
-	exit ${EXIT_FAILURE}
+    exit ${EXIT_FAILURE}
 fi
 
 tar xfv ${SDIST_PACKAGE}
@@ -59,18 +61,31 @@ SOURCE_DIRECTORY=${SDIST_PACKAGE/.tar.gz/}
 
 if [ ! -d "./${SOURCE_DIRECTORY}" ]
 then
-	echo "Missing source directory: ${SOURCE_DIRECTORY}"
+    echo "Missing source directory: ${SOURCE_DIRECTORY}"
 
-	exit ${EXIT_FAILURE}
+    exit ${EXIT_FAILURE}
 fi
 
 cp -rf ${SOURCE_DIRECTORY}/* .
 
 TEST_FILE="psort_test.plaso"
 
-# Syslog does not contain a year we must pass preferred year to prevent the parser failing early on non-leap years.
-PYTHONPATH=. python ./tools/log2timeline.py --buffer_size=300 --quiet --preferred_year 2012 --storage-file ${TEST_FILE} test_data/syslog
-PYTHONPATH=. python ./tools/log2timeline.py --quiet --timezone=Iceland --preferred_year 2012 --storage-file ${TEST_FILE} test_data/syslog
+# Syslog does not contain a year we must pass preferred year to prevent the
+# parser failing early on non-leap years.
+
+PYTHONPATH=. python ./plaso/scripts/log2timeline.py \
+    --buffer_size=300 \
+    --quiet \
+    --preferred-year 2012 \
+    --storage-file ${TEST_FILE} \
+    test_data/syslog/syslog
+
+PYTHONPATH=. python ./plaso/scripts/log2timeline.py \
+    --quiet \
+    --timezone=Iceland \
+    --preferred-year 2012 \
+    --storage-file ${TEST_FILE} \
+    test_data/syslog/syslog
 
 cat > tagging.txt <<EOI
 anacron1
@@ -83,7 +98,11 @@ repeated
   body contains 'last message repeated'
 EOI
 
-PYTHONPATH=. python ./tools/psort.py --analysis tagging --output-format=null --tagging-file=tagging.txt ${TEST_FILE}
+PYTHONPATH=. python ./plaso/scripts/psort.py \
+    --analysis tagging \
+    --output-format=null \
+    --tagging-file=tagging.txt \
+    ${TEST_FILE}
 
 # Run tagging twice.
 cat > tagging.txt <<EOI
@@ -97,17 +116,54 @@ repeated
   body contains 'last message repeated'
 EOI
 
-PYTHONPATH=. python ./tools/psort.py --analysis tagging --output-format=null --tagging-file=tagging.txt ${TEST_FILE}
+PYTHONPATH=. python ./plaso/scripts/psort.py \
+    --analysis tagging \
+    --output-format=null \
+    --tagging-file=tagging.txt \
+    ${TEST_FILE}
 
-mv ${TEST_FILE} ${OLD_PWD}/test_data/
+cp ${TEST_FILE} ${OLD_PWD}/test_data/
+
+PYTHONPATH=. ./plaso/scripts/pinfo.py \
+    --report file_hashes \
+    --output-format json \
+    ${TEST_FILE} > ${TEST_FILE}.file_hashes.json
+
+cp ${TEST_FILE}.file_hashes.json ${OLD_PWD}/test_data/
+
+PYTHONPATH=. ./plaso/scripts/pinfo.py \
+    --report file_hashes \
+    --output-format markdown \
+    ${TEST_FILE} > ${TEST_FILE}.file_hashes.md
+
+cp ${TEST_FILE}.file_hashes.md ${OLD_PWD}/test_data/
+
+PYTHONPATH=. ./plaso/scripts/pinfo.py \
+    --report file_hashes \
+    --output-format text \
+    ${TEST_FILE} > ${TEST_FILE}.file_hashes.txt
+
+cp ${TEST_FILE}.file_hashes.txt ${OLD_PWD}/test_data/
 
 TEST_FILE="pinfo_test.plaso"
 
-PYTHONPATH=. python ./tools/log2timeline.py --partition=all --quiet --storage-file ${TEST_FILE} test_data/tsk_volume_system.raw
+PYTHONPATH=. python ./plaso/scripts/log2timeline.py \
+    --partition=all \
+    --quiet \
+    --storage-file ${TEST_FILE} \
+    test_data/tsk_volume_system.raw
 
-mv ${TEST_FILE} ${OLD_PWD}/test_data/
+cp ${TEST_FILE} ${OLD_PWD}/test_data/
+
+PYTHONPATH=. ./plaso/scripts/pinfo.py \
+    --sections events,reports,sessions,warnings \
+    --output-format text \
+    ${TEST_FILE} > ${TEST_FILE}.output.txt
+
+cp ${TEST_FILE}.output.txt ${OLD_PWD}/test_data/
 
 popd
 
 rm -rf ${TEST_DIRECTORY}
 
+exit ${EXIT_SUCCESS}

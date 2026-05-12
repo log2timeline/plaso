@@ -331,15 +331,15 @@ class OutputAndFormattingMultiProcessEngineTest(
 
     self.assertEqual(len(lines), 22)
 
-    expected_line = (
-        '2014-11-18T01:15:43.000000+00:00,'
-        'Content Modification Time,'
-        'LOG,'
-        'Log File,'
-        '[---] last message repeated 5 times ---,'
-        'text/syslog_traditional,'
-        'OS:/tmp/test/test_data/syslog,'
-        'repeated')
+    expected_line = ','.join([
+        '2014-11-18T01:15:43.000000+00:00',
+        'Content Modification Time',
+        'LOG',
+        'Log File',
+        '[---] last message repeated 5 times ---',
+        'text/syslog_traditional',
+        'OS:/tmp/test/test_data/syslog/syslog',
+        'repeated'])
     self.assertEqual(lines[14], expected_line)
 
 
