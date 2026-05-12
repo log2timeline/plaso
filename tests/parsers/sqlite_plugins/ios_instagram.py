@@ -15,7 +15,7 @@ class IOSInstagramThreadsTest(test_lib.SQLitePluginTestCase):
     """Test the Process function."""
     plugin = ios_instagram.IOSInstagramPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        ['9368974384.db'], plugin)
+        ['ios', '9368974384.db'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')

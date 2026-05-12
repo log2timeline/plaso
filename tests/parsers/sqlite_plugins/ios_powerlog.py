@@ -14,7 +14,7 @@ class IOSPowerlogApplicationUsagePluginTest(test_lib.SQLitePluginTestCase):
     """Test the Process function on a PLSQL file."""
     plugin = ios_powerlog.IOSPowerlogApplicationUsagePlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        ['powerlog_2021-12-16_05-54_84E2141B.PLSQL'], plugin)
+        ['ios', 'powerlog_2021-12-16_05-54_84E2141B.PLSQL'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')

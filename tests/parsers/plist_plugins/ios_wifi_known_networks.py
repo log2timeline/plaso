@@ -17,7 +17,7 @@ class IOSWiFiKnownNetworksPlistPluginTest(test_lib.PlistPluginTestCase):
 
     plugin = ios_wifi_known_networks.IOSWiFiKnownNetworksPlistPlugin()
     storage_writer = self._ParsePlistFileWithPlugin(
-        plugin, [plist_name], plist_name)
+        plugin, ['ios', plist_name], plist_name)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')

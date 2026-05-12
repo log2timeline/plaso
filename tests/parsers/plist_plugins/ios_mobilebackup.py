@@ -17,7 +17,7 @@ class IOSMobileBackupPlistPluginTest(test_lib.PlistPluginTestCase):
 
     plugin = ios_mobilebackup.IOSMobileBackupPlistPlugin()
     storage_writer = self._ParsePlistFileWithPlugin(
-        plugin, [plist_name], plist_name)
+        plugin, ['ios', plist_name], plist_name)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')

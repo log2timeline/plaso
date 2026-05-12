@@ -16,7 +16,7 @@ class IOSIdstatusachePlistPluginTest(test_lib.PlistPluginTestCase):
 
     plugin = ios_identityservices.IOSIdstatusachePlistPlugin()
     storage_writer = self._ParsePlistFileWithPlugin(
-        plugin, [plist_name], plist_name)
+        plugin, ['ios', plist_name], plist_name)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')

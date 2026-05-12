@@ -15,7 +15,7 @@ class IMOHDChatMessagePluginTest(test_lib.SQLitePluginTestCase):
     """Tests the Process function."""
     plugin = ios_imohdchat.IMOHDChatMessagePlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        ['IMODb2.sqlite'], plugin)
+        ['ios', 'IMODb2.sqlite'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
