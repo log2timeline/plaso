@@ -597,10 +597,10 @@ attribute_mappings:
   description: 'Sent Time'
 place_holder_event: true
 ---
-data_type: 'ios:health:achievements'
+data_type: 'ios:health:achievement'
 attribute_mappings:
-- name: 'date_time'
-  description: 'Achievement Date'
+- name: 'creation_time'
+  description: 'Creation Time'
 place_holder_event: true
 ---
 data_type: 'ios:health:all_watch_sleep_latest'
@@ -623,8 +623,12 @@ place_holder_event: true
 ---
 data_type: 'ios:health:heart_rate'
 attribute_mappings:
-- name: 'start_date'
-  description: 'Heart Rate Start'
+- name: 'added_time'
+  description: 'Added Time'
+- name: 'end_time'
+  description: 'Start Time'
+- name: 'start_time'
+  description: 'Start Time'
 place_holder_event: true
 ---
 data_type: 'ios:health:height'

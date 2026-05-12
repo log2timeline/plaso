@@ -27,8 +27,7 @@ class IOSHealthRestingHeartRateEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super().__init__(
-        data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.date_added_to_health = None
     self.date_added_to_health_str = None
     self.date_time = None

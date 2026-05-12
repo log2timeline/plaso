@@ -14,7 +14,7 @@ class IOSHealthWorkoutsPluginGoldenTest(test_lib.SQLitePluginTestCase):
     """Tests the Process function on a healthdb_secure.sqlite file."""
     plugin = ios_health_workouts.IOSHealthWorkoutsPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        ['healthdb_secure.sqlite'], plugin)
+        ['ios', 'healthdb_secure.sqlite'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')

@@ -15,7 +15,7 @@ class IOSHealthWristTemperatureTest(test_lib.SQLitePluginTestCase):
     """Test the plugin's Process function on a test database."""
     plugin = ios_health_wrist_temperature.IOSHealthWristTemperaturePlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        ['healthdb_secure.sqlite'], plugin)
+        ['ios', 'healthdb_secure.sqlite'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -62,4 +62,3 @@ class IOSHealthWristTemperatureTest(test_lib.SQLitePluginTestCase):
 
 if __name__ == '__main__':
   unittest.main()
-  

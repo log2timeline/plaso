@@ -35,8 +35,7 @@ class IOSHealthWatchBySleepPeriodLatestEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super().__init__(
-        data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.awake_duration = None
     self.awake_duration_hms = None
     self.awake_percent = None
