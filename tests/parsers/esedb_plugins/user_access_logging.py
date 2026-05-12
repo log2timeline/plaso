@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Tests for the User Access Logging (UAL) ESE database file."""
 
 import unittest

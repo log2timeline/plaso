@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Tests for the Azure Application Gateway Access log files parser."""
 
 import unittest

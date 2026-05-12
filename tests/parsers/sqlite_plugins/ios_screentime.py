@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Tests for the SQLite parser plugin for iOS Screen Time database files."""
 
 import unittest
