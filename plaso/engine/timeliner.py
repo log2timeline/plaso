@@ -90,9 +90,9 @@ class EventDataTimeliner:
     # the current year.
 
     if self._preferred_year:
-      current_date = (self._preferred_year, 1, 1)
-    else:
-      current_date = self._current_date
+      return self._preferred_year, 0, 0
+
+    current_date = self._current_date
 
     event_data_stream_identifier = event_data.GetEventDataStreamIdentifier()
     if not event_data_stream_identifier:
@@ -109,10 +109,9 @@ class EventDataTimeliner:
         events.DateLessLogHelper.CONTAINER_TYPE,
         filter_expression=filter_expression))
     if not date_less_log_helpers:
-      message = (
+      self._ProduceTimeliningWarning(storage_writer, event_data, (
           f'missing date-less log helper, defaulting to date: '
-          f'{current_date[0]:d}-{current_date[1]:d}-{current_date[2]:d}')
-      self._ProduceTimeliningWarning(storage_writer, event_data, message)
+          f'{current_date[0]:d}-{current_date[1]:d}-{current_date[2]:d}'))
 
       base_date = (current_date[0], 0, 0)
 
@@ -135,11 +134,10 @@ class EventDataTimeliner:
             earliest_date, last_relative_date))
 
       if earliest_date is None and latest_date is None:
-        message = (
+        self._ProduceTimeliningWarning(storage_writer, event_data, (
             f'missing earliest and latest date in date-less log helper, '
             f'defaulting to date: {current_date[0]:d}-{current_date[1]:d}-'
-            f'{current_date[2]:d}')
-        self._ProduceTimeliningWarning(storage_writer, event_data, message)
+            f'{current_date[2]:d}'))
 
         base_date = current_date
 
@@ -147,29 +145,27 @@ class EventDataTimeliner:
         base_date = earliest_date
 
       elif latest_date < current_date:
-        message = (
+        self._ProduceTimeliningWarning(storage_writer, event_data, (
             f'earliest date: {earliest_date[0]:d}-{earliest_date[1]:d}-'
             f'{earliest_date[2]:d} as base date would exceed : '
             f'{current_date[0]:d}-{current_date[1]:d}-{current_date[2]:d} + '
             f'{last_relative_date[0]:d}-{last_relative_date[1]:d}-'
             f'{last_relative_date[2]:d}, using latest date: {latest_date[0]:d}-'
-            f'{latest_date[1]:d}-{latest_date[2]:d}')
-        self._ProduceTimeliningWarning(storage_writer, event_data, message)
+            f'{latest_date[1]:d}-{latest_date[2]:d}'))
 
         base_date = tuple(map(
             lambda latest, last_relative: latest - last_relative,
             latest_date, last_relative_date))
 
       else:
-        message = (
+        self._ProduceTimeliningWarning(storage_writer, event_data, (
             f'earliest date: {earliest_date[0]:d}-{earliest_date[1]:d}-'
-            f'{earliest_date[2]:d} and latest: date: {latest_date[0]:d}-'
+            f'{earliest_date[2]:d} and latest date: {latest_date[0]:d}-'
             f'{latest_date[1]:d}-{latest_date[2]:d} as base date would exceed '
             f'date: {current_date[0]:d}-{current_date[1]:d}-'
             f'{current_date[2]:d} + {last_relative_date[0]:d}-'
             f'{last_relative_date[1]:d}-{last_relative_date[2]:d}, using date: '
-            f'{current_date[0]:d}-{current_date[1]:d}-{current_date[2]:d}')
-        self._ProduceTimeliningWarning(storage_writer, event_data, message)
+            f'{current_date[0]:d}-{current_date[1]:d}-{current_date[2]:d}'))
 
         base_date = tuple(map(
             lambda current, last_relative: current - last_relative,
@@ -255,19 +251,17 @@ class EventDataTimeliner:
           try:
             time_zone = pytz.timezone(date_time.time_zone_hint)
           except pytz.UnknownTimeZoneError:
-            message = (
+            self._ProduceTimeliningWarning(storage_writer, event_data, (
                 f'unsupported time zone hint: {date_time.time_zone_hint:s}, '
-                f'using default time zone')
-            self._ProduceTimeliningWarning(storage_writer, event_data, message)
+                f'using default time zone'))
 
         if not time_zone and event_data_stream:
           try:
             time_zone = self._GetTimeZoneByPathSpec(event_data_stream.path_spec)
           except pytz.UnknownTimeZoneError:
-            message = (
+            self._ProduceTimeliningWarning(storage_writer, event_data, (
                 f'unsupported system time zone: {date_time.time_zone_hint:s}, '
-                f'using default time zone')
-            self._ProduceTimeliningWarning(storage_writer, event_data, message)
+                f'using default time zone'))
 
         if not time_zone:
           time_zone = self._preferred_time_zone or self._DEFAULT_TIME_ZONE

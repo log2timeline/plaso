@@ -1,0 +1,171 @@
+
+************************** Plaso Storage Information ***************************
+            Filename : pinfo_test.plaso
+      Format version : 20230327
+Serialization format : json
+--------------------------------------------------------------------------------
+
+*********************************** Sessions ***********************************
+b9556ec0-c5ab-44ae-aa24-2b06037ecb30 : 2026-05-12T09:34:11.613767+00:00
+--------------------------------------------------------------------------------
+
+**************** Session: b9556ec0-c5ab-44ae-aa24-2b06037ecb30 *****************
+                Start time : 2026-05-12T09:34:11.613767+00:00
+           Completion time : 2026-05-12T09:34:22.002986+00:00
+              Product name : plaso
+           Product version : 20260511
+    Command line arguments : ./plaso/scripts/log2timeline.py --partition=all
+                             --quiet --storage-file pinfo_test.plaso
+                             test_data/tsk_volume_system.raw
+  Parser filter expression : N/A
+Enabled parser and plugins : android_app_usage, asl_log, bencode,
+                             bencode/bencode_transmission,
+                             bencode/bencode_utorrent, binary_cookies,
+                             bodyfile, bsm_log, chrome_cache,
+                             chrome_preferences, cups_ipp, custom_destinations,
+                             czip, czip/oxml, discord_ios, esedb,
+                             esedb/file_history, esedb/msie_webcache,
+                             esedb/srum, esedb/user_access_logging, filestat,
+                             firefox_cache, firefox_cache2, fish_history,
+                             fseventsd, java_idx, jsonl,
+                             jsonl/aws_cloudtrail_log,
+                             jsonl/azure_activity_log,
+                             jsonl/azure_application_gateway_access_log,
+                             jsonl/docker_container_config,
+                             jsonl/docker_container_log,
+                             jsonl/docker_layer_config, jsonl/gcp_log,
+                             jsonl/ios_application_privacy,
+                             jsonl/microsoft_audit_log, lnk, locate_database,
+                             mac_keychain, mcafee_protection, mft, msiecf,
+                             networkminer_fileinfo, olecf,
+                             olecf/olecf_automatic_destinations,
+                             olecf/olecf_default, olecf/olecf_document_summary,
+                             olecf/olecf_summary, onedrive_log, opera_global,
+                             opera_typed_history, pe, plist, plist/airport,
+                             plist/apple_id, plist/ios_carplay,
+                             plist/ios_identityservices,
+                             plist/ios_mobile_backup, plist/ios_siminfo,
+                             plist/ios_wifi_known_networks, plist/ipod_device,
+                             plist/launchd_plist,
+                             plist/macos_background_items_plist,
+                             plist/macos_bluetooth,
+                             plist/macos_install_history,
+                             plist/macos_login_items_plist,
+                             plist/macos_login_window_plist,
+                             plist/macos_software_update,
+                             plist/macos_startup_item_plist, plist/macuser,
+                             plist/plist_default, plist/safari_downloads,
+                             plist/safari_history, plist/spotlight,
+                             plist/spotlight_volume, plist/time_machine,
+                             pls_recall, prefetch, recycle_bin,
+                             recycle_bin_info2, rplog, simatic_s7,
+                             spotlight_storedb, sqlite, sqlite/android_airtag,
+                             sqlite/android_app_launch,
+                             sqlite/android_app_usage, sqlite/android_calls,
+                             sqlite/android_communication_information,
+                             sqlite/android_native_downloads,
+                             sqlite/android_sms, sqlite/android_turbo,
+                             sqlite/android_viber_call, sqlite/android_webview,
+                             sqlite/android_webviewcache, sqlite/appusage,
+                             sqlite/chrome_17_cookies,
+                             sqlite/chrome_27_history,
+                             sqlite/chrome_66_cookies, sqlite/chrome_8_history,
+                             sqlite/chrome_autofill,
+                             sqlite/chrome_extension_activity, sqlite/dropbox,
+                             sqlite/edge_load_statistics,
+                             sqlite/files_by_google, sqlite/firefox_10_cookies,
+                             sqlite/firefox_118_downloads,
+                             sqlite/firefox_2_cookies,
+                             sqlite/firefox_downloads, sqlite/firefox_history,
+                             sqlite/google_drive, sqlite/hangouts_messages,
+                             sqlite/imessage, sqlite/instagram_ios,
+                             sqlite/ios_accounts, sqlite/ios_datausage,
+                             sqlite/ios_imohdchat_message, sqlite/ios_netusage,
+                             sqlite/ios_powerlog, sqlite/ios_screentime,
+                             sqlite/kik_ios, sqlite/kodi, sqlite/ls_quarantine,
+                             sqlite/mac_document_versions,
+                             sqlite/mac_knowledgec, sqlite/mac_notes,
+                             sqlite/mac_notificationcenter,
+                             sqlite/mackeeper_cache, sqlite/macostcc,
+                             sqlite/safari_historydb, sqlite/skype,
+                             sqlite/tango_android_profile,
+                             sqlite/tango_android_tc, sqlite/twitter_android,
+                             sqlite/twitter_ios,
+                             sqlite/windows_eventtranscript,
+                             sqlite/windows_push_notification,
+                             sqlite/windows_timeline, sqlite/zeitgeist,
+                             symantec_scanlog, systemd_journal, text,
+                             text/android_logcat, text/apache_access,
+                             text/apt_history, text/atlassian_bitbucket,
+                             text/atlassian_confluence, text/atlassian_jira,
+                             text/aws_elb_access, text/bash_history,
+                             text/bitbucket_access, text/bitbucket_audit,
+                             text/confluence_access, text/cri_log, text/dpkg,
+                             text/gdrive_synclog, text/googlelog,
+                             text/ios_lockdownd, text/ios_logd,
+                             text/ios_sysdiag_log, text/jira_access,
+                             text/mac_appfirewall_log, text/mac_securityd,
+                             text/mac_wifi, text/macos_launchd_log,
+                             text/popularity_contest, text/postgresql,
+                             text/powershell_transcript, text/santa, text/sccm,
+                             text/selinux, text/setupapi, text/skydrive_log_v1,
+                             text/skydrive_log_v2, text/snort_fastlog,
+                             text/sophos_av, text/syslog,
+                             text/syslog_traditional,
+                             text/teamviewer_application_log,
+                             text/teamviewer_connections_incoming,
+                             text/teamviewer_connections_outgoing,
+                             text/viminfo, text/vsftpd, text/winfirewall,
+                             text/winiis, text/xchatlog, text/xchatscrollback,
+                             text/zsh_extended_history, trendmicro_url,
+                             trendmicro_vd, unified_logging, usnjrnl, utmp,
+                             utmpx, wincc_sys, windefender_history, winevt,
+                             winevtx, winjob, winpca_db0, winpca_dic, winreg,
+                             winreg/amcache, winreg/appcompatcache,
+                             winreg/bagmru, winreg/bam, winreg/ccleaner,
+                             winreg/diagnosed_applications,
+                             winreg/explorer_mountpoints2,
+                             winreg/explorer_programscache,
+                             winreg/microsoft_office_mru,
+                             winreg/microsoft_outlook_mru,
+                             winreg/motherboard_info,
+                             winreg/mrulist_shell_item_list,
+                             winreg/mrulist_string,
+                             winreg/mrulistex_shell_item_list,
+                             winreg/mrulistex_string,
+                             winreg/mrulistex_string_and_shell_item,
+                             winreg/mrulistex_string_and_shell_item_list,
+                             winreg/msie_zone, winreg/mstsc_rdp,
+                             winreg/mstsc_rdp_mru, winreg/network_drives,
+                             winreg/networks, winreg/userassist,
+                             winreg/windows_boot_execute,
+                             winreg/windows_boot_verify, winreg/windows_run,
+                             winreg/windows_sam_users, winreg/windows_services,
+                             winreg/windows_shutdown,
+                             winreg/windows_task_cache,
+                             winreg/windows_timezone,
+                             winreg/windows_typed_urls,
+                             winreg/windows_usb_devices,
+                             winreg/windows_usbstor_devices,
+                             winreg/windows_version, winreg/winlogon,
+                             winreg/winrar_mru, winreg/winreg_default
+        Preferred encoding : UTF-8
+       Preferred time zone : UTC
+                Debug mode : False
+          Artifact filters : N/A
+               Filter file : N/A
+--------------------------------------------------------------------------------
+
+************************* Events generated per parser **************************
+Parser (plugin) name : Number of events
+--------------------------------------------------------------------------------
+            filestat : 3
+               Total : 3
+--------------------------------------------------------------------------------
+
+No events labels stored.
+
+No warnings stored.
+
+No analysis reports stored.
+
