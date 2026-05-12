@@ -53,7 +53,7 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
         'mood_change_time': None,
         'offset': 1,
         'profile_change_time': '2013-07-30T21:22:08+00:00',
-        'username': 'Gen Beringer'}
+        'username': 'Gen Beringer <None>'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 15)
     self.CheckEventData(event_data, expected_event_values)
