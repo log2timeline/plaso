@@ -76,6 +76,14 @@ plaso.parsers.plist\_plugins.ios\_mobilebackup module
    :show-inheritance:
    :undoc-members:
 
+plaso.parsers.plist\_plugins.ios\_siminfo module
+------------------------------------------------
+
+.. automodule:: plaso.parsers.plist_plugins.ios_siminfo
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 plaso.parsers.plist\_plugins.ios\_wifi\_known\_networks module
 --------------------------------------------------------------
 

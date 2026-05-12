@@ -64,8 +64,8 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
         'history_visits.title, history_visits.http_non_get, '
         'history_visits.redirect_source '
         'FROM history_items, history_visits '
-        'WHERE history_items.id = history_visits.history_item '
-        'ORDER BY history_visits.visit_time'), 'ParsePageVisitRow')]
+        'WHERE history_items.id = history_visits.history_item'),
+       '_ParsePageVisitRow')]
 
   SCHEMAS = [{
       'history_client_versions': (
@@ -122,7 +122,7 @@ class SafariHistoryPluginSqlite(interface.SQLitePlugin):
 
     return dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
 
-  def ParsePageVisitRow(self, parser_mediator, query, row, **unused_kwargs):
+  def _ParsePageVisitRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a visited row.
 
     Args:

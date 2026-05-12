@@ -74,8 +74,7 @@ class FilesByGooglePlugin(interface.SQLitePlugin):
        'files_master_table.mime_type, files_master_table.media_type,'
        'files_master_table.uri,files_master_table.is_hidden,'
        'files_master_table.title, files_master_table.parent_folder_name '
-       'FROM files_master_table ORDER BY file_date_modified_ms'),
-      'ParseFilesByGoogleRow')]
+       'FROM files_master_table'), '_ParseFilesByGoogleRow')]
 
   SCHEMAS = [{
       'android_metadata':(
@@ -182,7 +181,7 @@ class FilesByGooglePlugin(interface.SQLitePlugin):
 
     return dfdatetime_posix_time.PosixTimeInMilliseconds(timestamp=timestamp)
 
-  def ParseFilesByGoogleRow(
+  def _ParseFilesByGoogleRow(
       self, parser_mediator, query, row, **unused_kwargs):
     """Parses an files by google entry row.
 

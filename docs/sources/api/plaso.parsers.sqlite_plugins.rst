@@ -12,6 +12,14 @@ plaso.parsers.sqlite\_plugins.android\_airtag module
    :show-inheritance:
    :undoc-members:
 
+plaso.parsers.sqlite\_plugins.android\_app\_launch module
+---------------------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.android_app_launch
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 plaso.parsers.sqlite\_plugins.android\_app\_usage module
 --------------------------------------------------------
 

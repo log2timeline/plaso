@@ -115,6 +115,7 @@ apple_id | Parser for Apple account information plist files.
 ios_carplay | Parser for Apple iOS Car Play application plist files.
 ios_identityservices | Parser for Idstatuscache plist files.
 ios_mobile_backup | Parser for Apple iOS Mobile Backup plist files.
+ios_siminfo | Parser for iOS SIM Info plist files.
 ios_wifi_known_networks | Parser for Apple iOS WiFi Known Networks plist files.
 ipod_device | Parser for iPod, iPad and iPhone plist files.
 launchd_plist | Parser for Launchd plist files.
@@ -138,6 +139,7 @@ time_machine | Parser for MacOS TimeMachine plist files.
 Name | Description
 --- | ---
 android_airtag | Parser for AirGuard AirTag Tracker on SQLite database files.
+android_app_launch | Parser for Android application launch SQLite database (SimpleStorage) files.
 android_app_usage | Parser for Android application usage SQLite database (app_usage) files.
 android_calls | Parser for Android call history SQLite database (contacts2.db) files.
 android_communication_information | Parser for Android communication information SQLite database files.
@@ -199,10 +201,13 @@ Name | Description
 android_logcat | Parser for Android logcat files.
 apache_access | Parser for Apache access log (access.log) files.
 apt_history | Parser for Advanced Packaging Tool (APT) History log files.
+atlassian_bitbucket | Parser for Atlassian Bitbucket log files.
 atlassian_confluence | Parser for Atlassian Confluence log files.
 atlassian_jira | Parser for Atlassian Jira log files.
 aws_elb_access | Parser for AWS ELB Access log files.
 bash_history | Parser for Bash history files.
+bitbucket_access | Parser for Atlassian Bitbucket access log (atlassian-bitbucket-access.log) files.
+bitbucket_audit | Parser for Atlassian Bitbucket audit log (atlassian-bitbucket-audit.log) files.
 confluence_access | Parser for Confluence access log (access.log) files.
 cri_log | Parser for Container Runtime Interface log files.
 dpkg | Parser for Debian package manager log (dpkg.log) files.
@@ -249,6 +254,7 @@ appcompatcache | Parser for Application Compatibility Cache Registry data.
 bagmru | Parser for BagMRU (or ShellBags) Registry data.
 bam | Parser for Background Activity Moderator (BAM) Registry data.
 ccleaner | Parser for CCleaner Registry data.
+diagnosed_applications | Parser for Diagnosed Applications Registry data.
 explorer_mountpoints2 | Parser for Windows Explorer mount points Registry data.
 explorer_programscache | Parser for Windows Explorer Programs Cache Registry data.
 microsoft_office_mru | Parser for Microsoft Office MRU Registry data.

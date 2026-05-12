@@ -52,7 +52,7 @@ class MacOSLSQuarantinePlugin(interface.SQLitePlugin):
   QUERIES = [
       (('SELECT LSQuarantineTimeStamp AS Time, LSQuarantineAgentName AS Agent, '
         'LSQuarantineOriginURLString AS URL, LSQuarantineDataURLString AS Data '
-        'FROM LSQuarantineEvent ORDER BY Time'), 'ParseLSQuarantineRow')]
+        'FROM LSQuarantineEvent'), '_ParseLSQuarantineRow')]
 
   SCHEMAS = [{
       'LSQuarantineEvent': (
@@ -82,7 +82,7 @@ class MacOSLSQuarantinePlugin(interface.SQLitePlugin):
 
     return dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
 
-  def ParseLSQuarantineRow(
+  def _ParseLSQuarantineRow(
       self, parser_mediator, query, row, **unused_kwargs):
     """Parses a launch services quarantine event row.
 

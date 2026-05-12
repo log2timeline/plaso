@@ -61,8 +61,7 @@ class MacOSApplicationUsagePlugin(interface.SQLitePlugin):
 
   QUERIES = [(
       ('SELECT last_time, event, bundle_id, app_version, app_path, '
-       'number_times FROM application_usage ORDER BY last_time'),
-      'ParseApplicationUsageRow')]
+       'number_times FROM application_usage'), '_ParseApplicationUsageRow')]
 
   SCHEMAS = [{
       'application_usage': (
@@ -88,7 +87,7 @@ class MacOSApplicationUsagePlugin(interface.SQLitePlugin):
 
     return dfdatetime_posix_time.PosixTime(timestamp=timestamp)
 
-  def ParseApplicationUsageRow(
+  def _ParseApplicationUsageRow(
       self, parser_mediator, query, row, **unused_kwargs):
     """Parses an application usage row.
 
