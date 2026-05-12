@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Tests for the iOS Notes database plugin."""
 
 import unittest
@@ -18,7 +19,7 @@ class IOSNotesTest(test_lib.SQLitePluginTestCase):
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
-    self.assertEqual(number_of_event_data, 28)
+    self.assertEqual(number_of_event_data, 9)
 
     number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning')
@@ -29,14 +30,14 @@ class IOSNotesTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(number_of_warnings, 0)
 
     expected_event_values = {
-        'creation_time': '2023-05-10T00:56:26.719389',
-        'modification_time': '2023-05-10T00:57:01.178374',
-        'title': 'iOS 15 Note',
-        'snippet': 'Here is the test iOS 15 note.'}
+        'creation_time': '2020-03-28T00:42:31.589267+00:00',
+        'modification_time': '2020-03-28T00:42:56.774423+00:00',
+        'snippet': None,
+        'title': 'My Secret Note'}
 
-    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 25)
+    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 1)
     self.CheckEventData(event_data, expected_event_values)
 
 
-  if __name__ == '__main__':
-    unittest.main()
+if __name__ == '__main__':
+  unittest.main()
