@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """SQLite parser plugin for iOS Health Source Devices iOS 15 data."""
 
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
@@ -28,7 +27,7 @@ class IOSHealthSourceDevicesEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(IOSHealthSourceDevicesEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.creation_date_str = None
     self.date_time = None

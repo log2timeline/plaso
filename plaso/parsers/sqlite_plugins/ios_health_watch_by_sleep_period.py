@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """SQLite parser plugin for iOS Health - Watch By Sleep Period Data."""
 
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
@@ -27,7 +26,7 @@ class IOSHealthWatchBySleepPeriodEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(IOSHealthWatchBySleepPeriodEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.asleep_percent = None
     self.data_type_id = None

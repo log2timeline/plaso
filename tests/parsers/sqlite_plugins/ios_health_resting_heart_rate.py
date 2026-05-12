@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Tests for iOS Health Resting Heart Rate SQLite database plugin (golden)."""
 
 import unittest

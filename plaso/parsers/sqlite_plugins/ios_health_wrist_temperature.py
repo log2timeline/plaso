@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """SQLite parser plugin for iOS Health Wrist Temperature database."""
 
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
@@ -36,7 +35,7 @@ class IOSHealthWristTemperatureEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(IOSHealthWristTemperatureEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.algorithm_version = None
     self.date_added = None

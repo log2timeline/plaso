@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Tests for iOS Health - All Watch Sleep (iOS 13-16) SQLite plugin."""
 
 import unittest
