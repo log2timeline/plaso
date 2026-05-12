@@ -236,14 +236,6 @@ plaso.cli.helpers.vfs\_backend module
    :show-inheritance:
    :undoc-members:
 
-plaso.cli.helpers.viper\_analysis module
-----------------------------------------
-
-.. automodule:: plaso.cli.helpers.viper_analysis
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
 plaso.cli.helpers.virustotal\_analysis module
 ---------------------------------------------
 
