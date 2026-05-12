@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*
 """Tests for the JSON-L parser plugin for AWS CloudTrail log files."""
 
 import unittest

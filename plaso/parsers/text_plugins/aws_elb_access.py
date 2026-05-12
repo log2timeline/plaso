@@ -218,13 +218,13 @@ class AWSELBTextPlugin(interface.TextPlugin):
       r'([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2})')
 
   _REQUEST = pyparsing.quotedString.set_results_name(
-      'request').set_parse_action(pyparsing.removeQuotes)
+      'request').set_parse_action(pyparsing.remove_quotes)
 
   _USER_AGENT = pyparsing.quotedString.set_results_name(
-      'user_agent').set_parse_action(pyparsing.removeQuotes)
+      'user_agent').set_parse_action(pyparsing.remove_quotes)
 
   _ALPN_CLIENT_PREFERENCE_LIST = pyparsing.quotedString.set_results_name(
-      'alpn_client_preference_list').set_parse_action(pyparsing.removeQuotes)
+      'alpn_client_preference_list').set_parse_action(pyparsing.remove_quotes)
 
   _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
@@ -248,28 +248,28 @@ class AWSELBTextPlugin(interface.TextPlugin):
       _WORD.set_results_name('ssl_protocol') +
       _WORD.set_results_name('destination_group_arn') +
       pyparsing.quotedString.set_results_name(
-          'trace_identifier').set_parse_action(pyparsing.removeQuotes) +
+          'trace_identifier').set_parse_action(pyparsing.remove_quotes) +
       pyparsing.quotedString.set_results_name(
-          'domain_name').set_parse_action(pyparsing.removeQuotes) +
+          'domain_name').set_parse_action(pyparsing.remove_quotes) +
       pyparsing.quotedString.set_results_name(
-          'chosen_cert_arn').set_parse_action(pyparsing.removeQuotes) +
+          'chosen_cert_arn').set_parse_action(pyparsing.remove_quotes) +
       _SIGNED_INTEGER.set_results_name('matched_rule_priority') +
       _DATE_TIME_ISOFORMAT_STRING.set_results_name('request_time') +
       pyparsing.quotedString.set_results_name(
-          'actions_executed').set_parse_action(pyparsing.removeQuotes) +
+          'actions_executed').set_parse_action(pyparsing.remove_quotes) +
       pyparsing.quotedString.set_results_name(
-          'redirect_url').set_parse_action(pyparsing.removeQuotes) +
+          'redirect_url').set_parse_action(pyparsing.remove_quotes) +
       pyparsing.quotedString.set_results_name(
-          'error_reason').set_parse_action(pyparsing.removeQuotes) +
+          'error_reason').set_parse_action(pyparsing.remove_quotes) +
       pyparsing.quotedString.set_results_name(
-          'destination_list').set_parse_action(pyparsing.removeQuotes) +
+          'destination_list').set_parse_action(pyparsing.remove_quotes) +
       pyparsing.quotedString.set_results_name(
           'destination_status_code_list').set_parse_action(
-              pyparsing.removeQuotes) +
+              pyparsing.remove_quotes) +
       pyparsing.quotedString.set_results_name(
-          'classification').set_parse_action(pyparsing.removeQuotes) +
+          'classification').set_parse_action(pyparsing.remove_quotes) +
       pyparsing.quotedString.set_results_name(
-          'classification_reason').set_parse_action(pyparsing.removeQuotes) +
+          'classification_reason').set_parse_action(pyparsing.remove_quotes) +
       _END_OF_LINE)
 
   _NETWORK_LOG_LINE = (
@@ -513,7 +513,7 @@ class AWSELBTextPlugin(interface.TextPlugin):
 
       return date_time
 
-    except (TypeError, ValueError) as exception:
+    except (IndexError, TypeError, ValueError) as exception:
       raise errors.ParseError(
           f'Unable to parse time elements with error: {exception!s}')
 

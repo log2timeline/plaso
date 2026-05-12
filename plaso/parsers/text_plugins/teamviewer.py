@@ -218,7 +218,7 @@ class TeamViewerApplicationLogTextPlugin(
           time_elements_tuple=time_elements_tuple)
       return date_time
 
-    except (TypeError, ValueError) as exception:
+    except (IndexError, TypeError, ValueError) as exception:
       raise errors.ParseError(
           f'Unable to parse time elements with error: {exception!s}')
 
@@ -356,7 +356,7 @@ class TeamViewerConnectionsOutgoingLogTextPlugin(interface.TextPlugin):
           time_elements_tuple=time_elements_tuple, time_zone_offset=0)
       return date_time
 
-    except (TypeError, ValueError) as exception:
+    except (IndexError, TypeError, ValueError) as exception:
       raise errors.ParseError(
           f'Unable to parse time elements with error: {exception!s}')
 
@@ -493,7 +493,7 @@ class TeamViewerConnectionsIncomingLogTextPlugin(interface.TextPlugin):
           time_elements_tuple=time_elements_tuple, time_zone_offset=0)
       return date_time
 
-    except (TypeError, ValueError) as exception:
+    except (IndexError, TypeError, ValueError) as exception:
       raise errors.ParseError(
           f'Unable to parse time elements with error: {exception!s}')
 

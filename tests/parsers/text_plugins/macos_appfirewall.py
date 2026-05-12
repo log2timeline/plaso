@@ -3,6 +3,9 @@
 
 import unittest
 
+from dfvfs.helpers import fake_file_system_builder
+
+from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import macos_appfirewall
 
 from tests.parsers.text_plugins import test_lib
@@ -10,6 +13,41 @@ from tests.parsers.text_plugins import test_lib
 
 class MacOSAppFirewallTextPluginTest(test_lib.TextPluginTestCase):
   """Tests for the MacOS Application firewall log file text parser plugin."""
+
+  def testCheckRequiredFormat(self):
+    """Tests for the CheckRequiredFormat function."""
+    plugin = macos_appfirewall.MacOSAppFirewallTextPlugin()
+
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+    file_system_builder.AddFile('/file.txt', (
+        b'Nov  2 04:07:35 DarkTemplar-2.local socketfilterfw[112] <Error>: '
+        b'Logging: creating /var/log/appfirewall.log\n'))
+
+    file_entry = file_system_builder.file_system.GetFileEntryByPath('/file.txt')
+
+    parser_mediator = self._CreateParserMediator(None, file_entry=file_entry)
+
+    file_object = file_entry.GetFileObject()
+    text_reader = text_parser.EncodedTextReader(file_object)
+    text_reader.ReadLines()
+
+    self.assertTrue(plugin.CheckRequiredFormat(parser_mediator, text_reader))
+
+    # Check non-matching format.
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+    file_system_builder.AddFile('/file.txt', (
+        b'Jan 22 07:52:33 myhostname.myhost.com client[30840]: INFO No new '
+        b'content in image.dd.\n'))
+
+    file_entry = file_system_builder.file_system.GetFileEntryByPath('/file.txt')
+
+    parser_mediator = self._CreateParserMediator(None, file_entry=file_entry)
+
+    file_object = file_entry.GetFileObject()
+    text_reader = text_parser.EncodedTextReader(file_object)
+    text_reader.ReadLines()
+
+    self.assertFalse(plugin.CheckRequiredFormat(parser_mediator, text_reader))
 
   def testProcess(self):
     """Tests the Process function."""

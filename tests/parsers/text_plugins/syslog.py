@@ -15,7 +15,7 @@ class SyslogTextPluginTest(test_lib.TextPluginTestCase):
   """Tests for the syslog text parser plugin."""
 
   def testCheckRequiredFormat(self):
-    """Tests for the CheckRequiredFormat method."""
+    """Tests for the CheckRequiredFormat function."""
     plugin = syslog.SyslogTextPlugin()
 
     # Check ChromeOS syslog format.
@@ -229,7 +229,7 @@ class TraditionalSyslogTextPluginTest(test_lib.TextPluginTestCase):
   """Tests for the traditional syslog text parser plugin."""
 
   def testCheckRequiredFormat(self):
-    """Tests for the CheckRequiredFormat method."""
+    """Tests for the CheckRequiredFormat function."""
     plugin = syslog.TraditionalSyslogTextPlugin()
 
     # Check traditional syslog format.

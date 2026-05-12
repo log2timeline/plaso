@@ -65,7 +65,7 @@ class SkyDriveLog1TextPlugin(interface.TextPlugin):
       _TWO_DIGITS + pyparsing.Suppress(':') +
       _TWO_DIGITS + pyparsing.Suppress(':') + _TWO_DIGITS +
       pyparsing.Word('.,', exact=1).suppress() +
-                     _THREE_DIGITS).set_results_name('date_time')
+      _THREE_DIGITS).set_results_name('date_time')
 
   _SOURCE_CODE = pyparsing.Combine(
       pyparsing.CharsNotIn(':') + pyparsing.Literal(':') + _INTEGER +
@@ -197,7 +197,7 @@ class SkyDriveLog1TextPlugin(interface.TextPlugin):
       return dfdatetime_time_elements.TimeElementsInMilliseconds(
           time_elements_tuple=time_elements_tuple)
 
-    except (TypeError, ValueError) as exception:
+    except (IndexError, TypeError, ValueError) as exception:
       raise errors.ParseError(
           f'Unable to parse time elements with error: {exception!s}')
 
@@ -482,7 +482,7 @@ class SkyDriveLog2TextPlugin(interface.TextPluginWithLineContinuation):
       return dfdatetime_time_elements.TimeElementsInMilliseconds(
           time_elements_tuple=time_elements_tuple)
 
-    except (TypeError, ValueError) as exception:
+    except (IndexError, TypeError, ValueError) as exception:
       raise errors.ParseError(
           f'Unable to parse time elements with error: {exception!s}')
 
@@ -513,7 +513,7 @@ class SkyDriveLog2TextPlugin(interface.TextPluginWithLineContinuation):
     try:
       dfdatetime_time_elements.TimeElementsInMilliseconds(
           time_elements_tuple=time_elements_tuple)
-    except ValueError:
+    except (IndexError, TypeError, ValueError):
       return False
 
     self._ResetState()

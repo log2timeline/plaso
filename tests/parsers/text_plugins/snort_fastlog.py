@@ -3,6 +3,9 @@
 
 import unittest
 
+from dfvfs.helpers import fake_file_system_builder
+
+from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import snort_fastlog
 
 from tests.parsers.text_plugins import test_lib
@@ -10,6 +13,42 @@ from tests.parsers.text_plugins import test_lib
 
 class SnortFastLogTextPluginTest(test_lib.TextPluginTestCase):
   """Tests for Snort3/Suricata fast-log alert log text parser plugin."""
+
+  def testCheckRequiredFormat(self):
+    """Tests for the CheckRequiredFormat function."""
+    plugin = snort_fastlog.SnortFastLogTextPlugin()
+
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+    file_system_builder.AddFile('/file.txt', (
+        b'12/28-12:55:38.765402 [**] [1:366:11] "PROTOCOL-ICMP PING '
+        b'Unix" [**] [Priority: 3] {ICMP} 2001:df1:c200:c:0:0:0:35 -> '
+        b'2001:4860:4860:0:0:0:0:8888\n'))
+
+    file_entry = file_system_builder.file_system.GetFileEntryByPath('/file.txt')
+
+    parser_mediator = self._CreateParserMediator(None, file_entry=file_entry)
+
+    file_object = file_entry.GetFileObject()
+    text_reader = text_parser.EncodedTextReader(file_object)
+    text_reader.ReadLines()
+
+    self.assertTrue(plugin.CheckRequiredFormat(parser_mediator, text_reader))
+
+    # Check non-matching format.
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+    file_system_builder.AddFile('/file.txt', (
+        b'Jan 22 07:52:33 myhostname.myhost.com client[30840]: INFO No new '
+        b'content in image.dd.\n'))
+
+    file_entry = file_system_builder.file_system.GetFileEntryByPath('/file.txt')
+
+    parser_mediator = self._CreateParserMediator(None, file_entry=file_entry)
+
+    file_object = file_entry.GetFileObject()
+    text_reader = text_parser.EncodedTextReader(file_object)
+    text_reader.ReadLines()
+
+    self.assertFalse(plugin.CheckRequiredFormat(parser_mediator, text_reader))
 
   def testProcessWithSnort3Log(self):
     """Tests the Process function with a Snort fast-log alert log file."""

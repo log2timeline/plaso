@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Tests for the Google Drive Sync log log text parser plugin."""
 
+import io
 import unittest
 
-from dfvfs.helpers import fake_file_system_builder
-
+from plaso.parsers import mediator as parsers_mediator
 from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import gdrive_synclog
 
@@ -15,24 +15,26 @@ class GoogleDriveSyncLogTextPluginTest(test_lib.TextPluginTestCase):
   """Tests for the Google Drive Sync log text parser plugin."""
 
   def testCheckRequiredFormat(self):
-    """Tests for the CheckRequiredFormat method."""
+    """Tests for the CheckRequiredFormat function."""
     plugin = gdrive_synclog.GoogleDriveSyncLogTextPlugin()
+    parser_mediator = parsers_mediator.ParserMediator()
 
-    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
-    file_system_builder.AddFile('/file.txt', (
+    file_object = io.BytesIO(
         b'2018-01-24 18:25:08,454 -0800 INFO pid=2376 7780:MainThread      '
-        b'logging_config.py:295 OS: Windows/6.1-SP1\n'))
-
-    file_entry = file_system_builder.file_system.GetFileEntryByPath('/file.txt')
-
-    parser_mediator = self._CreateParserMediator(None, file_entry=file_entry)
-
-    file_object = file_entry.GetFileObject()
+        b'logging_config.py:295 OS: Windows/6.1-SP1\n')
     text_reader = text_parser.EncodedTextReader(file_object)
     text_reader.ReadLines()
 
-    result = plugin.CheckRequiredFormat(parser_mediator, text_reader)
-    self.assertTrue(result)
+    self.assertTrue(plugin.CheckRequiredFormat(parser_mediator, text_reader))
+
+    # Check non-matching format.
+    file_object = io.BytesIO(
+        b'Jan 22 07:52:33 myhostname.myhost.com client[30840]: INFO No new '
+        b'content in image.dd.\n')
+    text_reader = text_parser.EncodedTextReader(file_object)
+    text_reader.ReadLines()
+
+    self.assertFalse(plugin.CheckRequiredFormat(parser_mediator, text_reader))
 
   def testProcess(self):
     """Tests the Process function."""

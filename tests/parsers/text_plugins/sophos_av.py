@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """Tests for the Sophos Anti-Virus log (SAV.txt) text parser plugin."""
 
+import io
 import unittest
 
+from plaso.parsers import mediator as parsers_mediator
+from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import sophos_av
 
 from tests.parsers.text_plugins import test_lib
@@ -10,6 +13,29 @@ from tests.parsers.text_plugins import test_lib
 
 class SophosAVLogTextPluginTest(test_lib.TextPluginTestCase):
   """Tests for the Sophos Anti-Virus log (SAV.txt) text parser plugin."""
+
+  def testCheckRequiredFormat(self):
+    """Tests for the CheckRequiredFormat function."""
+    plugin = sophos_av.SophosAVLogTextPlugin()
+    parser_mediator = parsers_mediator.ParserMediator()
+
+    file_object = io.BytesIO(
+        b'20100720 183814 File "C:\\Documents and '
+        b'Settings\\Administrator\\Desktop\\sxl_test_50.com" belongs to '
+        b'virus/spyware \'LiveProtectTest\'.\n')
+    text_reader = text_parser.EncodedTextReader(file_object)
+    text_reader.ReadLines()
+
+    self.assertTrue(plugin.CheckRequiredFormat(parser_mediator, text_reader))
+
+    # Check non-matching format.
+    file_object = io.BytesIO(
+        b'Jan 22 07:52:33 myhostname.myhost.com client[30840]: INFO No new '
+        b'content in image.dd.\n')
+    text_reader = text_parser.EncodedTextReader(file_object)
+    text_reader.ReadLines()
+
+    self.assertFalse(plugin.CheckRequiredFormat(parser_mediator, text_reader))
 
   def testProcess(self):
     """Tests the Process function."""

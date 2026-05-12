@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """Tests for the iOS lockdown daemon log files text parser plugin."""
 
+import io
 import unittest
 
+from plaso.parsers import mediator as parsers_mediator
+from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import ios_lockdownd
 
 from tests.parsers.text_plugins import test_lib
@@ -10,6 +13,29 @@ from tests.parsers.text_plugins import test_lib
 
 class IOSLockdowndLogTextPluginTest(test_lib.TextPluginTestCase):
   """Tests for the iOS lockdown daemon log files text parser plugin."""
+
+  def testCheckRequiredFormat(self):
+    """Tests for the CheckRequiredFormat function."""
+    plugin = ios_lockdownd.IOSLockdowndLogTextPlugin()
+    parser_mediator = parsers_mediator.ParserMediator()
+
+    file_object = io.BytesIO(
+        b'10/13/21 07:57:42.865446 pid=69 mglog: libMobileGestalt '
+        b'MGBasebandSupport.c:183: No IMEI in CT mobile equipment info '
+        b'dictionary\n')
+    text_reader = text_parser.EncodedTextReader(file_object)
+    text_reader.ReadLines()
+
+    self.assertTrue(plugin.CheckRequiredFormat(parser_mediator, text_reader))
+
+    # Check non-matching format.
+    file_object = io.BytesIO(
+        b'Jan 22 07:52:33 myhostname.myhost.com client[30840]: INFO No new '
+        b'content in image.dd.\n')
+    text_reader = text_parser.EncodedTextReader(file_object)
+    text_reader.ReadLines()
+
+    self.assertFalse(plugin.CheckRequiredFormat(parser_mediator, text_reader))
 
   def testProcess(self):
     """Tests the Process function."""

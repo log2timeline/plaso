@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Tests for the bash history text parser plugin."""
 
+import io
 import unittest
 
-from dfvfs.helpers import fake_file_system_builder
-
+from plaso.parsers import mediator as parsers_mediator
 from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import bash_history
 
@@ -15,43 +15,37 @@ class BashHistoryTextPluginTest(test_lib.TextPluginTestCase):
   """Testd for the bash history text parser plugin."""
 
   def testCheckRequiredFormat(self):
-    """Tests for the CheckRequiredFormat method."""
+    """Tests for the CheckRequiredFormat function."""
     plugin = bash_history.BashHistoryTextPlugin()
+    parser_mediator = parsers_mediator.ParserMediator()
 
-    # Check a bash history file.
-    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
-    file_system_builder.AddFile('/file.txt', (
+    # Check a synchronized bash history file.
+    file_object = io.BytesIO(
         b'#1380630977\n'
-        b'/usr/lib/plaso\n'))
-
-    file_entry = file_system_builder.file_system.GetFileEntryByPath('/file.txt')
-
-    parser_mediator = self._CreateParserMediator(None, file_entry=file_entry)
-
-    file_object = file_entry.GetFileObject()
+        b'/usr/lib/plaso\n')
     text_reader = text_parser.EncodedTextReader(file_object)
     text_reader.ReadLines()
 
-    result = plugin.CheckRequiredFormat(parser_mediator, text_reader)
-    self.assertTrue(result)
+    self.assertTrue(plugin.CheckRequiredFormat(parser_mediator, text_reader))
 
     # Check a desynchronized bash history file.
-    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
-    file_system_builder.AddFile('/file.txt', (
+    file_object = io.BytesIO(
         b'/sbin/reboot\n'
         b'#1380630977\n'
-        b'/usr/lib/plaso\n'))
-
-    file_entry = file_system_builder.file_system.GetFileEntryByPath('/file.txt')
-
-    parser_mediator = self._CreateParserMediator(None, file_entry=file_entry)
-
-    file_object = file_entry.GetFileObject()
+        b'/usr/lib/plaso\n')
     text_reader = text_parser.EncodedTextReader(file_object)
     text_reader.ReadLines()
 
-    result = plugin.CheckRequiredFormat(parser_mediator, text_reader)
-    self.assertTrue(result)
+    self.assertTrue(plugin.CheckRequiredFormat(parser_mediator, text_reader))
+
+    # Check non-matching format.
+    file_object = io.BytesIO(
+        b'Jan 22 07:52:33 myhostname.myhost.com client[30840]: INFO No new '
+        b'content in image.dd.\n')
+    text_reader = text_parser.EncodedTextReader(file_object)
+    text_reader.ReadLines()
+
+    self.assertFalse(plugin.CheckRequiredFormat(parser_mediator, text_reader))
 
   def testProcess(self):
     """Tests the Process function."""

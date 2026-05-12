@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """Tests for the SkyDrive version 1 and 2 log files text parser plugins."""
 
+import io
 import unittest
 
+from plaso.parsers import mediator as parsers_mediator
+from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import skydrivelog
 
 from tests.parsers.text_plugins import test_lib
@@ -10,6 +13,28 @@ from tests.parsers.text_plugins import test_lib
 
 class SkyDriveLog1TextPluginTest(test_lib.TextPluginTestCase):
   """Tests for the SkyDrive version 1 log files text parser plugin."""
+
+  def testCheckRequiredFormat(self):
+    """Tests for the CheckRequiredFormat function."""
+    plugin = skydrivelog.SkyDriveLog1TextPlugin()
+    parser_mediator = parsers_mediator.ParserMediator()
+
+    file_object = io.BytesIO(
+        b'08-01-2013 21:22:28.999 global.cpp:626!logVersionInfo '
+        b'(DETAIL): 17.0.2011.0627 (Ship)\n')
+    text_reader = text_parser.EncodedTextReader(file_object)
+    text_reader.ReadLines()
+
+    self.assertTrue(plugin.CheckRequiredFormat(parser_mediator, text_reader))
+
+    # Check non-matching format.
+    file_object = io.BytesIO(
+        b'Jan 22 07:52:33 myhostname.myhost.com client[30840]: INFO No new '
+        b'content in image.dd.\n')
+    text_reader = text_parser.EncodedTextReader(file_object)
+    text_reader.ReadLines()
+
+    self.assertFalse(plugin.CheckRequiredFormat(parser_mediator, text_reader))
 
   def testProcess(self):
     """Tests the Process function."""
@@ -42,6 +67,30 @@ class SkyDriveLog1TextPluginTest(test_lib.TextPluginTestCase):
 
 class SkyDriveLog2TextPluginTest(test_lib.TextPluginTestCase):
   """Tests for the SkyDrive version 2 log files text parser plugin."""
+
+  def testCheckRequiredFormat(self):
+    """Tests for the CheckRequiredFormat function."""
+    plugin = skydrivelog.SkyDriveLog2TextPlugin()
+    parser_mediator = parsers_mediator.ParserMediator()
+
+    file_object = io.BytesIO(
+        b'######Logging started. Version=17.0.2011.0627 '
+        b'StartSystemTime:2013-08-12-011008.835 '
+        b'StartLocalTime:2013-08-11-211008.835 PID=0x14b0 TID=0x1348 '
+        b'ContinuedFrom=\n')
+    text_reader = text_parser.EncodedTextReader(file_object)
+    text_reader.ReadLines()
+
+    self.assertTrue(plugin.CheckRequiredFormat(parser_mediator, text_reader))
+
+    # Check non-matching format.
+    file_object = io.BytesIO(
+        b'Jan 22 07:52:33 myhostname.myhost.com client[30840]: INFO No new '
+        b'content in image.dd.\n')
+    text_reader = text_parser.EncodedTextReader(file_object)
+    text_reader.ReadLines()
+
+    self.assertFalse(plugin.CheckRequiredFormat(parser_mediator, text_reader))
 
   def testProcess(self):
     """Tests the Process function."""

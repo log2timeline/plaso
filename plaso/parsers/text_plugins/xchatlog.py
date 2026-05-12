@@ -68,7 +68,8 @@ class XChatLogEventData(events.EventData):
     added_time (dfdatetime.DateTimeValues): date and time the log entry
         was added.
     nickname (str): nickname.
-    text (str): text sent by nickname or other text (server, messages, etc.).
+    text (str): text sent by nickname or other text, such as 'server' or
+        'messages'.
   """
 
   DATA_TYPE = 'xchat:log:line'
@@ -288,7 +289,7 @@ class XChatLogTextPlugin(
 
       return date_time
 
-    except (TypeError, ValueError) as exception:
+    except (IndexError, TypeError, ValueError) as exception:
       raise errors.ParseError(
           f'Unable to parse time elements with error: {exception!s}')
 

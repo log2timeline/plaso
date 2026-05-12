@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """Tests for the selinux log file text parser plugin."""
 
+import io
 import unittest
 
+from plaso.parsers import mediator as parsers_mediator
+from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import selinux
 
 from tests.parsers.text_plugins import test_lib
@@ -10,6 +13,28 @@ from tests.parsers.text_plugins import test_lib
 
 class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
   """Tests for the selinux log file text parser plugin."""
+
+  def testCheckRequiredFormat(self):
+    """Tests for the CheckRequiredFormat function."""
+    plugin = selinux.SELinuxTextPlugin()
+    parser_mediator = parsers_mediator.ParserMediator()
+
+    file_object = io.BytesIO(
+        b'type=LOGIN msg=audit(1337845201.174:94983): pid=25443 uid=0 '
+        b'old auid=4294967295 new auid=0 old ses=4294967295 new ses=1165\n')
+    text_reader = text_parser.EncodedTextReader(file_object)
+    text_reader.ReadLines()
+
+    self.assertTrue(plugin.CheckRequiredFormat(parser_mediator, text_reader))
+
+    # Check non-matching format.
+    file_object = io.BytesIO(
+        b'Jan 22 07:52:33 myhostname.myhost.com client[30840]: INFO No new '
+        b'content in image.dd.\n')
+    text_reader = text_parser.EncodedTextReader(file_object)
+    text_reader.ReadLines()
+
+    self.assertFalse(plugin.CheckRequiredFormat(parser_mediator, text_reader))
 
   def testProcess(self):
     """Tests the Process function."""
