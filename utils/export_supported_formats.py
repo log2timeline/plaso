@@ -271,7 +271,7 @@ def Main():
   """The main program function.
 
   Returns:
-    bool: True if successful or False if not.
+    int: exit code that is provided to sys.exit().
   """
   argument_parser = argparse.ArgumentParser(description=(
       'Extract data format information from Plaso.'))
@@ -287,16 +287,13 @@ def Main():
   data_format_descriptors = extractor.GetDataFormatInformation()
   if not data_format_descriptors:
     print('Unable to determine data format information')
-    return False
+    return 1
 
   output_text = extractor.FormatDataFormats(data_format_descriptors)
   print(output_text)
 
-  return True
+  return 0
 
 
 if __name__ == '__main__':
-  if not Main():
-    sys.exit(1)
-  else:
-    sys.exit(0)
+  sys.exit(Main())
