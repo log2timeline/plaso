@@ -9,16 +9,16 @@ import glob
 import os
 import sys
 
-import numpy
+import numpy  # pylint: disable=import-error
 
-from matplotlib import pyplot
+from matplotlib import pyplot  # pylint: disable=import-error
 
 
 def Main():
   """The main program function.
 
   Returns:
-    bool: True if successful or False if not.
+    int: exit code that is provided to sys.exit().
   """
   argument_parser = argparse.ArgumentParser(description=(
       'Plots storage IO timing from profiling data.'))
@@ -41,7 +41,7 @@ def Main():
 
   if not os.path.isdir(options.profile_path):
     print(f'No such directory: {options.profile_path:s}')
-    return False
+    return 1
 
   processes = []
   if options.process:
@@ -84,11 +84,8 @@ def Main():
   else:
     pyplot.show()
 
-  return True
+  return 0
 
 
 if __name__ == '__main__':
-  if not Main():
-    sys.exit(1)
-  else:
-    sys.exit(0)
+  sys.exit(Main())

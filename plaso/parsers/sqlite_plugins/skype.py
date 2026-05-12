@@ -40,6 +40,7 @@ class SkypeAccountEventData(events.EventData):
     self.authentication_request_time = None
     self.authentication_request_sent_time = None
     self.country = None
+    # TODO: rename to skype_display_name after May 2026 release
     self.display_name = None
     self.email = None
     self.last_online_time = None
@@ -48,6 +49,7 @@ class SkypeAccountEventData(events.EventData):
     self.offset = None
     self.profile_change_time = None
     self.query = None
+    # TODO: remove username after May 2026 release
     self.username = None
 
 
@@ -537,10 +539,6 @@ class SkypePlugin(interface.SQLitePlugin):
     display_name = self._GetRowValue(query_hash, row, 'given_displayname')
     fullname = self._GetRowValue(query_hash, row, 'fullname')
 
-    # TODO: Move this to the formatter, and ensure username is rendered
-    # properly when fullname and/or display_name is None.
-    username = f'{fullname!s} <{display_name!s}>'
-
     event_data = SkypeAccountEventData()
     event_data.authentication_request_time = self._GetDateTimeRowValue(
         query_hash, row, 'authreq_timestamp')
@@ -559,7 +557,7 @@ class SkypePlugin(interface.SQLitePlugin):
     event_data.profile_change_time = self._GetDateTimeRowValue(
         query_hash, row, 'profile_timestamp')
     event_data.query = query
-    event_data.username = username
+    event_data.username = f'{fullname!s} <{display_name!s}>'
 
     parser_mediator.ProduceEventData(event_data)
 

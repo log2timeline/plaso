@@ -182,7 +182,7 @@ class FieldFormattingHelper:
       event_data_stream (EventDataStream): event data stream.
 
     Returns:
-      str: date field.
+      str: display name field.
     """
     display_name = getattr(event_data, 'display_name', None)
     if not display_name:
@@ -209,7 +209,7 @@ class FieldFormattingHelper:
       event_data_stream (EventDataStream): event data stream.
 
     Returns:
-      str: date field.
+      str: filename field.
     """
     filename = getattr(event_data, 'filename', None)
     if not filename:

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Script to extract the event data attribute containers schema."""
+"""Script to check the event data attribute containers schema."""
 
 import argparse
 import importlib
@@ -9,10 +9,16 @@ import pkgutil
 import sys
 
 from plaso.containers import events
+from plaso.output import formatting_helper
 
 
-class EventDataAttributeContainersSchemaExtractor:
-  """Event data attribute containers schema extractor."""
+class EventDataAttributeContainersSchemaValidator:
+  """Event data attribute containers schema validator."""
+
+  _ALLOWED_OVERRIDES = frozenset([
+      # Used in l2tcsv, but is always 2.
+      'version',
+  ])
 
   def _GetClassesFromPackage(self, package, base_class):
     """Retrieves event data attribute containers from a package.
@@ -48,12 +54,13 @@ class EventDataAttributeContainersSchemaExtractor:
 
     return classes
 
-  def FormatSchema(self, attribute_containers):
-    """Formats the event data attribute containers as a schema.
+  def CheckSchema(self, attribute_containers, reserved_names):
+    """Checks the event data attribute containers schema.
 
     Args:
       attribute_containers (list[class]): event data attribute container
           classes.
+      reserved_names (set[str]): reserved field names.
 
     Returns:
       str: event data schema.
@@ -67,11 +74,15 @@ class EventDataAttributeContainersSchemaExtractor:
         logging.warning(f'Unable to inspect data type: {cls.DATA_TYPE:s}')
         continue
 
-      lines.append(f'{event_data.data_type:s}')
+      conflicting_names = []
       for name in sorted(event_data.GetAttributeNames()):
         if name and name[0] != '_':
-          lines.append(f'  {name:s}')
-      lines.append('')
+          if name in reserved_names:
+            conflicting_names.append(name)
+
+      if conflicting_names:
+        names = ', '.join(conflicting_names)
+        lines.append(f'{cls.DATA_TYPE:s} {{ {names:s} }}')
 
     return '\n'.join(lines)
 
@@ -83,6 +94,40 @@ class EventDataAttributeContainersSchemaExtractor:
     """
     return self._GetClassesFromPackage(['plaso'], events.EventData)
 
+  def GetFieldFormattingHelpers(self):
+    """Retrieves field formatting helpers from Plaso.
+
+    Returns:
+      list[class]: field formatting helper classes.
+    """
+    return self._GetClassesFromPackage(
+        ['plaso'], formatting_helper.FieldFormattingHelper)
+
+  def GetReservedNames(self, formatting_helpers):
+    """Determines the reserved field names from the field formatting helpers.
+
+    Args:
+      formatting_helpers (list[class]): field formatting helper classes.
+
+    Returns:
+      set[str]: reserved field names.
+    """
+    reserved_names = set()
+
+    for cls in formatting_helpers:
+      try:
+        helper = cls()
+      except TypeError:
+        logging.warning(f'Unable to inspect: {cls.__name__:s}')
+        continue
+
+      # pylint: disable=protected-access
+      for name in helper._FIELD_FORMAT_CALLBACKS.keys():
+        if name not in self._ALLOWED_OVERRIDES:
+          reserved_names.add(name)
+
+    return reserved_names
+
 
 def Main():
   """The main program function.
@@ -91,18 +136,25 @@ def Main():
     int: exit code that is provided to sys.exit().
   """
   argument_parser = argparse.ArgumentParser(description=(
-      'Extract the event data schema from Plaso.'))
+      'Checks the event data schema of Plaso.'))
 
   argument_parser.parse_args()
 
-  extractor = EventDataAttributeContainersSchemaExtractor()
+  validator = EventDataAttributeContainersSchemaValidator()
 
-  attribute_containers = extractor.GetAttributeContainers()
+  formatting_helpers = validator.GetFieldFormattingHelpers()
+  if not formatting_helpers:
+    print('Unable to determine field formatting helpers')
+    return 1
+
+  reserved_names = validator.GetReservedNames(formatting_helpers)
+
+  attribute_containers = validator.GetAttributeContainers()
   if not attribute_containers:
     print('Unable to determine event data attribute containers')
     return 1
 
-  schema = extractor.FormatSchema(attribute_containers)
+  schema = validator.CheckSchema(attribute_containers, reserved_names)
   print(schema)
 
   return 0

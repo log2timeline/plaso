@@ -13,7 +13,7 @@ def Main():
   """The main program function.
 
   Returns:
-    bool: True if successful or False if not.
+    int: exit code that is provided to sys.exit().
   """
   argument_parser = argparse.ArgumentParser(description=(
       'Generate Windows time zone name to Python mappings.'))
@@ -30,10 +30,10 @@ def Main():
   windows_time_zones_xml = ElementTree.fromstring(windows_time_zones_xml_data)
 
   time_zone_mappings = {
-    'Kamchatka Standard Time': 'Asia/Kamchatka',
-    'Mexico Standard Time 2': 'America/Chihuahua',
-    'Mexico Standard Time': 'America/Mexico_City',
-    'Mid-Atlantic Standard Time': 'America/New_York'}
+      'Kamchatka Standard Time': 'Asia/Kamchatka',
+      'Mexico Standard Time 2': 'America/Chihuahua',
+      'Mexico Standard Time': 'America/Mexico_City',
+      'Mid-Atlantic Standard Time': 'America/New_York'}
   for windows_time_zone in windows_time_zones_xml.findall('.//mapZone'):
     if windows_time_zone.attrib['territory'] == '001':
       windows_name = windows_time_zone.attrib['other']
@@ -42,11 +42,8 @@ def Main():
   for windows_name, python_name in sorted(time_zone_mappings.items()):
     print(f'    \'{windows_name:s}\': \'{python_name:s}\'')
 
-  return True
+  return 0
 
 
 if __name__ == '__main__':
-  if not Main():
-    sys.exit(1)
-  else:
-    sys.exit(0)
+  sys.exit(Main())
