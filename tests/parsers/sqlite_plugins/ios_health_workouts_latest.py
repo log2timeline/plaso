@@ -14,7 +14,7 @@ class IOSHealthWorkoutsLatestTest(test_lib.SQLitePluginTestCase):
     """Test the Process function."""
     plugin = ios_health_workouts_latest.IOSHealthWorkoutsLatestPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        ['healthdb_secure.sqlite'], plugin)
+        ['ios', 'healthdb_secure.sqlite'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -63,4 +63,3 @@ class IOSHealthWorkoutsLatestTest(test_lib.SQLitePluginTestCase):
 
 if __name__ == '__main__':
   unittest.main()
-  

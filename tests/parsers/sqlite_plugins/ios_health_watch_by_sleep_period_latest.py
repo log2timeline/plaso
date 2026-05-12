@@ -18,7 +18,7 @@ class IOSHealthWatchBySleepPeriodLatestPluginTest(
         IOSHealthWatchBySleepPeriodLatestPlugin())
 
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        ['healthdb_secure.sqlite'], plugin)
+        ['ios', 'healthdb_secure.sqlite'], plugin)
 
     self.assertEqual(storage_writer.GetNumberOfAttributeContainers(
         'extraction_warning'), 0)

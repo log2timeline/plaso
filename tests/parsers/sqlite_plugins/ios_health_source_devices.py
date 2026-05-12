@@ -15,7 +15,7 @@ class IOSHealthSourceDevicesTest(test_lib.SQLitePluginTestCase):
     plugin = ios_health_source_devices.IOSHealthSourceDevicesPlugin()
 
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        ['healthdb.sqlite'], plugin)
+        ['ios', 'healthdb.sqlite'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')

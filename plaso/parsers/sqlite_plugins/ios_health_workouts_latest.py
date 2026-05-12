@@ -1,4 +1,4 @@
-"""SQLite parser plugin for Health Workouts (iOS 16/17)."""
+"""SQLite parser plugin for iOS 16 and 17 Health Workouts."""
 
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 
@@ -8,7 +8,7 @@ from plaso.parsers.sqlite_plugins import interface
 
 
 class IOSHealthWorkoutsLatestEventData(events.EventData):
-  """iOS 16/17 Health workouts (workout_activities) event data.
+  """iOS 16 and 17 Health Workouts (workout_activities) event data.
 
   Attributes:
     activity_type (int): RAW code from workout_activities.activity_type.
@@ -51,8 +51,7 @@ class IOSHealthWorkoutsLatestEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super().__init__(
-        data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.activity_type = None
     self.added_timestamp = None
     self.added_timestamp_str = None

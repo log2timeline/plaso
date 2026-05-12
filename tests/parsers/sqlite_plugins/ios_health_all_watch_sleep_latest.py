@@ -16,7 +16,7 @@ class IOSHealthAllWatchSleepLatestPluginGoldenTest(
     plugin = (
         ios_health_all_watch_sleep_latest.IOSHealthAllWatchSleepLatestPlugin())
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        ['healthdb_secure.sqlite'], plugin)
+        ['ios', 'healthdb_secure.sqlite'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
@@ -59,4 +59,3 @@ class IOSHealthAllWatchSleepLatestPluginGoldenTest(
 
 if __name__ == '__main__':
   unittest.main()
-  
