@@ -268,6 +268,14 @@ plaso.parsers.sqlite\_plugins.ios\_netusage module
    :show-inheritance:
    :undoc-members:
 
+plaso.parsers.sqlite\_plugins.ios\_notes module
+-----------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.ios_notes
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 plaso.parsers.sqlite\_plugins.ios\_powerlog module
 --------------------------------------------------
 

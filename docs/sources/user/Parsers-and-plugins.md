@@ -172,6 +172,7 @@ ios_accounts | Parser for iOS accounts SQLite database (Accounts3.db) files.
 ios_datausage | Parser for iOS data usage SQLite databse (DataUsage.sqlite) file..
 ios_imohdchat_message | Parser for IMO HD chat message SQLite database (IMODb2.sqlite) files.
 ios_netusage | Parser for iOS network usage SQLite database (netusage.sqlite) files.
+ios_notes | Parser for iOS Notes SQLite database files.
 ios_powerlog | Parser for iOS powerlog SQLite database (CurrentPowerlog.PLSQL) files.
 ios_screentime | Parser for iOS Screen Time SQLite database (RMAdminStore-Local.sqlite).
 kik_ios | Parser for iOS Kik messenger SQLite database (kik.sqlite) files.
