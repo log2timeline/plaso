@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """SQLite parser plugin for iOS Health Headphone Audio Levels."""
 
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
@@ -32,7 +31,7 @@ class IOSHealthHeadphoneAudioEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(IOSHealthHeadphoneAudioEventData, self).__init__(
+    super().__init__(
         data_type=self.DATA_TYPE)
     self.bundle_name = None
     self.data_id = None

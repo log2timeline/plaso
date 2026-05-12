@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """SQLite parser plugin for iOS Health Heart Rate (pre-iOS 15)."""
 
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
@@ -34,7 +33,7 @@ class IOSHealthHeartRateEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(IOSHealthHeartRateEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.added_date_str = None
     self.bpm = None
     self.context = None

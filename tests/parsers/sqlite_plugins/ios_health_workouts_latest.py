@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Tests for iOS 16/17 Health Workouts (latest, workout_activities) plugin."""
 
 import unittest

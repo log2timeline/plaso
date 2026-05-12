@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """SQLite parser plugin for Health Workouts database on iOS."""
 
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
@@ -35,7 +34,7 @@ class IOSHealthWorkoutsEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(IOSHealthWorkoutsEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.activity_type = None
     self.date_time = None
     self.duration = None

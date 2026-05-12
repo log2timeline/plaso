@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Tests for iOS Health Source Devices Latest SQLite database plugin."""
 
 import unittest

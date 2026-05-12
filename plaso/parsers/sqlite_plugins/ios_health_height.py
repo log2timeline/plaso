@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """SQLite parser plugin for iOS Health Height database."""
 
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
@@ -23,7 +22,7 @@ class IOSHealthHeightEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(IOSHealthHeightEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.date_time = None
     self.height_cm = None
     self.height_ft_in = None

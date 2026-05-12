@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Tests for the iOS Health Watch by Sleep Period Latest (iOS 17+) plugin."""
 
 import unittest
