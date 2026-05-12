@@ -17,6 +17,9 @@ sed "s/version = \"[0-9]*\"/version = \"${VERSION}\"/" -i pyproject.toml
 # Ensure shebangs of Python scripts are consistent.
 find . -name \*.py -exec sed '1s?^#!.*$?#!/usr/bin/env python3?' -i {} \;
 
+find plaso/scripts -name \*.py -exec grep -H -L '#!/usr/bin/env python3' {} \; | grep -v -e '__init__.py'
+find tests -name \*.py -exec grep -H -L '#!/usr/bin/env python3' {} \; | grep -v -e '__init__.py' -e 'test_lib.py'
+
 # Update the version in the dpkg configuration files.
 DPKG_DATE=$(date -R)
 

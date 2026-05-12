@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Tests for the iOS identityservices plist plugin."""
 
 import unittest

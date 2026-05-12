@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Tests for the Windows Diagnosis EventTranscript database plugin."""
 
 import unittest

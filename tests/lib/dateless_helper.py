@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Tests for the date-less log format helper mix-in."""
 
 import unittest

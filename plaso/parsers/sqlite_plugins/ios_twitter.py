@@ -103,13 +103,13 @@ class IOSTwitterPlugin(interface.SQLitePlugin):
   QUERIES = [
       (('SELECT createdDate, updatedAt, screenName, name, profileImageUrl,'
         'location, description, url, following, followersCount, followingCount'
-        ' FROM Users ORDER BY createdDate'), 'ParseContactRow'),
+        ' FROM Users'), '_ParseContactRow'),
       (('SELECT Statuses.date AS date, Statuses.text AS text, Statuses.userId '
         'AS user_id, Users.name AS name, Statuses.retweetCount AS '
         'retweetCount, Statuses.favoriteCount AS favoriteCount, '
         'Statuses.favorited AS favorited, Statuses.updatedAt AS updatedAt '
-        'FROM Statuses LEFT join Users ON Statuses.userId = Users.id ORDER '
-        'BY date'), 'ParseStatusRow')]
+        'FROM Statuses LEFT join Users ON Statuses.userId = Users.id'),
+       '_ParseStatusRow')]
 
   SCHEMAS = [{
       'Lists': (
@@ -211,7 +211,7 @@ class IOSTwitterPlugin(interface.SQLitePlugin):
     timestamp = int(timestamp)
     return dfdatetime_posix_time.PosixTime(timestamp=timestamp)
 
-  def ParseContactRow(self, parser_mediator, query, row, **unused_kwargs):
+  def _ParseContactRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a contact row from the database.
 
     Args:
@@ -243,7 +243,7 @@ class IOSTwitterPlugin(interface.SQLitePlugin):
 
     parser_mediator.ProduceEventData(event_data)
 
-  def ParseStatusRow(self, parser_mediator, query, row, **unused_kwargs):
+  def _ParseStatusRow(self, parser_mediator, query, row, **unused_kwargs):
     """Parses a contact row from the database.
 
     Args:

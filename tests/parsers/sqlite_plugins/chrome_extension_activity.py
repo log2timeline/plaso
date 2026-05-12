@@ -30,12 +30,12 @@ class ChromeExtensionActivityPluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(number_of_warnings, 0)
 
     expected_event_values = {
-        'action_type': 1,
-        'activity_id': 48,
-        'api_name': 'browserAction.onClicked',
+        'action_type': 0,
+        'activity_id': 1,
+        'api_name': 'alarms.create',
         'data_type': 'chrome:extension_activity:activity_log',
-        'extension_id': 'ognampngfcbddbfemdapefohjiobgbdl',
-        'recorded_time': '2014-11-25T21:08:23.698737+00:00'}
+        'extension_id': 'knipolnnllmklapflnccelgolnpehhpl',
+        'recorded_time': '2014-11-25T21:12:03.189013+00:00'}
 
     event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
     self.CheckEventData(event_data, expected_event_values)

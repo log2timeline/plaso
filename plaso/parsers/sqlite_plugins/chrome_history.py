@@ -199,7 +199,7 @@ class BaseGoogleChromeHistoryPlugin(interface.SQLitePlugin):
 
     return None
 
-  def ParseLastVisitedRow(
+  def _ParseLastVisitedRow(
       self, parser_mediator, query, row, cache=None, database=None,
       **unused_kwargs):
     """Parses a last visited row.
@@ -260,10 +260,10 @@ class GoogleChrome8HistoryPlugin(BaseGoogleChromeHistoryPlugin):
       (('SELECT urls.id, urls.url, urls.title, urls.visit_count, '
         'urls.typed_count, urls.last_visit_time, urls.hidden, visits.'
         'visit_time, visits.from_visit, visits.transition, visits.id '
-        'AS visit_id FROM urls, visits WHERE urls.id = visits.url ORDER '
-        'BY visits.visit_time'), 'ParseLastVisitedRow'),
+        'AS visit_id FROM urls, visits WHERE urls.id = visits.url'),
+       '_ParseLastVisitedRow'),
       (('SELECT id, full_path, url, start_time, received_bytes, '
-        'total_bytes, state FROM downloads'), 'ParseFileDownloadedRow')]
+        'total_bytes, state FROM downloads'), '_ParseFileDownloadedRow')]
 
   _SCHEMA_8 = {
       'downloads': (
@@ -415,7 +415,7 @@ class GoogleChrome8HistoryPlugin(BaseGoogleChromeHistoryPlugin):
 
   SCHEMAS = [_SCHEMA_8, _SCHEMA_16, _SCHEMA_19, _SCHEMA_20]
 
-  def ParseFileDownloadedRow(
+  def _ParseFileDownloadedRow(
       self, parser_mediator, query, row, **unused_kwargs):
     """Parses a file downloaded row.
 
@@ -464,15 +464,16 @@ class GoogleChrome27HistoryPlugin(BaseGoogleChromeHistoryPlugin):
       (('SELECT urls.id, urls.url, urls.title, urls.visit_count, '
         'urls.typed_count, urls.last_visit_time, urls.hidden, visits.'
         'visit_time, visits.from_visit, visits.transition, visits.id '
-        'AS visit_id FROM urls, visits WHERE urls.id = visits.url ORDER '
-        'BY visits.visit_time'), 'ParseLastVisitedRow'),
+        'AS visit_id FROM urls, visits WHERE urls.id = visits.url'),
+       '_ParseLastVisitedRow'),
       (('SELECT downloads.id AS id, downloads.start_time,'
         'downloads.target_path, downloads_url_chains.url, '
         'downloads.received_bytes, downloads.total_bytes, '
         'downloads.end_time, downloads.state, downloads.danger_type, '
-        'downloads.interrupt_reason, downloads.opened FROM downloads,'
-        ' downloads_url_chains WHERE downloads.id = '
-        'downloads_url_chains.id'), 'ParseFileDownloadedRow')]
+        'downloads.interrupt_reason, downloads.opened '
+        'FROM downloads, downloads_url_chains '
+        'WHERE downloads.id = downloads_url_chains.id'),
+       '_ParseFileDownloadedRow')]
 
   _SCHEMA_27 = {
       'downloads': (
@@ -1031,7 +1032,7 @@ class GoogleChrome27HistoryPlugin(BaseGoogleChromeHistoryPlugin):
       _SCHEMA_27, _SCHEMA_31, _SCHEMA_37, _SCHEMA_51, _SCHEMA_58, _SCHEMA_59,
       _SCHEMA_63, _SCHEMA_65, _SCHEMA_67, _SCHEMA_67_2, _SCHEMA_67_3]
 
-  def ParseFileDownloadedRow(
+  def _ParseFileDownloadedRow(
       self, parser_mediator, query, row, **unused_kwargs):
     """Parses a file downloaded row.
 

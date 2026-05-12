@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Tests for Microsoft Edge load statistics plugin."""
 
 import unittest

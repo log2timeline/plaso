@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Tests for MacOS notes plugin."""
 
 import unittest

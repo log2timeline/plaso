@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Tests for the dtFabric format definition helper mix-in."""
 
 import io

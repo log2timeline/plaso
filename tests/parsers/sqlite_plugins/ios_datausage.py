@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Tests for the SQLite parser plugin for iOS datausage database files."""
 
 import unittest

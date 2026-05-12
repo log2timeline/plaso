@@ -1,4 +1,8 @@
-"""SQLite parser plugin for Google Chrome extension activity database files."""
+"""SQLite parser plugin for Google Chrome extension activity database files.
+
+The Google Chrome extension activity database file is typically stored in:
+  Extension Activity
+"""
 
 from dfdatetime import webkit_time as dfdatetime_webkit_time
 
@@ -44,25 +48,20 @@ class ChromeExtensionActivityEventData(events.EventData):
 
 
 class ChromeExtensionActivityPlugin(interface.SQLitePlugin):
-  """SQLite parser plugin for Google Chrome extension activity database files.
-
-  The Google Chrome extension activity database file is typically stored in:
-  Extension Activity
-  """
+  """SQLite parser plugin for Google Chrome extension activity database."""
 
   NAME = 'chrome_extension_activity'
   DATA_FORMAT = 'Google Chrome extension activity SQLite database file'
 
   REQUIRED_STRUCTURE = {
       'activitylog_compressed': frozenset([
-          'time', 'extension_id_x', 'action_type', 'api_name_x', 'args_x',
-          'page_url_x', 'page_title_x', 'arg_url_x', 'other_x'])}
+          'action_type', 'api_name_x', 'arg_url_x', 'args_x', 'extension_id_x',
+          'other_x', 'page_title_x', 'page_url_x', 'time'])}
 
   QUERIES = [
-      (('SELECT time, extension_id, action_type, api_name, args, page_url, '
-        'page_title, arg_url, other, activity_id '
-        'FROM activitylog_uncompressed ORDER BY time'),
-       'ParseActivityLogUncompressedRow')]
+      (('SELECT action_type, activity_id, api_name, arg_url, args, '
+        'extension_id, other, page_title, page_url, time '
+        'FROM activitylog_uncompressed'), '_ParseActivityLogUncompressedRow')]
 
   SCHEMAS = [{
       'activitylog_compressed': (
@@ -96,7 +95,7 @@ class ChromeExtensionActivityPlugin(interface.SQLitePlugin):
 
     return dfdatetime_webkit_time.WebKitTime(timestamp=timestamp)
 
-  def ParseActivityLogUncompressedRow(
+  def _ParseActivityLogUncompressedRow(
       self, parser_mediator, query, row, **unused_kwargs):
     """Parses an activity log row.
 

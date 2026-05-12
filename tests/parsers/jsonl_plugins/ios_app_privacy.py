@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Tests for the JSON-L parser plugin for iOS application privacy reports."""
 
 import unittest
