@@ -15,6 +15,11 @@ from plaso.output import formatting_helper
 class EventDataAttributeContainersSchemaValidator:
   """Event data attribute containers schema validator."""
 
+  _ALLOWED_OVERRIDES = frozenset([
+      # Used in l2tcsv, but is always 2.
+      'version',
+  ])
+
   def _GetClassesFromPackage(self, package, base_class):
     """Retrieves event data attribute containers from a package.
 
@@ -117,7 +122,9 @@ class EventDataAttributeContainersSchemaValidator:
         continue
 
       # pylint: disable=protected-access
-      reserved_names.update(helper._FIELD_FORMAT_CALLBACKS.keys())
+      for name in helper._FIELD_FORMAT_CALLBACKS.keys():
+        if name not in self._ALLOWED_OVERRIDES:
+          reserved_names.add(name)
 
     return reserved_names
 
