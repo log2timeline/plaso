@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """SQLite parser plugin for iOS Notes database files."""
 
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
@@ -24,7 +23,7 @@ class IOSNotesEventData(events.EventData):
 
   def __init__(self):
     """Initializes event data."""
-    super(IOSNotesEventData, self).__init__(data_type=self.DATA_TYPE)
+    super().__init__(data_type=self.DATA_TYPE)
     self.creation_time = None
     self.modification_time = None
     self.snippet = None

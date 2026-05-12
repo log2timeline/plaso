@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Tests for the iOS Notes database plugin."""
 
 import unittest
@@ -15,7 +14,7 @@ class IOSNotesTest(test_lib.SQLitePluginTestCase):
     """Test the Process function."""
     plugin = ios_notes.IOSNotesPlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
-        ['NotesStore.sqlite'], plugin)
+        ['ios', 'NoteStore.sqlite'], plugin)
 
     number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
         'event_data')
