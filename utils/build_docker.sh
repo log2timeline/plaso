@@ -23,6 +23,13 @@ docker build \
 
 IDENTIFIER=$( grep -e ' writing image ' ${LOGFILE} | sed 's/^.* writing image //;s/ done$//' )
 
+if [ -z "${IDENTIFIER}" ];
+then
+    echo "Unable to determine image identifier - did docker build fail?"
+
+    exit ${EXIT_FAILURE}
+fi
+
 docker run \
     log2timeline/plaso \
     log2timeline --version 2>&1 | tee ${LOGFILE}
@@ -31,7 +38,8 @@ VERSION=$( grep -e '^plaso - log2timeline version ' ${LOGFILE} | sed 's/^plaso -
 
 docker tag ${IDENTIFIER} log2timeline/plaso:${VERSION}
 
-if [ "${PPA_TRACK}" = "stable" ]; then
+if [ "${PPA_TRACK}" = "stable" ];
+then
     docker tag ${IDENTIFIER} log2timeline/plaso:latest
 else
     docker tag ${IDENTIFIER} log2timeline/plaso:${PPA_TRACK}

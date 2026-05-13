@@ -1,4 +1,4 @@
-FROM ubuntu:noble
+FROM ubuntu:resolute
 
 # Create container with:
 # docker build --build-arg PPA_TRACK="[dev|staging|stable]" \
