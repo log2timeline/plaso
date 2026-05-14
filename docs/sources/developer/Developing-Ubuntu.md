@@ -25,7 +25,7 @@ python utils/check_dependencies.py
 
 **Note that some dependencies are actively under development and can be
 frequently updated, therefore we recommend checking the status of the
- dependencies regularly.**
+dependencies regularly.**
 
 ## Updating your environment.
 
