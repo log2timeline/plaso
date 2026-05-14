@@ -1,6 +1,6 @@
 # Installing Plaso on Ubuntu
 
-### Ubuntu 24.04 LTS (noble)
+### Ubuntu 26.04 LTS (noble)
 
 **Note that other versions of Ubuntu are not supported at this time.**
 
