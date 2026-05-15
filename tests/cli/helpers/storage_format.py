@@ -12,14 +12,14 @@ from tests.cli import test_lib as cli_test_lib
 
 
 class StorageFormatArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
-  """Tests for the storage format CLI arguments helper."""
+    """Tests for the storage format CLI arguments helper."""
 
-  # pylint: disable=no-member,protected-access
+    # pylint: disable=no-member,protected-access
 
-  _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
+    _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
 
-  if _PYTHON3_13_OR_LATER:
-    _EXPECTED_OUTPUT = f"""\
+    if _PYTHON3_13_OR_LATER:
+        _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--storage_format FORMAT] [--task_storage_format FORMAT]
 
 Test argument parser.
@@ -33,8 +33,8 @@ Test argument parser.
                         Supported options: redis, sqlite
 """
 
-  else:
-    _EXPECTED_OUTPUT = f"""\
+    else:
+        _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--storage_format FORMAT] [--task_storage_format FORMAT]
 
 Test argument parser.
@@ -48,36 +48,34 @@ Test argument parser.
                         Supported options: redis, sqlite
 """
 
-  def testAddArguments(self):
-    """Tests the AddArguments function."""
-    argument_parser = self._GetTestArgumentParser('cli_helper.py')
+    def testAddArguments(self):
+        """Tests the AddArguments function."""
+        argument_parser = self._GetTestArgumentParser("cli_helper.py")
 
-    storage_format.StorageFormatArgumentsHelper.AddArguments(argument_parser)
+        storage_format.StorageFormatArgumentsHelper.AddArguments(argument_parser)
 
-    output = self._RunArgparseFormatHelp(argument_parser)
-    self.assertEqual(output, self._EXPECTED_OUTPUT)
+        output = self._RunArgparseFormatHelp(argument_parser)
+        self.assertEqual(output, self._EXPECTED_OUTPUT)
 
-  def testParseOptions(self):
-    """Tests the ParseOptions function."""
-    options = cli_test_lib.TestOptions()
-    options.storage_format = 'sqlite'
-    options.task_storage_format = 'sqlite'
+    def testParseOptions(self):
+        """Tests the ParseOptions function."""
+        options = cli_test_lib.TestOptions()
+        options.storage_format = "sqlite"
+        options.task_storage_format = "sqlite"
 
-    test_tool = tools.CLITool()
-    storage_format.StorageFormatArgumentsHelper.ParseOptions(options, test_tool)
+        test_tool = tools.CLITool()
+        storage_format.StorageFormatArgumentsHelper.ParseOptions(options, test_tool)
 
-    self.assertEqual(test_tool._storage_format, options.storage_format)
-    self.assertEqual(
-        test_tool._task_storage_format, options.task_storage_format)
+        self.assertEqual(test_tool._storage_format, options.storage_format)
+        self.assertEqual(test_tool._task_storage_format, options.task_storage_format)
 
-    with self.assertRaises(errors.BadConfigObject):
-      storage_format.StorageFormatArgumentsHelper.ParseOptions(options, None)
+        with self.assertRaises(errors.BadConfigObject):
+            storage_format.StorageFormatArgumentsHelper.ParseOptions(options, None)
 
-    with self.assertRaises(errors.BadConfigOption):
-      options.storage_format = 'bogus'
-      storage_format.StorageFormatArgumentsHelper.ParseOptions(
-          options, test_tool)
+        with self.assertRaises(errors.BadConfigOption):
+            options.storage_format = "bogus"
+            storage_format.StorageFormatArgumentsHelper.ParseOptions(options, test_tool)
 
 
-if __name__ == '__main__':
-  unittest.main()
+if __name__ == "__main__":
+    unittest.main()

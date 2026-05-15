@@ -7,17 +7,23 @@ from tests import test_lib
 
 
 class AnalysisImportTest(test_lib.ImportCheckTestCase):
-  """Tests that analysis plugin classes are imported correctly."""
+    """Tests that analysis plugin classes are imported correctly."""
 
-  _IGNORABLE_FILES = frozenset([
-      'definitions.py', 'hash_tagging.py', 'interface.py', 'logger.py',
-      'manager.py', 'mediator.py'])
+    _IGNORABLE_FILES = frozenset(
+        [
+            "definitions.py",
+            "hash_tagging.py",
+            "interface.py",
+            "logger.py",
+            "manager.py",
+            "mediator.py",
+        ]
+    )
 
-  def testAnalysisPluginsImported(self):
-    """Tests that all parsers are imported."""
-    self._AssertFilesImportedInInit(
-        test_lib.ANALYSIS_PATH, self._IGNORABLE_FILES)
+    def testAnalysisPluginsImported(self):
+        """Tests that all parsers are imported."""
+        self._AssertFilesImportedInInit(test_lib.ANALYSIS_PATH, self._IGNORABLE_FILES)
 
 
-if __name__ == '__main__':
-  unittest.main()
+if __name__ == "__main__":
+    unittest.main()

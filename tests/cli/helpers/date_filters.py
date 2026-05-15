@@ -13,14 +13,14 @@ from tests.cli import test_lib as cli_test_lib
 
 
 class DateFiltersArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
-  """Tests for the date filters CLI arguments helper."""
+    """Tests for the date filters CLI arguments helper."""
 
-  # pylint: disable=no-member,protected-access
+    # pylint: disable=no-member,protected-access
 
-  _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
+    _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
 
-  if _PYTHON3_13_OR_LATER:
-    _EXPECTED_OUTPUT = f"""\
+    if _PYTHON3_13_OR_LATER:
+        _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--date-filter TYPE_START_END]
 
 Test argument parser.
@@ -47,8 +47,8 @@ Test argument parser.
                         boundaries, e.g. once for atime, once for crtime, etc.
 """
 
-  else:
-    _EXPECTED_OUTPUT = f"""\
+    else:
+        _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--date-filter TYPE_START_END]
 
 Test argument parser.
@@ -75,43 +75,42 @@ Test argument parser.
                         boundaries, e.g. once for atime, once for crtime, etc.
 """
 
-  def testAddArguments(self):
-    """Tests the AddArguments function."""
-    argument_parser = self._GetTestArgumentParser('cli_helper.py')
+    def testAddArguments(self):
+        """Tests the AddArguments function."""
+        argument_parser = self._GetTestArgumentParser("cli_helper.py")
 
-    date_filters.DateFiltersArgumentsHelper.AddArguments(argument_parser)
+        date_filters.DateFiltersArgumentsHelper.AddArguments(argument_parser)
 
-    output = self._RunArgparseFormatHelp(argument_parser)
-    self.assertEqual(output, self._EXPECTED_OUTPUT)
+        output = self._RunArgparseFormatHelp(argument_parser)
+        self.assertEqual(output, self._EXPECTED_OUTPUT)
 
-  def testParseOptions(self):
-    """Tests the ParseOptions function."""
-    options = cli_test_lib.TestOptions()
-    options.date_filters = ['ctime,2012-05-25 15:59:00,2012-05-25 15:59:20']
+    def testParseOptions(self):
+        """Tests the ParseOptions function."""
+        options = cli_test_lib.TestOptions()
+        options.date_filters = ["ctime,2012-05-25 15:59:00,2012-05-25 15:59:20"]
 
-    test_tool = tools.CLITool()
+        test_tool = tools.CLITool()
 
-    with self.assertRaises(errors.BadConfigObject):
-      date_filters.DateFiltersArgumentsHelper.ParseOptions(options, None)
+        with self.assertRaises(errors.BadConfigObject):
+            date_filters.DateFiltersArgumentsHelper.ParseOptions(options, None)
 
-    with self.assertRaises(errors.BadConfigObject):
-      test_tool._filter_collection = None
-      date_filters.DateFiltersArgumentsHelper.ParseOptions(options, test_tool)
+        with self.assertRaises(errors.BadConfigObject):
+            test_tool._filter_collection = None
+            date_filters.DateFiltersArgumentsHelper.ParseOptions(options, test_tool)
 
-    test_tool._filter_collection = (
-        file_entry_filters.FileEntryFilterCollection())
+        test_tool._filter_collection = file_entry_filters.FileEntryFilterCollection()
 
-    date_filters.DateFiltersArgumentsHelper.ParseOptions(options, test_tool)
-    self.assertTrue(test_tool._filter_collection.HasFilters())
+        date_filters.DateFiltersArgumentsHelper.ParseOptions(options, test_tool)
+        self.assertTrue(test_tool._filter_collection.HasFilters())
 
-    with self.assertRaises(errors.BadConfigOption):
-      options.date_filters = ['ctime,2012-05-25 15:59:00']
-      date_filters.DateFiltersArgumentsHelper.ParseOptions(options, test_tool)
+        with self.assertRaises(errors.BadConfigOption):
+            options.date_filters = ["ctime,2012-05-25 15:59:00"]
+            date_filters.DateFiltersArgumentsHelper.ParseOptions(options, test_tool)
 
-    with self.assertRaises(errors.BadConfigOption):
-      options.date_filters = ['ctime,2012-05-25 15:59:00,2012-05-A5 15:59:20']
-      date_filters.DateFiltersArgumentsHelper.ParseOptions(options, test_tool)
+        with self.assertRaises(errors.BadConfigOption):
+            options.date_filters = ["ctime,2012-05-25 15:59:00,2012-05-A5 15:59:20"]
+            date_filters.DateFiltersArgumentsHelper.ParseOptions(options, test_tool)
 
 
-if __name__ == '__main__':
-  unittest.main()
+if __name__ == "__main__":
+    unittest.main()

@@ -19,497 +19,550 @@ from plaso.parsers.winreg_plugins import interface
 
 
 class MRUListExEventData(events.EventData):
-  """MRUListEx event data attribute container.
+    """MRUListEx event data attribute container.
 
-  Attributes:
-    entries (list[str]): most recently used (MRU) entries.
-    key_path (str): Windows Registry key path.
-    last_written_time (dfdatetime.DateTimeValues): entry last written date and
-        time.
-  """
-
-  DATA_TYPE = 'windows:registry:mrulistex'
-
-  def __init__(self):
-    """Initializes event data."""
-    super().__init__(data_type=self.DATA_TYPE)
-    self.entries = None
-    self.key_path = None
-    self.last_written_time = None
-
-
-class MRUListExStringRegistryKeyFilter(
-    interface.WindowsRegistryKeyWithValuesFilter):
-  """Windows Registry key with values filter."""
-
-  _IGNORE_KEY_PATH_SEGMENTS = frozenset([
-      '\\BagMRU\\'.upper(),
-      '\\Explorer\\ComDlg32\\OpenSavePidlMRU\\'.upper()])
-
-  _IGNORE_KEY_PATH_SUFFIXES = frozenset([
-      '\\BagMRU'.upper(),
-      '\\Explorer\\StreamMRU'.upper(),
-      '\\Explorer\\ComDlg32\\OpenSavePidlMRU'.upper()])
-
-  _VALUE_NAMES = ['0', 'MRUListEx']
-
-  def __init__(self):
-    """Initializes Windows Registry key filter object."""
-    super().__init__(self._VALUE_NAMES)
-
-  def Match(self, registry_key):
-    """Determines if a Windows Registry key matches the filter.
-
-    Args:
-      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
-
-    Returns:
-      bool: True if the Windows Registry key matches the filter.
+    Attributes:
+      entries (list[str]): most recently used (MRU) entries.
+      key_path (str): Windows Registry key path.
+      last_written_time (dfdatetime.DateTimeValues): entry last written date and
+          time.
     """
-    key_path_upper = registry_key.path.upper()
-    # Prevent this filter matching non-string MRUListEx values.
-    for ignore_key_path_suffix in self._IGNORE_KEY_PATH_SUFFIXES:
-      if key_path_upper.endswith(ignore_key_path_suffix):
-        return False
 
-    for ignore_key_path_segment in self._IGNORE_KEY_PATH_SEGMENTS:
-      if ignore_key_path_segment in key_path_upper:
-        return False
+    DATA_TYPE = "windows:registry:mrulistex"
 
-    return super().Match(registry_key)
+    def __init__(self):
+        """Initializes event data."""
+        super().__init__(data_type=self.DATA_TYPE)
+        self.entries = None
+        self.key_path = None
+        self.last_written_time = None
+
+
+class MRUListExStringRegistryKeyFilter(interface.WindowsRegistryKeyWithValuesFilter):
+    """Windows Registry key with values filter."""
+
+    _IGNORE_KEY_PATH_SEGMENTS = frozenset(
+        ["\\BagMRU\\".upper(), "\\Explorer\\ComDlg32\\OpenSavePidlMRU\\".upper()]
+    )
+
+    _IGNORE_KEY_PATH_SUFFIXES = frozenset(
+        [
+            "\\BagMRU".upper(),
+            "\\Explorer\\StreamMRU".upper(),
+            "\\Explorer\\ComDlg32\\OpenSavePidlMRU".upper(),
+        ]
+    )
+
+    _VALUE_NAMES = ["0", "MRUListEx"]
+
+    def __init__(self):
+        """Initializes Windows Registry key filter object."""
+        super().__init__(self._VALUE_NAMES)
+
+    def Match(self, registry_key):
+        """Determines if a Windows Registry key matches the filter.
+
+        Args:
+          registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
+
+        Returns:
+          bool: True if the Windows Registry key matches the filter.
+        """
+        key_path_upper = registry_key.path.upper()
+        # Prevent this filter matching non-string MRUListEx values.
+        for ignore_key_path_suffix in self._IGNORE_KEY_PATH_SUFFIXES:
+            if key_path_upper.endswith(ignore_key_path_suffix):
+                return False
+
+        for ignore_key_path_segment in self._IGNORE_KEY_PATH_SEGMENTS:
+            if ignore_key_path_segment in key_path_upper:
+                return False
+
+        return super().Match(registry_key)
 
 
 class BaseMRUListExWindowsRegistryPlugin(
-    interface.WindowsRegistryPlugin, dtfabric_helper.DtFabricHelper):
-  """Class for common MRUListEx Windows Registry plugin functionality."""
+    interface.WindowsRegistryPlugin, dtfabric_helper.DtFabricHelper
+):
+    """Class for common MRUListEx Windows Registry plugin functionality."""
 
-  _DEFINITION_FILE = os.path.join(
-      os.path.dirname(__file__), 'mru.yaml')
+    _DEFINITION_FILE = os.path.join(os.path.dirname(__file__), "mru.yaml")
 
-  @abc.abstractmethod
-  def _ParseMRUListExEntryValue(
-      self, parser_mediator, registry_key, entry_index, entry_number, **kwargs):
-    """Parses the MRUListEx entry value.
+    @abc.abstractmethod
+    def _ParseMRUListExEntryValue(
+        self, parser_mediator, registry_key, entry_index, entry_number, **kwargs
+    ):
+        """Parses the MRUListEx entry value.
 
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      registry_key (dfwinreg.WinRegistryKey): Windows Registry key that contains
-           the MRUListEx value.
-      entry_index (int): MRUListEx entry index.
-      entry_number (int): entry number.
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          registry_key (dfwinreg.WinRegistryKey): Windows Registry key that contains
+               the MRUListEx value.
+          entry_index (int): MRUListEx entry index.
+          entry_number (int): entry number.
 
-    Returns:
-      str: MRUList entry value.
-    """
+        Returns:
+          str: MRUList entry value.
+        """
 
-  def _ParseMRUListExValue(self, registry_key):
-    """Parses the MRUListEx value in a given Registry key.
+    def _ParseMRUListExValue(self, registry_key):
+        """Parses the MRUListEx value in a given Registry key.
 
-    Args:
-      registry_key (dfwinreg.WinRegistryKey): Windows Registry key that contains
-           the MRUListEx value.
+        Args:
+          registry_key (dfwinreg.WinRegistryKey): Windows Registry key that contains
+               the MRUListEx value.
 
-    Returns:
-      mrulistex_entries: MRUListEx entries or None if not available.
-    """
-    mrulistex_value = registry_key.GetValueByName('MRUListEx')
+        Returns:
+          mrulistex_entries: MRUListEx entries or None if not available.
+        """
+        mrulistex_value = registry_key.GetValueByName("MRUListEx")
 
-    # The key exists but does not contain a value named "MRUList".
-    if not mrulistex_value:
-      return None
+        # The key exists but does not contain a value named "MRUList".
+        if not mrulistex_value:
+            return None
 
-    mrulistex_entries_map = self._GetDataTypeMap('mrulistex_entries')
+        mrulistex_entries_map = self._GetDataTypeMap("mrulistex_entries")
 
-    context = dtfabric_data_maps.DataTypeMapContext(values={
-        'data_size': len(mrulistex_value.data)})
+        context = dtfabric_data_maps.DataTypeMapContext(
+            values={"data_size": len(mrulistex_value.data)}
+        )
+        return self._ReadStructureFromByteStream(
+            mrulistex_value.data, 0, mrulistex_entries_map, context=context
+        )
 
-    return self._ReadStructureFromByteStream(
-        mrulistex_value.data, 0, mrulistex_entries_map, context=context)
+    def _ParseMRUListExKey(self, parser_mediator, registry_key, codepage="cp1252"):
+        """Extract event objects from a MRUListEx Registry key.
 
-  def _ParseMRUListExKey(
-      self, parser_mediator, registry_key, codepage='cp1252'):
-    """Extract event objects from a MRUListEx Registry key.
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
+          codepage (Optional[str]): extended ASCII string codepage.
+        """
+        try:
+            mrulistex = self._ParseMRUListExValue(registry_key)
+        except (ValueError, errors.ParseError) as exception:
+            parser_mediator.ProduceExtractionWarning(
+                f"unable to parse MRUListEx value with error: {exception!s}"
+            )
+            return
 
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
-      codepage (Optional[str]): extended ASCII string codepage.
-    """
-    try:
-      mrulistex = self._ParseMRUListExValue(registry_key)
-    except (ValueError, errors.ParseError) as exception:
-      parser_mediator.ProduceExtractionWarning(
-          f'unable to parse MRUListEx value with error: {exception!s}')
-      return
+        if not mrulistex:
+            return
 
-    if not mrulistex:
-      return
-
-    entries = []
-    found_terminator = False
-    for entry_index, entry_number in enumerate(mrulistex):
-      # The MRU list is terminated with -1 (0xffffffff).
-      if entry_number == -1:
-        break
-
-      if found_terminator:
-        parser_mediator.ProduceExtractionWarning((
-            f'found additional MRUListEx entries after terminator in key: '
-            f'{registry_key.path:s}'))
-
-        # Only create one parser error per terminator.
+        entries = []
         found_terminator = False
+        for entry_index, entry_number in enumerate(mrulistex):
+            # The MRU list is terminated with -1 (0xffffffff).
+            if entry_number == -1:
+                break
 
-      value_string = self._ParseMRUListExEntryValue(
-          parser_mediator, registry_key, entry_index, entry_number,
-          codepage=codepage)
+            if found_terminator:
+                parser_mediator.ProduceExtractionWarning(
+                    f"found additional MRUListEx entries after terminator in key: "
+                    f"{registry_key.path:s}"
+                )
+                # Only create one parser error per terminator.
+                found_terminator = False
 
-      display_entry_index = entry_index + 1
-      entries.append((
-          f'Index: {display_entry_index:d} [MRU Value {entry_number:d}]: '
-          f'{value_string:s}'))
+            value_string = self._ParseMRUListExEntryValue(
+                parser_mediator,
+                registry_key,
+                entry_index,
+                entry_number,
+                codepage=codepage,
+            )
+            display_entry_index = entry_index + 1
+            entries.append(
+                f"Index: {display_entry_index:d} [MRU Value {entry_number:d}]: "
+                f"{value_string:s}"
+            )
 
-    event_data = MRUListExEventData()
-    event_data.entries = entries
-    event_data.key_path = registry_key.path
-    event_data.last_written_time = registry_key.last_written_time
+        event_data = MRUListExEventData()
+        event_data.entries = entries
+        event_data.key_path = registry_key.path
+        event_data.last_written_time = registry_key.last_written_time
 
-    parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data)
 
 
 class MRUListExStringWindowsRegistryPlugin(BaseMRUListExWindowsRegistryPlugin):
-  """Windows Registry plugin to parse a string MRUListEx."""
+    """Windows Registry plugin to parse a string MRUListEx."""
 
-  NAME = 'mrulistex_string'
-  DATA_FORMAT = 'Most Recently Used (MRU) Registry data'
+    NAME = "mrulistex_string"
+    DATA_FORMAT = "Most Recently Used (MRU) Registry data"
 
-  FILTERS = frozenset([MRUListExStringRegistryKeyFilter()])
+    FILTERS = frozenset([MRUListExStringRegistryKeyFilter()])
 
-  # pylint: disable=arguments-differ
-  def _ParseMRUListExEntryValue(
-      self, parser_mediator, registry_key, entry_index, entry_number, **kwargs):
-    """Parses the MRUListEx entry value.
+    # pylint: disable=arguments-differ
+    def _ParseMRUListExEntryValue(
+        self, parser_mediator, registry_key, entry_index, entry_number, **kwargs
+    ):
+        """Parses the MRUListEx entry value.
 
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      registry_key (dfwinreg.WinRegistryKey): Windows Registry key that contains
-           the MRUListEx value.
-      entry_index (int): MRUListEx entry index.
-      entry_number (int): entry number.
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          registry_key (dfwinreg.WinRegistryKey): Windows Registry key that contains
+               the MRUListEx value.
+          entry_index (int): MRUListEx entry index.
+          entry_number (int): entry number.
 
-    Returns:
-      str: MRUList entry value.
-    """
-    value_string = ''
+        Returns:
+          str: MRUList entry value.
+        """
+        value_string = ""
 
-    value = registry_key.GetValueByName(f'{entry_number:d}')
-    if value is None:
-      parser_mediator.ProduceExtractionWarning((
-          f'missing MRUListEx value: {entry_number:d} in key: '
-          f'{registry_key.path:s}'))
+        value = registry_key.GetValueByName(f"{entry_number:d}")
+        if value is None:
+            parser_mediator.ProduceExtractionWarning(
+                f"missing MRUListEx value: {entry_number:d} in key: "
+                f"{registry_key.path:s}"
+            )
 
-    elif value.DataIsString():
-      value_string = value.GetDataAsObject()
+        elif value.DataIsString():
+            value_string = value.GetDataAsObject()
 
-    elif value.DataIsBinaryData():
-      utf16le_string_map = self._GetDataTypeMap('utf16le_string')
+        elif value.DataIsBinaryData():
+            utf16le_string_map = self._GetDataTypeMap("utf16le_string")
 
-      try:
-        value_string = self._ReadStructureFromByteStream(
-            value.data, 0, utf16le_string_map)
-      except (ValueError, errors.ParseError) as exception:
-        parser_mediator.ProduceExtractionWarning((
-            f'unable to parse MRUListEx entry value: {0:entry_number} with '
-            f'error: {exception!s}'))
+            try:
+                value_string = self._ReadStructureFromByteStream(
+                    value.data, 0, utf16le_string_map
+                )
+            except (ValueError, errors.ParseError) as exception:
+                parser_mediator.ProduceExtractionWarning(
+                    f"unable to parse MRUListEx entry value: {0:entry_number} with "
+                    f"error: {exception!s}"
+                )
 
-      value_string = value_string.rstrip('\x00')
+            value_string = value_string.rstrip("\x00")
 
-    return value_string
+        return value_string
 
-  # pylint: disable=arguments-differ
-  def ExtractEvents(
-      self, parser_mediator, registry_key, codepage='cp1252', **kwargs):
-    """Extracts events from a Windows Registry key.
+    # pylint: disable=arguments-differ
+    def ExtractEvents(self, parser_mediator, registry_key, codepage="cp1252", **kwargs):
+        """Extracts events from a Windows Registry key.
 
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
-      codepage (Optional[str]): extended ASCII string codepage.
-    """
-    self._ParseMRUListExKey(parser_mediator, registry_key, codepage=codepage)
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
+          codepage (Optional[str]): extended ASCII string codepage.
+        """
+        self._ParseMRUListExKey(parser_mediator, registry_key, codepage=codepage)
 
 
-class MRUListExShellItemListWindowsRegistryPlugin(
-    BaseMRUListExWindowsRegistryPlugin):
-  """Windows Registry plugin to parse a shell item list MRUListEx."""
+class MRUListExShellItemListWindowsRegistryPlugin(BaseMRUListExWindowsRegistryPlugin):
+    """Windows Registry plugin to parse a shell item list MRUListEx."""
 
-  NAME = 'mrulistex_shell_item_list'
-  DATA_FORMAT = 'Most Recently Used (MRU) Registry data'
+    NAME = "mrulistex_shell_item_list"
+    DATA_FORMAT = "Most Recently Used (MRU) Registry data"
 
-  FILTERS = frozenset([
-      interface.WindowsRegistryKeyPathFilter(
-          'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-          'Explorer\\ComDlg32\\OpenSavePidlMRU'),
-      interface.WindowsRegistryKeyPathFilter(
-          'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-          'Explorer\\StreamMRU')])
+    FILTERS = frozenset(
+        [
+            interface.WindowsRegistryKeyPathFilter(
+                "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\"
+                "Explorer\\ComDlg32\\OpenSavePidlMRU"
+            ),
+            interface.WindowsRegistryKeyPathFilter(
+                "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\"
+                "Explorer\\StreamMRU"
+            ),
+        ]
+    )
 
-  # pylint: disable=arguments-differ
-  def _ParseMRUListExEntryValue(
-      self, parser_mediator, registry_key, entry_index, entry_number,
-      codepage='cp1252', **kwargs):
-    """Parses the MRUListEx entry value.
+    # pylint: disable=arguments-differ
+    def _ParseMRUListExEntryValue(
+        self,
+        parser_mediator,
+        registry_key,
+        entry_index,
+        entry_number,
+        codepage="cp1252",
+        **kwargs,
+    ):
+        """Parses the MRUListEx entry value.
 
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      registry_key (dfwinreg.WinRegistryKey): Windows Registry key that contains
-           the MRUListEx value.
-      entry_index (int): MRUListEx entry index.
-      entry_number (int): entry number.
-      codepage (Optional[str]): extended ASCII string codepage.
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          registry_key (dfwinreg.WinRegistryKey): Windows Registry key that contains
+               the MRUListEx value.
+          entry_index (int): MRUListEx entry index.
+          entry_number (int): entry number.
+          codepage (Optional[str]): extended ASCII string codepage.
 
-    Returns:
-      str: MRUList entry value.
-    """
-    value_string = ''
+        Returns:
+          str: MRUList entry value.
+        """
+        value_string = ""
 
-    value = registry_key.GetValueByName(f'{entry_number:d}')
-    if value is None:
-      parser_mediator.ProduceExtractionWarning((
-          f'missing MRUListEx value: {entry_number:d} in key: '
-          f'{registry_key.path:s}'))
+        value = registry_key.GetValueByName(f"{entry_number:d}")
+        if value is None:
+            parser_mediator.ProduceExtractionWarning(
+                f"missing MRUListEx value: {entry_number:d} in key: "
+                f"{registry_key.path:s}"
+            )
+        elif not value.DataIsBinaryData():
+            logger.debug(
+                f"[{self.NAME:s}] Non-binary MRUListEx entry value: {entry_number:d} "
+                f"in key: {registry_key.path:s}"
+            )
+        elif value.data:
+            shell_items_parser = shell_items.ShellItemsParser(registry_key.path)
+            shell_items_parser.ParseByteStream(
+                parser_mediator, value.data, codepage=codepage
+            )
+            shell_item_path = shell_items_parser.CopyToPath() or "N/A"
+            value_string = f"Shell item path: {shell_item_path:s}"
 
-    elif not value.DataIsBinaryData():
-      logger.debug((
-          f'[{self.NAME:s}] Non-binary MRUListEx entry value: {entry_number:d} '
-          f'in key: {registry_key.path:s}'))
+        return value_string
 
-    elif value.data:
-      shell_items_parser = shell_items.ShellItemsParser(registry_key.path)
-      shell_items_parser.ParseByteStream(
-          parser_mediator, value.data, codepage=codepage)
+    # pylint: disable=arguments-differ
+    def ExtractEvents(self, parser_mediator, registry_key, codepage="cp1252", **kwargs):
+        """Extracts events from a Windows Registry key.
 
-      shell_item_path = shell_items_parser.CopyToPath() or 'N/A'
-      value_string = f'Shell item path: {shell_item_path:s}'
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
+          codepage (Optional[str]): extended ASCII string codepage.
+        """
+        if registry_key.name != "OpenSavePidlMRU":
+            self._ParseMRUListExKey(parser_mediator, registry_key, codepage=codepage)
 
-    return value_string
-
-  # pylint: disable=arguments-differ
-  def ExtractEvents(
-      self, parser_mediator, registry_key, codepage='cp1252', **kwargs):
-    """Extracts events from a Windows Registry key.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
-      codepage (Optional[str]): extended ASCII string codepage.
-    """
-    if registry_key.name != 'OpenSavePidlMRU':
-      self._ParseMRUListExKey(parser_mediator, registry_key, codepage=codepage)
-
-    if registry_key.name == 'OpenSavePidlMRU':
-      # For the OpenSavePidlMRU MRUListEx we also need to parse its subkeys
-      # since the Registry key path does not support wildcards yet.
-      for subkey in registry_key.GetSubkeys():
-        self._ParseMRUListExKey(parser_mediator, subkey, codepage=codepage)
+        if registry_key.name == "OpenSavePidlMRU":
+            # For the OpenSavePidlMRU MRUListEx we also need to parse its subkeys
+            # since the Registry key path does not support wildcards yet.
+            for subkey in registry_key.GetSubkeys():
+                self._ParseMRUListExKey(parser_mediator, subkey, codepage=codepage)
 
 
 class MRUListExStringAndShellItemWindowsRegistryPlugin(
-    BaseMRUListExWindowsRegistryPlugin):
-  """Windows Registry plugin to parse a string and shell item MRUListEx."""
+    BaseMRUListExWindowsRegistryPlugin
+):
+    """Windows Registry plugin to parse a string and shell item MRUListEx."""
 
-  NAME = 'mrulistex_string_and_shell_item'
-  DATA_FORMAT = 'Most Recently Used (MRU) Registry data'
+    NAME = "mrulistex_string_and_shell_item"
+    DATA_FORMAT = "Most Recently Used (MRU) Registry data"
 
-  FILTERS = frozenset([
-      interface.WindowsRegistryKeyPathFilter(
-          'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-          'Explorer\\RecentDocs')])
+    FILTERS = frozenset(
+        [
+            interface.WindowsRegistryKeyPathFilter(
+                "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\"
+                "Explorer\\RecentDocs"
+            )
+        ]
+    )
 
-  # pylint: disable=arguments-differ
-  def _ParseMRUListExEntryValue(
-      self, parser_mediator, registry_key, entry_index, entry_number,
-      codepage='cp1252', **kwargs):
-    """Parses the MRUListEx entry value.
+    # pylint: disable=arguments-differ
+    def _ParseMRUListExEntryValue(
+        self,
+        parser_mediator,
+        registry_key,
+        entry_index,
+        entry_number,
+        codepage="cp1252",
+        **kwargs,
+    ):
+        """Parses the MRUListEx entry value.
 
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      registry_key (dfwinreg.WinRegistryKey): Windows Registry key that contains
-           the MRUListEx value.
-      entry_index (int): MRUListEx entry index.
-      entry_number (int): entry number.
-      codepage (Optional[str]): extended ASCII string codepage.
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          registry_key (dfwinreg.WinRegistryKey): Windows Registry key that contains
+               the MRUListEx value.
+          entry_index (int): MRUListEx entry index.
+          entry_number (int): entry number.
+          codepage (Optional[str]): extended ASCII string codepage.
 
-    Returns:
-      str: MRUList entry value.
-    """
-    value_string = ''
+        Returns:
+          str: MRUList entry value.
+        """
+        value_string = ""
 
-    value = registry_key.GetValueByName(f'{entry_number:d}')
-    if value is None:
-      parser_mediator.ProduceExtractionWarning((
-          f'missing MRUListEx value: {entry_number:d} in key: '
-          f'{registry_key.path:s}'))
+        value = registry_key.GetValueByName(f"{entry_number:d}")
+        if value is None:
+            parser_mediator.ProduceExtractionWarning(
+                f"missing MRUListEx value: {entry_number:d} in key: "
+                f"{registry_key.path:s}"
+            )
 
-    elif not value.DataIsBinaryData():
-      logger.debug((
-          f'[{self.NAME:s}] Non-binary MRUListEx entry value: {entry_number:d} '
-          f'in key: {registry_key.path:s}'))
+        elif not value.DataIsBinaryData():
+            logger.debug(
+                f"[{self.NAME:s}] Non-binary MRUListEx entry value: {entry_number:d} "
+                f"in key: {registry_key.path:s}"
+            )
 
-    elif value.data:
-      utf16le_string_map = self._GetDataTypeMap('utf16le_string')
+        elif value.data:
+            utf16le_string_map = self._GetDataTypeMap("utf16le_string")
 
-      context = dtfabric_data_maps.DataTypeMapContext()
+            context = dtfabric_data_maps.DataTypeMapContext()
 
-      try:
-        path = self._ReadStructureFromByteStream(
-            value.data, 0, utf16le_string_map, context=context)
-      except (ValueError, errors.ParseError) as exception:
-        parser_mediator.ProduceExtractionWarning((
-            f'unable to parse MRUListEx entry value: {entry_number:d} with '
-            f'error: {exception!s}'))
+            try:
+                path = self._ReadStructureFromByteStream(
+                    value.data, 0, utf16le_string_map, context=context
+                )
+            except (ValueError, errors.ParseError) as exception:
+                parser_mediator.ProduceExtractionWarning(
+                    f"unable to parse MRUListEx entry value: {entry_number:d} with "
+                    f"error: {exception!s}"
+                )
+                return value_string
+
+            path = path.rstrip("\x00")
+
+            shell_item_data = value.data[context.byte_size :]
+
+            if not shell_item_data:
+                parser_mediator.ProduceExtractionWarning(
+                    f"missing shell item in MRUListEx value: {entry_number:d} in key: "
+                    f"{registry_key.path:s}"
+                )
+                value_string = f"Path: {path:s}"
+
+            else:
+                shell_items_parser = shell_items.ShellItemsParser(registry_key.path)
+                shell_items_parser.ParseByteStream(
+                    parser_mediator, shell_item_data, codepage=codepage
+                )
+                shell_item_path = shell_items_parser.CopyToPath() or "N/A"
+                value_string = f"Path: {path:s}, Shell item: [{shell_item_path:s}]"
+
         return value_string
 
-      path = path.rstrip('\x00')
+    # pylint: disable=arguments-differ
+    def ExtractEvents(self, parser_mediator, registry_key, codepage="cp1252", **kwargs):
+        """Extracts events from a Windows Registry key.
 
-      shell_item_data = value.data[context.byte_size:]
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
+          codepage (Optional[str]): extended ASCII string codepage.
+        """
+        self._ParseMRUListExKey(parser_mediator, registry_key, codepage=codepage)
 
-      if not shell_item_data:
-        parser_mediator.ProduceExtractionWarning((
-            f'missing shell item in MRUListEx value: {entry_number:d} in key: '
-            f'{registry_key.path:s}'))
-        value_string = f'Path: {path:s}'
-
-      else:
-        shell_items_parser = shell_items.ShellItemsParser(registry_key.path)
-        shell_items_parser.ParseByteStream(
-            parser_mediator, shell_item_data, codepage=codepage)
-
-        shell_item_path = shell_items_parser.CopyToPath() or 'N/A'
-        value_string = f'Path: {path:s}, Shell item: [{shell_item_path:s}]'
-
-    return value_string
-
-  # pylint: disable=arguments-differ
-  def ExtractEvents(
-      self, parser_mediator, registry_key, codepage='cp1252', **kwargs):
-    """Extracts events from a Windows Registry key.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
-      codepage (Optional[str]): extended ASCII string codepage.
-    """
-    self._ParseMRUListExKey(parser_mediator, registry_key, codepage=codepage)
-
-    if registry_key.name == 'RecentDocs':
-      # For the RecentDocs MRUListEx we also need to parse its subkeys
-      # since the Registry key path does not support wildcards yet.
-      for subkey in registry_key.GetSubkeys():
-        self._ParseMRUListExKey(parser_mediator, subkey, codepage=codepage)
+        if registry_key.name == "RecentDocs":
+            # For the RecentDocs MRUListEx we also need to parse its subkeys
+            # since the Registry key path does not support wildcards yet.
+            for subkey in registry_key.GetSubkeys():
+                self._ParseMRUListExKey(parser_mediator, subkey, codepage=codepage)
 
 
 class MRUListExStringAndShellItemListWindowsRegistryPlugin(
-    BaseMRUListExWindowsRegistryPlugin):
-  """Windows Registry plugin to parse a string and shell item list MRUListEx."""
+    BaseMRUListExWindowsRegistryPlugin
+):
+    """Windows Registry plugin to parse a string and shell item list MRUListEx."""
 
-  NAME = 'mrulistex_string_and_shell_item_list'
-  DATA_FORMAT = 'Most Recently Used (MRU) Registry data'
+    NAME = "mrulistex_string_and_shell_item_list"
+    DATA_FORMAT = "Most Recently Used (MRU) Registry data"
 
-  FILTERS = frozenset([
-      interface.WindowsRegistryKeyPathFilter(
-          'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
-          'Explorer\\ComDlg32\\LastVisitedPidlMRU')])
+    FILTERS = frozenset(
+        [
+            interface.WindowsRegistryKeyPathFilter(
+                "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\"
+                "Explorer\\ComDlg32\\LastVisitedPidlMRU"
+            )
+        ]
+    )
 
-  # pylint: disable=arguments-differ
-  def _ParseMRUListExEntryValue(
-      self, parser_mediator, registry_key, entry_index, entry_number,
-      codepage='cp1252', **kwargs):
-    """Parses the MRUListEx entry value.
+    # pylint: disable=arguments-differ
+    def _ParseMRUListExEntryValue(
+        self,
+        parser_mediator,
+        registry_key,
+        entry_index,
+        entry_number,
+        codepage="cp1252",
+        **kwargs,
+    ):
+        """Parses the MRUListEx entry value.
 
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      registry_key (dfwinreg.WinRegistryKey): Windows Registry key that contains
-           the MRUListEx value.
-      entry_index (int): MRUListEx entry index.
-      entry_number (int): entry number.
-      codepage (Optional[str]): extended ASCII string codepage.
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          registry_key (dfwinreg.WinRegistryKey): Windows Registry key that contains
+               the MRUListEx value.
+          entry_index (int): MRUListEx entry index.
+          entry_number (int): entry number.
+          codepage (Optional[str]): extended ASCII string codepage.
 
-    Returns:
-      str: MRUList entry value.
-    """
-    value_string = ''
+        Returns:
+          str: MRUList entry value.
+        """
+        value_string = ""
 
-    value = registry_key.GetValueByName(f'{entry_number:d}')
-    if value is None:
-      parser_mediator.ProduceExtractionWarning((
-          f'missing MRUListEx value: {entry_number:d} in key: '
-          f'{registry_key.path:s}'))
+        value = registry_key.GetValueByName(f"{entry_number:d}")
+        if value is None:
+            parser_mediator.ProduceExtractionWarning(
+                f"missing MRUListEx value: {entry_number:d} in key: "
+                f"{registry_key.path:s}"
+            )
 
-    elif not value.DataIsBinaryData():
-      logger.debug((
-          f'[{self.NAME:s}] Non-binary MRUListEx entry value: {entry_number:d} '
-          f'in key: {registry_key.path:s}'))
+        elif not value.DataIsBinaryData():
+            logger.debug(
+                f"[{self.NAME:s}] Non-binary MRUListEx entry value: {entry_number:d} "
+                f"in key: {registry_key.path:s}"
+            )
 
-    elif value.data:
-      utf16le_string_map = self._GetDataTypeMap('utf16le_string')
+        elif value.data:
+            utf16le_string_map = self._GetDataTypeMap("utf16le_string")
 
-      context = dtfabric_data_maps.DataTypeMapContext()
+            context = dtfabric_data_maps.DataTypeMapContext()
 
-      try:
-        path = self._ReadStructureFromByteStream(
-            value.data, 0, utf16le_string_map, context=context)
-      except (ValueError, errors.ParseError) as exception:
-        parser_mediator.ProduceExtractionWarning((
-            f'unable to parse MRUListEx entry value: {entry_number:d} with '
-            f'error: {exception!s}'))
+            try:
+                path = self._ReadStructureFromByteStream(
+                    value.data, 0, utf16le_string_map, context=context
+                )
+            except (ValueError, errors.ParseError) as exception:
+                parser_mediator.ProduceExtractionWarning(
+                    f"unable to parse MRUListEx entry value: {entry_number:d} with "
+                    f"error: {exception!s}"
+                )
+                return value_string
+
+            path = path.rstrip("\x00")
+
+            shell_item_list_data = value.data[context.byte_size :]
+
+            if not shell_item_list_data:
+                parser_mediator.ProduceExtractionWarning(
+                    f"missing shell item in MRUListEx value: {entry_number:d} in key: "
+                    f"{registry_key.path:s}"
+                )
+                value_string = f"Path: {path:s}"
+
+            else:
+                shell_items_parser = shell_items.ShellItemsParser(registry_key.path)
+                shell_items_parser.ParseByteStream(
+                    parser_mediator, shell_item_list_data, codepage=codepage
+                )
+                shell_item_path = shell_items_parser.CopyToPath() or "N/A"
+                value_string = f"Path: {path:s}, Shell item path: {shell_item_path:s}"
+
         return value_string
 
-      path = path.rstrip('\x00')
+    # pylint: disable=arguments-differ
+    def ExtractEvents(self, parser_mediator, registry_key, codepage="cp1252", **kwargs):
+        """Extracts events from a Windows Registry key.
 
-      shell_item_list_data = value.data[context.byte_size:]
-
-      if not shell_item_list_data:
-        parser_mediator.ProduceExtractionWarning((
-            f'missing shell item in MRUListEx value: {entry_number:d} in key: '
-            f'{registry_key.path:s}'))
-        value_string = f'Path: {path:s}'
-
-      else:
-        shell_items_parser = shell_items.ShellItemsParser(registry_key.path)
-        shell_items_parser.ParseByteStream(
-            parser_mediator, shell_item_list_data, codepage=codepage)
-
-        shell_item_path = shell_items_parser.CopyToPath() or 'N/A'
-        value_string = f'Path: {path:s}, Shell item path: {shell_item_path:s}'
-
-    return value_string
-
-  # pylint: disable=arguments-differ
-  def ExtractEvents(
-      self, parser_mediator, registry_key, codepage='cp1252', **kwargs):
-    """Extracts events from a Windows Registry key.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
-      codepage (Optional[str]): extended ASCII string codepage.
-    """
-    self._ParseMRUListExKey(parser_mediator, registry_key, codepage=codepage)
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
+          codepage (Optional[str]): extended ASCII string codepage.
+        """
+        self._ParseMRUListExKey(parser_mediator, registry_key, codepage=codepage)
 
 
-winreg_parser.WinRegistryParser.RegisterPlugins([
-    MRUListExStringWindowsRegistryPlugin,
-    MRUListExShellItemListWindowsRegistryPlugin,
-    MRUListExStringAndShellItemWindowsRegistryPlugin,
-    MRUListExStringAndShellItemListWindowsRegistryPlugin])
+winreg_parser.WinRegistryParser.RegisterPlugins(
+    [
+        MRUListExStringWindowsRegistryPlugin,
+        MRUListExShellItemListWindowsRegistryPlugin,
+        MRUListExStringAndShellItemWindowsRegistryPlugin,
+        MRUListExStringAndShellItemListWindowsRegistryPlugin,
+    ]
+)

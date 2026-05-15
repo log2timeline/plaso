@@ -8,219 +8,229 @@ from plaso.output import interface
 
 
 class SortedStringHeap:
-  """Heap to sort output strings."""
+    """Heap to sort output strings."""
 
-  _MAXIMUM_NUMBER_OF_STRINGS = 100000
+    _MAXIMUM_NUMBER_OF_STRINGS = 100000
 
-  def __init__(self):
-    """Initializes a heap."""
-    super().__init__()
-    self._heap = []
+    def __init__(self):
+        """Initializes a heap."""
+        super().__init__()
+        self._heap = []
 
-  def IsFull(self):
-    """Determines if the heap is full.
+    def IsFull(self):
+        """Determines if the heap is full.
 
-    Returns:
-      bool: True if the heap is full.
-    """
-    return len(self._heap) >= self._MAXIMUM_NUMBER_OF_STRINGS
+        Returns:
+          bool: True if the heap is full.
+        """
+        return len(self._heap) >= self._MAXIMUM_NUMBER_OF_STRINGS
 
-  def PopString(self):
-    """Pops a string from the heap.
+    def PopString(self):
+        """Pops a string from the heap.
 
-    Returns:
-      str: string.
-    """
-    try:
-      _, string = heapq.heappop(self._heap)
-    except IndexError:
-      return None
+        Returns:
+          str: string.
+        """
+        try:
+            _, string = heapq.heappop(self._heap)
+        except IndexError:
+            return None
 
-    return string
+        return string
 
-  def PopStrings(self):
-    """Pops strings from the heap.
+    def PopStrings(self):
+        """Pops strings from the heap.
 
-    Yields:
-      str: string.
-    """
-    string = self.PopString()
-    while string:
-      yield string
-      string = self.PopString()
+        Yields:
+          str: string.
+        """
+        string = self.PopString()
+        while string:
+            yield string
+            string = self.PopString()
 
-  def PushString(self, sort_key, string):
-    """Pushes a string onto the heap.
+    def PushString(self, sort_key, string):
+        """Pushes a string onto the heap.
 
-    Args:
-      sort_key (str): key for the sort order.
-      string (str): string.
-    """
-    heapq.heappush(self._heap, (sort_key, string))
+        Args:
+          sort_key (str): key for the sort order.
+          string (str): string.
+        """
+        heapq.heappush(self._heap, (sort_key, string))
 
 
 class TextFileOutputModule(interface.OutputModule):
-  """Shared functionality of an output module that writes to a text file."""
+    """Shared functionality of an output module that writes to a text file."""
 
-  WRITES_OUTPUT_FILE = True
+    WRITES_OUTPUT_FILE = True
 
-  _ENCODING = 'utf-8'
+    _ENCODING = "utf-8"
 
-  def __init__(self):
-    """Initializes an output module that writes to a text file."""
-    super().__init__()
-    self._file_object = None
+    def __init__(self):
+        """Initializes an output module that writes to a text file."""
+        super().__init__()
+        self._file_object = None
 
-  def Close(self):
-    """Closes the output file."""
-    if self._file_object:
-      self._file_object.close()
-      self._file_object = None
+    def Close(self):
+        """Closes the output file."""
+        if self._file_object:
+            self._file_object.close()
+            self._file_object = None
 
-  @abc.abstractmethod
-  def GetFieldValues(
-      self, output_mediator, event, event_data, event_data_stream, event_tag):
-    """Retrieves the output field values.
+    @abc.abstractmethod
+    def GetFieldValues(
+        self, output_mediator, event, event_data, event_data_stream, event_tag
+    ):
+        """Retrieves the output field values.
 
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfVFS.
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-      event_tag (EventTag): event tag.
+        Args:
+          output_mediator (OutputMediator): mediates interactions between output
+              modules and other components, such as storage and dfVFS.
+          event (EventObject): event.
+          event_data (EventData): event data.
+          event_data_stream (EventDataStream): event data stream.
+          event_tag (EventTag): event tag.
 
-    Returns:
-      dict[str, str]: output field values per name.
-    """
+        Returns:
+          dict[str, str]: output field values per name.
+        """
 
-  def Open(self, path=None, **kwargs):  # pylint: disable=arguments-differ
-    """Opens the output file.
+    def Open(self, path=None, **kwargs):  # pylint: disable=arguments-differ
+        """Opens the output file.
 
-    Args:
-      path (Optional[str]): path of the output file.
+        Args:
+          path (Optional[str]): path of the output file.
 
-    Raises:
-      OSError: if the specified output file already exists.
-      ValueError: if path is not set.
-    """
-    if not path:
-      raise ValueError('Missing path.')
+        Raises:
+          OSError: if the specified output file already exists.
+          ValueError: if path is not set.
+        """
+        if not path:
+            raise ValueError("Missing path.")
 
-    if os.path.isfile(path):
-      raise OSError(
-          f'Unable to use an already existing file for output '
-          f'[{path:s}]')
+        if os.path.isfile(path):
+            raise OSError(
+                f"Unable to use an already existing file for output [{path:s}]"
+            )
 
-    self._file_object = open(path, 'wt', encoding=self._ENCODING)  # pylint: disable=consider-using-with
+        # pylint: disable=consider-using-with
+        self._file_object = open(path, "wt", encoding=self._ENCODING)
 
-  @abc.abstractmethod
-  def WriteFieldValues(self, output_mediator, field_values):
-    """Writes field values to the output.
+    @abc.abstractmethod
+    def WriteFieldValues(self, output_mediator, field_values):
+        """Writes field values to the output.
 
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfVFS.
-      field_values (dict[str, str]): output field values per name.
-    """
+        Args:
+          output_mediator (OutputMediator): mediates interactions between output
+              modules and other components, such as storage and dfVFS.
+          field_values (dict[str, str]): output field values per name.
+        """
 
-  def WriteLine(self, text):
-    """Writes a line of text to the output file.
+    def WriteLine(self, text):
+        """Writes a line of text to the output file.
 
-    Args:
-      text (str): text to output.
-    """
-    self._file_object.write(f'{text:s}\n')
+        Args:
+          text (str): text to output.
+        """
+        self._file_object.write(f"{text:s}\n")
 
-  def WriteText(self, text):
-    """Writes text to the output file.
+    def WriteText(self, text):
+        """Writes text to the output file.
 
-    Args:
-      text (str): text to output.
-    """
-    self._file_object.write(text)
+        Args:
+          text (str): text to output.
+        """
+        self._file_object.write(text)
 
 
 class SortedTextFileOutputModule(TextFileOutputModule):
-  """Shared functionality of an output module that writes to a text file."""
+    """Shared functionality of an output module that writes to a text file."""
 
-  _SORT_KEY_FIELD_NAMES = ['time']
+    _SORT_KEY_FIELD_NAMES = ["time"]
 
-  def __init__(self, event_formatting_helper):
-    """Initializes an output module that writes to a text file.
+    def __init__(self, event_formatting_helper):
+        """Initializes an output module that writes to a text file.
 
-    Args:
-      event_formatting_helper (EventFormattingHelper): event formatting helper.
-    """
-    super().__init__()
-    self._event_formatting_helper = event_formatting_helper
-    self._last_primary_sort_key = None
-    self._sorted_strings_heap = SortedStringHeap()
+        Args:
+          event_formatting_helper (EventFormattingHelper): event formatting helper.
+        """
+        super().__init__()
+        self._event_formatting_helper = event_formatting_helper
+        self._last_primary_sort_key = None
+        self._sorted_strings_heap = SortedStringHeap()
 
-  def _FlushSortedStringsHeap(self):
-    """Flushed the sorted strings heap."""
-    for output_text in self._sorted_strings_heap.PopStrings():
-      self.WriteText(output_text)
+    def _FlushSortedStringsHeap(self):
+        """Flushed the sorted strings heap."""
+        for output_text in self._sorted_strings_heap.PopStrings():
+            self.WriteText(output_text)
 
-    self._last_primary_sort_key = None
+        self._last_primary_sort_key = None
 
-  @abc.abstractmethod
-  def _GetString(self, output_mediator, field_values):
-    """Retrieves an output string.
+    @abc.abstractmethod
+    def _GetString(self, output_mediator, field_values):
+        """Retrieves an output string.
 
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfVFS.
-      field_values (dict[str, str]): output field values per name.
+        Args:
+          output_mediator (OutputMediator): mediates interactions between output
+              modules and other components, such as storage and dfVFS.
+          field_values (dict[str, str]): output field values per name.
 
-    Returns:
-      str: output string.
-    """
+        Returns:
+          str: output string.
+        """
 
-  def GetFieldValues(
-      self, output_mediator, event, event_data, event_data_stream, event_tag):
-    """Retrieves the output field values.
+    def GetFieldValues(
+        self, output_mediator, event, event_data, event_data_stream, event_tag
+    ):
+        """Retrieves the output field values.
 
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfVFS.
-      event (EventObject): event.
-      event_data (EventData): event data.
-      event_data_stream (EventDataStream): event data stream.
-      event_tag (EventTag): event tag.
+        Args:
+          output_mediator (OutputMediator): mediates interactions between output
+              modules and other components, such as storage and dfVFS.
+          event (EventObject): event.
+          event_data (EventData): event data.
+          event_data_stream (EventDataStream): event data stream.
+          event_tag (EventTag): event tag.
 
-    Returns:
-      dict[str, str]: output field values per name.
-    """
-    return self._event_formatting_helper.GetFieldValues(
-        output_mediator, event, event_data, event_data_stream, event_tag)
+        Returns:
+          dict[str, str]: output field values per name.
+        """
+        return self._event_formatting_helper.GetFieldValues(
+            output_mediator, event, event_data, event_data_stream, event_tag
+        )
 
-  def WriteFieldValues(self, output_mediator, field_values):
-    """Writes field values to the output.
+    def WriteFieldValues(self, output_mediator, field_values):
+        """Writes field values to the output.
 
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfVFS.
-      field_values (dict[str, str]): output field values per name.
-    """
-    primary_sort_key = field_values.get(self._SORT_KEY_FIELD_NAMES[0])
-    if self._last_primary_sort_key is None:
-      self._last_primary_sort_key = primary_sort_key
+        Args:
+          output_mediator (OutputMediator): mediates interactions between output
+              modules and other components, such as storage and dfVFS.
+          field_values (dict[str, str]): output field values per name.
+        """
+        primary_sort_key = field_values.get(self._SORT_KEY_FIELD_NAMES[0])
+        if self._last_primary_sort_key is None:
+            self._last_primary_sort_key = primary_sort_key
 
-    if (primary_sort_key != self._last_primary_sort_key or
-        self._sorted_strings_heap.IsFull()):
-      self._FlushSortedStringsHeap()
+        if (
+            primary_sort_key != self._last_primary_sort_key
+            or self._sorted_strings_heap.IsFull()
+        ):
+            self._FlushSortedStringsHeap()
 
-    output_text = self._GetString(output_mediator, field_values)
-    if output_text:
-      sort_key = ' '.join([field_values.get(field_name) or ''
-                           for field_name in self._SORT_KEY_FIELD_NAMES])
-      self._sorted_strings_heap.PushString(sort_key, output_text)
+        output_text = self._GetString(output_mediator, field_values)
+        if output_text:
+            sort_key = " ".join(
+                [
+                    field_values.get(field_name) or ""
+                    for field_name in self._SORT_KEY_FIELD_NAMES
+                ]
+            )
+            self._sorted_strings_heap.PushString(sort_key, output_text)
 
-  def WriteFooter(self):
-    """Writes the footer to the output.
+    def WriteFooter(self):
+        """Writes the footer to the output.
 
-    Can be used for post-processing or output after the last event is written,
-    such as writing a file footer.
-    """
-    self._FlushSortedStringsHeap()
+        Can be used for post-processing or output after the last event is written,
+        such as writing a file footer.
+        """
+        self._FlushSortedStringsHeap()

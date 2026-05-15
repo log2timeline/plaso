@@ -12,11 +12,11 @@ from tests.cli.helpers import test_lib
 
 
 class XLSXOutputArgumentsHelperTest(test_lib.OutputModuleArgumentsHelperTest):
-  """Tests the XLSX output module CLI arguments helper."""
+    """Tests the XLSX output module CLI arguments helper."""
 
-  # pylint: disable=no-member,protected-access
+    # pylint: disable=no-member,protected-access
 
-  _EXPECTED_OUTPUT = f"""\
+    _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--fields FIELDS] [--timestamp_format TIMESTAMP_FORMAT]
 
 Test argument parser.
@@ -28,32 +28,29 @@ Test argument parser.
                         datetimecolumn of the XLSX spreadsheet.
 """
 
-  def testAddArguments(self):
-    """Tests the AddArguments function."""
-    argument_parser = self._GetTestArgumentParser('cli_helper.py')
+    def testAddArguments(self):
+        """Tests the AddArguments function."""
+        argument_parser = self._GetTestArgumentParser("cli_helper.py")
 
-    xlsx_output.XLSXOutputArgumentsHelper.AddArguments(argument_parser)
+        xlsx_output.XLSXOutputArgumentsHelper.AddArguments(argument_parser)
 
-    output = self._RunArgparseFormatHelp(argument_parser)
-    self.assertEqual(output, self._EXPECTED_OUTPUT)
+        output = self._RunArgparseFormatHelp(argument_parser)
+        self.assertEqual(output, self._EXPECTED_OUTPUT)
 
-  def testParseOptions(self):
-    """Tests the ParseOptions function."""
-    options = cli_test_lib.TestOptions()
-    output_module = xlsx.XLSXOutputModule()
+    def testParseOptions(self):
+        """Tests the ParseOptions function."""
+        options = cli_test_lib.TestOptions()
+        output_module = xlsx.XLSXOutputModule()
 
-    with self.assertRaises(errors.BadConfigOption):
-      xlsx_output.XLSXOutputArgumentsHelper.ParseOptions(
-          options, output_module)
+        with self.assertRaises(errors.BadConfigOption):
+            xlsx_output.XLSXOutputArgumentsHelper.ParseOptions(options, output_module)
 
-    options.write = 'plaso.xlsx'
-    xlsx_output.XLSXOutputArgumentsHelper.ParseOptions(
-        options, output_module)
+        options.write = "plaso.xlsx"
+        xlsx_output.XLSXOutputArgumentsHelper.ParseOptions(options, output_module)
 
-    with self.assertRaises(errors.BadConfigObject):
-      xlsx_output.XLSXOutputArgumentsHelper.ParseOptions(
-          options, None)
+        with self.assertRaises(errors.BadConfigObject):
+            xlsx_output.XLSXOutputArgumentsHelper.ParseOptions(options, None)
 
 
-if __name__ == '__main__':
-  unittest.main()
+if __name__ == "__main__":
+    unittest.main()

@@ -12,14 +12,14 @@ from tests.cli import test_lib as cli_test_lib
 
 
 class FilterFileArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
-  """Tests for the filter file CLI arguments helper."""
+    """Tests for the filter file CLI arguments helper."""
 
-  # pylint: disable=no-member,protected-access
+    # pylint: disable=no-member,protected-access
 
-  _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
+    _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
 
-  if _PYTHON3_13_OR_LATER:
-    _EXPECTED_OUTPUT = f"""\
+    if _PYTHON3_13_OR_LATER:
+        _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [-f FILE_FILTER]
 
 Test argument parser.
@@ -33,8 +33,8 @@ Test argument parser.
                         expression.
 """
 
-  else:
-    _EXPECTED_OUTPUT = f"""\
+    else:
+        _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [-f FILE_FILTER]
 
 Test argument parser.
@@ -48,30 +48,30 @@ Test argument parser.
                         expression.
 """
 
-  def testAddArguments(self):
-    """Tests the AddArguments function."""
-    argument_parser = self._GetTestArgumentParser('cli_helper.py')
+    def testAddArguments(self):
+        """Tests the AddArguments function."""
+        argument_parser = self._GetTestArgumentParser("cli_helper.py")
 
-    filter_file.FilterFileArgumentsHelper.AddArguments(argument_parser)
+        filter_file.FilterFileArgumentsHelper.AddArguments(argument_parser)
 
-    output = self._RunArgparseFormatHelp(argument_parser)
-    self.assertEqual(output, self._EXPECTED_OUTPUT)
+        output = self._RunArgparseFormatHelp(argument_parser)
+        self.assertEqual(output, self._EXPECTED_OUTPUT)
 
-  def testParseOptions(self):
-    """Tests the ParseOptions function."""
-    options = cli_test_lib.TestOptions()
-    options.file_filter = self._GetTestFilePath(['testdir', 'filter2.txt'])
+    def testParseOptions(self):
+        """Tests the ParseOptions function."""
+        options = cli_test_lib.TestOptions()
+        options.file_filter = self._GetTestFilePath(["testdir", "filter2.txt"])
 
-    test_tool = tools.CLITool()
-    filter_file.FilterFileArgumentsHelper.ParseOptions(options, test_tool)
+        test_tool = tools.CLITool()
+        filter_file.FilterFileArgumentsHelper.ParseOptions(options, test_tool)
 
-    self.assertEqual(test_tool._filter_file, options.file_filter)
+        self.assertEqual(test_tool._filter_file, options.file_filter)
 
-    with self.assertRaises(errors.BadConfigObject):
-      filter_file.FilterFileArgumentsHelper.ParseOptions(options, None)
+        with self.assertRaises(errors.BadConfigObject):
+            filter_file.FilterFileArgumentsHelper.ParseOptions(options, None)
 
-    # TODO: improve test coverage.
+        # TODO: improve test coverage.
 
 
-if __name__ == '__main__':
-  unittest.main()
+if __name__ == "__main__":
+    unittest.main()

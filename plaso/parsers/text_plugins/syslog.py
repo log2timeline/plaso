@@ -19,827 +19,919 @@ from plaso.parsers.text_plugins import interface
 
 
 class SyslogCommentEventData(events.EventData):
-  """Syslog comment event data.
+    """Syslog comment event data.
 
-  Attributes:
-    body (str): message body.
-    last_written_time (dfdatetime.DateTimeValues): entry last written date and
-        time.
-  """
+    Attributes:
+      body (str): message body.
+      last_written_time (dfdatetime.DateTimeValues): entry last written date and
+          time.
+    """
 
-  DATA_TYPE = 'syslog:comment'
+    DATA_TYPE = "syslog:comment"
 
-  def __init__(self):
-    """Initializes event data."""
-    super().__init__(data_type=self.DATA_TYPE)
-    self.body = None
-    self.last_written_time = None
+    def __init__(self):
+        """Initializes event data."""
+        super().__init__(data_type=self.DATA_TYPE)
+        self.body = None
+        self.last_written_time = None
 
 
 class SyslogLineEventData(events.EventData):
-  """Syslog line event data.
+    """Syslog line event data.
 
-  Attributes:
-    body (str): message body.
-    facility (str): facility.
-    hostname (str): hostname of the reporter.
-    last_written_time (dfdatetime.DateTimeValues): entry last written date and
-        time.
-    message_identifier (str): message identifier.
-    pid (str): process identifier of the reporter.
-    reporter (str): reporter.
-    severity (str): severity.
-  """
-
-  DATA_TYPE = 'syslog:line'
-
-  def __init__(self, data_type=DATA_TYPE):
-    """Initializes an event data attribute container.
-
-    Args:
-      data_type (Optional[str]): event data type indicator.
+    Attributes:
+      body (str): message body.
+      facility (str): facility.
+      hostname (str): hostname of the reporter.
+      last_written_time (dfdatetime.DateTimeValues): entry last written date and
+          time.
+      message_identifier (str): message identifier.
+      pid (str): process identifier of the reporter.
+      reporter (str): reporter.
+      severity (str): severity.
     """
-    super().__init__(data_type=data_type)
-    self.body = None
-    self.facility = None
-    self.hostname = None
-    self.last_written_time = None
-    self.message_identifier = None
-    self.pid = None
-    self.reporter = None
-    self.severity = None
+
+    DATA_TYPE = "syslog:line"
+
+    def __init__(self, data_type=DATA_TYPE):
+        """Initializes an event data attribute container.
+
+        Args:
+          data_type (Optional[str]): event data type indicator.
+        """
+        super().__init__(data_type=data_type)
+        self.body = None
+        self.facility = None
+        self.hostname = None
+        self.last_written_time = None
+        self.message_identifier = None
+        self.pid = None
+        self.reporter = None
+        self.severity = None
 
 
 class SyslogCronTaskRunEventData(SyslogLineEventData):
-  """Syslog cron task run event data.
+    """Syslog cron task run event data.
 
-  Attributes:
-    command (str): command executed.
-    last_written_time (dfdatetime.DateTimeValues): entry last written date and
-        time.
-    username (str): name of user the command was executed.
-  """
+    Attributes:
+      command (str): command executed.
+      last_written_time (dfdatetime.DateTimeValues): entry last written date and
+          time.
+      username (str): name of user the command was executed.
+    """
 
-  DATA_TYPE = 'syslog:cron:task_run'
+    DATA_TYPE = "syslog:cron:task_run"
 
-  def __init__(self):
-    """Initializes event data."""
-    super().__init__(data_type=self.DATA_TYPE)
-    self.command = None
-    self.last_written_time = None
-    self.username = None
+    def __init__(self):
+        """Initializes event data."""
+        super().__init__(data_type=self.DATA_TYPE)
+        self.command = None
+        self.last_written_time = None
+        self.username = None
 
 
 class SyslogSSHEventData(SyslogLineEventData):
-  """SSH event data.
+    """SSH event data.
 
-  Attributes:
-    authentication_method (str): authentication method.
-    fingerprint (str): fingerprint.
-    ip_address (str): IP address.
-    last_written_time (dfdatetime.DateTimeValues): entry last written date and
-        time.
-    port (str): port.
-    protocol (str): protocol.
-    username (str): name of user the command was executed.
-  """
+    Attributes:
+      authentication_method (str): authentication method.
+      fingerprint (str): fingerprint.
+      ip_address (str): IP address.
+      last_written_time (dfdatetime.DateTimeValues): entry last written date and
+          time.
+      port (str): port.
+      protocol (str): protocol.
+      username (str): name of user the command was executed.
+    """
 
-  def __init__(self):
-    """Initializes event data."""
-    super().__init__(data_type=self.DATA_TYPE)
-    self.authentication_method = None
-    self.fingerprint = None
-    self.ip_address = None
-    self.last_written_time = None
-    self.port = None
-    self.protocol = None
-    self.username = None
+    def __init__(self):
+        """Initializes event data."""
+        super().__init__(data_type=self.DATA_TYPE)
+        self.authentication_method = None
+        self.fingerprint = None
+        self.ip_address = None
+        self.last_written_time = None
+        self.port = None
+        self.protocol = None
+        self.username = None
 
 
 # TODO: merge separate SyslogSSHEventData classes.
 class SyslogSSHLoginEventData(SyslogSSHEventData):
-  """SSH login event data."""
+    """SSH login event data."""
 
-  DATA_TYPE = 'syslog:ssh:login'
+    DATA_TYPE = "syslog:ssh:login"
 
 
 class SyslogSSHFailedConnectionEventData(SyslogSSHEventData):
-  """SSH failed connection event data."""
+    """SSH failed connection event data."""
 
-  DATA_TYPE = 'syslog:ssh:failed_connection'
+    DATA_TYPE = "syslog:ssh:failed_connection"
 
 
 class SyslogSSHOpenedConnectionEventData(SyslogSSHEventData):
-  """SSH opened connection event data."""
+    """SSH opened connection event data."""
 
-  DATA_TYPE = 'syslog:ssh:opened_connection'
+    DATA_TYPE = "syslog:ssh:opened_connection"
 
 
 class BaseSyslogTextPlugin(interface.TextPlugin):
-  """Shared functionality for syslog log file text parser plugins."""
+    """Shared functionality for syslog log file text parser plugins."""
 
-  # pylint: disable=abstract-method
+    # pylint: disable=abstract-method
 
-  _CRON_USERNAME = (
-      pyparsing.Literal('(') +
-      pyparsing.Word(pyparsing.alphanums).set_results_name('username') +
-      pyparsing.Literal(')'))
+    _CRON_USERNAME = (
+        pyparsing.Literal("(")
+        + pyparsing.Word(pyparsing.alphanums).set_results_name("username")
+        + pyparsing.Literal(")")
+    )
 
-  _CRON_COMMAND_END = pyparsing.Literal(')') + pyparsing.StringEnd()
+    _CRON_COMMAND_END = pyparsing.Literal(")") + pyparsing.StringEnd()
 
-  _CRON_COMMAND = (
-      pyparsing.Literal('CMD') + pyparsing.Literal('(') +
-      pyparsing.SkipTo(_CRON_COMMAND_END).set_results_name('command') +
-      _CRON_COMMAND_END)
+    _CRON_COMMAND = (
+        pyparsing.Literal("CMD")
+        + pyparsing.Literal("(")
+        + pyparsing.SkipTo(_CRON_COMMAND_END).set_results_name("command")
+        + _CRON_COMMAND_END
+    )
 
-  _CRON_TASK_RUN = _CRON_USERNAME + _CRON_COMMAND + pyparsing.StringEnd()
+    _CRON_TASK_RUN = _CRON_USERNAME + _CRON_COMMAND + pyparsing.StringEnd()
 
-  _CRON_MESSAGE = pyparsing.Group(_CRON_TASK_RUN).set_results_name('task_run')
+    _CRON_MESSAGE = pyparsing.Group(_CRON_TASK_RUN).set_results_name("task_run")
 
-  _SSHD_AUTHENTICATION_METHOD = (
-      pyparsing.Keyword('password') | pyparsing.Keyword('publickey'))
+    _SSHD_AUTHENTICATION_METHOD = pyparsing.Keyword("password") | pyparsing.Keyword(
+        "publickey"
+    )
 
-  _SSHD_FINGER_PRINT = pyparsing.Combine(
-      pyparsing.Literal('RSA ') +
-      pyparsing.Word(':' + pyparsing.hexnums)).set_results_name('fingerprint')
+    _SSHD_FINGER_PRINT = pyparsing.Combine(
+        pyparsing.Literal("RSA ") + pyparsing.Word(":" + pyparsing.hexnums)
+    ).set_results_name("fingerprint")
 
-  _SSH_USERNAME = pyparsing.Word(pyparsing.alphanums).set_results_name(
-      'username')
+    _SSH_USERNAME = pyparsing.Word(pyparsing.alphanums).set_results_name("username")
 
-  _SSH_IP_ADDRESS = (
-      pyparsing.pyparsing_common.ipv4_address |
-      pyparsing.pyparsing_common.ipv6_address)
+    _SSH_IP_ADDRESS = (
+        pyparsing.pyparsing_common.ipv4_address
+        | pyparsing.pyparsing_common.ipv6_address
+    )
 
-  _SSH_PORT = pyparsing.Word(pyparsing.nums, max=5).set_results_name('port')
+    _SSH_PORT = pyparsing.Word(pyparsing.nums, max=5).set_results_name("port")
 
-  _SSHD_FAILED_CONNECTION = (
-      pyparsing.Literal('Failed') +
-      _SSHD_AUTHENTICATION_METHOD.set_results_name('authentication_method') +
-      pyparsing.Literal('for') + _SSH_USERNAME +
-      pyparsing.Literal('from') +
-      _SSH_IP_ADDRESS.set_results_name('ip_address') +
-      pyparsing.Literal('port') + _SSH_PORT +
-      pyparsing.StringEnd())
+    _SSHD_FAILED_CONNECTION = (
+        pyparsing.Literal("Failed")
+        + _SSHD_AUTHENTICATION_METHOD.set_results_name("authentication_method")
+        + pyparsing.Literal("for")
+        + _SSH_USERNAME
+        + pyparsing.Literal("from")
+        + _SSH_IP_ADDRESS.set_results_name("ip_address")
+        + pyparsing.Literal("port")
+        + _SSH_PORT
+        + pyparsing.StringEnd()
+    )
 
-  _SSHD_LOGIN = (
-      pyparsing.Literal('Accepted') +
-      _SSHD_AUTHENTICATION_METHOD.set_results_name('authentication_method') +
-      pyparsing.Literal('for') + _SSH_USERNAME +
-      pyparsing.Literal('from') +
-      _SSH_IP_ADDRESS.set_results_name('ip_address') +
-      pyparsing.Literal('port') + _SSH_PORT +
-      pyparsing.Literal('ssh2').set_results_name('protocol') +
-      pyparsing.Optional(pyparsing.Literal(':') + _SSHD_FINGER_PRINT) +
-      pyparsing.StringEnd())
+    _SSHD_LOGIN = (
+        pyparsing.Literal("Accepted")
+        + _SSHD_AUTHENTICATION_METHOD.set_results_name("authentication_method")
+        + pyparsing.Literal("for")
+        + _SSH_USERNAME
+        + pyparsing.Literal("from")
+        + _SSH_IP_ADDRESS.set_results_name("ip_address")
+        + pyparsing.Literal("port")
+        + _SSH_PORT
+        + pyparsing.Literal("ssh2").set_results_name("protocol")
+        + pyparsing.Optional(pyparsing.Literal(":") + _SSHD_FINGER_PRINT)
+        + pyparsing.StringEnd()
+    )
 
-  _SSHD_OPENED_CONNECTION = (
-      pyparsing.Literal('Connection from') +
-      _SSH_IP_ADDRESS.set_results_name('ip_address') +
-      pyparsing.Literal('port') + _SSH_PORT +
-      pyparsing.StringEnd())
+    _SSHD_OPENED_CONNECTION = (
+        pyparsing.Literal("Connection from")
+        + _SSH_IP_ADDRESS.set_results_name("ip_address")
+        + pyparsing.Literal("port")
+        + _SSH_PORT
+        + pyparsing.StringEnd()
+    )
 
-  _SSHD_MESSAGE = (
-      pyparsing.Group(_SSHD_FAILED_CONNECTION).set_results_name(
-          'failed_connection') ^
-      pyparsing.Group(_SSHD_LOGIN).set_results_name('login') ^
-      pyparsing.Group(_SSHD_OPENED_CONNECTION).set_results_name(
-          'opened_connection'))
+    _SSHD_MESSAGE = (
+        pyparsing.Group(_SSHD_FAILED_CONNECTION).set_results_name("failed_connection")
+        ^ pyparsing.Group(_SSHD_LOGIN).set_results_name("login")
+        ^ pyparsing.Group(_SSHD_OPENED_CONNECTION).set_results_name("opened_connection")
+    )
 
-  def _ParseCronMessageBody(self, body):
-    """Parses a cron syslog message body.
+    def _ParseCronMessageBody(self, body):
+        """Parses a cron syslog message body.
 
-    Args:
-      body (str): syslog message body.
+        Args:
+          body (str): syslog message body.
 
-    Returns:
-      SyslogCronTaskRunEventData: event data or None if not available.
-    """
-    try:
-      structure = self._CRON_MESSAGE.parse_string(body)
-    except pyparsing.ParseException as exception:
-      logger.debug(
-          f'Unable to parse cron message body with error: {exception!s}')
-      return None
+        Returns:
+          SyslogCronTaskRunEventData: event data or None if not available.
+        """
+        try:
+            structure = self._CRON_MESSAGE.parse_string(body)
+        except pyparsing.ParseException as exception:
+            logger.debug(f"Unable to parse cron message body with error: {exception!s}")
+            return None
 
-    keys = list(structure.keys())
-    if len(keys) != 1:
-      return None
+        keys = list(structure.keys())
+        if len(keys) != 1:
+            return None
 
-    key = keys[0]
-    structure = structure[0]
+        key = keys[0]
+        structure = structure[0]
 
-    if key != 'task_run':
-      return None
+        if key != "task_run":
+            return None
 
-    event_data = SyslogCronTaskRunEventData()
-    event_data.body = structure.get('body')
-    event_data.command = structure.get('command')
-    event_data.hostname = structure.get('hostname')
-    event_data.pid = structure.get('pid')
-    event_data.reporter = structure.get('reporter')
-    event_data.severity = structure.get('severity')
-    event_data.username = structure.get('username')
+        event_data = SyslogCronTaskRunEventData()
+        event_data.body = structure.get("body")
+        event_data.command = structure.get("command")
+        event_data.hostname = structure.get("hostname")
+        event_data.pid = structure.get("pid")
+        event_data.reporter = structure.get("reporter")
+        event_data.severity = structure.get("severity")
+        event_data.username = structure.get("username")
 
-    return event_data
+        return event_data
 
-  def _ParseSshdMessageBody(self, body):
-    """Parses a sshd syslog message body.
+    def _ParseSshdMessageBody(self, body):
+        """Parses a sshd syslog message body.
 
-    Args:
-      body (str): syslog message body.
+        Args:
+          body (str): syslog message body.
 
-    Returns:
-      SyslogCronTaskRunEventData: event data or None if not available.
-    """
-    try:
-      structure = self._SSHD_MESSAGE.parse_string(body)
-    except pyparsing.ParseException as exception:
-      logger.debug(
-          f'Unable to parse sshd message body with error: {exception!s}')
-      return None
+        Returns:
+          SyslogCronTaskRunEventData: event data or None if not available.
+        """
+        try:
+            structure = self._SSHD_MESSAGE.parse_string(body)
+        except pyparsing.ParseException as exception:
+            logger.debug(f"Unable to parse sshd message body with error: {exception!s}")
+            return None
 
-    keys = list(structure.keys())
-    if len(keys) != 1:
-      return None
+        keys = list(structure.keys())
+        if len(keys) != 1:
+            return None
 
-    key = keys[0]
-    structure = structure[0]
+        key = keys[0]
+        structure = structure[0]
 
-    if key == 'failed_connection':
-      event_data = SyslogSSHFailedConnectionEventData()
-    elif key == 'login':
-      event_data = SyslogSSHLoginEventData()
-    elif key == 'opened_connection':
-      event_data = SyslogSSHOpenedConnectionEventData()
-    else:
-      return None
+        if key == "failed_connection":
+            event_data = SyslogSSHFailedConnectionEventData()
+        elif key == "login":
+            event_data = SyslogSSHLoginEventData()
+        elif key == "opened_connection":
+            event_data = SyslogSSHOpenedConnectionEventData()
+        else:
+            return None
 
-    event_data.authentication_method = structure.get(
-        'authentication_method', None)
-    event_data.body = structure.get('body')
-    event_data.fingerprint = structure.get('fingerprint')
-    event_data.hostname = structure.get('hostname')
-    event_data.ip_address = structure.get('ip_address')
-    event_data.pid = structure.get('pid')
-    event_data.protocol = structure.get('protocol')
-    event_data.port = structure.get('port')
-    event_data.reporter = structure.get('reporter')
-    event_data.severity = structure.get('severity')
-    event_data.username = structure.get('username')
+        event_data.authentication_method = structure.get("authentication_method", None)
+        event_data.body = structure.get("body")
+        event_data.fingerprint = structure.get("fingerprint")
+        event_data.hostname = structure.get("hostname")
+        event_data.ip_address = structure.get("ip_address")
+        event_data.pid = structure.get("pid")
+        event_data.protocol = structure.get("protocol")
+        event_data.port = structure.get("port")
+        event_data.reporter = structure.get("reporter")
+        event_data.severity = structure.get("severity")
+        event_data.username = structure.get("username")
 
-    return event_data
+        return event_data
 
 
 class SyslogTextPlugin(BaseSyslogTextPlugin):
-  """Text parser plugin for syslog log files."""
+    """Text parser plugin for syslog log files."""
 
-  NAME = 'syslog'
-  DATA_FORMAT = 'System log (syslog) file'
+    NAME = "syslog"
+    DATA_FORMAT = "System log (syslog) file"
 
-  ENCODING = 'utf-8'
+    ENCODING = "utf-8"
 
-  # The reporter and facility fields can contain any printable character, but
-  # to allow for processing of syslog formats that delimit the reporter and
-  # facility with printable characters, we remove certain common delimiters
-  # from the set of printable characters.
+    # The reporter and facility fields can contain any printable character, but
+    # to allow for processing of syslog formats that delimit the reporter and
+    # facility with printable characters, we remove certain common delimiters
+    # from the set of printable characters.
 
-  _REPORTER_CHARACTERS = ''.join(
-      [c for c in pyparsing.printables if c not in [':', '[', '<']])
+    _REPORTER_CHARACTERS = "".join(
+        [c for c in pyparsing.printables if c not in [":", "[", "<"]]
+    )
 
-  _FACILITY_CHARACTERS = ''.join(
-      [c for c in pyparsing.printables if c not in [':', '>']])
+    _FACILITY_CHARACTERS = "".join(
+        [c for c in pyparsing.printables if c not in [":", ">"]]
+    )
 
-  # Note that the following values are sorted in-order of their corresponding
-  # syslog protocol 23 priority value.
-  _SYSLOG_SEVERITY = [
-      'EMERG', 'ALERT', 'CRIT', 'ERR', 'WARNING', 'NOTICE', 'INFO', 'DEBUG']
+    # Note that the following values are sorted in-order of their corresponding
+    # syslog protocol 23 priority value.
+    _SYSLOG_SEVERITY = [
+        "EMERG",
+        "ALERT",
+        "CRIT",
+        "ERR",
+        "WARNING",
+        "NOTICE",
+        "INFO",
+        "DEBUG",
+    ]
 
-  # According to section 6.2.1 of
-  # https://datatracker.ietf.org/doc/html/draft-ietf-syslog-protocol-23
-  #  0             kernel messages
-  #  1             user-level messages
-  #  2             mail system
-  #  3             system daemons
-  #  4             security/authorization messages
-  #  5             messages generated internally by syslogd
-  #  6             line printer subsystem
-  #  7             network news subsystem
-  #  8             UUCP subsystem
-  #  9             clock daemon
-  # 10             security/authorization messages
-  # 11             FTP daemon
-  # 12             NTP subsystem
-  # 13             log audit
-  # 14             log alert
-  # 15             clock daemon (note 2)
-  # 16             local use 0  (local0)
-  # 17             local use 1  (local1)
-  # 18             local use 2  (local2)
-  # 19             local use 3  (local3)
-  # 20             local use 4  (local4)
-  # 21             local use 5  (local5)
-  # 22             local use 6  (local6)
-  # 23             local use 7  (local7)
-  _SYSLOG_FACILITY = [
-      'kernel message',
-      'user-level message',
-      'mail system',
-      'system daemons',
-      'security/authorization messages',
-      'messages generated internally by syslogd',
-      'line printer subsystem',
-      'network news subsystem',
-      'UUCP subsystem',
-      'clock daemon',
-      'security/authorization messages',
-      'FTP daemon',
-      'NTP subsystem',
-      'log audit',
-      'log alert',
-      'clock daemon',
-      'local use 0',
-      'local use 1',
-      'local use 2',
-      'local use 3',
-      'local use 4',
-      'local use 5',
-      'local use 6',
-      'local use 7']
+    # According to section 6.2.1 of
+    # https://datatracker.ietf.org/doc/html/draft-ietf-syslog-protocol-23
+    #  0             kernel messages
+    #  1             user-level messages
+    #  2             mail system
+    #  3             system daemons
+    #  4             security/authorization messages
+    #  5             messages generated internally by syslogd
+    #  6             line printer subsystem
+    #  7             network news subsystem
+    #  8             UUCP subsystem
+    #  9             clock daemon
+    # 10             security/authorization messages
+    # 11             FTP daemon
+    # 12             NTP subsystem
+    # 13             log audit
+    # 14             log alert
+    # 15             clock daemon (note 2)
+    # 16             local use 0  (local0)
+    # 17             local use 1  (local1)
+    # 18             local use 2  (local2)
+    # 19             local use 3  (local3)
+    # 20             local use 4  (local4)
+    # 21             local use 5  (local5)
+    # 22             local use 6  (local6)
+    # 23             local use 7  (local7)
+    _SYSLOG_FACILITY = [
+        "kernel message",
+        "user-level message",
+        "mail system",
+        "system daemons",
+        "security/authorization messages",
+        "messages generated internally by syslogd",
+        "line printer subsystem",
+        "network news subsystem",
+        "UUCP subsystem",
+        "clock daemon",
+        "security/authorization messages",
+        "FTP daemon",
+        "NTP subsystem",
+        "log audit",
+        "log alert",
+        "clock daemon",
+        "local use 0",
+        "local use 1",
+        "local use 2",
+        "local use 3",
+        "local use 4",
+        "local use 5",
+        "local use 6",
+        "local use 7",
+    ]
 
-  # TODO: change pattern to allow only spaces as a field separator.
-  _BODY_PATTERN = (
-      r'.*?(?=($|\n\w{3}\s+\d{1,2}\s\d{2}:\d{2}:\d{2})|'
-      r'($|\n\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}[\+|-]\d{2}:\d{2}\s)|'
-      r'($|\n<\d{1,3}>1\s\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}[\+|-]\d{2}'
-      r':\d{2}\s))')
+    # TODO: change pattern to allow only spaces as a field separator.
+    _BODY_PATTERN = (
+        r".*?(?=($|\n\w{3}\s+\d{1,2}\s\d{2}:\d{2}:\d{2})|"
+        r"($|\n\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}[\+|-]\d{2}:\d{2}\s)|"
+        r"($|\n<\d{1,3}>1\s\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}[\+|-]\d{2}"
+        r":\d{2}\s))"
+    )
 
-  _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).set_parse_action(
-      lambda tokens: int(tokens[0], 10))
+    _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).set_parse_action(
+        lambda tokens: int(tokens[0], 10)
+    )
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
-      lambda tokens: int(tokens[0], 10))
+    _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
+        lambda tokens: int(tokens[0], 10)
+    )
 
-  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).set_parse_action(
-      lambda tokens: int(tokens[0], 10))
+    _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).set_parse_action(
+        lambda tokens: int(tokens[0], 10)
+    )
 
-  _SIX_DIGITS = pyparsing.Word(pyparsing.nums, exact=6).set_parse_action(
-      lambda tokens: int(tokens[0], 10))
+    _SIX_DIGITS = pyparsing.Word(pyparsing.nums, exact=6).set_parse_action(
+        lambda tokens: int(tokens[0], 10)
+    )
 
-  _DATE_TIME_RFC3339 = (
-      _FOUR_DIGITS + pyparsing.Suppress('-') +
-      _TWO_DIGITS + pyparsing.Suppress('-') +
-      _TWO_DIGITS + pyparsing.Suppress('T') +
-      _TWO_DIGITS + pyparsing.Suppress(':') +
-      _TWO_DIGITS + pyparsing.Suppress(':') +
-      _TWO_DIGITS + pyparsing.Suppress('.') +
-      _SIX_DIGITS + pyparsing.Word('+-', exact=1) +
-      _TWO_DIGITS + pyparsing.Optional(
-          pyparsing.Suppress(':') + _TWO_DIGITS))
+    _DATE_TIME_RFC3339 = (
+        _FOUR_DIGITS
+        + pyparsing.Suppress("-")
+        + _TWO_DIGITS
+        + pyparsing.Suppress("-")
+        + _TWO_DIGITS
+        + pyparsing.Suppress("T")
+        + _TWO_DIGITS
+        + pyparsing.Suppress(":")
+        + _TWO_DIGITS
+        + pyparsing.Suppress(":")
+        + _TWO_DIGITS
+        + pyparsing.Suppress(".")
+        + _SIX_DIGITS
+        + pyparsing.Word("+-", exact=1)
+        + _TWO_DIGITS
+        + pyparsing.Optional(pyparsing.Suppress(":") + _TWO_DIGITS)
+    )
 
-  _PROCESS_IDENTIFIER = pyparsing.Word(pyparsing.nums, max=5).set_parse_action(
-      lambda tokens: int(tokens[0], 10))
+    _PROCESS_IDENTIFIER = pyparsing.Word(pyparsing.nums, max=5).set_parse_action(
+        lambda tokens: int(tokens[0], 10)
+    )
 
-  _REPORTER = pyparsing.Word(_REPORTER_CHARACTERS)
+    _REPORTER = pyparsing.Word(_REPORTER_CHARACTERS)
 
-  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
+    _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
-  # The ChromeOS syslog messages are of a format beginning with an
-  # ISO 8601 combined date and time expression with a time zone offset:
-  #   2016-10-25T12:37:23.297265-07:00
-  #
-  # This will then be followed by the SYSLOG Severity which will be one of:
-  #   EMERG,ALERT,CRIT,ERR,WARNING,NOTICE,INFO,DEBUG
-  #
-  # 2016-10-25T12:37:23.297265-07:00 INFO
+    # The ChromeOS syslog messages are of a format beginning with an
+    # ISO 8601 combined date and time expression with a time zone offset:
+    #   2016-10-25T12:37:23.297265-07:00
+    #
+    # This will then be followed by the SYSLOG Severity which will be one of:
+    #   EMERG,ALERT,CRIT,ERR,WARNING,NOTICE,INFO,DEBUG
+    #
+    # 2016-10-25T12:37:23.297265-07:00 INFO
 
-  _CHROMEOS_SYSLOG_LINE_BODY = (
-      pyparsing.one_of(_SYSLOG_SEVERITY).set_results_name('severity') +
-      _REPORTER.set_results_name('reporter') +
-      pyparsing.Optional(pyparsing.Suppress(':')) +
-      pyparsing.Optional(
-          pyparsing.Suppress('[') +
-          _PROCESS_IDENTIFIER.set_results_name('pid') +
-          pyparsing.Suppress(']')))
+    _CHROMEOS_SYSLOG_LINE_BODY = (
+        pyparsing.one_of(_SYSLOG_SEVERITY).set_results_name("severity")
+        + _REPORTER.set_results_name("reporter")
+        + pyparsing.Optional(pyparsing.Suppress(":"))
+        + pyparsing.Optional(
+            pyparsing.Suppress("[")
+            + _PROCESS_IDENTIFIER.set_results_name("pid")
+            + pyparsing.Suppress("]")
+        )
+    )
 
-  # The rsyslog file format (RSYSLOG_FileFormat) consists of:
-  # %TIMESTAMP% %HOSTNAME% %syslogtag%%msg%
-  #
-  # Where %TIMESTAMP% is in RFC-3339 date time format e.g.
-  # 2020-05-31T00:00:45.698463+00:00
+    # The rsyslog file format (RSYSLOG_FileFormat) consists of:
+    # %TIMESTAMP% %HOSTNAME% %syslogtag%%msg%
+    #
+    # Where %TIMESTAMP% is in RFC-3339 date time format e.g.
+    # 2020-05-31T00:00:45.698463+00:00
 
-  _RSYSLOG_LINE_BODY = (
-      pyparsing.Word(pyparsing.printables).set_results_name('hostname') +
-      _REPORTER.set_results_name('reporter') +
-      pyparsing.Optional(
-          pyparsing.Suppress('[') +
-          _PROCESS_IDENTIFIER.set_results_name('pid') +
-          pyparsing.Suppress(']')) +
-      pyparsing.Optional(
-          pyparsing.Suppress('<') +
-          pyparsing.Word(_FACILITY_CHARACTERS).set_results_name('facility') +
-          pyparsing.Suppress('>')))
+    _RSYSLOG_LINE_BODY = (
+        pyparsing.Word(pyparsing.printables).set_results_name("hostname")
+        + _REPORTER.set_results_name("reporter")
+        + pyparsing.Optional(
+            pyparsing.Suppress("[")
+            + _PROCESS_IDENTIFIER.set_results_name("pid")
+            + pyparsing.Suppress("]")
+        )
+        + pyparsing.Optional(
+            pyparsing.Suppress("<")
+            + pyparsing.Word(_FACILITY_CHARACTERS).set_results_name("facility")
+            + pyparsing.Suppress(">")
+        )
+    )
 
-  _LOG_LINE = (
-      _DATE_TIME_RFC3339.set_results_name('date_time') +
-      (_CHROMEOS_SYSLOG_LINE_BODY ^ _RSYSLOG_LINE_BODY) +
-      pyparsing.Optional(pyparsing.Suppress(':')) +
-      pyparsing.Regex(_BODY_PATTERN, re.DOTALL).set_results_name('body') +
-      _END_OF_LINE)
+    _LOG_LINE = (
+        _DATE_TIME_RFC3339.set_results_name("date_time")
+        + (_CHROMEOS_SYSLOG_LINE_BODY ^ _RSYSLOG_LINE_BODY)
+        + pyparsing.Optional(pyparsing.Suppress(":"))
+        + pyparsing.Regex(_BODY_PATTERN, re.DOTALL).set_results_name("body")
+        + _END_OF_LINE
+    )
 
-  # The rsyslog protocol 23 format (RSYSLOG_SyslogProtocol23Format)
-  # consists of:
-  # %PRI%1 %TIMESTAMP% %HOSTNAME% %APP-NAME% %PROCID% %MSGID% %STRUCTURED-DATA%
-  #   %msg%
-  #
-  # Where %TIMESTAMP% is in RFC-3339 date time format e.g.
-  # 2020-05-31T00:00:45.698463+00:00
+    # The rsyslog protocol 23 format (RSYSLOG_SyslogProtocol23Format)
+    # consists of:
+    # %PRI%1 %TIMESTAMP% %HOSTNAME% %APP-NAME% %PROCID% %MSGID% %STRUCTURED-DATA%
+    #   %msg%
+    #
+    # Where %TIMESTAMP% is in RFC-3339 date time format e.g.
+    # 2020-05-31T00:00:45.698463+00:00
 
-  # TODO: Add proper support for %STRUCTURED-DATA%:
-  # https://datatracker.ietf.org/doc/html/draft-ietf-syslog-protocol-23#section-6.3
-  _RSYSLOG_PROTOCOL_23_LINE = (
-      pyparsing.Suppress('<') +
-      _ONE_OR_TWO_DIGITS.set_results_name('priority') +
-      pyparsing.Suppress('>') + pyparsing.Suppress(
-          pyparsing.Word(pyparsing.nums, max=1)) +
-      _DATE_TIME_RFC3339.set_results_name('date_time') +
-      pyparsing.Word(pyparsing.printables).set_results_name('hostname') +
-      _REPORTER.set_results_name('reporter') +
-      pyparsing.Or([pyparsing.Suppress('-'),
-                    _PROCESS_IDENTIFIER.set_results_name('pid')]) +
-      pyparsing.Word(pyparsing.printables).set_results_name(
-          'message_identifier') +
-      pyparsing.Word(pyparsing.printables).set_results_name('structured_data') +
-      pyparsing.Regex(_BODY_PATTERN, re.DOTALL).set_results_name('body') +
-      _END_OF_LINE)
+    # TODO: Add proper support for %STRUCTURED-DATA%:
+    # https://datatracker.ietf.org/doc/html/draft-ietf-syslog-protocol-23#section-6.3
+    _RSYSLOG_PROTOCOL_23_LINE = (
+        pyparsing.Suppress("<")
+        + _ONE_OR_TWO_DIGITS.set_results_name("priority")
+        + pyparsing.Suppress(">")
+        + pyparsing.Suppress(pyparsing.Word(pyparsing.nums, max=1))
+        + _DATE_TIME_RFC3339.set_results_name("date_time")
+        + pyparsing.Word(pyparsing.printables).set_results_name("hostname")
+        + _REPORTER.set_results_name("reporter")
+        + pyparsing.Or(
+            [pyparsing.Suppress("-"), _PROCESS_IDENTIFIER.set_results_name("pid")]
+        )
+        + pyparsing.Word(pyparsing.printables).set_results_name("message_identifier")
+        + pyparsing.Word(pyparsing.printables).set_results_name("structured_data")
+        + pyparsing.Regex(_BODY_PATTERN, re.DOTALL).set_results_name("body")
+        + _END_OF_LINE
+    )
 
-  _LINE_STRUCTURES = [
-      ('log_line', _LOG_LINE),
-      ('rsyslog_protocol_23_line', _RSYSLOG_PROTOCOL_23_LINE)]
+    _LINE_STRUCTURES = [
+        ("log_line", _LOG_LINE),
+        ("rsyslog_protocol_23_line", _RSYSLOG_PROTOCOL_23_LINE),
+    ]
 
-  VERIFICATION_GRAMMAR = _LOG_LINE ^ _RSYSLOG_PROTOCOL_23_LINE
+    VERIFICATION_GRAMMAR = _LOG_LINE ^ _RSYSLOG_PROTOCOL_23_LINE
 
-  def _ParseRecord(self, parser_mediator, key, structure):
-    """Parses a pyparsing structure.
+    def _ParseRecord(self, parser_mediator, key, structure):
+        """Parses a pyparsing structure.
 
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      key (str): name of the parsed structure.
-      structure (pyparsing.ParseResults): tokens from a parsed log line.
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          key (str): name of the parsed structure.
+          structure (pyparsing.ParseResults): tokens from a parsed log line.
 
-    Raises:
-      ParseError: if the structure cannot be parsed.
-    """
-    time_elements_structure = self._GetValueFromStructure(
-        structure, 'date_time')
+        Raises:
+          ParseError: if the structure cannot be parsed.
+        """
+        time_elements_structure = self._GetValueFromStructure(structure, "date_time")
 
-    body = self._GetValueFromStructure(structure, 'body')
-    reporter = self._GetValueFromStructure(structure, 'reporter')
+        body = self._GetValueFromStructure(structure, "body")
+        reporter = self._GetValueFromStructure(structure, "reporter")
 
-    if key == 'rsyslog_protocol_23_line':
-      priority = self._GetValueFromStructure(structure, 'priority')
+        if key == "rsyslog_protocol_23_line":
+            priority = self._GetValueFromStructure(structure, "priority")
 
-      facility = self._PriorityToFacility(priority)
-      message_identifier = self._GetValueFromStructure(
-          structure, 'message_identifier')
-      severity = self._PriorityToSeverity(priority)
-    else:
-      facility = None
-      message_identifier = None
-      severity = self._GetValueFromStructure(structure, 'severity')
+            facility = self._PriorityToFacility(priority)
+            message_identifier = self._GetValueFromStructure(
+                structure, "message_identifier"
+            )
+            severity = self._PriorityToSeverity(priority)
+        else:
+            facility = None
+            message_identifier = None
+            severity = self._GetValueFromStructure(structure, "severity")
 
-    event_data = None
-    if reporter == 'CRON':
-      event_data = self._ParseCronMessageBody(body)
-    elif reporter == 'sshd':
-      event_data = self._ParseSshdMessageBody(body)
+        event_data = None
+        if reporter == "CRON":
+            event_data = self._ParseCronMessageBody(body)
+        elif reporter == "sshd":
+            event_data = self._ParseSshdMessageBody(body)
 
-    if not event_data:
-      event_data = SyslogLineEventData()
+        if not event_data:
+            event_data = SyslogLineEventData()
 
-    event_data.body = body
-    event_data.facility = facility
-    event_data.hostname = self._GetValueFromStructure(structure, 'hostname')
-    event_data.last_written_time = self._ParseTimeElements(
-        time_elements_structure)
-    event_data.message_identifier = message_identifier
-    event_data.pid = self._GetValueFromStructure(structure, 'pid')
-    event_data.reporter = reporter
-    event_data.severity = severity
+        event_data.body = body
+        event_data.facility = facility
+        event_data.hostname = self._GetValueFromStructure(structure, "hostname")
+        event_data.last_written_time = self._ParseTimeElements(time_elements_structure)
+        event_data.message_identifier = message_identifier
+        event_data.pid = self._GetValueFromStructure(structure, "pid")
+        event_data.reporter = reporter
+        event_data.severity = severity
 
-    parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data)
 
-  def _ParseTimeElements(self, time_elements_structure):
-    """Parses date and time elements of a log line.
+    def _ParseTimeElements(self, time_elements_structure):
+        """Parses date and time elements of a log line.
 
-    Args:
-      time_elements_structure (pyparsing.ParseResults): date and time elements
-          of a log line.
+        Args:
+          time_elements_structure (pyparsing.ParseResults): date and time elements
+              of a log line.
 
-    Returns:
-      dfdatetime.TimeElements: date and time value.
+        Returns:
+          dfdatetime.TimeElements: date and time value.
 
-    Raises:
-      ParseError: if a valid date and time value cannot be derived from
-          the time elements.
-    """
-    try:
-      time_zone_minutes = 0
+        Raises:
+          ParseError: if a valid date and time value cannot be derived from
+              the time elements.
+        """
+        try:
+            time_zone_minutes = 0
 
-      if len(time_elements_structure) == 9:
-        (year, month, day_of_month, hours, minutes, seconds, microseconds,
-         time_zone_sign, time_zone_hours) = time_elements_structure
+            if len(time_elements_structure) == 9:
+                (
+                    year,
+                    month,
+                    day_of_month,
+                    hours,
+                    minutes,
+                    seconds,
+                    microseconds,
+                    time_zone_sign,
+                    time_zone_hours,
+                ) = time_elements_structure
 
-      else:
-        (year, month, day_of_month, hours, minutes, seconds, microseconds,
-         time_zone_sign, time_zone_hours, time_zone_minutes) = (
-            time_elements_structure)
+            else:
+                (
+                    year,
+                    month,
+                    day_of_month,
+                    hours,
+                    minutes,
+                    seconds,
+                    microseconds,
+                    time_zone_sign,
+                    time_zone_hours,
+                    time_zone_minutes,
+                ) = time_elements_structure
 
-      time_zone_offset = (time_zone_hours * 60) + time_zone_minutes
-      if time_zone_sign == '-':
-        time_zone_offset *= -1
+            time_zone_offset = (time_zone_hours * 60) + time_zone_minutes
+            if time_zone_sign == "-":
+                time_zone_offset *= -1
 
-      time_elements_tuple = (
-          year, month, day_of_month, hours, minutes, seconds, microseconds)
+            time_elements_tuple = (
+                year,
+                month,
+                day_of_month,
+                hours,
+                minutes,
+                seconds,
+                microseconds,
+            )
 
-      date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
-          time_elements_tuple=time_elements_tuple,
-          time_zone_offset=time_zone_offset)
+            date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
+                time_elements_tuple=time_elements_tuple,
+                time_zone_offset=time_zone_offset,
+            )
 
-      return date_time
+            return date_time
 
-    except (IndexError, TypeError, ValueError) as exception:
-      raise errors.ParseError(
-          f'Unable to parse time elements with error: {exception!s}')
+        except (IndexError, TypeError, ValueError) as exception:
+            raise errors.ParseError(
+                f"Unable to parse time elements with error: {exception!s}"
+            )
 
-  def _PriorityToSeverity(self, priority):
-    """Converts a syslog protocol 23 priority value to severity.
+    def _PriorityToSeverity(self, priority):
+        """Converts a syslog protocol 23 priority value to severity.
 
-    Severity is derived from the 3 least significant bits of the priority
-    value.
+        Severity is derived from the 3 least significant bits of the priority
+        value.
 
-    Args:
-      priority (int): a syslog protocol 23 priority value.
+        Args:
+          priority (int): a syslog protocol 23 priority value.
 
-    Returns:
-      str: the value from _SYSLOG_SEVERITY corresponding to severity value.
-    """
-    return self._SYSLOG_SEVERITY[priority & 0x07]
+        Returns:
+          str: the value from _SYSLOG_SEVERITY corresponding to severity value.
+        """
+        return self._SYSLOG_SEVERITY[priority & 0x07]
 
-  def _PriorityToFacility(self, priority: int) -> str:
-    """Converts a syslog protocol 23 or RFC3164 priority to facility.
+    def _PriorityToFacility(self, priority: int) -> str:
+        """Converts a syslog protocol 23 or RFC3164 priority to facility.
 
-    Facility is derived from the 5 most significant bits of the priority
-    value.
+        Facility is derived from the 5 most significant bits of the priority
+        value.
 
-    Args:
-      priority (int): a syslog rfc3164 or protocol 23 priority value.
+        Args:
+          priority (int): a syslog rfc3164 or protocol 23 priority value.
 
-    Returns:
-      str: the value from _SYSLOG_FACILITY corresponding to facility value.
-    """
-    return self._SYSLOG_FACILITY[priority >> 3]
+        Returns:
+          str: the value from _SYSLOG_FACILITY corresponding to facility value.
+        """
+        return self._SYSLOG_FACILITY[priority >> 3]
 
-  def CheckRequiredFormat(self, parser_mediator, text_reader):
-    """Check if the log record has the minimal structure required by the parser.
+    def CheckRequiredFormat(self, parser_mediator, text_reader):
+        """Check if the log record has the minimal structure required by the parser.
 
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      text_reader (EncodedTextReader): text reader.
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          text_reader (EncodedTextReader): text reader.
 
-    Returns:
-      bool: True if this is the correct plugin, False otherwise.
-    """
-    try:
-      structure = self._VerifyString(text_reader.lines)
-    except errors.ParseError:
-      return False
+        Returns:
+          bool: True if this is the correct plugin, False otherwise.
+        """
+        try:
+            structure = self._VerifyString(text_reader.lines)
+        except errors.ParseError:
+            return False
 
-    time_elements_structure = self._GetValueFromStructure(
-        structure, 'date_time')
+        time_elements_structure = self._GetValueFromStructure(structure, "date_time")
 
-    try:
-      self._ParseTimeElements(time_elements_structure)
-    except errors.ParseError:
-      return False
+        try:
+            self._ParseTimeElements(time_elements_structure)
+        except errors.ParseError:
+            return False
 
-    return True
+        return True
 
 
 class TraditionalSyslogTextPlugin(
-    BaseSyslogTextPlugin, dateless_helper.DateLessLogFormatHelper):
-  """Text parser plugin for traditional syslog log files."""
+    BaseSyslogTextPlugin, dateless_helper.DateLessLogFormatHelper
+):
+    """Text parser plugin for traditional syslog log files."""
 
-  NAME = 'syslog_traditional'
-  DATA_FORMAT = 'Traditional system log (syslog) file'
+    NAME = "syslog_traditional"
+    DATA_FORMAT = "Traditional system log (syslog) file"
 
-  ENCODING = 'utf-8'
+    ENCODING = "utf-8"
 
-  # The reporter and facility fields can contain any printable character, but
-  # to allow for processing of syslog formats that delimit the reporter and
-  # facility with printable characters, we remove certain common delimiters
-  # from the set of printable characters.
+    # The reporter and facility fields can contain any printable character, but
+    # to allow for processing of syslog formats that delimit the reporter and
+    # facility with printable characters, we remove certain common delimiters
+    # from the set of printable characters.
 
-  _REPORTER_CHARACTERS = ''.join(
-      [c for c in pyparsing.printables if c not in [':', '[', '<']])
+    _REPORTER_CHARACTERS = "".join(
+        [c for c in pyparsing.printables if c not in [":", "[", "<"]]
+    )
 
-  _FACILITY_CHARACTERS = ''.join(
-      [c for c in pyparsing.printables if c not in [':', '>']])
+    _FACILITY_CHARACTERS = "".join(
+        [c for c in pyparsing.printables if c not in [":", ">"]]
+    )
 
-  _SYSLOG_SEVERITY = [
-      'ALERT', 'CRIT', 'DEBUG', 'EMERG', 'ERR', 'INFO', 'NOTICE', 'WARNING']
+    _SYSLOG_SEVERITY = [
+        "ALERT",
+        "CRIT",
+        "DEBUG",
+        "EMERG",
+        "ERR",
+        "INFO",
+        "NOTICE",
+        "WARNING",
+    ]
 
-  # TODO: change pattern to allow only spaces as a field separator.
-  _BODY_PATTERN = (
-      r'.*?(?=($|\n\w{3}\s+\d{1,2}\s\d{2}:\d{2}:\d{2})|'
-      r'($|\n\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}[\+|-]\d{2}:\d{2}\s)|'
-      r'($|\n<\d{1,3}>1\s\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}[\+|-]\d{2}'
-      r':\d{2}\s))')
+    # TODO: change pattern to allow only spaces as a field separator.
+    _BODY_PATTERN = (
+        r".*?(?=($|\n\w{3}\s+\d{1,2}\s\d{2}:\d{2}:\d{2})|"
+        r"($|\n\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}[\+|-]\d{2}:\d{2}\s)|"
+        r"($|\n<\d{1,3}>1\s\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}[\+|-]\d{2}"
+        r":\d{2}\s))"
+    )
 
-  _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).set_parse_action(
-      lambda tokens: int(tokens[0], 10))
+    _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).set_parse_action(
+        lambda tokens: int(tokens[0], 10)
+    )
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
-      lambda tokens: int(tokens[0], 10))
+    _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
+        lambda tokens: int(tokens[0], 10)
+    )
 
-  _THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
+    _THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
 
-  _DATE_TIME = (
-      _THREE_LETTERS + _ONE_OR_TWO_DIGITS +
-      _TWO_DIGITS + pyparsing.Suppress(':') +
-      _TWO_DIGITS + pyparsing.Suppress(':') +
-      _TWO_DIGITS + pyparsing.Optional(
-          pyparsing.Suppress('.') +
-          pyparsing.Word(pyparsing.nums)))
+    _DATE_TIME = (
+        _THREE_LETTERS
+        + _ONE_OR_TWO_DIGITS
+        + _TWO_DIGITS
+        + pyparsing.Suppress(":")
+        + _TWO_DIGITS
+        + pyparsing.Suppress(":")
+        + _TWO_DIGITS
+        + pyparsing.Optional(pyparsing.Suppress(".") + pyparsing.Word(pyparsing.nums))
+    )
 
-  _PROCESS_IDENTIFIER = pyparsing.Word(pyparsing.nums, max=5).set_parse_action(
-      lambda tokens: int(tokens[0], 10))
+    _PROCESS_IDENTIFIER = pyparsing.Word(pyparsing.nums, max=5).set_parse_action(
+        lambda tokens: int(tokens[0], 10)
+    )
 
-  _REPORTER = pyparsing.Word(_REPORTER_CHARACTERS)
+    _REPORTER = pyparsing.Word(_REPORTER_CHARACTERS)
 
-  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
+    _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
-  # The rsyslog traditional file format (RSYSLOG_TraditionalFileFormat)
-  # consists of:
-  # %TIMESTAMP% %HOSTNAME% %syslogtag%%msg%
-  #
-  # Where %TIMESTAMP% is in year-less ctime date time format e.g.
-  # Jan 22 07:54:32
+    # The rsyslog traditional file format (RSYSLOG_TraditionalFileFormat)
+    # consists of:
+    # %TIMESTAMP% %HOSTNAME% %syslogtag%%msg%
+    #
+    # Where %TIMESTAMP% is in year-less ctime date time format e.g.
+    # Jan 22 07:54:32
 
-  _RSYSLOG_BODY = (
-      pyparsing.Word(pyparsing.printables).set_results_name('hostname') +
-      _REPORTER.set_results_name('reporter') +
-      pyparsing.Optional(
-          pyparsing.Suppress('[') + _PROCESS_IDENTIFIER.set_results_name(
-              'pid') +
-          pyparsing.Suppress(']')) +
-      pyparsing.Optional(
-          pyparsing.Suppress('<') +
-          pyparsing.Word(_FACILITY_CHARACTERS).set_results_name('facility') +
-          pyparsing.Suppress('>')) +
-      pyparsing.Optional(pyparsing.Suppress(':')) +
-      pyparsing.Regex(_BODY_PATTERN, re.DOTALL).set_results_name('body'))
+    _RSYSLOG_BODY = (
+        pyparsing.Word(pyparsing.printables).set_results_name("hostname")
+        + _REPORTER.set_results_name("reporter")
+        + pyparsing.Optional(
+            pyparsing.Suppress("[")
+            + _PROCESS_IDENTIFIER.set_results_name("pid")
+            + pyparsing.Suppress("]")
+        )
+        + pyparsing.Optional(
+            pyparsing.Suppress("<")
+            + pyparsing.Word(_FACILITY_CHARACTERS).set_results_name("facility")
+            + pyparsing.Suppress(">")
+        )
+        + pyparsing.Optional(pyparsing.Suppress(":"))
+        + pyparsing.Regex(_BODY_PATTERN, re.DOTALL).set_results_name("body")
+    )
 
-  _SYSLOG_COMMENT_END = pyparsing.Suppress('---') + _END_OF_LINE
+    _SYSLOG_COMMENT_END = pyparsing.Suppress("---") + _END_OF_LINE
 
-  _SYSLOG_COMMENT_BODY = (
-      pyparsing.Suppress(': ---') +
-      pyparsing.SkipTo(_SYSLOG_COMMENT_END).set_results_name('body') +
-      pyparsing.Suppress('---'))
+    _SYSLOG_COMMENT_BODY = (
+        pyparsing.Suppress(": ---")
+        + pyparsing.SkipTo(_SYSLOG_COMMENT_END).set_results_name("body")
+        + pyparsing.Suppress("---")
+    )
 
-  _KERNEL_SYSLOG_BODY = (
-      pyparsing.Literal('kernel').set_results_name('reporter') +
-      pyparsing.Suppress(':') +
-      pyparsing.Regex(_BODY_PATTERN, re.DOTALL).set_results_name('body'))
+    _KERNEL_SYSLOG_BODY = (
+        pyparsing.Literal("kernel").set_results_name("reporter")
+        + pyparsing.Suppress(":")
+        + pyparsing.Regex(_BODY_PATTERN, re.DOTALL).set_results_name("body")
+    )
 
-  _LOG_LINE = (
-      _DATE_TIME.set_results_name('date_time') + (
-          _KERNEL_SYSLOG_BODY ^ _RSYSLOG_BODY ^ _SYSLOG_COMMENT_BODY) +
-      _END_OF_LINE)
+    _LOG_LINE = (
+        _DATE_TIME.set_results_name("date_time")
+        + (_KERNEL_SYSLOG_BODY ^ _RSYSLOG_BODY ^ _SYSLOG_COMMENT_BODY)
+        + _END_OF_LINE
+    )
 
-  _LINE_STRUCTURES = [('log_line', _LOG_LINE)]
+    _LINE_STRUCTURES = [("log_line", _LOG_LINE)]
 
-  # Using a regular expression here is faster on non-match than the log line
-  # grammar.
-  VERIFICATION_GRAMMAR = pyparsing.Regex(
-      r'(?P<date_time>(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) '
-      r'( [1-9]|[1-9][0-9]) [0-9]{2}:[0-9]{2}:[0-9]{2}) \S+ .*\n')
+    # Using a regular expression here is faster on non-match than the log line
+    # grammar.
+    VERIFICATION_GRAMMAR = pyparsing.Regex(
+        r"(?P<date_time>(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) "
+        r"( [1-9]|[1-9][0-9]) [0-9]{2}:[0-9]{2}:[0-9]{2}) \S+ .*\n"
+    )
 
-  def _ParseRecord(self, parser_mediator, key, structure):
-    """Parses a pyparsing structure.
+    def _ParseRecord(self, parser_mediator, key, structure):
+        """Parses a pyparsing structure.
 
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      key (str): name of the parsed structure.
-      structure (pyparsing.ParseResults): tokens from a parsed log line.
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          key (str): name of the parsed structure.
+          structure (pyparsing.ParseResults): tokens from a parsed log line.
 
-    Raises:
-      ParseError: if the structure cannot be parsed.
-    """
-    time_elements_structure = self._GetValueFromStructure(
-        structure, 'date_time')
+        Raises:
+          ParseError: if the structure cannot be parsed.
+        """
+        time_elements_structure = self._GetValueFromStructure(structure, "date_time")
 
-    body = self._GetValueFromStructure(structure, 'body')
-    reporter = self._GetValueFromStructure(structure, 'reporter')
+        body = self._GetValueFromStructure(structure, "body")
+        reporter = self._GetValueFromStructure(structure, "reporter")
 
-    event_data = None
-    if reporter == 'CRON':
-      event_data = self._ParseCronMessageBody(body)
-    elif reporter == 'sshd':
-      event_data = self._ParseSshdMessageBody(body)
+        event_data = None
+        if reporter == "CRON":
+            event_data = self._ParseCronMessageBody(body)
+        elif reporter == "sshd":
+            event_data = self._ParseSshdMessageBody(body)
 
-    if not event_data:
-      event_data = SyslogLineEventData()
+        if not event_data:
+            event_data = SyslogLineEventData()
 
-    event_data.body = body
-    event_data.hostname = self._GetValueFromStructure(structure, 'hostname')
-    event_data.last_written_time = self._ParseTimeElements(
-        time_elements_structure)
-    event_data.pid = self._GetValueFromStructure(structure, 'pid')
-    event_data.reporter = reporter
-    event_data.severity = self._GetValueFromStructure(structure, 'severity')
+        event_data.body = body
+        event_data.hostname = self._GetValueFromStructure(structure, "hostname")
+        event_data.last_written_time = self._ParseTimeElements(time_elements_structure)
+        event_data.pid = self._GetValueFromStructure(structure, "pid")
+        event_data.reporter = reporter
+        event_data.severity = self._GetValueFromStructure(structure, "severity")
 
-    parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data)
 
-  def _ParseTimeElements(self, time_elements_structure):
-    """Parses date and time elements of a log line.
+    def _ParseTimeElements(self, time_elements_structure):
+        """Parses date and time elements of a log line.
 
-    Args:
-      time_elements_structure (pyparsing.ParseResults): date and time elements
-          of a log line.
+        Args:
+          time_elements_structure (pyparsing.ParseResults): date and time elements
+              of a log line.
 
-    Returns:
-      dfdatetime.TimeElements: date and time value.
+        Returns:
+          dfdatetime.TimeElements: date and time value.
 
-    Raises:
-      ParseError: if a valid date and time value cannot be derived from
-          the time elements.
-    """
-    try:
-      if len(time_elements_structure) == 5:
-        month_string, day_of_month, hours, minutes, seconds = (
-            time_elements_structure)
+        Raises:
+          ParseError: if a valid date and time value cannot be derived from
+              the time elements.
+        """
+        try:
+            if len(time_elements_structure) == 5:
+                month_string, day_of_month, hours, minutes, seconds = (
+                    time_elements_structure
+                )
 
-      else:
-        # TODO: add support for fractional seconds.
-        month_string, day_of_month, hours, minutes, seconds, _ = (
-            time_elements_structure)
+            else:
+                # TODO: add support for fractional seconds.
+                month_string, day_of_month, hours, minutes, seconds, _ = (
+                    time_elements_structure
+                )
 
-      month = self._GetMonthFromString(month_string)
+            month = self._GetMonthFromString(month_string)
 
-      self._UpdateYear(month)
+            self._UpdateYear(month)
 
-      year = self._GetRelativeYear()
+            year = self._GetRelativeYear()
 
-      time_elements_tuple = (
-          year, month, day_of_month, hours, minutes, seconds)
+            time_elements_tuple = (year, month, day_of_month, hours, minutes, seconds)
 
-      date_time = dfdatetime_time_elements.TimeElements(
-          is_delta=True, time_elements_tuple=time_elements_tuple)
+            date_time = dfdatetime_time_elements.TimeElements(
+                is_delta=True, time_elements_tuple=time_elements_tuple
+            )
 
-      date_time.is_local_time = True
+            date_time.is_local_time = True
 
-      return date_time
+            return date_time
 
-    except (IndexError, TypeError, ValueError) as exception:
-      raise errors.ParseError(
-          f'Unable to parse time elements with error: {exception!s}')
+        except (IndexError, TypeError, ValueError) as exception:
+            raise errors.ParseError(
+                f"Unable to parse time elements with error: {exception!s}"
+            )
 
-  def CheckRequiredFormat(self, parser_mediator, text_reader):
-    """Check if the log record has the minimal structure required by the parser.
+    def CheckRequiredFormat(self, parser_mediator, text_reader):
+        """Check if the log record has the minimal structure required by the parser.
 
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      text_reader (EncodedTextReader): text reader.
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          text_reader (EncodedTextReader): text reader.
 
-    Returns:
-      bool: True if this is the correct plugin, False otherwise.
-    """
-    try:
-      structure = self._VerifyString(text_reader.lines)
-    except errors.ParseError:
-      return False
+        Returns:
+          bool: True if this is the correct plugin, False otherwise.
+        """
+        try:
+            structure = self._VerifyString(text_reader.lines)
+        except errors.ParseError:
+            return False
 
-    date_time_structure = self._GetValueFromStructure(structure, 'date_time')
+        date_time_structure = self._GetValueFromStructure(structure, "date_time")
 
-    try:
-      time_elements_structure = self._DATE_TIME.parse_string(
-          date_time_structure)
-    except pyparsing.ParseException:
-      return False
+        try:
+            time_elements_structure = self._DATE_TIME.parse_string(date_time_structure)
+        except pyparsing.ParseException:
+            return False
 
-    self._SetEstimatedYear(parser_mediator)
+        self._SetEstimatedYear(parser_mediator)
 
-    try:
-      self._ParseTimeElements(time_elements_structure)
-    except errors.ParseError:
-      return False
+        try:
+            self._ParseTimeElements(time_elements_structure)
+        except errors.ParseError:
+            return False
 
-    return True
+        return True
 
 
-text_parser.TextLogParser.RegisterPlugins([
-    SyslogTextPlugin, TraditionalSyslogTextPlugin])
+text_parser.TextLogParser.RegisterPlugins(
+    [SyslogTextPlugin, TraditionalSyslogTextPlugin]
+)

@@ -14,277 +14,321 @@ from plaso.parsers.text_plugins import interface
 
 
 class MacOSWiFiLogEventData(events.EventData):
-  """MacOS Wi-Fi log event data.
+    """MacOS Wi-Fi log event data.
 
-  Attributes:
-    action (str): known Wi-Fi action, for example connected to an access point,
-        configured, etc. If the action is not known, the value is the message
-        of the log (text variable).
-    added_time (dfdatetime.DateTimeValues): date and time the log entry
-        was added.
-    agent (str): name and identifier of process that generated the log message.
-    function (str): name of function that generated the log message.
-    text (str): log message.
-  """
+    Attributes:
+      action (str): known Wi-Fi action, for example connected to an access point,
+          configured, etc. If the action is not known, the value is the message
+          of the log (text variable).
+      added_time (dfdatetime.DateTimeValues): date and time the log entry
+          was added.
+      agent (str): name and identifier of process that generated the log message.
+      function (str): name of function that generated the log message.
+      text (str): log message.
+    """
 
-  DATA_TYPE = 'macos:wifi_log:entry'
+    DATA_TYPE = "macos:wifi_log:entry"
 
-  def __init__(self):
-    """Initializes event data."""
-    super().__init__(data_type=self.DATA_TYPE)
-    self.action = None
-    self.added_time = None
-    self.agent = None
-    self.function = None
-    self.text = None
+    def __init__(self):
+        """Initializes event data."""
+        super().__init__(data_type=self.DATA_TYPE)
+        self.action = None
+        self.added_time = None
+        self.agent = None
+        self.function = None
+        self.text = None
 
 
 class MacOSWiFiLogTextPlugin(
-    interface.TextPlugin, dateless_helper.DateLessLogFormatHelper):
-  """Text parser plugin MacOS Wi-Fi log (wifi.log) files."""
+    interface.TextPlugin, dateless_helper.DateLessLogFormatHelper
+):
+    """Text parser plugin MacOS Wi-Fi log (wifi.log) files."""
 
-  NAME = 'mac_wifi'
-  DATA_FORMAT = 'MacOS Wi-Fi log (wifi.log) file'
+    NAME = "mac_wifi"
+    DATA_FORMAT = "MacOS Wi-Fi log (wifi.log) file"
 
-  ENCODING = 'utf-8'
+    ENCODING = "utf-8"
 
-  _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).set_parse_action(
-      lambda tokens: int(tokens[0], 10))
+    _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).set_parse_action(
+        lambda tokens: int(tokens[0], 10)
+    )
 
-  _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
-      lambda tokens: int(tokens[0], 10))
+    _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
+        lambda tokens: int(tokens[0], 10)
+    )
 
-  _THREE_DIGITS = pyparsing.Word(pyparsing.nums, exact=3).set_parse_action(
-      lambda tokens: int(tokens[0], 10))
+    _THREE_DIGITS = pyparsing.Word(pyparsing.nums, exact=3).set_parse_action(
+        lambda tokens: int(tokens[0], 10)
+    )
 
-  _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).set_parse_action(
-      lambda tokens: int(tokens[0], 10))
+    _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).set_parse_action(
+        lambda tokens: int(tokens[0], 10)
+    )
 
-  _THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
+    _THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
 
-  # Regular expressions for known actions.
-  _CONNECTED_RE = re.compile(r'Already\sassociated\sto\s(.*)\.\sBailing')
-  _WIFI_PARAMETERS_RE = re.compile(
-      r'\[ssid=(.*?), bssid=(.*?), security=(.*?), rssi=')
+    # Regular expressions for known actions.
+    _CONNECTED_RE = re.compile(r"Already\sassociated\sto\s(.*)\.\sBailing")
+    _WIFI_PARAMETERS_RE = re.compile(
+        r"\[ssid=(.*?), bssid=(.*?), security=(.*?), rssi="
+    )
 
-  _KNOWN_FUNCTIONS = [
-      'airportdProcessDLILEvent',
-      '_doAutoJoin',
-      '_processSystemPSKAssoc']
+    _KNOWN_FUNCTIONS = [
+        "airportdProcessDLILEvent",
+        "_doAutoJoin",
+        "_processSystemPSKAssoc",
+    ]
 
-  _AGENT = (
-      pyparsing.Literal('<') +
-      pyparsing.Combine(
-          pyparsing.Literal('airportd') + pyparsing.CharsNotIn('>'),
-          joinString='', adjacent=True).set_results_name('agent') +
-      pyparsing.Literal('>'))
+    _AGENT = (
+        pyparsing.Literal("<")
+        + pyparsing.Combine(
+            pyparsing.Literal("airportd") + pyparsing.CharsNotIn(">"),
+            joinString="",
+            adjacent=True,
+        ).set_results_name("agent")
+        + pyparsing.Literal(">")
+    )
 
-  _DATE_TIME = pyparsing.Group(
-      _THREE_LETTERS.set_results_name('weekday') +
-      _THREE_LETTERS.set_results_name('month') +
-      _ONE_OR_TWO_DIGITS.set_results_name('day_of_month') +
-      _TWO_DIGITS.set_results_name('hours') + pyparsing.Suppress(':') +
-      _TWO_DIGITS.set_results_name('minutes') + pyparsing.Suppress(':') +
-      _TWO_DIGITS.set_results_name('seconds') + pyparsing.Suppress('.') +
-      _THREE_DIGITS.set_results_name('milliseconds'))
+    _DATE_TIME = pyparsing.Group(
+        _THREE_LETTERS.set_results_name("weekday")
+        + _THREE_LETTERS.set_results_name("month")
+        + _ONE_OR_TWO_DIGITS.set_results_name("day_of_month")
+        + _TWO_DIGITS.set_results_name("hours")
+        + pyparsing.Suppress(":")
+        + _TWO_DIGITS.set_results_name("minutes")
+        + pyparsing.Suppress(":")
+        + _TWO_DIGITS.set_results_name("seconds")
+        + pyparsing.Suppress(".")
+        + _THREE_DIGITS.set_results_name("milliseconds")
+    )
 
-  _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
+    _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
-  # Log line with a known function name.
-  _KNOWN_FUNCTION_LOG_LINE = (
-      _DATE_TIME.set_results_name('date_time') + _AGENT +
-      pyparsing.one_of(_KNOWN_FUNCTIONS).set_results_name('function') +
-      pyparsing.Literal(':') +
-      pyparsing.restOfLine().set_results_name('text') +
-      _END_OF_LINE)
+    # Log line with a known function name.
+    _KNOWN_FUNCTION_LOG_LINE = (
+        _DATE_TIME.set_results_name("date_time")
+        + _AGENT
+        + pyparsing.one_of(_KNOWN_FUNCTIONS).set_results_name("function")
+        + pyparsing.Literal(":")
+        + pyparsing.restOfLine().set_results_name("text")
+        + _END_OF_LINE
+    )
 
-  # Log line with an unknown function name.
-  _LOG_LINE = (
-      _DATE_TIME.set_results_name('date_time') + pyparsing.NotAny(
-          _AGENT +
-          pyparsing.one_of(_KNOWN_FUNCTIONS) +
-          pyparsing.Literal(':')) +
-      pyparsing.restOfLine().set_results_name('text') +
-      _END_OF_LINE)
+    # Log line with an unknown function name.
+    _LOG_LINE = (
+        _DATE_TIME.set_results_name("date_time")
+        + pyparsing.NotAny(
+            _AGENT + pyparsing.one_of(_KNOWN_FUNCTIONS) + pyparsing.Literal(":")
+        )
+        + pyparsing.restOfLine().set_results_name("text")
+        + _END_OF_LINE
+    )
 
-  _HEADER_LOG_LINE = (
-      _DATE_TIME.set_results_name('date_time') +
-      pyparsing.Literal('***Starting Up***').set_results_name('text') +
-      _END_OF_LINE)
+    _HEADER_LOG_LINE = (
+        _DATE_TIME.set_results_name("date_time")
+        + pyparsing.Literal("***Starting Up***").set_results_name("text")
+        + _END_OF_LINE
+    )
 
-  _DATE_TIME_TURNED_OVER_HEADER = pyparsing.Group(
-      _THREE_LETTERS.set_results_name('month') +
-      _ONE_OR_TWO_DIGITS.set_results_name('day_of_month') +
-      _TWO_DIGITS.set_results_name('hours') + pyparsing.Suppress(':') +
-      _TWO_DIGITS.set_results_name('minutes') + pyparsing.Suppress(':') +
-      _TWO_DIGITS.set_results_name('seconds'))
+    _DATE_TIME_TURNED_OVER_HEADER = pyparsing.Group(
+        _THREE_LETTERS.set_results_name("month")
+        + _ONE_OR_TWO_DIGITS.set_results_name("day_of_month")
+        + _TWO_DIGITS.set_results_name("hours")
+        + pyparsing.Suppress(":")
+        + _TWO_DIGITS.set_results_name("minutes")
+        + pyparsing.Suppress(":")
+        + _TWO_DIGITS.set_results_name("seconds")
+    )
 
-  _TURNED_OVER_HEADER_LOG_LINE = (
-      _DATE_TIME_TURNED_OVER_HEADER.set_results_name('date_time') +
-      pyparsing.Combine(
-          pyparsing.Word(pyparsing.printables) +
-          pyparsing.Word(pyparsing.printables) +
-          pyparsing.Literal('logfile turned over'),
-          joinString=' ', adjacent=False).set_results_name('text') +
-      _END_OF_LINE)
+    _TURNED_OVER_HEADER_LOG_LINE = (
+        _DATE_TIME_TURNED_OVER_HEADER.set_results_name("date_time")
+        + pyparsing.Combine(
+            pyparsing.Word(pyparsing.printables)
+            + pyparsing.Word(pyparsing.printables)
+            + pyparsing.Literal("logfile turned over"),
+            joinString=" ",
+            adjacent=False,
+        ).set_results_name("text")
+        + _END_OF_LINE
+    )
 
-  _LINE_STRUCTURES = [
-      ('header_line', _HEADER_LOG_LINE),
-      ('known_function_log_line', _KNOWN_FUNCTION_LOG_LINE),
-      ('log_line', _LOG_LINE),
-      ('turned_over_header_line', _TURNED_OVER_HEADER_LOG_LINE)]
+    _LINE_STRUCTURES = [
+        ("header_line", _HEADER_LOG_LINE),
+        ("known_function_log_line", _KNOWN_FUNCTION_LOG_LINE),
+        ("log_line", _LOG_LINE),
+        ("turned_over_header_line", _TURNED_OVER_HEADER_LOG_LINE),
+    ]
 
-  VERIFICATION_GRAMMAR = (
-      _HEADER_LOG_LINE ^ _KNOWN_FUNCTION_LOG_LINE ^ _LOG_LINE ^
-      _TURNED_OVER_HEADER_LOG_LINE)
+    VERIFICATION_GRAMMAR = (
+        _HEADER_LOG_LINE
+        ^ _KNOWN_FUNCTION_LOG_LINE
+        ^ _LOG_LINE
+        ^ _TURNED_OVER_HEADER_LOG_LINE
+    )
 
-  def _GetAction(self, action, text):
-    """Parse the well known actions for easy reading.
+    def _GetAction(self, action, text):
+        """Parse the well known actions for easy reading.
 
-    Args:
-      action (str): the function or action called by the agent.
-      text (str): text from a log line.
+        Args:
+          action (str): the function or action called by the agent.
+          text (str): text from a log line.
 
-    Returns:
-       str: a formatted string representing the known (or common) action.
-           If the action is not known the original log text is returned.
-    """
-    # TODO: replace "x in y" checks by startswith if possible.
-    if 'airportdProcessDLILEvent' in action:
-      network_interface = text.split()[0]
-      return f'Interface {network_interface:s} turn up.'
+        Returns:
+           str: a formatted string representing the known (or common) action.
+               If the action is not known the original log text is returned.
+        """
+        # TODO: replace "x in y" checks by startswith if possible.
+        if "airportdProcessDLILEvent" in action:
+            network_interface = text.split()[0]
+            return f"Interface {network_interface:s} turn up."
 
-    if 'doAutoJoin' in action:
-      match = self._CONNECTED_RE.match(text)
-      if match:
-        ssid = match.group(1)[1:-1]
-      else:
-        ssid = 'Unknown'
-      return f'Wi-Fi connected to SSID: {ssid:s}'
+        if "doAutoJoin" in action:
+            match = self._CONNECTED_RE.match(text)
+            if match:
+                ssid = match.group(1)[1:-1]
+            else:
+                ssid = "Unknown"
+            return f"Wi-Fi connected to SSID: {ssid:s}"
 
-    if 'processSystemPSKAssoc' in action:
-      wifi_parameters = self._WIFI_PARAMETERS_RE.search(text)
-      if wifi_parameters:
-        ssid = wifi_parameters.group(1)
-        bssid = wifi_parameters.group(2)
-        security = wifi_parameters.group(3)
-        if not ssid:
-          ssid = 'Unknown'
-        if not bssid:
-          bssid = 'Unknown'
-        if not security:
-          security = 'Unknown'
+        if "processSystemPSKAssoc" in action:
+            wifi_parameters = self._WIFI_PARAMETERS_RE.search(text)
+            if wifi_parameters:
+                ssid = wifi_parameters.group(1)
+                bssid = wifi_parameters.group(2)
+                security = wifi_parameters.group(3)
+                if not ssid:
+                    ssid = "Unknown"
+                if not bssid:
+                    bssid = "Unknown"
+                if not security:
+                    security = "Unknown"
 
-        return (
-            f'New wifi configured. BSSID: {bssid:s}, SSID: {ssid:s}, '
-            f'Security: {security:s}.')
+                return (
+                    f"New wifi configured. BSSID: {bssid:s}, SSID: {ssid:s}, "
+                    f"Security: {security:s}."
+                )
 
-    return text
+        return text
 
-  def _ParseRecord(self, parser_mediator, key, structure):
-    """Parses a pyparsing structure.
+    def _ParseRecord(self, parser_mediator, key, structure):
+        """Parses a pyparsing structure.
 
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      key (str): name of the parsed structure.
-      structure (pyparsing.ParseResults): tokens from a parsed log line.
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          key (str): name of the parsed structure.
+          structure (pyparsing.ParseResults): tokens from a parsed log line.
 
-    Raises:
-      ParseError: if the structure cannot be parsed.
-    """
-    time_elements_structure = self._GetValueFromStructure(
-        structure, 'date_time')
+        Raises:
+          ParseError: if the structure cannot be parsed.
+        """
+        time_elements_structure = self._GetValueFromStructure(structure, "date_time")
 
-    event_data = MacOSWiFiLogEventData()
-    event_data.added_time = self._ParseTimeElements(time_elements_structure)
-    event_data.agent = self._GetValueFromStructure(structure, 'agent')
-    event_data.function = self._GetValueFromStructure(structure, 'function')
-    event_data.text = self._GetStringValueFromStructure(structure, 'text')
+        event_data = MacOSWiFiLogEventData()
+        event_data.added_time = self._ParseTimeElements(time_elements_structure)
+        event_data.agent = self._GetValueFromStructure(structure, "agent")
+        event_data.function = self._GetValueFromStructure(structure, "function")
+        event_data.text = self._GetStringValueFromStructure(structure, "text")
 
-    if key == 'known_function_log_line':
-      event_data.action = self._GetAction(event_data.function, event_data.text)
+        if key == "known_function_log_line":
+            event_data.action = self._GetAction(event_data.function, event_data.text)
 
-    parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data)
 
-  def _ParseTimeElements(self, time_elements_structure):
-    """Parses date and time elements of a log line.
+    def _ParseTimeElements(self, time_elements_structure):
+        """Parses date and time elements of a log line.
 
-    Args:
-      time_elements_structure (pyparsing.ParseResults): date and time elements
-          of a log line.
+        Args:
+          time_elements_structure (pyparsing.ParseResults): date and time elements
+              of a log line.
 
-    Returns:
-      dfdatetime.TimeElements: date and time value.
+        Returns:
+          dfdatetime.TimeElements: date and time value.
 
-    Raises:
-      ParseError: if a valid date and time value cannot be derived from
-          the time elements.
-    """
-    try:
-      if len(time_elements_structure) == 5:
-        month_string, day_of_month, hours, minutes, seconds = (
-            time_elements_structure)
+        Raises:
+          ParseError: if a valid date and time value cannot be derived from
+              the time elements.
+        """
+        try:
+            if len(time_elements_structure) == 5:
+                month_string, day_of_month, hours, minutes, seconds = (
+                    time_elements_structure
+                )
 
-        milliseconds = None
-      else:
-        _, month_string, day_of_month, hours, minutes, seconds, milliseconds = (
-            time_elements_structure)
+                milliseconds = None
+            else:
+                _, month_string, day_of_month, hours, minutes, seconds, milliseconds = (
+                    time_elements_structure
+                )
 
-      month = self._GetMonthFromString(month_string)
+            month = self._GetMonthFromString(month_string)
 
-      self._UpdateYear(month)
+            self._UpdateYear(month)
 
-      relative_year = self._GetRelativeYear()
+            relative_year = self._GetRelativeYear()
 
-      if milliseconds is None:
-        time_elements_tuple = (
-            relative_year, month, day_of_month, hours, minutes, seconds)
+            if milliseconds is None:
+                time_elements_tuple = (
+                    relative_year,
+                    month,
+                    day_of_month,
+                    hours,
+                    minutes,
+                    seconds,
+                )
 
-        date_time = dfdatetime_time_elements.TimeElements(
-            is_delta=True, time_elements_tuple=time_elements_tuple)
+                date_time = dfdatetime_time_elements.TimeElements(
+                    is_delta=True, time_elements_tuple=time_elements_tuple
+                )
 
-      else:
-        time_elements_tuple = (
-            relative_year, month, day_of_month, hours, minutes, seconds,
-            milliseconds)
+            else:
+                time_elements_tuple = (
+                    relative_year,
+                    month,
+                    day_of_month,
+                    hours,
+                    minutes,
+                    seconds,
+                    milliseconds,
+                )
 
-        date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
-            is_delta=True, time_elements_tuple=time_elements_tuple)
+                date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
+                    is_delta=True, time_elements_tuple=time_elements_tuple
+                )
 
-      return date_time
+            return date_time
 
-    except (IndexError, TypeError, ValueError) as exception:
-      raise errors.ParseError(
-          f'Unable to parse time elements with error: {exception!s}')
+        except (IndexError, TypeError, ValueError) as exception:
+            raise errors.ParseError(
+                f"Unable to parse time elements with error: {exception!s}"
+            )
 
-  def CheckRequiredFormat(self, parser_mediator, text_reader):
-    """Check if the log record has the minimal structure required by the plugin.
+    def CheckRequiredFormat(self, parser_mediator, text_reader):
+        """Check if the log record has the minimal structure required by the plugin.
 
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      text_reader (EncodedTextReader): text reader.
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          text_reader (EncodedTextReader): text reader.
 
-    Returns:
-      bool: True if this is the correct plugin, False otherwise.
-    """
-    try:
-      structure = self._VerifyString(text_reader.lines)
-    except errors.ParseError:
-      return False
+        Returns:
+          bool: True if this is the correct plugin, False otherwise.
+        """
+        try:
+            structure = self._VerifyString(text_reader.lines)
+        except errors.ParseError:
+            return False
 
-    self._SetEstimatedYear(parser_mediator)
+        self._SetEstimatedYear(parser_mediator)
 
-    time_elements_structure = self._GetValueFromStructure(
-        structure, 'date_time')
+        time_elements_structure = self._GetValueFromStructure(structure, "date_time")
 
-    try:
-      self._ParseTimeElements(time_elements_structure)
-    except errors.ParseError:
-      return False
+        try:
+            self._ParseTimeElements(time_elements_structure)
+        except errors.ParseError:
+            return False
 
-    return True
+        return True
 
 
 text_parser.TextLogParser.RegisterPlugin(MacOSWiFiLogTextPlugin)

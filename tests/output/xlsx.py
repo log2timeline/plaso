@@ -18,194 +18,226 @@ from tests.output import test_lib
 
 
 class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
-  """Test the XLSX output module."""
+    """Test the XLSX output module."""
 
-  # pylint: disable=protected-access
+    # pylint: disable=protected-access
 
-  _SHARED_STRINGS = 'xl/sharedStrings.xml'
-  _SHEET1 = 'xl/worksheets/sheet1.xml'
+    _SHARED_STRINGS = "xl/sharedStrings.xml"
+    _SHEET1 = "xl/worksheets/sheet1.xml"
 
-  _COLUMN_TAG = '}c'
-  _ROW_TAG = '}row'
-  _SHARED_STRING_TAG = '}t'
-  _SHARED_STRING_TYPE = 's'
-  _TYPE_ATTRIBUTE = 't'
-  _VALUE_STRING_TAG = '}v'
+    _COLUMN_TAG = "}c"
+    _ROW_TAG = "}row"
+    _SHARED_STRING_TAG = "}t"
+    _SHARED_STRING_TYPE = "s"
+    _TYPE_ATTRIBUTE = "t"
+    _VALUE_STRING_TAG = "}v"
 
-  _TEST_EVENTS = [
-      {'data_type': 'test:event',
-       'hostname': 'ubuntu',
-       'filename': 'log/syslog.1',
-       'text': (
-           'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n '
-           'closed for user root)'),
-       'timestamp': '2012-06-27 18:17:01',
-       'timestamp_desc': definitions.TIME_DESCRIPTION_METADATA_MODIFICATION}]
+    _TEST_EVENTS = [
+        {
+            "data_type": "test:event",
+            "hostname": "ubuntu",
+            "filename": "log/syslog.1",
+            "text": (
+                "Reporter <CRON> PID: 8442 (pam_unix(cron:session): session\n "
+                "closed for user root)"
+            ),
+            "timestamp": "2012-06-27 18:17:01",
+            "timestamp_desc": definitions.TIME_DESCRIPTION_METADATA_MODIFICATION,
+        }
+    ]
 
-  def _GetSheetRows(self, filename):
-    """Parses the contents of the first sheet of an XLSX document.
+    def _GetSheetRows(self, filename):
+        """Parses the contents of the first sheet of an XLSX document.
 
-    Args:
-      filename (str): The file path of the XLSX document to parse.
+        Args:
+          filename (str): The file path of the XLSX document to parse.
 
-    Returns:
-      list[list[str]]: A list of lists representing the rows of the first sheet.
+        Returns:
+          list[list[str]]: A list of lists representing the rows of the first sheet.
 
-    Raises:
-      ValueError: if the sheet cannot be found, or a string cannot be read.
-    """
-    rows = []
-    with zipfile.ZipFile(filename) as zip_file:
-      if self._SHEET1 not in zip_file.namelist():
-        # Fail if we cannot find the expected first sheet.
-        raise ValueError(f'Unable to locate expected sheet: {self._SHEET1!s}')
+        Raises:
+          ValueError: if the sheet cannot be found, or a string cannot be read.
+        """
+        rows = []
+        with zipfile.ZipFile(filename) as zip_file:
+            if self._SHEET1 not in zip_file.namelist():
+                # Fail if we cannot find the expected first sheet.
+                raise ValueError(f"Unable to locate expected sheet: {self._SHEET1!s}")
 
-      # Generate a reference table of shared strings if available.
-      strings = []
-      if self._SHARED_STRINGS in zip_file.namelist():
-        with zip_file.open(self._SHARED_STRINGS) as zip_file_object:
-          for _, element in ElementTree.iterparse(zip_file_object):
-            if element.tag.endswith(self._SHARED_STRING_TAG):
-              strings.append(element.text)
+            # Generate a reference table of shared strings if available.
+            strings = []
+            if self._SHARED_STRINGS in zip_file.namelist():
+                with zip_file.open(self._SHARED_STRINGS) as zip_file_object:
+                    for _, element in ElementTree.iterparse(zip_file_object):
+                        if element.tag.endswith(self._SHARED_STRING_TAG):
+                            strings.append(element.text)
 
-      row = []
-      value = ''
-      with zip_file.open(self._SHEET1) as zip_file_object:
-        for _, element in ElementTree.iterparse(zip_file_object):
-          if (element.tag.endswith(self._VALUE_STRING_TAG) or
-              element.tag.endswith(self._SHARED_STRING_TAG)):
-            value = element.text
-
-          if element.tag.endswith(self._COLUMN_TAG):
-            # Grab value from shared string reference table if type shared
-            # string.
-            if strings and element.attrib.get(
-                self._TYPE_ATTRIBUTE) == self._SHARED_STRING_TYPE:
-              try:
-                value = strings[int(value)]
-              except (IndexError, ValueError):
-                raise ValueError(
-                    'Unable to successfully dereference shared string.')
-
-            row.append(value)
-
-          # If we see the end tag of the row, record row in rows and reset.
-          if element.tag.endswith(self._ROW_TAG):
-            rows.append(row)
             row = []
+            value = ""
+            with zip_file.open(self._SHEET1) as zip_file_object:
+                for _, element in ElementTree.iterparse(zip_file_object):
+                    if element.tag.endswith(
+                        self._VALUE_STRING_TAG
+                    ) or element.tag.endswith(self._SHARED_STRING_TAG):
+                        value = element.text
 
-    return rows
+                    if element.tag.endswith(self._COLUMN_TAG):
+                        # Grab value from shared string reference table if type shared
+                        # string.
+                        if (
+                            strings
+                            and element.attrib.get(self._TYPE_ATTRIBUTE)
+                            == self._SHARED_STRING_TYPE
+                        ):
+                            try:
+                                value = strings[int(value)]
+                            except (IndexError, ValueError):
+                                raise ValueError(
+                                    "Unable to successfully dereference shared string."
+                                )
 
-  def testGetFieldValues(self):
-    """Tests the GetFieldValues function."""
-    output_mediator = self._CreateOutputMediator()
+                        row.append(value)
 
-    formatters_directory_path = self._GetTestFilePath(['formatters'])
-    output_mediator.ReadMessageFormattersFromDirectory(
-        formatters_directory_path)
+                    # If we see the end tag of the row, record row in rows and reset.
+                    if element.tag.endswith(self._ROW_TAG):
+                        rows.append(row)
+                        row = []
 
-    output_module = xlsx.XLSXOutputModule()
+        return rows
 
-    event, event_data, event_data_stream = (
-        containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
+    def testGetFieldValues(self):
+        """Tests the GetFieldValues function."""
+        output_mediator = self._CreateOutputMediator()
 
-    event_tag = events.EventTag()
-    event_tag.AddLabels(['Malware', 'Printed'])
+        formatters_directory_path = self._GetTestFilePath(["formatters"])
+        output_mediator.ReadMessageFormattersFromDirectory(formatters_directory_path)
 
-    expected_field_values = {
-        'datetime': datetime.datetime(2012, 6, 27, 18, 17, 1),
-        'display_name': '-',
-        'message': (
-            'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
-            'closed for user root)'),
-        'parser': '-',
-        'source': 'FILE',
-        'source_long': 'Test log file',
-        'tag': 'Malware Printed',
-        'timestamp_desc': 'Metadata Modification Time'}
+        output_module = xlsx.XLSXOutputModule()
 
-    field_values = output_module.GetFieldValues(
-        output_mediator, event, event_data, event_data_stream, event_tag)
+        event, event_data, event_data_stream = (
+            containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0])
+        )
 
-    self.assertEqual(field_values, expected_field_values)
+        event_tag = events.EventTag()
+        event_tag.AddLabels(["Malware", "Printed"])
 
-  def testWriteFieldValues(self):
-    """Tests the WriteFieldValues function."""
-    output_mediator = self._CreateOutputMediator()
-
-    formatters_directory_path = self._GetTestFilePath(['formatters'])
-    output_mediator.ReadMessageFormattersFromDirectory(
-        formatters_directory_path)
-
-    output_module = xlsx.XLSXOutputModule()
-
-    with shared_test_lib.TempDirectory() as temp_directory:
-      xslx_file = os.path.join(temp_directory, 'xlsx.out')
-
-      event, event_data, event_data_stream = (
-          containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0]))
-
-      event_tag = events.EventTag()
-      event_tag.AddLabels(['Malware', 'Printed'])
-
-      output_module.Open(path=xslx_file)
-
-      try:
-        output_module.WriteHeader(output_mediator)
+        expected_field_values = {
+            "datetime": datetime.datetime(2012, 6, 27, 18, 17, 1),
+            "display_name": "-",
+            "message": (
+                "Reporter <CRON> PID: 8442 (pam_unix(cron:session): session "
+                "closed for user root)"
+            ),
+            "parser": "-",
+            "source": "FILE",
+            "source_long": "Test log file",
+            "tag": "Malware Printed",
+            "timestamp_desc": "Metadata Modification Time",
+        }
 
         field_values = output_module.GetFieldValues(
-            output_mediator, event, event_data, event_data_stream, event_tag)
+            output_mediator, event, event_data, event_data_stream, event_tag
+        )
 
-        output_module.WriteFieldValues(output_mediator, field_values)
+        self.assertEqual(field_values, expected_field_values)
 
-      finally:
-        output_module.Close()
+    def testWriteFieldValues(self):
+        """Tests the WriteFieldValues function."""
+        output_mediator = self._CreateOutputMediator()
 
-      try:
-        rows = self._GetSheetRows(xslx_file)
-      except ValueError as exception:
-        self.fail(exception)
+        formatters_directory_path = self._GetTestFilePath(["formatters"])
+        output_mediator.ReadMessageFormattersFromDirectory(formatters_directory_path)
 
-      expected_header = [
-          'datetime', 'timestamp_desc', 'source', 'source_long',
-          'message', 'parser', 'display_name', 'tag']
-      expected_event_body = [
-          '41087.76181712963', 'Metadata Modification Time', 'FILE',
-          'Test log file',
-          'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
-          'closed for user root)',
-          '-', '-', 'Malware Printed']
+        output_module = xlsx.XLSXOutputModule()
 
-      self.assertEqual(expected_header, rows[0])
-      self.assertEqual(len(expected_event_body), len(rows[1]))
-      self.assertEqual(expected_event_body, rows[1])
+        with shared_test_lib.TempDirectory() as temp_directory:
+            xslx_file = os.path.join(temp_directory, "xlsx.out")
 
-  def testWriteHeader(self):
-    """Tests the WriteHeader function."""
-    expected_header = [
-        'datetime', 'timestamp_desc', 'source', 'source_long',
-        'message', 'parser', 'display_name', 'tag']
+            event, event_data, event_data_stream = (
+                containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0])
+            )
 
-    with shared_test_lib.TempDirectory() as temp_directory:
-      output_mediator = self._CreateOutputMediator()
-      output_module = xlsx.XLSXOutputModule()
+            event_tag = events.EventTag()
+            event_tag.AddLabels(["Malware", "Printed"])
 
-      xlsx_file = os.path.join(temp_directory, 'xlsx.out')
+            output_module.Open(path=xslx_file)
 
-      output_module.Open(path=xlsx_file)
+            try:
+                output_module.WriteHeader(output_mediator)
 
-      try:
-        output_module.WriteHeader(output_mediator)
-      finally:
-        output_module.Close()
+                field_values = output_module.GetFieldValues(
+                    output_mediator, event, event_data, event_data_stream, event_tag
+                )
 
-      try:
-        rows = self._GetSheetRows(xlsx_file)
-      except ValueError as exception:
-        self.fail(exception)
+                output_module.WriteFieldValues(output_mediator, field_values)
 
-      self.assertEqual(expected_header, rows[0])
+            finally:
+                output_module.Close()
+
+            try:
+                rows = self._GetSheetRows(xslx_file)
+            except ValueError as exception:
+                self.fail(exception)
+
+            expected_header = [
+                "datetime",
+                "timestamp_desc",
+                "source",
+                "source_long",
+                "message",
+                "parser",
+                "display_name",
+                "tag",
+            ]
+            expected_event_body = [
+                "41087.76181712963",
+                "Metadata Modification Time",
+                "FILE",
+                "Test log file",
+                "Reporter <CRON> PID: 8442 (pam_unix(cron:session): session "
+                "closed for user root)",
+                "-",
+                "-",
+                "Malware Printed",
+            ]
+
+            self.assertEqual(expected_header, rows[0])
+            self.assertEqual(len(expected_event_body), len(rows[1]))
+            self.assertEqual(expected_event_body, rows[1])
+
+    def testWriteHeader(self):
+        """Tests the WriteHeader function."""
+        expected_header = [
+            "datetime",
+            "timestamp_desc",
+            "source",
+            "source_long",
+            "message",
+            "parser",
+            "display_name",
+            "tag",
+        ]
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            output_mediator = self._CreateOutputMediator()
+            output_module = xlsx.XLSXOutputModule()
+
+            xlsx_file = os.path.join(temp_directory, "xlsx.out")
+
+            output_module.Open(path=xlsx_file)
+
+            try:
+                output_module.WriteHeader(output_mediator)
+            finally:
+                output_module.Close()
+
+            try:
+                rows = self._GetSheetRows(xlsx_file)
+            except ValueError as exception:
+                self.fail(exception)
+
+            self.assertEqual(expected_header, rows[0])
 
 
-if __name__ == '__main__':
-  unittest.main()
+if __name__ == "__main__":
+    unittest.main()

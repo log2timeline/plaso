@@ -11,11 +11,11 @@ from tests.cli import test_lib as cli_test_lib
 
 
 class CodepagergumentsHelperTest(cli_test_lib.CLIToolTestCase):
-  """Tests for the codepage CLI arguments helper."""
+    """Tests for the codepage CLI arguments helper."""
 
-  # pylint: disable=no-member,protected-access
+    # pylint: disable=no-member,protected-access
 
-  _EXPECTED_OUTPUT = f"""\
+    _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--codepage CODEPAGE]
 
 Test argument parser.
@@ -25,28 +25,28 @@ Test argument parser.
                        single-byte or multi-byte character extracted strings.
 """
 
-  def testAddArguments(self):
-    """Tests the AddArguments function."""
-    argument_parser = self._GetTestArgumentParser('cli_helper.py')
+    def testAddArguments(self):
+        """Tests the AddArguments function."""
+        argument_parser = self._GetTestArgumentParser("cli_helper.py")
 
-    codepage.CodepageArgumentsHelper.AddArguments(argument_parser)
+        codepage.CodepageArgumentsHelper.AddArguments(argument_parser)
 
-    output = self._RunArgparseFormatHelp(argument_parser)
-    self.assertEqual(output, self._EXPECTED_OUTPUT)
+        output = self._RunArgparseFormatHelp(argument_parser)
+        self.assertEqual(output, self._EXPECTED_OUTPUT)
 
-  def testParseOptions(self):
-    """Tests the ParseOptions function."""
-    options = cli_test_lib.TestOptions()
-    options.preferred_codepage = 'cp1252'
+    def testParseOptions(self):
+        """Tests the ParseOptions function."""
+        options = cli_test_lib.TestOptions()
+        options.preferred_codepage = "cp1252"
 
-    test_tool = tools.CLITool()
-    codepage.CodepageArgumentsHelper.ParseOptions(options, test_tool)
+        test_tool = tools.CLITool()
+        codepage.CodepageArgumentsHelper.ParseOptions(options, test_tool)
 
-    self.assertEqual(test_tool._preferred_codepage, options.preferred_codepage)
+        self.assertEqual(test_tool._preferred_codepage, options.preferred_codepage)
 
-    with self.assertRaises(errors.BadConfigObject):
-      codepage.CodepageArgumentsHelper.ParseOptions(options, None)
+        with self.assertRaises(errors.BadConfigObject):
+            codepage.CodepageArgumentsHelper.ParseOptions(options, None)
 
 
-if __name__ == '__main__':
-  unittest.main()
+if __name__ == "__main__":
+    unittest.main()

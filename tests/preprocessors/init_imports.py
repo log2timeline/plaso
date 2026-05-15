@@ -7,16 +7,18 @@ from tests import test_lib
 
 
 class PreprocessorsImportTest(test_lib.ImportCheckTestCase):
-  """Tests that preprocessor classes are imported correctly."""
+    """Tests that preprocessor classes are imported correctly."""
 
-  _IGNORABLE_FILES = frozenset([
-      'logger.py', 'manager.py', 'mediator.py', 'interface.py'])
+    _IGNORABLE_FILES = frozenset(
+        ["logger.py", "manager.py", "mediator.py", "interface.py"]
+    )
 
-  def testAnalysisPluginsImported(self):
-    """Tests that all preprocessors are imported."""
-    self._AssertFilesImportedInInit(
-        test_lib.PREPROCESSORS_PATH, self._IGNORABLE_FILES)
+    def testAnalysisPluginsImported(self):
+        """Tests that all preprocessors are imported."""
+        self._AssertFilesImportedInInit(
+            test_lib.PREPROCESSORS_PATH, self._IGNORABLE_FILES
+        )
 
 
-if __name__ == '__main__':
-  unittest.main()
+if __name__ == "__main__":
+    unittest.main()

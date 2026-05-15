@@ -2,8 +2,7 @@
 
 import logging
 
-
-_logger = logging.getLogger('preprocessors')
+_logger = logging.getLogger("preprocessors")
 
 # Mimic the logging module interface.
 critical = _logger.critical

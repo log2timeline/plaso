@@ -6,7 +6,6 @@ related changes should be made in dependencies.ini.
 
 import re
 
-
 # Dictionary that contains version tuples per module name.
 #
 # A version tuple consists of:
@@ -15,219 +14,235 @@ import re
 # Where version_attribute_name is either a name of an attribute,
 # property or method.
 PYTHON_DEPENDENCIES = {
-    'acstore': ('__version__', '20240407', None, True),
-    'artifacts': ('__version__', '20220219', None, True),
-    'bencode': ('', '', None, True),
-    'certifi': ('__version__', '2016.9.26', None, True),
-    'dateutil': ('__version__', '1.5', None, True),
-    'defusedxml': ('__version__', '0.5.0', None, True),
-    'dfdatetime': ('__version__', '20251018', None, True),
-    'dfvfs': ('__version__', '20260411', None, True),
-    'dfwinreg': ('__version__', '20240229', None, True),
-    'dtfabric': ('__version__', '20230518', None, True),
-    'flor': ('__version__', '1.1.3', None, False),
-    'lz4': ('__version__', '0.10.0', None, True),
-    'opensearchpy': ('__versionstr__', '', None, False),
-    'pefile': ('__version__', '2023.2.7', None, True),
-    'psutil': ('__version__', '5.4.3', None, True),
-    'pybde': ('get_version()', '20220121', None, True),
-    'pycaes': ('get_version()', '20240114', None, True),
-    'pycreg': ('get_version()', '20200725', None, True),
-    'pyesedb': ('get_version()', '20220806', None, True),
-    'pyevt': ('get_version()', '20191104', None, True),
-    'pyevtx': ('get_version()', '20220724', None, True),
-    'pyewf': ('get_version()', '20131210', None, True),
-    'pyfcrypto': ('get_version()', '20240114', None, True),
-    'pyfsapfs': ('get_version()', '20220709', None, True),
-    'pyfsext': ('get_version()', '20220829', None, True),
-    'pyfsfat': ('get_version()', '20220925', None, True),
-    'pyfshfs': ('get_version()', '20220831', None, True),
-    'pyfsntfs': ('get_version()', '20211229', None, True),
-    'pyfsxfs': ('get_version()', '20220829', None, True),
-    'pyfvde': ('get_version()', '20220121', None, True),
-    'pyfwnt': ('get_version()', '20210717', None, True),
-    'pyfwsi': ('get_version()', '20240225', None, True),
-    'pylnk': ('get_version()', '20230716', None, True),
-    'pyluksde': ('get_version()', '20220121', None, True),
-    'pymodi': ('get_version()', '20210405', None, True),
-    'pymsiecf': ('get_version()', '20150314', None, True),
-    'pyolecf': ('get_version()', '20151223', None, True),
-    'pyparsing': ('__version__', '3.0.0', None, True),
-    'pyphdi': ('get_version()', '20220228', None, True),
-    'pyqcow': ('get_version()', '20201213', None, True),
-    'pyregf': ('get_version()', '20201002', None, True),
-    'pyscca': ('get_version()', '20190605', None, True),
-    'pysigscan': ('get_version()', '20230109', None, True),
-    'pysmdev': ('get_version()', '20140529', None, True),
-    'pysmraw': ('get_version()', '20140612', None, True),
-    'pytsk3': ('get_version()', '20210419', None, True),
-    'pytz': ('__version__', '', None, True),
-    'pyvhdi': ('get_version()', '20201014', None, True),
-    'pyvmdk': ('get_version()', '20140421', None, True),
-    'pyvsapm': ('get_version()', '20230506', None, True),
-    'pyvsgpt': ('get_version()', '20211115', None, True),
-    'pyvshadow': ('get_version()', '20160109', None, True),
-    'pyvslvm': ('get_version()', '20160109', None, True),
-    'redis': ('__version__', '3.4', None, False),
-    'requests': ('__version__', '2.18.0', None, True),
-    'urllib3': ('__version__', '1.21.1', None, True),
-    'xattr': ('__version__', '0.7.2', None, False),
-    'xlsxwriter': ('__version__', '0.9.3', None, True),
-    'yaml': ('__version__', '3.10', None, True),
-    'yara': ('YARA_VERSION', '3.4.0', None, True),
-    'zmq': ('__version__', '2.1.11', None, True),
-    'zstd': ('version()', '1.3.0.2', None, True)}
+    "acstore": ("__version__", "20240407", None, True),
+    "artifacts": ("__version__", "20220219", None, True),
+    "bencode": ("", "", None, True),
+    "certifi": ("__version__", "2016.9.26", None, True),
+    "dateutil": ("__version__", "1.5", None, True),
+    "defusedxml": ("__version__", "0.5.0", None, True),
+    "dfdatetime": ("__version__", "20251018", None, True),
+    "dfvfs": ("__version__", "20260411", None, True),
+    "dfwinreg": ("__version__", "20240229", None, True),
+    "dtfabric": ("__version__", "20230518", None, True),
+    "flor": ("__version__", "1.1.3", None, False),
+    "lz4": ("__version__", "0.10.0", None, True),
+    "opensearchpy": ("__versionstr__", "", None, False),
+    "pefile": ("__version__", "2023.2.7", None, True),
+    "psutil": ("__version__", "5.4.3", None, True),
+    "pybde": ("get_version()", "20220121", None, True),
+    "pycaes": ("get_version()", "20240114", None, True),
+    "pycreg": ("get_version()", "20200725", None, True),
+    "pyesedb": ("get_version()", "20220806", None, True),
+    "pyevt": ("get_version()", "20191104", None, True),
+    "pyevtx": ("get_version()", "20220724", None, True),
+    "pyewf": ("get_version()", "20131210", None, True),
+    "pyfcrypto": ("get_version()", "20240114", None, True),
+    "pyfsapfs": ("get_version()", "20220709", None, True),
+    "pyfsext": ("get_version()", "20220829", None, True),
+    "pyfsfat": ("get_version()", "20220925", None, True),
+    "pyfshfs": ("get_version()", "20220831", None, True),
+    "pyfsntfs": ("get_version()", "20211229", None, True),
+    "pyfsxfs": ("get_version()", "20220829", None, True),
+    "pyfvde": ("get_version()", "20220121", None, True),
+    "pyfwnt": ("get_version()", "20210717", None, True),
+    "pyfwsi": ("get_version()", "20240225", None, True),
+    "pylnk": ("get_version()", "20230716", None, True),
+    "pyluksde": ("get_version()", "20220121", None, True),
+    "pymodi": ("get_version()", "20210405", None, True),
+    "pymsiecf": ("get_version()", "20150314", None, True),
+    "pyolecf": ("get_version()", "20151223", None, True),
+    "pyparsing": ("__version__", "3.0.0", None, True),
+    "pyphdi": ("get_version()", "20220228", None, True),
+    "pyqcow": ("get_version()", "20201213", None, True),
+    "pyregf": ("get_version()", "20201002", None, True),
+    "pyscca": ("get_version()", "20190605", None, True),
+    "pysigscan": ("get_version()", "20230109", None, True),
+    "pysmdev": ("get_version()", "20140529", None, True),
+    "pysmraw": ("get_version()", "20140612", None, True),
+    "pytsk3": ("get_version()", "20210419", None, True),
+    "pytz": ("__version__", "", None, True),
+    "pyvhdi": ("get_version()", "20201014", None, True),
+    "pyvmdk": ("get_version()", "20140421", None, True),
+    "pyvsapm": ("get_version()", "20230506", None, True),
+    "pyvsgpt": ("get_version()", "20211115", None, True),
+    "pyvshadow": ("get_version()", "20160109", None, True),
+    "pyvslvm": ("get_version()", "20160109", None, True),
+    "redis": ("__version__", "3.4", None, False),
+    "requests": ("__version__", "2.18.0", None, True),
+    "urllib3": ("__version__", "1.21.1", None, True),
+    "xattr": ("__version__", "0.7.2", None, False),
+    "xlsxwriter": ("__version__", "0.9.3", None, True),
+    "yaml": ("__version__", "3.10", None, True),
+    "yara": ("YARA_VERSION", "3.4.0", None, True),
+    "zmq": ("__version__", "2.1.11", None, True),
+    "zstd": ("version()", "1.3.0.2", None, True),
+}
 
-_VERSION_SPLIT_REGEX = re.compile(r'\.|\-')
+_VERSION_SPLIT_REGEX = re.compile(r"\.|\-")
 
 
 def _CheckPythonModule(
-    module_name, version_attribute_name, minimum_version,
-    is_required=True, maximum_version=None, verbose_output=True):
-  """Checks the availability of a Python module.
+    module_name,
+    version_attribute_name,
+    minimum_version,
+    is_required=True,
+    maximum_version=None,
+    verbose_output=True,
+):
+    """Checks the availability of a Python module.
 
-  Args:
-    module_name (str): name of the module.
-    version_attribute_name (str): name of the attribute that contains
-       the module version or method to retrieve the module version.
-    minimum_version (str): minimum required version.
-    is_required (Optional[bool]): True if the Python module is a required
-        dependency.
-    maximum_version (Optional[str]): maximum required version. Should only be
-        used if there is a later version that is not supported.
-    verbose_output (Optional[bool]): True if output should be verbose.
+    Args:
+      module_name (str): name of the module.
+      version_attribute_name (str): name of the attribute that contains
+         the module version or method to retrieve the module version.
+      minimum_version (str): minimum required version.
+      is_required (Optional[bool]): True if the Python module is a required
+          dependency.
+      maximum_version (Optional[str]): maximum required version. Should only be
+          used if there is a later version that is not supported.
+      verbose_output (Optional[bool]): True if output should be verbose.
 
-  Returns:
-    bool: True if the Python module is available and conforms to
-        the minimum required version, False otherwise.
-  """
-  module_object = _ImportPythonModule(module_name)
-  if not module_object:
-    if not is_required:
-      print(f'[OPTIONAL]\tmissing: {module_name:s}.')
-      return True
+    Returns:
+      bool: True if the Python module is available and conforms to
+          the minimum required version, False otherwise.
+    """
+    module_object = _ImportPythonModule(module_name)
+    if not module_object:
+        if not is_required:
+            print(f"[OPTIONAL]\tmissing: {module_name:s}.")
+            return True
 
-    print(f'[FAILURE]\tmissing: {module_name:s}.')
-    return False
+        print(f"[FAILURE]\tmissing: {module_name:s}.")
+        return False
 
-  if not version_attribute_name or not minimum_version:
-    if verbose_output:
-      print(f'[OK]\t\t{module_name:s}')
-    return True
-
-  module_version = None
-  if not version_attribute_name.endswith('()'):
-    module_version = getattr(module_object, version_attribute_name, None)
-  else:
-    version_method = getattr(module_object, version_attribute_name[:-2], None)
-    if version_method:
-      module_version = version_method()
-
-  if not module_version:
-    if not is_required:
-      print((
-          f'[OPTIONAL]\tunable to determine version information '
-          f'for: {module_name:s}'))
-      return True
-
-    print((
-        f'[FAILURE]\tunable to determine version information '
-        f'for: {module_name:s}'))
-    return False
-
-  # Make sure the module version is a string.
-  module_version = f'{module_version!s}'
-
-  # Remove a version suffix, such as: 0.7.0~rc1
-  module_version_list = _VERSION_SPLIT_REGEX.split(module_version)
-
-  try:
-    int(module_version_list[-1], 10)
-  except (TypeError, ValueError):
-    module_version_list.pop()
-
-  # Split the version string and convert every digit into an integer.
-  # A string compare of both version strings will yield an incorrect result.
-  module_version_map = list(map(int, module_version_list))
-  minimum_version_map = list(
-      map(int, _VERSION_SPLIT_REGEX.split(minimum_version)))
-
-  if module_version_map < minimum_version_map:
-    if not is_required:
-      print((
-          f'[OPTIONAL]\t{module_name:s} version: {module_version!s} is too '
-          f'old, {minimum_version!s} or later required.'))
-      return True
-
-    print((
-        f'[FAILURE]\t{module_name:s} version: {module_version!s} is too old, '
-        f'{minimum_version!s} or later required.'))
-    return False
-
-  if maximum_version:
-    maximum_version_map = list(
-        map(int, _VERSION_SPLIT_REGEX.split(maximum_version)))
-    if module_version_map > maximum_version_map:
-      if not is_required:
-        print((
-            f'[OPTIONAL]\t{module_name:s} version: {module_version!s} is too '
-            f'recent, {minimum_version!s} or earlier required.'))
+    if not version_attribute_name or not minimum_version:
+        if verbose_output:
+            print(f"[OK]\t\t{module_name:s}")
         return True
 
-      print((
-          f'[FAILURE]\t{module_name:s} version: {module_version!s} is too '
-          f'recent, {maximum_version!s} or earlier required.'))
-      return False
+    module_version = None
+    if not version_attribute_name.endswith("()"):
+        module_version = getattr(module_object, version_attribute_name, None)
+    else:
+        version_method = getattr(module_object, version_attribute_name[:-2], None)
+        if version_method:
+            module_version = version_method()
 
-  if verbose_output:
-    print(f'[OK]\t\t{module_name:s} version: {module_version!s}')
+    if not module_version:
+        if not is_required:
+            print(
+                f"[OPTIONAL]\tunable to determine version information "
+                f"for: {module_name:s}"
+            )
+            return True
 
-  return True
+        print(
+            f"[FAILURE]\tunable to determine version information "
+            f"for: {module_name:s}"
+        )
+        return False
+
+    # Make sure the module version is a string.
+    module_version = f"{module_version!s}"
+
+    # Remove a version suffix, such as: 0.7.0~rc1
+    module_version_list = _VERSION_SPLIT_REGEX.split(module_version)
+
+    try:
+        int(module_version_list[-1], 10)
+    except (TypeError, ValueError):
+        module_version_list.pop()
+
+    # Split the version string and convert every digit into an integer.
+    # A string compare of both version strings will yield an incorrect result.
+    module_version_map = list(map(int, module_version_list))
+    minimum_version_map = list(map(int, _VERSION_SPLIT_REGEX.split(minimum_version)))
+
+    if module_version_map < minimum_version_map:
+        if not is_required:
+            print(
+                f"[OPTIONAL]\t{module_name:s} version: {module_version!s} is too "
+                f"old, {minimum_version!s} or later required."
+            )
+            return True
+
+        print(
+            f"[FAILURE]\t{module_name:s} version: {module_version!s} is too old, "
+            f"{minimum_version!s} or later required."
+        )
+        return False
+
+    if maximum_version:
+        maximum_version_map = list(
+            map(int, _VERSION_SPLIT_REGEX.split(maximum_version))
+        )
+        if module_version_map > maximum_version_map:
+            if not is_required:
+                print(
+                    f"[OPTIONAL]\t{module_name:s} version: {module_version!s} is too "
+                    f"recent, {minimum_version!s} or earlier required."
+                )
+                return True
+
+            print(
+                f"[FAILURE]\t{module_name:s} version: {module_version!s} is too "
+                f"recent, {maximum_version!s} or earlier required."
+            )
+            return False
+
+    if verbose_output:
+        print(f"[OK]\t\t{module_name:s} version: {module_version!s}")
+
+    return True
 
 
 def _ImportPythonModule(module_name):
-  """Imports a Python module.
+    """Imports a Python module.
 
-  Args:
-    module_name (str): name of the module.
+    Args:
+      module_name (str): name of the module.
 
-  Returns:
-    module: Python module or None if the module cannot be imported.
-  """
-  try:
-    module_object = list(map(__import__, [module_name]))[0]
-  except ImportError:
-    return None
+    Returns:
+      module: Python module or None if the module cannot be imported.
+    """
+    try:
+        module_object = list(map(__import__, [module_name]))[0]
+    except ImportError:
+        return None
 
-  # If the module name contains dots get the upper most module object.
-  if '.' in module_name:
-    for submodule_name in module_name.split('.')[1:]:
-      module_object = getattr(module_object, submodule_name, None)
+    # If the module name contains dots get the upper most module object.
+    if "." in module_name:
+        for submodule_name in module_name.split(".")[1:]:
+            module_object = getattr(module_object, submodule_name, None)
 
-  return module_object
+    return module_object
 
 
 def CheckDependencies(verbose_output=True):
-  """Checks the availability of the dependencies.
+    """Checks the availability of the dependencies.
 
-  Args:
-    verbose_output (Optional[bool]): True if output should be verbose.
+    Args:
+      verbose_output (Optional[bool]): True if output should be verbose.
 
-  Returns:
-    bool: True if the dependencies are available, False otherwise.
-  """
-  print('Checking availability and versions of dependencies.')
-  check_result = True
+    Returns:
+      bool: True if the dependencies are available, False otherwise.
+    """
+    print("Checking availability and versions of dependencies.")
+    check_result = True
 
-  for module_name, version_tuple in sorted(PYTHON_DEPENDENCIES.items()):
-    if not _CheckPythonModule(
-        module_name, version_tuple[0], version_tuple[1],
-        is_required=version_tuple[3], maximum_version=version_tuple[2],
-        verbose_output=verbose_output):
-      check_result = False
+    for module_name, version_tuple in sorted(PYTHON_DEPENDENCIES.items()):
+        if not _CheckPythonModule(
+            module_name,
+            version_tuple[0],
+            version_tuple[1],
+            is_required=version_tuple[3],
+            maximum_version=version_tuple[2],
+            verbose_output=verbose_output,
+        ):
+            check_result = False
 
-  if check_result and not verbose_output:
-    print('[OK]')
+    if check_result and not verbose_output:
+        print("[OK]")
 
-  print('')
-  return check_result
+    print("")
+    return check_result

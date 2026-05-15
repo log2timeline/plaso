@@ -1,9 +1,9 @@
 """This file imports Python modules that register analysis plugins."""
 
 try:
-  from plaso.analysis import bloom
+    from plaso.analysis import bloom
 except ImportError:
-  pass
+    pass
 
 from plaso.analysis import browser_search
 from plaso.analysis import chrome_extension

@@ -5,11 +5,11 @@ import sys
 import unittest
 
 try:
-  import flor
-  from plaso.analysis import bloom
-  from plaso.cli.helpers import bloom_analysis
+    import flor
+    from plaso.analysis import bloom
+    from plaso.cli.helpers import bloom_analysis
 except ModuleNotFoundError:
-  flor = None
+    flor = None
 
 from plaso.lib import errors
 
@@ -17,17 +17,16 @@ from tests.cli import test_lib as cli_test_lib
 from tests.cli.helpers import test_lib
 
 
-@unittest.skipIf(flor is None, 'missing flor support')
-class BloomAnalysisArgumentsHelperTest(
-    test_lib.AnalysisPluginArgumentsHelperTest):
-  """Tests the bloom database analysis plugin CLI arguments helper."""
+@unittest.skipIf(flor is None, "missing flor support")
+class BloomAnalysisArgumentsHelperTest(test_lib.AnalysisPluginArgumentsHelperTest):
+    """Tests the bloom database analysis plugin CLI arguments helper."""
 
-  # pylint: disable=no-member,protected-access
+    # pylint: disable=no-member,protected-access
 
-  _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
+    _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
 
-  if _PYTHON3_13_OR_LATER:
-    _EXPECTED_OUTPUT = f"""\
+    if _PYTHON3_13_OR_LATER:
+        _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--bloom-file PATH] [--bloom-hash HASH]
                      [--bloom-label LABEL]
 
@@ -47,8 +46,8 @@ Test argument parser.
                         bloom_present.
 """
 
-  else:
-    _EXPECTED_OUTPUT = f"""\
+    else:
+        _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--bloom-file PATH] [--bloom-hash HASH]
                      [--bloom-label LABEL]
 
@@ -68,29 +67,28 @@ Test argument parser.
                         bloom_present.
 """
 
-  def testAddArguments(self):
-    """Tests the AddArguments function."""
-    argument_parser = self._GetTestArgumentParser('cli_helper.py')
+    def testAddArguments(self):
+        """Tests the AddArguments function."""
+        argument_parser = self._GetTestArgumentParser("cli_helper.py")
 
-    bloom_analysis.BloomAnalysisArgumentsHelper.AddArguments(
-        argument_parser)
+        bloom_analysis.BloomAnalysisArgumentsHelper.AddArguments(argument_parser)
 
-    output = self._RunArgparseFormatHelp(argument_parser)
-    self.assertEqual(output, self._EXPECTED_OUTPUT)
+        output = self._RunArgparseFormatHelp(argument_parser)
+        self.assertEqual(output, self._EXPECTED_OUTPUT)
 
-  def testParseOptions(self):
-    """Tests the ParseOptions function."""
-    options = cli_test_lib.TestOptions()
-    analysis_plugin = bloom.BloomAnalysisPlugin()
+    def testParseOptions(self):
+        """Tests the ParseOptions function."""
+        options = cli_test_lib.TestOptions()
+        analysis_plugin = bloom.BloomAnalysisPlugin()
 
-    with self.assertRaises(errors.BadConfigOption):
-      bloom_analysis.BloomAnalysisArgumentsHelper.ParseOptions(
-          options, analysis_plugin)
+        with self.assertRaises(errors.BadConfigOption):
+            bloom_analysis.BloomAnalysisArgumentsHelper.ParseOptions(
+                options, analysis_plugin
+            )
 
-    with self.assertRaises(errors.BadConfigObject):
-      bloom_analysis.BloomAnalysisArgumentsHelper.ParseOptions(
-          options, None)
+        with self.assertRaises(errors.BadConfigObject):
+            bloom_analysis.BloomAnalysisArgumentsHelper.ParseOptions(options, None)
 
 
-if __name__ == '__main__':
-  unittest.main()
+if __name__ == "__main__":
+    unittest.main()

@@ -10,144 +10,153 @@ from plaso.parsers import plugins
 
 
 class ESEDatabase:
-  """Extensible Storage Engine (ESE) database."""
+    """Extensible Storage Engine (ESE) database."""
 
-  def __init__(self):
-    """Initializes an Extensible Storage Engine (ESE) database."""
-    super().__init__()
-    self._esedb_file = None
-    self._table_names = []
+    def __init__(self):
+        """Initializes an Extensible Storage Engine (ESE) database."""
+        super().__init__()
+        self._esedb_file = None
+        self._table_names = []
 
-  @property
-  def tables(self):
-    """List[str]: names of all the tables."""
-    if not self._table_names:
-      for esedb_table in self._esedb_file.tables:
-        self._table_names.append(esedb_table.name)
+    @property
+    def tables(self):
+        """List[str]: names of all the tables."""
+        if not self._table_names:
+            for esedb_table in self._esedb_file.tables:
+                self._table_names.append(esedb_table.name)
 
-    return self._table_names
+        return self._table_names
 
-  def Close(self):
-    """Closes the database."""
-    self._esedb_file.close()
-    self._esedb_file = None
+    def Close(self):
+        """Closes the database."""
+        self._esedb_file.close()
+        self._esedb_file = None
 
-  def GetTableByName(self, name):
-    """Retrieves a table by its name.
+    def GetTableByName(self, name):
+        """Retrieves a table by its name.
 
-    Args:
-      name (str): name of the table.
+        Args:
+          name (str): name of the table.
 
-    Returns:
-      pyesedb.table: the table with the corresponding name or None if there is
-          no table with the name.
-    """
-    return self._esedb_file.get_table_by_name(name)
+        Returns:
+          pyesedb.table: the table with the corresponding name or None if there is
+              no table with the name.
+        """
+        return self._esedb_file.get_table_by_name(name)
 
-  def Open(self, file_object):
-    """Opens an Extensible Storage Engine (ESE) database file.
+    def Open(self, file_object):
+        """Opens an Extensible Storage Engine (ESE) database file.
 
-    Args:
-      file_object (dfvfs.FileIO): file-like object.
+        Args:
+          file_object (dfvfs.FileIO): file-like object.
 
-    Raises:
-      OSError: if the file-like object cannot be read.
-      ValueError: if the file-like object is missing.
-    """
-    if not file_object:
-      raise ValueError('Missing file object.')
+        Raises:
+          OSError: if the file-like object cannot be read.
+          ValueError: if the file-like object is missing.
+        """
+        if not file_object:
+            raise ValueError("Missing file object.")
 
-    self._esedb_file = pyesedb.file()
-    self._esedb_file.open_file_object(file_object)
+        self._esedb_file = pyesedb.file()
+        self._esedb_file.open_file_object(file_object)
 
 
 class ESEDBCache(plugins.BasePluginCache):
-  """A cache storing query results for ESEDB plugins."""
+    """A cache storing query results for ESEDB plugins."""
 
 
 class ESEDBParser(interface.FileObjectParser):
-  """Parses Extensible Storage Engine (ESE) database files (EDB)."""
+    """Parses Extensible Storage Engine (ESE) database files (EDB)."""
 
-  _INITIAL_FILE_OFFSET = None
+    _INITIAL_FILE_OFFSET = None
 
-  NAME = 'esedb'
-  DATA_FORMAT = 'Extensible Storage Engine (ESE) Database File (EDB) format'
+    NAME = "esedb"
+    DATA_FORMAT = "Extensible Storage Engine (ESE) Database File (EDB) format"
 
-  _plugin_classes = {}
+    _plugin_classes = {}
 
-  @classmethod
-  def GetFormatSpecification(cls):
-    """Retrieves the format specification.
+    @classmethod
+    def GetFormatSpecification(cls):
+        """Retrieves the format specification.
 
-    Returns:
-      FormatSpecification: format specification.
-    """
-    format_specification = specification.FormatSpecification(cls.NAME)
-    format_specification.AddNewSignature(b'\xef\xcd\xab\x89', offset=4)
-    return format_specification
+        Returns:
+          FormatSpecification: format specification.
+        """
+        format_specification = specification.FormatSpecification(cls.NAME)
+        format_specification.AddNewSignature(b"\xef\xcd\xab\x89", offset=4)
+        return format_specification
 
-  def ParseFileObject(self, parser_mediator, file_object):
-    """Parses an ESE database file-like object.
+    def ParseFileObject(self, parser_mediator, file_object):
+        """Parses an ESE database file-like object.
 
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      file_object (dfvfs.FileIO): file-like object.
-    """
-    database = ESEDatabase()
-
-    try:
-      database.Open(file_object)
-    except (OSError, ValueError) as exception:
-      parser_mediator.ProduceExtractionWarning(
-          f'unable to open file with error: {exception!s}')
-      return
-
-    display_name = parser_mediator.GetDisplayName()
-
-    # Compare the list of available plugin objects.
-    cache = ESEDBCache()
-    try:
-      for plugin_name, plugin in self._plugins_per_name.items():
-        if parser_mediator.abort:
-          break
-
-        profiling_name = '/'.join([self.NAME, plugin.NAME])
-
-        parser_mediator.SampleFormatCheckStartTiming(profiling_name)
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          file_object (dfvfs.FileIO): file-like object.
+        """
+        database = ESEDatabase()
 
         try:
-          result = plugin.CheckRequiredTables(database)
-        finally:
-          parser_mediator.SampleFormatCheckStopTiming(profiling_name)
+            database.Open(file_object)
+        except (OSError, ValueError) as exception:
+            parser_mediator.ProduceExtractionWarning(
+                f"unable to open file with error: {exception!s}"
+            )
+            return
 
-        if not result:
-          logger.debug((
-              f'Skipped parsing file: {display_name:s} with plugin: '
-              f'{plugin_name:s}'))
-          continue
+        display_name = parser_mediator.GetDisplayName()
 
-        logger.debug(
-            f'Parsing file: {display_name:s} with plugin: {plugin_name:s}')
-
-        parser_mediator.SampleStartTiming(profiling_name)
-
+        # Compare the list of available plugin objects.
+        cache = ESEDBCache()
         try:
-          plugin.UpdateChainAndProcess(
-              parser_mediator, cache=cache, database=database)
+            for plugin_name, plugin in self._plugins_per_name.items():
+                if parser_mediator.abort:
+                    break
 
-        except Exception as exception:  # pylint: disable=broad-except
-          parser_mediator.ProduceExtractionWarning((
-              f'plugin: {plugin_name:s} unable to parse ESE database '
-              f'with error: {exception!s}'))
+                profiling_name = "/".join([self.NAME, plugin.NAME])
+
+                parser_mediator.SampleFormatCheckStartTiming(profiling_name)
+
+                try:
+                    result = plugin.CheckRequiredTables(database)
+                finally:
+                    parser_mediator.SampleFormatCheckStopTiming(profiling_name)
+
+                if not result:
+                    logger.debug(
+                        (
+                            f"Skipped parsing file: {display_name:s} with plugin: "
+                            f"{plugin_name:s}"
+                        )
+                    )
+                    continue
+
+                logger.debug(
+                    f"Parsing file: {display_name:s} with plugin: {plugin_name:s}"
+                )
+
+                parser_mediator.SampleStartTiming(profiling_name)
+
+                try:
+                    plugin.UpdateChainAndProcess(
+                        parser_mediator, cache=cache, database=database
+                    )
+
+                except Exception as exception:  # pylint: disable=broad-except
+                    parser_mediator.ProduceExtractionWarning(
+                        (
+                            f"plugin: {plugin_name:s} unable to parse ESE database "
+                            f"with error: {exception!s}"
+                        )
+                    )
+
+                finally:
+                    parser_mediator.SampleStopTiming(profiling_name)
 
         finally:
-          parser_mediator.SampleStopTiming(profiling_name)
+            # TODO: explicitly clean up cache.
 
-    finally:
-      # TODO: explicitly clean up cache.
-
-      database.Close()
+            database.Close()
 
 
 manager.ParsersManager.RegisterParser(ESEDBParser)

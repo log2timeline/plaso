@@ -19,545 +19,589 @@ from plaso.serializer import json_serializer
 from plaso.storage import logger
 
 
-class BaseRedisAttributeContainerStore(
-    interface.AttributeContainerStoreWithReadCache):
-  """Redis-based attribute container store.
+class BaseRedisAttributeContainerStore(interface.AttributeContainerStoreWithReadCache):
+    """Redis-based attribute container store.
 
-  Attribute containers are stored as Redis hashes. All keys are prefixed with
-  the session identifier to avoid collisions. Event identifiers are also stored
-  in an index to enable sorting.
+    Attribute containers are stored as Redis hashes. All keys are prefixed with
+    the session identifier to avoid collisions. Event identifiers are also stored
+    in an index to enable sorting.
 
-  Attributes:
-    format_version (int): storage format version.
-    serialization_format (str): serialization format.
-  """
-
-  _FORMAT_VERSION = 20230312
-
-  DEFAULT_REDIS_URL = 'redis://127.0.0.1/0'
-
-  def __init__(self):
-    """Initializes a Redis attribute container store."""
-    super().__init__()
-    self._json_serializer = (
-        containers_json_serializer.AttributeContainerJSONSerializer)
-    self._redis_client = None
-    self._session_identifier = None
-    self._task_identifier = None
-
-    self.format_version = self._FORMAT_VERSION
-    self.serialization_format = definitions.SERIALIZER_FORMAT_JSON
-
-  def _GetRedisHashName(self, container_type):
-    """Retrieves the Redis hash name of the attribute container type.
-
-    Args:
-      container_type (str): container type.
-
-    Returns:
-      str: a Redis key name.
+    Attributes:
+      format_version (int): storage format version.
+      serialization_format (str): serialization format.
     """
-    return (f'{self._session_identifier:s}-{self._task_identifier:s}-'
-            f'{container_type:s}')
 
-  def _RaiseIfNotReadable(self):
-    """Raises if the attribute container store is not readable.
+    _FORMAT_VERSION = 20230312
 
-    Raises:
-      OSError: when the attribute container store is closed.
-    """
-    if not self._redis_client:
-      raise OSError('Unable to read, client not connected.')
+    DEFAULT_REDIS_URL = "redis://127.0.0.1/0"
 
-  def _RaiseIfNotWritable(self):
-    """Raises if the attribute container store is not writable.
+    def __init__(self):
+        """Initializes a Redis attribute container store."""
+        super().__init__()
+        self._json_serializer = (
+            containers_json_serializer.AttributeContainerJSONSerializer
+        )
+        self._redis_client = None
+        self._session_identifier = None
+        self._task_identifier = None
 
-    Raises:
-      OSError: when the attribute container store is closed or read-only.
-    """
-    if not self._redis_client:
-      raise OSError('Unable to write, client not connected.')
+        self.format_version = self._FORMAT_VERSION
+        self.serialization_format = definitions.SERIALIZER_FORMAT_JSON
 
-  @classmethod
-  def _SetClientName(cls, redis_client, name):
-    """Attempts to sets a Redis client name.
+    def _GetRedisHashName(self, container_type):
+        """Retrieves the Redis hash name of the attribute container type.
 
-    This method ignores errors from the Redis server or exceptions
-    indicating the method is missing, as setting the name is not a critical
-    function, and it is not currently supported by the fakeredis test library.
+        Args:
+          container_type (str): container type.
 
-    Args:
-      redis_client (Redis): an open Redis client.
-      name (str): name to set.
-    """
-    try:
-      redis_client.client_setname(name)
-    except redis.ResponseError as exception:
-      logger.debug((
-          f'Unable to set redis client name: {name:s} with error: '
-          f'{exception!s}'))
+        Returns:
+          str: a Redis key name.
+        """
+        return (
+            f"{self._session_identifier:s}-{self._task_identifier:s}-"
+            f"{container_type:s}"
+        )
 
-  def _WriteExistingAttributeContainer(self, container):
-    """Writes an existing attribute container to the store.
+    def _RaiseIfNotReadable(self):
+        """Raises if the attribute container store is not readable.
 
-    Args:
-      container (AttributeContainer): attribute container.
-    """
-    identifier = container.GetIdentifier()
+        Raises:
+          OSError: when the attribute container store is closed.
+        """
+        if not self._redis_client:
+            raise OSError("Unable to read, client not connected.")
 
-    redis_hash_name = self._GetRedisHashName(container.CONTAINER_TYPE)
-    redis_key = identifier.CopyToString()
+    def _RaiseIfNotWritable(self):
+        """Raises if the attribute container store is not writable.
 
-    json_dict = self._json_serializer.ConvertAttributeContainerToJSON(container)
+        Raises:
+          OSError: when the attribute container store is closed or read-only.
+        """
+        if not self._redis_client:
+            raise OSError("Unable to write, client not connected.")
 
-    try:
-      json_string = json.dumps(json_dict)
-    except TypeError as exception:
-      raise OSError((
-          f'Unable to serialize attribute container: '
-          f'{container.CONTAINER_TYPE:s} with error: {exception!s}.'))
+    @classmethod
+    def _SetClientName(cls, redis_client, name):
+        """Attempts to sets a Redis client name.
 
-    if not json_string:
-      raise OSError((
-          f'Unable to serialize attribute container: '
-          f'{container.CONTAINER_TYPE:s}'))
+        This method ignores errors from the Redis server or exceptions
+        indicating the method is missing, as setting the name is not a critical
+        function, and it is not currently supported by the fakeredis test library.
 
-    self._redis_client.hset(redis_hash_name, key=redis_key, value=json_string)
+        Args:
+          redis_client (Redis): an open Redis client.
+          name (str): name to set.
+        """
+        try:
+            redis_client.client_setname(name)
+        except redis.ResponseError as exception:
+            logger.debug(
+                (
+                    f"Unable to set redis client name: {name:s} with error: "
+                    f"{exception!s}"
+                )
+            )
 
-  def _WriteNewAttributeContainer(self, container):
-    """Writes a new attribute container to the store.
+    def _WriteExistingAttributeContainer(self, container):
+        """Writes an existing attribute container to the store.
 
-    Args:
-      container (AttributeContainer): attribute container.
-    """
-    next_sequence_number = self._GetAttributeContainerNextSequenceNumber(
-        container.CONTAINER_TYPE)
+        Args:
+          container (AttributeContainer): attribute container.
+        """
+        identifier = container.GetIdentifier()
 
-    identifier = containers_interface.AttributeContainerIdentifier(
-        name=container.CONTAINER_TYPE, sequence_number=next_sequence_number)
-    container.SetIdentifier(identifier)
+        redis_hash_name = self._GetRedisHashName(container.CONTAINER_TYPE)
+        redis_key = identifier.CopyToString()
 
-    redis_hash_name = self._GetRedisHashName(container.CONTAINER_TYPE)
-    redis_key = identifier.CopyToString()
+        json_dict = self._json_serializer.ConvertAttributeContainerToJSON(container)
 
-    json_dict = self._json_serializer.ConvertAttributeContainerToJSON(container)
+        try:
+            json_string = json.dumps(json_dict)
+        except TypeError as exception:
+            raise OSError(
+                (
+                    f"Unable to serialize attribute container: "
+                    f"{container.CONTAINER_TYPE:s} with error: {exception!s}."
+                )
+            )
 
-    try:
-      json_string = json.dumps(json_dict)
-    except TypeError as exception:
-      raise OSError((
-          f'Unable to serialize attribute container: '
-          f'{container.CONTAINER_TYPE:s} with error: {exception!s}.'))
+        if not json_string:
+            raise OSError(
+                (
+                    f"Unable to serialize attribute container: "
+                    f"{container.CONTAINER_TYPE:s}"
+                )
+            )
 
-    if not json_string:
-      raise OSError((
-          f'Unable to serialize attribute container: '
-          f'{container.CONTAINER_TYPE:s}'))
+        self._redis_client.hset(redis_hash_name, key=redis_key, value=json_string)
 
-    self._redis_client.hsetnx(redis_hash_name, redis_key, json_string)
+    def _WriteNewAttributeContainer(self, container):
+        """Writes a new attribute container to the store.
 
-    self._CacheAttributeContainerByIndex(container, next_sequence_number - 1)
+        Args:
+          container (AttributeContainer): attribute container.
+        """
+        next_sequence_number = self._GetAttributeContainerNextSequenceNumber(
+            container.CONTAINER_TYPE
+        )
 
-  def _WriteStorageMetadata(self):
-    """Writes the storage metadata."""
-    metadata = {
-        'format_version': self._FORMAT_VERSION,
-        'serialization_format': self.serialization_format}
-    metadata_key = self._GetRedisHashName('metadata')
-
-    for key, value in metadata.items():
-      self._redis_client.hset(metadata_key, key=key, value=value)
-
-  def Close(self):
-    """Closes the store.
-
-    Raises:
-      OSError: if the store is already closed.
-    """
-    if not self._redis_client:
-      raise OSError('Store already closed.')
-
-    self._redis_client = None
-
-  def GetAttributeContainerByIdentifier(self, container_type, identifier):
-    """Retrieves a specific type of container with a specific identifier.
-
-    Args:
-      container_type (str): container type.
-      identifier (AttributeContainerIdentifier): attribute container identifier.
-
-    Returns:
-      AttributeContainer: attribute container or None if not available.
-    """
-    redis_hash_name = self._GetRedisHashName(container_type)
-    redis_key = identifier.CopyToString()
-
-    json_string = self._redis_client.hget(redis_hash_name, redis_key)
-    if not json_string:
-      return None
-
-    json_dict = json.loads(json_string)
-
-    container = self._json_serializer.ConvertJSONToAttributeContainer(json_dict)
-    container.SetIdentifier(identifier)
-    return container
-
-  def GetAttributeContainerByIndex(self, container_type, index):
-    """Retrieves a specific attribute container.
-
-    Args:
-      container_type (str): attribute container type.
-      index (int): attribute container index.
-
-    Returns:
-      AttributeContainer: attribute container or None if not available.
-    """
-    identifier = containers_interface.AttributeContainerIdentifier(
-        name=container_type, sequence_number=index + 1)
-
-    redis_hash_name = self._GetRedisHashName(container_type)
-    redis_key = identifier.CopyToString()
-
-    json_string = self._redis_client.hget(redis_hash_name, redis_key)
-    if not json_string:
-      return None
-
-    json_dict = json.loads(json_string)
-
-    container = self._json_serializer.ConvertJSONToAttributeContainer(json_dict)
-    container.SetIdentifier(identifier)
-    return container
-
-  def GetAttributeContainers(self, container_type, filter_expression=None):
-    """Retrieves a specific type of attribute containers.
-
-    Args:
-      container_type (str): attribute container type.
-      filter_expression (Optional[str]): expression to filter the resulting
-          attribute containers by.
-
-    Yields:
-      AttributeContainer: attribute container.
-    """
-    redis_hash_name = self._GetRedisHashName(container_type)
-
-    if filter_expression:
-      expression_ast = ast.parse(filter_expression, mode='eval')
-      filter_expression = compile(expression_ast, '<string>', mode='eval')
-
-    for redis_key, json_string in self._redis_client.hscan_iter(
-        redis_hash_name):
-      json_dict = json.loads(json_string)
-
-      container = self._json_serializer.ConvertJSONToAttributeContainer(
-          json_dict)
-      # TODO: map filter expression to Redis native filter.
-      if container.MatchesExpression(filter_expression):
-        key = redis_key.decode('utf8')
-        identifier = containers_interface.AttributeContainerIdentifier()
-        identifier.CopyFromString(key)
-
+        identifier = containers_interface.AttributeContainerIdentifier(
+            name=container.CONTAINER_TYPE, sequence_number=next_sequence_number
+        )
         container.SetIdentifier(identifier)
-        yield container
 
-  def GetNumberOfAttributeContainers(self, container_type):
-    """Retrieves the number of a specific type of attribute containers.
+        redis_hash_name = self._GetRedisHashName(container.CONTAINER_TYPE)
+        redis_key = identifier.CopyToString()
 
-    Args:
-      container_type (str): attribute container type.
+        json_dict = self._json_serializer.ConvertAttributeContainerToJSON(container)
 
-    Returns:
-      int: the number of containers of a specified type.
-    """
-    redis_hash_name = self._GetRedisHashName(container_type)
-    return self._redis_client.hlen(redis_hash_name)
+        try:
+            json_string = json.dumps(json_dict)
+        except TypeError as exception:
+            raise OSError(
+                (
+                    f"Unable to serialize attribute container: "
+                    f"{container.CONTAINER_TYPE:s} with error: {exception!s}."
+                )
+            )
 
-  def HasAttributeContainers(self, container_type):
-    """Determines if a store contains a specific type of attribute container.
+        if not json_string:
+            raise OSError(
+                (
+                    f"Unable to serialize attribute container: "
+                    f"{container.CONTAINER_TYPE:s}"
+                )
+            )
 
-    Args:
-      container_type (str): attribute container type.
+        self._redis_client.hsetnx(redis_hash_name, redis_key, json_string)
 
-    Returns:
-      bool: True if the store contains the specified type of attribute
-          containers.
-    """
-    return self._attribute_container_sequence_numbers[container_type] > 0
+        self._CacheAttributeContainerByIndex(container, next_sequence_number - 1)
 
-  # pylint: disable=arguments-differ
-  def Open(
-      self, redis_client=None, session_identifier=None, task_identifier=None,
-      url=None, **unused_kwargs):
-    """Opens the store.
+    def _WriteStorageMetadata(self):
+        """Writes the storage metadata."""
+        metadata = {
+            "format_version": self._FORMAT_VERSION,
+            "serialization_format": self.serialization_format,
+        }
+        metadata_key = self._GetRedisHashName("metadata")
 
-    Args:
-      redis_client (Optional[Redis]): Redis client to query. If specified, no
-          new client will be created. If no client is specified a new client
-          will be opened connected to the Redis instance specified by 'url'.
-      session_identifier (Optional[str]): identifier of the session.
-      task_identifier (Optional[str]): unique identifier of the task the store
-          will store containers for. If not specified, an identifier will be
-          generated.
-      url (Optional[str]): URL for a Redis database. If not specified, the
-          DEFAULT_REDIS_URL will be used.
+        for key, value in metadata.items():
+            self._redis_client.hset(metadata_key, key=key, value=value)
 
-    Raises:
-      OSError: if the store is already connected to a Redis instance.
-    """
-    if self._redis_client:
-      raise OSError('Redis client already connected')
+    def Close(self):
+        """Closes the store.
 
-    if not redis_client:
-      if not url:
-        url = self.DEFAULT_REDIS_URL
+        Raises:
+          OSError: if the store is already closed.
+        """
+        if not self._redis_client:
+            raise OSError("Store already closed.")
 
-      redis_client = redis.from_url(url=url, socket_timeout=60)
+        self._redis_client = None
 
-    self._redis_client = redis_client
+    def GetAttributeContainerByIdentifier(self, container_type, identifier):
+        """Retrieves a specific type of container with a specific identifier.
 
-    self._session_identifier = session_identifier or str(uuid.uuid4())
-    self._task_identifier = task_identifier or str(uuid.uuid4())
+        Args:
+          container_type (str): container type.
+          identifier (AttributeContainerIdentifier): attribute container identifier.
 
-    client_name = self._GetRedisHashName('')
-    self._SetClientName(self._redis_client, client_name)
+        Returns:
+          AttributeContainer: attribute container or None if not available.
+        """
+        redis_hash_name = self._GetRedisHashName(container_type)
+        redis_key = identifier.CopyToString()
 
-    metadata_key = self._GetRedisHashName('metadata')
-    if not self._redis_client.exists(metadata_key):
-      self._WriteStorageMetadata()
+        json_string = self._redis_client.hget(redis_hash_name, redis_key)
+        if not json_string:
+            return None
+
+        json_dict = json.loads(json_string)
+
+        container = self._json_serializer.ConvertJSONToAttributeContainer(json_dict)
+        container.SetIdentifier(identifier)
+        return container
+
+    def GetAttributeContainerByIndex(self, container_type, index):
+        """Retrieves a specific attribute container.
+
+        Args:
+          container_type (str): attribute container type.
+          index (int): attribute container index.
+
+        Returns:
+          AttributeContainer: attribute container or None if not available.
+        """
+        identifier = containers_interface.AttributeContainerIdentifier(
+            name=container_type, sequence_number=index + 1
+        )
+
+        redis_hash_name = self._GetRedisHashName(container_type)
+        redis_key = identifier.CopyToString()
+
+        json_string = self._redis_client.hget(redis_hash_name, redis_key)
+        if not json_string:
+            return None
+
+        json_dict = json.loads(json_string)
+
+        container = self._json_serializer.ConvertJSONToAttributeContainer(json_dict)
+        container.SetIdentifier(identifier)
+        return container
+
+    def GetAttributeContainers(self, container_type, filter_expression=None):
+        """Retrieves a specific type of attribute containers.
+
+        Args:
+          container_type (str): attribute container type.
+          filter_expression (Optional[str]): expression to filter the resulting
+              attribute containers by.
+
+        Yields:
+          AttributeContainer: attribute container.
+        """
+        redis_hash_name = self._GetRedisHashName(container_type)
+
+        if filter_expression:
+            expression_ast = ast.parse(filter_expression, mode="eval")
+            filter_expression = compile(expression_ast, "<string>", mode="eval")
+
+        for redis_key, json_string in self._redis_client.hscan_iter(redis_hash_name):
+            json_dict = json.loads(json_string)
+
+            container = self._json_serializer.ConvertJSONToAttributeContainer(json_dict)
+            # TODO: map filter expression to Redis native filter.
+            if container.MatchesExpression(filter_expression):
+                key = redis_key.decode("utf8")
+                identifier = containers_interface.AttributeContainerIdentifier()
+                identifier.CopyFromString(key)
+
+                container.SetIdentifier(identifier)
+                yield container
+
+    def GetNumberOfAttributeContainers(self, container_type):
+        """Retrieves the number of a specific type of attribute containers.
+
+        Args:
+          container_type (str): attribute container type.
+
+        Returns:
+          int: the number of containers of a specified type.
+        """
+        redis_hash_name = self._GetRedisHashName(container_type)
+        return self._redis_client.hlen(redis_hash_name)
+
+    def HasAttributeContainers(self, container_type):
+        """Determines if a store contains a specific type of attribute container.
+
+        Args:
+          container_type (str): attribute container type.
+
+        Returns:
+          bool: True if the store contains the specified type of attribute
+              containers.
+        """
+        return self._attribute_container_sequence_numbers[container_type] > 0
+
+    # pylint: disable=arguments-differ
+    def Open(
+        self,
+        redis_client=None,
+        session_identifier=None,
+        task_identifier=None,
+        url=None,
+        **unused_kwargs,
+    ):
+        """Opens the store.
+
+        Args:
+          redis_client (Optional[Redis]): Redis client to query. If specified, no
+              new client will be created. If no client is specified a new client
+              will be opened connected to the Redis instance specified by 'url'.
+          session_identifier (Optional[str]): identifier of the session.
+          task_identifier (Optional[str]): unique identifier of the task the store
+              will store containers for. If not specified, an identifier will be
+              generated.
+          url (Optional[str]): URL for a Redis database. If not specified, the
+              DEFAULT_REDIS_URL will be used.
+
+        Raises:
+          OSError: if the store is already connected to a Redis instance.
+        """
+        if self._redis_client:
+            raise OSError("Redis client already connected")
+
+        if not redis_client:
+            if not url:
+                url = self.DEFAULT_REDIS_URL
+
+            redis_client = redis.from_url(url=url, socket_timeout=60)
+
+        self._redis_client = redis_client
+
+        self._session_identifier = session_identifier or str(uuid.uuid4())
+        self._task_identifier = task_identifier or str(uuid.uuid4())
+
+        client_name = self._GetRedisHashName("")
+        self._SetClientName(self._redis_client, client_name)
+
+        metadata_key = self._GetRedisHashName("metadata")
+        if not self._redis_client.exists(metadata_key):
+            self._WriteStorageMetadata()
 
 
 class RedisAttributeContainerStore(BaseRedisAttributeContainerStore):
-  """Redis-based attribute container store.
+    """Redis-based attribute container store.
 
-  Attribute containers are stored as Redis hashes. All keys are prefixed with
-  the session identifier to avoid collisions. Event identifiers are also stored
-  in an index to enable sorting.
-  """
-
-  _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE
-  _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
-  _CONTAINER_TYPE_EVENT_DATA_STREAM = events.EventDataStream.CONTAINER_TYPE
-
-  _EVENT_INDEX_NAME = 'sorted_event_identifier'
-
-  def __init__(self):
-    """Initializes a Redis attribute container store."""
-    super().__init__()
-    self._serializer = json_serializer.JSONAttributeContainerSerializer
-    self._serializers_profiler = None
-
-  def _DeserializeAttributeContainer(self, container_type, serialized_data):
-    """Deserializes an attribute container.
-
-    Args:
-      container_type (str): attribute container type.
-      serialized_data (bytes): serialized attribute container data.
-
-    Returns:
-      AttributeContainer: attribute container or None.
-
-    Raises:
-      OSError: if the serialized data cannot be decoded.
+    Attribute containers are stored as Redis hashes. All keys are prefixed with
+    the session identifier to avoid collisions. Event identifiers are also stored
+    in an index to enable sorting.
     """
-    if not serialized_data:
-      return None
 
-    if self._serializers_profiler:
-      self._serializers_profiler.StartTiming(container_type)
+    _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE
+    _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
+    _CONTAINER_TYPE_EVENT_DATA_STREAM = events.EventDataStream.CONTAINER_TYPE
 
-    try:
-      serialized_string = serialized_data.decode('utf-8')
-      attribute_container = self._serializer.ReadSerialized(serialized_string)
+    _EVENT_INDEX_NAME = "sorted_event_identifier"
 
-    except UnicodeDecodeError as exception:
-      raise OSError(
-          f'Unable to decode serialized data with error: {exception!s}')
+    def __init__(self):
+        """Initializes a Redis attribute container store."""
+        super().__init__()
+        self._serializer = json_serializer.JSONAttributeContainerSerializer
+        self._serializers_profiler = None
 
-    except (TypeError, ValueError) as exception:
-      # TODO: consider re-reading attribute container with error correction.
-      raise OSError(f'Unable to read serialized data with error: {exception!s}')
+    def _DeserializeAttributeContainer(self, container_type, serialized_data):
+        """Deserializes an attribute container.
 
-    finally:
-      if self._serializers_profiler:
-        self._serializers_profiler.StopTiming(container_type)
+        Args:
+          container_type (str): attribute container type.
+          serialized_data (bytes): serialized attribute container data.
 
-    return attribute_container
+        Returns:
+          AttributeContainer: attribute container or None.
 
-  def _SerializeAttributeContainer(self, attribute_container):
-    """Serializes an attribute container.
+        Raises:
+          OSError: if the serialized data cannot be decoded.
+        """
+        if not serialized_data:
+            return None
 
-    Args:
-      attribute_container (AttributeContainer): attribute container.
+        if self._serializers_profiler:
+            self._serializers_profiler.StartTiming(container_type)
 
-    Returns:
-      bytes: serialized attribute container.
+        try:
+            serialized_string = serialized_data.decode("utf-8")
+            attribute_container = self._serializer.ReadSerialized(serialized_string)
 
-    Raises:
-      OSError: if the attribute container cannot be serialized.
-    """
-    if self._serializers_profiler:
-      self._serializers_profiler.StartTiming(
-          attribute_container.CONTAINER_TYPE)
+        except UnicodeDecodeError as exception:
+            raise OSError(f"Unable to decode serialized data with error: {exception!s}")
 
-    try:
-      attribute_container_data = self._serializer.WriteSerialized(
-          attribute_container)
-      if not attribute_container_data:
-        raise OSError((
-            f'Unable to serialize attribute container: '
-            f'{attribute_container.CONTAINER_TYPE:s}'))
+        except (TypeError, ValueError) as exception:
+            # TODO: consider re-reading attribute container with error correction.
+            raise OSError(f"Unable to read serialized data with error: {exception!s}")
 
-    finally:
-      if self._serializers_profiler:
-        self._serializers_profiler.StopTiming(
-            attribute_container.CONTAINER_TYPE)
+        finally:
+            if self._serializers_profiler:
+                self._serializers_profiler.StopTiming(container_type)
 
-    return attribute_container_data
+        return attribute_container
 
-  def _WriteNewAttributeContainer(self, container):
-    """Writes a new attribute container to the store.
+    def _SerializeAttributeContainer(self, attribute_container):
+        """Serializes an attribute container.
 
-    Args:
-      container (AttributeContainer): attribute container.
-    """
-    schema = self._GetAttributeContainerSchema(container.CONTAINER_TYPE)
-    if schema:
-      super()._WriteNewAttributeContainer(container)
-    else:
-      next_sequence_number = self._GetAttributeContainerNextSequenceNumber(
-          container.CONTAINER_TYPE)
+        Args:
+          attribute_container (AttributeContainer): attribute container.
 
-      identifier = containers_interface.AttributeContainerIdentifier(
-          name=container.CONTAINER_TYPE, sequence_number=next_sequence_number)
-      container.SetIdentifier(identifier)
+        Returns:
+          bytes: serialized attribute container.
 
-      redis_hash_name = self._GetRedisHashName(container.CONTAINER_TYPE)
-      redis_key = identifier.CopyToString()
+        Raises:
+          OSError: if the attribute container cannot be serialized.
+        """
+        if self._serializers_profiler:
+            self._serializers_profiler.StartTiming(attribute_container.CONTAINER_TYPE)
 
-      if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
-        event_data_stream_identifier = container.GetEventDataStreamIdentifier()
-        if event_data_stream_identifier:
-          setattr(container, '_event_data_stream_identifier',
-                  event_data_stream_identifier.sequence_number)
+        try:
+            attribute_container_data = self._serializer.WriteSerialized(
+                attribute_container
+            )
+            if not attribute_container_data:
+                raise OSError(
+                    (
+                        f"Unable to serialize attribute container: "
+                        f"{attribute_container.CONTAINER_TYPE:s}"
+                    )
+                )
 
-      serialized_data = self._SerializeAttributeContainer(container)
-      self._redis_client.hsetnx(redis_hash_name, redis_key, serialized_data)
+        finally:
+            if self._serializers_profiler:
+                self._serializers_profiler.StopTiming(
+                    attribute_container.CONTAINER_TYPE
+                )
 
-    if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
-      index_name = self._GetRedisHashName(self._EVENT_INDEX_NAME)
+        return attribute_container_data
 
-      identifier = container.GetIdentifier()
-      redis_key = identifier.CopyToString()
+    def _WriteNewAttributeContainer(self, container):
+        """Writes a new attribute container to the store.
 
-      self._redis_client.zincrby(index_name, container.timestamp, redis_key)
+        Args:
+          container (AttributeContainer): attribute container.
+        """
+        schema = self._GetAttributeContainerSchema(container.CONTAINER_TYPE)
+        if schema:
+            super()._WriteNewAttributeContainer(container)
+        else:
+            next_sequence_number = self._GetAttributeContainerNextSequenceNumber(
+                container.CONTAINER_TYPE
+            )
 
-  def GetAttributeContainerByIndex(self, container_type, index):
-    """Retrieves a specific attribute container.
+            identifier = containers_interface.AttributeContainerIdentifier(
+                name=container.CONTAINER_TYPE, sequence_number=next_sequence_number
+            )
+            container.SetIdentifier(identifier)
 
-    Args:
-      container_type (str): attribute container type.
-      index (int): attribute container index.
+            redis_hash_name = self._GetRedisHashName(container.CONTAINER_TYPE)
+            redis_key = identifier.CopyToString()
 
-    Returns:
-      AttributeContainer: attribute container or None if not available.
-    """
-    schema = self._GetAttributeContainerSchema(container_type)
-    if schema:
-      return super().GetAttributeContainerByIndex(container_type, index)
+            if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
+                event_data_stream_identifier = container.GetEventDataStreamIdentifier()
+                if event_data_stream_identifier:
+                    setattr(
+                        container,
+                        "_event_data_stream_identifier",
+                        event_data_stream_identifier.sequence_number,
+                    )
 
-    identifier = containers_interface.AttributeContainerIdentifier(
-        name=container_type, sequence_number=index + 1)
+            serialized_data = self._SerializeAttributeContainer(container)
+            self._redis_client.hsetnx(redis_hash_name, redis_key, serialized_data)
 
-    redis_hash_name = self._GetRedisHashName(container_type)
-    redis_key = identifier.CopyToString()
+        if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT:
+            index_name = self._GetRedisHashName(self._EVENT_INDEX_NAME)
 
-    serialized_data = self._redis_client.hget(redis_hash_name, redis_key)
-    if not serialized_data:
-      return None
+            identifier = container.GetIdentifier()
+            redis_key = identifier.CopyToString()
 
-    container = self._DeserializeAttributeContainer(
-        container_type, serialized_data)
-    container.SetIdentifier(identifier)
+            self._redis_client.zincrby(index_name, container.timestamp, redis_key)
 
-    if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
-      identifier = getattr(container, '_event_data_stream_identifier', None)
-      if identifier:
-        event_data_stream_identifier = (
-            containers_interface.AttributeContainerIdentifier(
-                name=self._CONTAINER_TYPE_EVENT_DATA_STREAM,
-                sequence_number=identifier))
-        container.SetEventDataStreamIdentifier(event_data_stream_identifier)
+    def GetAttributeContainerByIndex(self, container_type, index):
+        """Retrieves a specific attribute container.
 
-    return container
+        Args:
+          container_type (str): attribute container type.
+          index (int): attribute container index.
 
-  def GetAttributeContainers(self, container_type, filter_expression=None):
-    """Retrieves a specific type of attribute containers.
+        Returns:
+          AttributeContainer: attribute container or None if not available.
+        """
+        schema = self._GetAttributeContainerSchema(container_type)
+        if schema:
+            return super().GetAttributeContainerByIndex(container_type, index)
 
-    Args:
-      container_type (str): attribute container type.
-      filter_expression (Optional[str]): expression to filter the resulting
-          attribute containers by.
+        identifier = containers_interface.AttributeContainerIdentifier(
+            name=container_type, sequence_number=index + 1
+        )
 
-    Yields:
-      AttributeContainer: attribute container.
-    """
-    schema = self._GetAttributeContainerSchema(container_type)
-    if schema:
-      yield from super().GetAttributeContainers(
-          container_type, filter_expression=filter_expression)
-    else:
-      redis_hash_name = self._GetRedisHashName(container_type)
-      for redis_key, serialized_data in self._redis_client.hscan_iter(
-          redis_hash_name):
-        container = self._DeserializeAttributeContainer(
-            container_type, serialized_data)
+        redis_hash_name = self._GetRedisHashName(container_type)
+        redis_key = identifier.CopyToString()
 
-        redis_key = redis_key.decode('utf-8')
-        identifier = containers_interface.AttributeContainerIdentifier()
-        identifier.CopyFromString(redis_key)
+        serialized_data = self._redis_client.hget(redis_hash_name, redis_key)
+        if not serialized_data:
+            return None
+
+        container = self._DeserializeAttributeContainer(container_type, serialized_data)
+        container.SetIdentifier(identifier)
 
         if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
-          identifier = getattr(container, '_event_data_stream_identifier', None)
-          if identifier:
-            event_data_stream_identifier = (
-                containers_interface.AttributeContainerIdentifier(
-                    name=self._CONTAINER_TYPE_EVENT_DATA_STREAM,
-                    sequence_number=identifier))
-            container.SetEventDataStreamIdentifier(event_data_stream_identifier)
+            identifier = getattr(container, "_event_data_stream_identifier", None)
+            if identifier:
+                event_data_stream_identifier = (
+                    containers_interface.AttributeContainerIdentifier(
+                        name=self._CONTAINER_TYPE_EVENT_DATA_STREAM,
+                        sequence_number=identifier,
+                    )
+                )
+                container.SetEventDataStreamIdentifier(event_data_stream_identifier)
 
-        # TODO: map filter expression to Redis native filter.
-        if container.MatchesExpression(filter_expression):
-          yield container
+        return container
 
-  def GetSortedEvents(self, time_range=None):
-    """Retrieves the events in increasing chronological order.
+    def GetAttributeContainers(self, container_type, filter_expression=None):
+        """Retrieves a specific type of attribute containers.
 
-    Args:
-      time_range (Optional[TimeRange]): This argument is not supported by the
-          Redis store.
+        Args:
+          container_type (str): attribute container type.
+          filter_expression (Optional[str]): expression to filter the resulting
+              attribute containers by.
 
-    Yields:
-      EventObject: event.
+        Yields:
+          AttributeContainer: attribute container.
+        """
+        schema = self._GetAttributeContainerSchema(container_type)
+        if schema:
+            yield from super().GetAttributeContainers(
+                container_type, filter_expression=filter_expression
+            )
+        else:
+            redis_hash_name = self._GetRedisHashName(container_type)
+            for redis_key, serialized_data in self._redis_client.hscan_iter(
+                redis_hash_name
+            ):
+                container = self._DeserializeAttributeContainer(
+                    container_type, serialized_data
+                )
 
-    Raises:
-      RuntimeError: if a time_range argument is specified.
-    """
-    event_index_name = self._GetRedisHashName(self._EVENT_INDEX_NAME)
-    if time_range:
-      raise RuntimeError('Not supported')
+                redis_key = redis_key.decode("utf-8")
+                identifier = containers_interface.AttributeContainerIdentifier()
+                identifier.CopyFromString(redis_key)
 
-    for redis_key, _ in self._redis_client.zscan_iter(event_index_name):
-      redis_key = redis_key.decode('utf-8')
-      identifier = containers_interface.AttributeContainerIdentifier()
-      identifier.CopyFromString(redis_key)
+                if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
+                    identifier = getattr(
+                        container, "_event_data_stream_identifier", None
+                    )
+                    if identifier:
+                        event_data_stream_identifier = (
+                            containers_interface.AttributeContainerIdentifier(
+                                name=self._CONTAINER_TYPE_EVENT_DATA_STREAM,
+                                sequence_number=identifier,
+                            )
+                        )
+                        container.SetEventDataStreamIdentifier(
+                            event_data_stream_identifier
+                        )
 
-      yield self.GetAttributeContainerByIdentifier(
-          self._CONTAINER_TYPE_EVENT, identifier)
+                # TODO: map filter expression to Redis native filter.
+                if container.MatchesExpression(filter_expression):
+                    yield container
 
-  def SetSerializersProfiler(self, serializers_profiler):
-    """Sets the serializers profiler.
+    def GetSortedEvents(self, time_range=None):
+        """Retrieves the events in increasing chronological order.
 
-    Args:
-      serializers_profiler (SerializersProfiler): serializers profiler.
-    """
-    self._serializers_profiler = serializers_profiler
+        Args:
+          time_range (Optional[TimeRange]): This argument is not supported by the
+              Redis store.
+
+        Yields:
+          EventObject: event.
+
+        Raises:
+          RuntimeError: if a time_range argument is specified.
+        """
+        event_index_name = self._GetRedisHashName(self._EVENT_INDEX_NAME)
+        if time_range:
+            raise RuntimeError("Not supported")
+
+        for redis_key, _ in self._redis_client.zscan_iter(event_index_name):
+            redis_key = redis_key.decode("utf-8")
+            identifier = containers_interface.AttributeContainerIdentifier()
+            identifier.CopyFromString(redis_key)
+
+            yield self.GetAttributeContainerByIdentifier(
+                self._CONTAINER_TYPE_EVENT, identifier
+            )
+
+    def SetSerializersProfiler(self, serializers_profiler):
+        """Sets the serializers profiler.
+
+        Args:
+          serializers_profiler (SerializersProfiler): serializers profiler.
+        """
+        self._serializers_profiler = serializers_profiler

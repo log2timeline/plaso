@@ -2,8 +2,7 @@
 
 import logging
 
-
-_logger = logging.getLogger('filters')
+_logger = logging.getLogger("filters")
 
 # Mimic the logging module interface.
 critical = _logger.critical

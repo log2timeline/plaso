@@ -12,57 +12,70 @@ from tests.analysis import test_lib
 
 
 class SessionizeAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
-  """Tests the sessionize analysis plugin."""
+    """Tests the sessionize analysis plugin."""
 
-  _TEST_EVENTS = [
-      {'_parser_chain': 'test_parser',
-       'data_type': 'test:event',
-       'timestamp': '2015-05-01 00:00:00',
-       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
-      {'_parser_chain': 'test_parser',
-       'data_type': 'test:event',
-       'timestamp': '2015-05-01 00:09:00',
-       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
-      {'_parser_chain': 'test_parser',
-       'data_type': 'test:event',
-       'timestamp': '2015-05-01 00:18:00',
-       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
-      {'_parser_chain': 'test_parser',
-       'data_type': 'test:event',
-       'timestamp': '2015-05-01 01:00:00',
-       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN},
-      {'_parser_chain': 'test_parser',
-       'data_type': 'test:event',
-       'timestamp': '2015-05-01 01:09:00',
-       'timestamp_desc': definitions.TIME_DESCRIPTION_UNKNOWN}]
+    _TEST_EVENTS = [
+        {
+            "_parser_chain": "test_parser",
+            "data_type": "test:event",
+            "timestamp": "2015-05-01 00:00:00",
+            "timestamp_desc": definitions.TIME_DESCRIPTION_UNKNOWN,
+        },
+        {
+            "_parser_chain": "test_parser",
+            "data_type": "test:event",
+            "timestamp": "2015-05-01 00:09:00",
+            "timestamp_desc": definitions.TIME_DESCRIPTION_UNKNOWN,
+        },
+        {
+            "_parser_chain": "test_parser",
+            "data_type": "test:event",
+            "timestamp": "2015-05-01 00:18:00",
+            "timestamp_desc": definitions.TIME_DESCRIPTION_UNKNOWN,
+        },
+        {
+            "_parser_chain": "test_parser",
+            "data_type": "test:event",
+            "timestamp": "2015-05-01 01:00:00",
+            "timestamp_desc": definitions.TIME_DESCRIPTION_UNKNOWN,
+        },
+        {
+            "_parser_chain": "test_parser",
+            "data_type": "test:event",
+            "timestamp": "2015-05-01 01:09:00",
+            "timestamp_desc": definitions.TIME_DESCRIPTION_UNKNOWN,
+        },
+    ]
 
-  def testTagAndCompileReport(self):
-    """Tests the Sessionize plugin."""
-    plugin = sessionize.SessionizeAnalysisPlugin()
-    plugin.SetMaximumPause(10)
+    def testTagAndCompileReport(self):
+        """Tests the Sessionize plugin."""
+        plugin = sessionize.SessionizeAnalysisPlugin()
+        plugin.SetMaximumPause(10)
 
-    storage_writer = self._AnalyzeEvents(self._TEST_EVENTS, plugin)
+        storage_writer = self._AnalyzeEvents(self._TEST_EVENTS, plugin)
 
-    number_of_reports = storage_writer.GetNumberOfAttributeContainers(
-        'analysis_report')
-    self.assertEqual(number_of_reports, 1)
+        number_of_reports = storage_writer.GetNumberOfAttributeContainers(
+            "analysis_report"
+        )
+        self.assertEqual(number_of_reports, 1)
 
-    analysis_report = storage_writer.GetAttributeContainerByIndex(
-        reports.AnalysisReport.CONTAINER_TYPE, 0)
-    self.assertIsNotNone(analysis_report)
+        analysis_report = storage_writer.GetAttributeContainerByIndex(
+            reports.AnalysisReport.CONTAINER_TYPE, 0
+        )
+        self.assertIsNotNone(analysis_report)
 
-    self.assertEqual(analysis_report.plugin_name, 'sessionize')
+        self.assertEqual(analysis_report.plugin_name, "sessionize")
 
-    expected_analysis_counter = collections.Counter({
-        'session_0': 3,
-        'session_1': 2})
-    self.assertEqual(
-        analysis_report.analysis_counter, expected_analysis_counter)
+        expected_analysis_counter = collections.Counter(
+            {"session_0": 3, "session_1": 2}
+        )
+        self.assertEqual(analysis_report.analysis_counter, expected_analysis_counter)
 
-    number_of_event_tags = storage_writer.GetNumberOfAttributeContainers(
-        'event_tag')
-    self.assertEqual(number_of_event_tags, 5)
+        number_of_event_tags = storage_writer.GetNumberOfAttributeContainers(
+            "event_tag"
+        )
+        self.assertEqual(number_of_event_tags, 5)
 
 
-if __name__ == '__main__':
-  unittest.main()
+if __name__ == "__main__":
+    unittest.main()

@@ -7,17 +7,17 @@ from tests.parsers import test_lib
 
 
 class TextPluginTest(test_lib.ParserTestCase):
-  """Tests for the text plugins interface."""
+    """Tests for the text plugins interface."""
 
-  # pylint: disable=protected-access
+    # pylint: disable=protected-access
 
-  # TODO: add tests for _GetMatchingLineStructure
-  # TODO: add tests for _GetValueFromStructure
-  # TODO: add tests for _ParseLines
-  # TODO: add tests for _ParseLineStructure
-  # TODO: add tests for _SetLineStructures
-  # TODO: add tests for Process
+    # TODO: add tests for _GetMatchingLineStructure
+    # TODO: add tests for _GetValueFromStructure
+    # TODO: add tests for _ParseLines
+    # TODO: add tests for _ParseLineStructure
+    # TODO: add tests for _SetLineStructures
+    # TODO: add tests for Process
 
 
-if __name__ == '__main__':
-  unittest.main()
+if __name__ == "__main__":
+    unittest.main()

@@ -12,14 +12,14 @@ from tests.cli import test_lib as cli_test_lib
 
 
 class WorkersArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
-  """Tests for the worker processes CLI arguments helper."""
+    """Tests for the worker processes CLI arguments helper."""
 
-  # pylint: disable=no-member,protected-access
+    # pylint: disable=no-member,protected-access
 
-  _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
+    _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
 
-  if _PYTHON3_13_OR_LATER:
-    _EXPECTED_OUTPUT = f"""\
+    if _PYTHON3_13_OR_LATER:
+        _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--worker_memory_limit SIZE] [--worker_timeout MINUTES]
                      [--workers WORKERS]
 
@@ -43,8 +43,8 @@ Test argument parser.
                         (foreman) process.
 """
 
-  else:
-    _EXPECTED_OUTPUT = f"""\
+    else:
+        _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--worker_memory_limit SIZE] [--worker_timeout MINUTES]
                      [--workers WORKERS]
 
@@ -68,44 +68,44 @@ Test argument parser.
                         (foreman) process.
 """
 
-  def testAddArguments(self):
-    """Tests the AddArguments function."""
-    argument_parser = self._GetTestArgumentParser('cli_helper.py')
+    def testAddArguments(self):
+        """Tests the AddArguments function."""
+        argument_parser = self._GetTestArgumentParser("cli_helper.py")
 
-    workers.WorkersArgumentsHelper.AddArguments(argument_parser)
+        workers.WorkersArgumentsHelper.AddArguments(argument_parser)
 
-    output = self._RunArgparseFormatHelp(argument_parser)
-    self.assertEqual(output, self._EXPECTED_OUTPUT)
+        output = self._RunArgparseFormatHelp(argument_parser)
+        self.assertEqual(output, self._EXPECTED_OUTPUT)
 
-  def testParseOptions(self):
-    """Tests the ParseOptions function."""
-    options = cli_test_lib.TestOptions()
-    options.workers = 0
+    def testParseOptions(self):
+        """Tests the ParseOptions function."""
+        options = cli_test_lib.TestOptions()
+        options.workers = 0
 
-    test_tool = tools.CLITool()
-    workers.WorkersArgumentsHelper.ParseOptions(options, test_tool)
+        test_tool = tools.CLITool()
+        workers.WorkersArgumentsHelper.ParseOptions(options, test_tool)
 
-    self.assertEqual(test_tool._number_of_extraction_workers, options.workers)
+        self.assertEqual(test_tool._number_of_extraction_workers, options.workers)
 
-    with self.assertRaises(errors.BadConfigObject):
-      workers.WorkersArgumentsHelper.ParseOptions(options, None)
+        with self.assertRaises(errors.BadConfigObject):
+            workers.WorkersArgumentsHelper.ParseOptions(options, None)
 
-    with self.assertRaises(errors.BadConfigOption):
-      options.workers = 'bogus'
-      workers.WorkersArgumentsHelper.ParseOptions(options, test_tool)
+        with self.assertRaises(errors.BadConfigOption):
+            options.workers = "bogus"
+            workers.WorkersArgumentsHelper.ParseOptions(options, test_tool)
 
-    with self.assertRaises(errors.BadConfigOption):
-      options.workers = -1
-      workers.WorkersArgumentsHelper.ParseOptions(options, test_tool)
+        with self.assertRaises(errors.BadConfigOption):
+            options.workers = -1
+            workers.WorkersArgumentsHelper.ParseOptions(options, test_tool)
 
-    with self.assertRaises(errors.BadConfigOption):
-      options.worker_memory_limit = 'bogus'
-      workers.WorkersArgumentsHelper.ParseOptions(options, test_tool)
+        with self.assertRaises(errors.BadConfigOption):
+            options.worker_memory_limit = "bogus"
+            workers.WorkersArgumentsHelper.ParseOptions(options, test_tool)
 
-    with self.assertRaises(errors.BadConfigOption):
-      options.worker_memory_limit = -1
-      workers.WorkersArgumentsHelper.ParseOptions(options, test_tool)
+        with self.assertRaises(errors.BadConfigOption):
+            options.worker_memory_limit = -1
+            workers.WorkersArgumentsHelper.ParseOptions(options, test_tool)
 
 
-if __name__ == '__main__':
-  unittest.main()
+if __name__ == "__main__":
+    unittest.main()

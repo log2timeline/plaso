@@ -10,11 +10,11 @@ from tests.cli import test_lib
 
 
 class PinfoToolTest(test_lib.CLIToolTestCase):
-  """Tests for the pinfo CLI tool."""
+    """Tests for the pinfo CLI tool."""
 
-  # pylint: disable=protected-access
+    # pylint: disable=protected-access
 
-  _EXPECTED_OUTPUT_COMPARE_STORES = """\
+    _EXPECTED_OUTPUT_COMPARE_STORES = """\
 
 ************************* Events generated per parser **************************
 Parser (plugin) name : Number of events
@@ -26,539 +26,552 @@ Parser (plugin) name : Number of events
 Storage files are different.
 """
 
-  # TODO: add test for _CalculateStorageCounters.
-  # TODO: add test for _CompareStores.
-
-  def testGenerateAnalysisResultsReportAsJSON(self):
-    """Tests the _GenerateAnalysisResultsReport function."""
-    test_file_path = self._GetTestFilePath(['psort_test.plaso'])
-    self._SkipIfPathNotExists(test_file_path)
-
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
-    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
-    test_tool._output_format = 'json'
-
-    storage_reader = test_tool._GetStorageReader(test_file_path)
-    try:
-      column_titles = ['Search engine', 'Search term', 'Number of queries']
-      attribute_names = ['search_engine', 'search_term', 'number_of_queries']
-      attribute_mappings = {}
-      test_tool._GenerateAnalysisResultsReport(
-          storage_reader, 'browser_searches', column_titles,
-          'browser_search_analysis_result', attribute_names,
-          attribute_mappings)
-
-    finally:
-      storage_reader.Close()
-
-    expected_output = [
-        '{"browser_searches": [', '', ']}',
-        '']
-
-    output = output_writer.ReadOutput()
-
-    # Compare the output as list of lines which makes it easier to spot
-    # differences.
-    self.assertEqual(output.split('\n'), expected_output)
-
-  def testGenerateAnalysisResultsReportAsMarkdown(self):
-    """Tests the _GenerateAnalysisResultsReport function."""
-    test_file_path = self._GetTestFilePath(['psort_test.plaso'])
-    self._SkipIfPathNotExists(test_file_path)
-
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
-    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
-    test_tool._output_format = 'markdown'
-
-    storage_reader = test_tool._GetStorageReader(test_file_path)
-    try:
-      column_titles = ['Search engine', 'Search term', 'Number of queries']
-      attribute_names = ['search_engine', 'search_term', 'number_of_queries']
-      attribute_mappings = {}
-      test_tool._GenerateAnalysisResultsReport(
-          storage_reader, 'browser_searches', column_titles,
-          'browser_search_analysis_result', attribute_names,
-          attribute_mappings)
-
-    finally:
-      storage_reader.Close()
-
-    expected_output = [
-        'Search engine | Search term | Number of queries',
-        '--- | --- | ---',
-        '']
-
-    output = output_writer.ReadOutput()
-
-    # Compare the output as list of lines which makes it easier to spot
-    # differences.
-    self.assertEqual(output.split('\n'), expected_output)
-
-  def testGenerateAnalysisResultsReportAsText(self):
-    """Tests the _GenerateAnalysisResultsReport function."""
-    test_file_path = self._GetTestFilePath(['psort_test.plaso'])
-    self._SkipIfPathNotExists(test_file_path)
-
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
-    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
-    test_tool._output_format = 'text'
-
-    storage_reader = test_tool._GetStorageReader(test_file_path)
-    try:
-      column_titles = ['Search engine', 'Search term', 'Number of queries']
-      attribute_names = ['search_engine', 'search_term', 'number_of_queries']
-      attribute_mappings = {}
-      test_tool._GenerateAnalysisResultsReport(
-          storage_reader, 'browser_searches', column_titles,
-          'browser_search_analysis_result', attribute_names,
-          attribute_mappings)
-
-    finally:
-      storage_reader.Close()
-
-    expected_output = [
-        'Search engine\tSearch term\tNumber of queries',
-        '']
-
-    output = output_writer.ReadOutput()
-
-    # Compare the output as list of lines which makes it easier to spot
-    # differences.
-    self.assertEqual(output.split('\n'), expected_output)
-
-  def testGenerateFileHashesReportAsJSON(self):
-    """Tests the _GenerateFileHashesReport function."""
-    test_file_path = self._GetTestFilePath(['psort_test.plaso'])
-    self._SkipIfPathNotExists(test_file_path)
+    # TODO: add test for _CalculateStorageCounters.
+    # TODO: add test for _CompareStores.
+
+    def testGenerateAnalysisResultsReportAsJSON(self):
+        """Tests the _GenerateAnalysisResultsReport function."""
+        test_file_path = self._GetTestFilePath(["psort_test.plaso"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+        test_tool._output_format = "json"
+
+        storage_reader = test_tool._GetStorageReader(test_file_path)
+        try:
+            column_titles = ["Search engine", "Search term", "Number of queries"]
+            attribute_names = ["search_engine", "search_term", "number_of_queries"]
+            attribute_mappings = {}
+            test_tool._GenerateAnalysisResultsReport(
+                storage_reader,
+                "browser_searches",
+                column_titles,
+                "browser_search_analysis_result",
+                attribute_names,
+                attribute_mappings,
+            )
+
+        finally:
+            storage_reader.Close()
+
+        expected_output = ['{"browser_searches": [', "", "]}", ""]
+
+        output = output_writer.ReadOutput()
+
+        # Compare the output as list of lines which makes it easier to spot
+        # differences.
+        self.assertEqual(output.split("\n"), expected_output)
+
+    def testGenerateAnalysisResultsReportAsMarkdown(self):
+        """Tests the _GenerateAnalysisResultsReport function."""
+        test_file_path = self._GetTestFilePath(["psort_test.plaso"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+        test_tool._output_format = "markdown"
+
+        storage_reader = test_tool._GetStorageReader(test_file_path)
+        try:
+            column_titles = ["Search engine", "Search term", "Number of queries"]
+            attribute_names = ["search_engine", "search_term", "number_of_queries"]
+            attribute_mappings = {}
+            test_tool._GenerateAnalysisResultsReport(
+                storage_reader,
+                "browser_searches",
+                column_titles,
+                "browser_search_analysis_result",
+                attribute_names,
+                attribute_mappings,
+            )
+
+        finally:
+            storage_reader.Close()
+
+        expected_output = [
+            "Search engine | Search term | Number of queries",
+            "--- | --- | ---",
+            "",
+        ]
+
+        output = output_writer.ReadOutput()
+
+        # Compare the output as list of lines which makes it easier to spot
+        # differences.
+        self.assertEqual(output.split("\n"), expected_output)
+
+    def testGenerateAnalysisResultsReportAsText(self):
+        """Tests the _GenerateAnalysisResultsReport function."""
+        test_file_path = self._GetTestFilePath(["psort_test.plaso"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+        test_tool._output_format = "text"
+
+        storage_reader = test_tool._GetStorageReader(test_file_path)
+        try:
+            column_titles = ["Search engine", "Search term", "Number of queries"]
+            attribute_names = ["search_engine", "search_term", "number_of_queries"]
+            attribute_mappings = {}
+            test_tool._GenerateAnalysisResultsReport(
+                storage_reader,
+                "browser_searches",
+                column_titles,
+                "browser_search_analysis_result",
+                attribute_names,
+                attribute_mappings,
+            )
+
+        finally:
+            storage_reader.Close()
+
+        expected_output = ["Search engine\tSearch term\tNumber of queries", ""]
 
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
-    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
-    test_tool._output_format = 'json'
+        output = output_writer.ReadOutput()
 
-    storage_reader = test_tool._GetStorageReader(test_file_path)
-    try:
-      test_tool._GenerateFileHashesReport(storage_reader)
+        # Compare the output as list of lines which makes it easier to spot
+        # differences.
+        self.assertEqual(output.split("\n"), expected_output)
 
-    finally:
-      storage_reader.Close()
+    def testGenerateFileHashesReportAsJSON(self):
+        """Tests the _GenerateFileHashesReport function."""
+        test_file_path = self._GetTestFilePath(["psort_test.plaso"])
+        self._SkipIfPathNotExists(test_file_path)
 
-    test_file_path = self._GetTestFilePath([
-        'psort_test.plaso.file_hashes.json'])
-    with open(test_file_path, encoding='utf-8') as file_object:
-      expected_output = file_object.read()
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+        test_tool._output_format = "json"
 
-    output = output_writer.ReadOutput()
+        storage_reader = test_tool._GetStorageReader(test_file_path)
+        try:
+            test_tool._GenerateFileHashesReport(storage_reader)
 
-    # Compare the output as list of lines which makes it easier to spot
-    # differences.
-    self.assertEqual(output.split('\n'), expected_output.split('\n'))
+        finally:
+            storage_reader.Close()
 
-  def testGenerateFileHashesReportAsMarkdown(self):
-    """Tests the _GenerateFileHashesReport function."""
-    test_file_path = self._GetTestFilePath(['psort_test.plaso'])
-    self._SkipIfPathNotExists(test_file_path)
+        test_file_path = self._GetTestFilePath(["psort_test.plaso.file_hashes.json"])
+        with open(test_file_path, encoding="utf-8") as file_object:
+            expected_output = file_object.read()
 
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
-    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
-    test_tool._output_format = 'markdown'
+        output = output_writer.ReadOutput()
 
-    storage_reader = test_tool._GetStorageReader(test_file_path)
-    try:
-      test_tool._GenerateFileHashesReport(storage_reader)
+        # Compare the output as list of lines which makes it easier to spot
+        # differences.
+        self.assertEqual(output.split("\n"), expected_output.split("\n"))
 
-    finally:
-      storage_reader.Close()
+    def testGenerateFileHashesReportAsMarkdown(self):
+        """Tests the _GenerateFileHashesReport function."""
+        test_file_path = self._GetTestFilePath(["psort_test.plaso"])
+        self._SkipIfPathNotExists(test_file_path)
 
-    test_file_path = self._GetTestFilePath([
-        'psort_test.plaso.file_hashes.md'])
-    with open(test_file_path, encoding='utf-8') as file_object:
-      expected_output = file_object.read()
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+        test_tool._output_format = "markdown"
 
-    output = output_writer.ReadOutput()
+        storage_reader = test_tool._GetStorageReader(test_file_path)
+        try:
+            test_tool._GenerateFileHashesReport(storage_reader)
 
-    # Compare the output as list of lines which makes it easier to spot
-    # differences.
-    self.assertEqual(output.split('\n'), expected_output.split('\n'))
+        finally:
+            storage_reader.Close()
 
-  def testGenerateFileHashesReportAsText(self):
-    """Tests the _GenerateFileHashesReport function."""
-    test_file_path = self._GetTestFilePath(['psort_test.plaso'])
-    self._SkipIfPathNotExists(test_file_path)
+        test_file_path = self._GetTestFilePath(["psort_test.plaso.file_hashes.md"])
+        with open(test_file_path, encoding="utf-8") as file_object:
+            expected_output = file_object.read()
 
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
-    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
-    test_tool._output_format = 'text'
+        output = output_writer.ReadOutput()
 
-    storage_reader = test_tool._GetStorageReader(test_file_path)
-    try:
-      test_tool._GenerateFileHashesReport(storage_reader)
+        # Compare the output as list of lines which makes it easier to spot
+        # differences.
+        self.assertEqual(output.split("\n"), expected_output.split("\n"))
 
-    finally:
-      storage_reader.Close()
+    def testGenerateFileHashesReportAsText(self):
+        """Tests the _GenerateFileHashesReport function."""
+        test_file_path = self._GetTestFilePath(["psort_test.plaso"])
+        self._SkipIfPathNotExists(test_file_path)
 
-    test_file_path = self._GetTestFilePath([
-        'psort_test.plaso.file_hashes.txt'])
-    with open(test_file_path, encoding='utf-8') as file_object:
-      expected_output = file_object.read()
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+        test_tool._output_format = "text"
 
-    output = output_writer.ReadOutput()
+        storage_reader = test_tool._GetStorageReader(test_file_path)
+        try:
+            test_tool._GenerateFileHashesReport(storage_reader)
 
-    # Compare the output as list of lines which makes it easier to spot
-    # differences.
-    self.assertEqual(output.split('\n'), expected_output.split('\n'))
+        finally:
+            storage_reader.Close()
 
-  def testGenerateReportEntryFormatStringAsJSON(self):
-    """Tests the _GenerateReportEntryFormatString function."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
-    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
-    test_tool._output_format = 'json'
+        test_file_path = self._GetTestFilePath(["psort_test.plaso.file_hashes.txt"])
+        with open(test_file_path, encoding="utf-8") as file_object:
+            expected_output = file_object.read()
 
-    attribute_names = ['search_engine', 'search_term', 'number_of_queries']
+        output = output_writer.ReadOutput()
 
-    expected_entry_format_string = (
-        '    {{"search_engine": "{search_engine!s}", "search_term": '
-        '"{search_term!s}", "number_of_queries": "{number_of_queries!s}"}}')
+        # Compare the output as list of lines which makes it easier to spot
+        # differences.
+        self.assertEqual(output.split("\n"), expected_output.split("\n"))
 
-    entry_format_string = test_tool._GenerateReportEntryFormatString(
-        attribute_names)
-    self.assertEqual(entry_format_string, expected_entry_format_string)
+    def testGenerateReportEntryFormatStringAsJSON(self):
+        """Tests the _GenerateReportEntryFormatString function."""
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+        test_tool._output_format = "json"
 
-  def testGenerateReportEntryFormatStringAsMarkdown(self):
-    """Tests the _GenerateReportEntryFormatString function."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
-    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
-    test_tool._output_format = 'markdown'
+        attribute_names = ["search_engine", "search_term", "number_of_queries"]
 
-    attribute_names = ['search_engine', 'search_term', 'number_of_queries']
+        expected_entry_format_string = (
+            '    {{"search_engine": "{search_engine!s}", "search_term": '
+            '"{search_term!s}", "number_of_queries": "{number_of_queries!s}"}}'
+        )
 
-    expected_entry_format_string = (
-        '{search_engine!s} | {search_term!s} | {number_of_queries!s}\n')
+        entry_format_string = test_tool._GenerateReportEntryFormatString(
+            attribute_names
+        )
+        self.assertEqual(entry_format_string, expected_entry_format_string)
 
-    entry_format_string = test_tool._GenerateReportEntryFormatString(
-        attribute_names)
-    self.assertEqual(entry_format_string, expected_entry_format_string)
+    def testGenerateReportEntryFormatStringAsMarkdown(self):
+        """Tests the _GenerateReportEntryFormatString function."""
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+        test_tool._output_format = "markdown"
 
-  def testGenerateReportEntryFormatStringAsText(self):
-    """Tests the _GenerateReportEntryFormatString function."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
-    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
-    test_tool._output_format = 'text'
+        attribute_names = ["search_engine", "search_term", "number_of_queries"]
 
-    attribute_names = ['search_engine', 'search_term', 'number_of_queries']
+        expected_entry_format_string = (
+            "{search_engine!s} | {search_term!s} | {number_of_queries!s}\n"
+        )
 
-    expected_entry_format_string = (
-        '{search_engine!s}	{search_term!s}	{number_of_queries!s}\n')
+        entry_format_string = test_tool._GenerateReportEntryFormatString(
+            attribute_names
+        )
+        self.assertEqual(entry_format_string, expected_entry_format_string)
 
-    entry_format_string = test_tool._GenerateReportEntryFormatString(
-        attribute_names)
-    self.assertEqual(entry_format_string, expected_entry_format_string)
+    def testGenerateReportEntryFormatStringAsText(self):
+        """Tests the _GenerateReportEntryFormatString function."""
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+        test_tool._output_format = "text"
 
-  def testGenerateReportFooterAsJSON(self):
-    """Tests the _GenerateReportFooter function."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
-    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
-    test_tool._output_format = 'json'
+        attribute_names = ["search_engine", "search_term", "number_of_queries"]
 
-    test_tool._GenerateReportFooter()
+        expected_entry_format_string = (
+            "{search_engine!s}	{search_term!s}	{number_of_queries!s}\n"
+        )
 
-    expected_output = ['', ']}', '']
+        entry_format_string = test_tool._GenerateReportEntryFormatString(
+            attribute_names
+        )
+        self.assertEqual(entry_format_string, expected_entry_format_string)
 
-    output = output_writer.ReadOutput()
+    def testGenerateReportFooterAsJSON(self):
+        """Tests the _GenerateReportFooter function."""
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+        test_tool._output_format = "json"
 
-    # Compare the output as list of lines which makes it easier to spot
-    # differences.
-    self.assertEqual(output.split('\n'), expected_output)
+        test_tool._GenerateReportFooter()
 
-  def testGenerateReportFooterAsMarkdown(self):
-    """Tests the _GenerateReportFooter function."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
-    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
-    test_tool._output_format = 'markdown'
+        expected_output = ["", "]}", ""]
 
-    test_tool._GenerateReportFooter()
+        output = output_writer.ReadOutput()
 
-    expected_output = ['']
+        # Compare the output as list of lines which makes it easier to spot
+        # differences.
+        self.assertEqual(output.split("\n"), expected_output)
 
-    output = output_writer.ReadOutput()
+    def testGenerateReportFooterAsMarkdown(self):
+        """Tests the _GenerateReportFooter function."""
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+        test_tool._output_format = "markdown"
 
-    # Compare the output as list of lines which makes it easier to spot
-    # differences.
-    self.assertEqual(output.split('\n'), expected_output)
+        test_tool._GenerateReportFooter()
 
-  def testGenerateReportFooterAsText(self):
-    """Tests the _GenerateReportFooter function."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
-    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
-    test_tool._output_format = 'text'
+        expected_output = [""]
 
-    test_tool._GenerateReportFooter()
+        output = output_writer.ReadOutput()
 
-    expected_output = ['']
+        # Compare the output as list of lines which makes it easier to spot
+        # differences.
+        self.assertEqual(output.split("\n"), expected_output)
 
-    output = output_writer.ReadOutput()
+    def testGenerateReportFooterAsText(self):
+        """Tests the _GenerateReportFooter function."""
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+        test_tool._output_format = "text"
 
-    # Compare the output as list of lines which makes it easier to spot
-    # differences.
-    self.assertEqual(output.split('\n'), expected_output)
+        test_tool._GenerateReportFooter()
 
-  def testGenerateReportHeaderAsJSON(self):
-    """Tests the _GenerateReportHeader function."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
-    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
-    test_tool._output_format = 'json'
+        expected_output = [""]
 
-    column_titles = ['Search engine', 'Search term', 'Number of queries']
-    test_tool._GenerateReportHeader('browser_searches', column_titles)
+        output = output_writer.ReadOutput()
 
-    expected_output = [
-        '{"browser_searches": [',
-        '']
+        # Compare the output as list of lines which makes it easier to spot
+        # differences.
+        self.assertEqual(output.split("\n"), expected_output)
 
-    output = output_writer.ReadOutput()
+    def testGenerateReportHeaderAsJSON(self):
+        """Tests the _GenerateReportHeader function."""
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+        test_tool._output_format = "json"
 
-    # Compare the output as list of lines which makes it easier to spot
-    # differences.
-    self.assertEqual(output.split('\n'), expected_output)
+        column_titles = ["Search engine", "Search term", "Number of queries"]
+        test_tool._GenerateReportHeader("browser_searches", column_titles)
 
-  def testGenerateReportHeaderAsMarkdown(self):
-    """Tests the _GenerateReportHeader function."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
-    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
-    test_tool._output_format = 'markdown'
+        expected_output = ['{"browser_searches": [', ""]
 
-    column_titles = ['Search engine', 'Search term', 'Number of queries']
-    test_tool._GenerateReportHeader('browser_searches', column_titles)
+        output = output_writer.ReadOutput()
 
-    expected_output = [
-        'Search engine | Search term | Number of queries',
-        '--- | --- | ---',
-        '']
+        # Compare the output as list of lines which makes it easier to spot
+        # differences.
+        self.assertEqual(output.split("\n"), expected_output)
 
-    output = output_writer.ReadOutput()
+    def testGenerateReportHeaderAsMarkdown(self):
+        """Tests the _GenerateReportHeader function."""
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+        test_tool._output_format = "markdown"
 
-    # Compare the output as list of lines which makes it easier to spot
-    # differences.
-    self.assertEqual(output.split('\n'), expected_output)
+        column_titles = ["Search engine", "Search term", "Number of queries"]
+        test_tool._GenerateReportHeader("browser_searches", column_titles)
 
-  def testGenerateReportHeaderAsText(self):
-    """Tests the _GenerateReportHeader function."""
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
-    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
-    test_tool._output_format = 'text'
+        expected_output = [
+            "Search engine | Search term | Number of queries",
+            "--- | --- | ---",
+            "",
+        ]
 
-    column_titles = ['Search engine', 'Search term', 'Number of queries']
-    test_tool._GenerateReportHeader('browser_searches', column_titles)
+        output = output_writer.ReadOutput()
 
-    expected_output = [
-        'Search engine\tSearch term\tNumber of queries',
-        '']
+        # Compare the output as list of lines which makes it easier to spot
+        # differences.
+        self.assertEqual(output.split("\n"), expected_output)
 
-    output = output_writer.ReadOutput()
+    def testGenerateReportHeaderAsText(self):
+        """Tests the _GenerateReportHeader function."""
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+        test_tool._output_format = "text"
 
-    # Compare the output as list of lines which makes it easier to spot
-    # differences.
-    self.assertEqual(output.split('\n'), expected_output)
+        column_titles = ["Search engine", "Search term", "Number of queries"]
+        test_tool._GenerateReportHeader("browser_searches", column_titles)
 
-  def testGenerateWinEvtProvidersReportAsJSON(self):
-    """Tests the _GenerateWinEvtProvidersReport function."""
-    test_file_path = self._GetTestFilePath(['psort_test.plaso'])
-    self._SkipIfPathNotExists(test_file_path)
+        expected_output = ["Search engine\tSearch term\tNumber of queries", ""]
 
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
-    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
-    test_tool._output_format = 'json'
+        output = output_writer.ReadOutput()
 
-    storage_reader = test_tool._GetStorageReader(test_file_path)
-    try:
-      test_tool._GenerateWinEvtProvidersReport(storage_reader)
+        # Compare the output as list of lines which makes it easier to spot
+        # differences.
+        self.assertEqual(output.split("\n"), expected_output)
 
-    finally:
-      storage_reader.Close()
+    def testGenerateWinEvtProvidersReportAsJSON(self):
+        """Tests the _GenerateWinEvtProvidersReport function."""
+        test_file_path = self._GetTestFilePath(["psort_test.plaso"])
+        self._SkipIfPathNotExists(test_file_path)
 
-    expected_output = [
-        '{"winevt_providers": [', '', ']}',
-        '']
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+        test_tool._output_format = "json"
 
-    output = output_writer.ReadOutput()
+        storage_reader = test_tool._GetStorageReader(test_file_path)
+        try:
+            test_tool._GenerateWinEvtProvidersReport(storage_reader)
 
-    # Compare the output as list of lines which makes it easier to spot
-    # differences.
-    self.assertEqual(output.split('\n'), expected_output)
+        finally:
+            storage_reader.Close()
 
-  def testGenerateWinEvtProvidersReportAsMarkdown(self):
-    """Tests the _GenerateWinEvtProvidersReport function."""
-    test_file_path = self._GetTestFilePath(['psort_test.plaso'])
-    self._SkipIfPathNotExists(test_file_path)
+        expected_output = ['{"winevt_providers": [', "", "]}", ""]
 
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
-    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
-    test_tool._output_format = 'markdown'
+        output = output_writer.ReadOutput()
 
-    storage_reader = test_tool._GetStorageReader(test_file_path)
-    try:
-      test_tool._GenerateWinEvtProvidersReport(storage_reader)
+        # Compare the output as list of lines which makes it easier to spot
+        # differences.
+        self.assertEqual(output.split("\n"), expected_output)
 
-    finally:
-      storage_reader.Close()
+    def testGenerateWinEvtProvidersReportAsMarkdown(self):
+        """Tests the _GenerateWinEvtProvidersReport function."""
+        test_file_path = self._GetTestFilePath(["psort_test.plaso"])
+        self._SkipIfPathNotExists(test_file_path)
 
-    expected_output = [
-        ('Identifier | Log source(s) | Log type(s) | Event message file(s) | '
-         'Parameter message file(s)'),
-        '--- | --- | --- | --- | ---',
-        '']
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+        test_tool._output_format = "markdown"
 
-    output = output_writer.ReadOutput()
+        storage_reader = test_tool._GetStorageReader(test_file_path)
+        try:
+            test_tool._GenerateWinEvtProvidersReport(storage_reader)
 
-    # Compare the output as list of lines which makes it easier to spot
-    # differences.
-    self.assertEqual(output.split('\n'), expected_output)
+        finally:
+            storage_reader.Close()
 
-  def testGenerateWinEvtProvidersReportAsText(self):
-    """Tests the _GenerateWinEvtProvidersReport function."""
-    test_file_path = self._GetTestFilePath(['psort_test.plaso'])
-    self._SkipIfPathNotExists(test_file_path)
+        expected_output = [
+            (
+                "Identifier | Log source(s) | Log type(s) | Event message file(s) | "
+                "Parameter message file(s)"
+            ),
+            "--- | --- | --- | --- | ---",
+            "",
+        ]
 
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
-    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
-    test_tool._output_format = 'text'
+        output = output_writer.ReadOutput()
 
-    storage_reader = test_tool._GetStorageReader(test_file_path)
-    try:
-      test_tool._GenerateWinEvtProvidersReport(storage_reader)
+        # Compare the output as list of lines which makes it easier to spot
+        # differences.
+        self.assertEqual(output.split("\n"), expected_output)
 
-    finally:
-      storage_reader.Close()
+    def testGenerateWinEvtProvidersReportAsText(self):
+        """Tests the _GenerateWinEvtProvidersReport function."""
+        test_file_path = self._GetTestFilePath(["psort_test.plaso"])
+        self._SkipIfPathNotExists(test_file_path)
 
-    expected_output = [
-        ('Identifier\tLog source(s)\tLog type(s)\tEvent message file(s)\t'
-         'Parameter message file(s)'),
-        '']
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+        test_tool._output_format = "text"
 
-    output = output_writer.ReadOutput()
+        storage_reader = test_tool._GetStorageReader(test_file_path)
+        try:
+            test_tool._GenerateWinEvtProvidersReport(storage_reader)
 
-    # Compare the output as list of lines which makes it easier to spot
-    # differences.
-    self.assertEqual(output.split('\n'), expected_output)
+        finally:
+            storage_reader.Close()
 
-  def testGetStorageReader(self):
-    """Tests the _GetStorageReader function."""
-    test_file_path = self._GetTestFilePath(['psort_test.plaso'])
-    self._SkipIfPathNotExists(test_file_path)
+        expected_output = [
+            (
+                "Identifier\tLog source(s)\tLog type(s)\tEvent message file(s)\t"
+                "Parameter message file(s)"
+            ),
+            "",
+        ]
 
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
-    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+        output = output_writer.ReadOutput()
 
-    storage_reader = test_tool._GetStorageReader(test_file_path)
-    try:
-      self.assertIsNotNone(storage_reader)
-    finally:
-      storage_reader.Close()
+        # Compare the output as list of lines which makes it easier to spot
+        # differences.
+        self.assertEqual(output.split("\n"), expected_output)
 
-    with self.assertRaises(errors.BadConfigOption):
-      test_tool._GetStorageReader('bogus.plaso')
+    def testGetStorageReader(self):
+        """Tests the _GetStorageReader function."""
+        test_file_path = self._GetTestFilePath(["psort_test.plaso"])
+        self._SkipIfPathNotExists(test_file_path)
 
-  # TODO: add test for _PrintAnalysisReportCounter.
-  # TODO: add test for _PrintAnalysisReportsDetails.
-  # TODO: add test for _PrintExtractionWarningsDetails.
-  # TODO: add test for _PrintEventLabelsCounter.
-  # TODO: add test for _PrintParsersCounter.
-  # TODO: add test for _PrintPreprocessingInformation.
-  # TODO: add test for _PrintRecoveryWarningsDetails.
-  # TODO: add test for _PrintSessionsDetails.
-  # TODO: add test for _PrintSessionsOverview.
-  # TODO: add test for _PrintTasksInformation.
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
 
-  def testCompareStores(self):
-    """Tests the CompareStores function."""
-    test_file_path1 = self._GetTestFilePath(['psort_test.plaso'])
-    self._SkipIfPathNotExists(test_file_path1)
+        storage_reader = test_tool._GetStorageReader(test_file_path)
+        try:
+            self.assertIsNotNone(storage_reader)
+        finally:
+            storage_reader.Close()
 
-    test_file_path2 = self._GetTestFilePath(['pinfo_test.plaso'])
-    self._SkipIfPathNotExists(test_file_path2)
+        with self.assertRaises(errors.BadConfigOption):
+            test_tool._GetStorageReader("bogus.plaso")
 
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
-    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+    # TODO: add test for _PrintAnalysisReportCounter.
+    # TODO: add test for _PrintAnalysisReportsDetails.
+    # TODO: add test for _PrintExtractionWarningsDetails.
+    # TODO: add test for _PrintEventLabelsCounter.
+    # TODO: add test for _PrintParsersCounter.
+    # TODO: add test for _PrintPreprocessingInformation.
+    # TODO: add test for _PrintRecoveryWarningsDetails.
+    # TODO: add test for _PrintSessionsDetails.
+    # TODO: add test for _PrintSessionsOverview.
+    # TODO: add test for _PrintTasksInformation.
 
-    options = test_lib.TestOptions()
-    options.compare_storage_file = test_file_path1
-    options.storage_file = test_file_path1
+    def testCompareStores(self):
+        """Tests the CompareStores function."""
+        test_file_path1 = self._GetTestFilePath(["psort_test.plaso"])
+        self._SkipIfPathNotExists(test_file_path1)
 
-    test_tool.ParseOptions(options)
+        test_file_path2 = self._GetTestFilePath(["pinfo_test.plaso"])
+        self._SkipIfPathNotExists(test_file_path2)
 
-    self.assertTrue(test_tool.CompareStores())
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
 
-    output = output_writer.ReadOutput()
-    self.assertEqual(output, 'Storage files are identical.\n')
+        options = test_lib.TestOptions()
+        options.compare_storage_file = test_file_path1
+        options.storage_file = test_file_path1
 
-    options = test_lib.TestOptions()
-    options.compare_storage_file = test_file_path1
-    options.storage_file = test_file_path2
+        test_tool.ParseOptions(options)
 
-    test_tool.ParseOptions(options)
+        self.assertTrue(test_tool.CompareStores())
 
-    self.assertFalse(test_tool.CompareStores())
+        output = output_writer.ReadOutput()
+        self.assertEqual(output, "Storage files are identical.\n")
 
-    output = output_writer.ReadOutput()
-    self.assertEqual(output, self._EXPECTED_OUTPUT_COMPARE_STORES)
+        options = test_lib.TestOptions()
+        options.compare_storage_file = test_file_path1
+        options.storage_file = test_file_path2
 
-  def testParseArguments(self):
-    """Tests the ParseArguments function."""
-    output_writer = test_lib.TestBinaryOutputWriter(encoding='utf-8')
-    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+        test_tool.ParseOptions(options)
 
-    result = test_tool.ParseArguments([])
-    self.assertFalse(result)
+        self.assertFalse(test_tool.CompareStores())
 
-    # TODO: check output.
-    # TODO: improve test coverage.
+        output = output_writer.ReadOutput()
+        self.assertEqual(output, self._EXPECTED_OUTPUT_COMPARE_STORES)
 
-  def testParseOptions(self):
-    """Tests the ParseOptions function."""
-    test_file_path = self._GetTestFilePath(['pinfo_test.plaso'])
-    self._SkipIfPathNotExists(test_file_path)
+    def testParseArguments(self):
+        """Tests the ParseArguments function."""
+        output_writer = test_lib.TestBinaryOutputWriter(encoding="utf-8")
+        test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
 
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
-    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+        result = test_tool.ParseArguments([])
+        self.assertFalse(result)
 
-    options = test_lib.TestOptions()
-    options.storage_file = test_file_path
+        # TODO: check output.
+        # TODO: improve test coverage.
 
-    test_tool.ParseOptions(options)
+    def testParseOptions(self):
+        """Tests the ParseOptions function."""
+        test_file_path = self._GetTestFilePath(["pinfo_test.plaso"])
+        self._SkipIfPathNotExists(test_file_path)
 
-    options = test_lib.TestOptions()
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
 
-    with self.assertRaises(errors.BadConfigOption):
-      test_tool.ParseOptions(options)
+        options = test_lib.TestOptions()
+        options.storage_file = test_file_path
 
-    # TODO: improve test coverage.
+        test_tool.ParseOptions(options)
 
-  def testPrintStorageInformation(self):
-    """Tests the PrintStorageInformation function."""
-    test_file_path = self._GetTestFilePath(['pinfo_test.plaso'])
-    self._SkipIfPathNotExists(test_file_path)
+        options = test_lib.TestOptions()
 
-    output_writer = test_lib.TestOutputWriter(encoding='utf-8')
-    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+        with self.assertRaises(errors.BadConfigOption):
+            test_tool.ParseOptions(options)
 
-    options = test_lib.TestOptions()
-    options.storage_file = test_file_path
-    options.output_format = 'text'
-    options.sections = 'events,reports,sessions,warnings'
+        # TODO: improve test coverage.
 
-    test_tool.ParseOptions(options)
+    def testPrintStorageInformation(self):
+        """Tests the PrintStorageInformation function."""
+        test_file_path = self._GetTestFilePath(["pinfo_test.plaso"])
+        self._SkipIfPathNotExists(test_file_path)
 
-    test_tool.PrintStorageInformation()
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
 
-    test_file_path = self._GetTestFilePath(['pinfo_test.plaso.output.txt'])
-    with open(test_file_path, encoding='utf-8') as file_object:
-      expected_output = file_object.read()
+        options = test_lib.TestOptions()
+        options.storage_file = test_file_path
+        options.output_format = "text"
+        options.sections = "events,reports,sessions,warnings"
 
-    output = output_writer.ReadOutput()
+        test_tool.ParseOptions(options)
 
-    # Compare the output as list of lines which makes it easier to spot
-    # differences.
-    self.assertEqual(output.split('\n'), expected_output.split('\n'))
+        test_tool.PrintStorageInformation()
 
+        test_file_path = self._GetTestFilePath(["pinfo_test.plaso.output.txt"])
+        with open(test_file_path, encoding="utf-8") as file_object:
+            expected_output = file_object.read()
 
-if __name__ == '__main__':
-  unittest.main()
+        output = output_writer.ReadOutput()
+
+        # Compare the output as list of lines which makes it easier to spot
+        # differences.
+        self.assertEqual(output.split("\n"), expected_output.split("\n"))
+
+
+if __name__ == "__main__":
+    unittest.main()

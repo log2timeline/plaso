@@ -13,16 +13,15 @@ from tests.cli import test_lib as cli_test_lib
 from tests.cli.helpers import test_lib
 
 
-class OpenSearchOutputArgumentsHelperTest(
-    test_lib.OutputModuleArgumentsHelperTest):
-  """Tests the OpenSearch output module CLI arguments helper."""
+class OpenSearchOutputArgumentsHelperTest(test_lib.OutputModuleArgumentsHelperTest):
+    """Tests the OpenSearch output module CLI arguments helper."""
 
-  # pylint: disable=no-member,protected-access
+    # pylint: disable=no-member,protected-access
 
-  _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
+    _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
 
-  if _PYTHON3_13_OR_LATER:
-    _EXPECTED_OUTPUT = f"""\
+    if _PYTHON3_13_OR_LATER:
+        _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--index_name NAME] [--flush_interval INTERVAL]
                      [--opensearch-server HOSTNAME] [--opensearch-port PORT]
                      [--opensearch-user USERNAME]
@@ -61,8 +60,8 @@ Test argument parser.
   --use_ssl, --use-ssl  Enforces use of SSL/TLS.
 """
 
-  else:
-    _EXPECTED_OUTPUT = f"""\
+    else:
+        _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--index_name NAME] [--flush_interval INTERVAL]
                      [--opensearch-server HOSTNAME] [--opensearch-port PORT]
                      [--opensearch-user USERNAME]
@@ -101,29 +100,30 @@ Test argument parser.
   --use_ssl, --use-ssl  Enforces use of SSL/TLS.
 """
 
-  def testAddArguments(self):
-    """Tests the AddArguments function."""
-    argument_parser = self._GetTestArgumentParser('cli_helper.py')
+    def testAddArguments(self):
+        """Tests the AddArguments function."""
+        argument_parser = self._GetTestArgumentParser("cli_helper.py")
 
-    opensearch_output.OpenSearchOutputArgumentsHelper.AddArguments(
-        argument_parser)
+        opensearch_output.OpenSearchOutputArgumentsHelper.AddArguments(argument_parser)
 
-    output = self._RunArgparseFormatHelp(argument_parser)
-    self.assertEqual(output, self._EXPECTED_OUTPUT)
+        output = self._RunArgparseFormatHelp(argument_parser)
+        self.assertEqual(output, self._EXPECTED_OUTPUT)
 
-  def testParseOptions(self):
-    """Tests the ParseOptions function."""
-    options = cli_test_lib.TestOptions()
-    options._data_location = shared_test_lib.DATA_PATH
+    def testParseOptions(self):
+        """Tests the ParseOptions function."""
+        options = cli_test_lib.TestOptions()
+        options._data_location = shared_test_lib.DATA_PATH
 
-    output_module = opensearch.OpenSearchOutputModule()
-    opensearch_output.OpenSearchOutputArgumentsHelper.ParseOptions(
-        options, output_module)
+        output_module = opensearch.OpenSearchOutputModule()
+        opensearch_output.OpenSearchOutputArgumentsHelper.ParseOptions(
+            options, output_module
+        )
 
-    with self.assertRaises(errors.BadConfigObject):
-      opensearch_output.OpenSearchOutputArgumentsHelper.ParseOptions(
-          options, None)
+        with self.assertRaises(errors.BadConfigObject):
+            opensearch_output.OpenSearchOutputArgumentsHelper.ParseOptions(
+                options, None
+            )
 
 
-if __name__ == '__main__':
-  unittest.main()
+if __name__ == "__main__":
+    unittest.main()

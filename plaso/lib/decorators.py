@@ -2,21 +2,24 @@
 
 import warnings
 
-
 # pylint: disable=invalid-name
 
+
 def deprecated(function):
-  """Decorator to mark functions or methods as deprecated."""
+    """Decorator to mark functions or methods as deprecated."""
 
-  def IssueDeprecationWarning(*args, **kwargs):
-    """Issue a deprecation warning."""
-    warnings.simplefilter('default', DeprecationWarning)
-    warnings.warn(f'Call to deprecated function: {function.__name__:s}.',
-                  category=DeprecationWarning, stacklevel=2)
+    def IssueDeprecationWarning(*args, **kwargs):
+        """Issue a deprecation warning."""
+        warnings.simplefilter("default", DeprecationWarning)
+        warnings.warn(
+            f"Call to deprecated function: {function.__name__:s}.",
+            category=DeprecationWarning,
+            stacklevel=2,
+        )
 
-    return function(*args, **kwargs)
+        return function(*args, **kwargs)
 
-  IssueDeprecationWarning.__name__ = function.__name__
-  IssueDeprecationWarning.__doc__ = function.__doc__
-  IssueDeprecationWarning.__dict__.update(function.__dict__)
-  return IssueDeprecationWarning
+    IssueDeprecationWarning.__name__ = function.__name__
+    IssueDeprecationWarning.__doc__ = function.__doc__
+    IssueDeprecationWarning.__dict__.update(function.__dict__)
+    return IssueDeprecationWarning

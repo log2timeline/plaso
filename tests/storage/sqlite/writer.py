@@ -14,165 +14,176 @@ from tests.containers import test_lib as containers_test_lib
 
 
 class SQLiteStorageWriterTest(test_lib.StorageTestCase):
-  """Tests for the SQLite-based storage writer."""
+    """Tests for the SQLite-based storage writer."""
 
-  # pylint: disable=protected-access
+    # pylint: disable=protected-access
 
-  def _AddTestEvents(self, storage_writer):
-    """Adds tests events to the storage writer.
+    def _AddTestEvents(self, storage_writer):
+        """Adds tests events to the storage writer.
 
-    Args:
-      storage_writer (SQLiteStorageWriter): storage writer.
+        Args:
+          storage_writer (SQLiteStorageWriter): storage writer.
 
-    Returns:
-      list[EventObject]: test events.
-    """
-    test_events = []
-    for event, event_data, event_data_stream in (
-        containers_test_lib.CreateEventsFromValues(self._TEST_EVENTS)):
-      storage_writer.AddAttributeContainer(event_data_stream)
+        Returns:
+          list[EventObject]: test events.
+        """
+        test_events = []
+        for (
+            event,
+            event_data,
+            event_data_stream,
+        ) in containers_test_lib.CreateEventsFromValues(self._TEST_EVENTS):
+            storage_writer.AddAttributeContainer(event_data_stream)
 
-      event_data.SetEventDataStreamIdentifier(event_data_stream.GetIdentifier())
-      storage_writer.AddAttributeContainer(event_data)
+            event_data.SetEventDataStreamIdentifier(event_data_stream.GetIdentifier())
+            storage_writer.AddAttributeContainer(event_data)
 
-      event.SetEventDataIdentifier(event_data.GetIdentifier())
-      storage_writer.AddAttributeContainer(event)
+            event.SetEventDataIdentifier(event_data.GetIdentifier())
+            storage_writer.AddAttributeContainer(event)
 
-      test_events.append(event)
+            test_events.append(event)
 
-    return test_events
+        return test_events
 
-  def testAddAttributeContainer(self):
-    """Tests the AddAttributeContainer function."""
-    event_data_stream = events.EventDataStream()
+    def testAddAttributeContainer(self):
+        """Tests the AddAttributeContainer function."""
+        event_data_stream = events.EventDataStream()
 
-    with shared_test_lib.TempDirectory() as temp_directory:
-      test_path = os.path.join(temp_directory, 'plaso.sqlite')
-      storage_writer = sqlite_writer.SQLiteStorageWriter()
-      storage_writer.Open(path=test_path)
+        with shared_test_lib.TempDirectory() as temp_directory:
+            test_path = os.path.join(temp_directory, "plaso.sqlite")
+            storage_writer = sqlite_writer.SQLiteStorageWriter()
+            storage_writer.Open(path=test_path)
 
-      try:
-        number_of_containers = storage_writer.GetNumberOfAttributeContainers(
-            event_data_stream.CONTAINER_TYPE)
-        self.assertEqual(number_of_containers, 0)
+            try:
+                number_of_containers = storage_writer.GetNumberOfAttributeContainers(
+                    event_data_stream.CONTAINER_TYPE
+                )
+                self.assertEqual(number_of_containers, 0)
 
-        storage_writer.AddAttributeContainer(event_data_stream)
+                storage_writer.AddAttributeContainer(event_data_stream)
 
-        number_of_containers = storage_writer.GetNumberOfAttributeContainers(
-            event_data_stream.CONTAINER_TYPE)
-        self.assertEqual(number_of_containers, 1)
+                number_of_containers = storage_writer.GetNumberOfAttributeContainers(
+                    event_data_stream.CONTAINER_TYPE
+                )
+                self.assertEqual(number_of_containers, 1)
 
-      finally:
-        storage_writer.Close()
+            finally:
+                storage_writer.Close()
 
-      with self.assertRaises(OSError):
-        storage_writer.AddAttributeContainer(event_data_stream)
+            with self.assertRaises(OSError):
+                storage_writer.AddAttributeContainer(event_data_stream)
 
-  def testAddOrUpdateEventTag(self):
-    """Tests the AddOrUpdateEventTag function."""
-    with shared_test_lib.TempDirectory() as temp_directory:
-      test_path = os.path.join(temp_directory, 'plaso.sqlite')
-      storage_writer = sqlite_writer.SQLiteStorageWriter()
-      storage_writer.Open(path=test_path)
+    def testAddOrUpdateEventTag(self):
+        """Tests the AddOrUpdateEventTag function."""
+        with shared_test_lib.TempDirectory() as temp_directory:
+            test_path = os.path.join(temp_directory, "plaso.sqlite")
+            storage_writer = sqlite_writer.SQLiteStorageWriter()
+            storage_writer.Open(path=test_path)
 
-      try:
-        test_events = self._AddTestEvents(storage_writer)
+            try:
+                test_events = self._AddTestEvents(storage_writer)
 
-        event_tag = events.EventTag()
-        event_identifier = test_events[1].GetIdentifier()
-        event_tag.SetEventIdentifier(event_identifier)
+                event_tag = events.EventTag()
+                event_identifier = test_events[1].GetIdentifier()
+                event_tag.SetEventIdentifier(event_identifier)
 
-        event_tag.AddLabel('Label1')
+                event_tag.AddLabel("Label1")
 
-        number_of_containers = storage_writer.GetNumberOfAttributeContainers(
-            event_tag.CONTAINER_TYPE)
-        self.assertEqual(number_of_containers, 0)
+                number_of_containers = storage_writer.GetNumberOfAttributeContainers(
+                    event_tag.CONTAINER_TYPE
+                )
+                self.assertEqual(number_of_containers, 0)
 
-        storage_writer.AddOrUpdateEventTag(event_tag)
+                storage_writer.AddOrUpdateEventTag(event_tag)
 
-        number_of_containers = storage_writer.GetNumberOfAttributeContainers(
-            event_tag.CONTAINER_TYPE)
-        self.assertEqual(number_of_containers, 1)
+                number_of_containers = storage_writer.GetNumberOfAttributeContainers(
+                    event_tag.CONTAINER_TYPE
+                )
+                self.assertEqual(number_of_containers, 1)
 
-        event_tag = events.EventTag()
-        event_identifier = test_events[2].GetIdentifier()
-        event_tag.SetEventIdentifier(event_identifier)
+                event_tag = events.EventTag()
+                event_identifier = test_events[2].GetIdentifier()
+                event_tag.SetEventIdentifier(event_identifier)
 
-        event_tag.AddLabel('Label2')
+                event_tag.AddLabel("Label2")
 
-        storage_writer.AddOrUpdateEventTag(event_tag)
+                storage_writer.AddOrUpdateEventTag(event_tag)
 
-        number_of_containers = storage_writer.GetNumberOfAttributeContainers(
-            event_tag.CONTAINER_TYPE)
-        self.assertEqual(number_of_containers, 2)
+                number_of_containers = storage_writer.GetNumberOfAttributeContainers(
+                    event_tag.CONTAINER_TYPE
+                )
+                self.assertEqual(number_of_containers, 2)
 
-        event_tag = events.EventTag()
-        event_identifier = test_events[1].GetIdentifier()
-        event_tag.SetEventIdentifier(event_identifier)
+                event_tag = events.EventTag()
+                event_identifier = test_events[1].GetIdentifier()
+                event_tag.SetEventIdentifier(event_identifier)
 
-        event_tag.AddLabel('AnotherLabel1')
+                event_tag.AddLabel("AnotherLabel1")
 
-        storage_writer.AddOrUpdateEventTag(event_tag)
+                storage_writer.AddOrUpdateEventTag(event_tag)
 
-        number_of_containers = storage_writer.GetNumberOfAttributeContainers(
-            event_tag.CONTAINER_TYPE)
-        self.assertEqual(number_of_containers, 2)
+                number_of_containers = storage_writer.GetNumberOfAttributeContainers(
+                    event_tag.CONTAINER_TYPE
+                )
+                self.assertEqual(number_of_containers, 2)
 
-        event_tags = list(storage_writer.GetAttributeContainers(
-            event_tag.CONTAINER_TYPE))
-        self.assertEqual(event_tags[0].labels, ['Label1', 'AnotherLabel1'])
-        self.assertEqual(event_tags[1].labels, ['Label2'])
+                event_tags = list(
+                    storage_writer.GetAttributeContainers(event_tag.CONTAINER_TYPE)
+                )
+                self.assertEqual(event_tags[0].labels, ["Label1", "AnotherLabel1"])
+                self.assertEqual(event_tags[1].labels, ["Label2"])
 
-      finally:
-        storage_writer.Close()
+            finally:
+                storage_writer.Close()
 
-  # TODO: add tests for GetFirstWrittenEventSource
-  # TODO: add tests for GetNextWrittenEventSource
+    # TODO: add tests for GetFirstWrittenEventSource
+    # TODO: add tests for GetNextWrittenEventSource
 
-  def testGetSortedEvents(self):
-    """Tests the GetSortedEvents function."""
-    with shared_test_lib.TempDirectory() as temp_directory:
-      test_path = os.path.join(temp_directory, 'plaso.sqlite')
-      storage_writer = sqlite_writer.SQLiteStorageWriter()
-      storage_writer.Open(path=test_path)
+    def testGetSortedEvents(self):
+        """Tests the GetSortedEvents function."""
+        with shared_test_lib.TempDirectory() as temp_directory:
+            test_path = os.path.join(temp_directory, "plaso.sqlite")
+            storage_writer = sqlite_writer.SQLiteStorageWriter()
+            storage_writer.Open(path=test_path)
 
-      try:
-        self._AddTestEvents(storage_writer)
+            try:
+                self._AddTestEvents(storage_writer)
 
-        test_events = list(storage_writer.GetSortedEvents())
-        self.assertEqual(len(test_events), 4)
+                test_events = list(storage_writer.GetSortedEvents())
+                self.assertEqual(len(test_events), 4)
 
-      finally:
-        storage_writer.Close()
+            finally:
+                storage_writer.Close()
 
-    # TODO: add test with time range.
+        # TODO: add test with time range.
 
-  def testOpenClose(self):
-    """Tests the Open and Close functions."""
-    with shared_test_lib.TempDirectory() as temp_directory:
-      test_path = os.path.join(temp_directory, 'plaso.sqlite')
-      storage_writer = sqlite_writer.SQLiteStorageWriter()
-      storage_writer.Open(path=test_path)
-      storage_writer.Close()
+    def testOpenClose(self):
+        """Tests the Open and Close functions."""
+        with shared_test_lib.TempDirectory() as temp_directory:
+            test_path = os.path.join(temp_directory, "plaso.sqlite")
+            storage_writer = sqlite_writer.SQLiteStorageWriter()
+            storage_writer.Open(path=test_path)
+            storage_writer.Close()
 
-      storage_writer.Open(path=test_path)
-      storage_writer.Close()
+            storage_writer.Open(path=test_path)
+            storage_writer.Close()
 
-      storage_writer = sqlite_writer.SQLiteStorageWriter(
-          storage_type=definitions.STORAGE_TYPE_TASK)
-      storage_writer.Open(path=test_path)
-      storage_writer.Close()
+            storage_writer = sqlite_writer.SQLiteStorageWriter(
+                storage_type=definitions.STORAGE_TYPE_TASK
+            )
+            storage_writer.Open(path=test_path)
+            storage_writer.Close()
 
-      storage_writer.Open(path=test_path)
+            storage_writer.Open(path=test_path)
 
-      with self.assertRaises(OSError):
-        storage_writer.Open(path=test_path)
+            with self.assertRaises(OSError):
+                storage_writer.Open(path=test_path)
 
-      storage_writer.Close()
+            storage_writer.Close()
 
-      with self.assertRaises(OSError):
-        storage_writer.Close()
+            with self.assertRaises(OSError):
+                storage_writer.Close()
 
 
-if __name__ == '__main__':
-  unittest.main()
+if __name__ == "__main__":
+    unittest.main()

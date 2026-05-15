@@ -12,16 +12,15 @@ from tests.cli import test_lib as cli_test_lib
 from tests.cli.helpers import test_lib
 
 
-class TaggingAnalysisArgumentsHelperTest(
-    test_lib.AnalysisPluginArgumentsHelperTest):
-  """Tests the tagging analysis plugin CLI arguments helper."""
+class TaggingAnalysisArgumentsHelperTest(test_lib.AnalysisPluginArgumentsHelperTest):
+    """Tests the tagging analysis plugin CLI arguments helper."""
 
-  # pylint: disable=no-member,protected-access
+    # pylint: disable=no-member,protected-access
 
-  _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
+    _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
 
-  if _PYTHON3_13_OR_LATER:
-    _EXPECTED_OUTPUT = f"""\
+    if _PYTHON3_13_OR_LATER:
+        _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--tagging-file TAGGING_FILE]
 
 Test argument parser.
@@ -31,8 +30,8 @@ Test argument parser.
                         Specify a file to read tagging criteria from.
 """
 
-  else:
-    _EXPECTED_OUTPUT = f"""\
+    else:
+        _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--tagging-file TAGGING_FILE]
 
 Test argument parser.
@@ -42,55 +41,57 @@ Test argument parser.
                         Specify a file to read tagging criteria from.
 """
 
-  def testAddArguments(self):
-    """Tests the AddArguments function."""
-    argument_parser = self._GetTestArgumentParser('cli_helper.py')
+    def testAddArguments(self):
+        """Tests the AddArguments function."""
+        argument_parser = self._GetTestArgumentParser("cli_helper.py")
 
-    tagging_analysis.TaggingAnalysisArgumentsHelper.AddArguments(
-        argument_parser)
+        tagging_analysis.TaggingAnalysisArgumentsHelper.AddArguments(argument_parser)
 
-    output = self._RunArgparseFormatHelp(argument_parser)
-    self.assertEqual(output, self._EXPECTED_OUTPUT)
+        output = self._RunArgparseFormatHelp(argument_parser)
+        self.assertEqual(output, self._EXPECTED_OUTPUT)
 
-  def testParseOptions(self):
-    """Tests the ParseOptions function."""
-    test_file_path = self._GetTestFilePath(['tagging_file', 'valid.txt'])
-    self._SkipIfPathNotExists(test_file_path)
+    def testParseOptions(self):
+        """Tests the ParseOptions function."""
+        test_file_path = self._GetTestFilePath(["tagging_file", "valid.txt"])
+        self._SkipIfPathNotExists(test_file_path)
 
-    options = cli_test_lib.TestOptions()
-    options.tagging_file = test_file_path
+        options = cli_test_lib.TestOptions()
+        options.tagging_file = test_file_path
 
-    analysis_plugin = tagging.TaggingAnalysisPlugin()
-    tagging_analysis.TaggingAnalysisArgumentsHelper.ParseOptions(
-        options, analysis_plugin)
+        analysis_plugin = tagging.TaggingAnalysisPlugin()
+        tagging_analysis.TaggingAnalysisArgumentsHelper.ParseOptions(
+            options, analysis_plugin
+        )
 
-    with self.assertRaises(errors.BadConfigObject):
-      tagging_analysis.TaggingAnalysisArgumentsHelper.ParseOptions(
-          options, None)
+        with self.assertRaises(errors.BadConfigObject):
+            tagging_analysis.TaggingAnalysisArgumentsHelper.ParseOptions(options, None)
 
-    options.tagging_file = None
+        options.tagging_file = None
 
-    with self.assertRaises(errors.BadConfigOption):
-      tagging_analysis.TaggingAnalysisArgumentsHelper.ParseOptions(
-          options, analysis_plugin)
+        with self.assertRaises(errors.BadConfigOption):
+            tagging_analysis.TaggingAnalysisArgumentsHelper.ParseOptions(
+                options, analysis_plugin
+            )
 
-    test_file_path = self._GetTestFilePath([
-        'tagging_file', 'invalid_syntax.txt'])
-    self._SkipIfPathNotExists(test_file_path)
+        test_file_path = self._GetTestFilePath(["tagging_file", "invalid_syntax.txt"])
+        self._SkipIfPathNotExists(test_file_path)
 
-    options.tagging_file = test_file_path
+        options.tagging_file = test_file_path
 
-    with self.assertRaises(errors.BadConfigOption):
-      tagging_analysis.TaggingAnalysisArgumentsHelper.ParseOptions(
-          options, analysis_plugin)
+        with self.assertRaises(errors.BadConfigOption):
+            tagging_analysis.TaggingAnalysisArgumentsHelper.ParseOptions(
+                options, analysis_plugin
+            )
 
-    options.tagging_file = self._GetTestFilePath([
-        'tagging_file', 'invalid_encoding.txt'])
+        options.tagging_file = self._GetTestFilePath(
+            ["tagging_file", "invalid_encoding.txt"]
+        )
 
-    with self.assertRaises(errors.BadConfigOption):
-      tagging_analysis.TaggingAnalysisArgumentsHelper.ParseOptions(
-          options, analysis_plugin)
+        with self.assertRaises(errors.BadConfigOption):
+            tagging_analysis.TaggingAnalysisArgumentsHelper.ParseOptions(
+                options, analysis_plugin
+            )
 
 
-if __name__ == '__main__':
-  unittest.main()
+if __name__ == "__main__":
+    unittest.main()

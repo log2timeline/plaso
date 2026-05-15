@@ -10,35 +10,35 @@ from tests.output import test_lib
 
 
 class TextFileOutputModuleTest(test_lib.OutputModuleTestCase):
-  """Tests for the shared functionality for text file based output modules."""
+    """Tests for the shared functionality for text file based output modules."""
 
-  # pylint: disable=protected-access
+    # pylint: disable=protected-access
 
-  def testWriteHeader(self):
-    """Tests the WriteHeader function."""
-    test_file_object = io.StringIO()
+    def testWriteHeader(self):
+        """Tests the WriteHeader function."""
+        test_file_object = io.StringIO()
 
-    output_mediator = self._CreateOutputMediator()
-    output_module = text_file.TextFileOutputModule()
-    output_module._file_object = test_file_object
+        output_mediator = self._CreateOutputMediator()
+        output_module = text_file.TextFileOutputModule()
+        output_module._file_object = test_file_object
 
-    output_module.WriteHeader(output_mediator)
+        output_module.WriteHeader(output_mediator)
 
-    header = test_file_object.getvalue()
-    self.assertEqual(header, '')
+        header = test_file_object.getvalue()
+        self.assertEqual(header, "")
 
-  def testWriteFooter(self):
-    """Tests the WriteFooter function."""
-    test_file_object = io.StringIO()
+    def testWriteFooter(self):
+        """Tests the WriteFooter function."""
+        test_file_object = io.StringIO()
 
-    output_module = text_file.TextFileOutputModule()
-    output_module._file_object = test_file_object
+        output_module = text_file.TextFileOutputModule()
+        output_module._file_object = test_file_object
 
-    output_module.WriteFooter()
+        output_module.WriteFooter()
 
-    footer = test_file_object.getvalue()
-    self.assertEqual(footer, '')
+        footer = test_file_object.getvalue()
+        self.assertEqual(footer, "")
 
 
-if __name__ == '__main__':
-  unittest.main()
+if __name__ == "__main__":
+    unittest.main()

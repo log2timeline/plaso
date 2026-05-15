@@ -2,8 +2,7 @@
 
 import logging
 
-
-_logger = logging.getLogger('storage')
+_logger = logging.getLogger("storage")
 
 # Mimic the logging module interface.
 critical = _logger.critical

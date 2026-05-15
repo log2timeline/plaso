@@ -11,417 +11,446 @@ from plaso.filters import logger
 
 
 class FileEntryFilter:
-  """File entry filter interface."""
+    """File entry filter interface."""
 
-  # pylint: disable=redundant-returns-doc
-  @abc.abstractmethod
-  def Matches(self, file_entry):
-    """Compares the file entry against the filter.
+    # pylint: disable=redundant-returns-doc
+    @abc.abstractmethod
+    def Matches(self, file_entry):
+        """Compares the file entry against the filter.
 
-    Args:
-      file_entry (dfvfs.FileEntry): file entry to compare.
+        Args:
+          file_entry (dfvfs.FileEntry): file entry to compare.
 
-    Returns:
-      bool: True if the file entry matches the filter, False if not or
-          None if the filter does not apply.
-    """
+        Returns:
+          bool: True if the file entry matches the filter, False if not or
+              None if the filter does not apply.
+        """
 
-  @abc.abstractmethod
-  def Print(self, output_writer):
-    """Prints a human readable version of the filter.
+    @abc.abstractmethod
+    def Print(self, output_writer):
+        """Prints a human readable version of the filter.
 
-    Args:
-      output_writer (CLIOutputWriter): output writer.
-    """
+        Args:
+          output_writer (CLIOutputWriter): output writer.
+        """
 
 
 class DateTimeFileEntryFilter(FileEntryFilter):
-  """Date and time-based file entry filter."""
+    """Date and time-based file entry filter."""
 
-  _DATE_TIME_RANGE_TUPLE = collections.namedtuple(
-      'date_time_range_tuple', 'time_value start_date_time end_date_time')
+    _DATE_TIME_RANGE_TUPLE = collections.namedtuple(
+        "date_time_range_tuple", "time_value start_date_time end_date_time"
+    )
 
-  # Maps the time value of the date time range to a file entry attribute name.
-  _TIME_VALUE_MAPPINGS = {
-      'atime': 'access_time',
-      'bkup': 'backup_time',
-      'ctime': 'change_time',
-      'crtime': 'creation_time',
-      'dtime': 'deletion_time',
-      'mtime': 'modification_time'}
+    # Maps the time value of the date time range to a file entry attribute name.
+    _TIME_VALUE_MAPPINGS = {
+        "atime": "access_time",
+        "bkup": "backup_time",
+        "ctime": "change_time",
+        "crtime": "creation_time",
+        "dtime": "deletion_time",
+        "mtime": "modification_time",
+    }
 
-  _SUPPORTED_TIME_VALUES = frozenset(_TIME_VALUE_MAPPINGS.keys())
+    _SUPPORTED_TIME_VALUES = frozenset(_TIME_VALUE_MAPPINGS.keys())
 
-  def __init__(self):
-    """Initializes a date and time-based file entry filter."""
-    super().__init__()
-    self._date_time_ranges = []
+    def __init__(self):
+        """Initializes a date and time-based file entry filter."""
+        super().__init__()
+        self._date_time_ranges = []
 
-  def AddDateTimeRange(
-      self, time_value, start_time_string=None, end_time_string=None):
-    """Adds a date time filter range.
+    def AddDateTimeRange(
+        self, time_value, start_time_string=None, end_time_string=None
+    ):
+        """Adds a date time filter range.
 
-    The time strings are formatted as:
-    YYYY-MM-DD hh:mm:ss.######[+-]##:##
-    Where # are numeric digits ranging from 0 to 9 and the seconds
-    fraction can be either 3 or 6 digits. The time of day, seconds fraction
-    and timezone offset are optional. The default timezone is UTC.
+        The time strings are formatted as:
+        YYYY-MM-DD hh:mm:ss.######[+-]##:##
+        Where # are numeric digits ranging from 0 to 9 and the seconds
+        fraction can be either 3 or 6 digits. The time of day, seconds fraction
+        and timezone offset are optional. The default timezone is UTC.
 
-    Args:
-      time_value (str): time value, such as, atime, ctime, crtime, dtime, bkup
-          and mtime.
-      start_time_string (str): start date and time value string.
-      end_time_string (str): end date and time value string.
+        Args:
+          time_value (str): time value, such as, atime, ctime, crtime, dtime, bkup
+              and mtime.
+          start_time_string (str): start date and time value string.
+          end_time_string (str): end date and time value string.
 
-    Raises:
-      ValueError: If the filter is badly formed.
-    """
-    if not isinstance(time_value, str):
-      raise ValueError('Filter type must be a string.')
+        Raises:
+          ValueError: If the filter is badly formed.
+        """
+        if not isinstance(time_value, str):
+            raise ValueError("Filter type must be a string.")
 
-    if start_time_string is None and end_time_string is None:
-      raise ValueError(
-          'Filter must have either a start or an end date time value.')
+        if start_time_string is None and end_time_string is None:
+            raise ValueError(
+                "Filter must have either a start or an end date time value."
+            )
 
-    time_value_lower = time_value.lower()
-    if time_value_lower not in self._SUPPORTED_TIME_VALUES:
-      raise ValueError(f'Unsupported time value: {time_value:s}.')
+        time_value_lower = time_value.lower()
+        if time_value_lower not in self._SUPPORTED_TIME_VALUES:
+            raise ValueError(f"Unsupported time value: {time_value:s}.")
 
-    start_date_time = None
-    if start_time_string:
-      start_date_time = time_elements.TimeElementsInMicroseconds()
-      start_date_time.CopyFromDateTimeString(start_time_string)
+        start_date_time = None
+        if start_time_string:
+            start_date_time = time_elements.TimeElementsInMicroseconds()
+            start_date_time.CopyFromDateTimeString(start_time_string)
 
-    end_date_time = None
-    if end_time_string:
-      end_date_time = time_elements.TimeElementsInMicroseconds()
-      end_date_time.CopyFromDateTimeString(end_time_string)
+        end_date_time = None
+        if end_time_string:
+            end_date_time = time_elements.TimeElementsInMicroseconds()
+            end_date_time.CopyFromDateTimeString(end_time_string)
 
-    # Make sure that the end timestamp occurs after the beginning.
-    # If not then we need to reverse the time range.
-    if (None not in (start_date_time, end_date_time) and
-        start_date_time > end_date_time):
-      raise ValueError(
-          'Invalid date time value start must be earlier than end.')
+        # Make sure that the end timestamp occurs after the beginning.
+        # If not then we need to reverse the time range.
+        if (
+            None not in (start_date_time, end_date_time)
+            and start_date_time > end_date_time
+        ):
+            raise ValueError("Invalid date time value start must be earlier than end.")
 
-    self._date_time_ranges.append(self._DATE_TIME_RANGE_TUPLE(
-        time_value_lower, start_date_time, end_date_time))
+        self._date_time_ranges.append(
+            self._DATE_TIME_RANGE_TUPLE(
+                time_value_lower, start_date_time, end_date_time
+            )
+        )
 
-  def Matches(self, file_entry):
-    """Compares the file entry against the filter.
+    def Matches(self, file_entry):
+        """Compares the file entry against the filter.
 
-    Args:
-      file_entry (dfvfs.FileEntry): file entry to compare.
+        Args:
+          file_entry (dfvfs.FileEntry): file entry to compare.
 
-    Returns:
-      bool: True if the file entry matches the filter, False if not or
-          None if the filter does not apply.
-    """
-    if not self._date_time_ranges:
-      return None
+        Returns:
+          bool: True if the file entry matches the filter, False if not or
+              None if the filter does not apply.
+        """
+        if not self._date_time_ranges:
+            return None
 
-    for date_time_range in self._date_time_ranges:
-      time_attribute = self._TIME_VALUE_MAPPINGS.get(
-          date_time_range.time_value, None)
-      if not time_attribute:
-        continue
+        for date_time_range in self._date_time_ranges:
+            time_attribute = self._TIME_VALUE_MAPPINGS.get(
+                date_time_range.time_value, None
+            )
+            if not time_attribute:
+                continue
 
-      timestamp = getattr(file_entry, time_attribute, None)
-      if timestamp is None:
-        continue
+            timestamp = getattr(file_entry, time_attribute, None)
+            if timestamp is None:
+                continue
 
-      if (date_time_range.start_date_time is not None and
-          timestamp < date_time_range.start_date_time):
-        return False
+            if (
+                date_time_range.start_date_time is not None
+                and timestamp < date_time_range.start_date_time
+            ):
+                return False
 
-      if (date_time_range.end_date_time is not None and
-          timestamp > date_time_range.end_date_time):
-        return False
+            if (
+                date_time_range.end_date_time is not None
+                and timestamp > date_time_range.end_date_time
+            ):
+                return False
 
-    return True
+        return True
 
-  def Print(self, output_writer):
-    """Prints a human readable version of the filter.
+    def Print(self, output_writer):
+        """Prints a human readable version of the filter.
 
-    Args:
-      output_writer (CLIOutputWriter): output writer.
-    """
-    if self._date_time_ranges:
-      for date_time_range in self._date_time_ranges:
-        if date_time_range.start_date_time is None:
-          end_time_string = date_time_range.end_date_time.CopyToDateTimeString()
-          output_writer.Write(
-              f'\t{date_time_range.time_value:s} after {end_time_string:s}\n')
+        Args:
+          output_writer (CLIOutputWriter): output writer.
+        """
+        if self._date_time_ranges:
+            for date_time_range in self._date_time_ranges:
+                if date_time_range.start_date_time is None:
+                    end_time_string = (
+                        date_time_range.end_date_time.CopyToDateTimeString()
+                    )
+                    output_writer.Write(
+                        f"\t{date_time_range.time_value:s} after {end_time_string:s}\n"
+                    )
 
-        elif date_time_range.end_date_time is None:
-          start_time_string = (
-              date_time_range.start_date_time.CopyToDateTimeString())
-          output_writer.Write((
-              f'\t{date_time_range.time_value:s} before '
-              f'{start_time_string:s}\n'))
+                elif date_time_range.end_date_time is None:
+                    start_time_string = (
+                        date_time_range.start_date_time.CopyToDateTimeString()
+                    )
+                    output_writer.Write(
+                        (
+                            f"\t{date_time_range.time_value:s} before "
+                            f"{start_time_string:s}\n"
+                        )
+                    )
 
-        else:
-          start_time_string = (
-              date_time_range.start_date_time.CopyToDateTimeString())
-          end_time_string = date_time_range.end_date_time.CopyToDateTimeString()
-          output_writer.Write(
-              f'\t{date_time_range.time_value:s} between '
-              f'{start_time_string:s} and {end_time_string:s}\n')
+                else:
+                    start_time_string = (
+                        date_time_range.start_date_time.CopyToDateTimeString()
+                    )
+                    end_time_string = (
+                        date_time_range.end_date_time.CopyToDateTimeString()
+                    )
+                    output_writer.Write(
+                        f"\t{date_time_range.time_value:s} between "
+                        f"{start_time_string:s} and {end_time_string:s}\n"
+                    )
 
 
 class ExtensionsFileEntryFilter(FileEntryFilter):
-  """Extensions-based file entry filter."""
+    """Extensions-based file entry filter."""
 
-  def __init__(self, extensions):
-    """Initializes an extensions-based file entry filter.
+    def __init__(self, extensions):
+        """Initializes an extensions-based file entry filter.
 
-    An extension is defined as "pdf" as in "document.pdf".
+        An extension is defined as "pdf" as in "document.pdf".
 
-    Args:
-      extensions (list[str]): a list of extension strings.
-    """
-    super().__init__()
-    self._extensions = extensions
+        Args:
+          extensions (list[str]): a list of extension strings.
+        """
+        super().__init__()
+        self._extensions = extensions
 
-  def Matches(self, file_entry):
-    """Compares the file entry against the filter.
+    def Matches(self, file_entry):
+        """Compares the file entry against the filter.
 
-    Args:
-      file_entry (dfvfs.FileEntry): file entry to compare.
+        Args:
+          file_entry (dfvfs.FileEntry): file entry to compare.
 
-    Returns:
-      bool: True if the file entry matches the filter, False if not or
-          None if the filter does not apply.
-    """
-    location = getattr(file_entry.path_spec, 'location', None)
-    if not location:
-      return None
+        Returns:
+          bool: True if the file entry matches the filter, False if not or
+              None if the filter does not apply.
+        """
+        location = getattr(file_entry.path_spec, "location", None)
+        if not location:
+            return None
 
-    if '.' not in location:
-      return False
+        if "." not in location:
+            return False
 
-    _, _, extension = location.rpartition('.')
-    return extension.lower() in self._extensions
+        _, _, extension = location.rpartition(".")
+        return extension.lower() in self._extensions
 
-  def Print(self, output_writer):
-    """Prints a human readable version of the filter.
+    def Print(self, output_writer):
+        """Prints a human readable version of the filter.
 
-    Args:
-      output_writer (CLIOutputWriter): output writer.
-    """
-    if self._extensions:
-      extensions = ', '.join(self._extensions)
-      output_writer.Write(f'\textensions: {extensions:s}\n')
+        Args:
+          output_writer (CLIOutputWriter): output writer.
+        """
+        if self._extensions:
+            extensions = ", ".join(self._extensions)
+            output_writer.Write(f"\textensions: {extensions:s}\n")
 
 
 class NamesFileEntryFilter(FileEntryFilter):
-  """Names-based file entry filter."""
+    """Names-based file entry filter."""
 
-  def __init__(self, names):
-    """Initializes a names-based file entry filter.
+    def __init__(self, names):
+        """Initializes a names-based file entry filter.
 
-    Args:
-      names (list[str]): names.
-    """
-    super().__init__()
-    self._names = names
+        Args:
+          names (list[str]): names.
+        """
+        super().__init__()
+        self._names = names
 
-  def Matches(self, file_entry):
-    """Compares the file entry against the filter.
+    def Matches(self, file_entry):
+        """Compares the file entry against the filter.
 
-    Args:
-      file_entry (dfvfs.FileEntry): file entry to compare.
+        Args:
+          file_entry (dfvfs.FileEntry): file entry to compare.
 
-    Returns:
-      bool: True if the file entry matches the filter.
-    """
-    if not self._names or not file_entry.IsFile():
-      return False
+        Returns:
+          bool: True if the file entry matches the filter.
+        """
+        if not self._names or not file_entry.IsFile():
+            return False
 
-    return file_entry.name.lower() in self._names
+        return file_entry.name.lower() in self._names
 
-  def Print(self, output_writer):
-    """Prints a human readable version of the filter.
+    def Print(self, output_writer):
+        """Prints a human readable version of the filter.
 
-    Args:
-      output_writer (CLIOutputWriter): output writer.
-    """
-    if self._names:
-      names = ', '.join(self._names)
-      output_writer.Write(f'\tnames: {names:s}\n')
+        Args:
+          output_writer (CLIOutputWriter): output writer.
+        """
+        if self._names:
+            names = ", ".join(self._names)
+            output_writer.Write(f"\tnames: {names:s}\n")
 
 
 class SignaturesFileEntryFilter(FileEntryFilter):
-  """Signature-based file entry filter."""
+    """Signature-based file entry filter."""
 
-  def __init__(self, specification_store, signature_identifiers):
-    """Initializes a signature-based file entry filter.
+    def __init__(self, specification_store, signature_identifiers):
+        """Initializes a signature-based file entry filter.
 
-    Args:
-      specification_store (FormatSpecificationStore): a specification store.
-      signature_identifiers (list[str]): signature identifiers.
-    """
-    super().__init__()
-    self._file_scanner = None
-    self._signature_identifiers = []
+        Args:
+          specification_store (FormatSpecificationStore): a specification store.
+          signature_identifiers (list[str]): signature identifiers.
+        """
+        super().__init__()
+        self._file_scanner = None
+        self._signature_identifiers = []
 
-    self._file_scanner = self._GetScanner(
-        specification_store, signature_identifiers)
+        self._file_scanner = self._GetScanner(
+            specification_store, signature_identifiers
+        )
 
-  def _GetScanner(self, specification_store, signature_identifiers):
-    """Initializes the scanner form the specification store.
+    def _GetScanner(self, specification_store, signature_identifiers):
+        """Initializes the scanner form the specification store.
 
-    Args:
-      specification_store (FormatSpecificationStore): a specification store.
-      signature_identifiers (list[str]): signature identifiers.
+        Args:
+          specification_store (FormatSpecificationStore): a specification store.
+          signature_identifiers (list[str]): signature identifiers.
 
-    Returns:
-      pysigscan.scanner: signature scanner or None.
-    """
-    if not specification_store:
-      return None
+        Returns:
+          pysigscan.scanner: signature scanner or None.
+        """
+        if not specification_store:
+            return None
 
-    scanner_object = pysigscan.scanner()
+        scanner_object = pysigscan.scanner()
 
-    for format_specification in specification_store.specifications:
-      if format_specification.identifier not in signature_identifiers:
-        continue
+        for format_specification in specification_store.specifications:
+            if format_specification.identifier not in signature_identifiers:
+                continue
 
-      for signature in format_specification.signatures:
-        pattern_offset = signature.offset
-        if pattern_offset is None:
-          signature_flags = pysigscan.signature_flags.NO_OFFSET
-        elif pattern_offset < 0:
-          pattern_offset *= -1
-          signature_flags = pysigscan.signature_flags.RELATIVE_FROM_END
-        else:
-          signature_flags = pysigscan.signature_flags.RELATIVE_FROM_START
+            for signature in format_specification.signatures:
+                pattern_offset = signature.offset
+                if pattern_offset is None:
+                    signature_flags = pysigscan.signature_flags.NO_OFFSET
+                elif pattern_offset < 0:
+                    pattern_offset *= -1
+                    signature_flags = pysigscan.signature_flags.RELATIVE_FROM_END
+                else:
+                    signature_flags = pysigscan.signature_flags.RELATIVE_FROM_START
 
-        scanner_object.add_signature(
-            signature.identifier, pattern_offset, signature.pattern,
-            signature_flags)
+                scanner_object.add_signature(
+                    signature.identifier,
+                    pattern_offset,
+                    signature.pattern,
+                    signature_flags,
+                )
 
-      self._signature_identifiers.append(format_specification.identifier)
+            self._signature_identifiers.append(format_specification.identifier)
 
-    return scanner_object
+        return scanner_object
 
-  def Matches(self, file_entry):
-    """Compares the file entry against the filter.
+    def Matches(self, file_entry):
+        """Compares the file entry against the filter.
 
-    Args:
-      file_entry (dfvfs.FileEntry): file entry to compare.
+        Args:
+          file_entry (dfvfs.FileEntry): file entry to compare.
 
-    Returns:
-      bool: True if the file entry matches the filter, False if not or
-          None if the filter does not apply.
-    """
-    if not self._file_scanner or not file_entry.IsFile():
-      return None
+        Returns:
+          bool: True if the file entry matches the filter, False if not or
+              None if the filter does not apply.
+        """
+        if not self._file_scanner or not file_entry.IsFile():
+            return None
 
-    file_object = file_entry.GetFileObject()
-    if not file_object:
-      return False
+        file_object = file_entry.GetFileObject()
+        if not file_object:
+            return False
 
-    try:
-      scan_state = pysigscan.scan_state()
-      self._file_scanner.scan_file_object(scan_state, file_object)
+        try:
+            scan_state = pysigscan.scan_state()
+            self._file_scanner.scan_file_object(scan_state, file_object)
 
-    except OSError as exception:
-      # TODO: replace location by display name.
-      location = getattr(file_entry.path_spec, 'location', '')
-      logger.error(
-          f'[skipping] unable to scan file: {location:s} for signatures '
-          f'with error: {exception!s}')
-      return False
+        except OSError as exception:
+            # TODO: replace location by display name.
+            location = getattr(file_entry.path_spec, "location", "")
+            logger.error(
+                f"[skipping] unable to scan file: {location:s} for signatures "
+                f"with error: {exception!s}"
+            )
+            return False
 
-    return scan_state.number_of_scan_results > 0
+        return scan_state.number_of_scan_results > 0
 
-  def Print(self, output_writer):
-    """Prints a human readable version of the filter.
+    def Print(self, output_writer):
+        """Prints a human readable version of the filter.
 
-    Args:
-      output_writer (CLIOutputWriter): output writer.
-    """
-    if self._file_scanner:
-      identifiers = ", ".join(self._signature_identifiers)
-      output_writer.Write(f'\tsignature identifiers: {identifiers:s}\n')
+        Args:
+          output_writer (CLIOutputWriter): output writer.
+        """
+        if self._file_scanner:
+            identifiers = ", ".join(self._signature_identifiers)
+            output_writer.Write(f"\tsignature identifiers: {identifiers:s}\n")
 
 
 class FileEntryFilterCollection:
-  """Collection of file entry filters."""
+    """Collection of file entry filters."""
 
-  def __init__(self):
-    """Initializes a file entry filter collection."""
-    super().__init__()
-    self._artifacts_trie = None
-    self._filters = []
+    def __init__(self):
+        """Initializes a file entry filter collection."""
+        super().__init__()
+        self._artifacts_trie = None
+        self._filters = []
 
-  def AddFilter(self, file_entry_filter):
-    """Adds a file entry filter to the collection.
+    def AddFilter(self, file_entry_filter):
+        """Adds a file entry filter to the collection.
 
-    Args:
-      file_entry_filter (FileEntryFilter): file entry filter.
-    """
-    self._filters.append(file_entry_filter)
+        Args:
+          file_entry_filter (FileEntryFilter): file entry filter.
+        """
+        self._filters.append(file_entry_filter)
 
-  def GetMatchingArtifacts(self, path, path_separator):
-    """Retrieves the artifacts that match the given path.
+    def GetMatchingArtifacts(self, path, path_separator):
+        """Retrieves the artifacts that match the given path.
 
-    Args:
-      path (str): The path of the extracted file.
-      path_separator (str): The path separator.
+        Args:
+          path (str): The path of the extracted file.
+          path_separator (str): The path separator.
 
-    Returns:
-      list[str]: A list of artifact names that match the path.
-    """
-    if not self._artifacts_trie:
-      return []
+        Returns:
+          list[str]: A list of artifact names that match the path.
+        """
+        if not self._artifacts_trie:
+            return []
 
-    return self._artifacts_trie.GetMatchingArtifacts(path, path_separator)
+        return self._artifacts_trie.GetMatchingArtifacts(path, path_separator)
 
-  def HasFilters(self):
-    """Determines if filters are defined.
+    def HasFilters(self):
+        """Determines if filters are defined.
 
-    Returns:
-      bool: True if filters are defined.
-    """
-    return bool(self._filters)
+        Returns:
+          bool: True if filters are defined.
+        """
+        return bool(self._filters)
 
-  def Matches(self, file_entry):
-    """Compares the file entry against the filter collection.
+    def Matches(self, file_entry):
+        """Compares the file entry against the filter collection.
 
-    Args:
-      file_entry (dfvfs.FileEntry): file entry to compare.
+        Args:
+          file_entry (dfvfs.FileEntry): file entry to compare.
 
-    Returns:
-      bool: True if the file entry matches one of the filters. If no filters
-          are provided or applicable the result will be True.
-    """
-    if not self._filters:
-      return True
+        Returns:
+          bool: True if the file entry matches one of the filters. If no filters
+              are provided or applicable the result will be True.
+        """
+        if not self._filters:
+            return True
 
-    results = []
-    for file_entry_filter in self._filters:
-      result = file_entry_filter.Matches(file_entry)
-      results.append(result)
+        results = []
+        for file_entry_filter in self._filters:
+            result = file_entry_filter.Matches(file_entry)
+            results.append(result)
 
-    return True in results or False not in results
+        return True in results or False not in results
 
-  def Print(self, output_writer):
-    """Prints a human readable version of the filter.
+    def Print(self, output_writer):
+        """Prints a human readable version of the filter.
 
-    Args:
-      output_writer (CLIOutputWriter): output writer.
-    """
-    if self._filters:
-      output_writer.Write('Filters:\n')
-      for file_entry_filter in self._filters:
-        file_entry_filter.Print(output_writer)
+        Args:
+          output_writer (CLIOutputWriter): output writer.
+        """
+        if self._filters:
+            output_writer.Write("Filters:\n")
+            for file_entry_filter in self._filters:
+                file_entry_filter.Print(output_writer)
 
-  def SetArtifactsTrie(self, artifacts_trie):
-    """Sets the artifacts trie.
+    def SetArtifactsTrie(self, artifacts_trie):
+        """Sets the artifacts trie.
 
-    Args:
-      artifacts_trie (ArtifactsTrie): artifacts trie.
-    """
-    self._artifacts_trie = artifacts_trie
+        Args:
+          artifacts_trie (ArtifactsTrie): artifacts trie.
+        """
+        self._artifacts_trie = artifacts_trie

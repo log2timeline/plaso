@@ -7,282 +7,311 @@ from plaso.lib import errors
 
 
 class YAMLFormattersFile:
-  """YAML-based formatters file.
+    """YAML-based formatters file.
 
-  A YAML-based formatters file contains one or more event formatter
-  definitions. An event formatter definition consists of:
+    A YAML-based formatters file contains one or more event formatter
+    definitions. An event formatter definition consists of:
 
-  type: 'conditional'
-  data_type: 'fs:stat'
-  message:
-  - '{display_name}'
-  - 'Type: {file_entry_type}'
-  - '({unallocated})'
-  short_message:
-  - '{filename}'
-  short_source: 'FILE'
-  source: 'File stat'
+    type: 'conditional'
+    data_type: 'fs:stat'
+    message:
+    - '{display_name}'
+    - 'Type: {file_entry_type}'
+    - '({unallocated})'
+    short_message:
+    - '{filename}'
+    short_source: 'FILE'
+    source: 'File stat'
 
-  Where:
-  * type, defines the formatter data type, which can be "basic" or
-    "conditional";
-  * data_type, defines the corresponding event data type;
-  * message, defines a list of message string pieces;
-  * separator, defines the message and short message string pieces separator;
-  * short_message, defines the short message string pieces;
-  * short_source, defines the short source description;
-  * source, defines the source description.
-  """
-
-  _SUPPORTED_KEYS = frozenset([
-      'data_type',
-      'boolean_helpers',
-      'custom_helpers',
-      'enumeration_helpers',
-      'flags_helpers',
-      'message',
-      'separator',
-      'short_message',
-      'short_source',
-      'source',
-      'type'])
-
-  def _ReadBooleanHelpers(self, formatter, boolean_helpers_definition_values):
-    """Reads boolean helper definitions from a list.
-
-    Args:
-      formatter (EventFormatter): an event formatter.
-      boolean_helpers_definition_values (list[dict[str, object]]):
-          boolean helpers definition values.
-
-    Raises:
-      ParseError: if the format of the boolean helper definitions are incorrect.
+    Where:
+    * type, defines the formatter data type, which can be "basic" or
+      "conditional";
+    * data_type, defines the corresponding event data type;
+    * message, defines a list of message string pieces;
+    * separator, defines the message and short message string pieces separator;
+    * short_message, defines the short message string pieces;
+    * short_source, defines the short source description;
+    * source, defines the source description.
     """
-    for boolean_helper in boolean_helpers_definition_values:
-      input_attribute = boolean_helper.get('input_attribute')
-      if not input_attribute:
-        raise errors.ParseError(
-            'Invalid boolean helper missing input attribute.')
 
-      output_attribute = boolean_helper.get('output_attribute')
-      if not output_attribute:
-        raise errors.ParseError(
-            'Invalid boolean helper missing output attribute.')
+    _SUPPORTED_KEYS = frozenset(
+        [
+            "data_type",
+            "boolean_helpers",
+            "custom_helpers",
+            "enumeration_helpers",
+            "flags_helpers",
+            "message",
+            "separator",
+            "short_message",
+            "short_source",
+            "source",
+            "type",
+        ]
+    )
 
-      value_if_false = boolean_helper.get('value_if_false')
-      value_if_true = boolean_helper.get('value_if_true')
+    def _ReadBooleanHelpers(self, formatter, boolean_helpers_definition_values):
+        """Reads boolean helper definitions from a list.
 
-      helper = interface.BooleanEventFormatterHelper(
-          input_attribute=input_attribute, output_attribute=output_attribute,
-          value_if_false=value_if_false, value_if_true=value_if_true)
+        Args:
+          formatter (EventFormatter): an event formatter.
+          boolean_helpers_definition_values (list[dict[str, object]]):
+              boolean helpers definition values.
 
-      formatter.AddHelper(helper)
+        Raises:
+          ParseError: if the format of the boolean helper definitions are incorrect.
+        """
+        for boolean_helper in boolean_helpers_definition_values:
+            input_attribute = boolean_helper.get("input_attribute")
+            if not input_attribute:
+                raise errors.ParseError(
+                    "Invalid boolean helper missing input attribute."
+                )
 
-  def _ReadCustomHelpers(self, formatter, custom_helpers_definition_values):
-    """Reads custom helper definitions from a list.
+            output_attribute = boolean_helper.get("output_attribute")
+            if not output_attribute:
+                raise errors.ParseError(
+                    "Invalid boolean helper missing output attribute."
+                )
 
-    Args:
-      formatter (EventFormatter): an event formatter.
-      custom_helpers_definition_values (list[dict[str, object]]):
-          custom helpers definition values.
+            value_if_false = boolean_helper.get("value_if_false")
+            value_if_true = boolean_helper.get("value_if_true")
 
-    Raises:
-      ParseError: if the format of the custom helper definitions are incorrect.
-    """
-    for custom_helper in custom_helpers_definition_values:
-      identifier = custom_helper.get('identifier')
-      if not identifier:
-        raise errors.ParseError(
-            'Invalid custom helper missing identifier.')
+            helper = interface.BooleanEventFormatterHelper(
+                input_attribute=input_attribute,
+                output_attribute=output_attribute,
+                value_if_false=value_if_false,
+                value_if_true=value_if_true,
+            )
 
-      input_attribute = custom_helper.get('input_attribute')
-      output_attribute = custom_helper.get('output_attribute')
+            formatter.AddHelper(helper)
 
-      formatter.AddCustomHelper(
-          identifier, input_attribute=input_attribute,
-          output_attribute=output_attribute)
+    def _ReadCustomHelpers(self, formatter, custom_helpers_definition_values):
+        """Reads custom helper definitions from a list.
 
-  def _ReadEnumerationHelpers(
-      self, formatter, enumeration_helpers_definition_values):
-    """Reads enumeration helper definitions from a list.
+        Args:
+          formatter (EventFormatter): an event formatter.
+          custom_helpers_definition_values (list[dict[str, object]]):
+              custom helpers definition values.
 
-    Args:
-      formatter (EventFormatter): an event formatter.
-      enumeration_helpers_definition_values (list[dict[str, object]]):
-          enumeration helpers definition values.
+        Raises:
+          ParseError: if the format of the custom helper definitions are incorrect.
+        """
+        for custom_helper in custom_helpers_definition_values:
+            identifier = custom_helper.get("identifier")
+            if not identifier:
+                raise errors.ParseError("Invalid custom helper missing identifier.")
 
-    Raises:
-      ParseError: if the format of the enumeration helper definitions are
-          incorrect.
-    """
-    for enumeration_helper in enumeration_helpers_definition_values:
-      input_attribute = enumeration_helper.get('input_attribute')
-      if not input_attribute:
-        raise errors.ParseError(
-            'Invalid enumeration helper missing input attribute.')
+            input_attribute = custom_helper.get("input_attribute")
+            output_attribute = custom_helper.get("output_attribute")
 
-      output_attribute = enumeration_helper.get('output_attribute')
-      if not output_attribute:
-        raise errors.ParseError(
-            'Invalid enumeration helper missing output attribute.')
+            formatter.AddCustomHelper(
+                identifier,
+                input_attribute=input_attribute,
+                output_attribute=output_attribute,
+            )
 
-      values = enumeration_helper.get('values')
-      if not values:
-        raise errors.ParseError('Invalid enumeration helper missing values.')
+    def _ReadEnumerationHelpers(self, formatter, enumeration_helpers_definition_values):
+        """Reads enumeration helper definitions from a list.
 
-      default_value = enumeration_helper.get('default_value')
+        Args:
+          formatter (EventFormatter): an event formatter.
+          enumeration_helpers_definition_values (list[dict[str, object]]):
+              enumeration helpers definition values.
 
-      helper = interface.EnumerationEventFormatterHelper(
-          default=default_value, input_attribute=input_attribute,
-          output_attribute=output_attribute, values=values)
+        Raises:
+          ParseError: if the format of the enumeration helper definitions are
+              incorrect.
+        """
+        for enumeration_helper in enumeration_helpers_definition_values:
+            input_attribute = enumeration_helper.get("input_attribute")
+            if not input_attribute:
+                raise errors.ParseError(
+                    "Invalid enumeration helper missing input attribute."
+                )
 
-      formatter.AddHelper(helper)
+            output_attribute = enumeration_helper.get("output_attribute")
+            if not output_attribute:
+                raise errors.ParseError(
+                    "Invalid enumeration helper missing output attribute."
+                )
 
-  def _ReadFlagsHelpers(self, formatter, flags_helpers_definition_values):
-    """Reads flags helper definitions from a list.
+            values = enumeration_helper.get("values")
+            if not values:
+                raise errors.ParseError("Invalid enumeration helper missing values.")
 
-    Args:
-      formatter (EventFormatter): an event formatter.
-      flags_helpers_definition_values (list[dict[str, object]]): flags helpers
-          definition values.
+            default_value = enumeration_helper.get("default_value")
 
-    Raises:
-      ParseError: if the format of the flags helper definitions are incorrect.
-    """
-    for flags_helper in flags_helpers_definition_values:
-      input_attribute = flags_helper.get('input_attribute')
-      if not input_attribute:
-        raise errors.ParseError(
-            'Invalid flags helper missing input attribute.')
+            helper = interface.EnumerationEventFormatterHelper(
+                default=default_value,
+                input_attribute=input_attribute,
+                output_attribute=output_attribute,
+                values=values,
+            )
 
-      output_attribute = flags_helper.get('output_attribute')
-      if not output_attribute:
-        raise errors.ParseError(
-            'Invalid flags helper missing output attribute.')
+            formatter.AddHelper(helper)
 
-      values = flags_helper.get('values')
-      if not values:
-        raise errors.ParseError('Invalid flags helper missing values.')
+    def _ReadFlagsHelpers(self, formatter, flags_helpers_definition_values):
+        """Reads flags helper definitions from a list.
 
-      helper = interface.FlagsEventFormatterHelper(
-          input_attribute=input_attribute, output_attribute=output_attribute,
-          values=values)
+        Args:
+          formatter (EventFormatter): an event formatter.
+          flags_helpers_definition_values (list[dict[str, object]]): flags helpers
+              definition values.
 
-      formatter.AddHelper(helper)
+        Raises:
+          ParseError: if the format of the flags helper definitions are incorrect.
+        """
+        for flags_helper in flags_helpers_definition_values:
+            input_attribute = flags_helper.get("input_attribute")
+            if not input_attribute:
+                raise errors.ParseError("Invalid flags helper missing input attribute.")
 
-  def _ReadFormatterDefinition(self, formatter_definition_values):
-    """Reads an event formatter definition from a dictionary.
+            output_attribute = flags_helper.get("output_attribute")
+            if not output_attribute:
+                raise errors.ParseError(
+                    "Invalid flags helper missing output attribute."
+                )
 
-    Args:
-      formatter_definition_values (dict[str, object]): formatter definition
-          values.
+            values = flags_helper.get("values")
+            if not values:
+                raise errors.ParseError("Invalid flags helper missing values.")
 
-    Returns:
-      EventFormatter: an event formatter.
+            helper = interface.FlagsEventFormatterHelper(
+                input_attribute=input_attribute,
+                output_attribute=output_attribute,
+                values=values,
+            )
 
-    Raises:
-      ParseError: if the format of the formatter definition is not set
-          or incorrect.
-    """
-    if not formatter_definition_values:
-      raise errors.ParseError('Missing formatter definition values.')
+            formatter.AddHelper(helper)
 
-    different_keys = set(formatter_definition_values) - self._SUPPORTED_KEYS
-    if different_keys:
-      different_keys = ', '.join(different_keys)
-      raise errors.ParseError(f'Undefined keys: {different_keys:s}')
+    def _ReadFormatterDefinition(self, formatter_definition_values):
+        """Reads an event formatter definition from a dictionary.
 
-    formatter_type = formatter_definition_values.get('type')
-    if not formatter_type:
-      raise errors.ParseError(
-          'Invalid event formatter definition missing type.')
+        Args:
+          formatter_definition_values (dict[str, object]): formatter definition
+              values.
 
-    if formatter_type not in ('basic', 'conditional'):
-      raise errors.ParseError((
-          f'Invalid event formatter definition unsupported type: '
-          f'{formatter_type!s}.'))
+        Returns:
+          EventFormatter: an event formatter.
 
-    data_type = formatter_definition_values.get('data_type')
-    if not data_type:
-      raise errors.ParseError(
-          'Invalid event formatter definition missing data type.')
+        Raises:
+          ParseError: if the format of the formatter definition is not set
+              or incorrect.
+        """
+        if not formatter_definition_values:
+            raise errors.ParseError("Missing formatter definition values.")
 
-    message = formatter_definition_values.get('message')
-    if not message:
-      raise errors.ParseError(
-          f'Invalid event formatter definition: {data_type:s} missing message.')
+        different_keys = set(formatter_definition_values) - self._SUPPORTED_KEYS
+        if different_keys:
+            different_keys = ", ".join(different_keys)
+            raise errors.ParseError(f"Undefined keys: {different_keys:s}")
 
-    short_message = formatter_definition_values.get('short_message')
-    if not short_message:
-      raise errors.ParseError((
-          f'Invalid event formatter definition: {data_type:s} missing short '
-          f'message.'))
+        formatter_type = formatter_definition_values.get("type")
+        if not formatter_type:
+            raise errors.ParseError("Invalid event formatter definition missing type.")
 
-    short_source = formatter_definition_values.get('short_source')
-    if not short_source:
-      raise errors.ParseError((
-          f'Invalid event formatter definition: {data_type:s} missing short '
-          f'source.'))
+        if formatter_type not in ("basic", "conditional"):
+            raise errors.ParseError(
+                (
+                    f"Invalid event formatter definition unsupported type: "
+                    f"{formatter_type!s}."
+                )
+            )
 
-    source = formatter_definition_values.get('source')
-    if not source:
-      raise errors.ParseError(
-          f'Invalid event formatter definition: {data_type:s} missing source.')
+        data_type = formatter_definition_values.get("data_type")
+        if not data_type:
+            raise errors.ParseError(
+                "Invalid event formatter definition missing data type."
+            )
 
-    formatter = None
+        message = formatter_definition_values.get("message")
+        if not message:
+            raise errors.ParseError(
+                f"Invalid event formatter definition: {data_type:s} missing message."
+            )
 
-    if formatter_type == 'basic':
-      formatter = interface.BasicEventFormatter(
-          data_type=data_type, format_string=message,
-          format_string_short=short_message)
+        short_message = formatter_definition_values.get("short_message")
+        if not short_message:
+            raise errors.ParseError(
+                (
+                    f"Invalid event formatter definition: {data_type:s} missing short "
+                    f"message."
+                )
+            )
 
-    elif formatter_type == 'conditional':
-      separator = formatter_definition_values.get('separator')
-      formatter = interface.ConditionalEventFormatter(
-          data_type=data_type, format_string_pieces=message,
-          format_string_separator=separator,
-          format_string_short_pieces=short_message)
+        short_source = formatter_definition_values.get("short_source")
+        if not short_source:
+            raise errors.ParseError(
+                (
+                    f"Invalid event formatter definition: {data_type:s} missing short "
+                    f"source."
+                )
+            )
 
-    boolean_helpers = formatter_definition_values.get('boolean_helpers', [])
-    self._ReadBooleanHelpers(formatter, boolean_helpers)
+        source = formatter_definition_values.get("source")
+        if not source:
+            raise errors.ParseError(
+                f"Invalid event formatter definition: {data_type:s} missing source."
+            )
 
-    custom_helpers = formatter_definition_values.get('custom_helpers', [])
-    self._ReadCustomHelpers(formatter, custom_helpers)
+        formatter = None
 
-    enumeration_helpers = formatter_definition_values.get(
-        'enumeration_helpers', [])
-    self._ReadEnumerationHelpers(formatter, enumeration_helpers)
+        if formatter_type == "basic":
+            formatter = interface.BasicEventFormatter(
+                data_type=data_type,
+                format_string=message,
+                format_string_short=short_message,
+            )
 
-    flags_helpers = formatter_definition_values.get('flags_helpers', [])
-    self._ReadFlagsHelpers(formatter, flags_helpers)
+        elif formatter_type == "conditional":
+            separator = formatter_definition_values.get("separator")
+            formatter = interface.ConditionalEventFormatter(
+                data_type=data_type,
+                format_string_pieces=message,
+                format_string_separator=separator,
+                format_string_short_pieces=short_message,
+            )
 
-    if short_source and source:
-      formatter.source_mapping = (short_source, source)
+        boolean_helpers = formatter_definition_values.get("boolean_helpers", [])
+        self._ReadBooleanHelpers(formatter, boolean_helpers)
 
-    return formatter
+        custom_helpers = formatter_definition_values.get("custom_helpers", [])
+        self._ReadCustomHelpers(formatter, custom_helpers)
 
-  def _ReadFromFileObject(self, file_object):
-    """Reads the event formatters from a file-like object.
+        enumeration_helpers = formatter_definition_values.get("enumeration_helpers", [])
+        self._ReadEnumerationHelpers(formatter, enumeration_helpers)
 
-    Args:
-      file_object (file): formatters file-like object.
+        flags_helpers = formatter_definition_values.get("flags_helpers", [])
+        self._ReadFlagsHelpers(formatter, flags_helpers)
 
-    Yields:
-      EventFormatter: an event formatter.
-    """
-    yaml_generator = yaml.safe_load_all(file_object)
+        if short_source and source:
+            formatter.source_mapping = (short_source, source)
 
-    for yaml_definition in yaml_generator:
-      yield self._ReadFormatterDefinition(yaml_definition)
+        return formatter
 
-  def ReadFromFile(self, path):
-    """Reads the event formatters from a YAML file.
+    def _ReadFromFileObject(self, file_object):
+        """Reads the event formatters from a file-like object.
 
-    Args:
-      path (str): path to a formatters file.
+        Args:
+          file_object (file): formatters file-like object.
 
-    Yields:
-      EventFormatter: an event formatter.
-    """
-    with open(path, 'r', encoding='utf-8') as file_object:
-      yield from self._ReadFromFileObject(file_object)
+        Yields:
+          EventFormatter: an event formatter.
+        """
+        yaml_generator = yaml.safe_load_all(file_object)
+
+        for yaml_definition in yaml_generator:
+            yield self._ReadFormatterDefinition(yaml_definition)
+
+    def ReadFromFile(self, path):
+        """Reads the event formatters from a YAML file.
+
+        Args:
+          path (str): path to a formatters file.
+
+        Yields:
+          EventFormatter: an event formatter.
+        """
+        with open(path, "r", encoding="utf-8") as file_object:
+            yield from self._ReadFromFileObject(file_object)
