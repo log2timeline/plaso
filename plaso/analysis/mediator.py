@@ -8,169 +8,168 @@ from plaso.engine import path_helper
 
 
 class AnalysisMediator:
-  """Analysis plugin mediator.
+    """Analysis plugin mediator.
 
-  Attributes:
-    analysis_reports_counter (collections.Counter): number of analysis reports
-        per analysis plugin.
-    event_labels_counter (collections.Counter): number of event tags per label.
-    last_activity_timestamp (int): timestamp received that indicates the last
-        time activity was observed. The last activity timestamp is updated
-        when the mediator produces an attribute container, such as an event
-        tag. This timestamp is used by the multi processing worker process
-        to indicate the last time the worker was known to be active. This
-        information is then used by the foreman to detect workers that are
-        not responding (stalled).
-    number_of_produced_analysis_reports (int): number of produced analysis
-        reports.
-    number_of_produced_event_tags (int): number of produced event tags.
-  """
-
-  def __init__(self, data_location=None, user_accounts=None):
-    """Initializes an analysis plugin mediator.
-
-    Args:
-      data_location (Optional[str]): location of data files used during
-          analysis.
-      user_accounts (Optional[list[UserAccountArtifact]]): user accounts.
+    Attributes:
+      analysis_reports_counter (collections.Counter): number of analysis reports
+          per analysis plugin.
+      event_labels_counter (collections.Counter): number of event tags per label.
+      last_activity_timestamp (int): timestamp received that indicates the last
+          time activity was observed. The last activity timestamp is updated
+          when the mediator produces an attribute container, such as an event
+          tag. This timestamp is used by the multi processing worker process
+          to indicate the last time the worker was known to be active. This
+          information is then used by the foreman to detect workers that are
+          not responding (stalled).
+      number_of_produced_analysis_reports (int): number of produced analysis
+          reports.
+      number_of_produced_event_tags (int): number of produced event tags.
     """
-    super().__init__()
-    self._abort = False
-    self._data_location = data_location
-    self._event_filter_expression = None
-    self._number_of_warnings = 0
-    self._storage_writer = None
-    self._user_accounts = user_accounts
-    self._username_by_user_directory = {}
 
-    self.analysis_reports_counter = collections.Counter()
-    self.event_labels_counter = collections.Counter()
-    self.last_activity_timestamp = 0.0
-    self.number_of_produced_analysis_reports = 0
-    self.number_of_produced_event_tags = 0
+    def __init__(self, data_location=None, user_accounts=None):
+        """Initializes an analysis plugin mediator.
 
-  @property
-  def abort(self):
-    """bool: True if the analysis should be aborted."""
-    return self._abort
+        Args:
+          data_location (Optional[str]): location of data files used during
+              analysis.
+          user_accounts (Optional[list[UserAccountArtifact]]): user accounts.
+        """
+        super().__init__()
+        self._abort = False
+        self._data_location = data_location
+        self._event_filter_expression = None
+        self._number_of_warnings = 0
+        self._storage_writer = None
+        self._user_accounts = user_accounts
+        self._username_by_user_directory = {}
 
-  @property
-  def data_location(self):
-    """str: path to the data files."""
-    return self._data_location
+        self.analysis_reports_counter = collections.Counter()
+        self.event_labels_counter = collections.Counter()
+        self.last_activity_timestamp = 0.0
+        self.number_of_produced_analysis_reports = 0
+        self.number_of_produced_event_tags = 0
 
-  def GetDisplayNameForPathSpec(self, path_spec):
-    """Retrieves the display name for a path specification.
+    @property
+    def abort(self):
+        """bool: True if the analysis should be aborted."""
+        return self._abort
 
-    Args:
-      path_spec (dfvfs.PathSpec): path specification.
+    @property
+    def data_location(self):
+        """str: path to the data files."""
+        return self._data_location
 
-    Returns:
-      str: human readable version of the path specification.
-    """
-    return path_helper.PathHelper.GetDisplayNameForPathSpec(path_spec)
+    def GetDisplayNameForPathSpec(self, path_spec):
+        """Retrieves the display name for a path specification.
 
-  def GetUsernameForPath(self, path):
-    """Retrieves a username for a specific path.
+        Args:
+          path_spec (dfvfs.PathSpec): path specification.
 
-    This is determining if a specific path is within a user's directory and
-    returning the username of the user if so.
+        Returns:
+          str: human readable version of the path specification.
+        """
+        return path_helper.PathHelper.GetDisplayNameForPathSpec(path_spec)
 
-    Args:
-      path (str): path.
+    def GetUsernameForPath(self, path):
+        """Retrieves a username for a specific path.
 
-    Returns:
-      str: username or None if the path does not appear to be within a user's
-          directory.
-    """
-    path = path.lower()
+        This is determining if a specific path is within a user's directory and
+        returning the username of the user if so.
 
-    username = self._username_by_user_directory.get(path)
-    if not username and self._user_accounts:
-      for user_account in self._user_accounts:
-        if user_account.user_directory:
-          user_directory = user_account.user_directory.lower()
-          if path.startswith(user_directory):
-            username = user_account.username
-            self._username_by_user_directory[path] = username
-            break
+        Args:
+          path (str): path.
 
-    return username
+        Returns:
+          str: username or None if the path does not appear to be within a user's
+              directory.
+        """
+        path = path.lower()
 
-  def ProduceAnalysisResult(self, analysis_result):
-    """Produces an analysis result attribute.
+        username = self._username_by_user_directory.get(path)
+        if not username and self._user_accounts:
+            for user_account in self._user_accounts:
+                if user_account.user_directory:
+                    user_directory = user_account.user_directory.lower()
+                    if path.startswith(user_directory):
+                        username = user_account.username
+                        self._username_by_user_directory[path] = username
+                        break
 
-    Args:
-      analysis_result (AttributeContainer): analysis result.
-    """
-    if self._storage_writer:
-      self._storage_writer.AddAttributeContainer(analysis_result)
+        return username
 
-  def ProduceAnalysisReport(self, plugin):
-    """Produces an analysis report.
+    def ProduceAnalysisResult(self, analysis_result):
+        """Produces an analysis result attribute.
 
-    Args:
-      plugin (AnalysisPlugin): plugin.
-    """
-    analysis_report = plugin.CompileReport(self)
-    if not analysis_report:
-      # TODO: produce AnalysisWarning that no report can be generated.
-      return
+        Args:
+          analysis_result (AttributeContainer): analysis result.
+        """
+        if self._storage_writer:
+            self._storage_writer.AddAttributeContainer(analysis_result)
 
-    analysis_report.event_filter = self._event_filter_expression
+    def ProduceAnalysisReport(self, plugin):
+        """Produces an analysis report.
 
-    if self._storage_writer:
-      self._storage_writer.AddAttributeContainer(analysis_report)
+        Args:
+          plugin (AnalysisPlugin): plugin.
+        """
+        analysis_report = plugin.CompileReport(self)
+        if not analysis_report:
+            # TODO: produce AnalysisWarning that no report can be generated.
+            return
 
-    self.analysis_reports_counter[analysis_report.plugin_name] += 1
-    self.analysis_reports_counter['total'] += 1
+        analysis_report.event_filter = self._event_filter_expression
 
-    self.number_of_produced_analysis_reports += 1
+        if self._storage_writer:
+            self._storage_writer.AddAttributeContainer(analysis_report)
 
-    self.last_activity_timestamp = time.time()
+        self.analysis_reports_counter[analysis_report.plugin_name] += 1
+        self.analysis_reports_counter["total"] += 1
 
-  def ProduceAnalysisWarning(self, message, plugin_name):
-    """Produces an analysis warning.
+        self.number_of_produced_analysis_reports += 1
 
-    Args:
-      message (str): message of the warning.
-      plugin_name (str): name of the analysis plugin to which the warning
-          applies.
-    """
-    if self._storage_writer:
-      warning = warnings.AnalysisWarning(
-         message=message, plugin_name=plugin_name)
-      self._storage_writer.AddAttributeContainer(warning)
+        self.last_activity_timestamp = time.time()
 
-    self._number_of_warnings += 1
+    def ProduceAnalysisWarning(self, message, plugin_name):
+        """Produces an analysis warning.
 
-    self.last_activity_timestamp = time.time()
+        Args:
+          message (str): message of the warning.
+          plugin_name (str): name of the analysis plugin to which the warning
+              applies.
+        """
+        if self._storage_writer:
+            warning = warnings.AnalysisWarning(message=message, plugin_name=plugin_name)
+            self._storage_writer.AddAttributeContainer(warning)
 
-  def ProduceEventTag(self, event_tag):
-    """Produces an event tag.
+        self._number_of_warnings += 1
 
-    Args:
-      event_tag (EventTag): event tag.
-    """
-    if self._storage_writer:
-      self._storage_writer.AddOrUpdateEventTag(event_tag)
+        self.last_activity_timestamp = time.time()
 
-    for label in event_tag.labels:
-      self.event_labels_counter[label] += 1
-      self.event_labels_counter['total'] += 1
+    def ProduceEventTag(self, event_tag):
+        """Produces an event tag.
 
-    self.number_of_produced_event_tags += 1
+        Args:
+          event_tag (EventTag): event tag.
+        """
+        if self._storage_writer:
+            self._storage_writer.AddOrUpdateEventTag(event_tag)
 
-    self.last_activity_timestamp = time.time()
+        for label in event_tag.labels:
+            self.event_labels_counter[label] += 1
+            self.event_labels_counter["total"] += 1
 
-  def SetStorageWriter(self, storage_writer):
-    """Sets the storage writer.
+        self.number_of_produced_event_tags += 1
 
-    Args:
-      storage_writer (StorageWriter): storage writer.
-    """
-    self._storage_writer = storage_writer
+        self.last_activity_timestamp = time.time()
 
-  def SignalAbort(self):
-    """Signals the analysis plugins to abort."""
-    self._abort = True
+    def SetStorageWriter(self, storage_writer):
+        """Sets the storage writer.
+
+        Args:
+          storage_writer (StorageWriter): storage writer.
+        """
+        self._storage_writer = storage_writer
+
+    def SignalAbort(self):
+        """Signals the analysis plugins to abort."""
+        self._abort = True

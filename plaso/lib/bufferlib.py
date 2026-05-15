@@ -2,69 +2,69 @@
 
 
 class CircularBuffer:
-  """Class that defines a circular buffer for storing event objects."""
+    """Class that defines a circular buffer for storing event objects."""
 
-  def __init__(self, size):
-    """Initializes a circular buffer object.
+    def __init__(self, size):
+        """Initializes a circular buffer object.
 
-    Args:
-      size (int): number of elements in the buffer.
-    """
-    super().__init__()
-    self._index = 0
-    self._list = []
-    self._size = size
+        Args:
+          size (int): number of elements in the buffer.
+        """
+        super().__init__()
+        self._index = 0
+        self._list = []
+        self._size = size
 
-  def __iter__(self):
-    """Return all elements from the list."""
-    for index in range(0, self._size):
-      try:
-        yield self._list[(self._index + index) % self._size]
-      except IndexError:
-        pass
+    def __iter__(self):
+        """Return all elements from the list."""
+        for index in range(0, self._size):
+            try:
+                yield self._list[(self._index + index) % self._size]
+            except IndexError:
+                pass
 
-  def __len__(self):
-    """Return the length (the fixed size)."""
-    return self._size
+    def __len__(self):
+        """Return the length (the fixed size)."""
+        return self._size
 
-  @property
-  def size(self):
-    """int: number of elements in the buffer."""
-    return self._size
+    @property
+    def size(self):
+        """int: number of elements in the buffer."""
+        return self._size
 
-  def Append(self, item):
-    """Add an item to the list.
+    def Append(self, item):
+        """Add an item to the list.
 
-    Args:
-      item (object): item.
-    """
-    if self._index >= self._size:
-      self._index = self._index % self._size
+        Args:
+          item (object): item.
+        """
+        if self._index >= self._size:
+            self._index = self._index % self._size
 
-    try:
-      self._list[self._index] = item
-    except IndexError:
-      self._list.append(item)
-    self._index += 1
+        try:
+            self._list[self._index] = item
+        except IndexError:
+            self._list.append(item)
+        self._index += 1
 
-  def Clear(self):
-    """Removes all elements from the list."""
-    self._index = 0
-    self._list = []
+    def Clear(self):
+        """Removes all elements from the list."""
+        self._index = 0
+        self._list = []
 
-  def Flush(self):
-    """Returns a generator for all items and clear the buffer."""
-    yield from self
-    self.Clear()
+    def Flush(self):
+        """Returns a generator for all items and clear the buffer."""
+        yield from self
+        self.Clear()
 
-  def GetCurrent(self):
-    """Retrieves the current item that index points to.
+    def GetCurrent(self):
+        """Retrieves the current item that index points to.
 
-    Return:
-      object: item.
-    """
-    index = self._index - 1
-    if index < 0:
-      return None
+        Return:
+          object: item.
+        """
+        index = self._index - 1
+        if index < 0:
+            return None
 
-    return self._list[index]
+        return self._list[index]

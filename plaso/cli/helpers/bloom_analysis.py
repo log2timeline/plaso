@@ -7,83 +7,110 @@ from plaso.lib import errors
 
 
 class BloomAnalysisArgumentsHelper(interface.ArgumentsHelper):
-  """Bloom database analysis plugin CLI arguments helper."""
+    """Bloom database analysis plugin CLI arguments helper."""
 
-  NAME = 'bloom'
-  CATEGORY = 'analysis'
-  DESCRIPTION = 'Argument helper for the bloom database analysis plugin.'
+    NAME = "bloom"
+    CATEGORY = "analysis"
+    DESCRIPTION = "Argument helper for the bloom database analysis plugin."
 
-  _DEFAULT_BLOOM_DATABASE_PATH = "hashlookup-full.bloom"
-  _DEFAULT_HASH = 'sha1'
-  _DEFAULT_LABEL = bloom.BloomAnalysisPlugin.DEFAULT_LABEL
-  _SUPPORTED_HASHES = sorted(
-      bloom.BloomAnalysisPlugin.SUPPORTED_HASHES)
+    _DEFAULT_BLOOM_DATABASE_PATH = "hashlookup-full.bloom"
+    _DEFAULT_HASH = "sha1"
+    _DEFAULT_LABEL = bloom.BloomAnalysisPlugin.DEFAULT_LABEL
+    _SUPPORTED_HASHES = sorted(bloom.BloomAnalysisPlugin.SUPPORTED_HASHES)
 
-  @classmethod
-  def AddArguments(cls, argument_group):
-    """Adds command line arguments the helper supports to an argument group.
+    @classmethod
+    def AddArguments(cls, argument_group):
+        """Adds command line arguments the helper supports to an argument group.
 
-    This function takes an argument parser or an argument group object and adds
-    to it all the command line arguments this helper supports.
+        This function takes an argument parser or an argument group object and adds
+        to it all the command line arguments this helper supports.
 
-    Args:
-      argument_group (argparse._ArgumentGroup|argparse.ArgumentParser): group
-          to append arguments to.
-    """
-    argument_group.add_argument(
-        '--bloom-file', '--bloom_file', dest='bloom_file', type=str,
-        action='store', default=cls._DEFAULT_BLOOM_DATABASE_PATH,
-        metavar='PATH', help=(
-            f'Path to the bloom database file, the default is: '
-            f'{cls._DEFAULT_BLOOM_DATABASE_PATH:s}'))
+        Args:
+          argument_group (argparse._ArgumentGroup|argparse.ArgumentParser): group
+              to append arguments to.
+        """
+        argument_group.add_argument(
+            "--bloom-file",
+            "--bloom_file",
+            dest="bloom_file",
+            type=str,
+            action="store",
+            default=cls._DEFAULT_BLOOM_DATABASE_PATH,
+            metavar="PATH",
+            help=(
+                f"Path to the bloom database file, the default is: "
+                f"{cls._DEFAULT_BLOOM_DATABASE_PATH:s}"
+            ),
+        )
 
-    supported_hashes = ', '.join(cls._SUPPORTED_HASHES)
-    argument_group.add_argument(
-        '--bloom-hash', '--bloom_hash', dest='bloom_hash', type=str,
-        action='store', choices=cls._SUPPORTED_HASHES,
-        default=cls._DEFAULT_HASH, metavar='HASH', help=(
-            f'Type of hash to use to query the bloom database file (note that '
-            f'hash values must be stored in upper case), the default is: '
-            f'{cls._DEFAULT_HASH:s}. Supported options: {supported_hashes:s}.'))
+        supported_hashes = ", ".join(cls._SUPPORTED_HASHES)
+        argument_group.add_argument(
+            "--bloom-hash",
+            "--bloom_hash",
+            dest="bloom_hash",
+            type=str,
+            action="store",
+            choices=cls._SUPPORTED_HASHES,
+            default=cls._DEFAULT_HASH,
+            metavar="HASH",
+            help=(
+                f"Type of hash to use to query the bloom database file (note that "
+                f"hash values must be stored in upper case), the default is: "
+                f"{cls._DEFAULT_HASH:s}. Supported options: {supported_hashes:s}."
+            ),
+        )
 
-    argument_group.add_argument(
-        '--bloom-label', '--bloom_label', dest='bloom_label', type=str,
-        action='store', default=cls._DEFAULT_LABEL, metavar='LABEL', help=(
-            f'Label to apply to events, the default is: '
-            f'{cls._DEFAULT_LABEL:s}.'))
+        argument_group.add_argument(
+            "--bloom-label",
+            "--bloom_label",
+            dest="bloom_label",
+            type=str,
+            action="store",
+            default=cls._DEFAULT_LABEL,
+            metavar="LABEL",
+            help=(
+                f"Label to apply to events, the default is: " f"{cls._DEFAULT_LABEL:s}."
+            ),
+        )
 
-  @classmethod
-  def ParseOptions(cls, options, analysis_plugin):  # pylint: disable=arguments-renamed
-    """Parses and validates options.
+    @classmethod
+    def ParseOptions(
+        cls, options, analysis_plugin
+    ):  # pylint: disable=arguments-renamed
+        """Parses and validates options.
 
-    Args:
-      options (argparse.Namespace): parser options object.
-      analysis_plugin (BloomAnalysisPlugin): analysis plugin
-        to configure.
+        Args:
+          options (argparse.Namespace): parser options object.
+          analysis_plugin (BloomAnalysisPlugin): analysis plugin
+            to configure.
 
-    Raises:
-      BadConfigObject: when the analysis plugin is the wrong type.
-      BadConfigOption: when unable to load the bloom database file.
-    """
-    if not isinstance(analysis_plugin, bloom.BloomAnalysisPlugin):
-      raise errors.BadConfigObject(
-          'Analysis plugin is not an instance of BloomAnalysisPlugin')
+        Raises:
+          BadConfigObject: when the analysis plugin is the wrong type.
+          BadConfigOption: when unable to load the bloom database file.
+        """
+        if not isinstance(analysis_plugin, bloom.BloomAnalysisPlugin):
+            raise errors.BadConfigObject(
+                "Analysis plugin is not an instance of BloomAnalysisPlugin"
+            )
 
-    label = cls._ParseStringOption(
-        options, 'bloom_label', default_value=cls._DEFAULT_LABEL)
-    analysis_plugin.SetLabel(label)
+        label = cls._ParseStringOption(
+            options, "bloom_label", default_value=cls._DEFAULT_LABEL
+        )
+        analysis_plugin.SetLabel(label)
 
-    lookup_hash = cls._ParseStringOption(
-        options, 'bloom_hash', default_value=cls._DEFAULT_HASH)
-    analysis_plugin.SetLookupHash(lookup_hash)
+        lookup_hash = cls._ParseStringOption(
+            options, "bloom_hash", default_value=cls._DEFAULT_HASH
+        )
+        analysis_plugin.SetLookupHash(lookup_hash)
 
-    bloom_file = cls._ParseStringOption(
-        options, 'bloom_file',
-        default_value=cls._DEFAULT_BLOOM_DATABASE_PATH)
-    analysis_plugin.SetBloomDatabasePath(bloom_file)
-    if not analysis_plugin.TestLoading():
-      raise errors.BadConfigOption(
-          f'Unable to load bloom database: {bloom_file:s}')
+        bloom_file = cls._ParseStringOption(
+            options, "bloom_file", default_value=cls._DEFAULT_BLOOM_DATABASE_PATH
+        )
+        analysis_plugin.SetBloomDatabasePath(bloom_file)
+        if not analysis_plugin.TestLoading():
+            raise errors.BadConfigOption(
+                f"Unable to load bloom database: {bloom_file:s}"
+            )
 
 
 manager.ArgumentHelperManager.RegisterHelper(BloomAnalysisArgumentsHelper)

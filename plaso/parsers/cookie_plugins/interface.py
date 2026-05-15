@@ -9,121 +9,122 @@ from plaso.parsers import plugins
 
 
 class BaseCookiePlugin(plugins.BasePlugin):
-  """A browser cookie plugin for Plaso.
+    """A browser cookie plugin for Plaso.
 
-  This is a generic cookie parsing interface that can handle parsing cookies
-  from all browsers.
-  """
-  NAME = 'cookie_plugin'
-  DATA_FORMAT = 'Browser cookie data'
-
-  # The name of the cookie value that this plugin is designed to parse.
-  # This value is used to evaluate whether the plugin is the correct one
-  # to parse the browser cookie.
-  COOKIE_NAME = ''
-
-  @abc.abstractmethod
-  def _ParseCookieData(
-      self, parser_mediator, cookie_data=None, url=None, **kwargs):
-    """Extracts events from cookie data.
-
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      cookie_data (Optional[bytes]): cookie data, as a byte sequence.
-      url (Optional[str]): URL or path where the cookie was set.
+    This is a generic cookie parsing interface that can handle parsing cookies
+    from all browsers.
     """
 
-  def _ParseIntegerValue(self, string_value):
-    """Parses an integer time.
+    NAME = "cookie_plugin"
+    DATA_FORMAT = "Browser cookie data"
 
-    Args:
-      string_value (str): string value.
+    # The name of the cookie value that this plugin is designed to parse.
+    # This value is used to evaluate whether the plugin is the correct one
+    # to parse the browser cookie.
+    COOKIE_NAME = ""
 
-    Returns:
-      int: integer value or None if not available.
-    """
-    try:
-      return int(string_value, 10)
-    except (TypeError, ValueError):
-      return None
+    @abc.abstractmethod
+    def _ParseCookieData(self, parser_mediator, cookie_data=None, url=None, **kwargs):
+        """Extracts events from cookie data.
 
-  def _ParsePosixTime(self, string_value):
-    """Parses a POSIX time.
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          cookie_data (Optional[bytes]): cookie data, as a byte sequence.
+          url (Optional[str]): URL or path where the cookie was set.
+        """
 
-    Args:
-      string_value (str): string value.
+    def _ParseIntegerValue(self, string_value):
+        """Parses an integer time.
 
-    Returns:
-      dfdatetime.PosixTime: date and time value or None if not available.
-    """
-    try:
-      timestamp = int(string_value, 10)
-    except (TypeError, ValueError):
-      return None
+        Args:
+          string_value (str): string value.
 
-    return dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+        Returns:
+          int: integer value or None if not available.
+        """
+        try:
+            return int(string_value, 10)
+        except (TypeError, ValueError):
+            return None
 
-  def _ParsePosixTimeInMilliseconds(self, string_value):
-    """Parses a POSIX time in milliseconds.
+    def _ParsePosixTime(self, string_value):
+        """Parses a POSIX time.
 
-    Args:
-      string_value (str): string value.
+        Args:
+          string_value (str): string value.
 
-    Returns:
-      dfdatetime.PosixTimeInMilliseconds: date and time value or None if not
-          available.
-    """
-    try:
-      timestamp = int(string_value, 10)
-    except (TypeError, ValueError):
-      return None
+        Returns:
+          dfdatetime.PosixTime: date and time value or None if not available.
+        """
+        try:
+            timestamp = int(string_value, 10)
+        except (TypeError, ValueError):
+            return None
 
-    return dfdatetime_posix_time.PosixTimeInMilliseconds(timestamp=timestamp)
+        return dfdatetime_posix_time.PosixTime(timestamp=timestamp)
 
-  def _ParsePosixTimeIn100Nanoseconds(self, string_value):
-    """Parses a POSIX time in 100 nanoseconds intervals.
+    def _ParsePosixTimeInMilliseconds(self, string_value):
+        """Parses a POSIX time in milliseconds.
 
-    Args:
-      string_value (str): string value.
+        Args:
+          string_value (str): string value.
 
-    Returns:
-      dfdatetime.PosixTimeInMicroseconds: date and time value or None if not
-          available.
-    """
-    try:
-      timestamp = int(string_value, 10)
-      # TODO: fix that we're losing precision here.
-      timestamp //= 10
-    except (TypeError, ValueError):
-      return None
+        Returns:
+          dfdatetime.PosixTimeInMilliseconds: date and time value or None if not
+              available.
+        """
+        try:
+            timestamp = int(string_value, 10)
+        except (TypeError, ValueError):
+            return None
 
-    return dfdatetime_posix_time.PosixTimeInMicroseconds(timestamp=timestamp)
+        return dfdatetime_posix_time.PosixTimeInMilliseconds(timestamp=timestamp)
 
-  # pylint: disable=arguments-differ
-  def Process(self, parser_mediator, cookie_name, cookie_data, url, **kwargs):
-    """Extracts events from cookie data.
+    def _ParsePosixTimeIn100Nanoseconds(self, string_value):
+        """Parses a POSIX time in 100 nanoseconds intervals.
 
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      cookie_name (str): the name of the cookie value.
-      cookie_data (bytes): the cookie data, as a byte sequence.
-      url (str): the full URL or path where the cookie was set.
+        Args:
+          string_value (str): string value.
 
-    Raises:
-      errors.WrongPlugin: If the cookie name differs from the one
-          supplied in COOKIE_NAME.
-      ValueError: If cookie_name or cookie_data are not set.
-    """
-    if cookie_name is None or cookie_data is None:
-      raise ValueError('Cookie name or data are not set.')
+        Returns:
+          dfdatetime.PosixTimeInMicroseconds: date and time value or None if not
+              available.
+        """
+        try:
+            timestamp = int(string_value, 10)
+            # TODO: fix that we're losing precision here.
+            timestamp //= 10
+        except (TypeError, ValueError):
+            return None
 
-    if cookie_name != self.COOKIE_NAME:
-      raise errors.WrongPlugin(
-          f'Plugin: {self.NAME:s} does not support: {cookie_name:s}')
+        return dfdatetime_posix_time.PosixTimeInMicroseconds(timestamp=timestamp)
 
-    # This will raise if unhandled keyword arguments are passed.
-    super().Process(parser_mediator)
+    # pylint: disable=arguments-differ
+    def Process(self, parser_mediator, cookie_name, cookie_data, url, **kwargs):
+        """Extracts events from cookie data.
 
-    self._ParseCookieData(parser_mediator, cookie_data=cookie_data, url=url)
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          cookie_name (str): the name of the cookie value.
+          cookie_data (bytes): the cookie data, as a byte sequence.
+          url (str): the full URL or path where the cookie was set.
+
+        Raises:
+          errors.WrongPlugin: If the cookie name differs from the one
+              supplied in COOKIE_NAME.
+          ValueError: If cookie_name or cookie_data are not set.
+        """
+        if cookie_name is None or cookie_data is None:
+            raise ValueError("Cookie name or data are not set.")
+
+        if cookie_name != self.COOKIE_NAME:
+            raise errors.WrongPlugin(
+                f"Plugin: {self.NAME:s} does not support: {cookie_name:s}"
+            )
+
+        # This will raise if unhandled keyword arguments are passed.
+        super().Process(parser_mediator)
+
+        self._ParseCookieData(parser_mediator, cookie_data=cookie_data, url=url)

@@ -4,12 +4,12 @@
 import unittest
 
 try:
-  # pylint: disable=ungrouped-imports
-  import fakeredis
-  import redis
-  from plaso.storage.redis import redis_store
+    # pylint: disable=ungrouped-imports
+    import fakeredis
+    import redis
+    from plaso.storage.redis import redis_store
 except ModuleNotFoundError:
-  redis = None
+    redis = None
 
 from plaso.containers import events
 from plaso.containers import sessions
@@ -19,406 +19,453 @@ from tests.containers import test_lib as containers_test_lib
 from tests.storage import test_lib
 
 
-@unittest.skipIf(redis is None, 'missing redis support')
+@unittest.skipIf(redis is None, "missing redis support")
 class RedisAttributeContainerStoreTest(test_lib.StorageTestCase):
-  """Tests for the Redis storage object."""
+    """Tests for the Redis storage object."""
+
+    # pylint: disable=protected-access
 
-  # pylint: disable=protected-access
+    _REDIS_URL = "redis://127.0.0.1/0"
+
+    def _CreateRedisClient(self):
+        """Creates a Redis client for testing.
 
-  _REDIS_URL = 'redis://127.0.0.1/0'
+        This method will attempt to use a Redis server listening on localhost and
+        fallback to a fake Redis client if no server is available or the connection
+        timed out.
 
-  def _CreateRedisClient(self):
-    """Creates a Redis client for testing.
+        Returns:
+          Redis: a Redis client.
+        """
+        try:
+            redis_client = redis.from_url(self._REDIS_URL, socket_timeout=60)
+            redis_client.ping()
+        except redis.exceptions.ConnectionError:
+            redis_client = fakeredis.FakeStrictRedis()
 
-    This method will attempt to use a Redis server listening on localhost and
-    fallback to a fake Redis client if no server is available or the connection
-    timed out.
+        return redis_client
 
-    Returns:
-      Redis: a Redis client.
-    """
-    try:
-      redis_client = redis.from_url(self._REDIS_URL, socket_timeout=60)
-      redis_client.ping()
-    except redis.exceptions.ConnectionError:
-      redis_client = fakeredis.FakeStrictRedis()
+    def _RemoveSessionData(self, redis_client, session_identifier):
+        """Removes the session data after testing.
+
+        Args:
+          redis_client (Redis): an open Redis client.
+          session_identifier (str): the identifier of the session the tasks are
+              part of.
+        """
+        for redis_hash_name in redis_client.keys(f"{session_identifier:s}-*"):
+            redis_client.delete(redis_hash_name)
+
+    def testGetRedisHashName(self):
+        """Tests the _GetRedisHashName function."""
+        redis_client = self._CreateRedisClient()
 
-    return redis_client
+        session = sessions.Session()
+        task = tasks.Task(session_identifier=session.identifier)
+
+        event_data_stream = events.EventDataStream()
 
-  def _RemoveSessionData(self, redis_client, session_identifier):
-    """Removes the session data after testing.
+        test_store = redis_store.RedisAttributeContainerStore()
+        test_store.Open(
+            redis_client=redis_client,
+            session_identifier=task.session_identifier,
+            task_identifier=task.identifier,
+        )
 
-    Args:
-      redis_client (Redis): an open Redis client.
-      session_identifier (str): the identifier of the session the tasks are
-          part of.
-    """
-    for redis_hash_name in redis_client.keys(f'{session_identifier:s}-*'):
-      redis_client.delete(redis_hash_name)
+        try:
+            redis_hash_name = test_store._GetRedisHashName(
+                event_data_stream.CONTAINER_TYPE
+            )
 
-  def testGetRedisHashName(self):
-    """Tests the _GetRedisHashName function."""
-    redis_client = self._CreateRedisClient()
+            expected_redis_hash_name = (
+                f"{task.session_identifier:s}-{task.identifier:s}-"
+                f"{event_data_stream.CONTAINER_TYPE:s}"
+            )
+            self.assertEqual(redis_hash_name, expected_redis_hash_name)
 
-    session = sessions.Session()
-    task = tasks.Task(session_identifier=session.identifier)
+        finally:
+            test_store.Close()
 
-    event_data_stream = events.EventDataStream()
+            self._RemoveSessionData(redis_client, session.identifier)
 
-    test_store = redis_store.RedisAttributeContainerStore()
-    test_store.Open(
-        redis_client=redis_client, session_identifier=task.session_identifier,
-        task_identifier=task.identifier)
+    # TODO: add tests for _GetFinalizationKey
+    # TODO: add tests for _RaiseIfNotReadable
+    # TODO: add tests for _RaiseIfNotWritable
+    # TODO: add tests for _SetClientName
 
-    try:
-      redis_hash_name = test_store._GetRedisHashName(
-          event_data_stream.CONTAINER_TYPE)
+    def testWriteExistingAttributeContainer(self):
+        """Tests the _WriteExistingAttributeContainer function."""
+        redis_client = self._CreateRedisClient()
 
-      expected_redis_hash_name = (
-          f'{task.session_identifier:s}-{task.identifier:s}-'
-          f'{event_data_stream.CONTAINER_TYPE:s}')
-      self.assertEqual(redis_hash_name, expected_redis_hash_name)
+        session = sessions.Session()
+        task = tasks.Task(session_identifier=session.identifier)
 
-    finally:
-      test_store.Close()
+        test_store = redis_store.RedisAttributeContainerStore()
+        test_store.Open(
+            redis_client=redis_client,
+            session_identifier=session.identifier,
+            task_identifier=task.identifier,
+        )
 
-      self._RemoveSessionData(redis_client, session.identifier)
+        try:
+            event_data_stream = events.EventDataStream()
 
-  # TODO: add tests for _GetFinalizationKey
-  # TODO: add tests for _RaiseIfNotReadable
-  # TODO: add tests for _RaiseIfNotWritable
-  # TODO: add tests for _SetClientName
+            number_of_containers = test_store.GetNumberOfAttributeContainers(
+                event_data_stream.CONTAINER_TYPE
+            )
+            self.assertEqual(number_of_containers, 0)
 
-  def testWriteExistingAttributeContainer(self):
-    """Tests the _WriteExistingAttributeContainer function."""
-    redis_client = self._CreateRedisClient()
+            test_store._WriteNewAttributeContainer(event_data_stream)
 
-    session = sessions.Session()
-    task = tasks.Task(session_identifier=session.identifier)
+            number_of_containers = test_store.GetNumberOfAttributeContainers(
+                event_data_stream.CONTAINER_TYPE
+            )
+            self.assertEqual(number_of_containers, 1)
 
-    test_store = redis_store.RedisAttributeContainerStore()
-    test_store.Open(
-        redis_client=redis_client, session_identifier=session.identifier,
-        task_identifier=task.identifier)
+            test_store._WriteExistingAttributeContainer(event_data_stream)
 
-    try:
-      event_data_stream = events.EventDataStream()
+            number_of_containers = test_store.GetNumberOfAttributeContainers(
+                event_data_stream.CONTAINER_TYPE
+            )
+            self.assertEqual(number_of_containers, 1)
 
-      number_of_containers = test_store.GetNumberOfAttributeContainers(
-          event_data_stream.CONTAINER_TYPE)
-      self.assertEqual(number_of_containers, 0)
+        finally:
+            test_store.Close()
 
-      test_store._WriteNewAttributeContainer(event_data_stream)
+            self._RemoveSessionData(redis_client, session.identifier)
 
-      number_of_containers = test_store.GetNumberOfAttributeContainers(
-          event_data_stream.CONTAINER_TYPE)
-      self.assertEqual(number_of_containers, 1)
+    def testWriteNewAttributeContainer(self):
+        """Tests the _WriteNewAttributeContainer method."""
+        redis_client = self._CreateRedisClient()
 
-      test_store._WriteExistingAttributeContainer(event_data_stream)
+        session = sessions.Session()
+        task = tasks.Task(session_identifier=session.identifier)
 
-      number_of_containers = test_store.GetNumberOfAttributeContainers(
-          event_data_stream.CONTAINER_TYPE)
-      self.assertEqual(number_of_containers, 1)
+        test_store = redis_store.RedisAttributeContainerStore()
+        test_store.Open(
+            redis_client=redis_client,
+            session_identifier=task.session_identifier,
+            task_identifier=task.identifier,
+        )
 
-    finally:
-      test_store.Close()
+        try:
+            event_data_stream = events.EventDataStream()
 
-      self._RemoveSessionData(redis_client, session.identifier)
+            number_of_containers = test_store.GetNumberOfAttributeContainers(
+                event_data_stream.CONTAINER_TYPE
+            )
+            self.assertEqual(number_of_containers, 0)
 
-  def testWriteNewAttributeContainer(self):
-    """Tests the _WriteNewAttributeContainer method."""
-    redis_client = self._CreateRedisClient()
+            test_store._WriteNewAttributeContainer(event_data_stream)
 
-    session = sessions.Session()
-    task = tasks.Task(session_identifier=session.identifier)
+            number_of_containers = test_store.GetNumberOfAttributeContainers(
+                event_data_stream.CONTAINER_TYPE
+            )
+            self.assertEqual(number_of_containers, 1)
 
-    test_store = redis_store.RedisAttributeContainerStore()
-    test_store.Open(
-        redis_client=redis_client, session_identifier=task.session_identifier,
-        task_identifier=task.identifier)
+        finally:
+            test_store.Close()
 
-    try:
-      event_data_stream = events.EventDataStream()
+            self._RemoveSessionData(redis_client, session.identifier)
 
-      number_of_containers = test_store.GetNumberOfAttributeContainers(
-          event_data_stream.CONTAINER_TYPE)
-      self.assertEqual(number_of_containers, 0)
+    def testAddAttributeContainer(self):
+        """Tests the AddAttributeContainer method."""
+        redis_client = self._CreateRedisClient()
 
-      test_store._WriteNewAttributeContainer(event_data_stream)
+        session = sessions.Session()
+        task = tasks.Task(session_identifier=session.identifier)
 
-      number_of_containers = test_store.GetNumberOfAttributeContainers(
-          event_data_stream.CONTAINER_TYPE)
-      self.assertEqual(number_of_containers, 1)
+        test_store = redis_store.RedisAttributeContainerStore()
+        test_store.Open(
+            redis_client=redis_client,
+            session_identifier=task.session_identifier,
+            task_identifier=task.identifier,
+        )
 
-    finally:
-      test_store.Close()
+        try:
+            event_data_stream = events.EventDataStream()
 
-      self._RemoveSessionData(redis_client, session.identifier)
+            number_of_containers = test_store.GetNumberOfAttributeContainers(
+                event_data_stream.CONTAINER_TYPE
+            )
+            self.assertEqual(number_of_containers, 0)
 
-  def testAddAttributeContainer(self):
-    """Tests the AddAttributeContainer method."""
-    redis_client = self._CreateRedisClient()
+            test_store.AddAttributeContainer(event_data_stream)
 
-    session = sessions.Session()
-    task = tasks.Task(session_identifier=session.identifier)
+            number_of_containers = test_store.GetNumberOfAttributeContainers(
+                event_data_stream.CONTAINER_TYPE
+            )
+            self.assertEqual(number_of_containers, 1)
 
-    test_store = redis_store.RedisAttributeContainerStore()
-    test_store.Open(
-        redis_client=redis_client, session_identifier=task.session_identifier,
-        task_identifier=task.identifier)
+        finally:
+            test_store.Close()
 
-    try:
-      event_data_stream = events.EventDataStream()
+            self._RemoveSessionData(redis_client, session.identifier)
 
-      number_of_containers = test_store.GetNumberOfAttributeContainers(
-          event_data_stream.CONTAINER_TYPE)
-      self.assertEqual(number_of_containers, 0)
+        with self.assertRaises(OSError):
+            test_store.AddAttributeContainer(event_data_stream)
 
-      test_store.AddAttributeContainer(event_data_stream)
+    # TODO: add tests for _WriteStorageMetadata
 
-      number_of_containers = test_store.GetNumberOfAttributeContainers(
-          event_data_stream.CONTAINER_TYPE)
-      self.assertEqual(number_of_containers, 1)
+    def testGetAttributeContainerByIdentifier(self):
+        """Tests the GetAttributeContainerByIdentifier method."""
+        redis_client = self._CreateRedisClient()
 
-    finally:
-      test_store.Close()
+        session = sessions.Session()
+        task = tasks.Task(session_identifier=session.identifier)
 
-      self._RemoveSessionData(redis_client, session.identifier)
+        test_store = redis_store.RedisAttributeContainerStore()
+        test_store.Open(
+            redis_client=redis_client,
+            session_identifier=task.session_identifier,
+            task_identifier=task.identifier,
+        )
 
-    with self.assertRaises(OSError):
-      test_store.AddAttributeContainer(event_data_stream)
+        try:
+            event_data_stream = events.EventDataStream()
 
-  # TODO: add tests for _WriteStorageMetadata
+            test_store.AddAttributeContainer(event_data_stream)
+            identifier = event_data_stream.GetIdentifier()
 
-  def testGetAttributeContainerByIdentifier(self):
-    """Tests the GetAttributeContainerByIdentifier method."""
-    redis_client = self._CreateRedisClient()
+            container = test_store.GetAttributeContainerByIdentifier(
+                event_data_stream.CONTAINER_TYPE, identifier
+            )
+            self.assertIsNotNone(container)
 
-    session = sessions.Session()
-    task = tasks.Task(session_identifier=session.identifier)
+            identifier.sequence_number = 99
 
-    test_store = redis_store.RedisAttributeContainerStore()
-    test_store.Open(
-        redis_client=redis_client, session_identifier=task.session_identifier,
-        task_identifier=task.identifier)
+            container = test_store.GetAttributeContainerByIdentifier(
+                event_data_stream.CONTAINER_TYPE, identifier
+            )
+            self.assertIsNone(container)
 
-    try:
-      event_data_stream = events.EventDataStream()
+        finally:
+            test_store.Close()
 
-      test_store.AddAttributeContainer(event_data_stream)
-      identifier = event_data_stream.GetIdentifier()
+            self._RemoveSessionData(redis_client, session.identifier)
 
-      container = test_store.GetAttributeContainerByIdentifier(
-          event_data_stream.CONTAINER_TYPE, identifier)
-      self.assertIsNotNone(container)
+    def testGetAttributeContainerByIndex(self):
+        """Tests the GetAttributeContainerByIndex function."""
+        redis_client = self._CreateRedisClient()
 
-      identifier.sequence_number = 99
+        session = sessions.Session()
+        task = tasks.Task(session_identifier=session.identifier)
 
-      container = test_store.GetAttributeContainerByIdentifier(
-          event_data_stream.CONTAINER_TYPE, identifier)
-      self.assertIsNone(container)
+        test_store = redis_store.RedisAttributeContainerStore()
+        test_store.Open(
+            redis_client=redis_client,
+            session_identifier=task.session_identifier,
+            task_identifier=task.identifier,
+        )
 
-    finally:
-      test_store.Close()
+        try:
+            event_data_stream = events.EventDataStream()
 
-      self._RemoveSessionData(redis_client, session.identifier)
+            container = test_store.GetAttributeContainerByIndex(
+                event_data_stream.CONTAINER_TYPE, 0
+            )
+            self.assertIsNone(container)
 
-  def testGetAttributeContainerByIndex(self):
-    """Tests the GetAttributeContainerByIndex function."""
-    redis_client = self._CreateRedisClient()
+            test_store.AddAttributeContainer(event_data_stream)
 
-    session = sessions.Session()
-    task = tasks.Task(session_identifier=session.identifier)
+            container = test_store.GetAttributeContainerByIndex(
+                event_data_stream.CONTAINER_TYPE, 0
+            )
+            self.assertIsNotNone(container)
 
-    test_store = redis_store.RedisAttributeContainerStore()
-    test_store.Open(
-        redis_client=redis_client, session_identifier=task.session_identifier,
-        task_identifier=task.identifier)
+        finally:
+            test_store.Close()
 
-    try:
-      event_data_stream = events.EventDataStream()
+            self._RemoveSessionData(redis_client, session.identifier)
 
-      container = test_store.GetAttributeContainerByIndex(
-          event_data_stream.CONTAINER_TYPE, 0)
-      self.assertIsNone(container)
+    def testGetAttributeContainers(self):
+        """Tests the GetAttributeContainers method."""
+        redis_client = self._CreateRedisClient()
 
-      test_store.AddAttributeContainer(event_data_stream)
+        session = sessions.Session()
+        task = tasks.Task(session_identifier=session.identifier)
 
-      container = test_store.GetAttributeContainerByIndex(
-          event_data_stream.CONTAINER_TYPE, 0)
-      self.assertIsNotNone(container)
+        test_store = redis_store.RedisAttributeContainerStore()
+        test_store.Open(
+            redis_client=redis_client,
+            session_identifier=task.session_identifier,
+            task_identifier=task.identifier,
+        )
 
-    finally:
-      test_store.Close()
+        try:
+            event_data_stream = events.EventDataStream()
+            event_data_stream.md5_hash = "8f0bf95a7959baad9666b21a7feed79d"
 
-      self._RemoveSessionData(redis_client, session.identifier)
+            containers = list(
+                test_store.GetAttributeContainers(event_data_stream.CONTAINER_TYPE)
+            )
+            self.assertEqual(len(containers), 0)
 
-  def testGetAttributeContainers(self):
-    """Tests the GetAttributeContainers method."""
-    redis_client = self._CreateRedisClient()
+            test_store.AddAttributeContainer(event_data_stream)
 
-    session = sessions.Session()
-    task = tasks.Task(session_identifier=session.identifier)
+            containers = list(
+                test_store.GetAttributeContainers(event_data_stream.CONTAINER_TYPE)
+            )
+            self.assertEqual(len(containers), 1)
 
-    test_store = redis_store.RedisAttributeContainerStore()
-    test_store.Open(
-        redis_client=redis_client, session_identifier=task.session_identifier,
-        task_identifier=task.identifier)
+            filter_expression = 'md5_hash == "8f0bf95a7959baad9666b21a7feed79d"'
+            containers = list(
+                test_store.GetAttributeContainers(
+                    event_data_stream.CONTAINER_TYPE,
+                    filter_expression=filter_expression,
+                )
+            )
+            self.assertEqual(len(containers), 1)
 
-    try:
-      event_data_stream = events.EventDataStream()
-      event_data_stream.md5_hash = '8f0bf95a7959baad9666b21a7feed79d'
+            filter_expression = 'md5_hash != "8f0bf95a7959baad9666b21a7feed79d"'
+            containers = list(
+                test_store.GetAttributeContainers(
+                    event_data_stream.CONTAINER_TYPE,
+                    filter_expression=filter_expression,
+                )
+            )
+            self.assertEqual(len(containers), 0)
 
-      containers = list(test_store.GetAttributeContainers(
-          event_data_stream.CONTAINER_TYPE))
-      self.assertEqual(len(containers), 0)
+        finally:
+            test_store.Close()
 
-      test_store.AddAttributeContainer(event_data_stream)
+            self._RemoveSessionData(redis_client, session.identifier)
 
-      containers = list(test_store.GetAttributeContainers(
-          event_data_stream.CONTAINER_TYPE))
-      self.assertEqual(len(containers), 1)
+    def testGetNumberOfAttributeContainers(self):
+        """Tests the GetNumberOfAttributeContainers function."""
+        redis_client = self._CreateRedisClient()
 
-      filter_expression = 'md5_hash == "8f0bf95a7959baad9666b21a7feed79d"'
-      containers = list(test_store.GetAttributeContainers(
-          event_data_stream.CONTAINER_TYPE,
-          filter_expression=filter_expression))
-      self.assertEqual(len(containers), 1)
+        session = sessions.Session()
+        task = tasks.Task(session_identifier=session.identifier)
 
-      filter_expression = 'md5_hash != "8f0bf95a7959baad9666b21a7feed79d"'
-      containers = list(test_store.GetAttributeContainers(
-         event_data_stream.CONTAINER_TYPE,
-         filter_expression=filter_expression))
-      self.assertEqual(len(containers), 0)
+        test_store = redis_store.RedisAttributeContainerStore()
+        test_store.Open(
+            redis_client=redis_client,
+            session_identifier=task.session_identifier,
+            task_identifier=task.identifier,
+        )
 
-    finally:
-      test_store.Close()
+        try:
+            event_data_stream = events.EventDataStream()
 
-      self._RemoveSessionData(redis_client, session.identifier)
+            number_of_containers = test_store.GetNumberOfAttributeContainers(
+                event_data_stream.CONTAINER_TYPE
+            )
+            self.assertEqual(number_of_containers, 0)
 
-  def testGetNumberOfAttributeContainers(self):
-    """Tests the GetNumberOfAttributeContainers function."""
-    redis_client = self._CreateRedisClient()
+            test_store.AddAttributeContainer(event_data_stream)
 
-    session = sessions.Session()
-    task = tasks.Task(session_identifier=session.identifier)
+            number_of_containers = test_store.GetNumberOfAttributeContainers(
+                event_data_stream.CONTAINER_TYPE
+            )
+            self.assertEqual(number_of_containers, 1)
 
-    test_store = redis_store.RedisAttributeContainerStore()
-    test_store.Open(
-        redis_client=redis_client, session_identifier=task.session_identifier,
-        task_identifier=task.identifier)
+        finally:
+            test_store.Close()
 
-    try:
-      event_data_stream = events.EventDataStream()
+            self._RemoveSessionData(redis_client, session.identifier)
 
-      number_of_containers = test_store.GetNumberOfAttributeContainers(
-          event_data_stream.CONTAINER_TYPE)
-      self.assertEqual(number_of_containers, 0)
+    def testGetSortedEvents(self):
+        """Tests the GetSortedEvents method."""
+        redis_client = self._CreateRedisClient()
 
-      test_store.AddAttributeContainer(event_data_stream)
+        session = sessions.Session()
+        task = tasks.Task(session_identifier=session.identifier)
 
-      number_of_containers = test_store.GetNumberOfAttributeContainers(
-          event_data_stream.CONTAINER_TYPE)
-      self.assertEqual(number_of_containers, 1)
+        test_store = redis_store.RedisAttributeContainerStore()
+        test_store.Open(
+            redis_client=redis_client,
+            session_identifier=task.session_identifier,
+            task_identifier=task.identifier,
+        )
 
-    finally:
-      test_store.Close()
+        try:
+            for event, _, _ in containers_test_lib.CreateEventsFromValues(
+                self._TEST_EVENTS
+            ):
+                test_store.AddAttributeContainer(event)
 
-      self._RemoveSessionData(redis_client, session.identifier)
+            retrieved_events = list(test_store.GetSortedEvents())
+            self.assertEqual(len(retrieved_events), 4)
 
-  def testGetSortedEvents(self):
-    """Tests the GetSortedEvents method."""
-    redis_client = self._CreateRedisClient()
+        finally:
+            test_store.Close()
 
-    session = sessions.Session()
-    task = tasks.Task(session_identifier=session.identifier)
+            self._RemoveSessionData(redis_client, session.identifier)
 
-    test_store = redis_store.RedisAttributeContainerStore()
-    test_store.Open(
-        redis_client=redis_client, session_identifier=task.session_identifier,
-        task_identifier=task.identifier)
+    def testHasAttributeContainers(self):
+        """Tests the HasAttributeContainers method."""
+        redis_client = self._CreateRedisClient()
 
-    try:
-      for event, _, _ in containers_test_lib.CreateEventsFromValues(
-          self._TEST_EVENTS):
-        test_store.AddAttributeContainer(event)
+        session = sessions.Session()
+        task = tasks.Task(session_identifier=session.identifier)
 
-      retrieved_events = list(test_store.GetSortedEvents())
-      self.assertEqual(len(retrieved_events), 4)
+        test_store = redis_store.RedisAttributeContainerStore()
+        test_store.Open(
+            redis_client=redis_client,
+            session_identifier=task.session_identifier,
+            task_identifier=task.identifier,
+        )
 
-    finally:
-      test_store.Close()
+        try:
+            event_data_stream = events.EventDataStream()
 
-      self._RemoveSessionData(redis_client, session.identifier)
+            result = test_store.HasAttributeContainers(event_data_stream.CONTAINER_TYPE)
+            self.assertFalse(result)
 
-  def testHasAttributeContainers(self):
-    """Tests the HasAttributeContainers method."""
-    redis_client = self._CreateRedisClient()
+            test_store.AddAttributeContainer(event_data_stream)
 
-    session = sessions.Session()
-    task = tasks.Task(session_identifier=session.identifier)
+            result = test_store.HasAttributeContainers(event_data_stream.CONTAINER_TYPE)
+            self.assertTrue(result)
 
-    test_store = redis_store.RedisAttributeContainerStore()
-    test_store.Open(
-        redis_client=redis_client, session_identifier=task.session_identifier,
-        task_identifier=task.identifier)
+        finally:
+            test_store.Close()
 
-    try:
-      event_data_stream = events.EventDataStream()
+            self._RemoveSessionData(redis_client, session.identifier)
 
-      result = test_store.HasAttributeContainers(
-          event_data_stream.CONTAINER_TYPE)
-      self.assertFalse(result)
+    # TODO: add tests for Open and Close
 
-      test_store.AddAttributeContainer(event_data_stream)
+    def testUpdateAttributeContainer(self):
+        """Tests the UpdateAttributeContainer function."""
+        redis_client = self._CreateRedisClient()
 
-      result = test_store.HasAttributeContainers(
-          event_data_stream.CONTAINER_TYPE)
-      self.assertTrue(result)
+        session = sessions.Session()
+        task = tasks.Task(session_identifier=session.identifier)
 
-    finally:
-      test_store.Close()
+        test_store = redis_store.RedisAttributeContainerStore()
+        test_store.Open(
+            redis_client=redis_client,
+            session_identifier=task.session_identifier,
+            task_identifier=task.identifier,
+        )
 
-      self._RemoveSessionData(redis_client, session.identifier)
+        try:
+            event_data_stream = events.EventDataStream()
 
-  # TODO: add tests for Open and Close
+            number_of_containers = test_store.GetNumberOfAttributeContainers(
+                event_data_stream.CONTAINER_TYPE
+            )
+            self.assertEqual(number_of_containers, 0)
 
-  def testUpdateAttributeContainer(self):
-    """Tests the UpdateAttributeContainer function."""
-    redis_client = self._CreateRedisClient()
+            test_store.AddAttributeContainer(event_data_stream)
 
-    session = sessions.Session()
-    task = tasks.Task(session_identifier=session.identifier)
+            number_of_containers = test_store.GetNumberOfAttributeContainers(
+                event_data_stream.CONTAINER_TYPE
+            )
+            self.assertEqual(number_of_containers, 1)
 
-    test_store = redis_store.RedisAttributeContainerStore()
-    test_store.Open(
-        redis_client=redis_client, session_identifier=task.session_identifier,
-        task_identifier=task.identifier)
+            test_store.UpdateAttributeContainer(event_data_stream)
 
-    try:
-      event_data_stream = events.EventDataStream()
+            number_of_containers = test_store.GetNumberOfAttributeContainers(
+                event_data_stream.CONTAINER_TYPE
+            )
+            self.assertEqual(number_of_containers, 1)
 
-      number_of_containers = test_store.GetNumberOfAttributeContainers(
-          event_data_stream.CONTAINER_TYPE)
-      self.assertEqual(number_of_containers, 0)
+        finally:
+            test_store.Close()
 
-      test_store.AddAttributeContainer(event_data_stream)
+            self._RemoveSessionData(redis_client, session.identifier)
 
-      number_of_containers = test_store.GetNumberOfAttributeContainers(
-          event_data_stream.CONTAINER_TYPE)
-      self.assertEqual(number_of_containers, 1)
 
-      test_store.UpdateAttributeContainer(event_data_stream)
-
-      number_of_containers = test_store.GetNumberOfAttributeContainers(
-          event_data_stream.CONTAINER_TYPE)
-      self.assertEqual(number_of_containers, 1)
-
-    finally:
-      test_store.Close()
-
-      self._RemoveSessionData(redis_client, session.identifier)
-
-
-if __name__ == '__main__':
-  unittest.main()
+if __name__ == "__main__":
+    unittest.main()

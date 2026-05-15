@@ -13,77 +13,92 @@ from tests.parsers.winreg_plugins import test_lib
 
 
 class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
-  """Tests for the Outlook Search MRU Windows Registry plugin."""
+    """Tests for the Outlook Search MRU Windows Registry plugin."""
 
-  def _CreateTestKey(self):
-    """Creates Registry keys and values for testing.
+    def _CreateTestKey(self):
+        """Creates Registry keys and values for testing.
 
-    Returns:
-      dfwinreg.WinRegistryKey: a Windows Registry key.
-    """
-    filetime = dfdatetime_filetime.Filetime()
-    filetime.CopyFromDateTimeString('2012-08-28 09:23:49.002031')
-    registry_key = dfwinreg_fake.FakeWinRegistryKey(
-        'Search', key_path_prefix='HKEY_CURRENT_USER',
-        last_written_time=filetime.timestamp, offset=1456, relative_key_path=(
-            'Software\\Microsoft\\Office\\15.0\\Outlook\\Search'))
+        Returns:
+          dfwinreg.WinRegistryKey: a Windows Registry key.
+        """
+        filetime = dfdatetime_filetime.Filetime()
+        filetime.CopyFromDateTimeString("2012-08-28 09:23:49.002031")
+        registry_key = dfwinreg_fake.FakeWinRegistryKey(
+            "Search",
+            key_path_prefix="HKEY_CURRENT_USER",
+            last_written_time=filetime.timestamp,
+            offset=1456,
+            relative_key_path=("Software\\Microsoft\\Office\\15.0\\Outlook\\Search"),
+        )
 
-    value_name = (
-        'C:\\Users\\username\\AppData\\Local\\Microsoft\\Outlook\\'
-        'username@example.com.ost')
-    value_data = b'\xcf\x2b\x37\x00'
-    registry_value = dfwinreg_fake.FakeWinRegistryValue(
-        value_name, data=value_data, data_type=dfwinreg_definitions.REG_DWORD,
-        offset=1892)
-    registry_key.AddValue(registry_value)
+        value_name = (
+            "C:\\Users\\username\\AppData\\Local\\Microsoft\\Outlook\\"
+            "username@example.com.ost"
+        )
+        value_data = b"\xcf\x2b\x37\x00"
+        registry_value = dfwinreg_fake.FakeWinRegistryValue(
+            value_name,
+            data=value_data,
+            data_type=dfwinreg_definitions.REG_DWORD,
+            offset=1892,
+        )
+        registry_key.AddValue(registry_value)
 
-    return registry_key
+        return registry_key
 
-  def testFilters(self):
-    """Tests the FILTERS class attribute."""
-    plugin = outlook.OutlookSearchMRUPlugin()
+    def testFilters(self):
+        """Tests the FILTERS class attribute."""
+        plugin = outlook.OutlookSearchMRUPlugin()
 
-    self._AssertFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
-        'Software\\Microsoft\\Office\\14.0\\Outlook\\Search'))
+        self._AssertFiltersOnKeyPath(
+            plugin,
+            "HKEY_CURRENT_USER",
+            ("Software\\Microsoft\\Office\\14.0\\Outlook\\Search"),
+        )
 
-    self._AssertFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', (
-        'Software\\Microsoft\\Office\\15.0\\Outlook\\Search'))
+        self._AssertFiltersOnKeyPath(
+            plugin,
+            "HKEY_CURRENT_USER",
+            ("Software\\Microsoft\\Office\\15.0\\Outlook\\Search"),
+        )
 
-    self._AssertNotFiltersOnKeyPath(plugin, 'HKEY_CURRENT_USER', 'Bogus')
+        self._AssertNotFiltersOnKeyPath(plugin, "HKEY_CURRENT_USER", "Bogus")
 
-  def testProcess(self):
-    """Tests the Process function."""
-    registry_key = self._CreateTestKey()
+    def testProcess(self):
+        """Tests the Process function."""
+        registry_key = self._CreateTestKey()
 
-    plugin = outlook.OutlookSearchMRUPlugin()
-    storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
+        plugin = outlook.OutlookSearchMRUPlugin()
+        storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
-    number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
-        'event_data')
-    self.assertEqual(number_of_event_data, 1)
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 1)
 
-    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-        'extraction_warning')
-    self.assertEqual(number_of_warnings, 0)
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
 
-    number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-        'recovery_warning')
-    self.assertEqual(number_of_warnings, 0)
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "recovery_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
 
-    expected_key_path = (
-        'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\15.0\\Outlook\\'
-        'Search')
-
-    expected_event_values = {
-        'data_type': 'windows:registry:outlook_search_mru',
-        'entries': (
-            'C:\\Users\\username\\AppData\\Local\\Microsoft\\Outlook\\'
-            'username@example.com.ost: 0x00372bcf'),
-        'key_path': expected_key_path,
-        'last_written_time': '2012-08-28T09:23:49.0020310+00:00'}
-
-    event_data = storage_writer.GetAttributeContainerByIndex('event_data', 0)
-    self.CheckEventData(event_data, expected_event_values)
+        expected_event_values = {
+            "data_type": "windows:registry:outlook_search_mru",
+            "entries": (
+                "C:\\Users\\username\\AppData\\Local\\Microsoft\\Outlook\\"
+                "username@example.com.ost: 0x00372bcf"
+            ),
+            "key_path": (
+                "HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\15.0\\Outlook\\Search"
+            ),
+            "last_written_time": "2012-08-28T09:23:49.0020310+00:00",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
 
 
 # TODO: The catalog for Office 2013 (15.0) contains binary values not
@@ -121,5 +136,5 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
 #     # TODO: add test for Catalog key.
 
 
-if __name__ == '__main__':
-  unittest.main()
+if __name__ == "__main__":
+    unittest.main()

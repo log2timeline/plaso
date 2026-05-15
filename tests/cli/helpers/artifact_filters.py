@@ -12,14 +12,14 @@ from tests.cli import test_lib as cli_test_lib
 
 
 class ArtifactFiltersArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
-  """Tests for the filter file CLI arguments helper."""
+    """Tests for the filter file CLI arguments helper."""
 
-  # pylint: disable=no-member,protected-access
+    # pylint: disable=no-member,protected-access
 
-  _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
+    _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
 
-  if _PYTHON3_13_OR_LATER:
-    _EXPECTED_OUTPUT = f"""\
+    if _PYTHON3_13_OR_LATER:
+        _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--artifact_filters ARTIFACT_FILTERS]
                      [--artifact_filters_file PATH]
 
@@ -48,8 +48,8 @@ Test argument parser.
                         keys.
 """
 
-  else:
-    _EXPECTED_OUTPUT = f"""\
+    else:
+        _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--artifact_filters ARTIFACT_FILTERS]
                      [--artifact_filters_file PATH]
 
@@ -78,52 +78,51 @@ Test argument parser.
                         keys.
 """
 
-  def testAddArguments(self):
-    """Tests the AddArguments function."""
-    argument_parser = self._GetTestArgumentParser('cli_helper.py')
+    def testAddArguments(self):
+        """Tests the AddArguments function."""
+        argument_parser = self._GetTestArgumentParser("cli_helper.py")
 
-    artifact_filters.ArtifactFiltersArgumentsHelper.AddArguments(
-        argument_parser)
+        artifact_filters.ArtifactFiltersArgumentsHelper.AddArguments(argument_parser)
 
-    output = self._RunArgparseFormatHelp(argument_parser)
-    self.assertEqual(output, self._EXPECTED_OUTPUT)
+        output = self._RunArgparseFormatHelp(argument_parser)
+        self.assertEqual(output, self._EXPECTED_OUTPUT)
 
-  def testParseOptions(self):
-    """Tests the ParseOptions function."""
-    options = cli_test_lib.TestOptions()
-    options.artifact_filter_string = 'TestFiles, TestFiles2'
-    expected_output = ['TestFiles', 'TestFiles2']
+    def testParseOptions(self):
+        """Tests the ParseOptions function."""
+        options = cli_test_lib.TestOptions()
+        options.artifact_filter_string = "TestFiles, TestFiles2"
+        expected_output = ["TestFiles", "TestFiles2"]
 
-    test_tool = tools.CLITool()
-    artifact_filters.ArtifactFiltersArgumentsHelper.ParseOptions(
-        options, test_tool)
+        test_tool = tools.CLITool()
+        artifact_filters.ArtifactFiltersArgumentsHelper.ParseOptions(options, test_tool)
 
-    self.assertEqual(test_tool._artifact_filters, expected_output)
+        self.assertEqual(test_tool._artifact_filters, expected_output)
 
-    options.artifact_filters_file = self._GetTestFilePath(
-        ['artifacts', 'artifact_names'])
+        options.artifact_filters_file = self._GetTestFilePath(
+            ["artifacts", "artifact_names"]
+        )
 
-    with self.assertRaises(errors.BadConfigOption):
-      artifact_filters.ArtifactFiltersArgumentsHelper.ParseOptions(
-          options, test_tool)
+        with self.assertRaises(errors.BadConfigOption):
+            artifact_filters.ArtifactFiltersArgumentsHelper.ParseOptions(
+                options, test_tool
+            )
 
-    expected_output = ['TestFiles', 'TestFiles2', 'TestFiles3']
+        expected_output = ["TestFiles", "TestFiles2", "TestFiles3"]
 
-    options.artifact_filter_string = None
-    artifact_filters.ArtifactFiltersArgumentsHelper.ParseOptions(
-        options, test_tool)
+        options.artifact_filter_string = None
+        artifact_filters.ArtifactFiltersArgumentsHelper.ParseOptions(options, test_tool)
 
-    self.assertEqual(test_tool._artifact_filters, expected_output)
+        self.assertEqual(test_tool._artifact_filters, expected_output)
 
-    options.file_filter = self._GetTestFilePath(['testdir', 'filter2.txt'])
-    with self.assertRaises(errors.BadConfigOption):
-      artifact_filters.ArtifactFiltersArgumentsHelper.ParseOptions(
-          options, test_tool)
+        options.file_filter = self._GetTestFilePath(["testdir", "filter2.txt"])
+        with self.assertRaises(errors.BadConfigOption):
+            artifact_filters.ArtifactFiltersArgumentsHelper.ParseOptions(
+                options, test_tool
+            )
 
-    with self.assertRaises(errors.BadConfigObject):
-      artifact_filters.ArtifactFiltersArgumentsHelper.ParseOptions(
-          options, None)
+        with self.assertRaises(errors.BadConfigObject):
+            artifact_filters.ArtifactFiltersArgumentsHelper.ParseOptions(options, None)
 
 
-if __name__ == '__main__':
-  unittest.main()
+if __name__ == "__main__":
+    unittest.main()

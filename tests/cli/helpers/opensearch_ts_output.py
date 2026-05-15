@@ -15,15 +15,16 @@ from tests.cli.helpers import test_lib
 
 
 class OpenSearchTimesketchOutputArgumentsHelperTest(
-    test_lib.OutputModuleArgumentsHelperTest):
-  """Tests the OpenSearch Timesketch output module CLI arguments helper."""
+    test_lib.OutputModuleArgumentsHelperTest
+):
+    """Tests the OpenSearch Timesketch output module CLI arguments helper."""
 
-  # pylint: disable=no-member,protected-access
+    # pylint: disable=no-member,protected-access
 
-  _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
+    _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
 
-  if _PYTHON3_13_OR_LATER:
-    _EXPECTED_OUTPUT = f"""\
+    if _PYTHON3_13_OR_LATER:
+        _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--index_name NAME] [--flush_interval INTERVAL]
                      [--opensearch-server HOSTNAME] [--opensearch-port PORT]
                      [--opensearch-user USERNAME]
@@ -65,8 +66,8 @@ Test argument parser.
   --use_ssl, --use-ssl  Enforces use of SSL/TLS.
 """
 
-  else:
-    _EXPECTED_OUTPUT = f"""\
+    else:
+        _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--index_name NAME] [--flush_interval INTERVAL]
                      [--opensearch-server HOSTNAME] [--opensearch-port PORT]
                      [--opensearch-user USERNAME]
@@ -108,34 +109,38 @@ Test argument parser.
   --use_ssl, --use-ssl  Enforces use of SSL/TLS.
 """
 
-  def testAddArguments(self):
-    """Tests the AddArguments function."""
-    argument_parser = self._GetTestArgumentParser('cli_helper.py')
+    def testAddArguments(self):
+        """Tests the AddArguments function."""
+        argument_parser = self._GetTestArgumentParser("cli_helper.py")
 
-    opensearch_ts_output.OpenSearchTimesketchOutputArgumentsHelper.AddArguments(
-        argument_parser)
+        opensearch_ts_output.OpenSearchTimesketchOutputArgumentsHelper.AddArguments(
+            argument_parser
+        )
 
-    output = self._RunArgparseFormatHelp(argument_parser)
-    self.assertEqual(output, self._EXPECTED_OUTPUT)
+        output = self._RunArgparseFormatHelp(argument_parser)
+        self.assertEqual(output, self._EXPECTED_OUTPUT)
 
-  def testParseOptions(self):
-    """Tests the ParseOptions function."""
-    options = cli_test_lib.TestOptions()
+    def testParseOptions(self):
+        """Tests the ParseOptions function."""
+        options = cli_test_lib.TestOptions()
 
-    output_module = opensearch_ts.OpenSearchTimesketchOutputModule()
+        output_module = opensearch_ts.OpenSearchTimesketchOutputModule()
 
-    # The mappings file is /etc/timesketch/plaso.mappings by default which
-    # does not exist on the CI test environment.
-    with self.assertRaises(errors.BadConfigObject):
-      arguments_helper = (
-          opensearch_ts_output.OpenSearchTimesketchOutputArgumentsHelper)
-      arguments_helper.ParseOptions(options, None)
+        # The mappings file is /etc/timesketch/plaso.mappings by default which
+        # does not exist on the CI test environment.
+        with self.assertRaises(errors.BadConfigObject):
+            arguments_helper = (
+                opensearch_ts_output.OpenSearchTimesketchOutputArgumentsHelper
+            )
+            arguments_helper.ParseOptions(options, None)
 
-    options.opensearch_mappings = os.path.join(
-        shared_test_lib.DATA_PATH, 'opensearch.mappings')
-    opensearch_ts_output.OpenSearchTimesketchOutputArgumentsHelper.ParseOptions(
-        options, output_module)
+        options.opensearch_mappings = os.path.join(
+            shared_test_lib.DATA_PATH, "opensearch.mappings"
+        )
+        opensearch_ts_output.OpenSearchTimesketchOutputArgumentsHelper.ParseOptions(
+            options, output_module
+        )
 
 
-if __name__ == '__main__':
-  unittest.main()
+if __name__ == "__main__":
+    unittest.main()

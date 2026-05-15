@@ -9,34 +9,32 @@ from tests import test_lib as shared_test_lib
 
 
 class EventSourceTest(shared_test_lib.BaseTestCase):
-  """Tests for the event source attribute container."""
+    """Tests for the event source attribute container."""
 
-  def testGetAttributeNames(self):
-    """Tests the GetAttributeNames function."""
-    attribute_container = event_sources.EventSource()
+    def testGetAttributeNames(self):
+        """Tests the GetAttributeNames function."""
+        attribute_container = event_sources.EventSource()
 
-    expected_attribute_names = [
-        'data_type', 'file_entry_type', 'path_spec']
+        expected_attribute_names = ["data_type", "file_entry_type", "path_spec"]
 
-    attribute_names = sorted(attribute_container.GetAttributeNames())
+        attribute_names = sorted(attribute_container.GetAttributeNames())
 
-    self.assertEqual(attribute_names, expected_attribute_names)
+        self.assertEqual(attribute_names, expected_attribute_names)
 
 
 class FileEntryEventSourceTest(shared_test_lib.BaseTestCase):
-  """Tests for the file entry event source attribute container."""
+    """Tests for the file entry event source attribute container."""
 
-  def testGetAttributeNames(self):
-    """Tests the GetAttributeNames function."""
-    attribute_container = event_sources.FileEntryEventSource()
+    def testGetAttributeNames(self):
+        """Tests the GetAttributeNames function."""
+        attribute_container = event_sources.FileEntryEventSource()
 
-    expected_attribute_names = [
-        'data_type', 'file_entry_type', 'path_spec']
+        expected_attribute_names = ["data_type", "file_entry_type", "path_spec"]
 
-    attribute_names = sorted(attribute_container.GetAttributeNames())
+        attribute_names = sorted(attribute_container.GetAttributeNames())
 
-    self.assertEqual(attribute_names, expected_attribute_names)
+        self.assertEqual(attribute_names, expected_attribute_names)
 
 
-if __name__ == '__main__':
-  unittest.main()
+if __name__ == "__main__":
+    unittest.main()

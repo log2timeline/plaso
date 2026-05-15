@@ -22,89 +22,92 @@ from plaso.lib import errors
 
 
 def Main():
-  """Entry point of console script to extract and output events.
+    """Entry point of console script to extract and output events.
 
-  Returns:
-    int: exit code that is provided to sys.exit().
-  """
-  tool = psteal_tool.PstealTool()
+    Returns:
+      int: exit code that is provided to sys.exit().
+    """
+    tool = psteal_tool.PstealTool()
 
-  if not tool.ParseArguments(sys.argv[1:]):
-    return 1
+    if not tool.ParseArguments(sys.argv[1:]):
+        return 1
 
-  if tool.show_troubleshooting:
-    path = os.path.abspath(__file__)
+    if tool.show_troubleshooting:
+        path = os.path.abspath(__file__)
 
-    print(f'Using Python version {sys.version!s}')
-    print()
-    print(f'Path: {path!s}')
-    print()
-    print(tool.GetVersionInformation())
-    print()
-    dependencies.CheckDependencies(verbose_output=True)
+        print(f"Using Python version {sys.version!s}")
+        print()
+        print(f"Path: {path!s}")
+        print()
+        print(tool.GetVersionInformation())
+        print()
+        dependencies.CheckDependencies(verbose_output=True)
 
-    print('Also see: https://plaso.readthedocs.io/en/latest/sources/user/'
-          'Troubleshooting.html')
+        print(
+            "Also see: https://plaso.readthedocs.io/en/latest/sources/user/"
+            "Troubleshooting.html"
+        )
+        return 0
+
+    try:
+        tool.CheckOutDated()
+    except KeyboardInterrupt:
+        return 1
+
+    have_list_option = False
+    if tool.list_archive_types:
+        tool.ListArchiveTypes()
+        have_list_option = True
+
+    if tool.list_hashers:
+        tool.ListHashers()
+        have_list_option = True
+
+    if tool.list_language_tags:
+        tool.ListLanguageTags()
+        have_list_option = True
+
+    if tool.list_output_modules:
+        tool.ListOutputModules()
+        have_list_option = True
+
+    if tool.list_parsers_and_plugins:
+        tool.ListParsersAndPlugins()
+        have_list_option = True
+
+    if tool.list_time_zones:
+        tool.ListTimeZones()
+        have_list_option = True
+
+    if have_list_option:
+        return 0
+
+    if tool.dependencies_check and not dependencies.CheckDependencies(
+        verbose_output=False
+    ):
+        return 1
+
+    try:
+        tool.ExtractEventsFromSources()
+        tool.ProcessStorage()
+
+    # Writing to stdout and stderr will raise BrokenPipeError if it
+    # receives a SIGPIPE.
+    except BrokenPipeError:
+        pass
+
+    except (KeyboardInterrupt, errors.UserAbort):
+        logging.warning("Aborted by user.")
+        return 1
+
+    except errors.SourceScannerError as exception:
+        logging.warning(exception)
+        return 1
+
     return 0
 
-  try:
-    tool.CheckOutDated()
-  except KeyboardInterrupt:
-    return 1
 
-  have_list_option = False
-  if tool.list_archive_types:
-    tool.ListArchiveTypes()
-    have_list_option = True
+if __name__ == "__main__":
+    multiprocessing.freeze_support()
 
-  if tool.list_hashers:
-    tool.ListHashers()
-    have_list_option = True
-
-  if tool.list_language_tags:
-    tool.ListLanguageTags()
-    have_list_option = True
-
-  if tool.list_output_modules:
-    tool.ListOutputModules()
-    have_list_option = True
-
-  if tool.list_parsers_and_plugins:
-    tool.ListParsersAndPlugins()
-    have_list_option = True
-
-  if tool.list_time_zones:
-    tool.ListTimeZones()
-    have_list_option = True
-
-  if have_list_option:
-    return 0
-
-  if tool.dependencies_check and not dependencies.CheckDependencies(
-      verbose_output=False):
-    return 1
-
-  try:
-    tool.ExtractEventsFromSources()
-    tool.ProcessStorage()
-
-  # Writing to stdout and stderr will raise BrokenPipeError if it
-  # receives a SIGPIPE.
-  except BrokenPipeError:
-    pass
-
-  except (KeyboardInterrupt, errors.UserAbort):
-    logging.warning('Aborted by user.')
-    return 1
-
-  except errors.SourceScannerError as exception:
-    logging.warning(exception)
-    return 1
-
-  return 0
-
-
-if __name__ == '__main__':
-  multiprocessing.freeze_support()
-
-  sys.exit(Main())
+    sys.exit(Main())

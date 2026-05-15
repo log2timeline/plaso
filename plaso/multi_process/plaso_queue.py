@@ -12,45 +12,45 @@ import abc
 
 
 class QueueAbort:
-  """Class that implements a queue abort."""
+    """Class that implements a queue abort."""
 
 
 class Queue:
-  """Class that implements the queue interface."""
+    """Class that implements the queue interface."""
 
-  @abc.abstractmethod
-  def IsEmpty(self):
-    """Determines if the queue is empty."""
+    @abc.abstractmethod
+    def IsEmpty(self):
+        """Determines if the queue is empty."""
 
-  @abc.abstractmethod
-  def PushItem(self, item, block=True):
-    """Pushes an item onto the queue.
+    @abc.abstractmethod
+    def PushItem(self, item, block=True):
+        """Pushes an item onto the queue.
 
-    Args:
-      item (object): item to add.
-      block (bool): whether to block if the queue is full.
+        Args:
+          item (object): item to add.
+          block (bool): whether to block if the queue is full.
 
-    Raises:
-      QueueFull: if the queue is full, and the item could not be added.
-    """
+        Raises:
+          QueueFull: if the queue is full, and the item could not be added.
+        """
 
-  @abc.abstractmethod
-  def PopItem(self):
-    """Pops an item off the queue.
+    @abc.abstractmethod
+    def PopItem(self):
+        """Pops an item off the queue.
 
-    Raises:
-      QueueEmpty: when the queue is empty.
-    """
+        Raises:
+          QueueEmpty: when the queue is empty.
+        """
 
-  @abc.abstractmethod
-  def Close(self, abort=False):
-    """Closes the queue.
+    @abc.abstractmethod
+    def Close(self, abort=False):
+        """Closes the queue.
 
-    Args:
-      abort (Optional[bool]): whether the Close is the result of an abort
-          condition. If True, queue contents may be lost.
-    """
+        Args:
+          abort (Optional[bool]): whether the Close is the result of an abort
+              condition. If True, queue contents may be lost.
+        """
 
-  @abc.abstractmethod
-  def Open(self):
-    """Opens the queue, ready to enqueue or dequeue items."""
+    @abc.abstractmethod
+    def Open(self):
+        """Opens the queue, ready to enqueue or dequeue items."""

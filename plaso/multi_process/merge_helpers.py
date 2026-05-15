@@ -9,117 +9,119 @@ from plaso.containers import warnings
 
 
 class BaseTaskMergeHelper:
-  """Interface of heler for merging task related attribute containers.
+    """Interface of heler for merging task related attribute containers.
 
-  Attributes:
-    task_identifier (str): identifier of the task that is merged.
-  """
-
-  _CONTAINER_TYPES = ()
-
-  def __init__(self, task_storage_reader, task_identifier):
-    """Initialize a helper for merging task related attribute containers.
-
-    Args:
-      task_storage_reader (StorageReader): task storage reader.
+    Attributes:
       task_identifier (str): identifier of the task that is merged.
     """
-    super().__init__()
-    self._container_identifier_mappings = {}
-    self._generator = self._GetAttributeContainers(task_storage_reader)
-    self._task_storage_reader = task_storage_reader
 
-    self.fully_merged = False
-    self.task_identifier = task_identifier
+    _CONTAINER_TYPES = ()
 
-  def _GetAttributeContainers(self, task_storage_reader):
-    """Retrieves attribute containers to merge.
+    def __init__(self, task_storage_reader, task_identifier):
+        """Initialize a helper for merging task related attribute containers.
 
-    Args:
-      task_storage_reader (StorageReader): task storage reader.
+        Args:
+          task_storage_reader (StorageReader): task storage reader.
+          task_identifier (str): identifier of the task that is merged.
+        """
+        super().__init__()
+        self._container_identifier_mappings = {}
+        self._generator = self._GetAttributeContainers(task_storage_reader)
+        self._task_storage_reader = task_storage_reader
 
-    Yields:
-      AttributeContainer: attribute container.
-    """
-    for container_type in self._CONTAINER_TYPES:
-      yield from task_storage_reader.GetAttributeContainers(container_type)
+        self.fully_merged = False
+        self.task_identifier = task_identifier
 
-    self.fully_merged = True
+    def _GetAttributeContainers(self, task_storage_reader):
+        """Retrieves attribute containers to merge.
 
-  def Close(self):
-    """Closes the task storage reader."""
-    self._task_storage_reader.Close()
-    self._task_storage_reader = None
+        Args:
+          task_storage_reader (StorageReader): task storage reader.
 
-  def GetAttributeContainer(self):
-    """Retrieves an attribute container to merge.
+        Yields:
+          AttributeContainer: attribute container.
+        """
+        for container_type in self._CONTAINER_TYPES:
+            yield from task_storage_reader.GetAttributeContainers(container_type)
 
-    Returns:
-      AttributeContainer: attribute container or None if not available.
-    """
-    try:
-      container = next(self._generator)
-    except StopIteration:
-      container = None
+        self.fully_merged = True
 
-    return container
+    def Close(self):
+        """Closes the task storage reader."""
+        self._task_storage_reader.Close()
+        self._task_storage_reader = None
 
-  def GetAttributeContainerIdentifier(self, lookup_key):
-    """Retrieves an attribute container.
+    def GetAttributeContainer(self):
+        """Retrieves an attribute container to merge.
 
-    Args:
-      lookup_key (str): lookup key that identifies the attribute container.
+        Returns:
+          AttributeContainer: attribute container or None if not available.
+        """
+        try:
+            container = next(self._generator)
+        except StopIteration:
+            container = None
 
-    Returns:
-      AttributeContainerIdentifier: attribute container identifier that maps
-          to the lookup key or None if not available.
-    """
-    return self._container_identifier_mappings.get(lookup_key)
+        return container
 
-  def SetAttributeContainerIdentifier(self, lookup_key, identifier):
-    """Sets an attribute container.
+    def GetAttributeContainerIdentifier(self, lookup_key):
+        """Retrieves an attribute container.
 
-    Args:
-      lookup_key (str): lookup key that identifies the attribute container.
-      identifier (AttributeContainerIdentifier): attribute container identifier.
-    """
-    self._container_identifier_mappings[lookup_key] = identifier
+        Args:
+          lookup_key (str): lookup key that identifies the attribute container.
+
+        Returns:
+          AttributeContainerIdentifier: attribute container identifier that maps
+              to the lookup key or None if not available.
+        """
+        return self._container_identifier_mappings.get(lookup_key)
+
+    def SetAttributeContainerIdentifier(self, lookup_key, identifier):
+        """Sets an attribute container.
+
+        Args:
+          lookup_key (str): lookup key that identifies the attribute container.
+          identifier (AttributeContainerIdentifier): attribute container identifier.
+        """
+        self._container_identifier_mappings[lookup_key] = identifier
 
 
 class AnalysisTaskMergeHelper(BaseTaskMergeHelper):
-  """Assists in merging attribute containers of an analysis task."""
+    """Assists in merging attribute containers of an analysis task."""
 
-  # Container types produced by the analysis worker processes that need to be
-  # merged. Note that some container types reference other container types and
-  # therefore container types that are referenced, must be defined before
-  # container types that reference them.
+    # Container types produced by the analysis worker processes that need to be
+    # merged. Note that some container types reference other container types and
+    # therefore container types that are referenced, must be defined before
+    # container types that reference them.
 
-  _CONTAINER_TYPES = (
-      events.EventTag.CONTAINER_TYPE,
-      reports.AnalysisReport.CONTAINER_TYPE,
-      warnings.AnalysisWarning.CONTAINER_TYPE,
-      analysis_results.BrowserSearchAnalysisResult.CONTAINER_TYPE,
-      analysis_results.ChromeExtensionAnalysisResult.CONTAINER_TYPE)
+    _CONTAINER_TYPES = (
+        events.EventTag.CONTAINER_TYPE,
+        reports.AnalysisReport.CONTAINER_TYPE,
+        warnings.AnalysisWarning.CONTAINER_TYPE,
+        analysis_results.BrowserSearchAnalysisResult.CONTAINER_TYPE,
+        analysis_results.ChromeExtensionAnalysisResult.CONTAINER_TYPE,
+    )
 
 
 class ExtractionTaskMergeHelper(BaseTaskMergeHelper):
-  """Assists in merging attribute containers of an extraction task."""
+    """Assists in merging attribute containers of an extraction task."""
 
-  # Container types produced by the extraction worker processes that need to be
-  # merged. Note that some container types reference other container types and
-  # therefore container types that are referenced, must be defined before
-  # container types that reference them.
+    # Container types produced by the extraction worker processes that need to be
+    # merged. Note that some container types reference other container types and
+    # therefore container types that are referenced, must be defined before
+    # container types that reference them.
 
-  _CONTAINER_TYPES = (
-      event_sources.EventSource.CONTAINER_TYPE,
-      events.EventDataStream.CONTAINER_TYPE,
-      # The date-less log helper is needed to generate event from the event
-      # data by the timeliner and therefore needs to be merged before event
-      # data containers.
-      events.DateLessLogHelper.CONTAINER_TYPE,
-      events.EventData.CONTAINER_TYPE,
-      warnings.ExtractionWarning.CONTAINER_TYPE,
-      warnings.RecoveryWarning.CONTAINER_TYPE,
-      artifacts.WindowsEventLogMessageFileArtifact.CONTAINER_TYPE,
-      artifacts.WindowsEventLogMessageStringArtifact.CONTAINER_TYPE,
-      artifacts.WindowsWevtTemplateEvent.CONTAINER_TYPE)
+    _CONTAINER_TYPES = (
+        event_sources.EventSource.CONTAINER_TYPE,
+        events.EventDataStream.CONTAINER_TYPE,
+        # The date-less log helper is needed to generate event from the event
+        # data by the timeliner and therefore needs to be merged before event
+        # data containers.
+        events.DateLessLogHelper.CONTAINER_TYPE,
+        events.EventData.CONTAINER_TYPE,
+        warnings.ExtractionWarning.CONTAINER_TYPE,
+        warnings.RecoveryWarning.CONTAINER_TYPE,
+        artifacts.WindowsEventLogMessageFileArtifact.CONTAINER_TYPE,
+        artifacts.WindowsEventLogMessageStringArtifact.CONTAINER_TYPE,
+        artifacts.WindowsWevtTemplateEvent.CONTAINER_TYPE,
+    )

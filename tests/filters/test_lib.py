@@ -6,19 +6,19 @@ from tests import test_lib as shared_test_lib
 
 
 class TestEventFilter(event_filter.EventObjectFilter):
-  """Test event filter."""
+    """Test event filter."""
 
-  def CompileFilter(self, filter_expression):
-    """Compiles the filter expression.
+    def CompileFilter(self, filter_expression):
+        """Compiles the filter expression.
 
-    Args:
-      filter_expression (str): filter expression.
+        Args:
+          filter_expression (str): filter expression.
 
-    Raises:
-      WrongPlugin: if the filter could not be compiled.
-    """
-    return
+        Raises:
+          WrongPlugin: if the filter could not be compiled.
+        """
+        return
 
 
 class FilterTestCase(shared_test_lib.BaseTestCase):
-  """Event filter test case."""
+    """Event filter test case."""

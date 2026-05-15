@@ -12,16 +12,15 @@ from tests.cli import test_lib as cli_test_lib
 from tests.cli.helpers import test_lib
 
 
-class SessionizeAnalysisArgumentsHelperTest(
-    test_lib.AnalysisPluginArgumentsHelperTest):
-  """Tests the sessionize analysis plugin CLI arguments helper."""
+class SessionizeAnalysisArgumentsHelperTest(test_lib.AnalysisPluginArgumentsHelperTest):
+    """Tests the sessionize analysis plugin CLI arguments helper."""
 
-  # pylint: disable=no-member,protected-access
+    # pylint: disable=no-member,protected-access
 
-  _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
+    _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
 
-  if _PYTHON3_13_OR_LATER:
-    _EXPECTED_OUTPUT = f"""\
+    if _PYTHON3_13_OR_LATER:
+        _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--maximum-pause MINUTES]
 
 Test argument parser.
@@ -32,8 +31,8 @@ Test argument parser.
                         the session.
 """
 
-  else:
-    _EXPECTED_OUTPUT = f"""\
+    else:
+        _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--maximum-pause MINUTES]
 
 Test argument parser.
@@ -44,38 +43,43 @@ Test argument parser.
                         the session.
 """
 
-  def testAddArguments(self):
-    """Tests the AddArguments function."""
-    argument_parser = self._GetTestArgumentParser('cli_helper.py')
+    def testAddArguments(self):
+        """Tests the AddArguments function."""
+        argument_parser = self._GetTestArgumentParser("cli_helper.py")
 
-    sessionize_analysis.SessionizeAnalysisArgumentsHelper.AddArguments(
-        argument_parser)
+        sessionize_analysis.SessionizeAnalysisArgumentsHelper.AddArguments(
+            argument_parser
+        )
 
-    output = self._RunArgparseFormatHelp(argument_parser)
-    self.assertEqual(output, self._EXPECTED_OUTPUT)
+        output = self._RunArgparseFormatHelp(argument_parser)
+        self.assertEqual(output, self._EXPECTED_OUTPUT)
 
-  def testParseOptions(self):
-    """Tests the ParseOptions function."""
-    options = cli_test_lib.TestOptions()
+    def testParseOptions(self):
+        """Tests the ParseOptions function."""
+        options = cli_test_lib.TestOptions()
 
-    analysis_plugin = sessionize.SessionizeAnalysisPlugin()
-    sessionize_analysis.SessionizeAnalysisArgumentsHelper.ParseOptions(
-        options, analysis_plugin)
+        analysis_plugin = sessionize.SessionizeAnalysisPlugin()
+        sessionize_analysis.SessionizeAnalysisArgumentsHelper.ParseOptions(
+            options, analysis_plugin
+        )
 
-    with self.assertRaises(errors.BadConfigObject):
-      sessionize_analysis.SessionizeAnalysisArgumentsHelper.ParseOptions(
-          options, None)
+        with self.assertRaises(errors.BadConfigObject):
+            sessionize_analysis.SessionizeAnalysisArgumentsHelper.ParseOptions(
+                options, None
+            )
 
-    options.sessionize_maximumpause = 0
-    with self.assertRaises(errors.BadConfigOption):
-      sessionize_analysis.SessionizeAnalysisArgumentsHelper.ParseOptions(
-          options, analysis_plugin)
+        options.sessionize_maximumpause = 0
+        with self.assertRaises(errors.BadConfigOption):
+            sessionize_analysis.SessionizeAnalysisArgumentsHelper.ParseOptions(
+                options, analysis_plugin
+            )
 
-    options.sessionize_maximumpause = 'ten'
-    with self.assertRaises(errors.BadConfigOption):
-      sessionize_analysis.SessionizeAnalysisArgumentsHelper.ParseOptions(
-          options, analysis_plugin)
+        options.sessionize_maximumpause = "ten"
+        with self.assertRaises(errors.BadConfigOption):
+            sessionize_analysis.SessionizeAnalysisArgumentsHelper.ParseOptions(
+                options, analysis_plugin
+            )
 
 
-if __name__ == '__main__':
-  unittest.main()
+if __name__ == "__main__":
+    unittest.main()

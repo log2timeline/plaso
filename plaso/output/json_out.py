@@ -7,46 +7,46 @@ from plaso.output import shared_json
 
 
 class JSONOutputModule(shared_json.SharedJSONOutputModule):
-  """Output module for the JSON format."""
+    """Output module for the JSON format."""
 
-  NAME = 'json'
-  DESCRIPTION = 'Saves the events into a JSON format.'
+    NAME = "json"
+    DESCRIPTION = "Saves the events into a JSON format."
 
-  def __init__(self):
-    """Initializes an output module."""
-    super().__init__()
-    self._event_counter = 0
+    def __init__(self):
+        """Initializes an output module."""
+        super().__init__()
+        self._event_counter = 0
 
-  def WriteFieldValues(self, output_mediator, field_values):
-    """Writes field values to the output.
+    def WriteFieldValues(self, output_mediator, field_values):
+        """Writes field values to the output.
 
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfVFS.
-      field_values (dict[str, str]): output field values per name.
-    """
-    if self._event_counter != 0:
-      self.WriteText(', ')
+        Args:
+          output_mediator (OutputMediator): mediates interactions between output
+              modules and other components, such as storage and dfVFS.
+          field_values (dict[str, str]): output field values per name.
+        """
+        if self._event_counter != 0:
+            self.WriteText(", ")
 
-    json_string = json.dumps(field_values, sort_keys=True)
-    output_text = f'"event_{self._event_counter:d}": {json_string:s}\n'
-    self.WriteText(output_text)
+        json_string = json.dumps(field_values, sort_keys=True)
+        output_text = f'"event_{self._event_counter:d}": {json_string:s}\n'
+        self.WriteText(output_text)
 
-    self._event_counter += 1
+        self._event_counter += 1
 
-  def WriteFooter(self):
-    """Writes the footer to the output."""
-    self.WriteText('}')
+    def WriteFooter(self):
+        """Writes the footer to the output."""
+        self.WriteText("}")
 
-  def WriteHeader(self, output_mediator):
-    """Writes the header to the output.
+    def WriteHeader(self, output_mediator):
+        """Writes the header to the output.
 
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfVFS.
-    """
-    self.WriteText('{')
-    self._event_counter = 0
+        Args:
+          output_mediator (OutputMediator): mediates interactions between output
+              modules and other components, such as storage and dfVFS.
+        """
+        self.WriteText("{")
+        self._event_counter = 0
 
 
 manager.OutputManager.RegisterOutput(JSONOutputModule)

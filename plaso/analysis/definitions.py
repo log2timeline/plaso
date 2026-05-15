@@ -1,6 +1,5 @@
 """This file contains the definitions for analysis plugins."""
 
-
 # All the possible analysis plugin types.
 
 # Plugin that detects anomalies.

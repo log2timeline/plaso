@@ -8,158 +8,180 @@ from plaso.parsers.sqlite_plugins import interface
 
 
 class IOSAccountsEventData(events.EventData):
-  """iOS accounts event data.
+    """iOS accounts event data.
 
-  Attributes:
-    account_type (str): account type.
-    creation_time (dfdatetime.DateTimeValues): date and time the account
-        was created.
-    identifier (str): identifier.
-    owning_bundle_identifier (str): owning bundle identifier of the
-        application managing the account.
-    username (str): user name.
-  """
+    Attributes:
+      account_type (str): account type.
+      creation_time (dfdatetime.DateTimeValues): date and time the account
+          was created.
+      identifier (str): identifier.
+      owning_bundle_identifier (str): owning bundle identifier of the
+          application managing the account.
+      username (str): user name.
+    """
 
-  DATA_TYPE = 'ios:accounts:entry'
+    DATA_TYPE = "ios:accounts:entry"
 
-  def __init__(self):
-    """Initializes event data."""
-    super().__init__(data_type=self.DATA_TYPE)
-    self.account_type = None
-    self.creation_time = None
-    self.identifier = None
-    self.owning_bundle_identifier = None
-    self.username = None
+    def __init__(self):
+        """Initializes event data."""
+        super().__init__(data_type=self.DATA_TYPE)
+        self.account_type = None
+        self.creation_time = None
+        self.identifier = None
+        self.owning_bundle_identifier = None
+        self.username = None
 
 
 class IOSAccountsPlugin(interface.SQLitePlugin):
-  """SQLite parser plugin for iOS accounts (Accounts3.db) database files."""
+    """SQLite parser plugin for iOS accounts (Accounts3.db) database files."""
 
-  NAME = 'ios_accounts'
-  DATA_FORMAT = 'iOS accounts SQLite database (Accounts3.db) file'
+    NAME = "ios_accounts"
+    DATA_FORMAT = "iOS accounts SQLite database (Accounts3.db) file"
 
-  REQUIRED_STRUCTURE = {
-      'ZACCOUNT': frozenset([
-          'ZACCOUNTTYPE', 'ZDATE', 'ZUSERNAME', 'ZIDENTIFIER',
-          'ZOWNINGBUNDLEID']),
-      'ZACCOUNTTYPE': frozenset([
-          'Z_PK', 'ZACCOUNTTYPEDESCRIPTION'])}
+    REQUIRED_STRUCTURE = {
+        "ZACCOUNT": frozenset(
+            ["ZACCOUNTTYPE", "ZDATE", "ZUSERNAME", "ZIDENTIFIER", "ZOWNINGBUNDLEID"]
+        ),
+        "ZACCOUNTTYPE": frozenset(["Z_PK", "ZACCOUNTTYPEDESCRIPTION"]),
+    }
 
-  QUERIES = [(
-      ('SELECT ZACCOUNT.ZDATE, ZACCOUNTTYPE.ZACCOUNTTYPEDESCRIPTION, '
-       'ZACCOUNT.ZUSERNAME, ZACCOUNT.ZIDENTIFIER, ZACCOUNT.ZOWNINGBUNDLEID '
-       'FROM ZACCOUNT LEFT JOIN ZACCOUNTTYPE '
-       'ON ZACCOUNT.ZACCOUNTTYPE = ZACCOUNTTYPE.Z_PK'),
-      'ParseAccountRow')]
+    QUERIES = [
+        (
+            (
+                "SELECT ZACCOUNT.ZDATE, ZACCOUNTTYPE.ZACCOUNTTYPEDESCRIPTION, "
+                "ZACCOUNT.ZUSERNAME, ZACCOUNT.ZIDENTIFIER, ZACCOUNT.ZOWNINGBUNDLEID "
+                "FROM ZACCOUNT LEFT JOIN ZACCOUNTTYPE "
+                "ON ZACCOUNT.ZACCOUNTTYPE = ZACCOUNTTYPE.Z_PK"
+            ),
+            "ParseAccountRow",
+        )
+    ]
 
-  SCHEMAS = [{
-      'ZACCESSOPTIONSKEY': (
-          'CREATE TABLE ZACCESSOPTIONSKEY ( Z_PK INTEGER PRIMARY KEY, Z_ENT '
-          'INTEGER, Z_OPT INTEGER, ZNAME VARCHAR )'),
-      'ZACCOUNT': (
-          'CREATE TABLE ZACCOUNT ( Z_PK INTEGER PRIMARY KEY, Z_ENT INTEGER, '
-          'Z_OPT INTEGER, ZACTIVE INTEGER, ZAUTHENTICATED INTEGER, '
-          'ZSUPPORTSAUTHENTICATION INTEGER, ZVISIBLE INTEGER, ZACCOUNTTYPE '
-          'INTEGER, ZPARENTACCOUNT INTEGER, ZDATE TIMESTAMP, '
-          'ZLASTCREDENTIALRENEWALREJECTIONDATE TIMESTAMP, ZACCOUNTDESCRIPTION '
-          'VARCHAR, ZAUTHENTICATIONTYPE VARCHAR, ZCREDENTIALTYPE VARCHAR, '
-          'ZIDENTIFIER VARCHAR, ZOWNINGBUNDLEID VARCHAR, ZUSERNAME VARCHAR, '
-          'ZDATACLASSPROPERTIES BLOB )'),
-      'ZACCOUNTPROPERTY': (
-          'CREATE TABLE ZACCOUNTPROPERTY ( Z_PK INTEGER PRIMARY KEY, Z_ENT '
-          'INTEGER, Z_OPT INTEGER, ZOWNER INTEGER, ZKEY VARCHAR, ZVALUE BLOB '
-          ')'),
-      'ZACCOUNTTYPE': (
-          'CREATE TABLE ZACCOUNTTYPE ( Z_PK INTEGER PRIMARY KEY, Z_ENT '
-          'INTEGER, Z_OPT INTEGER, ZENCRYPTACCOUNTPROPERTIES INTEGER, '
-          'ZOBSOLETE INTEGER, ZSUPPORTSAUTHENTICATION INTEGER, '
-          'ZSUPPORTSMULTIPLEACCOUNTS INTEGER, ZVISIBILITY INTEGER, '
-          'ZACCOUNTTYPEDESCRIPTION VARCHAR, ZCREDENTIALPROTECTIONPOLICY '
-          'VARCHAR, ZCREDENTIALTYPE VARCHAR, ZIDENTIFIER VARCHAR, '
-          'ZOWNINGBUNDLEID VARCHAR )'),
-      'ZAUTHORIZATION': (
-          'CREATE TABLE ZAUTHORIZATION ( Z_PK INTEGER PRIMARY KEY, Z_ENT '
-          'INTEGER, Z_OPT INTEGER, ZACCOUNTTYPE INTEGER, ZBUNDLEID VARCHAR, '
-          'ZGRANTEDPERMISSIONS VARCHAR, ZOPTIONS BLOB )'),
-      'ZCREDENTIALITEM': (
-          'CREATE TABLE ZCREDENTIALITEM ( Z_PK INTEGER PRIMARY KEY, Z_ENT '
-          'INTEGER, Z_OPT INTEGER, ZPERSISTENT INTEGER, ZEXPIRATIONDATE '
-          'TIMESTAMP, ZACCOUNTIDENTIFIER VARCHAR, ZSERVICENAME VARCHAR )'),
-      'ZDATACLASS': (
-          'CREATE TABLE ZDATACLASS ( Z_PK INTEGER PRIMARY KEY, Z_ENT INTEGER, '
-          'Z_OPT INTEGER, ZNAME BLOB )'),
-      'Z_1OWNINGACCOUNTTYPES': (
-          'CREATE TABLE Z_1OWNINGACCOUNTTYPES ( Z_1ACCESSKEYS INTEGER, '
-          'Z_4OWNINGACCOUNTTYPES INTEGER, PRIMARY KEY (Z_1ACCESSKEYS, '
-          'Z_4OWNINGACCOUNTTYPES) )'),
-      'Z_2ENABLEDDATACLASSES': (
-          'CREATE TABLE Z_2ENABLEDDATACLASSES ( Z_2ENABLEDACCOUNTS INTEGER, '
-          'Z_7ENABLEDDATACLASSES INTEGER, PRIMARY KEY (Z_2ENABLEDACCOUNTS, '
-          'Z_7ENABLEDDATACLASSES) )'),
-      'Z_2PROVISIONEDDATACLASSES': (
-          'CREATE TABLE Z_2PROVISIONEDDATACLASSES ( Z_2PROVISIONEDACCOUNTS '
-          'INTEGER, Z_7PROVISIONEDDATACLASSES INTEGER, PRIMARY KEY '
-          '(Z_2PROVISIONEDACCOUNTS, Z_7PROVISIONEDDATACLASSES) )'),
-      'Z_4SUPPORTEDDATACLASSES': (
-          'CREATE TABLE Z_4SUPPORTEDDATACLASSES ( Z_4SUPPORTEDTYPES INTEGER, '
-          'Z_7SUPPORTEDDATACLASSES INTEGER, PRIMARY KEY (Z_4SUPPORTEDTYPES, '
-          'Z_7SUPPORTEDDATACLASSES) )'),
-      'Z_4SYNCABLEDATACLASSES': (
-          'CREATE TABLE Z_4SYNCABLEDATACLASSES ( Z_4SYNCABLETYPES INTEGER, '
-          'Z_7SYNCABLEDATACLASSES INTEGER, PRIMARY KEY (Z_4SYNCABLETYPES, '
-          'Z_7SYNCABLEDATACLASSES) )'),
-      'Z_METADATA': (
-          'CREATE TABLE Z_METADATA (Z_VERSION INTEGER PRIMARY KEY, Z_UUID '
-          'VARCHAR(255), Z_PLIST BLOB)'),
-      'Z_MODELCACHE': (
-          'CREATE TABLE Z_MODELCACHE (Z_CONTENT BLOB)'),
-      'Z_PRIMARYKEY': (
-          'CREATE TABLE Z_PRIMARYKEY (Z_ENT INTEGER PRIMARY KEY, Z_NAME '
-          'VARCHAR, Z_SUPER INTEGER, Z_MAX INTEGER)')}]
+    SCHEMAS = [
+        {
+            "ZACCESSOPTIONSKEY": (
+                "CREATE TABLE ZACCESSOPTIONSKEY ( Z_PK INTEGER PRIMARY KEY, Z_ENT "
+                "INTEGER, Z_OPT INTEGER, ZNAME VARCHAR )"
+            ),
+            "ZACCOUNT": (
+                "CREATE TABLE ZACCOUNT ( Z_PK INTEGER PRIMARY KEY, Z_ENT INTEGER, "
+                "Z_OPT INTEGER, ZACTIVE INTEGER, ZAUTHENTICATED INTEGER, "
+                "ZSUPPORTSAUTHENTICATION INTEGER, ZVISIBLE INTEGER, ZACCOUNTTYPE "
+                "INTEGER, ZPARENTACCOUNT INTEGER, ZDATE TIMESTAMP, "
+                "ZLASTCREDENTIALRENEWALREJECTIONDATE TIMESTAMP, ZACCOUNTDESCRIPTION "
+                "VARCHAR, ZAUTHENTICATIONTYPE VARCHAR, ZCREDENTIALTYPE VARCHAR, "
+                "ZIDENTIFIER VARCHAR, ZOWNINGBUNDLEID VARCHAR, ZUSERNAME VARCHAR, "
+                "ZDATACLASSPROPERTIES BLOB )"
+            ),
+            "ZACCOUNTPROPERTY": (
+                "CREATE TABLE ZACCOUNTPROPERTY ( Z_PK INTEGER PRIMARY KEY, Z_ENT "
+                "INTEGER, Z_OPT INTEGER, ZOWNER INTEGER, ZKEY VARCHAR, ZVALUE BLOB "
+                ")"
+            ),
+            "ZACCOUNTTYPE": (
+                "CREATE TABLE ZACCOUNTTYPE ( Z_PK INTEGER PRIMARY KEY, Z_ENT "
+                "INTEGER, Z_OPT INTEGER, ZENCRYPTACCOUNTPROPERTIES INTEGER, "
+                "ZOBSOLETE INTEGER, ZSUPPORTSAUTHENTICATION INTEGER, "
+                "ZSUPPORTSMULTIPLEACCOUNTS INTEGER, ZVISIBILITY INTEGER, "
+                "ZACCOUNTTYPEDESCRIPTION VARCHAR, ZCREDENTIALPROTECTIONPOLICY "
+                "VARCHAR, ZCREDENTIALTYPE VARCHAR, ZIDENTIFIER VARCHAR, "
+                "ZOWNINGBUNDLEID VARCHAR )"
+            ),
+            "ZAUTHORIZATION": (
+                "CREATE TABLE ZAUTHORIZATION ( Z_PK INTEGER PRIMARY KEY, Z_ENT "
+                "INTEGER, Z_OPT INTEGER, ZACCOUNTTYPE INTEGER, ZBUNDLEID VARCHAR, "
+                "ZGRANTEDPERMISSIONS VARCHAR, ZOPTIONS BLOB )"
+            ),
+            "ZCREDENTIALITEM": (
+                "CREATE TABLE ZCREDENTIALITEM ( Z_PK INTEGER PRIMARY KEY, Z_ENT "
+                "INTEGER, Z_OPT INTEGER, ZPERSISTENT INTEGER, ZEXPIRATIONDATE "
+                "TIMESTAMP, ZACCOUNTIDENTIFIER VARCHAR, ZSERVICENAME VARCHAR )"
+            ),
+            "ZDATACLASS": (
+                "CREATE TABLE ZDATACLASS ( Z_PK INTEGER PRIMARY KEY, Z_ENT INTEGER, "
+                "Z_OPT INTEGER, ZNAME BLOB )"
+            ),
+            "Z_1OWNINGACCOUNTTYPES": (
+                "CREATE TABLE Z_1OWNINGACCOUNTTYPES ( Z_1ACCESSKEYS INTEGER, "
+                "Z_4OWNINGACCOUNTTYPES INTEGER, PRIMARY KEY (Z_1ACCESSKEYS, "
+                "Z_4OWNINGACCOUNTTYPES) )"
+            ),
+            "Z_2ENABLEDDATACLASSES": (
+                "CREATE TABLE Z_2ENABLEDDATACLASSES ( Z_2ENABLEDACCOUNTS INTEGER, "
+                "Z_7ENABLEDDATACLASSES INTEGER, PRIMARY KEY (Z_2ENABLEDACCOUNTS, "
+                "Z_7ENABLEDDATACLASSES) )"
+            ),
+            "Z_2PROVISIONEDDATACLASSES": (
+                "CREATE TABLE Z_2PROVISIONEDDATACLASSES ( Z_2PROVISIONEDACCOUNTS "
+                "INTEGER, Z_7PROVISIONEDDATACLASSES INTEGER, PRIMARY KEY "
+                "(Z_2PROVISIONEDACCOUNTS, Z_7PROVISIONEDDATACLASSES) )"
+            ),
+            "Z_4SUPPORTEDDATACLASSES": (
+                "CREATE TABLE Z_4SUPPORTEDDATACLASSES ( Z_4SUPPORTEDTYPES INTEGER, "
+                "Z_7SUPPORTEDDATACLASSES INTEGER, PRIMARY KEY (Z_4SUPPORTEDTYPES, "
+                "Z_7SUPPORTEDDATACLASSES) )"
+            ),
+            "Z_4SYNCABLEDATACLASSES": (
+                "CREATE TABLE Z_4SYNCABLEDATACLASSES ( Z_4SYNCABLETYPES INTEGER, "
+                "Z_7SYNCABLEDATACLASSES INTEGER, PRIMARY KEY (Z_4SYNCABLETYPES, "
+                "Z_7SYNCABLEDATACLASSES) )"
+            ),
+            "Z_METADATA": (
+                "CREATE TABLE Z_METADATA (Z_VERSION INTEGER PRIMARY KEY, Z_UUID "
+                "VARCHAR(255), Z_PLIST BLOB)"
+            ),
+            "Z_MODELCACHE": ("CREATE TABLE Z_MODELCACHE (Z_CONTENT BLOB)"),
+            "Z_PRIMARYKEY": (
+                "CREATE TABLE Z_PRIMARYKEY (Z_ENT INTEGER PRIMARY KEY, Z_NAME "
+                "VARCHAR, Z_SUPER INTEGER, Z_MAX INTEGER)"
+            ),
+        }
+    ]
 
-  REQUIRES_SCHEMA_MATCH = False
+    REQUIRES_SCHEMA_MATCH = False
 
-  def _GetTimeRowValue(self, query_hash, row, value_name):
-    """Retrieves a date and time value from the row.
+    def _GetTimeRowValue(self, query_hash, row, value_name):
+        """Retrieves a date and time value from the row.
 
-    Args:
-      query_hash (int): hash of the query, that uniquely
-          identifies the query that produced the row.
-      row (sqlite3.Row): row.
-      value_name (str): name of the value.
+        Args:
+          query_hash (int): hash of the query, that uniquely
+              identifies the query that produced the row.
+          row (sqlite3.Row): row.
+          value_name (str): name of the value.
 
-    Returns:
-      dfdatetime.CocoaTime: date and time value or None if not available.
-    """
-    timestamp = self._GetRowValue(query_hash, row, value_name)
-    if timestamp is None:
-      return None
+        Returns:
+          dfdatetime.CocoaTime: date and time value or None if not available.
+        """
+        timestamp = self._GetRowValue(query_hash, row, value_name)
+        if timestamp is None:
+            return None
 
-    return dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
+        return dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
 
-  # pylint: disable=unused-argument
-  def ParseAccountRow(self, parser_mediator, query, row, **unused_kwargs):
-    """Parses an account row.
+    # pylint: disable=unused-argument
+    def ParseAccountRow(self, parser_mediator, query, row, **unused_kwargs):
+        """Parses an account row.
 
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between
-          parsers and other components, such as storage and dfVFS.
-      query (str): query that created the row.
-      row (sqlite3.Row): row.
-    """
-    query_hash = hash(query)
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between
+              parsers and other components, such as storage and dfVFS.
+          query (str): query that created the row.
+          row (sqlite3.Row): row.
+        """
+        query_hash = hash(query)
 
-    event_data = IOSAccountsEventData()
-    event_data.account_type = self._GetRowValue(
-        query_hash, row, 'ZACCOUNTTYPEDESCRIPTION')
-    event_data.creation_time = self._GetTimeRowValue(query_hash, row, 'ZDATE')
-    event_data.identifier = self._GetRowValue(
-        query_hash, row, 'ZIDENTIFIER')
-    event_data.owning_bundle_identifier = self._GetRowValue(
-        query_hash, row, 'ZOWNINGBUNDLEID')
-    event_data.username = self._GetRowValue(query_hash, row, 'ZUSERNAME')
+        event_data = IOSAccountsEventData()
+        event_data.account_type = self._GetRowValue(
+            query_hash, row, "ZACCOUNTTYPEDESCRIPTION"
+        )
+        event_data.creation_time = self._GetTimeRowValue(query_hash, row, "ZDATE")
+        event_data.identifier = self._GetRowValue(query_hash, row, "ZIDENTIFIER")
+        event_data.owning_bundle_identifier = self._GetRowValue(
+            query_hash, row, "ZOWNINGBUNDLEID"
+        )
+        event_data.username = self._GetRowValue(query_hash, row, "ZUSERNAME")
 
-    parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data)
 
 
 sqlite.SQLiteParser.RegisterPlugin(IOSAccountsPlugin)

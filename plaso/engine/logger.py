@@ -2,8 +2,7 @@
 
 import logging
 
-
-_logger = logging.getLogger('engine')
+_logger = logging.getLogger("engine")
 
 # Mimic the logging module interface.
 critical = _logger.critical

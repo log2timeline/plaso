@@ -11,322 +11,362 @@ from plaso.parsers import manager
 
 
 class SIMATICS7EventData(events.EventData):
-  """SIMATIC S7 event data.
+    """SIMATIC S7 event data.
 
-  Attributes:
-    body (str): the message content of the event.
-    creation_time (dfdatetime.DateTimeValues): date and time the log entry
-        was created.
-  """
+    Attributes:
+      body (str): the message content of the event.
+      creation_time (dfdatetime.DateTimeValues): date and time the log entry
+          was created.
+    """
 
-  DATA_TYPE = 'wincc:simatic_s7:entry'
+    DATA_TYPE = "wincc:simatic_s7:entry"
 
-  def __init__(self):
-    """Initializes event data."""
-    super().__init__(data_type=self.DATA_TYPE)
-    self.body = None
-    self.creation_time = None
+    def __init__(self):
+        """Initializes event data."""
+        super().__init__(data_type=self.DATA_TYPE)
+        self.body = None
+        self.creation_time = None
 
 
 class WinCCSysLogEventData(events.EventData):
-  """WinCC Sys Log event data.
+    """WinCC Sys Log event data.
 
-  Attributes:
-    body (str): the content of the log's message.
-    creation_time (dfdatetime.DateTimeValues): date and time the log entry
-        was created.
-    event_number (int): a number specifying the type of event.
-    log_hostname (str): the hostname of the machine logging the event.
-    log_identifier (int): identifier for this log file.
-    source_device (str): which device generated the event.
-  """
+    Attributes:
+      body (str): the content of the log's message.
+      creation_time (dfdatetime.DateTimeValues): date and time the log entry
+          was created.
+      event_number (int): a number specifying the type of event.
+      log_hostname (str): the hostname of the machine logging the event.
+      log_identifier (int): identifier for this log file.
+      source_device (str): which device generated the event.
+    """
 
-  DATA_TYPE = 'wincc:sys_log:entry'
+    DATA_TYPE = "wincc:sys_log:entry"
 
-  def __init__(self):
-    """Initializes event data."""
-    super().__init__(data_type=self.DATA_TYPE)
-    self.body = None
-    self.creation_time = None
-    self.event_number = None
-    self.log_hostname = None
-    self.log_identifier = None
-    self.source_device = None
+    def __init__(self):
+        """Initializes event data."""
+        super().__init__(data_type=self.DATA_TYPE)
+        self.body = None
+        self.creation_time = None
+        self.event_number = None
+        self.log_hostname = None
+        self.log_identifier = None
+        self.source_device = None
 
 
 class SIMATICLogParser(interface.FileObjectParser):
-  """Text parser plugin for SIMATIC S7 Log files."""
+    """Text parser plugin for SIMATIC S7 Log files."""
 
-  NAME = 'simatic_s7'
-  DATA_FORMAT = 'SIMATIC S7 Log file'
+    NAME = "simatic_s7"
+    DATA_FORMAT = "SIMATIC S7 Log file"
 
-  DELIMITER = ','
-  ENCODING = 'ascii'
-  END_OF_LINE = '\r\n'
+    DELIMITER = ","
+    ENCODING = "ascii"
+    END_OF_LINE = "\r\n"
 
-  _EXPECTED_FIRST_LINE_STRING = 'Log starting ...' + END_OF_LINE
-  _EXPECTED_SECOND_LINE_STRING = '| LogFileName'
-  _EXPECTED_THIRD_LINE_STRING = '| LogFileCount'
+    _EXPECTED_FIRST_LINE_STRING = "Log starting ..." + END_OF_LINE
+    _EXPECTED_SECOND_LINE_STRING = "| LogFileName"
+    _EXPECTED_THIRD_LINE_STRING = "| LogFileCount"
 
-  def _ParseValues(self, parser_mediator, line_number, values):
-    """Parses SIMATIC S7 log file values.
+    def _ParseValues(self, parser_mediator, line_number, values):
+        """Parses SIMATIC S7 log file values.
 
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      line_number (int): number of the line the values were extracted from.
-      values (list[str]): values extracted from the line.
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          line_number (int): number of the line the values were extracted from.
+          values (list[str]): values extracted from the line.
 
-    Raises:
-      WrongParser: when the values cannot be parsed.
-    """
-    number_of_values = len(values)
-    if number_of_values < 2:
-      raise errors.WrongParser(
-          f'Expected at least two values on line {line_number:d}')
+        Raises:
+          WrongParser: when the values cannot be parsed.
+        """
+        number_of_values = len(values)
+        if number_of_values < 2:
+            raise errors.WrongParser(
+                f"Expected at least two values on line {line_number:d}"
+            )
 
-    # The first lines seem to  always follow the following format:
-    #
-    # 2019-05-27 10:05:43,405 INFO     Log starting ...
-    # 2019-05-27 10:05:43,405 INFO     | LogFileName   : C:\.....
-    # 2019-05-27 10:05:43,419 INFO     | LogFileCount  : 3
-    if line_number == 0:
-      if not values[1].endswith(self._EXPECTED_FIRST_LINE_STRING):
-        raise errors.WrongParser(
-            f'Expected first line to end with: '
-            f'"{self._EXPECTED_FIRST_LINE_STRING:s}"')
+        # The first lines seem to  always follow the following format:
+        #
+        # 2019-05-27 10:05:43,405 INFO     Log starting ...
+        # 2019-05-27 10:05:43,405 INFO     | LogFileName   : C:\.....
+        # 2019-05-27 10:05:43,419 INFO     | LogFileCount  : 3
+        if line_number == 0:
+            if not values[1].endswith(self._EXPECTED_FIRST_LINE_STRING):
+                raise errors.WrongParser(
+                    f"Expected first line to end with: "
+                    f'"{self._EXPECTED_FIRST_LINE_STRING:s}"'
+                )
 
-    if line_number == 1:
-      if values[1].find(self._EXPECTED_SECOND_LINE_STRING) < 0:
-        raise errors.WrongParser(
-            f'Expected second line to contain: '
-            f'"{self._EXPECTED_SECOND_LINE_STRING:s}"')
+        if line_number == 1:
+            if values[1].find(self._EXPECTED_SECOND_LINE_STRING) < 0:
+                raise errors.WrongParser(
+                    f"Expected second line to contain: "
+                    f'"{self._EXPECTED_SECOND_LINE_STRING:s}"'
+                )
 
-    if line_number == 2:
-      if values[1].find(self._EXPECTED_THIRD_LINE_STRING) < 0:
-        raise errors.WrongParser(
-            f'Expected third line to contain: '
-            f'"{self._EXPECTED_THIRD_LINE_STRING:s}"')
+        if line_number == 2:
+            if values[1].find(self._EXPECTED_THIRD_LINE_STRING) < 0:
+                raise errors.WrongParser(
+                    f"Expected third line to contain: "
+                    f'"{self._EXPECTED_THIRD_LINE_STRING:s}"'
+                )
 
-    event_data = SIMATICS7EventData()
-    try:
-      date_time = dfdatetime_time_elements.TimeElements()
-      date_time.CopyFromDateTimeString(values[0])
-      event_data.creation_time = date_time
-    except (TypeError, ValueError) as exception:
-      error_string = (
-          f'Unable to parse date time value with error: '
-          f'{exception!s} on line {line_number:d} {values!s}')
-      parser_mediator.ProduceExtractionWarning(error_string)
+        event_data = SIMATICS7EventData()
+        try:
+            date_time = dfdatetime_time_elements.TimeElements()
+            date_time.CopyFromDateTimeString(values[0])
+            event_data.creation_time = date_time
+        except (TypeError, ValueError) as exception:
+            message = (
+                f"Unable to parse date time value with error: "
+                f"{exception!s} on line {line_number:d} {values!s}"
+            )
+            parser_mediator.ProduceExtractionWarning(message)
 
-    event_data.body = ','.join(values[1:]).strip()
+        event_data.body = ",".join(values[1:]).strip()
 
-    parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data)
 
-  def ParseFileObject(self, parser_mediator, file_object):
-    """Parses a SIMATIC Log file-like object.
+    def ParseFileObject(self, parser_mediator, file_object):
+        """Parses a SIMATIC Log file-like object.
 
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      file_object (dfvfs.FileIO): file-like object.
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          file_object (dfvfs.FileIO): file-like object.
 
-    Raises:
-      WrongParser: when the file cannot be parsed.
-    """
-    line_reader = text_file.TextFile(
-        file_object, encoding=self.ENCODING, end_of_line=self.END_OF_LINE)
+        Raises:
+          WrongParser: when the file cannot be parsed.
+        """
+        line_reader = text_file.TextFile(
+            file_object, encoding=self.ENCODING, end_of_line=self.END_OF_LINE
+        )
+        line_number = 0
 
-    line_number = 0
+        try:
+            line = line_reader.readline()
+        except UnicodeDecodeError as exception:
+            raise errors.WrongParser(
+                f"unable to read line: {line_number:d} with error: {exception!s}"
+            )
 
-    try:
-      line = line_reader.readline()
-    except UnicodeDecodeError as exception:
-      raise errors.WrongParser(
-          f'unable to read line: {line_number:d} with error: {exception!s}')
+        while line:
+            values = line.split(self.DELIMITER)
+            self._ParseValues(parser_mediator, line_number, values)
 
-    while line:
-      values = line.split(self.DELIMITER)
-      self._ParseValues(parser_mediator, line_number, values)
-
-      try:
-        line_number += 1
-        line = line_reader.readline()
-      except UnicodeDecodeError as exception:
-        parser_mediator.ProduceExtractionWarning(
-            f'unable to read line: {line_number:d} with error: {exception!s}')
-        break
+            try:
+                line_number += 1
+                line = line_reader.readline()
+            except UnicodeDecodeError as exception:
+                parser_mediator.ProduceExtractionWarning(
+                    f"unable to read line: {line_number:d} with error: {exception!s}"
+                )
+                break
 
 
 class WinCCSysLogParser(interface.FileObjectParser):
-  """Text parser plugin for WinCC Sys Log files."""
+    """Text parser plugin for WinCC Sys Log files."""
 
-  NAME = 'wincc_sys'
-  DATA_FORMAT = 'WinCC Sys Log file'
+    NAME = "wincc_sys"
+    DATA_FORMAT = "WinCC Sys Log file"
 
-  DELIMITER = ','
-  ENCODING = 'utf-16-le'
+    DELIMITER = ","
+    ENCODING = "utf-16-le"
 
-  _DISALLOWED_HOSTNAME_CHARS = ['\\', '/', ':', '*', '?', '"', '<', '>', '|']
+    _DISALLOWED_HOSTNAME_CHARS = ["\\", "/", ":", "*", "?", '"', "<", ">", "|"]
 
-  _END_OF_LOG_FILE_STRING = '======>'
+    _END_OF_LOG_FILE_STRING = "======>"
 
-  def _ParseValues(self, parser_mediator, line_number, values, first_line):
-    """Parses WinCC log file values.
+    def _ParseValues(self, parser_mediator, line_number, values, first_line):
+        """Parses WinCC log file values.
 
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      line_number (int): number of the line the values were extracted from.
-      values (list[str]): values extracted from the line.
-      first_line (bool): True if this is first line from which values were
-          extracted.
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          line_number (int): number of the line the values were extracted from.
+          values (list[str]): values extracted from the line.
+          first_line (bool): True if this is first line from which values were
+              extracted.
 
-    Raises:
-      WrongParser: when the values cannot be parsed.
-    """
-    number_of_values = len(values)
-    if len(values) < 10:
-      error_string = (
-          f'invalid number of values: {number_of_values:d} in line: '
-          f'{line_number:d}')
+        Raises:
+          WrongParser: when the values cannot be parsed.
+        """
+        number_of_values = len(values)
+        if len(values) < 10:
+            message = (
+                f"invalid number of values: {number_of_values:d} in line: "
+                f"{line_number:d}"
+            )
+            # On other lines, we might encounter times where the split() operation
+            # produces more values.
+            if first_line:
+                raise errors.WrongParser(message)
 
-      # On other lines, we might encounter times where the split() operation
-      # produces more values.
-      if first_line:
-        raise errors.WrongParser(error_string)
+            parser_mediator.ProduceExtractionWarning(message)
 
-      parser_mediator.ProduceExtractionWarning(error_string)
+        event_data = WinCCSysLogEventData()
 
-    event_data = WinCCSysLogEventData()
+        identifier_value = values[0]
 
-    identifier_value = values[0]
+        try:
+            log_identifier = int(identifier_value, 10)
+            event_data.log_identifier = log_identifier
+        except ValueError as exception:
+            message = (
+                f"Type of first value ({identifier_value!s}) should be an int in "
+                f"line: {line_number:d} with error: {exception!s}"
+            )
+            if first_line:
+                raise errors.WrongParser(message)
 
-    try:
-      log_identifier = int(identifier_value, 10)
-      event_data.log_identifier = log_identifier
-    except ValueError as exception:
-      self._ParseValuesFail(parser_mediator, first_line, exception, (
-          f'Type of first value ({identifier_value!s}) should be an int in '
-          f'line: {line_number:d}'))
+            parser_mediator.ProduceExtractionWarning(message)
 
-    date_value = values[1]
-    time_value = values[2]
+        date_value = values[1]
+        time_value = values[2]
 
-    try:
-      day_of_month, month, year = [
-          int(element, 10) for element in date_value.split('.')]
-      hours, minutes, seconds, milliseconds = [
-          int(element, 10) for element in time_value.split(':')]
-      time_elements_tuple = (
-          year, month, day_of_month, hours, minutes, seconds, milliseconds)
-      date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
-          time_elements_tuple=time_elements_tuple)
+        try:
+            day_of_month, month, year = [
+                int(element, 10) for element in date_value.split(".")
+            ]
+            hours, minutes, seconds, milliseconds = [
+                int(element, 10) for element in time_value.split(":")
+            ]
+            time_elements_tuple = (
+                year,
+                month,
+                day_of_month,
+                hours,
+                minutes,
+                seconds,
+                milliseconds,
+            )
+            date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
+                time_elements_tuple=time_elements_tuple
+            )
+            # TODO: determine if format is dependant on the system's locale.
+            date_time.is_local_time = True
 
-      # TODO: determine if format is dependant on the system's locale.
-      date_time.is_local_time = True
+            event_data.creation_time = date_time
 
-      event_data.creation_time = date_time
+        except (TypeError, ValueError) as exception:
+            message = (
+                f"Unable to parse time elements with error: {exception!s} on line "
+                f"{line_number:d} [{date_value!s}, {time_value!s}] with error: "
+                f"{exception!s}"
+            )
+            if first_line:
+                raise errors.WrongParser(message)
 
-    except (TypeError, ValueError) as exception:
-      self._ParseValuesFail(parser_mediator, first_line, exception, (
-          f'Unable to parse time elements with error: {exception!s} on line '
-          f'{line_number:d} [{date_value!s}, {time_value!s}]'))
+            parser_mediator.ProduceExtractionWarning(message)
 
-    event_number_value = values[3]
+        event_number_value = values[3]
 
-    try:
-      event_data.event_number = int(event_number_value, 10)
-    except ValueError as exception:
-      self._ParseValuesFail(parser_mediator, first_line, exception, (
-          f'Type of event_number value ({event_number_value!s}) should be a '
-          f'decimal in line: {line_number:d}'))
+        try:
+            event_data.event_number = int(event_number_value, 10)
+        except ValueError as exception:
+            message = (
+                f"Type of event_number value ({event_number_value!s}) should be a "
+                f"decimal in line: {line_number:d} with error: {exception!s}"
+            )
+            if first_line:
+                raise errors.WrongParser(message)
 
-    # Column 4 and 5 contain unknown values, we are not parsing them.
+            parser_mediator.ProduceExtractionWarning(message)
 
-    # We are checking this only once, on the first line, as we expect all
-    # following lines to contain the same hostname, as the logs are
-    # collected from the system generating it.
-    # Using this documentation to validate a Windows host name.
-    # https://learn.microsoft.com/en-us/troubleshoot/windows-server/identity/naming-conventions-for-computer-domain-site-ou
-    hostname = values[6]
+        # Column 4 and 5 contain unknown values, we are not parsing them.
 
-    if first_line:
-      if not hostname or len(hostname) > 16:
-        self._ParseValuesFail(parser_mediator, first_line, exception, (
-            f'Unsupported hostname: "{hostname!s}" on line: {line_number:d}'))
+        # We are checking this only once, on the first line, as we expect all
+        # following lines to contain the same hostname, as the logs are
+        # collected from the system generating it.
+        # Using this documentation to validate a Windows host name.
+        # https://learn.microsoft.com/en-us/troubleshoot/windows-server/identity/naming-conventions-for-computer-domain-site-ou
+        hostname = values[6]
 
-      for character in self._DISALLOWED_HOSTNAME_CHARS:
-        if character in hostname:
-          self._ParseValuesFail(parser_mediator, first_line, exception, (
-              f'Unsupported hostname: "{hostname!s}" on line: {line_number:d}'))
+        if first_line:
+            if not hostname or len(hostname) > 16:
+                message = (
+                    f'Unsupported hostname: "{hostname!s}" on line: '
+                    f"{line_number:d} with error: {exception!s}"
+                )
+                if first_line:
+                    raise errors.WrongParser(message)
 
-    event_data.log_hostname = hostname
+                parser_mediator.ProduceExtractionWarning(message)
 
-    event_data.source_device = values[7]
+            for character in self._DISALLOWED_HOSTNAME_CHARS:
+                if character in hostname:
+                    message = (
+                        f'Unsupported hostname: "{hostname!s}" on line: '
+                        f"{line_number:d} with error: {exception!s}"
+                    )
+                    if first_line:
+                        raise errors.WrongParser(message)
 
-    # The second to last field is the one that might contain unquoted separator.
-    # The last field can contain a string such as MSG_STATE_COME, MSG_STATE_GO,
-    # but also sometimes contains a message string.
+                    parser_mediator.ProduceExtractionWarning(message)
 
-    text_message = ' '.join(values[8:])
-    event_data.body = text_message
+        event_data.log_hostname = hostname
 
-    parser_mediator.ProduceEventData(event_data)
+        event_data.source_device = values[7]
 
-  def _ParseValuesFail(
-      self, parser_mediator, first_line, parent_exception, error_string):
-    if first_line:
-      raise errors.WrongParser(error_string) from parent_exception
+        # The second to last field is the one that might contain unquoted separator.
+        # The last field can contain a string such as MSG_STATE_COME, MSG_STATE_GO,
+        # but also sometimes contains a message string.
 
-    parser_mediator.ProduceExtractionWarning(error_string)
+        text_message = " ".join(values[8:])
+        event_data.body = text_message
 
-  def ParseFileObject(self, parser_mediator, file_object):
-    """Parses a WinCC Sys Log file-like object.
+        parser_mediator.ProduceEventData(event_data)
 
-    Args:
-      parser_mediator (ParserMediator): mediates interactions between parsers
-          and other components, such as storage and dfVFS.
-      file_object (dfvfs.FileIO): file-like object.
+    def ParseFileObject(self, parser_mediator, file_object):
+        """Parses a WinCC Sys Log file-like object.
 
-    Raises:
-      WrongParser: when the file cannot be parsed.
-    """
-    # Note that we cannot use the DSVParser here since this WinCC file format is
-    # not strict and clean file format.
-    line_reader = text_file.TextFile(
-        file_object, encoding=self.ENCODING, end_of_line='\r\n')
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          file_object (dfvfs.FileIO): file-like object.
 
-    line_number = 0
-    first_line = True
+        Raises:
+          WrongParser: when the file cannot be parsed.
+        """
+        # Note that we cannot use the DSVParser here since this WinCC file format is
+        # not strict and clean file format.
+        line_reader = text_file.TextFile(
+            file_object, encoding=self.ENCODING, end_of_line="\r\n"
+        )
+        line_number = 0
+        first_line = True
 
-    # While the file is in UTF-16, the end_of_line character is '\r\n'.
-    # We manually strip this out.
+        # While the file is in UTF-16, the end_of_line character is '\r\n'.
+        # We manually strip this out.
 
-    try:
-      line = line_reader.readline().strip()
-    except UnicodeDecodeError as exception:
-      raise errors.WrongParser(
-          f'unable to read line: {line_number:d} with error: {exception!s}')
+        try:
+            line = line_reader.readline().strip()
+        except UnicodeDecodeError as exception:
+            raise errors.WrongParser(
+                f"unable to read line: {line_number:d} with error: {exception!s}"
+            )
 
-    while line:
-      if line.startswith(self._END_OF_LOG_FILE_STRING):
-        # It seems that sometimes WinCC logs will end with a line starting like
-        # this, with the name of the next log file.
-        # But this is not always the case though.
-        line = line_reader.readline().strip()
-        continue
-      values = line.split(self.DELIMITER)
-      self._ParseValues(parser_mediator, line_number, values, first_line)
+        while line:
+            if line.startswith(self._END_OF_LOG_FILE_STRING):
+                # It seems that sometimes WinCC logs will end with a line starting like
+                # this, with the name of the next log file.
+                # But this is not always the case though.
+                line = line_reader.readline().strip()
+                continue
 
-      try:
-        line_number += 1
-        first_line = False
-        line = line_reader.readline().strip()
-      except UnicodeDecodeError as exception:
-        parser_mediator.ProduceExtractionWarning(
-            f'unable to read line: {line_number:d} with error: {exception!s}')
-        break
+            values = line.split(self.DELIMITER)
+            self._ParseValues(parser_mediator, line_number, values, first_line)
+
+            try:
+                line_number += 1
+                first_line = False
+                line = line_reader.readline().strip()
+            except UnicodeDecodeError as exception:
+                parser_mediator.ProduceExtractionWarning(
+                    f"unable to read line: {line_number:d} with error: {exception!s}"
+                )
+                break
 
 
 manager.ParsersManager.RegisterParsers([WinCCSysLogParser, SIMATICLogParser])

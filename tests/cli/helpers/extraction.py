@@ -12,14 +12,14 @@ from tests.cli import test_lib as cli_test_lib
 
 
 class ExtractionArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
-  """Tests for the extraction CLI arguments helper."""
+    """Tests for the extraction CLI arguments helper."""
 
-  # pylint: disable=no-member,protected-access
+    # pylint: disable=no-member,protected-access
 
-  _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
+    _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
 
-  if _PYTHON3_13_OR_LATER:
-    _EXPECTED_OUTPUT = f"""\
+    if _PYTHON3_13_OR_LATER:
+        _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--extract_winreg_binary] [--preferred_year YEAR]
                      [--skip_compressed_streams]
 
@@ -38,8 +38,8 @@ Test argument parser.
                         streams, such as syslog.gz and syslog.bz2.
 """
 
-  else:
-    _EXPECTED_OUTPUT = f"""\
+    else:
+        _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--extract_winreg_binary] [--preferred_year YEAR]
                      [--skip_compressed_streams]
 
@@ -58,30 +58,30 @@ Test argument parser.
                         streams, such as syslog.gz and syslog.bz2.
 """
 
-  def testAddArguments(self):
-    """Tests the AddArguments function."""
-    argument_parser = self._GetTestArgumentParser('cli_helper.py')
+    def testAddArguments(self):
+        """Tests the AddArguments function."""
+        argument_parser = self._GetTestArgumentParser("cli_helper.py")
 
-    extraction.ExtractionArgumentsHelper.AddArguments(argument_parser)
+        extraction.ExtractionArgumentsHelper.AddArguments(argument_parser)
 
-    output = self._RunArgparseFormatHelp(argument_parser)
-    self.assertEqual(output, self._EXPECTED_OUTPUT)
+        output = self._RunArgparseFormatHelp(argument_parser)
+        self.assertEqual(output, self._EXPECTED_OUTPUT)
 
-  def testParseOptions(self):
-    """Tests the ParseOptions function."""
-    options = cli_test_lib.TestOptions()
+    def testParseOptions(self):
+        """Tests the ParseOptions function."""
+        options = cli_test_lib.TestOptions()
 
-    test_tool = tools.CLITool()
-    extraction.ExtractionArgumentsHelper.ParseOptions(options, test_tool)
+        test_tool = tools.CLITool()
+        extraction.ExtractionArgumentsHelper.ParseOptions(options, test_tool)
 
-    self.assertIsNone(test_tool._preferred_year)
-    self.assertTrue(test_tool._process_compressed_streams)
+        self.assertIsNone(test_tool._preferred_year)
+        self.assertTrue(test_tool._process_compressed_streams)
 
-    with self.assertRaises(errors.BadConfigObject):
-      extraction.ExtractionArgumentsHelper.ParseOptions(options, None)
+        with self.assertRaises(errors.BadConfigObject):
+            extraction.ExtractionArgumentsHelper.ParseOptions(options, None)
 
-    # TODO: improve test coverage.
+        # TODO: improve test coverage.
 
 
-if __name__ == '__main__':
-  unittest.main()
+if __name__ == "__main__":
+    unittest.main()

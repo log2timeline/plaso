@@ -8,56 +8,65 @@ from plaso.formatters import interface
 
 
 class DefaultEventFormatter(interface.BasicEventFormatter):
-  """Formatter for events that do not have any defined formatter."""
+    """Formatter for events that do not have any defined formatter."""
 
-  DATA_TYPE = 'event'
-  FORMAT_STRING = '<WARNING DEFAULT FORMATTER> Attributes: {attribute_values}'
-  FORMAT_STRING_SHORT = '<DEFAULT> {attribute_values}'
+    DATA_TYPE = "event"
+    FORMAT_STRING = "<WARNING DEFAULT FORMATTER> Attributes: {attribute_values}"
+    FORMAT_STRING_SHORT = "<DEFAULT> {attribute_values}"
 
-  _RESERVED_VARIABLE_NAMES = frozenset([
-      '_event_values_hash',
-      '_parser_chain',
-      'data_type',
-      'date_time',
-      'path_spec',
-      'timestamp',
-      'timestamp_desc'])
+    _RESERVED_VARIABLE_NAMES = frozenset(
+        [
+            "_event_values_hash",
+            "_parser_chain",
+            "data_type",
+            "date_time",
+            "path_spec",
+            "timestamp",
+            "timestamp_desc",
+        ]
+    )
 
-  def __init__(self):
-    """Initializes a default event formatter."""
-    super().__init__(
-        data_type=self.DATA_TYPE, format_string=self.FORMAT_STRING,
-        format_string_short=self.FORMAT_STRING_SHORT)
+    def __init__(self):
+        """Initializes a default event formatter."""
+        super().__init__(
+            data_type=self.DATA_TYPE,
+            format_string=self.FORMAT_STRING,
+            format_string_short=self.FORMAT_STRING_SHORT,
+        )
 
-  def _FormatMessage(self, format_string, event_values):
-    """Determines the formatted message.
+    def _FormatMessage(self, format_string, event_values):
+        """Determines the formatted message.
 
-    Args:
-      format_string (str): message format string.
-      event_values (dict[str, object]): event values.
+        Args:
+          format_string (str): message format string.
+          event_values (dict[str, object]): event values.
 
-    Returns:
-      str: formatted message.
-    """
-    text_pieces = []
-    for name, value in event_values.items():
-      # Ignore reserved variable names.
-      if name in self._RESERVED_VARIABLE_NAMES:
-        continue
+        Returns:
+          str: formatted message.
+        """
+        text_pieces = []
+        for name, value in event_values.items():
+            # Ignore reserved variable names.
+            if name in self._RESERVED_VARIABLE_NAMES:
+                continue
 
-      # Ignore attribute container identifier values.
-      if isinstance(value, containers_interface.AttributeContainerIdentifier):
-        continue
+            # Ignore attribute container identifier values.
+            if isinstance(value, containers_interface.AttributeContainerIdentifier):
+                continue
 
-      # Ignore date and time values.
-      if isinstance(value, dfdatetime_interface.DateTimeValues):
-        continue
+            # Ignore date and time values.
+            if isinstance(value, dfdatetime_interface.DateTimeValues):
+                continue
 
-      if (isinstance(value, list) and value and
-          isinstance(value[0], dfdatetime_interface.DateTimeValues)):
-        continue
+            if (
+                isinstance(value, list)
+                and value
+                and isinstance(value[0], dfdatetime_interface.DateTimeValues)
+            ):
+                continue
 
-      text_pieces.append(f'{name:s}: {value!s}')
+            text_pieces.append(f"{name:s}: {value!s}")
 
-    return super()._FormatMessage(
-        format_string, {'attribute_values': ' '.join(text_pieces)})
+        return super()._FormatMessage(
+            format_string, {"attribute_values": " ".join(text_pieces)}
+        )

@@ -7,14 +7,14 @@ from tests import test_lib as shared_test_lib
 
 
 class FormattersManagerTest(shared_test_lib.BaseTestCase):
-  """Tests for the event formatters manager."""
+    """Tests for the event formatters manager."""
 
-  # pylint: disable=protected-access
+    # pylint: disable=protected-access
 
-  # TODO: add tests for GetEventFormatterHelper
-  # TODO: add tests for RegisterEventFormatterHelper
-  # TODO: add tests for RegisterEventFormatterHelpers
+    # TODO: add tests for GetEventFormatterHelper
+    # TODO: add tests for RegisterEventFormatterHelper
+    # TODO: add tests for RegisterEventFormatterHelpers
 
 
-if __name__ == '__main__':
-  unittest.main()
+if __name__ == "__main__":
+    unittest.main()

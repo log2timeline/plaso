@@ -20,705 +20,756 @@ from tests import test_lib as shared_test_lib
 
 
 class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
-  """Tests for the event extraction worker."""
-
-  # pylint: disable=protected-access
-
-  def _GetEventDataOfEvent(self, storage_writer, event):
-    """Retrieves the event data of an event.
-
-    Args:
-      storage_writer (FakeStorageWriter): storage writer.
-      event (EventObject): event.
-
-    Return:
-      EventData: event data corresponding to the event.
-    """
-    event_data_identifier = event.GetEventDataIdentifier()
-    return storage_writer.GetAttributeContainerByIdentifier(
-        events.EventData.CONTAINER_TYPE, event_data_identifier)
-
-  def _GetEventDataStreamOfEventData(self, storage_writer, event_data):
-    """Retrieves the event data stream of event data.
-
-    Args:
-      storage_writer (FakeStorageWriter): storage writer.
-      event_data (EventData): event data.
-
-    Return:
-      EventDataStream: event data stream corresponding to the event data.
-    """
-    event_data_stream_identifier = event_data.GetEventDataStreamIdentifier()
-    return storage_writer.GetAttributeContainerByIdentifier(
-        events.EventDataStream.CONTAINER_TYPE, event_data_stream_identifier)
-
-  def _GetTestFilePathSpec(self, path_segments):
-    """Retrieves a path specification of a test file in the test data directory.
-
-    Args:
-      path_segments (list[str]): components of a path to a test file, relative
-          to the test_data directory.
-
-    Returns:
-      dfvfs.PathSpec: path specification.
-
-    Raises:
-      SkipTest: if the path inside the test data directory does not exist and
-          the test should be skipped.
-    """
-    test_file_path = self._GetTestFilePath(path_segments)
-    self._SkipIfPathNotExists(test_file_path)
+    """Tests for the event extraction worker."""
+
+    # pylint: disable=protected-access
+
+    def _GetEventDataOfEvent(self, storage_writer, event):
+        """Retrieves the event data of an event.
+
+        Args:
+          storage_writer (FakeStorageWriter): storage writer.
+          event (EventObject): event.
+
+        Return:
+          EventData: event data corresponding to the event.
+        """
+        event_data_identifier = event.GetEventDataIdentifier()
+        return storage_writer.GetAttributeContainerByIdentifier(
+            events.EventData.CONTAINER_TYPE, event_data_identifier
+        )
+
+    def _GetEventDataStreamOfEventData(self, storage_writer, event_data):
+        """Retrieves the event data stream of event data.
+
+        Args:
+          storage_writer (FakeStorageWriter): storage writer.
+          event_data (EventData): event data.
+
+        Return:
+          EventDataStream: event data stream corresponding to the event data.
+        """
+        event_data_stream_identifier = event_data.GetEventDataStreamIdentifier()
+        return storage_writer.GetAttributeContainerByIdentifier(
+            events.EventDataStream.CONTAINER_TYPE, event_data_stream_identifier
+        )
+
+    def _GetTestFilePathSpec(self, path_segments):
+        """Retrieves a path specification of a test file in the test data directory.
+
+        Args:
+          path_segments (list[str]): components of a path to a test file, relative
+              to the test_data directory.
+
+        Returns:
+          dfvfs.PathSpec: path specification.
+
+        Raises:
+          SkipTest: if the path inside the test data directory does not exist and
+              the test should be skipped.
+        """
+        test_file_path = self._GetTestFilePath(path_segments)
+        self._SkipIfPathNotExists(test_file_path)
+
+        return path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
+        )
+
+    def _TestProcessPathSpec(
+        self,
+        storage_writer,
+        path_spec,
+        expected_event_data_counts,
+        archive_types_string=None,
+        extraction_worker=None,
+    ):
+        """Tests processing a path specification.
+
+        Args:
+          storage_writer (StorageWriter): storage writer.
+          path_spec (dfvfs.PathSpec): path specification.
+          expected_event_data_counts (dict[str, int|list[int]]): expected counts
+              of number of event data containers per data type.
+          archive_types_string (Optional[str]): comma separated archive types for
+              which embedded file entries should be processed.
+          extraction_worker (Optional[EventExtractionWorker]): worker to process
+              the path specification. If None, a new worker will be created.
+        """
+        session = sessions.Session()
+
+        resolver_context = context.Context()
+        parser_mediator = parsers_mediator.ParserMediator(
+            resolver_context=resolver_context
+        )
+
+        parser_mediator.SetStorageWriter(storage_writer)
+
+        if not extraction_worker:
+            configuration = configurations.ExtractionConfiguration()
+            configuration.archive_types_string = archive_types_string
+
+            extraction_worker = worker.EventExtractionWorker()
+            extraction_worker.SetExtractionConfiguration(configuration)
+
+        storage_writer.Open()
+
+        try:
+            storage_writer.AddAttributeContainer(session)
+
+            extraction_worker.ProcessPathSpec(parser_mediator, path_spec)
+            event_source = storage_writer.GetFirstWrittenEventSource()
+            while event_source:
+                extraction_worker.ProcessPathSpec(
+                    parser_mediator, event_source.path_spec
+                )
+                event_source = storage_writer.GetNextWrittenEventSource()
 
-    return path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
+            storage_writer.UpdateAttributeContainer(session)
 
-  def _TestProcessPathSpec(
-      self, storage_writer, path_spec, expected_event_data_counts,
-      archive_types_string=None, extraction_worker=None):
-    """Tests processing a path specification.
+            if expected_event_data_counts:
+                self.CheckEventDataCounts(storage_writer, expected_event_data_counts)
 
-    Args:
-      storage_writer (StorageWriter): storage writer.
-      path_spec (dfvfs.PathSpec): path specification.
-      expected_event_data_counts (dict[str, int|list[int]]): expected counts
-          of number of event data containers per data type.
-      archive_types_string (Optional[str]): comma separated archive types for
-          which embedded file entries should be processed.
-      extraction_worker (Optional[EventExtractionWorker]): worker to process
-          the path specification. If None, a new worker will be created.
-    """
-    session = sessions.Session()
+        finally:
+            storage_writer.Close()
 
-    resolver_context = context.Context()
-    parser_mediator = parsers_mediator.ParserMediator(
-        resolver_context=resolver_context)
+    def CheckEventDataCounts(self, storage_writer, expected_event_data_counts):
+        """Asserts that the number of events per data type matches.
 
-    parser_mediator.SetStorageWriter(storage_writer)
+        Args:
+          storage_writer (FakeStorageWriter): storage writer.
+          expected_event_data_counts (dict[str, int|list[int]]): expected counts
+              of number of event data containers per data type.
+        """
+        event_counters = collections.Counter()
+        for event_data in storage_writer.GetAttributeContainers("event_data"):
+            event_counters[event_data.data_type] += 1
 
-    if not extraction_worker:
-      configuration = configurations.ExtractionConfiguration()
-      configuration.archive_types_string = archive_types_string
+        for data_type, expected_event_count in expected_event_data_counts.items():
+            event_count = event_counters.pop(data_type, 0)
+            if isinstance(expected_event_count, list):
+                self.assertIn(event_count, expected_event_count)
+            else:
+                self.assertEqual(
+                    event_count,
+                    expected_event_count,
+                    (f'data type: "{data_type:s}" does not match expected value'),
+                )
 
-      extraction_worker = worker.EventExtractionWorker()
-      extraction_worker.SetExtractionConfiguration(configuration)
+        # Ensure there are no events left unaccounted for.
+        self.assertEqual(event_counters, collections.Counter())
 
-    storage_writer.Open()
+    def testAnalyzeDataStream(self):
+        """Tests the _AnalyzeDataStream function."""
+        session = sessions.Session()
 
-    try:
-      storage_writer.AddAttributeContainer(session)
+        resolver_context = context.Context()
+        parser_mediator = parsers_mediator.ParserMediator(
+            resolver_context=resolver_context
+        )
 
-      extraction_worker.ProcessPathSpec(parser_mediator, path_spec)
-      event_source = storage_writer.GetFirstWrittenEventSource()
-      while event_source:
-        extraction_worker.ProcessPathSpec(
-            parser_mediator, event_source.path_spec)
-        event_source = storage_writer.GetNextWrittenEventSource()
+        storage_writer = fake_writer.FakeStorageWriter()
+        parser_mediator.SetStorageWriter(storage_writer)
 
-      storage_writer.UpdateAttributeContainer(session)
+        extraction_worker = worker.EventExtractionWorker()
 
-      if expected_event_data_counts:
-        self.CheckEventDataCounts(storage_writer, expected_event_data_counts)
+        test_analyzer = analyzers_manager_test.TestAnalyzer()
+        self.assertEqual(len(test_analyzer.GetResults()), 0)
 
-    finally:
-      storage_writer.Close()
+        extraction_worker._analyzers = [test_analyzer]
 
-  def CheckEventDataCounts(self, storage_writer, expected_event_data_counts):
-    """Asserts that the number of events per data type matches.
+        storage_writer.Open()
 
-    Args:
-      storage_writer (FakeStorageWriter): storage writer.
-      expected_event_data_counts (dict[str, int|list[int]]): expected counts
-          of number of event data containers per data type.
-    """
-    event_counters = collections.Counter()
-    for event_data in storage_writer.GetAttributeContainers('event_data'):
-      event_counters[event_data.data_type] += 1
+        storage_writer.AddAttributeContainer(session)
 
-    for data_type, expected_event_count in expected_event_data_counts.items():
-      event_count = event_counters.pop(data_type, 0)
-      if isinstance(expected_event_count, list):
-        self.assertIn(event_count, expected_event_count)
-      else:
-        self.assertEqual(event_count, expected_event_count, (
-            f'data type: "{data_type:s}" does not match expected value'))
+        file_entry = self._GetTestFileEntry(["syslog.tgz"])
+        parser_mediator.SetFileEntry(file_entry)
 
-    # Ensure there are no events left unaccounted for.
-    self.assertEqual(event_counters, collections.Counter())
+        display_name = parser_mediator.GetDisplayName()
+        event_data_stream = events.EventDataStream()
 
-  def testAnalyzeDataStream(self):
-    """Tests the _AnalyzeDataStream function."""
-    session = sessions.Session()
+        extraction_worker._AnalyzeDataStream(
+            file_entry, "", display_name, event_data_stream
+        )
 
-    resolver_context = context.Context()
-    parser_mediator = parsers_mediator.ParserMediator(
-        resolver_context=resolver_context)
+        storage_writer.UpdateAttributeContainer(session)
 
-    storage_writer = fake_writer.FakeStorageWriter()
-    parser_mediator.SetStorageWriter(storage_writer)
+        storage_writer.Close()
 
-    extraction_worker = worker.EventExtractionWorker()
+        self.assertIsNotNone(event_data_stream)
 
-    test_analyzer = analyzers_manager_test.TestAnalyzer()
-    self.assertEqual(len(test_analyzer.GetResults()), 0)
+        event_attribute = getattr(event_data_stream, "test_result", None)
+        self.assertEqual(event_attribute, "is_vegetable")
 
-    extraction_worker._analyzers = [test_analyzer]
+    def testAnalyzeFileObject(self):
+        """Tests the _AnalyzeFileObject function."""
+        session = sessions.Session()
 
-    storage_writer.Open()
+        resolver_context = context.Context()
+        parser_mediator = parsers_mediator.ParserMediator(
+            resolver_context=resolver_context
+        )
 
-    storage_writer.AddAttributeContainer(session)
+        storage_writer = fake_writer.FakeStorageWriter()
+        parser_mediator.SetStorageWriter(storage_writer)
 
-    file_entry = self._GetTestFileEntry(['syslog.tgz'])
-    parser_mediator.SetFileEntry(file_entry)
+        extraction_worker = worker.EventExtractionWorker()
 
-    display_name = parser_mediator.GetDisplayName()
-    event_data_stream = events.EventDataStream()
+        test_analyzer = analyzers_manager_test.TestAnalyzer()
+        self.assertEqual(len(test_analyzer.GetResults()), 0)
 
-    extraction_worker._AnalyzeDataStream(
-        file_entry, '', display_name, event_data_stream)
+        extraction_worker._analyzers = [test_analyzer]
 
-    storage_writer.UpdateAttributeContainer(session)
+        storage_writer.Open()
 
-    storage_writer.Close()
+        storage_writer.AddAttributeContainer(session)
 
-    self.assertIsNotNone(event_data_stream)
+        file_entry = self._GetTestFileEntry(["syslog.tgz"])
+        parser_mediator.SetFileEntry(file_entry)
 
-    event_attribute = getattr(event_data_stream, 'test_result', None)
-    self.assertEqual(event_attribute, 'is_vegetable')
+        file_object = file_entry.GetFileObject()
+        display_name = parser_mediator.GetDisplayName()
+        event_data_stream = events.EventDataStream()
 
-  def testAnalyzeFileObject(self):
-    """Tests the _AnalyzeFileObject function."""
-    session = sessions.Session()
+        extraction_worker._AnalyzeFileObject(
+            file_object, display_name, event_data_stream
+        )
 
-    resolver_context = context.Context()
-    parser_mediator = parsers_mediator.ParserMediator(
-        resolver_context=resolver_context)
+        storage_writer.UpdateAttributeContainer(session)
 
-    storage_writer = fake_writer.FakeStorageWriter()
-    parser_mediator.SetStorageWriter(storage_writer)
+        storage_writer.Close()
 
-    extraction_worker = worker.EventExtractionWorker()
+        self.assertIsNotNone(event_data_stream)
 
-    test_analyzer = analyzers_manager_test.TestAnalyzer()
-    self.assertEqual(len(test_analyzer.GetResults()), 0)
+        event_attribute = getattr(event_data_stream, "test_result", None)
+        self.assertEqual(event_attribute, "is_vegetable")
 
-    extraction_worker._analyzers = [test_analyzer]
+    def testCanSkipDataStream(self):
+        """Tests the _CanSkipDataStream function."""
+        extraction_worker = worker.EventExtractionWorker()
 
-    storage_writer.Open()
+        file_entry = self._GetTestFileEntry(["syslog.tgz"])
 
-    storage_writer.AddAttributeContainer(session)
+        result = extraction_worker._CanSkipDataStream(file_entry, None)
+        self.assertFalse(result)
 
-    file_entry = self._GetTestFileEntry(['syslog.tgz'])
-    parser_mediator.SetFileEntry(file_entry)
+    def testCanSkipContentExtraction(self):
+        """Tests the _CanSkipContentExtraction function."""
+        extraction_worker = worker.EventExtractionWorker()
 
-    file_object = file_entry.GetFileObject()
-    display_name = parser_mediator.GetDisplayName()
-    event_data_stream = events.EventDataStream()
+        file_entry = self._GetTestFileEntry(["syslog.tgz"])
 
-    extraction_worker._AnalyzeFileObject(
-        file_object, display_name, event_data_stream)
+        result = extraction_worker._CanSkipContentExtraction(file_entry)
+        self.assertFalse(result)
 
-    storage_writer.UpdateAttributeContainer(session)
+    def testExtractContentFromDataStream(self):
+        """Tests the _ExtractContentFromDataStream function."""
+        session = sessions.Session()
 
-    storage_writer.Close()
+        resolver_context = context.Context()
+        parser_mediator = parsers_mediator.ParserMediator(
+            resolver_context=resolver_context
+        )
 
-    self.assertIsNotNone(event_data_stream)
+        storage_writer = fake_writer.FakeStorageWriter()
+        parser_mediator.SetStorageWriter(storage_writer)
 
-    event_attribute = getattr(event_data_stream, 'test_result', None)
-    self.assertEqual(event_attribute, 'is_vegetable')
+        extraction_worker = worker.EventExtractionWorker()
 
-  def testCanSkipDataStream(self):
-    """Tests the _CanSkipDataStream function."""
-    extraction_worker = worker.EventExtractionWorker()
+        test_analyzer = analyzers_manager_test.TestAnalyzer()
+        self.assertEqual(len(test_analyzer.GetResults()), 0)
 
-    file_entry = self._GetTestFileEntry(['syslog.tgz'])
+        extraction_worker._analyzers = [test_analyzer]
 
-    result = extraction_worker._CanSkipDataStream(file_entry, None)
-    self.assertFalse(result)
+        storage_writer.Open()
 
-  def testCanSkipContentExtraction(self):
-    """Tests the _CanSkipContentExtraction function."""
-    extraction_worker = worker.EventExtractionWorker()
+        storage_writer.AddAttributeContainer(session)
 
-    file_entry = self._GetTestFileEntry(['syslog.tgz'])
+        file_entry = self._GetTestFileEntry(["syslog.tgz"])
+        parser_mediator.SetFileEntry(file_entry)
 
-    result = extraction_worker._CanSkipContentExtraction(file_entry)
-    self.assertFalse(result)
+        extraction_worker._ExtractContentFromDataStream(parser_mediator, file_entry, "")
 
-  def testExtractContentFromDataStream(self):
-    """Tests the _ExtractContentFromDataStream function."""
-    session = sessions.Session()
+        storage_writer.UpdateAttributeContainer(session)
 
-    resolver_context = context.Context()
-    parser_mediator = parsers_mediator.ParserMediator(
-        resolver_context=resolver_context)
+        storage_writer.Close()
 
-    storage_writer = fake_writer.FakeStorageWriter()
-    parser_mediator.SetStorageWriter(storage_writer)
+        # TODO: check results in storage writer
 
-    extraction_worker = worker.EventExtractionWorker()
+    def testExtractMetadataFromFileEntry(self):
+        """Tests the _ExtractMetadataFromFileEntry function."""
+        session = sessions.Session()
 
-    test_analyzer = analyzers_manager_test.TestAnalyzer()
-    self.assertEqual(len(test_analyzer.GetResults()), 0)
+        resolver_context = context.Context()
+        parser_mediator = parsers_mediator.ParserMediator(
+            resolver_context=resolver_context
+        )
 
-    extraction_worker._analyzers = [test_analyzer]
+        storage_writer = fake_writer.FakeStorageWriter()
+        parser_mediator.SetStorageWriter(storage_writer)
 
-    storage_writer.Open()
+        extraction_worker = worker.EventExtractionWorker()
 
-    storage_writer.AddAttributeContainer(session)
+        test_analyzer = analyzers_manager_test.TestAnalyzer()
+        self.assertEqual(len(test_analyzer.GetResults()), 0)
 
-    file_entry = self._GetTestFileEntry(['syslog.tgz'])
-    parser_mediator.SetFileEntry(file_entry)
+        extraction_worker._analyzers = [test_analyzer]
 
-    extraction_worker._ExtractContentFromDataStream(
-        parser_mediator, file_entry, '')
+        storage_writer.Open()
 
-    storage_writer.UpdateAttributeContainer(session)
+        storage_writer.AddAttributeContainer(session)
 
-    storage_writer.Close()
+        file_entry = self._GetTestFileEntry(["syslog.tgz"])
+        parser_mediator.SetFileEntry(file_entry)
 
-    # TODO: check results in storage writer
+        extraction_worker._ExtractMetadataFromFileEntry(parser_mediator, file_entry, "")
 
-  def testExtractMetadataFromFileEntry(self):
-    """Tests the _ExtractMetadataFromFileEntry function."""
-    session = sessions.Session()
+        storage_writer.UpdateAttributeContainer(session)
 
-    resolver_context = context.Context()
-    parser_mediator = parsers_mediator.ParserMediator(
-        resolver_context=resolver_context)
+        storage_writer.Close()
 
-    storage_writer = fake_writer.FakeStorageWriter()
-    parser_mediator.SetStorageWriter(storage_writer)
+        # TODO: check results in storage writer
 
-    extraction_worker = worker.EventExtractionWorker()
+    def testGetCompressedStreamTypes(self):
+        """Tests the _GetCompressedStreamTypes function."""
+        session = sessions.Session()
 
-    test_analyzer = analyzers_manager_test.TestAnalyzer()
-    self.assertEqual(len(test_analyzer.GetResults()), 0)
+        resolver_context = context.Context()
+        parser_mediator = parsers_mediator.ParserMediator(
+            resolver_context=resolver_context
+        )
 
-    extraction_worker._analyzers = [test_analyzer]
+        storage_writer = fake_writer.FakeStorageWriter()
+        parser_mediator.SetStorageWriter(storage_writer)
 
-    storage_writer.Open()
+        extraction_worker = worker.EventExtractionWorker()
 
-    storage_writer.AddAttributeContainer(session)
+        test_analyzer = analyzers_manager_test.TestAnalyzer()
+        self.assertEqual(len(test_analyzer.GetResults()), 0)
 
-    file_entry = self._GetTestFileEntry(['syslog.tgz'])
-    parser_mediator.SetFileEntry(file_entry)
+        extraction_worker._analyzers = [test_analyzer]
 
-    extraction_worker._ExtractMetadataFromFileEntry(
-        parser_mediator, file_entry, '')
+        storage_writer.Open()
 
-    storage_writer.UpdateAttributeContainer(session)
+        storage_writer.AddAttributeContainer(session)
 
-    storage_writer.Close()
+        extraction_worker = worker.EventExtractionWorker()
 
-    # TODO: check results in storage writer
+        path_spec = self._GetTestFilePathSpec(["syslog.tgz"])
 
-  def testGetCompressedStreamTypes(self):
-    """Tests the _GetCompressedStreamTypes function."""
-    session = sessions.Session()
+        type_indicators = extraction_worker._GetCompressedStreamTypes(
+            parser_mediator, path_spec
+        )
+        self.assertEqual(type_indicators, [dfvfs_definitions.TYPE_INDICATOR_GZIP])
 
-    resolver_context = context.Context()
-    parser_mediator = parsers_mediator.ParserMediator(
-        resolver_context=resolver_context)
+        storage_writer.UpdateAttributeContainer(session)
 
-    storage_writer = fake_writer.FakeStorageWriter()
-    parser_mediator.SetStorageWriter(storage_writer)
+        storage_writer.Close()
 
-    extraction_worker = worker.EventExtractionWorker()
+    def testIsMetadataFile(self):
+        """Tests the _IsMetadataFile function."""
+        extraction_worker = worker.EventExtractionWorker()
 
-    test_analyzer = analyzers_manager_test.TestAnalyzer()
-    self.assertEqual(len(test_analyzer.GetResults()), 0)
+        file_entry = self._GetTestFileEntry(["syslog.tgz"])
 
-    extraction_worker._analyzers = [test_analyzer]
+        result = extraction_worker._IsMetadataFile(file_entry)
+        self.assertFalse(result)
 
-    storage_writer.Open()
+    # TODO: add tests for _ProcessArchiveTypes
+    # TODO: add tests for _ProcessCompressedStreamTypes
+    # TODO: add tests for _ProcessDirectory
+    # TODO: add tests for _ProcessFileEntry
+    # TODO: add tests for _ProcessFileEntryDataStream
+    # TODO: add tests for _ProcessMetadataFile
+    # TODO: add tests for _SetHashers
+    # TODO: add tests for _SetYaraRules
+    # TODO: add tests for GetAnalyzerNames
 
-    storage_writer.AddAttributeContainer(session)
+    def testProcessPathSpecFile(self):
+        """Tests the ProcessPathSpec function on a file."""
+        path_spec = self._GetTestFilePathSpec(["syslog", "syslog"])
+        storage_writer = fake_writer.FakeStorageWriter()
 
-    extraction_worker = worker.EventExtractionWorker()
+        expected_event_data_counts = {
+            "fs:stat": 1,
+            "syslog:cron:task_run": 3,
+            "syslog:line": 13,
+        }
 
-    path_spec = self._GetTestFilePathSpec(['syslog.tgz'])
+        self._TestProcessPathSpec(storage_writer, path_spec, expected_event_data_counts)
 
-    type_indicators = extraction_worker._GetCompressedStreamTypes(
-        parser_mediator, path_spec)
-    self.assertEqual(type_indicators, [dfvfs_definitions.TYPE_INDICATOR_GZIP])
+    def testProcessPathSpecCompressedFileGZIP(self):
+        """Tests the ProcessPathSpec function on a gzip compressed file."""
+        path_spec = self._GetTestFilePathSpec(["syslog.gz"])
+        storage_writer = fake_writer.FakeStorageWriter()
 
-    storage_writer.UpdateAttributeContainer(session)
+        expected_event_data_counts = {
+            "fs:stat": 2,
+            "syslog:cron:task_run": 3,
+            "syslog:line": 9,
+        }
 
-    storage_writer.Close()
+        self._TestProcessPathSpec(storage_writer, path_spec, expected_event_data_counts)
 
-  def testIsMetadataFile(self):
-    """Tests the _IsMetadataFile function."""
-    extraction_worker = worker.EventExtractionWorker()
+    def testProcessPathSpecCompressedFileBZIP2(self):
+        """Tests the ProcessPathSpec function on a bzip2 compressed file."""
+        path_spec = self._GetTestFilePathSpec(["syslog.bz2"])
+        storage_writer = fake_writer.FakeStorageWriter()
 
-    file_entry = self._GetTestFileEntry(['syslog.tgz'])
+        expected_event_data_counts = {
+            "fs:stat": 1,
+            "syslog:cron:task_run": 3,
+            "syslog:line": 9,
+        }
 
-    result = extraction_worker._IsMetadataFile(file_entry)
-    self.assertFalse(result)
+        self._TestProcessPathSpec(storage_writer, path_spec, expected_event_data_counts)
 
-  # TODO: add tests for _ProcessArchiveTypes
-  # TODO: add tests for _ProcessCompressedStreamTypes
-  # TODO: add tests for _ProcessDirectory
-  # TODO: add tests for _ProcessFileEntry
-  # TODO: add tests for _ProcessFileEntryDataStream
-  # TODO: add tests for _ProcessMetadataFile
-  # TODO: add tests for _SetHashers
-  # TODO: add tests for _SetYaraRules
-  # TODO: add tests for GetAnalyzerNames
+    def testProcessPathSpecCompressedFileXZ(self):
+        """Tests the ProcessPathSpec function on a xz compressed file."""
+        path_spec = self._GetTestFilePathSpec(["syslog.xz"])
+        storage_writer = fake_writer.FakeStorageWriter()
 
-  def testProcessPathSpecFile(self):
-    """Tests the ProcessPathSpec function on a file."""
-    path_spec = self._GetTestFilePathSpec(['syslog', 'syslog'])
-    storage_writer = fake_writer.FakeStorageWriter()
+        expected_event_data_counts = {
+            "fs:stat": 1,
+            "syslog:cron:task_run": 3,
+            "syslog:line": 9,
+        }
 
-    expected_event_data_counts = {
-        'fs:stat': 1,
-        'syslog:cron:task_run': 3,
-        'syslog:line': 13}
+        self._TestProcessPathSpec(storage_writer, path_spec, expected_event_data_counts)
 
-    self._TestProcessPathSpec(
-        storage_writer, path_spec, expected_event_data_counts)
+    def testProcessPathSpec(self):
+        """Tests the ProcessPathSpec function on an archive file."""
+        test_file_path = self._GetTestFilePath(["syslog.tar"])
+        self._SkipIfPathNotExists(test_file_path)
 
-  def testProcessPathSpecCompressedFileGZIP(self):
-    """Tests the ProcessPathSpec function on a gzip compressed file."""
-    path_spec = self._GetTestFilePathSpec(['syslog.gz'])
-    storage_writer = fake_writer.FakeStorageWriter()
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
+        )
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_TAR, location="/syslog", parent=path_spec
+        )
 
-    expected_event_data_counts = {
-        'fs:stat': 2,
-        'syslog:cron:task_run': 3,
-        'syslog:line': 9}
+        storage_writer = fake_writer.FakeStorageWriter()
 
-    self._TestProcessPathSpec(
-        storage_writer, path_spec, expected_event_data_counts)
+        expected_event_data_counts = {
+            "fs:stat": 1,
+            "syslog:cron:task_run": 3,
+            "syslog:line": 9,
+        }
 
-  def testProcessPathSpecCompressedFileBZIP2(self):
-    """Tests the ProcessPathSpec function on a bzip2 compressed file."""
-    path_spec = self._GetTestFilePathSpec(['syslog.bz2'])
-    storage_writer = fake_writer.FakeStorageWriter()
+        self._TestProcessPathSpec(storage_writer, path_spec, expected_event_data_counts)
 
-    expected_event_data_counts = {
-        'fs:stat': 1,
-        'syslog:cron:task_run': 3,
-        'syslog:line': 9}
+        # Process an archive file without "process archive files" mode.
+        path_spec = self._GetTestFilePathSpec(["syslog.tar"])
+        storage_writer = fake_writer.FakeStorageWriter()
 
-    self._TestProcessPathSpec(
-        storage_writer, path_spec, expected_event_data_counts)
+        expected_event_data_counts = {"fs:stat": 1}
 
-  def testProcessPathSpecCompressedFileXZ(self):
-    """Tests the ProcessPathSpec function on a xz compressed file."""
-    path_spec = self._GetTestFilePathSpec(['syslog.xz'])
-    storage_writer = fake_writer.FakeStorageWriter()
+        self._TestProcessPathSpec(storage_writer, path_spec, expected_event_data_counts)
 
-    expected_event_data_counts = {
-        'fs:stat': 1,
-        'syslog:cron:task_run': 3,
-        'syslog:line': 9}
+        # Process an archive file with "process archive files" mode.
+        path_spec = self._GetTestFilePathSpec(["syslog.tar"])
+        storage_writer = fake_writer.FakeStorageWriter()
 
-    self._TestProcessPathSpec(
-        storage_writer, path_spec, expected_event_data_counts)
+        expected_event_data_counts = {
+            "fs:stat": 2,
+            "syslog:cron:task_run": 3,
+            "syslog:line": 9,
+        }
 
-  def testProcessPathSpec(self):
-    """Tests the ProcessPathSpec function on an archive file."""
-    test_file_path = self._GetTestFilePath(['syslog.tar'])
-    self._SkipIfPathNotExists(test_file_path)
+        self._TestProcessPathSpec(
+            storage_writer,
+            path_spec,
+            expected_event_data_counts,
+            archive_types_string="tar,zip",
+        )
 
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TAR, location='/syslog',
-        parent=path_spec)
+    def testProcessPathSpecCompressedArchive(self):
+        """Tests the ProcessPathSpec function on a compressed archive file."""
+        test_file_path = self._GetTestFilePath(["syslog.tgz"])
+        self._SkipIfPathNotExists(test_file_path)
 
-    storage_writer = fake_writer.FakeStorageWriter()
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
+        )
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_GZIP, parent=path_spec
+        )
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_TAR, location="/syslog", parent=path_spec
+        )
 
-    expected_event_data_counts = {
-        'fs:stat': 1,
-        'syslog:cron:task_run': 3,
-        'syslog:line': 9}
+        storage_writer = fake_writer.FakeStorageWriter()
 
-    self._TestProcessPathSpec(
-        storage_writer, path_spec, expected_event_data_counts)
+        expected_event_data_counts = {
+            "fs:stat": 1,
+            "syslog:cron:task_run": 3,
+            "syslog:line": 9,
+        }
 
-    # Process an archive file without "process archive files" mode.
-    path_spec = self._GetTestFilePathSpec(['syslog.tar'])
-    storage_writer = fake_writer.FakeStorageWriter()
+        self._TestProcessPathSpec(storage_writer, path_spec, expected_event_data_counts)
 
-    expected_event_data_counts = {
-        'fs:stat': 1}
+        # Process an archive file with "process archive files" mode.
+        path_spec = self._GetTestFilePathSpec(["syslog.tgz"])
+        storage_writer = fake_writer.FakeStorageWriter()
 
-    self._TestProcessPathSpec(
-        storage_writer, path_spec, expected_event_data_counts)
+        expected_event_data_counts = {
+            "fs:stat": 3,
+            "syslog:cron:task_run": 3,
+            "syslog:line": 9,
+        }
 
-    # Process an archive file with "process archive files" mode.
-    path_spec = self._GetTestFilePathSpec(['syslog.tar'])
-    storage_writer = fake_writer.FakeStorageWriter()
+        self._TestProcessPathSpec(
+            storage_writer,
+            path_spec,
+            expected_event_data_counts,
+            archive_types_string="tar,zip",
+        )
 
-    expected_event_data_counts = {
-        'fs:stat': 2,
-        'syslog:cron:task_run': 3,
-        'syslog:line': 9}
+    def testProcessPathSpecDMG(self):
+        """Tests the ProcessPathSpec function on a DMG image."""
+        test_file_path = self._GetTestFilePath(["hfsplus_zlib.dmg"])
+        self._SkipIfPathNotExists(test_file_path)
 
-    self._TestProcessPathSpec(
-        storage_writer, path_spec, expected_event_data_counts,
-        archive_types_string='tar,zip')
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
+        )
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_MODI, parent=path_spec
+        )
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_GPT, location="/p1", parent=path_spec
+        )
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_HFS, location="/", parent=path_spec
+        )
+        storage_writer = fake_writer.FakeStorageWriter()
 
-  def testProcessPathSpecCompressedArchive(self):
-    """Tests the ProcessPathSpec function on a compressed archive file."""
-    test_file_path = self._GetTestFilePath(['syslog.tgz'])
-    self._SkipIfPathNotExists(test_file_path)
+        expected_event_data_counts = {"fs:stat": 7}
 
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_GZIP, parent=path_spec)
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TAR, location='/syslog',
-        parent=path_spec)
+        self._TestProcessPathSpec(storage_writer, path_spec, expected_event_data_counts)
 
-    storage_writer = fake_writer.FakeStorageWriter()
+    def testProcessPathSpecTarWithDMG(self):
+        """Tests the ProcessPathSpec function on a TAR with a DMG image."""
+        test_file_path = self._GetTestFilePath(["hfsplus_zlib.dmg.tar"])
+        self._SkipIfPathNotExists(test_file_path)
 
-    expected_event_data_counts = {
-        'fs:stat': 1,
-        'syslog:cron:task_run': 3,
-        'syslog:line': 9}
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
+        )
+        storage_writer = fake_writer.FakeStorageWriter()
 
-    self._TestProcessPathSpec(
-        storage_writer, path_spec, expected_event_data_counts)
+        expected_event_data_counts = {"fs:stat": 2}
 
-    # Process an archive file with "process archive files" mode.
-    path_spec = self._GetTestFilePathSpec(['syslog.tgz'])
-    storage_writer = fake_writer.FakeStorageWriter()
+        self._TestProcessPathSpec(
+            storage_writer,
+            path_spec,
+            expected_event_data_counts,
+            archive_types_string="tar",
+        )
 
-    expected_event_data_counts = {
-        'fs:stat': 3,
-        'syslog:cron:task_run': 3,
-        'syslog:line': 9}
+        expected_event_data_counts = {"fs:stat": 9}
 
-    self._TestProcessPathSpec(
-        storage_writer, path_spec, expected_event_data_counts,
-        archive_types_string='tar,zip')
+        self._TestProcessPathSpec(
+            storage_writer,
+            path_spec,
+            expected_event_data_counts,
+            archive_types_string="modi,tar",
+        )
 
-  def testProcessPathSpecDMG(self):
-    """Tests the ProcessPathSpec function on a DMG image."""
-    test_file_path = self._GetTestFilePath(['hfsplus_zlib.dmg'])
-    self._SkipIfPathNotExists(test_file_path)
+    def testProcessPathSpecISO(self):
+        """Tests the ProcessPathSpec function on an ISO image."""
+        test_file_path = self._GetTestFilePath(["iso9660.raw"])
+        self._SkipIfPathNotExists(test_file_path)
 
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_MODI, parent=path_spec)
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_GPT, location='/p1',
-        parent=path_spec)
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_HFS, location='/',
-        parent=path_spec)
-    storage_writer = fake_writer.FakeStorageWriter()
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
+        )
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_RAW, parent=path_spec
+        )
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_TSK, location="/", parent=path_spec
+        )
+        storage_writer = fake_writer.FakeStorageWriter()
 
-    expected_event_data_counts = {
-        'fs:stat': 7}
+        expected_event_data_counts = {"fs:stat": 5}
 
-    self._TestProcessPathSpec(
-        storage_writer, path_spec, expected_event_data_counts)
+        self._TestProcessPathSpec(storage_writer, path_spec, expected_event_data_counts)
 
-  def testProcessPathSpecTarWithDMG(self):
-    """Tests the ProcessPathSpec function on a TAR with a DMG image."""
-    test_file_path = self._GetTestFilePath(['hfsplus_zlib.dmg.tar'])
-    self._SkipIfPathNotExists(test_file_path)
+    def testProcessPathSpecTarWithISO(self):
+        """Tests the ProcessPathSpec function on a TAR with an ISO image."""
+        test_file_path = self._GetTestFilePath(["iso9660.raw.tar"])
+        self._SkipIfPathNotExists(test_file_path)
 
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
-    storage_writer = fake_writer.FakeStorageWriter()
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
+        )
+        storage_writer = fake_writer.FakeStorageWriter()
 
-    expected_event_data_counts = {
-        'fs:stat': 2}
+        expected_event_data_counts = {"fs:stat": 2}
 
-    self._TestProcessPathSpec(
-        storage_writer, path_spec, expected_event_data_counts,
-        archive_types_string='tar')
+        self._TestProcessPathSpec(
+            storage_writer,
+            path_spec,
+            expected_event_data_counts,
+            archive_types_string="tar",
+        )
 
-    expected_event_data_counts = {
-        'fs:stat': 9}
+        expected_event_data_counts = {"fs:stat": 7}
 
-    self._TestProcessPathSpec(
-        storage_writer, path_spec, expected_event_data_counts,
-        archive_types_string='modi,tar')
+        self._TestProcessPathSpec(
+            storage_writer,
+            path_spec,
+            expected_event_data_counts,
+            archive_types_string="iso9660,tar",
+        )
 
-  def testProcessPathSpecISO(self):
-    """Tests the ProcessPathSpec function on an ISO image."""
-    test_file_path = self._GetTestFilePath(['iso9660.raw'])
-    self._SkipIfPathNotExists(test_file_path)
+    def testProcessPathSpecVHD(self):
+        """Tests the ProcessPathSpec function on a VHD image."""
+        test_file_path = self._GetTestFilePath(["image.vhd"])
+        self._SkipIfPathNotExists(test_file_path)
 
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_RAW, parent=path_spec)
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_TSK, location='/',
-        parent=path_spec)
-    storage_writer = fake_writer.FakeStorageWriter()
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
+        )
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_VHDI, parent=path_spec
+        )
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_EXT, location="/", parent=path_spec
+        )
+        storage_writer = fake_writer.FakeStorageWriter()
 
-    expected_event_data_counts = {
-        'fs:stat': 5}
+        expected_event_data_counts = {"fs:stat": 5}
 
-    self._TestProcessPathSpec(
-        storage_writer, path_spec, expected_event_data_counts)
+        self._TestProcessPathSpec(storage_writer, path_spec, expected_event_data_counts)
 
-  def testProcessPathSpecTarWithISO(self):
-    """Tests the ProcessPathSpec function on a TAR with an ISO image."""
-    test_file_path = self._GetTestFilePath(['iso9660.raw.tar'])
-    self._SkipIfPathNotExists(test_file_path)
+    def testProcessPathSpecTarWithVHD(self):
+        """Tests the ProcessPathSpec function on a TAR with a VHD image."""
+        test_file_path = self._GetTestFilePath(["image.vhd.tar"])
+        self._SkipIfPathNotExists(test_file_path)
 
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
-    storage_writer = fake_writer.FakeStorageWriter()
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
+        )
+        storage_writer = fake_writer.FakeStorageWriter()
 
-    expected_event_data_counts = {
-        'fs:stat': 2}
+        expected_event_data_counts = {"fs:stat": 2}
 
-    self._TestProcessPathSpec(
-        storage_writer, path_spec, expected_event_data_counts,
-        archive_types_string='tar')
+        self._TestProcessPathSpec(
+            storage_writer,
+            path_spec,
+            expected_event_data_counts,
+            archive_types_string="tar",
+        )
 
-    expected_event_data_counts = {
-        'fs:stat': 7}
+        expected_event_data_counts = {"fs:stat": 7}
 
-    self._TestProcessPathSpec(
-        storage_writer, path_spec, expected_event_data_counts,
-        archive_types_string='iso9660,tar')
+        self._TestProcessPathSpec(
+            storage_writer,
+            path_spec,
+            expected_event_data_counts,
+            archive_types_string="tar,vhdi",
+        )
 
-  def testProcessPathSpecVHD(self):
-    """Tests the ProcessPathSpec function on a VHD image."""
-    test_file_path = self._GetTestFilePath(['image.vhd'])
-    self._SkipIfPathNotExists(test_file_path)
+    def testProcessPathSpecVMDK(self):
+        """Tests the ProcessPathSpec function on a VMDK with symbolic links."""
+        test_file_path = self._GetTestFilePath(["image.vmdk"])
+        self._SkipIfPathNotExists(test_file_path)
 
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_VHDI, parent=path_spec)
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_EXT, location='/',
-        parent=path_spec)
-    storage_writer = fake_writer.FakeStorageWriter()
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
+        )
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_VMDK, parent=path_spec
+        )
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_EXT, location="/", parent=path_spec
+        )
+        storage_writer = fake_writer.FakeStorageWriter()
 
-    expected_event_data_counts = {
-        'fs:stat': 5}
+        expected_event_data_counts = {"fs:stat": 6}
 
-    self._TestProcessPathSpec(
-        storage_writer, path_spec, expected_event_data_counts)
+        self._TestProcessPathSpec(storage_writer, path_spec, expected_event_data_counts)
 
-  def testProcessPathSpecTarWithVHD(self):
-    """Tests the ProcessPathSpec function on a TAR with a VHD image."""
-    test_file_path = self._GetTestFilePath(['image.vhd.tar'])
-    self._SkipIfPathNotExists(test_file_path)
+    # TODO: add tests for SetExtractionConfiguration
+    # TODO: add tests for SetAnalyzersProfiler
+    # TODO: add tests for SetProcessingProfiler
+    # TODO: add tests for SignalAbort
 
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
-    storage_writer = fake_writer.FakeStorageWriter()
+    def testExtractionWorkerHashing(self):
+        """Test that the worker sets up and runs hashing code correctly."""
+        extraction_worker = worker.EventExtractionWorker()
 
-    expected_event_data_counts = {
-        'fs:stat': 2}
+        extraction_worker._SetHashers("md5")
+        self.assertIn("hashing", extraction_worker.GetAnalyzerNames())
 
-    self._TestProcessPathSpec(
-        storage_writer, path_spec, expected_event_data_counts,
-        archive_types_string='tar')
+        path_spec = self._GetTestFilePathSpec(["empty_file"])
+        storage_writer = fake_writer.FakeStorageWriter()
 
-    expected_event_data_counts = {
-        'fs:stat': 7}
+        expected_event_data_counts = {"fs:stat": 1}
 
-    self._TestProcessPathSpec(
-        storage_writer, path_spec, expected_event_data_counts,
-        archive_types_string='tar,vhdi')
+        self._TestProcessPathSpec(
+            storage_writer,
+            path_spec,
+            expected_event_data_counts,
+            extraction_worker=extraction_worker,
+        )
 
-  def testProcessPathSpecVMDK(self):
-    """Tests the ProcessPathSpec function on a VMDK with symbolic links."""
-    test_file_path = self._GetTestFilePath(['image.vmdk'])
-    self._SkipIfPathNotExists(test_file_path)
+        storage_writer.Open()
 
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path)
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_VMDK, parent=path_spec)
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_EXT, location='/',
-        parent=path_spec)
-    storage_writer = fake_writer.FakeStorageWriter()
+        empty_file_md5 = "d41d8cd98f00b204e9800998ecf8427e"
+        for event in storage_writer.GetSortedEvents():
+            event_data = self._GetEventDataOfEvent(storage_writer, event)
+            event_data_stream = self._GetEventDataStreamOfEventData(
+                storage_writer, event_data
+            )
 
-    expected_event_data_counts = {
-        'fs:stat': 6}
+            self.assertEqual(event_data_stream.md5_hash, empty_file_md5)
 
-    self._TestProcessPathSpec(
-        storage_writer, path_spec, expected_event_data_counts)
+        storage_writer.Close()
 
-  # TODO: add tests for SetExtractionConfiguration
-  # TODO: add tests for SetAnalyzersProfiler
-  # TODO: add tests for SetProcessingProfiler
-  # TODO: add tests for SignalAbort
+    def testExtractionWorkerYara(self):
+        """Tests that the worker applies Yara matching code correctly."""
+        yara_rule_path = self._GetTestFilePath(["rules.yara"])
+        self._SkipIfPathNotExists(yara_rule_path)
 
-  def testExtractionWorkerHashing(self):
-    """Test that the worker sets up and runs hashing code correctly."""
-    extraction_worker = worker.EventExtractionWorker()
+        with open(yara_rule_path, "r", encoding="utf-8") as file_object:
+            rule_string = file_object.read()
 
-    extraction_worker._SetHashers('md5')
-    self.assertIn('hashing', extraction_worker.GetAnalyzerNames())
+        extraction_worker = worker.EventExtractionWorker()
+        extraction_worker._SetYaraRules(rule_string)
+        self.assertIn("yara", extraction_worker.GetAnalyzerNames())
 
-    path_spec = self._GetTestFilePathSpec(['empty_file'])
-    storage_writer = fake_writer.FakeStorageWriter()
+        path_spec = self._GetTestFilePathSpec(["test_pe.exe"])
+        storage_writer = fake_writer.FakeStorageWriter()
 
-    expected_event_data_counts = {
-        'fs:stat': 1}
+        expected_event_data_counts = {
+            "fs:stat": 1,
+            "pe_coff:dll_import": 2,
+            "pe_coff:file": 1,
+        }
 
-    self._TestProcessPathSpec(
-        storage_writer, path_spec, expected_event_data_counts,
-        extraction_worker=extraction_worker)
+        self._TestProcessPathSpec(
+            storage_writer,
+            path_spec,
+            expected_event_data_counts,
+            extraction_worker=extraction_worker,
+        )
 
-    storage_writer.Open()
+        storage_writer.Open()
 
-    empty_file_md5 = 'd41d8cd98f00b204e9800998ecf8427e'
-    for event in storage_writer.GetSortedEvents():
-      event_data = self._GetEventDataOfEvent(storage_writer, event)
-      event_data_stream = self._GetEventDataStreamOfEventData(
-          storage_writer, event_data)
+        expected_yara_match = "PEfileBasic,PEfile"
+        for event in storage_writer.GetSortedEvents():
+            event_data = self._GetEventDataOfEvent(storage_writer, event)
+            event_data_stream = self._GetEventDataStreamOfEventData(
+                storage_writer, event_data
+            )
 
-      self.assertEqual(event_data_stream.md5_hash, empty_file_md5)
+            self.assertEqual(event_data_stream.yara_match, expected_yara_match)
 
-    storage_writer.Close()
+        storage_writer.Close()
 
-  def testExtractionWorkerYara(self):
-    """Tests that the worker applies Yara matching code correctly."""
-    yara_rule_path = self._GetTestFilePath(['rules.yara'])
-    self._SkipIfPathNotExists(yara_rule_path)
 
-    with open(yara_rule_path, 'r', encoding='utf-8') as file_object:
-      rule_string = file_object.read()
-
-    extraction_worker = worker.EventExtractionWorker()
-    extraction_worker._SetYaraRules(rule_string)
-    self.assertIn('yara', extraction_worker.GetAnalyzerNames())
-
-    path_spec = self._GetTestFilePathSpec(['test_pe.exe'])
-    storage_writer = fake_writer.FakeStorageWriter()
-
-    expected_event_data_counts = {
-        'fs:stat': 1,
-        'pe_coff:dll_import': 2,
-        'pe_coff:file': 1}
-
-    self._TestProcessPathSpec(
-        storage_writer, path_spec, expected_event_data_counts,
-        extraction_worker=extraction_worker)
-
-    storage_writer.Open()
-
-    expected_yara_match = 'PEfileBasic,PEfile'
-    for event in storage_writer.GetSortedEvents():
-      event_data = self._GetEventDataOfEvent(storage_writer, event)
-      event_data_stream = self._GetEventDataStreamOfEventData(
-          storage_writer, event_data)
-
-      self.assertEqual(event_data_stream.yara_match, expected_yara_match)
-
-    storage_writer.Close()
-
-
-if __name__ == '__main__':
-  unittest.main()
+if __name__ == "__main__":
+    unittest.main()

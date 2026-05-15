@@ -14,63 +14,68 @@ from plaso.output import rawpy
 
 
 class KMLOutputModule(rawpy.NativePythonOutputModule):
-  """Output module for a Keyhole Markup Language (KML) XML file."""
+    """Output module for a Keyhole Markup Language (KML) XML file."""
 
-  NAME = 'kml'
-  DESCRIPTION = 'Saves events with geography data into a KML format.'
+    NAME = "kml"
+    DESCRIPTION = "Saves events with geography data into a KML format."
 
-  def WriteFieldValues(self, output_mediator, field_values):
-    """Writes field values to the output.
+    def WriteFieldValues(self, output_mediator, field_values):
+        """Writes field values to the output.
 
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfVFS.
-      field_values (dict[str, str]): output field values per name.
-    """
-    latitude = field_values.get('latitude')
-    longitude = field_values.get('longitude')
-    if None in (latitude, longitude):
-      return
+        Args:
+          output_mediator (OutputMediator): mediates interactions between output
+              modules and other components, such as storage and dfVFS.
+          field_values (dict[str, str]): output field values per name.
+        """
+        latitude = field_values.get("latitude")
+        longitude = field_values.get("longitude")
+        if None in (latitude, longitude):
+            return
 
-    # TODO: make description_text KML values.
-    description_text = self._GetString(field_values)
+        # TODO: make description_text KML values.
+        description_text = self._GetString(field_values)
 
-    placemark_xml_element = ElementTree.Element('Placemark')
+        placemark_xml_element = ElementTree.Element("Placemark")
 
-    name_xml_element = ElementTree.SubElement(placemark_xml_element, 'name')
-    name_xml_element.text = field_values['_event_identifier']
+        name_xml_element = ElementTree.SubElement(placemark_xml_element, "name")
+        name_xml_element.text = field_values["_event_identifier"]
 
-    description_xml_element = ElementTree.SubElement(
-        placemark_xml_element, 'description')
-    description_xml_element.text = f'{description_text:s}\n'
+        description_xml_element = ElementTree.SubElement(
+            placemark_xml_element, "description"
+        )
+        description_xml_element.text = f"{description_text:s}\n"
 
-    point_xml_element = ElementTree.SubElement(placemark_xml_element, 'Point')
+        point_xml_element = ElementTree.SubElement(placemark_xml_element, "Point")
 
-    coordinates_xml_element = ElementTree.SubElement(
-        point_xml_element, 'coordinates')
-    coordinates_xml_element.text = f'{longitude!s},{latitude!s}'
+        coordinates_xml_element = ElementTree.SubElement(
+            point_xml_element, "coordinates"
+        )
+        coordinates_xml_element.text = f"{longitude!s},{latitude!s}"
 
-    # Note that ElementTree.tostring() will appropriately escape the input data.
-    output_text = ElementTree.tostring(placemark_xml_element)
+        # Note that ElementTree.tostring() will appropriately escape the input data.
+        output_text = ElementTree.tostring(placemark_xml_element)
 
-    output_text = codecs.decode(output_text, output_mediator.encoding)
+        output_text = codecs.decode(output_text, output_mediator.encoding)
 
-    self.WriteText(output_text)
+        self.WriteText(output_text)
 
-  def WriteFooter(self):
-    """Writes the footer to the output."""
-    self.WriteText('</Document></kml>')
+    def WriteFooter(self):
+        """Writes the footer to the output."""
+        self.WriteText("</Document></kml>")
 
-  def WriteHeader(self, output_mediator):
-    """Writes the header to the output.
+    def WriteHeader(self, output_mediator):
+        """Writes the header to the output.
 
-    Args:
-      output_mediator (OutputMediator): mediates interactions between output
-          modules and other components, such as storage and dfVFS.
-    """
-    self.WriteText((
-        f'<?xml version="1.0" encoding="{output_mediator.encoding:s}"?>'
-        f'<kml xmlns="http://www.opengis.net/kml/2.2"><Document>'))
+        Args:
+          output_mediator (OutputMediator): mediates interactions between output
+              modules and other components, such as storage and dfVFS.
+        """
+        self.WriteText(
+            (
+                f'<?xml version="1.0" encoding="{output_mediator.encoding:s}"?>'
+                f'<kml xmlns="http://www.opengis.net/kml/2.2"><Document>'
+            )
+        )
 
 
 manager.OutputManager.RegisterOutput(KMLOutputModule)

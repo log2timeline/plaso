@@ -13,14 +13,14 @@ from tests.cli import test_lib as cli_test_lib
 
 
 class StatusViewArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
-  """Tests for the status view CLI arguments helper."""
+    """Tests for the status view CLI arguments helper."""
 
-  # pylint: disable=no-member,protected-access
+    # pylint: disable=no-member,protected-access
 
-  _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
+    _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
 
-  if _PYTHON3_13_OR_LATER:
-    _EXPECTED_OUTPUT = f"""\
+    if _PYTHON3_13_OR_LATER:
+        _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--status_view TYPE] [--status_view_file PATH]
                      [--status_view_interval SECONDS]
 
@@ -36,8 +36,8 @@ Test argument parser.
                         Number of seconds to update the status view.
 """
 
-  else:
-    _EXPECTED_OUTPUT = f"""\
+    else:
+        _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--status_view TYPE] [--status_view_file PATH]
                      [--status_view_interval SECONDS]
 
@@ -53,29 +53,29 @@ Test argument parser.
                         Number of seconds to update the status view.
 """
 
-  def testAddArguments(self):
-    """Tests the AddArguments function."""
-    argument_parser = self._GetTestArgumentParser('cli_helper.py')
+    def testAddArguments(self):
+        """Tests the AddArguments function."""
+        argument_parser = self._GetTestArgumentParser("cli_helper.py")
 
-    status_view.StatusViewArgumentsHelper.AddArguments(argument_parser)
+        status_view.StatusViewArgumentsHelper.AddArguments(argument_parser)
 
-    output = self._RunArgparseFormatHelp(argument_parser)
-    self.assertEqual(output, self._EXPECTED_OUTPUT)
+        output = self._RunArgparseFormatHelp(argument_parser)
+        self.assertEqual(output, self._EXPECTED_OUTPUT)
 
-  def testParseOptions(self):
-    """Tests the ParseOptions function."""
-    options = cli_test_lib.TestOptions()
-    options.status_view_mode = cli_status_view.StatusView.MODE_WINDOW
-    options.status_view_interval = 0.5
+    def testParseOptions(self):
+        """Tests the ParseOptions function."""
+        options = cli_test_lib.TestOptions()
+        options.status_view_mode = cli_status_view.StatusView.MODE_WINDOW
+        options.status_view_interval = 0.5
 
-    test_tool = tools.CLITool()
-    status_view.StatusViewArgumentsHelper.ParseOptions(options, test_tool)
+        test_tool = tools.CLITool()
+        status_view.StatusViewArgumentsHelper.ParseOptions(options, test_tool)
 
-    self.assertEqual(test_tool._status_view_mode, options.status_view_mode)
+        self.assertEqual(test_tool._status_view_mode, options.status_view_mode)
 
-    with self.assertRaises(errors.BadConfigObject):
-      status_view.StatusViewArgumentsHelper.ParseOptions(options, None)
+        with self.assertRaises(errors.BadConfigObject):
+            status_view.StatusViewArgumentsHelper.ParseOptions(options, None)
 
 
-if __name__ == '__main__':
-  unittest.main()
+if __name__ == "__main__":
+    unittest.main()

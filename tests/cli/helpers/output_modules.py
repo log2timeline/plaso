@@ -12,14 +12,14 @@ from tests.cli import test_lib as cli_test_lib
 
 
 class OutputModulesArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
-  """Tests for the output modules CLI arguments helper."""
+    """Tests for the output modules CLI arguments helper."""
 
-  # pylint: disable=no-member,protected-access
+    # pylint: disable=no-member,protected-access
 
-  _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
+    _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
 
-  if _PYTHON3_13_OR_LATER:
-    _EXPECTED_OUTPUT = f"""\
+    if _PYTHON3_13_OR_LATER:
+        _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [-o FORMAT] [-w OUTPUT_FILE] [--fields FIELDS]
 
 Test argument parser.
@@ -33,8 +33,8 @@ Test argument parser.
                         Output filename.
 """
 
-  else:
-    _EXPECTED_OUTPUT = f"""\
+    else:
+        _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [-o FORMAT] [-w OUTPUT_FILE] [--fields FIELDS]
 
 Test argument parser.
@@ -48,33 +48,32 @@ Test argument parser.
                         Output filename.
 """
 
-  def testAddArguments(self):
-    """Tests the AddArguments function."""
-    argument_parser = self._GetTestArgumentParser('cli_helper.py')
+    def testAddArguments(self):
+        """Tests the AddArguments function."""
+        argument_parser = self._GetTestArgumentParser("cli_helper.py")
 
-    output_modules.OutputModulesArgumentsHelper.AddArguments(argument_parser)
+        output_modules.OutputModulesArgumentsHelper.AddArguments(argument_parser)
 
-    output = self._RunArgparseFormatHelp(argument_parser)
-    self.assertEqual(output, self._EXPECTED_OUTPUT)
+        output = self._RunArgparseFormatHelp(argument_parser)
+        self.assertEqual(output, self._EXPECTED_OUTPUT)
 
-  def testParseOptions(self):
-    """Tests the ParseOptions function."""
-    options = cli_test_lib.TestOptions()
-    options.output_format = 'dynamic'
-    options.write = 'output.dynamic'
+    def testParseOptions(self):
+        """Tests the ParseOptions function."""
+        options = cli_test_lib.TestOptions()
+        options.output_format = "dynamic"
+        options.write = "output.dynamic"
 
-    test_tool = tools.CLITool()
+        test_tool = tools.CLITool()
 
-    output_modules.OutputModulesArgumentsHelper.ParseOptions(
-        options, test_tool)
+        output_modules.OutputModulesArgumentsHelper.ParseOptions(options, test_tool)
 
-    self.assertEqual(test_tool._output_format, options.output_format)
-    self.assertEqual(test_tool._output_filename, options.write)
+        self.assertEqual(test_tool._output_format, options.output_format)
+        self.assertEqual(test_tool._output_filename, options.write)
 
-    # Test with a configuration object missing.
-    with self.assertRaises(errors.BadConfigObject):
-      output_modules.OutputModulesArgumentsHelper.ParseOptions(options, None)
+        # Test with a configuration object missing.
+        with self.assertRaises(errors.BadConfigObject):
+            output_modules.OutputModulesArgumentsHelper.ParseOptions(options, None)
 
 
-if __name__ == '__main__':
-  unittest.main()
+if __name__ == "__main__":
+    unittest.main()

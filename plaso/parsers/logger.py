@@ -2,8 +2,7 @@
 
 import logging
 
-
-_logger = logging.getLogger('parsers')
+_logger = logging.getLogger("parsers")
 
 # Mimic the logging module interface.
 critical = _logger.critical

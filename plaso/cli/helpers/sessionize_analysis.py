@@ -7,53 +7,67 @@ from plaso.lib import errors
 
 
 class SessionizeAnalysisArgumentsHelper(interface.ArgumentsHelper):
-  """Sessionize analysis plugin CLI arguments helper."""
+    """Sessionize analysis plugin CLI arguments helper."""
 
-  NAME = 'sessionize'
-  CATEGORY = 'analysis'
-  DESCRIPTION = 'Argument helper for the Sessionize analysis plugin.'
+    NAME = "sessionize"
+    CATEGORY = "analysis"
+    DESCRIPTION = "Argument helper for the Sessionize analysis plugin."
 
-  @classmethod
-  def AddArguments(cls, argument_group):
-    """Adds command line arguments the helper supports to an argument group.
+    @classmethod
+    def AddArguments(cls, argument_group):
+        """Adds command line arguments the helper supports to an argument group.
 
-    This function takes an argument parser or an argument group object and adds
-    to it all the command line arguments this helper supports.
+        This function takes an argument parser or an argument group object and adds
+        to it all the command line arguments this helper supports.
 
-    Args:
-      argument_group (argparse._ArgumentGroup|argparse.ArgumentParser):
-          argparse group.
-    """
-    argument_group.add_argument(
-        '--maximum-pause', '--maximum_pause', dest='sessionize_maximumpause',
-        type=int, action='store', metavar='MINUTES', default=10, help=(
-            'Specify the maximum delay in minutes between events in the '
-            'session.'))
+        Args:
+          argument_group (argparse._ArgumentGroup|argparse.ArgumentParser):
+              argparse group.
+        """
+        argument_group.add_argument(
+            "--maximum-pause",
+            "--maximum_pause",
+            dest="sessionize_maximumpause",
+            type=int,
+            action="store",
+            metavar="MINUTES",
+            default=10,
+            help=(
+                "Specify the maximum delay in minutes between events in the " "session."
+            ),
+        )
 
-  @classmethod
-  def ParseOptions(cls, options, analysis_plugin):  # pylint: disable=arguments-renamed
-    """Parses and validates options.
+    @classmethod
+    def ParseOptions(
+        cls, options, analysis_plugin
+    ):  # pylint: disable=arguments-renamed
+        """Parses and validates options.
 
-    Args:
-      options (argparse.Namespace): parser options.
-      analysis_plugin (OutputModule): analysis_plugin to configure.
+        Args:
+          options (argparse.Namespace): parser options.
+          analysis_plugin (OutputModule): analysis_plugin to configure.
 
-    Raises:
-      BadConfigObject: when the output module object is of the wrong type.
-      BadConfigOption: when a configuration parameter fails validation.
-    """
-    if not isinstance(analysis_plugin, sessionize.SessionizeAnalysisPlugin):
-      raise errors.BadConfigObject(
-          'Analysis plugin is not an instance of SessionizeAnalysisPlugin')
+        Raises:
+          BadConfigObject: when the output module object is of the wrong type.
+          BadConfigOption: when a configuration parameter fails validation.
+        """
+        if not isinstance(analysis_plugin, sessionize.SessionizeAnalysisPlugin):
+            raise errors.BadConfigObject(
+                "Analysis plugin is not an instance of SessionizeAnalysisPlugin"
+            )
 
-    maximum_pause = cls._ParseNumericOption(
-        options, 'sessionize_maximumpause', default_value=10)
+        maximum_pause = cls._ParseNumericOption(
+            options, "sessionize_maximumpause", default_value=10
+        )
 
-    if maximum_pause <= 0:
-      raise errors.BadConfigOption((
-          f'Maximum pause value {maximum_pause:d} is not supported. Value '
-          f'must be greater than 0.'))
-    analysis_plugin.SetMaximumPause(maximum_pause)
+        if maximum_pause <= 0:
+            raise errors.BadConfigOption(
+                (
+                    f"Maximum pause value {maximum_pause:d} is not supported. Value "
+                    f"must be greater than 0."
+                )
+            )
+        analysis_plugin.SetMaximumPause(maximum_pause)
 
 
 manager.ArgumentHelperManager.RegisterHelper(SessionizeAnalysisArgumentsHelper)

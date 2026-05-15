@@ -11,11 +11,11 @@ from tests.cli import test_lib as cli_test_lib
 
 
 class ParsersArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
-  """Tests for the parsers CLI arguments helper."""
+    """Tests for the parsers CLI arguments helper."""
 
-  # pylint: disable=no-member,protected-access
+    # pylint: disable=no-member,protected-access
 
-  _EXPECTED_OUTPUT = f"""\
+    _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--parsers PARSER_FILTER_EXPRESSION]
 
 Test argument parser.
@@ -36,28 +36,28 @@ Test argument parser.
                         list available presets, parsers and plugins.
 """
 
-  def testAddArguments(self):
-    """Tests the AddArguments function."""
-    argument_parser = self._GetTestArgumentParser('cli_helper.py')
+    def testAddArguments(self):
+        """Tests the AddArguments function."""
+        argument_parser = self._GetTestArgumentParser("cli_helper.py")
 
-    parsers.ParsersArgumentsHelper.AddArguments(argument_parser)
+        parsers.ParsersArgumentsHelper.AddArguments(argument_parser)
 
-    output = self._RunArgparseFormatHelp(argument_parser)
-    self.assertEqual(output, self._EXPECTED_OUTPUT)
+        output = self._RunArgparseFormatHelp(argument_parser)
+        self.assertEqual(output, self._EXPECTED_OUTPUT)
 
-  def testParseOptions(self):
-    """Tests the ParseOptions function."""
-    options = cli_test_lib.TestOptions()
-    options.parsers = 'winevt'
+    def testParseOptions(self):
+        """Tests the ParseOptions function."""
+        options = cli_test_lib.TestOptions()
+        options.parsers = "winevt"
 
-    test_tool = tools.CLITool()
-    parsers.ParsersArgumentsHelper.ParseOptions(options, test_tool)
+        test_tool = tools.CLITool()
+        parsers.ParsersArgumentsHelper.ParseOptions(options, test_tool)
 
-    self.assertEqual(test_tool._parser_filter_expression, options.parsers)
+        self.assertEqual(test_tool._parser_filter_expression, options.parsers)
 
-    with self.assertRaises(errors.BadConfigObject):
-      parsers.ParsersArgumentsHelper.ParseOptions(options, None)
+        with self.assertRaises(errors.BadConfigObject):
+            parsers.ParsersArgumentsHelper.ParseOptions(options, None)
 
 
-if __name__ == '__main__':
-  unittest.main()
+if __name__ == "__main__":
+    unittest.main()

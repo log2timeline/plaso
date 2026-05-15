@@ -358,12 +358,11 @@ indent-after-paren=4
 
 # String used as indentation unit. This is usually "    " (4 spaces) or "\t" (1
 # tab).
-# indent-string='    '
-indent-string='  '
+indent-string='    '
 
 # Maximum number of characters on a single line.
 # max-line-length=100
-max-line-length=80
+max-line-length=88
 
 # Maximum number of lines in a module.
 max-module-lines=1000
@@ -599,7 +598,7 @@ spelling-store-unknown-words=no
 
 # This flag controls whether inconsistent-quotes generates a warning when the
 # character used as a quote delimiter is used inconsistently within a module.
-check-quote-consistency=no
+check-quote-consistency=yes
 
 # This flag controls whether the implicit-str-concat should generate a warning
 # on implicit string concatenation in sequences defined over several lines.

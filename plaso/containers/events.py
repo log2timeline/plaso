@@ -10,564 +10,588 @@ from dfdatetime import interface as dfdatetime_interface
 
 
 def CalculateEventValuesHash(event_data, event_data_stream):
-  """Calculates a digest hash of the event values.
+    """Calculates a digest hash of the event values.
 
-  Args:
-    event_data (EventData): event data.
-    event_data_stream (EventDataStream): an event data stream or None if not
-        available.
+    Args:
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): an event data stream or None if not
+          available.
 
-  Returns:
-    str: digest hash of the event values content.
+    Returns:
+      str: digest hash of the event values content.
 
-  Raises:
-    RuntimeError: if the event values hash cannot be determined.
-  """
-  attributes = [f'data_type: {event_data.data_type:s}']
+    Raises:
+      RuntimeError: if the event values hash cannot be determined.
+    """
+    attributes = [f"data_type: {event_data.data_type:s}"]
 
-  for attribute_name, attribute_value in sorted(event_data.GetAttributes()):
-    if attribute_value is None or attribute_name in (
-        '_event_data_stream_identifier', '_event_values_hash', '_parser_chain',
-        'data_type'):
-      continue
+    for attribute_name, attribute_value in sorted(event_data.GetAttributes()):
+        if attribute_value is None or attribute_name in (
+            "_event_data_stream_identifier",
+            "_event_values_hash",
+            "_parser_chain",
+            "data_type",
+        ):
+            continue
 
-    # Ignore date and time values.
-    if isinstance(attribute_value, dfdatetime_interface.DateTimeValues):
-      continue
+        # Ignore date and time values.
+        if isinstance(attribute_value, dfdatetime_interface.DateTimeValues):
+            continue
 
-    if (isinstance(attribute_value, list) and attribute_value and
-        isinstance(attribute_value[0],
-                     dfdatetime_interface.DateTimeValues)):
-      continue
+        if (
+            isinstance(attribute_value, list)
+            and attribute_value
+            and isinstance(attribute_value[0], dfdatetime_interface.DateTimeValues)
+        ):
+            continue
 
-    if not isinstance(attribute_value, (bool, float, int, list, str)):
-      raise RuntimeError(
-          f'Unsupported attribute: {attribute_name:s} value type: '
-          f'{type(attribute_value)!s}')
+        if not isinstance(attribute_value, (bool, float, int, list, str)):
+            raise RuntimeError(
+                f"Unsupported attribute: {attribute_name:s} value type: "
+                f"{type(attribute_value)!s}"
+            )
 
-    try:
-      attributes.append(f'{attribute_name:s}: {attribute_value!s}')
-    except UnicodeDecodeError:
-      raise RuntimeError(f'Failed to decode attribute {attribute_name:s}')
+        try:
+            attributes.append(f"{attribute_name:s}: {attribute_value!s}")
+        except UnicodeDecodeError:
+            raise RuntimeError(f"Failed to decode attribute {attribute_name:s}")
 
-  if event_data_stream:
-    for attribute_name, attribute_value in sorted(
-        event_data_stream.GetAttributes()):
+    if event_data_stream:
+        for attribute_name, attribute_value in sorted(
+            event_data_stream.GetAttributes()
+        ):
 
-      if attribute_name == 'path_spec':
-        attribute_value = attribute_value.comparable
+            if attribute_name == "path_spec":
+                attribute_value = attribute_value.comparable
 
-      elif not isinstance(attribute_value, (bool, float, int, list, str)):
-        raise RuntimeError(
-            f'Unsupported attribute: {attribute_name:s} value type: '
-            f'{type(attribute_value)!s}')
+            elif not isinstance(attribute_value, (bool, float, int, list, str)):
+                raise RuntimeError(
+                    f"Unsupported attribute: {attribute_name:s} value type: "
+                    f"{type(attribute_value)!s}"
+                )
 
-      try:
-        attributes.append(f'{attribute_name:s}: {attribute_value!s}')
-      except UnicodeDecodeError:
-        raise RuntimeError(f'Failed to decode attribute {attribute_name:s}')
+            try:
+                attributes.append(f"{attribute_name:s}: {attribute_value!s}")
+            except UnicodeDecodeError:
+                raise RuntimeError(f"Failed to decode attribute {attribute_name:s}")
 
-  content = ', '.join(attributes)
-  content_data = content.encode('utf-8')
+    content = ", ".join(attributes)
+    content_data = content.encode("utf-8")
 
-  md5_context = hashlib.md5(content_data)
+    md5_context = hashlib.md5(content_data)
 
-  return md5_context.hexdigest()
+    return md5_context.hexdigest()
 
 
 class DateLessLogHelper(interface.AttributeContainer):
-  """Attribute container to assist with logs without full dates.
+    """Attribute container to assist with logs without full dates.
 
-  Attributes:
-    earliest_date (list[int, int, int]): earliest possible date the event data
-        stream was created. The date is a tuple of year, month and day of month.
-    granularity (str): granularity of the date-less log format.
-    last_relative_date (list[int, int, int]): last relative date determined by
-        the date-less log helper. The date is a tuple of year, month and day of
-        month.
-    latest_date (List[int]): latest possible date the event data stream was
-        created. The date is a tuple of year, month and day of month.
-  """
-
-  CONTAINER_TYPE = 'date_less_log_helper'
-
-  SCHEMA = {
-      '_event_data_stream_identifier': 'AttributeContainerIdentifier',
-      'earliest_date': 'List[int]',
-      'granularity': 'str',
-      'last_relative_date': 'List[int]',
-      'latest_date': 'List[int]'}
-
-  _SERIALIZABLE_PROTECTED_ATTRIBUTES = [
-      '_event_data_stream_identifier']
-
-  # The date-less log format only supports time.
-  GRANULARITY_NO_DATE = 'd'
-
-  # The date-less log format only supports month and day of month.
-  GRANULARITY_NO_YEAR = 'y'
-
-  def __init__(self):
-    """Initializes a date-less log helper attribute container."""
-    super().__init__()
-    self._event_data_stream_identifier = None
-    self.earliest_date = None
-    self.granularity = self.GRANULARITY_NO_YEAR
-    self.last_relative_date = None
-    self.latest_date = None
-
-  # TODO: the YearLessLogHelper attribute container is kept for backwards
-  # compatibility remove once storage format 20230327 is obsolete.
-  def CopyFromYearLessLogHelper(self, year_less_log_helper):
-    """Copy the values of a year-less log helper.
-
-    Args:
-      year_less_log_helper (YearLessLogHelper): year-less log helper.
+    Attributes:
+      earliest_date (list[int, int, int]): earliest possible date the event data
+          stream was created. The date is a tuple of year, month and day of month.
+      granularity (str): granularity of the date-less log format.
+      last_relative_date (list[int, int, int]): last relative date determined by
+          the date-less log helper. The date is a tuple of year, month and day of
+          month.
+      latest_date (List[int]): latest possible date the event data stream was
+          created. The date is a tuple of year, month and day of month.
     """
-    self.earliest_date = (year_less_log_helper.earliest_year, 1, 1)
-    self.granularity = self.GRANULARITY_NO_YEAR
-    self.last_relative_date = (year_less_log_helper.last_relative_year, 0, 0)
-    self.latest_date = (year_less_log_helper.latest_year, 1, 1)
 
-  def GetEarliestDate(self):
-    """Retrieves the earliest date adjusted to the granularity.
+    CONTAINER_TYPE = "date_less_log_helper"
 
-    Returns:
-      tuple[int, int, int]: earliest date as tuple of year, month and day of
-          month or None if not available.
-    """
-    if self.earliest_date and self.granularity == self.GRANULARITY_NO_YEAR:
-      return self.earliest_date[0], 0, 0
+    SCHEMA = {
+        "_event_data_stream_identifier": "AttributeContainerIdentifier",
+        "earliest_date": "List[int]",
+        "granularity": "str",
+        "last_relative_date": "List[int]",
+        "latest_date": "List[int]",
+    }
 
-    return self.earliest_date
+    _SERIALIZABLE_PROTECTED_ATTRIBUTES = ["_event_data_stream_identifier"]
 
-  def GetEventDataStreamIdentifier(self):
-    """Retrieves the identifier of the associated event data stream.
+    # The date-less log format only supports time.
+    GRANULARITY_NO_DATE = "d"
 
-    The event data stream identifier is a storage specific value that requires
-    special handling during serialization.
+    # The date-less log format only supports month and day of month.
+    GRANULARITY_NO_YEAR = "y"
 
-    Returns:
-      AttributeContainerIdentifier: event data stream or None when not set.
-    """
-    return self._event_data_stream_identifier
+    def __init__(self):
+        """Initializes a date-less log helper attribute container."""
+        super().__init__()
+        self._event_data_stream_identifier = None
+        self.earliest_date = None
+        self.granularity = self.GRANULARITY_NO_YEAR
+        self.last_relative_date = None
+        self.latest_date = None
 
-  def GetLastRelativeDate(self):
-    """Retrieves the last relative date adjusted to the granularity.
+    # TODO: the YearLessLogHelper attribute container is kept for backwards
+    # compatibility remove once storage format 20230327 is obsolete.
+    def CopyFromYearLessLogHelper(self, year_less_log_helper):
+        """Copy the values of a year-less log helper.
 
-    Returns:
-      tuple[int, int, int]: last relative date as tuple of year, month and day
-          of month or None if not available.
-    """
-    if (self.last_relative_date and
-        self.granularity == self.GRANULARITY_NO_YEAR):
-      return self.last_relative_date[0], 0, 0
+        Args:
+          year_less_log_helper (YearLessLogHelper): year-less log helper.
+        """
+        self.earliest_date = (year_less_log_helper.earliest_year, 1, 1)
+        self.granularity = self.GRANULARITY_NO_YEAR
+        self.last_relative_date = (year_less_log_helper.last_relative_year, 0, 0)
+        self.latest_date = (year_less_log_helper.latest_year, 1, 1)
 
-    return self.last_relative_date
+    def GetEarliestDate(self):
+        """Retrieves the earliest date adjusted to the granularity.
 
-  def GetLatestDate(self):
-    """Retrieves the latest date adjusted to the granularity.
+        Returns:
+          tuple[int, int, int]: earliest date as tuple of year, month and day of
+              month or None if not available.
+        """
+        if self.earliest_date and self.granularity == self.GRANULARITY_NO_YEAR:
+            return self.earliest_date[0], 0, 0
 
-    Returns:
-      tuple[int, int, int]: latest date as tuple of year, month and day of
-          month or None if not available.
-    """
-    if self.latest_date and self.granularity == self.GRANULARITY_NO_YEAR:
-      return self.latest_date[0], 0, 0
+        return self.earliest_date
 
-    return self.latest_date
+    def GetEventDataStreamIdentifier(self):
+        """Retrieves the identifier of the associated event data stream.
 
-  def SetEventDataStreamIdentifier(self, event_data_stream_identifier):
-    """Sets the identifier of the associated event data stream.
+        The event data stream identifier is a storage specific value that requires
+        special handling during serialization.
 
-    The event data stream identifier is a storage specific value that requires
-    special handling during serialization.
+        Returns:
+          AttributeContainerIdentifier: event data stream or None when not set.
+        """
+        return self._event_data_stream_identifier
 
-    Args:
-      event_data_stream_identifier (AttributeContainerIdentifier): event data
-          stream identifier.
-    """
-    self._event_data_stream_identifier = event_data_stream_identifier
+    def GetLastRelativeDate(self):
+        """Retrieves the last relative date adjusted to the granularity.
+
+        Returns:
+          tuple[int, int, int]: last relative date as tuple of year, month and day
+              of month or None if not available.
+        """
+        if self.last_relative_date and self.granularity == self.GRANULARITY_NO_YEAR:
+            return self.last_relative_date[0], 0, 0
+
+        return self.last_relative_date
+
+    def GetLatestDate(self):
+        """Retrieves the latest date adjusted to the granularity.
+
+        Returns:
+          tuple[int, int, int]: latest date as tuple of year, month and day of
+              month or None if not available.
+        """
+        if self.latest_date and self.granularity == self.GRANULARITY_NO_YEAR:
+            return self.latest_date[0], 0, 0
+
+        return self.latest_date
+
+    def SetEventDataStreamIdentifier(self, event_data_stream_identifier):
+        """Sets the identifier of the associated event data stream.
+
+        The event data stream identifier is a storage specific value that requires
+        special handling during serialization.
+
+        Args:
+          event_data_stream_identifier (AttributeContainerIdentifier): event data
+              stream identifier.
+        """
+        self._event_data_stream_identifier = event_data_stream_identifier
 
 
 class EventData(interface.AttributeContainer):
-  """Event data attribute container.
+    """Event data attribute container.
 
-  The event data attribute container represents the attributes of an entity,
-  such as a database record or log line.
+    The event data attribute container represents the attributes of an entity,
+    such as a database record or log line.
 
-  Attributes:
-    data_type (str): event data type indicator.
-  """
-
-  CONTAINER_TYPE = 'event_data'
-
-  SCHEMA = {
-      '_event_data_stream_identifier': 'AttributeContainerIdentifier',
-      '_event_values_hash': 'str',
-      '_parser_chain': 'str',
-      'data_type': 'str'}
-
-  _SERIALIZABLE_PROTECTED_ATTRIBUTES = [
-      '_event_data_stream_identifier',
-      '_event_values_hash',
-      '_parser_chain']
-
-  def __init__(self, data_type=None):
-    """Initializes an event data attribute container.
-
-    Args:
-      data_type (Optional[str]): event data type indicator.
+    Attributes:
+      data_type (str): event data type indicator.
     """
-    super().__init__()
-    self._event_data_stream_identifier = None
-    self._event_values_hash = None
-    self._parser_chain = None
 
-    self.data_type = data_type
+    CONTAINER_TYPE = "event_data"
 
-  def GetAttributeValuesString(self):
-    """Retrieves a comparable string of the attribute values.
+    SCHEMA = {
+        "_event_data_stream_identifier": "AttributeContainerIdentifier",
+        "_event_values_hash": "str",
+        "_parser_chain": "str",
+        "data_type": "str",
+    }
 
-    Returns:
-      str: comparable string of the attribute values.
+    _SERIALIZABLE_PROTECTED_ATTRIBUTES = [
+        "_event_data_stream_identifier",
+        "_event_values_hash",
+        "_parser_chain",
+    ]
 
-    Raises:
-      TypeError: if the attribute value type is not supported.
-    """
-    attributes = []
-    for attribute_name, attribute_value in sorted(self.__dict__.items()):
-      # Not using startswith to improve performance.
-      if attribute_name[0] == '_' or attribute_value is None:
-        continue
+    def __init__(self, data_type=None):
+        """Initializes an event data attribute container.
 
-      if isinstance(attribute_value, bytes):
-        raise TypeError(
-            f'Attribute: {attribute_name:s} value of type bytes not supported.')
+        Args:
+          data_type (Optional[str]): event data type indicator.
+        """
+        super().__init__()
+        self._event_data_stream_identifier = None
+        self._event_values_hash = None
+        self._parser_chain = None
 
-      if isinstance(attribute_value, dict):
-        raise TypeError(
-            f'Attribute: {attribute_name:s} value of type dict not supported.')
+        self.data_type = data_type
 
-      attributes.append(f'{attribute_name:s}: {attribute_value!s}')
+    def GetAttributeValuesString(self):
+        """Retrieves a comparable string of the attribute values.
 
-    return ', '.join(attributes)
+        Returns:
+          str: comparable string of the attribute values.
 
-  def GetEventDataStreamIdentifier(self):
-    """Retrieves the identifier of the associated event data stream.
+        Raises:
+          TypeError: if the attribute value type is not supported.
+        """
+        attributes = []
+        for attribute_name, attribute_value in sorted(self.__dict__.items()):
+            # Not using startswith to improve performance.
+            if attribute_name[0] == "_" or attribute_value is None:
+                continue
 
-    The event data stream identifier is a storage specific value that requires
-    special handling during serialization.
+            if isinstance(attribute_value, bytes):
+                raise TypeError(
+                    f"Attribute: {attribute_name:s} value of type bytes not supported."
+                )
 
-    Returns:
-      AttributeContainerIdentifier: event data stream or None when not set.
-    """
-    return self._event_data_stream_identifier
+            if isinstance(attribute_value, dict):
+                raise TypeError(
+                    f"Attribute: {attribute_name:s} value of type dict not supported."
+                )
 
-  def SetEventDataStreamIdentifier(self, event_data_stream_identifier):
-    """Sets the identifier of the associated event data stream.
+            attributes.append(f"{attribute_name:s}: {attribute_value!s}")
 
-    The event data stream identifier is a storage specific value that requires
-    special handling during serialization.
+        return ", ".join(attributes)
 
-    Args:
-      event_data_stream_identifier (AttributeContainerIdentifier): event data
-          stream identifier.
-    """
-    self._event_data_stream_identifier = event_data_stream_identifier
+    def GetEventDataStreamIdentifier(self):
+        """Retrieves the identifier of the associated event data stream.
+
+        The event data stream identifier is a storage specific value that requires
+        special handling during serialization.
+
+        Returns:
+          AttributeContainerIdentifier: event data stream or None when not set.
+        """
+        return self._event_data_stream_identifier
+
+    def SetEventDataStreamIdentifier(self, event_data_stream_identifier):
+        """Sets the identifier of the associated event data stream.
+
+        The event data stream identifier is a storage specific value that requires
+        special handling during serialization.
+
+        Args:
+          event_data_stream_identifier (AttributeContainerIdentifier): event data
+              stream identifier.
+        """
+        self._event_data_stream_identifier = event_data_stream_identifier
 
 
 class EventDataStream(interface.AttributeContainer):
-  """Event data stream attribute container.
+    """Event data stream attribute container.
 
-  The event data stream attribute container represents the attributes of
-  a data stream, such as the content of a file or extended attribute.
+    The event data stream attribute container represents the attributes of
+    a data stream, such as the content of a file or extended attribute.
 
-  Attributes:
-    file_entropy (str): byte entropy value of the data stream.
-    md5_hash (str): MD5 digest hash of the data stream.
-    path_spec (dfvfs.PathSpec): path specification of the data stream.
-    sha1_hash (str): SHA-1 digest hash of the data stream.
-    sha256_hash (str): SHA-256 digest hash of the data stream.
-    yara_match (list[str]): names of the Yara rules that matched the data
-        stream.
-  """
+    Attributes:
+      file_entropy (str): byte entropy value of the data stream.
+      md5_hash (str): MD5 digest hash of the data stream.
+      path_spec (dfvfs.PathSpec): path specification of the data stream.
+      sha1_hash (str): SHA-1 digest hash of the data stream.
+      sha256_hash (str): SHA-256 digest hash of the data stream.
+      yara_match (list[str]): names of the Yara rules that matched the data
+          stream.
+    """
 
-  CONTAINER_TYPE = 'event_data_stream'
+    CONTAINER_TYPE = "event_data_stream"
 
-  SCHEMA = {
-      'file_entropy': 'str',
-      'md5_hash': 'str',
-      'path_spec': 'dfvfs.PathSpec',
-      'sha1_hash': 'str',
-      'sha256_hash': 'str',
-      'yara_match': 'List[str]'}
+    SCHEMA = {
+        "file_entropy": "str",
+        "md5_hash": "str",
+        "path_spec": "dfvfs.PathSpec",
+        "sha1_hash": "str",
+        "sha256_hash": "str",
+        "yara_match": "List[str]",
+    }
 
-  def __init__(self):
-    """Initializes an event data attribute container."""
-    super().__init__()
-    self.file_entropy = None
-    self.md5_hash = None
-    self.path_spec = None
-    self.sha1_hash = None
-    self.sha256_hash = None
-    self.yara_match = None
+    def __init__(self):
+        """Initializes an event data attribute container."""
+        super().__init__()
+        self.file_entropy = None
+        self.md5_hash = None
+        self.path_spec = None
+        self.sha1_hash = None
+        self.sha256_hash = None
+        self.yara_match = None
 
 
 class EventObject(interface.AttributeContainer):
-  """Event attribute container.
+    """Event attribute container.
 
-  The framework is designed to parse files and create events
-  from individual records, log lines or keys extracted from files.
-  The event object provides an extensible data store for event
-  attributes.
+    The framework is designed to parse files and create events
+    from individual records, log lines or keys extracted from files.
+    The event object provides an extensible data store for event
+    attributes.
 
-  Attributes:
-    date_time (dfdatetime.DateTimeValues): date and time values.
-    timestamp (int): timestamp, which contains the number of microseconds
-        since January 1, 1970, 00:00:00 UTC.
-    timestamp_desc (str): description of the meaning of the timestamp.
-  """
-
-  CONTAINER_TYPE = 'event'
-
-  SCHEMA = {
-      '_event_data_identifier': 'AttributeContainerIdentifier',
-      'date_time': 'dfdatetime.DateTimeValues',
-      'timestamp': 'int',
-      'timestamp_desc': 'str'}
-
-  _SERIALIZABLE_PROTECTED_ATTRIBUTES = [
-      '_event_data_identifier']
-
-  def __init__(self):
-    """Initializes an event attribute container."""
-    super().__init__()
-    self._event_data_identifier = None
-    self.date_time = None
-    self.timestamp = None
-    # TODO: rename timestamp_desc to timestamp_description
-    self.timestamp_desc = None
-
-  # This method is necessary for heap sort.
-  def __lt__(self, other):
-    """Compares if the event attribute container is less than the other.
-
-    Events are compared by timestamp.
-
-    Args:
-      other (EventObject): event attribute container to compare to.
-
-    Returns:
-      bool: True if the event attribute container is less than the other.
+    Attributes:
+      date_time (dfdatetime.DateTimeValues): date and time values.
+      timestamp (int): timestamp, which contains the number of microseconds
+          since January 1, 1970, 00:00:00 UTC.
+      timestamp_desc (str): description of the meaning of the timestamp.
     """
-    return (self.timestamp < other.timestamp or
-            self.timestamp_desc < other.timestamp_desc)
 
-  def GetEventDataIdentifier(self):
-    """Retrieves the identifier of the associated event data.
+    CONTAINER_TYPE = "event"
 
-    The event data identifier is a storage specific value that requires special
-    handling during serialization.
+    SCHEMA = {
+        "_event_data_identifier": "AttributeContainerIdentifier",
+        "date_time": "dfdatetime.DateTimeValues",
+        "timestamp": "int",
+        "timestamp_desc": "str",
+    }
 
-    Returns:
-      AttributeContainerIdentifier: event data identifier or None when not set.
-    """
-    return self._event_data_identifier
+    _SERIALIZABLE_PROTECTED_ATTRIBUTES = ["_event_data_identifier"]
 
-  def SetEventDataIdentifier(self, event_data_identifier):
-    """Sets the identifier of the associated event data.
+    def __init__(self):
+        """Initializes an event attribute container."""
+        super().__init__()
+        self._event_data_identifier = None
+        self.date_time = None
+        self.timestamp = None
+        # TODO: rename timestamp_desc to timestamp_description
+        self.timestamp_desc = None
 
-    The event data identifier is a storage specific value that requires special
-    handling during serialization.
+    # This method is necessary for heap sort.
+    def __lt__(self, other):
+        """Compares if the event attribute container is less than the other.
 
-    Args:
-      event_data_identifier (AttributeContainerIdentifier): event data
-          identifier.
-    """
-    self._event_data_identifier = event_data_identifier
+        Events are compared by timestamp.
+
+        Args:
+          other (EventObject): event attribute container to compare to.
+
+        Returns:
+          bool: True if the event attribute container is less than the other.
+        """
+        return (
+            self.timestamp < other.timestamp
+            or self.timestamp_desc < other.timestamp_desc
+        )
+
+    def GetEventDataIdentifier(self):
+        """Retrieves the identifier of the associated event data.
+
+        The event data identifier is a storage specific value that requires special
+        handling during serialization.
+
+        Returns:
+          AttributeContainerIdentifier: event data identifier or None when not set.
+        """
+        return self._event_data_identifier
+
+    def SetEventDataIdentifier(self, event_data_identifier):
+        """Sets the identifier of the associated event data.
+
+        The event data identifier is a storage specific value that requires special
+        handling during serialization.
+
+        Args:
+          event_data_identifier (AttributeContainerIdentifier): event data
+              identifier.
+        """
+        self._event_data_identifier = event_data_identifier
 
 
 class EventTag(interface.AttributeContainer):
-  """Event tag attribute container.
+    """Event tag attribute container.
 
-  Attributes:
-    labels (list[str]): labels, such as "malware", "application_execution".
-  """
-
-  CONTAINER_TYPE = 'event_tag'
-
-  SCHEMA = {
-      '_event_identifier': 'AttributeContainerIdentifier',
-      'labels': 'List[str]'}
-
-  _INVALID_LABEL_CHARACTERS_REGEX = re.compile(r'[^A-Za-z0-9_]')
-
-  _SERIALIZABLE_PROTECTED_ATTRIBUTES = [
-      '_event_identifier']
-
-  _VALID_LABEL_REGEX = re.compile(r'^[A-Za-z0-9_]+$')
-
-  def __init__(self):
-    """Initializes an event tag attribute container."""
-    super().__init__()
-    self._event_identifier = None
-    self.labels = []
-
-  def AddLabel(self, label):
-    """Adds a label to the event tag.
-
-    Args:
-      label (str): label.
-
-    Raises:
-      TypeError: if the label provided is not a string.
-      ValueError: if a label is malformed.
+    Attributes:
+      labels (list[str]): labels, such as "malware", "application_execution".
     """
-    if not isinstance(label, str):
-      raise TypeError(f'label is not a string type. Is {type(label)!s}')
 
-    if not self._VALID_LABEL_REGEX.match(label):
-      raise ValueError(
-          f'Unsupported label: "{label:s}". A label must only consist of '
-          f'alphanumeric characters or underscores.')
+    CONTAINER_TYPE = "event_tag"
 
-    if label not in self.labels:
-      self.labels.append(label)
+    SCHEMA = {
+        "_event_identifier": "AttributeContainerIdentifier",
+        "labels": "List[str]",
+    }
 
-  def AddLabels(self, labels):
-    """Adds labels to the event tag.
+    _INVALID_LABEL_CHARACTERS_REGEX = re.compile(r"[^A-Za-z0-9_]")
 
-    Args:
-      labels (list[str]): labels.
+    _SERIALIZABLE_PROTECTED_ATTRIBUTES = ["_event_identifier"]
 
-    Raises:
-      ValueError: if a label is malformed.
-    """
-    for label in labels:
-      if not label or not self._VALID_LABEL_REGEX.match(label):
-        raise ValueError(
-            f'Unsupported label: "{label:s}". A label must only consist of '
-            f'alphanumeric characters or underscores.')
+    _VALID_LABEL_REGEX = re.compile(r"^[A-Za-z0-9_]+$")
 
-    for label in labels:
-      if label not in self.labels:
-        self.labels.append(label)
+    def __init__(self):
+        """Initializes an event tag attribute container."""
+        super().__init__()
+        self._event_identifier = None
+        self.labels = []
 
-  @classmethod
-  def CopyTextToLabel(cls, text, prefix=''):
-    """Copies a string to a label.
+    def AddLabel(self, label):
+        """Adds a label to the event tag.
 
-    A label only supports a limited set of characters therefore
-    unsupported characters are replaced with an underscore.
+        Args:
+          label (str): label.
 
-    Args:
-      text (str): label text.
-      prefix (Optional[str]): label prefix.
+        Raises:
+          TypeError: if the label provided is not a string.
+          ValueError: if a label is malformed.
+        """
+        if not isinstance(label, str):
+            raise TypeError(f"label is not a string type. Is {type(label)!s}")
 
-    Returns:
-      str: label.
-    """
-    return cls._INVALID_LABEL_CHARACTERS_REGEX.sub('_', f'{prefix:s}{text:s}')
+        if not self._VALID_LABEL_REGEX.match(label):
+            raise ValueError(
+                f'Unsupported label: "{label:s}". A label must only consist of '
+                f"alphanumeric characters or underscores."
+            )
 
-  def GetEventIdentifier(self):
-    """Retrieves the identifier of the associated event.
+        if label not in self.labels:
+            self.labels.append(label)
 
-    The event identifier is a storage specific value that requires special
-    handling during serialization.
+    def AddLabels(self, labels):
+        """Adds labels to the event tag.
 
-    Returns:
-      AttributeContainerIdentifier: event identifier or None when not set.
-    """
-    return self._event_identifier
+        Args:
+          labels (list[str]): labels.
 
-  def SetEventIdentifier(self, event_identifier):
-    """Sets the identifier of the associated event.
+        Raises:
+          ValueError: if a label is malformed.
+        """
+        for label in labels:
+            if not label or not self._VALID_LABEL_REGEX.match(label):
+                raise ValueError(
+                    f'Unsupported label: "{label:s}". A label must only consist of '
+                    f"alphanumeric characters or underscores."
+                )
 
-    The event identifier is a storage specific value that requires special
-    handling during serialization.
+        for label in labels:
+            if label not in self.labels:
+                self.labels.append(label)
 
-    Args:
-      event_identifier (AttributeContainerIdentifier): event identifier.
-    """
-    self._event_identifier = event_identifier
+    @classmethod
+    def CopyTextToLabel(cls, text, prefix=""):
+        """Copies a string to a label.
+
+        A label only supports a limited set of characters therefore
+        unsupported characters are replaced with an underscore.
+
+        Args:
+          text (str): label text.
+          prefix (Optional[str]): label prefix.
+
+        Returns:
+          str: label.
+        """
+        return cls._INVALID_LABEL_CHARACTERS_REGEX.sub("_", f"{prefix:s}{text:s}")
+
+    def GetEventIdentifier(self):
+        """Retrieves the identifier of the associated event.
+
+        The event identifier is a storage specific value that requires special
+        handling during serialization.
+
+        Returns:
+          AttributeContainerIdentifier: event identifier or None when not set.
+        """
+        return self._event_identifier
+
+    def SetEventIdentifier(self, event_identifier):
+        """Sets the identifier of the associated event.
+
+        The event identifier is a storage specific value that requires special
+        handling during serialization.
+
+        Args:
+          event_identifier (AttributeContainerIdentifier): event identifier.
+        """
+        self._event_identifier = event_identifier
 
 
 class EventTripple(interface.AttributeContainer):
-  """Event tripple.
+    """Event tripple.
 
-  Attributes:
-    event (EventObject): event.
-    event_data (EventData): event data.
-    event_data_stream (EventDataStream): event data stream.
-  """
+    Attributes:
+      event (EventObject): event.
+      event_data (EventData): event data.
+      event_data_stream (EventDataStream): event data stream.
+    """
 
-  CONTAINER_TYPE = 'event_tripple'
+    CONTAINER_TYPE = "event_tripple"
 
-  def __init__(self):
-    """Initializes an event tripple."""
-    super().__init__()
-    self.event = None
-    self.event_data = None
-    self.event_data_stream = None
+    def __init__(self):
+        """Initializes an event tripple."""
+        super().__init__()
+        self.event = None
+        self.event_data = None
+        self.event_data_stream = None
 
 
 # TODO: the YearLessLogHelper attribute container is kept for backwards
 # compatibility remove once storage format 20230327 is obsolete.
 class YearLessLogHelper(interface.AttributeContainer):
-  """Year-less log helper attribute container.
+    """Year-less log helper attribute container.
 
-  Attributes:
-    earliest_year (int): earliest possible year the event data stream was
-        created.
-    last_relative_year (int): last relative year determined by the year-less
-        log helper.
-    latest_year (int): latest possible year the event data stream was created.
-  """
-
-  CONTAINER_TYPE = 'year_less_log_helper'
-
-  SCHEMA = {
-      '_event_data_stream_identifier': 'AttributeContainerIdentifier',
-      'earliest_year': 'int',
-      'last_relative_year': 'int',
-      'latest_year': 'int'}
-
-  _SERIALIZABLE_PROTECTED_ATTRIBUTES = [
-      '_event_data_stream_identifier']
-
-  def __init__(self):
-    """Initializes a year-less log helper attribute container."""
-    super().__init__()
-    self._event_data_stream_identifier = None
-    self.earliest_year = None
-    self.last_relative_year = None
-    self.latest_year = None
-
-  def GetEventDataStreamIdentifier(self):
-    """Retrieves the identifier of the associated event data stream.
-
-    The event data stream identifier is a storage specific value that requires
-    special handling during serialization.
-
-    Returns:
-      AttributeContainerIdentifier: event data stream or None when not set.
+    Attributes:
+      earliest_year (int): earliest possible year the event data stream was
+          created.
+      last_relative_year (int): last relative year determined by the year-less
+          log helper.
+      latest_year (int): latest possible year the event data stream was created.
     """
-    return self._event_data_stream_identifier
 
-  def SetEventDataStreamIdentifier(self, event_data_stream_identifier):
-    """Sets the identifier of the associated event data stream.
+    CONTAINER_TYPE = "year_less_log_helper"
 
-    The event data stream identifier is a storage specific value that requires
-    special handling during serialization.
+    SCHEMA = {
+        "_event_data_stream_identifier": "AttributeContainerIdentifier",
+        "earliest_year": "int",
+        "last_relative_year": "int",
+        "latest_year": "int",
+    }
 
-    Args:
-      event_data_stream_identifier (AttributeContainerIdentifier): event data
-          stream identifier.
-    """
-    self._event_data_stream_identifier = event_data_stream_identifier
+    _SERIALIZABLE_PROTECTED_ATTRIBUTES = ["_event_data_stream_identifier"]
+
+    def __init__(self):
+        """Initializes a year-less log helper attribute container."""
+        super().__init__()
+        self._event_data_stream_identifier = None
+        self.earliest_year = None
+        self.last_relative_year = None
+        self.latest_year = None
+
+    def GetEventDataStreamIdentifier(self):
+        """Retrieves the identifier of the associated event data stream.
+
+        The event data stream identifier is a storage specific value that requires
+        special handling during serialization.
+
+        Returns:
+          AttributeContainerIdentifier: event data stream or None when not set.
+        """
+        return self._event_data_stream_identifier
+
+    def SetEventDataStreamIdentifier(self, event_data_stream_identifier):
+        """Sets the identifier of the associated event data stream.
+
+        The event data stream identifier is a storage specific value that requires
+        special handling during serialization.
+
+        Args:
+          event_data_stream_identifier (AttributeContainerIdentifier): event data
+              stream identifier.
+        """
+        self._event_data_stream_identifier = event_data_stream_identifier
 
 
-manager.AttributeContainersManager.RegisterAttributeContainers([
-    DateLessLogHelper, EventData, EventDataStream, EventObject, EventTag,
-    EventTripple, YearLessLogHelper])
+manager.AttributeContainersManager.RegisterAttributeContainers(
+    [
+        DateLessLogHelper,
+        EventData,
+        EventDataStream,
+        EventObject,
+        EventTag,
+        EventTripple,
+        YearLessLogHelper,
+    ]
+)

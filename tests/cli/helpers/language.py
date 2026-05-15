@@ -11,11 +11,11 @@ from tests.cli import test_lib as cli_test_lib
 
 
 class LanguagergumentsHelperTest(cli_test_lib.CLIToolTestCase):
-  """Tests for the language CLI arguments helper."""
+    """Tests for the language CLI arguments helper."""
 
-  # pylint: disable=no-member,protected-access
+    # pylint: disable=no-member,protected-access
 
-  _EXPECTED_OUTPUT = f"""\
+    _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--language LANGUAGE_TAG]
 
 Test argument parser.
@@ -31,28 +31,28 @@ Test argument parser.
                         available in the winevt-rc.db database.
 """
 
-  def testAddArguments(self):
-    """Tests the AddArguments function."""
-    argument_parser = self._GetTestArgumentParser('cli_helper.py')
+    def testAddArguments(self):
+        """Tests the AddArguments function."""
+        argument_parser = self._GetTestArgumentParser("cli_helper.py")
 
-    language.LanguageArgumentsHelper.AddArguments(argument_parser)
+        language.LanguageArgumentsHelper.AddArguments(argument_parser)
 
-    output = self._RunArgparseFormatHelp(argument_parser)
-    self.assertEqual(output, self._EXPECTED_OUTPUT)
+        output = self._RunArgparseFormatHelp(argument_parser)
+        self.assertEqual(output, self._EXPECTED_OUTPUT)
 
-  def testParseOptions(self):
-    """Tests the ParseOptions function."""
-    options = cli_test_lib.TestOptions()
-    options.preferred_language = 'is'
+    def testParseOptions(self):
+        """Tests the ParseOptions function."""
+        options = cli_test_lib.TestOptions()
+        options.preferred_language = "is"
 
-    test_tool = tools.CLITool()
-    language.LanguageArgumentsHelper.ParseOptions(options, test_tool)
+        test_tool = tools.CLITool()
+        language.LanguageArgumentsHelper.ParseOptions(options, test_tool)
 
-    self.assertEqual(test_tool._preferred_language, options.preferred_language)
+        self.assertEqual(test_tool._preferred_language, options.preferred_language)
 
-    with self.assertRaises(errors.BadConfigObject):
-      language.LanguageArgumentsHelper.ParseOptions(options, None)
+        with self.assertRaises(errors.BadConfigObject):
+            language.LanguageArgumentsHelper.ParseOptions(options, None)
 
 
-if __name__ == '__main__':
-  unittest.main()
+if __name__ == "__main__":
+    unittest.main()

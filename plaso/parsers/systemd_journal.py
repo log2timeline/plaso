@@ -17,367 +17,396 @@ from plaso.parsers import manager
 
 
 class SystemdJournalEventData(events.EventData):
-  """Systemd journal event data.
+    """Systemd journal event data.
 
-  Attributes:
-    body (str): message body.
-    hostname (str): hostname.
-    pid (int): process identifier (PID).
-    reporter (str): reporter.
-    written_time (dfdatetime.DateTimeValues): date and time the log entry
-        was written.
-  """
-
-  DATA_TYPE = 'systemd:journal'
-
-  def __init__(self):
-    """Initializes event data."""
-    super().__init__(data_type=self.DATA_TYPE)
-    self.body = None
-    self.hostname = None
-    self.pid = None
-    self.reporter = None
-    self.written_time = None
-
-
-class SystemdJournalParser(
-    interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
-  """Parses Systemd Journal files."""
-
-  NAME = 'systemd_journal'
-  DATA_FORMAT = 'Systemd journal file'
-
-  _DEFINITION_FILE = os.path.join(
-      os.path.dirname(__file__), 'systemd_journal.yaml')
-
-  _OBJECT_COMPRESSED_FLAG_XZ = 1
-  _OBJECT_COMPRESSED_FLAG_LZ4 = 2
-  _OBJECT_COMPRESSED_FLAG_ZSTD = 4
-
-  _OBJECT_TYPE_UNUSED = 0
-  _OBJECT_TYPE_DATA = 1
-  _OBJECT_TYPE_FIELD = 2
-  _OBJECT_TYPE_ENTRY = 3
-  _OBJECT_TYPE_DATA_HASH_TABLE = 4
-  _OBJECT_TYPE_FIELD_HASH_TABLE = 5
-  _OBJECT_TYPE_ENTRY_ARRAY = 6
-  _OBJECT_TYPE_TAG = 7
-
-  _HEADER_SIZE_PRE_VERSION_187 = 208
-  _HEADER_SIZE_VERSION_187 = 224
-  _HEADER_SIZE_VERSION_189 = 240
-  _HEADER_SIZE_VERSION_246 = 256
-  _HEADER_SIZE_VERSION_252 = 264
-  _HEADER_SIZE_VERSION_254 = 272
-
-  _SUPPORTED_FILE_HEADER_SIZES = frozenset([
-      _HEADER_SIZE_PRE_VERSION_187,
-      _HEADER_SIZE_VERSION_187,
-      _HEADER_SIZE_VERSION_189,
-      _HEADER_SIZE_VERSION_246,
-      _HEADER_SIZE_VERSION_252,
-      _HEADER_SIZE_VERSION_254])
-
-  _HEADER_INCOMPATIBLE_COMPACT = 16
-
-  def __init__(self):
-    """Initializes a parser."""
-    super().__init__()
-    self._maximum_journal_file_offset = 0
-    self._is_compact = False
-
-  def _ParseDataObject(self, file_object, file_offset):
-    """Parses a data object.
-
-    Args:
-      file_object (dfvfs.FileIO): a file-like object.
-      file_offset (int): offset of the data object relative to the start
-          of the file-like object.
-
-    Returns:
-      bytes: data.
-
-    Raises:
-      ParseError: if the data object cannot be parsed.
+    Attributes:
+      body (str): message body.
+      hostname (str): hostname.
+      pid (int): process identifier (PID).
+      reporter (str): reporter.
+      written_time (dfdatetime.DateTimeValues): date and time the log entry
+          was written.
     """
-    if self._is_compact:
-      data_object_map = self._GetDataTypeMap(
-          'systemd_journal_data_object_compact')
-    else:
-      data_object_map = self._GetDataTypeMap('systemd_journal_data_object')
 
-    try:
-      data_object, data_object_header_size = self._ReadStructureFromFileObject(
-          file_object, file_offset, data_object_map)
-    except (ValueError, errors.ParseError) as exception:
-      raise errors.ParseError((
-          f'Unable to parse data object at offset: 0x{file_offset:08x} '
-          f'with error: {exception!s}'))
+    DATA_TYPE = "systemd:journal"
 
-    if data_object.object_type != self._OBJECT_TYPE_DATA:
-      raise errors.ParseError(
-          f'Unsupported object type: {data_object.object_type:d}')
+    def __init__(self):
+        """Initializes event data."""
+        super().__init__(data_type=self.DATA_TYPE)
+        self.body = None
+        self.hostname = None
+        self.pid = None
+        self.reporter = None
+        self.written_time = None
 
-    if data_object.object_flags not in (
-        0, self._OBJECT_COMPRESSED_FLAG_XZ, self._OBJECT_COMPRESSED_FLAG_LZ4,
-        self._OBJECT_COMPRESSED_FLAG_ZSTD):
-      raise errors.ParseError(
-          f'Unsupported object flags: 0x{data_object.object_flags:02x}')
 
-    # The data is read separately for performance reasons.
-    data_offset = file_offset + data_object_header_size
-    data_size = data_object.data_size - data_object_header_size
-    data = file_object.read(data_size)
+class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
+    """Parses Systemd Journal files."""
 
-    if data_object.object_flags & self._OBJECT_COMPRESSED_FLAG_XZ:
-      data = lzma.decompress(data)
+    NAME = "systemd_journal"
+    DATA_FORMAT = "Systemd journal file"
 
-    elif data_object.object_flags & self._OBJECT_COMPRESSED_FLAG_LZ4:
-      uncompressed_size_map = self._GetDataTypeMap('uint32le')
+    _DEFINITION_FILE = os.path.join(os.path.dirname(__file__), "systemd_journal.yaml")
 
-      try:
-        uncompressed_size = self._ReadStructureFromByteStream(
-            data, data_offset, uncompressed_size_map)
-      except (ValueError, errors.ParseError) as exception:
-        raise errors.ParseError((
-            f'Unable to parse LZ4 uncompressed size at offset: '
-            f'0x{data_offset:08x} with error: {exception!s}'))
+    _OBJECT_COMPRESSED_FLAG_XZ = 1
+    _OBJECT_COMPRESSED_FLAG_LZ4 = 2
+    _OBJECT_COMPRESSED_FLAG_ZSTD = 4
 
-      data = lz4_block.decompress(data[8:], uncompressed_size=uncompressed_size)
+    _OBJECT_TYPE_UNUSED = 0
+    _OBJECT_TYPE_DATA = 1
+    _OBJECT_TYPE_FIELD = 2
+    _OBJECT_TYPE_ENTRY = 3
+    _OBJECT_TYPE_DATA_HASH_TABLE = 4
+    _OBJECT_TYPE_FIELD_HASH_TABLE = 5
+    _OBJECT_TYPE_ENTRY_ARRAY = 6
+    _OBJECT_TYPE_TAG = 7
 
-    elif data_object.object_flags & self._OBJECT_COMPRESSED_FLAG_ZSTD:
-      try:
-        data = zstd.decompress(data)
-      except zstd.Error as exception:
-        raise errors.ParseError((
-            f'Unable to decompress ZSTD at offset: 0x{data_offset:08x} with '
-            f'error: {exception!s}'))
+    _HEADER_SIZE_PRE_VERSION_187 = 208
+    _HEADER_SIZE_VERSION_187 = 224
+    _HEADER_SIZE_VERSION_189 = 240
+    _HEADER_SIZE_VERSION_246 = 256
+    _HEADER_SIZE_VERSION_252 = 264
+    _HEADER_SIZE_VERSION_254 = 272
 
-    return data
+    _SUPPORTED_FILE_HEADER_SIZES = frozenset(
+        [
+            _HEADER_SIZE_PRE_VERSION_187,
+            _HEADER_SIZE_VERSION_187,
+            _HEADER_SIZE_VERSION_189,
+            _HEADER_SIZE_VERSION_246,
+            _HEADER_SIZE_VERSION_252,
+            _HEADER_SIZE_VERSION_254,
+        ]
+    )
 
-  def _ParseEntryArrayObject(self, file_object, file_offset):
-    """Parses an entry array object.
+    _HEADER_INCOMPATIBLE_COMPACT = 16
 
-    Args:
-      file_object (dfvfs.FileIO): a file-like object.
-      file_offset (int): offset of the entry array object relative to the start
-          of the file-like object.
+    def __init__(self):
+        """Initializes a parser."""
+        super().__init__()
+        self._maximum_journal_file_offset = 0
+        self._is_compact = False
 
-    Returns:
-      systemd_journal_entry_array_object: entry array object.
+    def _ParseDataObject(self, file_object, file_offset):
+        """Parses a data object.
 
-    Raises:
-      ParseError: if the entry array object cannot be parsed.
-    """
-    if self._is_compact:
-      entry_array_object_map = self._GetDataTypeMap(
-          'systemd_journal_entry_array_object_compact')
-    else:
-      entry_array_object_map = self._GetDataTypeMap(
-          'systemd_journal_entry_array_object')
+        Args:
+          file_object (dfvfs.FileIO): a file-like object.
+          file_offset (int): offset of the data object relative to the start
+              of the file-like object.
 
-    try:
-      entry_array_object, _ = self._ReadStructureFromFileObject(
-          file_object, file_offset, entry_array_object_map)
-    except (ValueError, errors.ParseError) as exception:
-      raise errors.ParseError((
-          f'Unable to parse entry array object at offset: 0x{file_offset:08x} '
-          f'with error: {exception!s}'))
+        Returns:
+          bytes: data.
 
-    if entry_array_object.object_type != self._OBJECT_TYPE_ENTRY_ARRAY:
-      raise errors.ParseError(
-          f'Unsupported object type: {entry_array_object.object_type:d}')
+        Raises:
+          ParseError: if the data object cannot be parsed.
+        """
+        if self._is_compact:
+            data_object_map = self._GetDataTypeMap(
+                "systemd_journal_data_object_compact"
+            )
+        else:
+            data_object_map = self._GetDataTypeMap("systemd_journal_data_object")
 
-    if entry_array_object.object_flags != 0:
-      raise errors.ParseError(
-          f'Unsupported object flags: 0x{entry_array_object.object_flags:02x}')
+        try:
+            data_object, data_object_header_size = self._ReadStructureFromFileObject(
+                file_object, file_offset, data_object_map
+            )
+        except (ValueError, errors.ParseError) as exception:
+            raise errors.ParseError(
+                f"Unable to parse data object at offset: 0x{file_offset:08x} "
+                f"with error: {exception!s}"
+            )
 
-    return entry_array_object
+        if data_object.object_type != self._OBJECT_TYPE_DATA:
+            raise errors.ParseError(
+                f"Unsupported object type: {data_object.object_type:d}"
+            )
 
-  def _ParseEntryObject(self, file_object, file_offset):
-    """Parses an entry object.
+        if data_object.object_flags not in (
+            0,
+            self._OBJECT_COMPRESSED_FLAG_XZ,
+            self._OBJECT_COMPRESSED_FLAG_LZ4,
+            self._OBJECT_COMPRESSED_FLAG_ZSTD,
+        ):
+            raise errors.ParseError(
+                f"Unsupported object flags: 0x{data_object.object_flags:02x}"
+            )
 
-    Args:
-      file_object (dfvfs.FileIO): a file-like object.
-      file_offset (int): offset of the entry object relative to the start
-          of the file-like object.
+        # The data is read separately for performance reasons.
+        data_offset = file_offset + data_object_header_size
+        data_size = data_object.data_size - data_object_header_size
+        data = file_object.read(data_size)
 
-    Returns:
-      systemd_journal_entry_object: entry object.
+        if data_object.object_flags & self._OBJECT_COMPRESSED_FLAG_XZ:
+            data = lzma.decompress(data)
 
-    Raises:
-      ParseError: if the entry object cannot be parsed.
-    """
-    entry_object_map = self._GetDataTypeMap('systemd_journal_entry_object')
+        elif data_object.object_flags & self._OBJECT_COMPRESSED_FLAG_LZ4:
+            uncompressed_size_map = self._GetDataTypeMap("uint32le")
 
-    try:
-      entry_object, _ = self._ReadStructureFromFileObject(
-          file_object, file_offset, entry_object_map)
-    except (ValueError, errors.ParseError) as exception:
-      raise errors.ParseError((
-          f'Unable to parse entry object at offset: 0x{file_offset:08x} '
-          f'with error: {exception!s}'))
+            try:
+                uncompressed_size = self._ReadStructureFromByteStream(
+                    data, data_offset, uncompressed_size_map
+                )
+            except (ValueError, errors.ParseError) as exception:
+                raise errors.ParseError(
+                    f"Unable to parse LZ4 uncompressed size at offset: "
+                    f"0x{data_offset:08x} with error: {exception!s}"
+                )
 
-    if entry_object.object_type != self._OBJECT_TYPE_ENTRY:
-      raise errors.ParseError(
-          f'Unsupported object type: {entry_object.object_type:d}')
+            data = lz4_block.decompress(data[8:], uncompressed_size=uncompressed_size)
 
-    if entry_object.object_flags != 0:
-      raise errors.ParseError(
-          f'Unsupported object flags: 0x{entry_object.object_flags:02x}')
+        elif data_object.object_flags & self._OBJECT_COMPRESSED_FLAG_ZSTD:
+            try:
+                data = zstd.decompress(data)
+            except zstd.Error as exception:
+                raise errors.ParseError(
+                    f"Unable to decompress ZSTD at offset: 0x{data_offset:08x} with "
+                    f"error: {exception!s}"
+                )
 
-    return entry_object
+        return data
 
-  def _ParseEntryObjectOffsets(self, file_object, file_offset):
-    """Parses entry array objects for the offset of the entry objects.
+    def _ParseEntryArrayObject(self, file_object, file_offset):
+        """Parses an entry array object.
 
-    Args:
-      file_object (dfvfs.FileIO): a file-like object.
-      file_offset (int): offset of the first entry array object relative to
-          the start of the file-like object.
+        Args:
+          file_object (dfvfs.FileIO): a file-like object.
+          file_offset (int): offset of the entry array object relative to the start
+              of the file-like object.
 
-    Returns:
-      list[int]: offsets of the entry objects.
-    """
-    entry_array_object = self._ParseEntryArrayObject(file_object, file_offset)
+        Returns:
+          systemd_journal_entry_array_object: entry array object.
 
-    entry_object_offsets = list(entry_array_object.entry_object_offsets)
-    while entry_array_object.next_entry_array_offset != 0:
-      entry_array_object = self._ParseEntryArrayObject(
-          file_object, entry_array_object.next_entry_array_offset)
-      entry_object_offsets.extend(entry_array_object.entry_object_offsets)
+        Raises:
+          ParseError: if the entry array object cannot be parsed.
+        """
+        if self._is_compact:
+            entry_array_object_map = self._GetDataTypeMap(
+                "systemd_journal_entry_array_object_compact"
+            )
+        else:
+            entry_array_object_map = self._GetDataTypeMap(
+                "systemd_journal_entry_array_object"
+            )
 
-    return entry_object_offsets
+        try:
+            entry_array_object, _ = self._ReadStructureFromFileObject(
+                file_object, file_offset, entry_array_object_map
+            )
+        except (ValueError, errors.ParseError) as exception:
+            raise errors.ParseError(
+                f"Unable to parse entry array object at offset: 0x{file_offset:08x} "
+                f"with error: {exception!s}"
+            )
 
-  def _ParseJournalEntry(self, file_object, file_offset):
-    """Parses a journal entry.
+        if entry_array_object.object_type != self._OBJECT_TYPE_ENTRY_ARRAY:
+            raise errors.ParseError(
+                f"Unsupported object type: {entry_array_object.object_type:d}"
+            )
 
-    This method will generate an event per ENTRY object.
+        if entry_array_object.object_flags != 0:
+            raise errors.ParseError(
+                f"Unsupported object flags: 0x{entry_array_object.object_flags:02x}"
+            )
 
-    Args:
-      file_object (dfvfs.FileIO): a file-like object.
-      file_offset (int): offset of the entry object relative to the start
-          of the file-like object.
+        return entry_array_object
 
-    Returns:
-      dict[str, objects]: entry items per key.
+    def _ParseEntryObject(self, file_object, file_offset):
+        """Parses an entry object.
 
-    Raises:
-      ParseError: when an object offset is out of bounds.
-    """
-    entry_object = self._ParseEntryObject(file_object, file_offset)
+        Args:
+          file_object (dfvfs.FileIO): a file-like object.
+          file_offset (int): offset of the entry object relative to the start
+              of the file-like object.
 
-    # The data is read separately for performance reasons.
-    if self._is_compact:
-      entry_item_map = self._GetDataTypeMap(
-          'systemd_journal_entry_item_compact')
-    else:
-      entry_item_map = self._GetDataTypeMap('systemd_journal_entry_item')
+        Returns:
+          systemd_journal_entry_object: entry object.
 
-    file_offset += 64
-    data_end_offset = file_offset + entry_object.data_size - 64
+        Raises:
+          ParseError: if the entry object cannot be parsed.
+        """
+        entry_object_map = self._GetDataTypeMap("systemd_journal_entry_object")
 
-    fields = {'real_time': entry_object.real_time}
+        try:
+            entry_object, _ = self._ReadStructureFromFileObject(
+                file_object, file_offset, entry_object_map
+            )
+        except (ValueError, errors.ParseError) as exception:
+            raise errors.ParseError(
+                f"Unable to parse entry object at offset: 0x{file_offset:08x} "
+                f"with error: {exception!s}"
+            )
 
-    while file_offset < data_end_offset:
-      try:
-        entry_item, entry_item_data_size = self._ReadStructureFromFileObject(
-            file_object, file_offset, entry_item_map)
-      except (ValueError, errors.ParseError) as exception:
-        raise errors.ParseError((
-            f'Unable to parse entry item at offset: 0x{file_offset:08x} '
-            f'with error: {exception!s}'))
+        if entry_object.object_type != self._OBJECT_TYPE_ENTRY:
+            raise errors.ParseError(
+                f"Unsupported object type: {entry_object.object_type:d}"
+            )
 
-      file_offset += entry_item_data_size
+        if entry_object.object_flags != 0:
+            raise errors.ParseError(
+                f"Unsupported object flags: 0x{entry_object.object_flags:02x}"
+            )
 
-      if entry_item.object_offset < self._maximum_journal_file_offset:
-        raise errors.ParseError((
-            f'object offset should be after hash tables '
-            f'({entry_item.object_offset:d} < '
-            f'{self._maximum_journal_file_offset:d})'))
+        return entry_object
 
-      event_data = self._ParseDataObject(file_object, entry_item.object_offset)
-      event_string = event_data.decode('utf-8')
-      key, value = event_string.split('=', 1)
-      fields[key] = value
+    def _ParseEntryObjectOffsets(self, file_object, file_offset):
+        """Parses entry array objects for the offset of the entry objects.
 
-    return fields
+        Args:
+          file_object (dfvfs.FileIO): a file-like object.
+          file_offset (int): offset of the first entry array object relative to
+              the start of the file-like object.
 
-  @classmethod
-  def GetFormatSpecification(cls):
-    """Retrieves the format specification.
+        Returns:
+          list[int]: offsets of the entry objects.
+        """
+        entry_array_object = self._ParseEntryArrayObject(file_object, file_offset)
 
-    Returns:
-      FormatSpecification: format specification.
-    """
-    format_specification = specification.FormatSpecification(cls.NAME)
-    format_specification.AddNewSignature(b'LPKSHHRH', offset=0)
-    return format_specification
+        entry_object_offsets = list(entry_array_object.entry_object_offsets)
+        while entry_array_object.next_entry_array_offset != 0:
+            entry_array_object = self._ParseEntryArrayObject(
+                file_object, entry_array_object.next_entry_array_offset
+            )
+            entry_object_offsets.extend(entry_array_object.entry_object_offsets)
 
-  def ParseFileObject(self, parser_mediator, file_object):
-    """Parses a Systemd journal file-like object.
+        return entry_object_offsets
 
-    Args:
-      parser_mediator (ParserMediator): parser mediator.
-      file_object (dfvfs.FileIO): a file-like object.
+    def _ParseJournalEntry(self, file_object, file_offset):
+        """Parses a journal entry.
 
-    Raises:
-      WrongParser: when the header cannot be parsed.
-    """
-    file_header_map = self._GetDataTypeMap('systemd_journal_file_header')
+        This method will generate an event per ENTRY object.
 
-    try:
-      file_header, _ = self._ReadStructureFromFileObject(
-          file_object, 0, file_header_map)
-    except (ValueError, errors.ParseError) as exception:
-      raise errors.WrongParser(
-          f'Unable to parse file header with error: {exception!s}')
+        Args:
+          file_object (dfvfs.FileIO): a file-like object.
+          file_offset (int): offset of the entry object relative to the start
+              of the file-like object.
 
-    if file_header.header_size not in self._SUPPORTED_FILE_HEADER_SIZES:
-      raise errors.WrongParser(
-          f'Unsupported file header size: {file_header.header_size:d}')
+        Returns:
+          dict[str, objects]: entry items per key.
 
-    if file_header.incompatible_flags & self._HEADER_INCOMPATIBLE_COMPACT:
-      self._is_compact = True
+        Raises:
+          ParseError: when an object offset is out of bounds.
+        """
+        entry_object = self._ParseEntryObject(file_object, file_offset)
 
-    data_hash_table_end_offset = (
-        file_header.data_hash_table_offset +
-        file_header.data_hash_table_size)
-    field_hash_table_end_offset = (
-        file_header.field_hash_table_offset +
-        file_header.field_hash_table_size)
-    self._maximum_journal_file_offset = max(
-        data_hash_table_end_offset, field_hash_table_end_offset)
+        # The data is read separately for performance reasons.
+        if self._is_compact:
+            entry_item_map = self._GetDataTypeMap("systemd_journal_entry_item_compact")
+        else:
+            entry_item_map = self._GetDataTypeMap("systemd_journal_entry_item")
 
-    entry_object_offsets = self._ParseEntryObjectOffsets(
-        file_object, file_header.entry_array_offset)
+        file_offset += 64
+        data_end_offset = file_offset + entry_object.data_size - 64
 
-    for entry_object_offset in entry_object_offsets:
-      if entry_object_offset == 0:
-        continue
+        fields = {"real_time": entry_object.real_time}
 
-      try:
-        fields = self._ParseJournalEntry(file_object, entry_object_offset)
-      except errors.ParseError as exception:
-        parser_mediator.ProduceExtractionWarning((
-            f'Unable to parse journal entry at offset: '
-            f'0x{entry_object_offset:08x} with error: {exception!s}'))
-        return
+        while file_offset < data_end_offset:
+            try:
+                entry_item, entry_item_data_size = self._ReadStructureFromFileObject(
+                    file_object, file_offset, entry_item_map
+                )
+            except (ValueError, errors.ParseError) as exception:
+                raise errors.ParseError(
+                    f"Unable to parse entry item at offset: 0x{file_offset:08x} "
+                    f"with error: {exception!s}"
+                )
 
-      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-          timestamp=fields['real_time'])
+            file_offset += entry_item_data_size
 
-      event_data = SystemdJournalEventData()
+            if entry_item.object_offset < self._maximum_journal_file_offset:
+                raise errors.ParseError(
+                    f"object offset should be after hash tables "
+                    f"({entry_item.object_offset:d} < "
+                    f"{self._maximum_journal_file_offset:d})"
+                )
 
-      event_data.body = fields.get('MESSAGE')
-      event_data.hostname = fields.get('_HOSTNAME')
-      event_data.reporter = fields.get('SYSLOG_IDENTIFIER')
-      event_data.written_time = date_time
+            event_data = self._ParseDataObject(file_object, entry_item.object_offset)
+            event_string = event_data.decode("utf-8")
+            key, value = event_string.split("=", 1)
+            fields[key] = value
 
-      if event_data.reporter and event_data.reporter != 'kernel':
-        event_data.pid = fields.get('_PID', fields.get('SYSLOG_PID'))
+        return fields
 
-      parser_mediator.ProduceEventData(event_data)
+    @classmethod
+    def GetFormatSpecification(cls):
+        """Retrieves the format specification.
+
+        Returns:
+          FormatSpecification: format specification.
+        """
+        format_specification = specification.FormatSpecification(cls.NAME)
+        format_specification.AddNewSignature(b"LPKSHHRH", offset=0)
+        return format_specification
+
+    def ParseFileObject(self, parser_mediator, file_object):
+        """Parses a Systemd journal file-like object.
+
+        Args:
+          parser_mediator (ParserMediator): parser mediator.
+          file_object (dfvfs.FileIO): a file-like object.
+
+        Raises:
+          WrongParser: when the header cannot be parsed.
+        """
+        file_header_map = self._GetDataTypeMap("systemd_journal_file_header")
+
+        try:
+            file_header, _ = self._ReadStructureFromFileObject(
+                file_object, 0, file_header_map
+            )
+        except (ValueError, errors.ParseError) as exception:
+            raise errors.WrongParser(
+                f"Unable to parse file header with error: {exception!s}"
+            )
+
+        if file_header.header_size not in self._SUPPORTED_FILE_HEADER_SIZES:
+            raise errors.WrongParser(
+                f"Unsupported file header size: {file_header.header_size:d}"
+            )
+
+        if file_header.incompatible_flags & self._HEADER_INCOMPATIBLE_COMPACT:
+            self._is_compact = True
+
+        data_hash_table_end_offset = (
+            file_header.data_hash_table_offset + file_header.data_hash_table_size
+        )
+        field_hash_table_end_offset = (
+            file_header.field_hash_table_offset + file_header.field_hash_table_size
+        )
+        self._maximum_journal_file_offset = max(
+            data_hash_table_end_offset, field_hash_table_end_offset
+        )
+        entry_object_offsets = self._ParseEntryObjectOffsets(
+            file_object, file_header.entry_array_offset
+        )
+        for entry_object_offset in entry_object_offsets:
+            if entry_object_offset == 0:
+                continue
+
+            try:
+                fields = self._ParseJournalEntry(file_object, entry_object_offset)
+            except errors.ParseError as exception:
+                parser_mediator.ProduceExtractionWarning(
+                    f"Unable to parse journal entry at offset: "
+                    f"0x{entry_object_offset:08x} with error: {exception!s}"
+                )
+                return
+
+            date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+                timestamp=fields["real_time"]
+            )
+            event_data = SystemdJournalEventData()
+
+            event_data.body = fields.get("MESSAGE")
+            event_data.hostname = fields.get("_HOSTNAME")
+            event_data.reporter = fields.get("SYSLOG_IDENTIFIER")
+            event_data.written_time = date_time
+
+            if event_data.reporter and event_data.reporter != "kernel":
+                event_data.pid = fields.get("_PID", fields.get("SYSLOG_PID"))
+
+            parser_mediator.ProduceEventData(event_data)
 
 
 manager.ParsersManager.RegisterParser(SystemdJournalParser)

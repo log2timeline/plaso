@@ -10,53 +10,53 @@ from tests import test_lib as shared_test_lib
 
 
 class TestProcess(base_process.MultiProcessBaseProcess):
-  """Implementation of the multi-processing base process for testing."""
+    """Implementation of the multi-processing base process for testing."""
 
-  def _GetStatus(self):
-    """Returns status information.
+    def _GetStatus(self):
+        """Returns status information.
 
-    Returns:
-      dict[str, object]: status attributes, indexed by name.
-    """
-    # TODO: implement.
-    return {}
+        Returns:
+          dict[str, object]: status attributes, indexed by name.
+        """
+        # TODO: implement.
+        return {}
 
-  def _Main(self):
-    """The process main loop.
+    def _Main(self):
+        """The process main loop.
 
-    This method is called when the process is ready to start. A sub class should
-    override this method to do the necessary actions in the main loop.
-    """
-    # TODO: implement.
-    return
+        This method is called when the process is ready to start. A sub class should
+        override this method to do the necessary actions in the main loop.
+        """
+        # TODO: implement.
+        return
 
-  def SignalAbort(self):
-    """Signals the process to abort."""
-    # TODO: implement.
-    return
+    def SignalAbort(self):
+        """Signals the process to abort."""
+        # TODO: implement.
+        return
 
 
 class MultiProcessBaseProcessTest(shared_test_lib.BaseTestCase):
-  """Tests the multi-processing base process."""
+    """Tests the multi-processing base process."""
 
-  # pylint: disable=protected-access
+    # pylint: disable=protected-access
 
-  def testInitialization(self):
-    """Tests the initialization."""
-    configuration = configurations.ProcessingConfiguration()
+    def testInitialization(self):
+        """Tests the initialization."""
+        configuration = configurations.ProcessingConfiguration()
 
-    test_process = TestProcess(configuration, name='TestBase')
-    self.assertIsNotNone(test_process)
+        test_process = TestProcess(configuration, name="TestBase")
+        self.assertIsNotNone(test_process)
 
-  # TODO: add test for name property.
-  # TODO: add test for _OnCriticalError.
-  # TODO: add test for _SigSegvHandler.
-  # TODO: add test for _SigTermHandler.
-  # TODO: add test for _StartProcessStatusRPCServer.
-  # TODO: add test for _StopProcessStatusRPCServer.
-  # TODO: add test for _WaitForStatusNotRunning.
-  # TODO: add test for run.
+    # TODO: add test for name property.
+    # TODO: add test for _OnCriticalError.
+    # TODO: add test for _SigSegvHandler.
+    # TODO: add test for _SigTermHandler.
+    # TODO: add test for _StartProcessStatusRPCServer.
+    # TODO: add test for _StopProcessStatusRPCServer.
+    # TODO: add test for _WaitForStatusNotRunning.
+    # TODO: add test for run.
 
 
-if __name__ == '__main__':
-  unittest.main()
+if __name__ == "__main__":
+    unittest.main()

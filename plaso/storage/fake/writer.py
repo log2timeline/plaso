@@ -6,116 +6,118 @@ from plaso.storage.fake import fake_store
 
 
 class FakeStorageWriter(writer.StorageWriter):
-  """Fake (in-memory only) storage writer object.
+    """Fake (in-memory only) storage writer object.
 
-  Attributes:
-    task_completion (TaskCompletion): task completion attribute container.
-    task_start (TaskStart): task start attribute container.
-  """
-
-  def __init__(self, storage_type=definitions.STORAGE_TYPE_SESSION):
-    """Initializes a storage writer object.
-
-    Args:
-      storage_type (Optional[str]): storage type.
+    Attributes:
+      task_completion (TaskCompletion): task completion attribute container.
+      task_start (TaskStart): task start attribute container.
     """
-    super().__init__(storage_type=storage_type)
-    self._first_written_event_data_index = 0
-    self._first_written_event_source_index = 0
-    self._written_event_data_index = 0
-    self._written_event_source_index = 0
-    self.task_completion = None
-    self.task_start = None
 
-  def GetFirstWrittenEventData(self):
-    """Retrieves the first event data that was written after open.
+    def __init__(self, storage_type=definitions.STORAGE_TYPE_SESSION):
+        """Initializes a storage writer object.
 
-    Using GetFirstWrittenEventData and GetNextWrittenEventData newly
-    added event data can be retrieved in order of addition.
+        Args:
+          storage_type (Optional[str]): storage type.
+        """
+        super().__init__(storage_type=storage_type)
+        self._first_written_event_data_index = 0
+        self._first_written_event_source_index = 0
+        self._written_event_data_index = 0
+        self._written_event_source_index = 0
+        self.task_completion = None
+        self.task_start = None
 
-    Returns:
-      EventData: event data or None if there are no newly written ones.
+    def GetFirstWrittenEventData(self):
+        """Retrieves the first event data that was written after open.
 
-    Raises:
-      OSError: when the storage writer is closed.
-    """
-    if not self._store:
-      raise OSError('Unable to read from closed storage writer.')
+        Using GetFirstWrittenEventData and GetNextWrittenEventData newly
+        added event data can be retrieved in order of addition.
 
-    event_data = self._store.GetAttributeContainerByIndex(
-        self._CONTAINER_TYPE_EVENT_DATA, self._first_written_event_data_index)
-    self._written_event_data_index = self._first_written_event_data_index + 1
-    return event_data
+        Returns:
+          EventData: event data or None if there are no newly written ones.
 
-  def GetNextWrittenEventData(self):
-    """Retrieves the next event data that was written after open.
+        Raises:
+          OSError: when the storage writer is closed.
+        """
+        if not self._store:
+            raise OSError("Unable to read from closed storage writer.")
 
-    Returns:
-      EventData: event data or None if there are no newly written ones.
+        event_data = self._store.GetAttributeContainerByIndex(
+            self._CONTAINER_TYPE_EVENT_DATA, self._first_written_event_data_index
+        )
+        self._written_event_data_index = self._first_written_event_data_index + 1
+        return event_data
 
-    Raises:
-      OSError: when the storage writer is closed.
-    """
-    if not self._store:
-      raise OSError('Unable to read from closed storage writer.')
+    def GetNextWrittenEventData(self):
+        """Retrieves the next event data that was written after open.
 
-    event_data = self._store.GetAttributeContainerByIndex(
-        self._CONTAINER_TYPE_EVENT_DATA, self._written_event_data_index)
-    self._written_event_data_index += 1
-    return event_data
+        Returns:
+          EventData: event data or None if there are no newly written ones.
 
-  def GetFirstWrittenEventSource(self):
-    """Retrieves the first event source that was written after open.
+        Raises:
+          OSError: when the storage writer is closed.
+        """
+        if not self._store:
+            raise OSError("Unable to read from closed storage writer.")
 
-    Using GetFirstWrittenEventSource and GetNextWrittenEventSource newly
-    added event sources can be retrieved in order of addition.
+        event_data = self._store.GetAttributeContainerByIndex(
+            self._CONTAINER_TYPE_EVENT_DATA, self._written_event_data_index
+        )
+        self._written_event_data_index += 1
+        return event_data
 
-    Returns:
-      EventSource: event source or None if there are no newly written ones.
+    def GetFirstWrittenEventSource(self):
+        """Retrieves the first event source that was written after open.
 
-    Raises:
-      OSError: when the storage writer is closed.
-    """
-    if not self._store:
-      raise OSError('Unable to read from closed storage writer.')
+        Using GetFirstWrittenEventSource and GetNextWrittenEventSource newly
+        added event sources can be retrieved in order of addition.
 
-    event_source = self._store.GetAttributeContainerByIndex(
-        self._CONTAINER_TYPE_EVENT_SOURCE,
-        self._first_written_event_source_index)
-    self._written_event_source_index = (
-        self._first_written_event_source_index + 1)
-    return event_source
+        Returns:
+          EventSource: event source or None if there are no newly written ones.
 
-  def GetNextWrittenEventSource(self):
-    """Retrieves the next event source that was written after open.
+        Raises:
+          OSError: when the storage writer is closed.
+        """
+        if not self._store:
+            raise OSError("Unable to read from closed storage writer.")
 
-    Returns:
-      EventSource: event source or None if there are no newly written ones.
+        event_source = self._store.GetAttributeContainerByIndex(
+            self._CONTAINER_TYPE_EVENT_SOURCE, self._first_written_event_source_index
+        )
+        self._written_event_source_index = self._first_written_event_source_index + 1
+        return event_source
 
-    Raises:
-      OSError: when the storage writer is closed.
-    """
-    if not self._store:
-      raise OSError('Unable to read from closed storage writer.')
+    def GetNextWrittenEventSource(self):
+        """Retrieves the next event source that was written after open.
 
-    event_source = self._store.GetAttributeContainerByIndex(
-        self._CONTAINER_TYPE_EVENT_SOURCE, self._written_event_source_index)
-    self._written_event_source_index += 1
-    return event_source
+        Returns:
+          EventSource: event source or None if there are no newly written ones.
 
-  def Open(self, **unused_kwargs):
-    """Opens the storage writer.
+        Raises:
+          OSError: when the storage writer is closed.
+        """
+        if not self._store:
+            raise OSError("Unable to read from closed storage writer.")
 
-    Raises:
-      OSError: if the storage writer is already opened.
-    """
-    if self._store:
-      raise OSError('Storage writer already opened.')
+        event_source = self._store.GetAttributeContainerByIndex(
+            self._CONTAINER_TYPE_EVENT_SOURCE, self._written_event_source_index
+        )
+        self._written_event_source_index += 1
+        return event_source
 
-    self._store = fake_store.FakeStore()
-    self._store.Open()
+    def Open(self, **unused_kwargs):
+        """Opens the storage writer.
 
-    self._first_written_event_data_index = 0
-    self._first_written_event_source_index = 0
-    self._written_event_data_index = 0
-    self._written_event_source_index = 0
+        Raises:
+          OSError: if the storage writer is already opened.
+        """
+        if self._store:
+            raise OSError("Storage writer already opened.")
+
+        self._store = fake_store.FakeStore()
+        self._store.Open()
+
+        self._first_written_event_data_index = 0
+        self._first_written_event_source_index = 0
+        self._written_event_data_index = 0
+        self._written_event_source_index = 0

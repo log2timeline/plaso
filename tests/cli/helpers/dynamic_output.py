@@ -11,13 +11,12 @@ from tests.cli import test_lib as cli_test_lib
 from tests.cli.helpers import test_lib
 
 
-class DynamicOutputArgumentsHelperTest(
-    test_lib.OutputModuleArgumentsHelperTest):
-  """Tests the dynamic output module CLI arguments helper."""
+class DynamicOutputArgumentsHelperTest(test_lib.OutputModuleArgumentsHelperTest):
+    """Tests the dynamic output module CLI arguments helper."""
 
-  # pylint: disable=no-member,protected-access
+    # pylint: disable=no-member,protected-access
 
-  _EXPECTED_OUTPUT = f"""\
+    _EXPECTED_OUTPUT = f"""\
 usage: cli_helper.py [--fields FIELDS]
 
 Test argument parser.
@@ -26,26 +25,25 @@ Test argument parser.
   --fields FIELDS  Defines which fields should be included in the output.
 """
 
-  def testAddArguments(self):
-    """Tests the AddArguments function."""
-    argument_parser = self._GetTestArgumentParser('cli_helper.py')
+    def testAddArguments(self):
+        """Tests the AddArguments function."""
+        argument_parser = self._GetTestArgumentParser("cli_helper.py")
 
-    dynamic_output.DynamicOutputArgumentsHelper.AddArguments(argument_parser)
+        dynamic_output.DynamicOutputArgumentsHelper.AddArguments(argument_parser)
 
-    output = self._RunArgparseFormatHelp(argument_parser)
-    self.assertEqual(output, self._EXPECTED_OUTPUT)
+        output = self._RunArgparseFormatHelp(argument_parser)
+        self.assertEqual(output, self._EXPECTED_OUTPUT)
 
-  def testParseOptions(self):
-    """Tests the ParseOptions function."""
-    options = cli_test_lib.TestOptions()
+    def testParseOptions(self):
+        """Tests the ParseOptions function."""
+        options = cli_test_lib.TestOptions()
 
-    output_module = dynamic.DynamicOutputModule()
-    dynamic_output.DynamicOutputArgumentsHelper.ParseOptions(
-        options, output_module)
+        output_module = dynamic.DynamicOutputModule()
+        dynamic_output.DynamicOutputArgumentsHelper.ParseOptions(options, output_module)
 
-    with self.assertRaises(errors.BadConfigObject):
-      dynamic_output.DynamicOutputArgumentsHelper.ParseOptions(options, None)
+        with self.assertRaises(errors.BadConfigObject):
+            dynamic_output.DynamicOutputArgumentsHelper.ParseOptions(options, None)
 
 
-if __name__ == '__main__':
-  unittest.main()
+if __name__ == "__main__":
+    unittest.main()

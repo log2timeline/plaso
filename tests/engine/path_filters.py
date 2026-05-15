@@ -17,86 +17,94 @@ from tests import test_lib as shared_test_lib
 
 
 class PathFilterTest(shared_test_lib.BaseTestCase):
-  """Tests for the path filter."""
+    """Tests for the path filter."""
 
-  def testInitialize(self):
-    """Tests the __init__ function."""
-    test_filter = path_filters.PathFilter(
-        path_filters.PathFilter.FILTER_TYPE_INCLUDE)
-    self.assertIsNotNone(test_filter)
+    def testInitialize(self):
+        """Tests the __init__ function."""
+        test_filter = path_filters.PathFilter(
+            path_filters.PathFilter.FILTER_TYPE_INCLUDE
+        )
+        self.assertIsNotNone(test_filter)
 
-    with self.assertRaises(ValueError):
-      test_filter = path_filters.PathFilter('bogus')
+        with self.assertRaises(ValueError):
+            test_filter = path_filters.PathFilter("bogus")
 
 
 class PathCollectionFiltersHelperTest(shared_test_lib.BaseTestCase):
-  """Tests for the path collection filters helper."""
+    """Tests for the path collection filters helper."""
 
-  # pylint: disable=protected-access
+    # pylint: disable=protected-access
 
-  _YAML_FILTER_FILE_DATA = '\n'.join([
-      'type: include',
-      'paths:',
-      '- \'bad re (no close on that parenthesis/file\'',
-      '- \'failing/\'',
-      '- \'/does_not_exist/some_file_[0-9]+txt\'',
-      '---',
-      'type: include',
-      'path_separator: \'\\\'',
-      'paths:',
-      '- \'\\\\AUTHORS\'',
-      '- \'{systemroot}\\\\Tasks\\\\.+[.]job\'',
-      '---',
-      'type: include',
-      'paths:',
-      '- \'/test_data/.+[.]evtx\'',
-      '- \'/test_data/evtx/.+[.]evtx\'',
-      '- \'/test_data/testdir/filter_.+[.]txt\'',
-      ''])
+    _YAML_FILTER_FILE_DATA = "\n".join(
+        [
+            "type: include",
+            "paths:",
+            "- 'bad re (no close on that parenthesis/file'",
+            "- 'failing/'",
+            "- '/does_not_exist/some_file_[0-9]+txt'",
+            "---",
+            "type: include",
+            "path_separator: '\\'",
+            "paths:",
+            "- '\\\\AUTHORS'",
+            "- '{systemroot}\\\\Tasks\\\\.+[.]job'",
+            "---",
+            "type: include",
+            "paths:",
+            "- '/test_data/.+[.]evtx'",
+            "- '/test_data/evtx/.+[.]evtx'",
+            "- '/test_data/testdir/filter_.+[.]txt'",
+            "",
+        ]
+    )
 
-  def testBuildFindSpecsWithYAMLFilterFile(self):
-    """Tests the BuildFindSpecs function with YAML filter file."""
-    test_file_path = self._GetTestFilePath(['evtx', 'System.evtx'])
-    self._SkipIfPathNotExists(test_file_path)
+    def testBuildFindSpecsWithYAMLFilterFile(self):
+        """Tests the BuildFindSpecs function with YAML filter file."""
+        test_file_path = self._GetTestFilePath(["evtx", "System.evtx"])
+        self._SkipIfPathNotExists(test_file_path)
 
-    test_file_path = self._GetTestFilePath(['evtx', 'System2.evtx'])
-    self._SkipIfPathNotExists(test_file_path)
+        test_file_path = self._GetTestFilePath(["evtx", "System2.evtx"])
+        self._SkipIfPathNotExists(test_file_path)
 
-    test_file_path = self._GetTestFilePath(['testdir', 'filter_1.txt'])
-    self._SkipIfPathNotExists(test_file_path)
+        test_file_path = self._GetTestFilePath(["testdir", "filter_1.txt"])
+        self._SkipIfPathNotExists(test_file_path)
 
-    test_file_path = self._GetTestFilePath(['testdir', 'filter_3.txt'])
-    self._SkipIfPathNotExists(test_file_path)
+        test_file_path = self._GetTestFilePath(["testdir", "filter_3.txt"])
+        self._SkipIfPathNotExists(test_file_path)
 
-    test_filter_file = yaml_filter_file.YAMLFilterFile()
-    test_path_filters = test_filter_file._ReadFromFileObject(
-        io.StringIO(self._YAML_FILTER_FILE_DATA))
+        test_filter_file = yaml_filter_file.YAMLFilterFile()
+        test_path_filters = test_filter_file._ReadFromFileObject(
+            io.StringIO(self._YAML_FILTER_FILE_DATA)
+        )
 
-    environment_variable = artifacts.EnvironmentVariableArtifact(
-        case_sensitive=False, name='SystemRoot', value='C:\\Windows')
+        environment_variable = artifacts.EnvironmentVariableArtifact(
+            case_sensitive=False, name="SystemRoot", value="C:\\Windows"
+        )
 
-    test_helper = path_filters.PathCollectionFiltersHelper()
-    test_helper.BuildFindSpecs(
-        test_path_filters, environment_variables=[environment_variable])
+        test_helper = path_filters.PathCollectionFiltersHelper()
+        test_helper.BuildFindSpecs(
+            test_path_filters, environment_variables=[environment_variable]
+        )
 
-    self.assertEqual(len(test_helper.included_file_system_find_specs), 6)
+        self.assertEqual(len(test_helper.included_file_system_find_specs), 6)
 
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location='.')
-    file_system = path_spec_resolver.Resolver.OpenFileSystem(path_spec)
-    searcher = file_system_searcher.FileSystemSearcher(
-        file_system, path_spec)
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_OS, location="."
+        )
+        file_system = path_spec_resolver.Resolver.OpenFileSystem(path_spec)
+        searcher = file_system_searcher.FileSystemSearcher(file_system, path_spec)
 
-    path_spec_generator = searcher.Find(
-        find_specs=test_helper.included_file_system_find_specs)
-    self.assertIsNotNone(path_spec_generator)
+        path_spec_generator = searcher.Find(
+            find_specs=test_helper.included_file_system_find_specs
+        )
+        self.assertIsNotNone(path_spec_generator)
 
-    path_specs = list(path_spec_generator)
+        path_specs = list(path_spec_generator)
 
-    # Two evtx, one symbolic link to evtx, one AUTHORS, two filter_*.txt files,
-    # total 6 path specifications.
-    self.assertEqual(len(path_specs), 6)
+        # Two evtx, one symbolic link to evtx, one AUTHORS, two filter_*.txt files,
+        # total 6 path specifications.
+        self.assertEqual(len(path_specs), 6)
 
 
-if __name__ == '__main__':
-  unittest.main()
+if __name__ == "__main__":
+    unittest.main()

@@ -17,570 +17,585 @@ from plaso.formatters import logger
 
 
 class EventFormatterHelper:
-  """Base class of helper for formatting event data."""
+    """Base class of helper for formatting event data."""
 
-  @abc.abstractmethod
-  def FormatEventValues(self, output_mediator, event_values):
-    """Formats event values using the helper.
+    @abc.abstractmethod
+    def FormatEventValues(self, output_mediator, event_values):
+        """Formats event values using the helper.
 
-    Args:
-      output_mediator (OutputMediator): output mediator.
-      event_values (dict[str, object]): event values.
-    """
+        Args:
+          output_mediator (OutputMediator): output mediator.
+          event_values (dict[str, object]): event values.
+        """
 
 
 class BooleanEventFormatterHelper(EventFormatterHelper):
-  """Helper for formatting boolean event data.
+    """Helper for formatting boolean event data.
 
-  Attributes:
-    input_attribute (str): name of the attribute that contains the boolean
-        input value.
-    output_attribute (str): name of the attribute where the boolean output
-        value should be stored.
-    value_if_false (str): output value if the boolean input value is False.
-    value_if_true (str): output value if the boolean input value is True.
-  """
-
-  def __init__(
-      self, input_attribute=None, output_attribute=None, value_if_false=None,
-      value_if_true=None):
-    """Initialized a helper for formatting boolean event data.
-
-    Args:
-      input_attribute (Optional[str]): name of the attribute that contains
-          the boolean input value.
-      output_attribute (Optional[str]): name of the attribute where the
-          boolean output value should be stored.
+    Attributes:
+      input_attribute (str): name of the attribute that contains the boolean
+          input value.
+      output_attribute (str): name of the attribute where the boolean output
+          value should be stored.
       value_if_false (str): output value if the boolean input value is False.
       value_if_true (str): output value if the boolean input value is True.
     """
-    super().__init__()
-    self.input_attribute = input_attribute
-    self.output_attribute = output_attribute
-    self.value_if_false = value_if_false
-    self.value_if_true = value_if_true
 
-  def FormatEventValues(self, output_mediator, event_values):
-    """Formats event values using the helper.
+    def __init__(
+        self,
+        input_attribute=None,
+        output_attribute=None,
+        value_if_false=None,
+        value_if_true=None,
+    ):
+        """Initialized a helper for formatting boolean event data.
 
-    Args:
-      output_mediator (OutputMediator): output mediator.
-      event_values (dict[str, object]): event values.
-    """
-    input_value = event_values.get(self.input_attribute)
-    if input_value:
-      output_value = self.value_if_true
-    else:
-      output_value = self.value_if_false
+        Args:
+          input_attribute (Optional[str]): name of the attribute that contains
+              the boolean input value.
+          output_attribute (Optional[str]): name of the attribute where the
+              boolean output value should be stored.
+          value_if_false (str): output value if the boolean input value is False.
+          value_if_true (str): output value if the boolean input value is True.
+        """
+        super().__init__()
+        self.input_attribute = input_attribute
+        self.output_attribute = output_attribute
+        self.value_if_false = value_if_false
+        self.value_if_true = value_if_true
 
-    event_values[self.output_attribute] = output_value
+    def FormatEventValues(self, output_mediator, event_values):
+        """Formats event values using the helper.
+
+        Args:
+          output_mediator (OutputMediator): output mediator.
+          event_values (dict[str, object]): event values.
+        """
+        input_value = event_values.get(self.input_attribute)
+        if input_value:
+            output_value = self.value_if_true
+        else:
+            output_value = self.value_if_false
+
+        event_values[self.output_attribute] = output_value
 
 
 class CustomEventFormatterHelper(EventFormatterHelper):
-  """Base class for a helper for custom formatting of event data."""
+    """Base class for a helper for custom formatting of event data."""
 
-  DATA_TYPE = ''
-  IDENTIFIER = ''
+    DATA_TYPE = ""
+    IDENTIFIER = ""
 
-  @abc.abstractmethod
-  def FormatEventValues(self, output_mediator, event_values):
-    """Formats event values using the helper.
+    @abc.abstractmethod
+    def FormatEventValues(self, output_mediator, event_values):
+        """Formats event values using the helper.
 
-    Args:
-      output_mediator (OutputMediator): output mediator.
-      event_values (dict[str, object]): event values.
-    """
+        Args:
+          output_mediator (OutputMediator): output mediator.
+          event_values (dict[str, object]): event values.
+        """
 
 
 class EnumerationEventFormatterHelper(EventFormatterHelper):
-  """Helper for formatting enumeration event data.
+    """Helper for formatting enumeration event data.
 
-  Attributes:
-    default (str): default value.
-    input_attribute (str): name of the attribute that contains the enumeration
-        input value.
-    output_attribute (str): name of the attribute where the enumeration output
-        value should be stored.
-    values (dict[str, str]): mapping of enumeration input and output values.
-  """
-
-  def __init__(
-      self, default=None, input_attribute=None, output_attribute=None,
-      values=None):
-    """Initialized a helper for formatting enumeration event data.
-
-    Args:
-      default (Optional[str]): default value.
-      input_attribute (Optional[str]): name of the attribute that contains
-          the enumeration input value.
-      output_attribute (Optional[str]): name of the attribute where the
-          enumeration output value should be stored.
-      values (Optional[dict[str, str]]): mapping of enumeration input and
-          output values.
+    Attributes:
+      default (str): default value.
+      input_attribute (str): name of the attribute that contains the enumeration
+          input value.
+      output_attribute (str): name of the attribute where the enumeration output
+          value should be stored.
+      values (dict[str, str]): mapping of enumeration input and output values.
     """
-    super().__init__()
-    self.default = default
-    self.input_attribute = input_attribute
-    self.output_attribute = output_attribute
-    self.values = values or {}
 
-  def FormatEventValues(self, output_mediator, event_values):
-    """Formats event values using the helper.
+    def __init__(
+        self, default=None, input_attribute=None, output_attribute=None, values=None
+    ):
+        """Initialized a helper for formatting enumeration event data.
 
-    If default value is None and there is no corresponding enumeration value
-    then the original value is used.
+        Args:
+          default (Optional[str]): default value.
+          input_attribute (Optional[str]): name of the attribute that contains
+              the enumeration input value.
+          output_attribute (Optional[str]): name of the attribute where the
+              enumeration output value should be stored.
+          values (Optional[dict[str, str]]): mapping of enumeration input and
+              output values.
+        """
+        super().__init__()
+        self.default = default
+        self.input_attribute = input_attribute
+        self.output_attribute = output_attribute
+        self.values = values or {}
 
-    Args:
-      output_mediator (OutputMediator): output mediator.
-      event_values (dict[str, object]): event values.
-    """
-    input_value = event_values.get(self.input_attribute)
-    if input_value is not None:
-      default_value = self.default
-      if default_value is None:
-        default_value = input_value
+    def FormatEventValues(self, output_mediator, event_values):
+        """Formats event values using the helper.
 
-      event_values[self.output_attribute] = self.values.get(
-          input_value, default_value)
+        If default value is None and there is no corresponding enumeration value
+        then the original value is used.
+
+        Args:
+          output_mediator (OutputMediator): output mediator.
+          event_values (dict[str, object]): event values.
+        """
+        input_value = event_values.get(self.input_attribute)
+        if input_value is not None:
+            default_value = self.default
+            if default_value is None:
+                default_value = input_value
+
+            event_values[self.output_attribute] = self.values.get(
+                input_value, default_value
+            )
 
 
 class FlagsEventFormatterHelper(EventFormatterHelper):
-  """Helper for formatting flags event data.
+    """Helper for formatting flags event data.
 
-  Attributes:
-    input_attribute (str): name of the attribute that contains the flags
-        input value.
-    output_attribute (str): name of the attribute where the flags output
-        value should be stored.
-    values (dict[str, str]): mapping of flags input and output values.
-  """
-
-  def __init__(
-      self, input_attribute=None, output_attribute=None, values=None):
-    """Initialized a helper for formatting flags event data.
-
-    Args:
-      input_attribute (Optional[str]): name of the attribute that contains
-          the flags input value.
-      output_attribute (Optional[str]): name of the attribute where the
-          flags output value should be stored.
-      values (Optional[dict[str, str]]): mapping of flags input and output
-          values.
+    Attributes:
+      input_attribute (str): name of the attribute that contains the flags
+          input value.
+      output_attribute (str): name of the attribute where the flags output
+          value should be stored.
+      values (dict[str, str]): mapping of flags input and output values.
     """
-    super().__init__()
-    self.input_attribute = input_attribute
-    self.output_attribute = output_attribute
-    self.values = values or {}
 
-  def FormatEventValues(self, output_mediator, event_values):
-    """Formats event values using the helper.
+    def __init__(self, input_attribute=None, output_attribute=None, values=None):
+        """Initialized a helper for formatting flags event data.
 
-    Args:
-      output_mediator (OutputMediator): output mediator.
-      event_values (dict[str, object]): event values.
-    """
-    input_value = event_values.get(self.input_attribute)
-    if input_value is None:
-      return
+        Args:
+          input_attribute (Optional[str]): name of the attribute that contains
+              the flags input value.
+          output_attribute (Optional[str]): name of the attribute where the
+              flags output value should be stored.
+          values (Optional[dict[str, str]]): mapping of flags input and output
+              values.
+        """
+        super().__init__()
+        self.input_attribute = input_attribute
+        self.output_attribute = output_attribute
+        self.values = values or {}
 
-    output_values = []
-    for flag, mapped_value in self.values.items():
-      if flag & input_value:
-        output_values.append(mapped_value)
+    def FormatEventValues(self, output_mediator, event_values):
+        """Formats event values using the helper.
 
-    event_values[self.output_attribute] = ', '.join(output_values)
+        Args:
+          output_mediator (OutputMediator): output mediator.
+          event_values (dict[str, object]): event values.
+        """
+        input_value = event_values.get(self.input_attribute)
+        if input_value is None:
+            return
+
+        output_values = []
+        for flag, mapped_value in self.values.items():
+            if flag & input_value:
+                output_values.append(mapped_value)
+
+        event_values[self.output_attribute] = ", ".join(output_values)
 
 
 class EventFormatter:
-  """Base class to format event values.
+    """Base class to format event values.
 
-  Attributes:
-    custom_helpers (list[str]): identifiers of custom event formatter helpers.
-    helpers (list[EventFormatterHelper]): event formatter helpers.
-    source_mapping (tuple[str, str]): short and (long) source mapping.
-  """
-
-  # The format string can be defined as:
-  # {name}, {name:format}, {name!conversion}, {name!conversion:format}
-  _FORMAT_STRING_ATTRIBUTE_NAME_RE = re.compile(
-      '{([a-z][a-zA-Z0-9_]*)[!]?[^:}]*[:]?[^}]*}')
-
-  def __init__(self, data_type='internal'):
-    """Initializes an event formatter.
-
-    Args:
-      data_type (Optional[str]): unique identifier for the event data supported
-          by the formatter.
-    """
-    super().__init__()
-    self._data_type = data_type
-    self._format_string_attribute_names = None
-
-    self.custom_helpers = []
-    self.helpers = []
-    self.source_mapping = None
-
-  @property
-  def data_type(self):
-    """str: unique identifier for the event data supported by the formatter."""
-    return self._data_type.lower()
-
-  def _FormatMessage(self, format_string, event_values):
-    """Determines the formatted message.
-
-    Args:
-      format_string (str): message format string.
-      event_values (dict[str, object]): event values.
-
-    Returns:
-      str: formatted message.
-    """
-    try:
-      message_string = format_string.format(**event_values)
-
-    except KeyError as exception:
-      data_type = event_values.get('data_type') or 'N/A'
-      display_name = event_values.get('display_name') or 'N/A'
-      event_identifier = event_values.get('uuid') or 'N/A'
-      parser_chain = event_values.get('_parser_chain') or 'N/A'
-
-      error_message = (
-          f'Event: {event_identifier:s} data type: {data_type:s} display '
-          f'name: {display_name:s} parser chain: {parser_chain:s} unable to '
-          f'format string: "{format_string:s}" with error: {exception!s}')
-      logger.error(error_message)
-
-      attribute_values = []
-      for attribute, value in event_values.items():
-        attribute_values.append(f'{attribute:s}: {value!s}')
-
-      message_string = ' '.join(attribute_values)
-
-    except UnicodeDecodeError as exception:
-      data_type = event_values.get('data_type') or 'N/A'
-      display_name = event_values.get('display_name') or 'N/A'
-      event_identifier = event_values.get('uuid') or 'N/A'
-      parser_chain = event_values.get('_parser_chain') or 'N/A'
-
-      error_message = (
-          f'Event: {event_identifier:s} data type: {data_type:s} display '
-          f'name: {display_name:s} parser chain: {parser_chain:s} '
-          f'Unicode decode error: {exception!s}')
-      logger.error(error_message)
-
-      message_string = ''
-
-    # Strip carriage return and linefeed form the message strings.
-    # Using replace function here because it is faster than re.sub() or
-    # string.strip().
-    return message_string.replace('\r', '').replace('\n', '')
-
-  def FormatEventValues(self, output_mediator, event_values):
-    """Formats event values using the helper.
-
-    Args:
-      output_mediator (OutputMediator): output mediator.
-      event_values (dict[str, object]): event values.
-    """
-    for helper in self.helpers:
-      helper.FormatEventValues(output_mediator, event_values)
-
-  @abc.abstractmethod
-  def GetFormatStringAttributeNames(self):
-    """Retrieves the attribute names in the format string.
-
-    Returns:
-      set(str): attribute names.
+    Attributes:
+      custom_helpers (list[str]): identifiers of custom event formatter helpers.
+      helpers (list[EventFormatterHelper]): event formatter helpers.
+      source_mapping (tuple[str, str]): short and (long) source mapping.
     """
 
-  # pylint: disable=unused-argument
-  def AddCustomHelper(
-      self, identifier, input_attribute=None, output_attribute=None):
-    """Adds a custom event formatter helper.
+    # The format string can be defined as:
+    # {name}, {name:format}, {name!conversion}, {name!conversion:format}
+    _FORMAT_STRING_ATTRIBUTE_NAME_RE = re.compile(
+        "{([a-z][a-zA-Z0-9_]*)[!]?[^:}]*[:]?[^}]*}"
+    )
 
-    Args:
-      identifier (str): identifier.
-      input_attribute (Optional[str]): name of the attribute that contains
-          the input value.
-      output_attribute (Optional[str]): name of the attribute where the
-          output value should be stored.
-    """
-    self.custom_helpers.append(identifier)
+    def __init__(self, data_type="internal"):
+        """Initializes an event formatter.
 
-  def AddHelper(self, helper):
-    """Adds an event formatter helper.
+        Args:
+          data_type (Optional[str]): unique identifier for the event data supported
+              by the formatter.
+        """
+        super().__init__()
+        self._data_type = data_type
+        self._format_string_attribute_names = None
 
-    Args:
-      helper (EventFormatterHelper): event formatter helper to add.
-    """
-    self.helpers.append(helper)
+        self.custom_helpers = []
+        self.helpers = []
+        self.source_mapping = None
 
-  @abc.abstractmethod
-  def GetMessage(self, event_values):
-    """Determines the message.
+    @property
+    def data_type(self):
+        """str: unique identifier for the event data supported by the formatter."""
+        return self._data_type.lower()
 
-    Args:
-      event_values (dict[str, object]): event values.
+    def _FormatMessage(self, format_string, event_values):
+        """Determines the formatted message.
 
-    Returns:
-      str: message.
-    """
+        Args:
+          format_string (str): message format string.
+          event_values (dict[str, object]): event values.
 
-  @abc.abstractmethod
-  def GetMessageShort(self, event_values):
-    """Determines the short message.
+        Returns:
+          str: formatted message.
+        """
+        try:
+            message_string = format_string.format(**event_values)
 
-    Args:
-      event_values (dict[str, object]): event values.
+        except KeyError as exception:
+            data_type = event_values.get("data_type") or "N/A"
+            display_name = event_values.get("display_name") or "N/A"
+            event_identifier = event_values.get("uuid") or "N/A"
+            parser_chain = event_values.get("_parser_chain") or "N/A"
 
-    Returns:
-      str: short message.
-    """
+            error_message = (
+                f"Event: {event_identifier:s} data type: {data_type:s} display "
+                f"name: {display_name:s} parser chain: {parser_chain:s} unable to "
+                f'format string: "{format_string:s}" with error: {exception!s}'
+            )
+            logger.error(error_message)
+
+            attribute_values = []
+            for attribute, value in event_values.items():
+                attribute_values.append(f"{attribute:s}: {value!s}")
+
+            message_string = " ".join(attribute_values)
+
+        except UnicodeDecodeError as exception:
+            data_type = event_values.get("data_type") or "N/A"
+            display_name = event_values.get("display_name") or "N/A"
+            event_identifier = event_values.get("uuid") or "N/A"
+            parser_chain = event_values.get("_parser_chain") or "N/A"
+
+            error_message = (
+                f"Event: {event_identifier:s} data type: {data_type:s} display "
+                f"name: {display_name:s} parser chain: {parser_chain:s} "
+                f"Unicode decode error: {exception!s}"
+            )
+            logger.error(error_message)
+
+            message_string = ""
+
+        # Strip carriage return and linefeed form the message strings.
+        # Using replace function here because it is faster than re.sub() or
+        # string.strip().
+        return message_string.replace("\r", "").replace("\n", "")
+
+    def FormatEventValues(self, output_mediator, event_values):
+        """Formats event values using the helper.
+
+        Args:
+          output_mediator (OutputMediator): output mediator.
+          event_values (dict[str, object]): event values.
+        """
+        for helper in self.helpers:
+            helper.FormatEventValues(output_mediator, event_values)
+
+    @abc.abstractmethod
+    def GetFormatStringAttributeNames(self):
+        """Retrieves the attribute names in the format string.
+
+        Returns:
+          set(str): attribute names.
+        """
+
+    # pylint: disable=unused-argument
+    def AddCustomHelper(self, identifier, input_attribute=None, output_attribute=None):
+        """Adds a custom event formatter helper.
+
+        Args:
+          identifier (str): identifier.
+          input_attribute (Optional[str]): name of the attribute that contains
+              the input value.
+          output_attribute (Optional[str]): name of the attribute where the
+              output value should be stored.
+        """
+        self.custom_helpers.append(identifier)
+
+    def AddHelper(self, helper):
+        """Adds an event formatter helper.
+
+        Args:
+          helper (EventFormatterHelper): event formatter helper to add.
+        """
+        self.helpers.append(helper)
+
+    @abc.abstractmethod
+    def GetMessage(self, event_values):
+        """Determines the message.
+
+        Args:
+          event_values (dict[str, object]): event values.
+
+        Returns:
+          str: message.
+        """
+
+    @abc.abstractmethod
+    def GetMessageShort(self, event_values):
+        """Determines the short message.
+
+        Args:
+          event_values (dict[str, object]): event values.
+
+        Returns:
+          str: short message.
+        """
 
 
 class BasicEventFormatter(EventFormatter):
-  """Format event values using a message format string.
+    """Format event values using a message format string.
 
-  Attributes:
-    custom_helpers (list[str]): identifiers of custom event formatter helpers.
-    helpers (list[EventFormatterHelper]): event formatter helpers.
-  """
-
-  def __init__(
-      self, data_type='basic', format_string=None, format_string_short=None):
-    """Initializes a basic event formatter.
-
-    The syntax of the format strings is similar to that of format() where
-    the place holder for a certain event object attribute is defined as
-    {attribute_name}.
-
-    Args:
-      data_type (Optional[str]): unique identifier for the event data supported
-          by the formatter.
-      format_string (Optional[str]): (long) message format string.
-      format_string_short (Optional[str]): short message format string.
+    Attributes:
+      custom_helpers (list[str]): identifiers of custom event formatter helpers.
+      helpers (list[EventFormatterHelper]): event formatter helpers.
     """
-    super().__init__(data_type=data_type)
-    self._format_string_attribute_names = None
-    self._format_string = format_string
-    self._format_string_short = format_string_short
 
-  def GetFormatStringAttributeNames(self):
-    """Retrieves the attribute names in the format string.
+    def __init__(self, data_type="basic", format_string=None, format_string_short=None):
+        """Initializes a basic event formatter.
 
-    Returns:
-      set(str): attribute names.
-    """
-    if self._format_string_attribute_names is None:
-      self._format_string_attribute_names = (
-          self._FORMAT_STRING_ATTRIBUTE_NAME_RE.findall(
-              self._format_string))
+        The syntax of the format strings is similar to that of format() where
+        the place holder for a certain event object attribute is defined as
+        {attribute_name}.
 
-    return set(self._format_string_attribute_names)
+        Args:
+          data_type (Optional[str]): unique identifier for the event data supported
+              by the formatter.
+          format_string (Optional[str]): (long) message format string.
+          format_string_short (Optional[str]): short message format string.
+        """
+        super().__init__(data_type=data_type)
+        self._format_string_attribute_names = None
+        self._format_string = format_string
+        self._format_string_short = format_string_short
 
-  def GetMessage(self, event_values):
-    """Determines the message.
+    def GetFormatStringAttributeNames(self):
+        """Retrieves the attribute names in the format string.
 
-    Args:
-      event_values (dict[str, object]): event values.
+        Returns:
+          set(str): attribute names.
+        """
+        if self._format_string_attribute_names is None:
+            self._format_string_attribute_names = (
+                self._FORMAT_STRING_ATTRIBUTE_NAME_RE.findall(self._format_string)
+            )
 
-    Returns:
-      str: message.
-    """
-    return self._FormatMessage(self._format_string, event_values)
+        return set(self._format_string_attribute_names)
 
-  def GetMessageShort(self, event_values):
-    """Determines the short message.
+    def GetMessage(self, event_values):
+        """Determines the message.
 
-    Args:
-      event_values (dict[str, object]): event values.
+        Args:
+          event_values (dict[str, object]): event values.
 
-    Returns:
-      str: short message.
-    """
-    if self._format_string_short:
-      format_string = self._format_string_short
-    else:
-      format_string = self._format_string
+        Returns:
+          str: message.
+        """
+        return self._FormatMessage(self._format_string, event_values)
 
-    short_message_string = self._FormatMessage(format_string, event_values)
+    def GetMessageShort(self, event_values):
+        """Determines the short message.
 
-    # Truncate the short message string if necessary.
-    if len(short_message_string) > 80:
-      short_message_string = f'{short_message_string[:77]:s}...'
+        Args:
+          event_values (dict[str, object]): event values.
 
-    return short_message_string
+        Returns:
+          str: short message.
+        """
+        if self._format_string_short:
+            format_string = self._format_string_short
+        else:
+            format_string = self._format_string
+
+        short_message_string = self._FormatMessage(format_string, event_values)
+
+        # Truncate the short message string if necessary.
+        if len(short_message_string) > 80:
+            short_message_string = f"{short_message_string[:77]:s}..."
+
+        return short_message_string
 
 
 class ConditionalEventFormatter(EventFormatter):
-  """Conditionally format event values using format string pieces."""
+    """Conditionally format event values using format string pieces."""
 
-  _DEFAULT_FORMAT_STRING_SEPARATOR = ' '
+    _DEFAULT_FORMAT_STRING_SEPARATOR = " "
 
-  def __init__(
-      self, data_type='conditional', format_string_pieces=None,
-      format_string_separator=None, format_string_short_pieces=None):
-    """Initializes a conditional event formatter.
+    def __init__(
+        self,
+        data_type="conditional",
+        format_string_pieces=None,
+        format_string_separator=None,
+        format_string_short_pieces=None,
+    ):
+        """Initializes a conditional event formatter.
 
-    The syntax of the format strings pieces is similar to of the basic event
-    formatter (BasicEventFormatter). Every format string piece should contain
-    at maximum one unique attribute name. Format string pieces without an
-    attribute name are supported.
+        The syntax of the format strings pieces is similar to of the basic event
+        formatter (BasicEventFormatter). Every format string piece should contain
+        at maximum one unique attribute name. Format string pieces without an
+        attribute name are supported.
 
-    Args:
-      data_type (Optional[str]): unique identifier for the event data supported
-          by the formatter.
-      format_string_pieces (Optional[list[str]]): (long) message format string
-          pieces.
-      format_string_separator (Optional[str]): string by which separate format
-          string pieces should be joined.
-      format_string_short_pieces (Optional[list[str]]): short message format
-          string pieces.
-    """
-    if format_string_separator is None:
-      format_string_separator = self._DEFAULT_FORMAT_STRING_SEPARATOR
+        Args:
+          data_type (Optional[str]): unique identifier for the event data supported
+              by the formatter.
+          format_string_pieces (Optional[list[str]]): (long) message format string
+              pieces.
+          format_string_separator (Optional[str]): string by which separate format
+              string pieces should be joined.
+          format_string_short_pieces (Optional[list[str]]): short message format
+              string pieces.
+        """
+        if format_string_separator is None:
+            format_string_separator = self._DEFAULT_FORMAT_STRING_SEPARATOR
 
-    super().__init__(data_type=data_type)
-    self._format_string_pieces = format_string_pieces or []
-    self._format_string_pieces_map = []
-    self._format_string_separator = format_string_separator
-    self._format_string_short_pieces = format_string_short_pieces or []
-    self._format_string_short_pieces_map = []
+        super().__init__(data_type=data_type)
+        self._format_string_pieces = format_string_pieces or []
+        self._format_string_pieces_map = []
+        self._format_string_separator = format_string_separator
+        self._format_string_short_pieces = format_string_short_pieces or []
+        self._format_string_short_pieces_map = []
 
-  def _CreateFormatStringMap(
-      self, format_string_pieces, format_string_pieces_map):
-    """Creates a format string map.
+    def _CreateFormatStringMap(self, format_string_pieces, format_string_pieces_map):
+        """Creates a format string map.
 
-    The format string pieces map is a list containing the attribute name
-    per format string piece. E.g. ["Description: {description}"] would be
-    mapped to: [0] = "description". If the string piece does not contain
-    an attribute name it is treated as text that does not needs formatting.
+        The format string pieces map is a list containing the attribute name
+        per format string piece. E.g. ["Description: {description}"] would be
+        mapped to: [0] = "description". If the string piece does not contain
+        an attribute name it is treated as text that does not needs formatting.
 
-    Args:
-      format_string_pieces (list[str]): format string pieces.
-      format_string_pieces_map (list[str]): format string pieces map.
+        Args:
+          format_string_pieces (list[str]): format string pieces.
+          format_string_pieces_map (list[str]): format string pieces map.
 
-    Raises:
-      RuntimeError: when an invalid format string piece is encountered.
-    """
-    for format_string_piece in format_string_pieces:
-      attribute_names = self._FORMAT_STRING_ATTRIBUTE_NAME_RE.findall(
-          format_string_piece)
+        Raises:
+          RuntimeError: when an invalid format string piece is encountered.
+        """
+        for format_string_piece in format_string_pieces:
+            attribute_names = self._FORMAT_STRING_ATTRIBUTE_NAME_RE.findall(
+                format_string_piece
+            )
 
-      if len(set(attribute_names)) > 1:
-        raise RuntimeError((
-            f'Invalid format string piece: [{format_string_piece:s}] contains '
-            f'more than 1 attribute name.'))
+            if len(set(attribute_names)) > 1:
+                raise RuntimeError(
+                    f"Invalid format string piece: [{format_string_piece:s}] contains "
+                    f"more than 1 attribute name."
+                )
 
-      if not attribute_names:
-        # The text format string piece is stored as an empty map entry to keep
-        # the index in the map equal to the format string pieces.
-        attribute_name = ''
+            if not attribute_names:
+                # The text format string piece is stored as an empty map entry to keep
+                # the index in the map equal to the format string pieces.
+                attribute_name = ""
 
-      else:
-        attribute_name = attribute_names[0]
+            else:
+                attribute_name = attribute_names[0]
 
-      format_string_pieces_map.append(attribute_name)
+            format_string_pieces_map.append(attribute_name)
 
-  def _CreateFormatStringMaps(self):
-    """Creates the format string maps.
+    def _CreateFormatStringMaps(self):
+        """Creates the format string maps.
 
-    Maps are built of the string pieces and their corresponding attribute
-    name to optimize conditional string formatting.
+        Maps are built of the string pieces and their corresponding attribute
+        name to optimize conditional string formatting.
 
-    Raises:
-      RuntimeError: when an invalid format string piece is encountered.
-    """
-    self._format_string_pieces_map = []
-    self._CreateFormatStringMap(
-        self._format_string_pieces, self._format_string_pieces_map)
+        Raises:
+          RuntimeError: when an invalid format string piece is encountered.
+        """
+        self._format_string_pieces_map = []
+        self._CreateFormatStringMap(
+            self._format_string_pieces, self._format_string_pieces_map
+        )
 
-    self._format_string_short_pieces_map = []
-    self._CreateFormatStringMap(
-        self._format_string_short_pieces, self._format_string_short_pieces_map)
+        self._format_string_short_pieces_map = []
+        self._CreateFormatStringMap(
+            self._format_string_short_pieces, self._format_string_short_pieces_map
+        )
 
-  def _ConditionalFormatMessage(
-      self, format_string_pieces, format_string_pieces_map, event_values):
-    """Determines the conditional formatted message.
+    def _ConditionalFormatMessage(
+        self, format_string_pieces, format_string_pieces_map, event_values
+    ):
+        """Determines the conditional formatted message.
 
-    Args:
-      format_string_pieces (dict[str, str]): format string pieces.
-      format_string_pieces_map (list[int, str]): format string pieces map.
-      event_values (dict[str, object]): event values.
+        Args:
+          format_string_pieces (dict[str, str]): format string pieces.
+          format_string_pieces_map (list[int, str]): format string pieces map.
+          event_values (dict[str, object]): event values.
 
-    Returns:
-      str: conditional formatted message.
+        Returns:
+          str: conditional formatted message.
 
-    Raises:
-      RuntimeError: when an invalid format string piece is encountered.
-    """
-    string_pieces = []
-    for map_index, attribute_name in enumerate(format_string_pieces_map):
-      if not attribute_name or event_values.get(
-          attribute_name, None) is not None:
-        string_pieces.append(format_string_pieces[map_index])
+        Raises:
+          RuntimeError: when an invalid format string piece is encountered.
+        """
+        string_pieces = []
+        for map_index, attribute_name in enumerate(format_string_pieces_map):
+            if not attribute_name or event_values.get(attribute_name, None) is not None:
+                string_pieces.append(format_string_pieces[map_index])
 
-    format_string = self._format_string_separator.join(string_pieces)
-    return self._FormatMessage(format_string, event_values)
+        format_string = self._format_string_separator.join(string_pieces)
+        return self._FormatMessage(format_string, event_values)
 
-  def GetFormatStringAttributeNames(self):
-    """Retrieves the attribute names in the format string.
+    def GetFormatStringAttributeNames(self):
+        """Retrieves the attribute names in the format string.
 
-    Returns:
-      set(str): attribute names.
-    """
-    if self._format_string_attribute_names is None:
-      self._format_string_attribute_names = []
-      for format_string_piece in self._format_string_pieces:
-        attribute_names = self._FORMAT_STRING_ATTRIBUTE_NAME_RE.findall(
-            format_string_piece)
+        Returns:
+          set(str): attribute names.
+        """
+        if self._format_string_attribute_names is None:
+            self._format_string_attribute_names = []
+            for format_string_piece in self._format_string_pieces:
+                attribute_names = self._FORMAT_STRING_ATTRIBUTE_NAME_RE.findall(
+                    format_string_piece
+                )
 
-        if attribute_names:
-          self._format_string_attribute_names.extend(attribute_names)
+                if attribute_names:
+                    self._format_string_attribute_names.extend(attribute_names)
 
-    return set(self._format_string_attribute_names)
+        return set(self._format_string_attribute_names)
 
-  def GetMessage(self, event_values):
-    """Determines the message.
+    def GetMessage(self, event_values):
+        """Determines the message.
 
-    Args:
-      event_values (dict[str, object]): event values.
+        Args:
+          event_values (dict[str, object]): event values.
 
-    Returns:
-      str: message.
-    """
-    if not self._format_string_pieces_map:
-      self._CreateFormatStringMaps()
+        Returns:
+          str: message.
+        """
+        if not self._format_string_pieces_map:
+            self._CreateFormatStringMaps()
 
-    return self._ConditionalFormatMessage(
-        self._format_string_pieces, self._format_string_pieces_map,
-        event_values)
+        return self._ConditionalFormatMessage(
+            self._format_string_pieces, self._format_string_pieces_map, event_values
+        )
 
-  def GetMessageShort(self, event_values):
-    """Determines the short message.
+    def GetMessageShort(self, event_values):
+        """Determines the short message.
 
-    Args:
-      event_values (dict[str, object]): event values.
+        Args:
+          event_values (dict[str, object]): event values.
 
-    Returns:
-      str: short message.
-    """
-    if not self._format_string_pieces_map:
-      self._CreateFormatStringMaps()
+        Returns:
+          str: short message.
+        """
+        if not self._format_string_pieces_map:
+            self._CreateFormatStringMaps()
 
-    if (self._format_string_short_pieces and
-        self._format_string_short_pieces != ['']):
-      format_string_pieces = self._format_string_short_pieces
-      format_string_pieces_map = self._format_string_short_pieces_map
-    else:
-      format_string_pieces = self._format_string_pieces
-      format_string_pieces_map = self._format_string_pieces_map
+        if self._format_string_short_pieces and self._format_string_short_pieces != [
+            ""
+        ]:
+            format_string_pieces = self._format_string_short_pieces
+            format_string_pieces_map = self._format_string_short_pieces_map
+        else:
+            format_string_pieces = self._format_string_pieces
+            format_string_pieces_map = self._format_string_pieces_map
 
-    short_message_string = self._ConditionalFormatMessage(
-        format_string_pieces, format_string_pieces_map, event_values)
+        short_message_string = self._ConditionalFormatMessage(
+            format_string_pieces, format_string_pieces_map, event_values
+        )
 
-    # Truncate the short message string if necessary.
-    if len(short_message_string) > 80:
-      short_message_string = f'{short_message_string[:77]:s}...'
+        # Truncate the short message string if necessary.
+        if len(short_message_string) > 80:
+            short_message_string = f"{short_message_string[:77]:s}..."
 
-    return short_message_string
+        return short_message_string

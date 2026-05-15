@@ -15,75 +15,77 @@ from plaso.lib import errors
 
 
 def Main():
-  """Entry point of console script to provide information about extracted data.
+    """Entry point of console script to provide information about extracted data.
 
-  Returns:
-    int: exit code that is provided to sys.exit().
-  """
-  tool = pinfo_tool.PinfoTool()
+    Returns:
+      int: exit code that is provided to sys.exit().
+    """
+    tool = pinfo_tool.PinfoTool()
 
-  if not tool.ParseArguments(sys.argv[1:]):
-    return 1
+    if not tool.ParseArguments(sys.argv[1:]):
+        return 1
 
-  if tool.show_troubleshooting:
-    print(f'Using Python version {sys.version!s}')
-    print()
-    print(f'Path: {os.path.abspath(__file__)!s}')
-    print()
-    print(tool.GetVersionInformation())
-    print()
-    dependencies.CheckDependencies(verbose_output=True)
+    if tool.show_troubleshooting:
+        print(f"Using Python version {sys.version!s}")
+        print()
+        print(f"Path: {os.path.abspath(__file__)!s}")
+        print()
+        print(tool.GetVersionInformation())
+        print()
+        dependencies.CheckDependencies(verbose_output=True)
 
-    print('Also see: https://plaso.readthedocs.io/en/latest/sources/user/'
-          'Troubleshooting.html')
+        print(
+            "Also see: https://plaso.readthedocs.io/en/latest/sources/user/"
+            "Troubleshooting.html"
+        )
+        return 0
+
+    try:
+        tool.CheckOutDated()
+    except KeyboardInterrupt:
+        return 1
+
+    have_list_option = False
+    if tool.list_reports:
+        tool.ListReports()
+        have_list_option = True
+
+    if tool.list_sections:
+        tool.ListSections()
+        have_list_option = True
+
+    if have_list_option:
+        return 0
+
+    result = True
+    try:
+        if tool.compare_storage_information:
+            result = tool.CompareStores()
+        elif tool.generate_report:
+            tool.GenerateReport()
+        else:
+            tool.PrintStorageInformation()
+
+    # Writing to stdout and stderr will raise BrokenPipeError if it
+    # receives a SIGPIPE.
+    except BrokenPipeError:
+        pass
+
+    except (KeyboardInterrupt, errors.UserAbort):
+        logging.warning("Aborted by user.")
+        return 1
+
+    except errors.BadConfigOption as exception:
+        logging.warning(exception)
+        return 1
+
+    if not result:
+        return 1
+
     return 0
 
-  try:
-    tool.CheckOutDated()
-  except KeyboardInterrupt:
-    return 1
 
-  have_list_option = False
-  if tool.list_reports:
-    tool.ListReports()
-    have_list_option = True
+if __name__ == "__main__":
+    multiprocessing.freeze_support()
 
-  if tool.list_sections:
-    tool.ListSections()
-    have_list_option = True
-
-  if have_list_option:
-    return 0
-
-  result = True
-  try:
-    if tool.compare_storage_information:
-      result = tool.CompareStores()
-    elif tool.generate_report:
-      tool.GenerateReport()
-    else:
-      tool.PrintStorageInformation()
-
-  # Writing to stdout and stderr will raise BrokenPipeError if it
-  # receives a SIGPIPE.
-  except BrokenPipeError:
-    pass
-
-  except (KeyboardInterrupt, errors.UserAbort):
-    logging.warning('Aborted by user.')
-    return 1
-
-  except errors.BadConfigOption as exception:
-    logging.warning(exception)
-    return 1
-
-  if not result:
-    return 1
-
-  return 0
-
-
-if __name__ == '__main__':
-  multiprocessing.freeze_support()
-
-  sys.exit(Main())
+    sys.exit(Main())
