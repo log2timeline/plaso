@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "plaso"
-version = "20260512"
+version = "20260515"
 description = "Plaso (log2timeline) - Super timeline all the things"
 maintainers = [
     { name = "Log2Timeline maintainers", email = "log2timeline-maintainers@googlegroups.com" },
@@ -92,6 +92,11 @@ psteal = "plaso.scripts.psteal:Main"
 Documentation = "https://plaso.readthedocs.io/en/latest"
 Homepage = "https://github.com/log2timeline/plaso"
 Repository = "https://github.com/log2timeline/plaso"
+
+[tool.black]
+line-length = 88
+target-version = ["py310"]
+include = "\\.pyi?$"
 
 [tool.setuptools]
 package-dir = {"plaso" = "plaso"}
