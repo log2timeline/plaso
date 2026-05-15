@@ -625,7 +625,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
                 {
                     "sha256": (
                         "553c231c45eda751710eabb479d08668f70464c14e60064190a7ec206f26b5"
-                        "f5",
+                        "f5"
                     ),
                     "paths": [os.path.join("bin", "bzcat")],
                 },

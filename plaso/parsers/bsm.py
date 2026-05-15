@@ -866,9 +866,9 @@ class BSMParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
                 token_status = token_values["token_status"]
                 call_status = token_values["call_status"]
                 return_token_values = (
-                    f'{{"error": "{error:s}", '
-                    f'"token_status": {token_status:d}, '
-                    f'"call_status": {call_status:d}}}'
+                    f"{{'error': '{error:s}', "
+                    f"'token_status': {token_status:d}, "
+                    f"'call_status': {call_status:d}}}"
                 )
 
         if token_data.record_size != header_record_size:
