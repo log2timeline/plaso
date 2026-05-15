@@ -31,7 +31,6 @@ from plaso.cli.helpers import status_view
 from plaso.cli.helpers import storage_format
 from plaso.cli.helpers import tagging_analysis
 from plaso.cli.helpers import temporary_directory
-from plaso.cli.helpers import viper_analysis
 from plaso.cli.helpers import virustotal_analysis
 from plaso.cli.helpers import xlsx_output
 from plaso.cli.helpers import yara_rules

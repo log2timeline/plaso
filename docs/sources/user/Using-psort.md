@@ -207,8 +207,6 @@ chrome_extension : Convert Chrome extension IDs into names, requires Internet
                    connection. [Summary/Report plugin]
          tagging : Analysis plugin that tags events according to rules in a
                    tag file. [Summary/Report plugin]
-           viper : An analysis plugin for looking up SHA256 hashes in Viper.
-                   [Summary/Report plugin]
       virustotal : An analysis plugin for looking up hashes in VirusTotal.
                    [Summary/Report plugin]
 windows_services : Provides a single list of for Windows services found in the
@@ -237,10 +235,6 @@ Analysis Arguments:
   --windows-services-output {text,yaml}
                         Specify how the results should be displayed. Options
                         are text and yaml.
-  --viper-host VIPER-HOST
-                        Specify the host to query Viper on.
-  --viper-protocol {http,https}
-                        Protocol to use to query Viper.
   --tagging-file TAGGING_FILE
                         Specify a file to read tagging criteria from.
 ...

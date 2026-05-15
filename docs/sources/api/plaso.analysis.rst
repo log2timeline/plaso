@@ -116,14 +116,6 @@ plaso.analysis.unique\_domains\_visited module
    :show-inheritance:
    :undoc-members:
 
-plaso.analysis.viper module
----------------------------
-
-.. automodule:: plaso.analysis.viper
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
 plaso.analysis.virustotal module
 --------------------------------
 
