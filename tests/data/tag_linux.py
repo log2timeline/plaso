@@ -20,8 +20,8 @@ from tests.data import test_lib
 class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
     """Tests the tag_linux.txt tagging file.
 
-    In the tests below the EventData classes are used to catch failing tagging
-    rules in case event data types are renamed.
+    In the tests below the EventData classes are used to catch failing tagging rules in
+    case event data types are renamed.
     """
 
     _TAG_FILE = "tag_linux.txt"

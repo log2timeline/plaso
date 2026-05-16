@@ -1,7 +1,7 @@
 """Text parser plugin for Atlassian Confluence log files.
 
-This is for the atlassian-confluence.log file, one of multiple log files
-produced by a Confluence DC/Server installation.
+This is for the atlassian-confluence.log file, one of multiple log files produced by a
+Confluence DC/Server installation.
 """
 
 import pyparsing

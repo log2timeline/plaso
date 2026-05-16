@@ -375,8 +375,8 @@ class EventDataExtractor:
 class PathSpecExtractor:
     """Path specification extractor.
 
-    A path specification extractor extracts path specification from a source
-    directory, file or storage media device or image.
+    A path specification extractor extracts path specification from a source directory,
+    file or storage media device or image.
     """
 
     _MAXIMUM_DEPTH = 255

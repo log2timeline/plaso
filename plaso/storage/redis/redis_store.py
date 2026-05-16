@@ -353,9 +353,9 @@ class BaseRedisAttributeContainerStore(interface.AttributeContainerStoreWithRead
 class RedisAttributeContainerStore(BaseRedisAttributeContainerStore):
     """Redis-based attribute container store.
 
-    Attribute containers are stored as Redis hashes. All keys are prefixed with
-    the session identifier to avoid collisions. Event identifiers are also stored
-    in an index to enable sorting.
+    Attribute containers are stored as Redis hashes. All keys are prefixed with the
+    session identifier to avoid collisions. Event identifiers are also stored in an
+    index to enable sorting.
     """
 
     _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE

@@ -37,8 +37,7 @@ class AndroidSMSEventData(events.EventData):
 class AndroidSMSPlugin(interface.SQLitePlugin):
     """SQLite parser plugin for Android text messages (SMS) database files.
 
-    The Android text messages (SMS) database file is typically stored in:
-    mmssms.dbs
+    The Android text messages (SMS) database file is typically stored in: mmssms.dbs
     """
 
     NAME = "android_sms"

@@ -1,7 +1,7 @@
 """Parser for the Microsoft Internet Explorer WebCache ESE database.
 
-The WebCache database (WebCacheV01.dat or WebCacheV24.dat) are used by MSIE as
-of version 10.
+The WebCache database (WebCacheV01.dat or WebCacheV24.dat) are used by MSIE as of
+version 10.
 """
 
 from dfdatetime import filetime as dfdatetime_filetime

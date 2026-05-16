@@ -431,8 +431,7 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
         self.assertIn("testuser1", path_trie_node_children["homes"].children)
 
     def testBuildFindSpecsFromRegistrySourceKey(self):
-        """Tests the _BuildFindSpecsFromRegistrySourceKey function on Windows
-        Registry sources."""
+        """Tests the _BuildFindSpecsFromRegistrySourceKey function."""
         test_filter_file = self._CreateTestArtifactDefinitionsFiltersHelper()
 
         # Test expansion of multiple repeated stars.

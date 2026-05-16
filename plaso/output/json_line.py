@@ -1,7 +1,7 @@
 """Output module that saves data into a JSON line format.
 
-JSON line format is a single JSON entry or event per line instead of grouping
-all the output into a single JSON entity.
+JSON line format is a single JSON entry or event per line instead of grouping all the
+output into a single JSON entity.
 """
 
 import json

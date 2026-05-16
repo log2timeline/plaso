@@ -99,15 +99,13 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     def _OnCriticalError(self):
         """The process on critical error handler.
 
-        This method is called when the process encounters a critical error for
-        example a segfault. A sub class should override this method to do the
-        necessary actions before the original critical error signal handler it
-        called.
+        This method is called when the process encounters a critical error for example a
+        segfault. A sub class should override this method to do the necessary actions
+        before the original critical error signal handler it called.
 
-        Be aware that the state of the process should not be trusted, as a
-        significant part of memory could have been overwritten before a segfault.
-        This callback is primarily intended to salvage what we need to troubleshoot
-        the error.
+        Be aware that the state of the process should not be trusted, as a significant
+        part of memory could have been overwritten before a segfault. This callback is
+        primarily intended to salvage what we need to troubleshoot the error.
         """
         return
 

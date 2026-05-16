@@ -179,8 +179,8 @@ class WindowsAllUsersAppDataKnowledgeBasePlugin(
 ):
     """The allusersdata knowledge base value plugin.
 
-    The allusersdata value is needed for the expansion of
-    %%environ_allusersappdata%% in artifact definitions.
+    The allusersdata value is needed for the expansion of %%environ_allusersappdata%% in
+    artifact definitions.
     """
 
     def Collect(self, mediator):
@@ -234,8 +234,8 @@ class WindowsAllUsersAppProfileKnowledgeBasePlugin(
     The allusersprofile value is needed for the expansion of
     %%environ_allusersappprofile%% in artifact definitions.
 
-    It is derived from %ProgramData% for versions of Windows, Vista and later,
-    that do not define %AllUsersProfile%.
+    It is derived from %ProgramData% for versions of Windows, Vista and later, that do
+    not define %AllUsersProfile%.
     """
 
     def Collect(self, mediator):
@@ -749,11 +749,11 @@ class WindowsProgramDataEnvironmentVariablePlugin(
 class WindowsProgramDataKnowledgeBasePlugin(interface.KnowledgeBasePreprocessorPlugin):
     """The programdata knowledge base value plugin.
 
-    The programdata value is needed for the expansion of %%environ_programdata%%
-    in artifact definitions.
+    The programdata value is needed for the expansion of %%environ_programdata%% in
+    artifact definitions.
 
-    It is derived from %AllUsersProfile% for versions of Windows prior to Vista
-    that do not define %ProgramData%.
+    It is derived from %AllUsersProfile% for versions of Windows prior to Vista that do
+    not define %ProgramData%.
     """
 
     def Collect(self, mediator):

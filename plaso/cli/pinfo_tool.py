@@ -830,7 +830,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
         self._output_writer.Write("\n")
 
     def _PrintDataTypesCounter(self, data_types_counter, session_identifier=None):
-        """Prints the data types counter
+        """Prints the data types counter.
 
         Args:
           data_types_counter (collections.Counter): number of events per data type.

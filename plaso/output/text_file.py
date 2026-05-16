@@ -230,7 +230,7 @@ class SortedTextFileOutputModule(TextFileOutputModule):
     def WriteFooter(self):
         """Writes the footer to the output.
 
-        Can be used for post-processing or output after the last event is written,
-        such as writing a file footer.
+        Can be used for post-processing or output after the last event is written, such
+        as writing a file footer.
         """
         self._FlushSortedStringsHeap()

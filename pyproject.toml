@@ -100,7 +100,7 @@ include = "\\.pyi?$"
 
 [tool.docformatter]
 black = true
-non-cap = []
+non-cap = ["bool:", "dfDateTime", "dfVFS", "dfWinReg", "dtFabric", "int:", "iMessage", "iOS", "iPod", "iterator:", "mDNS", "str:", "uTorrent"]
 non-strict = true
 
 [tool.setuptools]

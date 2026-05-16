@@ -31,8 +31,8 @@ class ZeitgeistActivityEventData(events.EventData):
 class ZeitgeistActivityDatabasePlugin(interface.SQLitePlugin):
     """SQLite parser plugin for Zeitgeist activity database files.
 
-    Zeitgeist is a service which logs the user activities and events, anywhere
-    from files opened to websites visited and conversations.
+    Zeitgeist is a service which logs the user activities and events, anywhere from
+    files opened to websites visited and conversations.
     """
 
     NAME = "zeitgeist"

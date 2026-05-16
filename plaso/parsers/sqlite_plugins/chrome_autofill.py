@@ -1,7 +1,6 @@
 """SQLite parser plugin for Google Chrome autofill database files.
 
-The Google Chrome autofill database (Web Data) file is typically stored in:
-  Web Data
+The Google Chrome autofill database (Web Data) file is typically stored in: Web Data
 """
 
 from dfdatetime import posix_time as dfdatetime_posix_time

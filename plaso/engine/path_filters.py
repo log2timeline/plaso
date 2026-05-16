@@ -1,7 +1,7 @@
 """Path filters.
 
-Path filters are specified in filter files and are used during collection to
-include or exclude file system paths.
+Path filters are specified in filter files and are used during collection to include or
+exclude file system paths.
 """
 
 from dfvfs.helpers import file_system_searcher

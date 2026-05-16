@@ -1,7 +1,7 @@
 """Parser for McAfee Anti-Virus Logs.
 
-McAfee AV uses 4 logs to track when scans were run, when virus databases were
-updated, and when files match the virus database.
+McAfee AV uses 4 logs to track when scans were run, when virus databases were updated,
+and when files match the virus database.
 """
 
 from dfdatetime import time_elements as dfdatetime_time_elements

@@ -1,7 +1,7 @@
 """Text parser plugin for Atlassian Jira log files.
 
-This is for the atlassian-jira.log file, one of multiple log files
-produced by a Jira DC/Server installation.
+This is for the atlassian-jira.log file, one of multiple log files produced by a Jira
+DC/Server installation.
 """
 
 import pyparsing
