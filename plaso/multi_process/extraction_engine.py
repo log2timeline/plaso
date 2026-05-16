@@ -171,6 +171,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
             worker_timeout = definitions.DEFAULT_WORKER_TIMEOUT
 
         super().__init__()
+        self._data_types_counter = collections.Counter()
         self._enable_sigsegv_handler = False
         self._event_data_timeliner = None
         self._extraction_worker = None
@@ -863,6 +864,14 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         self._number_of_produced_events = 0
         self._number_of_produced_sources = 0
 
+        stored_data_types_counter = collections.Counter(
+            {
+                data_type_count.name: data_type_count
+                for data_type_count in storage_writer.GetAttributeContainers(
+                    "data_type_count"
+                )
+            }
+        )
         stored_parsers_counter = collections.Counter(
             {
                 parser_count.name: parser_count
@@ -881,6 +890,15 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
             self._status = definitions.STATUS_INDICATOR_ABORTED
         else:
             self._status = definitions.STATUS_INDICATOR_COMPLETED
+
+        for key, value in self._event_data_timeliner.data_types_counter.items():
+            data_type_count = stored_data_types_counter.get(key, None)
+            if data_type_count:
+                data_type_count.number_of_events += value
+                storage_writer.UpdateAttributeContainer(data_type_count)
+            else:
+                data_type_count = counts.DataTypeCount(name=key, number_of_events=value)
+                storage_writer.AddAttributeContainer(data_type_count)
 
         for key, value in self._event_data_timeliner.parsers_counter.items():
             parser_count = stored_parsers_counter.get(key)
