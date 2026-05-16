@@ -18,7 +18,6 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
         storage_writer = self._ParseDatabaseFileWithPlugin(
             ["firefox_history", "places.sqlite"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -44,21 +43,23 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
             "visit_count": 1,
             "visit_type": 2,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
         # Check a bookmark entry.
         expected_event_values = {
             "added_time": "2011-07-01T11:13:59.266344+00:00",
+            "bookmark_type": 1,
             "data_type": "firefox:places:bookmark",
+            "host": None,
             "modification_time": "2011-07-01T11:13:59.267198+00:00",
+            "offset": 6,
             "places_title": (
                 "folder=BOOKMARKS_MENU&folder=UNFILED_BOOKMARKS&folder=TOOLBAR&"
                 "sort=12&excludeQueries=1&excludeItemIfParentHasAnnotation=livemark"
                 "%2FfeedURI&maxResults=10&queryType=1"
             ),
-            "type": "URL",
+            "title": "Recently Bookmarked",
             "url": (
                 "place:folder=BOOKMARKS_MENU&folder=UNFILED_BOOKMARKS&folder="
                 "TOOLBAR&sort=12&excludeQueries=1&excludeItemIfParentHasAnnotation="
@@ -66,7 +67,6 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
             ),
             "visit_count": 0,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -75,11 +75,10 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
             "added_time": "2011-07-01T11:13:59.267605+00:00",
             "content": "RecentTags",
             "data_type": "firefox:places:bookmark_annotation",
-            "modification_time": None,
+            "modification_time": "Not set",
             "title": "Recent Tags",
             "url": "place:sort=14&type=6&maxResults=10&queryType=1",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 93)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -90,7 +89,6 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
             "modification_time": "2011-07-01T11:14:11.766851+00:00",
             "title": "Latest Headlines",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 102)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -100,7 +98,6 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
         storage_writer = self._ParseDatabaseFileWithPlugin(
             ["firefox_history", "places_new.sqlite"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -124,7 +121,6 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
             "visit_count": 1,
             "visit_type": 2,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 10)
         self.CheckEventData(event_data, expected_event_values)
 

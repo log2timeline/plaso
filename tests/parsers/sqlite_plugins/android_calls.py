@@ -14,8 +14,9 @@ class AndroidCallSQLitePluginTest(test_lib.SQLitePluginTestCase):
     def testProcess(self):
         """Test the Process function on an Android contacts2.db file."""
         plugin = android_calls.AndroidCallPlugin()
-        storage_writer = self._ParseDatabaseFileWithPlugin(["contacts2.db"], plugin)
-
+        storage_writer = self._ParseDatabaseFileWithPlugin(
+            ["android", "contacts2.db"], plugin
+        )
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -35,11 +36,10 @@ class AndroidCallSQLitePluginTest(test_lib.SQLitePluginTestCase):
             "call_type": 3,
             "data_type": "android:event:call",
             "duration": 0,
-            "end_time": None,
+            "end_time": "2013-11-06T21:17:16.690+00:00",
             "number": "5404561685",
             "start_time": "2013-11-06T21:17:16.690+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

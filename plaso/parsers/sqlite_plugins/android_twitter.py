@@ -1,8 +1,6 @@
 # -*- coding:utf-8 -*-
 """SQLite parser plugin for Twitter on Android database files."""
 
-from dfdatetime import java_time as dfdatetime_java_time
-
 from plaso.containers import events
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
@@ -411,24 +409,6 @@ class AndroidTwitterPlugin(interface.SQLitePlugin):
         }
     ]
 
-    def _GetDateTimeRowValue(self, query_hash, row, value_name):
-        """Retrieves a date and time value from the row.
-
-        Args:
-          query_hash (int): hash of the query, that uniquely identifies the query
-              that produced the row.
-          row (sqlite3.Row): row.
-          value_name (str): name of the value.
-
-        Returns:
-          dfdatetime.JavaTime: date and time value or None if not available.
-        """
-        timestamp = self._GetRowValue(query_hash, row, value_name)
-        if timestamp is None:
-            return None
-
-        return dfdatetime_java_time.JavaTime(timestamp=timestamp)
-
     def ParseSearchRow(self, parser_mediator, query, row, **unused_kwargs):
         """Parses a search row from the database.
 
@@ -441,7 +421,7 @@ class AndroidTwitterPlugin(interface.SQLitePlugin):
         query_hash = hash(query)
 
         event_data = AndroidTwitterSearchEventData()
-        event_data.creation_time = self._GetDateTimeRowValue(query_hash, row, "time")
+        event_data.creation_time = self._GetJavaTimeRowValue(query_hash, row, "time")
         event_data.query = query
         event_data.name = self._GetRowValue(query_hash, row, "name")
         event_data.search_query = self._GetRowValue(query_hash, row, "query")
@@ -462,7 +442,7 @@ class AndroidTwitterPlugin(interface.SQLitePlugin):
         event_data = AndroidTwitterStatusEventData()
         event_data.author_identifier = self._GetRowValue(query_hash, row, "author_id")
         event_data.content = self._GetRowValue(query_hash, row, "content")
-        event_data.creation_time = self._GetDateTimeRowValue(query_hash, row, "time")
+        event_data.creation_time = self._GetJavaTimeRowValue(query_hash, row, "time")
         event_data.favorited = self._GetRowValue(query_hash, row, "favorited")
         event_data.identifier = self._GetRowValue(query_hash, row, "_id")
         event_data.query = query
@@ -483,19 +463,19 @@ class AndroidTwitterPlugin(interface.SQLitePlugin):
         query_hash = hash(query)
 
         event_data = AndroidTwitterContactEventData()
-        event_data.creation_time = self._GetDateTimeRowValue(
+        event_data.creation_time = self._GetJavaTimeRowValue(
             query_hash, row, "profile_created"
         )
         event_data.description = self._GetRowValue(query_hash, row, "description")
         event_data.followers = self._GetRowValue(query_hash, row, "followers")
         event_data.friends = self._GetRowValue(query_hash, row, "friends")
-        event_data.friendship_time = self._GetDateTimeRowValue(
+        event_data.friendship_time = self._GetJavaTimeRowValue(
             query_hash, row, "friendship_time"
         )
         event_data.identifier = self._GetRowValue(query_hash, row, "_id")
         event_data.image_url = self._GetRowValue(query_hash, row, "image_url")
         event_data.location = self._GetRowValue(query_hash, row, "location")
-        event_data.modification_time = self._GetDateTimeRowValue(
+        event_data.modification_time = self._GetJavaTimeRowValue(
             query_hash, row, "updated"
         )
         event_data.name = self._GetRowValue(query_hash, row, "name")

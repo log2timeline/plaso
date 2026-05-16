@@ -1,7 +1,5 @@
 """SQLite parser plugin for Android WebviewCache database files."""
 
-from dfdatetime import java_time as dfdatetime_java_time
-
 from plaso.containers import events
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
@@ -60,24 +58,6 @@ class AndroidWebViewCachePlugin(interface.SQLitePlugin):
         }
     ]
 
-    def _GetDateTimeRowValue(self, query_hash, row, value_name):
-        """Retrieves a date and time value from the row.
-
-        Args:
-          query_hash (int): hash of the query, that uniquely identifies the query
-              that produced the row.
-          row (sqlite3.Row): row.
-          value_name (str): name of the value.
-
-        Returns:
-          dfdatetime.JavaTime: date and time value or None if not available.
-        """
-        timestamp = self._GetRowValue(query_hash, row, value_name)
-        if timestamp is None:
-            return None
-
-        return dfdatetime_java_time.JavaTime(timestamp=timestamp)
-
     def ParseRow(self, parser_mediator, query, row, **unused_kwargs):
         """Parses a row from the database.
 
@@ -91,10 +71,10 @@ class AndroidWebViewCachePlugin(interface.SQLitePlugin):
 
         event_data = AndroidWebViewCacheEventData()
         event_data.content_length = self._GetRowValue(query_hash, row, "contentlength")
-        event_data.expiration_time = self._GetDateTimeRowValue(
+        event_data.expiration_time = self._GetJavaTimeRowValue(
             query_hash, row, "expires"
         )
-        event_data.last_modified_time = self._GetDateTimeRowValue(
+        event_data.last_modified_time = self._GetJavaTimeRowValue(
             query_hash, row, "lastmodify"
         )
         event_data.query = query

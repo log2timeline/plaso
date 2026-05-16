@@ -1,7 +1,5 @@
 """SQLite parser plugin for Android turbo database files."""
 
-from dfdatetime import posix_time as dfdatetime_posix_time
-
 from plaso.containers import events
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
@@ -37,15 +35,17 @@ class AndroidTurboPlugin(interface.SQLitePlugin):
 
     REQUIRED_STRUCTURE = {
         "battery_event": frozenset(
-            ["timestamp_millis", "battery_level", "charge_type", "battery_saver"]
+            ["battery_level", "battery_saver", "charge_type", "timestamp_millis"]
         )
     }
 
     QUERIES = [
         (
-            "SELECT timestamp_millis, battery_level, charge_type, battery_saver "
-            "FROM battery_event",
-            "ParseBatteryEventRow",
+            (
+                "SELECT battery_level, battery_saver, charge_type, timestamp_millis "
+                "FROM battery_event"
+            ),
+            "_ParseBatteryEventRow",
         )
     ]
 
@@ -65,7 +65,7 @@ class AndroidTurboPlugin(interface.SQLitePlugin):
         }
     ]
 
-    def ParseBatteryEventRow(self, parser_mediator, query, row, **unused_kwargs):
+    def _ParseBatteryEventRow(self, parser_mediator, query, row, **unused_kwargs):
         """Parses a row from the battery_event table.
 
         Args:
@@ -80,13 +80,9 @@ class AndroidTurboPlugin(interface.SQLitePlugin):
         event_data.battery_level = self._GetRowValue(query_hash, row, "battery_level")
         event_data.battery_saver = self._GetRowValue(query_hash, row, "battery_saver")
         event_data.charge_type = self._GetRowValue(query_hash, row, "charge_type")
-
-        timestamp = self._GetRowValue(query_hash, row, "timestamp_millis")
-
-        event_data.recorded_time = dfdatetime_posix_time.PosixTimeInMilliseconds(
-            timestamp=timestamp
+        event_data.recorded_time = self._GetPosixTimeInMillisecondsRowValue(
+            query_hash, row, "timestamp_millis"
         )
-
         parser_mediator.ProduceEventData(event_data)
 
 

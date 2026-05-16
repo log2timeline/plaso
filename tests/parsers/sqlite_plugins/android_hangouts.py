@@ -15,9 +15,8 @@ class AndroidHangoutsMessagesTest(test_lib.SQLitePluginTestCase):
         """Test the Process function on a Google hangouts file."""
         plugin = android_hangouts.AndroidHangoutsMessagePlugin()
         storage_writer = self._ParseDatabaseFileWithPlugin(
-            ["googlehangouts.db"], plugin
+            ["android", "babel.db"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -41,7 +40,6 @@ class AndroidHangoutsMessagesTest(test_lib.SQLitePluginTestCase):
             "message_type": 2,
             "sender": "John Macron",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 

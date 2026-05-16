@@ -1,7 +1,5 @@
 """SQLite parser plugin for Android Burner database files."""
 
-from dfdatetime import java_time as dfdatetime_java_time
-
 from plaso.containers import events
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
@@ -52,18 +50,18 @@ class AndroidBurnerPlugin(interface.SQLitePlugin):
     REQUIRED_STRUCTURE = {
         "burners": frozenset(
             [
-                "_id",
-                "phone_number_id",
-                "voicemail_url",
-                "user_id",
-                "name",
                 "alias",
-                "features",
-                "total_minutes",
-                "expiration_date",
                 "date_created",
+                "expiration_date",
+                "features",
+                "_id",
                 "last_updated_date",
+                "name",
+                "phone_number_id",
                 "renewal_date",
+                "total_minutes",
+                "user_id",
+                "voicemail_url",
             ]
         )
     }
@@ -71,9 +69,9 @@ class AndroidBurnerPlugin(interface.SQLitePlugin):
     QUERIES = [
         (
             (
-                "SELECT _id AS id, phone_number_id, voicemail_url, user_id, name, "
-                "alias, features, total_minutes, expiration_date, date_created, "
-                "last_updated_date, renewal_date FROM burners"
+                "SELECT alias, date_created, expiration_date, features, "
+                "last_updated_date, name, phone_number_id, renewal_date, "
+                "total_minutes, user_id, voicemail_url FROM burners"
             ),
             "_ParseBurnersRow",
         )
@@ -131,24 +129,6 @@ class AndroidBurnerPlugin(interface.SQLitePlugin):
         }
     ]
 
-    def _GetDateTimeRowValue(self, query_hash, row, value_name):
-        """Retrieves a date and time value from the row.
-
-        Args:
-          query_hash (int): hash of the query, that uniquely identifies the query
-              that produced the row.
-          row (sqlite3.Row): row.
-          value_name (str): name of the value.
-
-        Returns:
-          dfdatetime.JavaTime: date and time value or None if not available.
-        """
-        timestamp = self._GetRowValue(query_hash, row, value_name)
-        if timestamp is None:
-            return None
-
-        return dfdatetime_java_time.JavaTime(timestamp=timestamp)
-
     def _ParseBurnersRow(self, parser_mediator, query, row, **unused_kwargs):
         """Parses a burners record row.
 
@@ -165,13 +145,13 @@ class AndroidBurnerPlugin(interface.SQLitePlugin):
 
         event_data = AndroidBurnerEventData()
         event_data.alias = self._GetRowValue(query_hash, row, "alias")
-        event_data.creation_time = self._GetDateTimeRowValue(
+        event_data.creation_time = self._GetJavaTimeRowValue(
             query_hash, row, "date_created"
         )
-        event_data.expiration_time = self._GetDateTimeRowValue(
+        event_data.expiration_time = self._GetJavaTimeRowValue(
             query_hash, row, "expiration_date"
         )
-        event_data.last_updated_time = self._GetDateTimeRowValue(
+        event_data.last_updated_time = self._GetJavaTimeRowValue(
             query_hash, row, "last_updated_date"
         )
         event_data.name = self._GetRowValue(query_hash, row, "name")

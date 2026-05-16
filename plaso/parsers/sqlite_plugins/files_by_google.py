@@ -9,8 +9,6 @@ including file names, paths, sizes, and types, as well as records of storage
 locations.
 """
 
-from dfdatetime import posix_time as dfdatetime_posix_time
-
 from plaso.containers import events
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
@@ -197,25 +195,6 @@ class FilesByGooglePlugin(interface.SQLitePlugin):
         }
     ]
 
-    def _GetDateTimeRowValue(self, query_hash, row, value_name):
-        """Retrieves a date and time value from the row.
-
-        Args:
-          query_hash (int): hash of the query, that uniquely identifies the query
-              that produced the row.
-          row (sqlite3.Row): row.
-          value_name (str): name of the value.
-
-        Returns:
-          dfdatetime.PosixTimeInMilliseconds: date and time value or None if
-          not available.
-        """
-        timestamp = self._GetRowValue(query_hash, row, value_name)
-        if timestamp is None:
-            return None
-
-        return dfdatetime_posix_time.PosixTimeInMilliseconds(timestamp=timestamp)
-
     def _ParseFilesByGoogleRow(self, parser_mediator, query, row, **unused_kwargs):
         """Parses an files by google entry row.
 
@@ -233,7 +212,7 @@ class FilesByGooglePlugin(interface.SQLitePlugin):
         event_data.is_hidden = self._GetRowValue(query_hash, row, "is_hidden")
         event_data.media_type = self._GetRowValue(query_hash, row, "media_type")
         event_data.mime_type = self._GetRowValue(query_hash, row, "mime_type")
-        event_data.modification_time = self._GetDateTimeRowValue(
+        event_data.modification_time = self._GetPosixTimeInMillisecondsRowValue(
             query_hash, row, "file_date_modified_ms"
         )
         event_data.parent_folder = self._GetRowValue(

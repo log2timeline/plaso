@@ -1,7 +1,5 @@
 """SQLite parser plugin for Zeitgeist activity database files."""
 
-from dfdatetime import java_time as dfdatetime_java_time
-
 from plaso.containers import events
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
@@ -121,24 +119,6 @@ class ZeitgeistActivityDatabasePlugin(interface.SQLitePlugin):
         }
     ]
 
-    def _GetDateTimeRowValue(self, query_hash, row, value_name):
-        """Retrieves a date and time value from the row.
-
-        Args:
-          query_hash (int): hash of the query, that uniquely identifies the query
-              that produced the row.
-          row (sqlite3.Row): row.
-          value_name (str): name of the value.
-
-        Returns:
-          dfdatetime.JavaTime: date and time value or None if not available.
-        """
-        timestamp = self._GetRowValue(query_hash, row, value_name)
-        if timestamp is None:
-            return None
-
-        return dfdatetime_java_time.JavaTime(timestamp=timestamp)
-
     def ParseZeitgeistEventRow(self, parser_mediator, query, row, **unused_kwargs):
         """Parses a zeitgeist event row.
 
@@ -153,7 +133,7 @@ class ZeitgeistActivityDatabasePlugin(interface.SQLitePlugin):
         event_data = ZeitgeistActivityEventData()
         event_data.offset = self._GetRowValue(query_hash, row, "id")
         event_data.query = query
-        event_data.recorded_time = self._GetDateTimeRowValue(
+        event_data.recorded_time = self._GetJavaTimeRowValue(
             query_hash, row, "timestamp"
         )
         event_data.subject_uri = self._GetRowValue(query_hash, row, "subj_uri")

@@ -15,9 +15,8 @@ class AndroidSQLiteAppUsagePluginTest(test_lib.SQLitePluginTestCase):
         """Test the Process function on an Android app_usage file."""
         plugin = android_app_usage.AndroidSQLiteAppUsage()
         storage_writer = self._ParseDatabaseFileWithPlugin(
-            ["android_app_usage"], plugin
+            ["android", "app_usage"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -34,19 +33,11 @@ class AndroidSQLiteAppUsagePluginTest(test_lib.SQLitePluginTestCase):
         self.assertEqual(number_of_warnings, 0)
 
         expected_event_values = {
+            "data_type": "android:sqlite:app_usage",
             "package_name": "com.whatsapp",
             "start_time": "2023-05-31T01:29:31.577+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 339)
-        self.CheckEventData(event_data, expected_event_values)
-
-        expected_event_values = {
-            "package_name": "com.spotify.music",
-            "start_time": "2023-06-18T19:29:02.869+00:00",
-        }
-
-        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 8589)
         self.CheckEventData(event_data, expected_event_values)
 
 

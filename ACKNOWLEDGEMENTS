@@ -169,8 +169,8 @@ Generated with the [Windows PE/COFF resource file specimens project](https://git
 
 Copied with permission from [Digital Corpora](https://digitalcorpora.org/):
 * 23AAD8D4-D632-4F99-8E44-152AAB8FA9D6
-* attd_db
-* burners.sqlite
+* android/attd_db
+* android/burners.sqlite
 * files_master_database
 * ios/9368974384.db
 * ios/Accounts3.sqlite

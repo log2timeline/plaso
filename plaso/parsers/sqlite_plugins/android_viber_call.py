@@ -125,6 +125,28 @@ class AndroidViberCallPlugin(interface.SQLitePlugin):
         }
     ]
 
+    def _GetEndTimeValue(self, query_hash, row):
+        """Retrieves the end date and time value.
+
+        Args:
+          query_hash (int): hash of the query, that uniquely identifies the query
+              that produced the row.
+          row (sqlite3.Row): row.
+
+        Returns:
+          dfdatetime.JavaTime: date and time value or None if not available.
+        """
+        date = self._GetRowValue(query_hash, row, "date")
+        duration = self._GetRowValue(query_hash, row, "duration")
+
+        if None in (date, duration):
+            return None
+
+        # date is in milliseconds and duration in seconds.
+        timestamp = date + (duration * definitions.MILLISECONDS_PER_SECOND)
+
+        return dfdatetime_java_time.JavaTime(timestamp=timestamp)
+
     def ParseViberCallsRow(self, parser_mediator, query, row, **unused_kwargs):
         """Parses a Viber Call record row.
 
@@ -136,23 +158,15 @@ class AndroidViberCallPlugin(interface.SQLitePlugin):
         """
         query_hash = hash(query)
 
-        duration = self._GetRowValue(query_hash, row, "duration")
-        timestamp = self._GetRowValue(query_hash, row, "date")
-
         event_data = AndroidViberCallEventData()
         event_data.call_type = self._GetRowValue(query_hash, row, "type")
-        event_data.duration = duration
+        event_data.duration = self._GetRowValue(query_hash, row, "duration")
+        event_data.end_time = self._GetEndTimeValue(query_hash, row)
         event_data.phone_number = self._GetRowValue(query_hash, row, "number")
         event_data.viber_call_type = self._GetRowValue(
             query_hash, row, "viber_call_type"
         )
-        event_data.start_time = dfdatetime_java_time.JavaTime(timestamp=timestamp)
-
-        if duration:
-            # The duration is in seconds and the date value in milliseconds.
-            timestamp += duration * definitions.MILLISECONDS_PER_SECOND
-
-            event_data.end_time = dfdatetime_java_time.JavaTime(timestamp=timestamp)
+        event_data.start_time = self._GetJavaTimeRowValue(query_hash, row, "date")
 
         parser_mediator.ProduceEventData(event_data)
 

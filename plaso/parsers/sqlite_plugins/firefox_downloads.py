@@ -149,25 +149,6 @@ class FirefoxDownloadsPlugin(interface.SQLitePlugin):
         }
     ]
 
-    def _GetDateTimeRowValue(self, query_hash, row, value_name):
-        """Retrieves a date and time value from the row.
-
-        Args:
-          query_hash (int): hash of the query, that uniquely identifies the query
-              that produced the row.
-          row (sqlite3.Row): row.
-          value_name (str): name of the value.
-
-        Returns:
-          dfdatetime.PosixTimeInMicroseconds: date and time value or None if not
-              available.
-        """
-        timestamp = self._GetRowValue(query_hash, row, value_name)
-        if timestamp is None:
-            return None
-
-        return dfdatetime_posix_time.PosixTimeInMicroseconds(timestamp=timestamp)
-
     def ParseDownloadsRow(self, parser_mediator, query, row, **unused_kwargs):
         """Parses a downloads row.
 
@@ -180,7 +161,9 @@ class FirefoxDownloadsPlugin(interface.SQLitePlugin):
         query_hash = hash(query)
 
         event_data = FirefoxDownloadEventData()
-        event_data.end_time = self._GetDateTimeRowValue(query_hash, row, "endTime")
+        event_data.end_time = self._GetPosixTimeInMicrosecondsRowValue(
+            query_hash, row, "endTime"
+        )
         event_data.full_path = self._GetRowValue(query_hash, row, "target")
         event_data.mime_type = self._GetRowValue(query_hash, row, "mimeType")
         event_data.name = self._GetRowValue(query_hash, row, "name")
@@ -188,7 +171,9 @@ class FirefoxDownloadsPlugin(interface.SQLitePlugin):
         event_data.query = query
         event_data.received_bytes = self._GetRowValue(query_hash, row, "currBytes")
         event_data.referrer = self._GetRowValue(query_hash, row, "referrer")
-        event_data.start_time = self._GetDateTimeRowValue(query_hash, row, "startTime")
+        event_data.start_time = self._GetPosixTimeInMicrosecondsRowValue(
+            query_hash, row, "startTime"
+        )
         event_data.temporary_location = self._GetRowValue(query_hash, row, "tempPath")
         event_data.total_bytes = self._GetRowValue(query_hash, row, "maxBytes")
         event_data.url = self._GetRowValue(query_hash, row, "source")
@@ -263,25 +248,6 @@ class Firefox118DownloadsPlugin(interface.SQLitePlugin):
         },
     ]
 
-    def _GetDateTimeRowValue(self, query_hash, row, value_name):
-        """Retrieves a date and time value from the row.
-
-        Args:
-          query_hash (int): hash of the query, that uniquely identifies the query
-              that produced the row.
-          row (sqlite3.Row): row.
-          value_name (str): name of the value.
-
-        Returns:
-          dfdatetime.PosixTimeInMicroseconds: date and time value or None if not
-              available.
-        """
-        timestamp = self._GetRowValue(query_hash, row, value_name)
-        if timestamp is None:
-            return None
-
-        return dfdatetime_posix_time.PosixTimeInMicroseconds(timestamp=timestamp)
-
     def ParseDownloadsRow(self, parser_mediator, query, row, **unused_kwargs):
         """Parses a downloads row.
 
@@ -321,7 +287,9 @@ class Firefox118DownloadsPlugin(interface.SQLitePlugin):
         event_data.name = self._GetRowValue(query_hash, row, "title")
         event_data.query = query
         event_data.received_bytes = content_data.get("fileSize", 0)
-        event_data.start_time = self._GetDateTimeRowValue(query_hash, row, "dateAdded")
+        event_data.start_time = self._GetPosixTimeInMicrosecondsRowValue(
+            query_hash, row, "dateAdded"
+        )
         event_data.total_bytes = content_data.get("fileSize", 0)
         event_data.type = self._GetRowValue(query_hash, row, "type")
         event_data.url = self._GetRowValue(query_hash, row, "url")

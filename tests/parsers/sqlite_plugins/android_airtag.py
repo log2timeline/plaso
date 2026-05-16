@@ -14,8 +14,9 @@ class AirTagPluginTest(test_lib.SQLitePluginTestCase):
     def testProcess(self):
         """Test the Process function on an Android attd_db file."""
         plugin = android_airtag.AirTagPlugin()
-        storage_writer = self._ParseDatabaseFileWithPlugin(["attd_db"], plugin)
-
+        storage_writer = self._ParseDatabaseFileWithPlugin(
+            ["android", "attd_db"], plugin
+        )
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -41,7 +42,6 @@ class AirTagPluginTest(test_lib.SQLitePluginTestCase):
             "longitude": 30.2654229,
             "rssi": -97,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

@@ -48,27 +48,29 @@ class AirTagPlugin(interface.SQLitePlugin):
 
     REQUIRED_STRUCTURE = {
         "beacon": frozenset(
-            ["beaconId", "receivedAt", "rssi", "deviceAddress", "latitude", "longitude"]
+            ["beaconId", "deviceAddress", "latitude", "longitude", "receivedAt", "rssi"]
         ),
         "device": frozenset(
             [
-                "deviceId",
-                "uniqueId",
                 "address",
-                "name",
+                "deviceId",
+                "deviceType",
                 "firstDiscovery",
                 "lastSeen",
-                "deviceType",
+                "name",
+                "uniqueId",
             ]
         ),
     }
 
     QUERIES = [
         (
-            "SELECT device.address, device.name, beacon.rssi, beacon.latitude, "
-            "beacon.longitude, device.firstDiscovery, device.lastSeen FROM device "
-            "INNER JOIN beacon ON device.address = beacon.deviceAddress",
-            "ParseAirTagRow",
+            (
+                "SELECT beacon.latitude, beacon.longitude, beacon.rssi, "
+                "device.address, device.firstDiscovery, device.lastSeen, device.name "
+                "FROM device INNER JOIN beacon ON device.address = beacon.deviceAddress"
+            ),
+            "_ParseAirTagRow",
         )
     ]
 
@@ -150,7 +152,7 @@ class AirTagPlugin(interface.SQLitePlugin):
 
         return date_time
 
-    def ParseAirTagRow(self, parser_mediator, query, row, **unused_kwargs):
+    def _ParseAirTagRow(self, parser_mediator, query, row, **unused_kwargs):
         """Parses an AirTag row.
 
         Args:
