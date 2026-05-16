@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Parser for Ivanti Connect Secure .vc0 log files."""
 
 import codecs

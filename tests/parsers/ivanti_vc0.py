@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Tests for the Ivanti Connect Secure .vc0 log parser."""
 
 import unittest
@@ -10,7 +9,7 @@ from plaso.parsers import ivanti_vc0
 from tests.parsers import test_lib
 
 
-class _TestFileEntry(object):
+class _TestFileEntry:
     """Test file entry."""
 
     def __init__(self, name):
@@ -19,7 +18,7 @@ class _TestFileEntry(object):
         Args:
           name (str): file entry name.
         """
-        super(_TestFileEntry, self).__init__()
+        super().__init__()
         self.name = name
 
 
