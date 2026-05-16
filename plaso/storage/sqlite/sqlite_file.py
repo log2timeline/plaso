@@ -20,12 +20,18 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       compression_format (str): compression format.
     """
 
-    _FORMAT_VERSION = 20230327
+    _FORMAT_VERSION = 20260516
 
+    # The earliest format version, stored in-file, that this class
+    # is able to append (write).
     _APPEND_COMPATIBLE_FORMAT_VERSION = 20230327
 
+    # The earliest format version, stored in-file, that this class
+    # is able to upgrade (write new format features).
     _UPGRADE_COMPATIBLE_FORMAT_VERSION = 20230327
 
+    # The earliest format version, stored in-file, that this class
+    # is able to read.
     _READ_COMPATIBLE_FORMAT_VERSION = 20230327
 
     _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE
