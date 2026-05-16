@@ -1,7 +1,7 @@
 """Text parser plugin for Apache access log (access.log) files.
 
-Parser based on the two default apache formats, common and combined log format
-defined in: https://httpd.apache.org/docs/2.4/logs.html
+Parser based on the two default apache formats, common and combined log format defined
+in: https://httpd.apache.org/docs/2.4/logs.html
 """
 
 import pyparsing

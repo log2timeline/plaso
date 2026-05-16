@@ -172,8 +172,8 @@ class TaskManager:
     def _AbandonInactiveProcessingTasks(self):
         """Marks processing tasks that exceed the inactive time as abandoned.
 
-        This method does not lock the manager and should be called by a method
-        holding the manager lock.
+        This method does not lock the manager and should be called by a method holding
+        the manager lock.
         """
         if self._tasks_processing:
             inactive_time = time.time() - self._TASK_INACTIVE_TIME
@@ -196,8 +196,8 @@ class TaskManager:
     def _AbandonQueuedTasks(self):
         """Marks queued tasks abandoned.
 
-        This method does not lock the manager and should be called by a method
-        holding the manager lock.
+        This method does not lock the manager and should be called by a method holding
+        the manager lock.
         """
         # Abandon all tasks after they're identified so as not to modify the
         # dict while iterating over it.

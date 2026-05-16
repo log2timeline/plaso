@@ -1,8 +1,8 @@
 """An output module that writes event with geography data to a KML XML file.
 
 The Keyhole Markup Language (KML) is an XML notation for expressing geographic
-annotation and visualization within Internet-based, two-dimensional maps and
-three-dimensional Earth browsers.
+annotation and visualization within Internet-based, two-dimensional maps and three-
+dimensional Earth browsers.
 """
 
 import codecs

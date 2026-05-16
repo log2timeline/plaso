@@ -31,7 +31,6 @@ class StatusViewTest(test_lib.CLIToolTestCase):
 
     def setUp(self):
         """Makes preparations before running an individual test."""
-
         self.mock_time = mock.patch("plaso.cli.status_view.time.time", self._MockTime)
         self._mocked_time = 0
         self.mock_time.start()

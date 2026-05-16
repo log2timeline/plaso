@@ -41,9 +41,9 @@ class TempDirectory:
 class TestCase:
     """Test case interface.
 
-    The test case defines what aspect of the plaso tools to test. A test
-    definition is used to provide parameters for the test case so it can be easily
-    run on different input files.
+    The test case defines what aspect of the plaso tools to test. A test definition is
+    used to provide parameters for the test case so it can be easily run on different
+    input files.
     """
 
     NAME = None
@@ -414,9 +414,9 @@ class TestDefinitionReader:
 class TestLauncher:
     """Test launcher.
 
-    The test launcher reads the test definitions from a file, looks up the
-    corresponding test cases in the test case manager and then runs the test case
-    with the parameters specified in the test definition.
+    The test launcher reads the test definitions from a file, looks up the corresponding
+    test cases in the test case manager and then runs the test case with the parameters
+    specified in the test definition.
     """
 
     def __init__(
@@ -794,9 +794,9 @@ class StorageFileTestCase(TestCase):
 class ExtractAndOutputTestCase(StorageFileTestCase):
     """Extract and output test case.
 
-    The extract and output test case runs log2timeline to extract data from a
-    source, specified by the test definition. After the data has been extracted
-    pinfo and psort are run to read from the resulting storage file.
+    The extract and output test case runs log2timeline to extract data from a source,
+    specified by the test definition. After the data has been extracted pinfo and psort
+    are run to read from the resulting storage file.
     """
 
     NAME = "extract_and_output"
@@ -1264,9 +1264,9 @@ class ExtractAndOutputWithPstealTestCase(StorageFileTestCase):
 class ExtractAndAnalyzeTestCase(ExtractAndOutputTestCase):
     """Extract and analyze test case.
 
-    The extract and analyze test case runs log2timeline to extract data from a
-    source, specified by the test definition. After the data has been extracted
-    psort is run to analyze events in the resulting storage file.
+    The extract and analyze test case runs log2timeline to extract data from a source,
+    specified by the test definition. After the data has been extracted psort is run to
+    analyze events in the resulting storage file.
     """
 
     NAME = "extract_and_analyze"
@@ -1346,8 +1346,8 @@ class ExtractAndTagTestCase(ExtractAndOutputTestCase):
     """Extract and tag test case.
 
     The extract and tag test case runs log2timeline to extract data from a source,
-    specified by the test definition. After the data has been extracted psort is
-    run to tag events in the resulting storage file.
+    specified by the test definition. After the data has been extracted psort is run to
+    tag events in the resulting storage file.
     """
 
     NAME = "extract_and_tag"
@@ -1438,8 +1438,8 @@ class ExtractAndTagTestCase(ExtractAndOutputTestCase):
 class ImageExportTestCase(TestCase):
     """Image export test case.
 
-    The image export test case runs image_export to extract files from a storage
-    media image, specified by the test definition.
+    The image export test case runs image_export to extract files from a storage media
+    image, specified by the test definition.
     """
 
     NAME = "image_export"
@@ -1795,10 +1795,10 @@ class ImageExportTestCase(TestCase):
 class MultiExtractAndOutputTestCase(ExtractAndOutputTestCase):
     """Extract multiple times with the same storage file and output test case.
 
-    The multi extract and output test case runs log2timeline to extract data from
-    a source, specified by the test definition, multiple times with the same
-    storage file. After the data has been extracted pinfo and psort are run to
-    read from the resulting storage file.
+    The multi extract and output test case runs log2timeline to extract data from a
+    source, specified by the test definition, multiple times with the same storage file.
+    After the data has been extracted pinfo and psort are run to read from the resulting
+    storage file.
     """
 
     NAME = "multi_extract_and_output"
@@ -1927,8 +1927,8 @@ class MultiExtractAndOutputTestCase(ExtractAndOutputTestCase):
 class AnalyzeAndOutputTestCase(StorageFileTestCase):
     """Analyze and output test case.
 
-    The analyze and output test case runs psort on a storage file with specific
-    analysis and output options.
+    The analyze and output test case runs psort on a storage file with specific analysis
+    and output options.
     """
 
     NAME = "analyze_and_output"
@@ -2074,9 +2074,9 @@ class AnalyzeAndOutputTestCase(StorageFileTestCase):
 class MultiAnalyzeAndOutputTestCase(AnalyzeAndOutputTestCase):
     """Analyzes multiple times with the same storage file and output test case.
 
-    The multi analysis and output test case runs psort analysis modules multiple
-    times with the same storage file. After the analysis modules have run psort is
-    run to read from the resulting storage file.
+    The multi analysis and output test case runs psort analysis modules multiple times
+    with the same storage file. After the analysis modules have run psort is run to read
+    from the resulting storage file.
     """
 
     NAME = "multi_analyze_and_output"

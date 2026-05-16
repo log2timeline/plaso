@@ -162,8 +162,8 @@ class ZeroMQQueue(plaso_queue.Queue):
     def _SetSocketHighWaterMark(self):
         """Sets the high water mark for the socket.
 
-        This number is the maximum number of items that will be queued in the socket
-        on this end of the queue.
+        This number is the maximum number of items that will be queued in the socket on
+        this end of the queue.
         """
         self._zmq_socket.hwm = self._high_water_mark
 
@@ -317,11 +317,10 @@ class ZeroMQQueue(plaso_queue.Queue):
 class ZeroMQPullQueue(ZeroMQQueue):
     """Parent class for Plaso queues backed by ZeroMQ PULL sockets.
 
-    This class should not be instantiated directly, a subclass should be
-    instantiated instead.
+    This class should not be instantiated directly, a subclass should be instantiated
+    instead.
 
-    Instances of this class or subclasses may only be used to pop items, not to
-    push.
+    Instances of this class or subclasses may only be used to pop items, not to push.
     """
 
     _SOCKET_TYPE = zmq.PULL
@@ -394,11 +393,10 @@ class ZeroMQPullConnectQueue(ZeroMQPullQueue):
 class ZeroMQPushQueue(ZeroMQQueue):
     """Parent class for Plaso queues backed by ZeroMQ PUSH sockets.
 
-    This class should not be instantiated directly, a subclass should be
-    instantiated instead.
+    This class should not be instantiated directly, a subclass should be instantiated
+    instead.
 
-    Instances of this class or subclasses may only be used to push items, not to
-    pop.
+    Instances of this class or subclasses may only be used to push items, not to pop.
     """
 
     _SOCKET_TYPE = zmq.PUSH
@@ -468,11 +466,10 @@ class ZeroMQPushBindQueue(ZeroMQPushQueue):
 class ZeroMQRequestQueue(ZeroMQQueue):
     """Parent class for Plaso queues backed by ZeroMQ REQ sockets.
 
-    This class should not be instantiated directly, a subclass should be
-    instantiated instead.
+    This class should not be instantiated directly, a subclass should be instantiated
+    instead.
 
-    Instances of this class or subclasses may only be used to pop items, not to
-    push.
+    Instances of this class or subclasses may only be used to pop items, not to push.
     """
 
     _SOCKET_TYPE = zmq.REQ
@@ -557,11 +554,11 @@ class ZeroMQRequestConnectQueue(ZeroMQRequestQueue):
 class ZeroMQBufferedQueue(ZeroMQQueue):
     """Parent class for buffered Plaso queues.
 
-    Buffered queues use a regular Python queue to store items that are pushed or
-    popped from the queue without blocking on underlying ZeroMQ operations.
+    Buffered queues use a regular Python queue to store items that are pushed or popped
+    from the queue without blocking on underlying ZeroMQ operations.
 
-    This class should not be instantiated directly, a subclass should be
-    instantiated instead.
+    This class should not be instantiated directly, a subclass should be instantiated
+    instead.
     """
 
     def __init__(
@@ -693,11 +690,10 @@ class ZeroMQBufferedQueue(ZeroMQQueue):
 class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
     """Parent class for buffered Plaso queues backed by ZeroMQ REP sockets.
 
-    This class should not be instantiated directly, a subclass should be
-    instantiated instead.
+    This class should not be instantiated directly, a subclass should be instantiated
+    instead.
 
-    Instances of this class or subclasses may only be used to push items, not to
-    pop.
+    Instances of this class or subclasses may only be used to push items, not to pop.
     """
 
     _ZMQ_SOCKET_RECEIVE_TIMEOUT_MILLISECONDS = 4000

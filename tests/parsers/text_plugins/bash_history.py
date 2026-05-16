@@ -87,8 +87,8 @@ class BashHistoryTextPluginTest(test_lib.TextPluginTestCase):
     def testProcessWithDesynchronizedFile(self):
         """Tests the Process function with a desynchronized file.
 
-        A desynchronized bash history file will start with the command line instead
-        of the timestamp.
+        A desynchronized bash history file will start with the command line instead of
+        the timestamp.
         """
         plugin = bash_history.BashHistoryTextPlugin()
         storage_writer = self._ParseTextFileWithPlugin(["bash_history_desync"], plugin)

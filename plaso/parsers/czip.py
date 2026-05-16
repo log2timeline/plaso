@@ -11,8 +11,8 @@ from plaso.parsers import manager
 class CompoundZIPParser(interface.FileObjectParser):
     """Shared functionality for parsing compound ZIP files.
 
-    Compound ZIP files are ZIP files used as containers to create another file
-    format, as opposed to archives of unrelated files.
+    Compound ZIP files are ZIP files used as containers to create another file format,
+    as opposed to archives of unrelated files.
     """
 
     NAME = "czip"

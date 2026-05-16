@@ -13,8 +13,8 @@ from plaso.lib import errors
 class ArtifactPreprocessorPlugin:
     """The artifact preprocessor plugin interface.
 
-    The artifact preprocessor determines preprocessing attributes based on an
-    artifact definition defined by ARTIFACT_DEFINITION_NAME.
+    The artifact preprocessor determines preprocessing attributes based on an artifact
+    definition defined by ARTIFACT_DEFINITION_NAME.
     """
 
     ARTIFACT_DEFINITION_NAME = None
@@ -23,8 +23,8 @@ class ArtifactPreprocessorPlugin:
 class FileSystemArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
     """File system artifact preprocessor plugin interface.
 
-    Shared functionality for preprocessing attributes based on a file system
-    artifact definition, such as file or path.
+    Shared functionality for preprocessing attributes based on a file system artifact
+    definition, such as file or path.
     """
 
     @abc.abstractmethod
@@ -99,8 +99,8 @@ class FileSystemArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
 class FileEntryArtifactPreprocessorPlugin(FileSystemArtifactPreprocessorPlugin):
     """File entry artifact preprocessor plugin interface.
 
-    Shared functionality for preprocessing attributes based on a file entry
-    artifact definition, such as file or path.
+    Shared functionality for preprocessing attributes based on a file entry artifact
+    definition, such as file or path.
     """
 
     @abc.abstractmethod
@@ -279,8 +279,8 @@ class WindowsRegistryValueArtifactPreprocessorPlugin(
 ):
     """Windows Registry value artifact preprocessor plugin interface.
 
-    Shared functionality for preprocessing attributes based on a Windows Registry
-    value artifact definition.
+    Shared functionality for preprocessing attributes based on a Windows Registry value
+    artifact definition.
     """
 
     def _ParseKey(self, mediator, registry_key, value_name):
@@ -327,8 +327,8 @@ class WindowsRegistryValueArtifactPreprocessorPlugin(
 class KnowledgeBasePreprocessorPlugin:
     """The knowledge base preprocessor plugin interface.
 
-    The knowledge base preprocessor determines preprocessing attributes based on
-    other values in the knowledge base.
+    The knowledge base preprocessor determines preprocessing attributes based on other
+    values in the knowledge base.
     """
 
     @abc.abstractmethod

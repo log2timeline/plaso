@@ -5,9 +5,9 @@ description_long and description_short in l2t_csv.
 
 Plaso no longer stores these field explicitly.
 
-A formatter, with a format string definition, is used to convert the event
-object values into a formatted string that is similar to the description_long
-and description_short field.
+A formatter, with a format string definition, is used to convert the event object values
+into a formatted string that is similar to the description_long and description_short
+field.
 """
 
 import abc

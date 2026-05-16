@@ -116,8 +116,7 @@ class VirusTotalAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
     def EnableFreeAPIKeyRateLimit(self):
         """Configures Rate limiting for queries to VirusTotal.
 
-        The default rate limit for free VirusTotal API keys is 4 requests per
-        minute.
+        The default rate limit for free VirusTotal API keys is 4 requests per minute.
         """
         self._hashes_per_batch = 4
         self._wait_after_analysis = 60.0
