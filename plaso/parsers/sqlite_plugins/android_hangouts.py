@@ -1,6 +1,13 @@
-"""SQLite parser plugin for Google Hangouts conversations database files."""
+"""SQLite parser plugin for Google Hangouts conversations database files.
 
-from dfdatetime import posix_time as dfdatetime_posix_time
+The Google Hangouts conversations database file is typically stored in:
+  /data/com.google.android.talk/databases/babel.db
+
+This SQLite database is the conversation database for conversations, participant names,
+messages, and information about the Google Hangout event. There can be multiple
+babel.db databases, and each database name will be followed by an integer starting with
+0, for example: babel0.db,babel1.db,babel3.db
+"""
 
 from plaso.containers import events
 from plaso.parsers import sqlite
@@ -37,17 +44,7 @@ class AndroidHangoutsMessageData(events.EventData):
 
 
 class AndroidHangoutsMessagePlugin(interface.SQLitePlugin):
-    """SQLite parser plugin for Google Hangouts conversations database files.
-
-    The Google Hangouts conversations database file is typically stored in:
-    /data/com.google.android.talk/databases/babel.db
-
-    This SQLite database is the conversation database for conversations,
-    participant names, messages, and information about the Google Hangout event.
-    There can be multiple babel.db databases, and each database name will be
-    followed by an integer starting with 0, for example:
-    "babel0.db,babel1.db,babel3.db".
-    """
+    """SQLite parser plugin for Google Hangouts conversations database files."""
 
     NAME = "hangouts_messages"
     DATA_FORMAT = "Google Hangouts conversations SQLite database (babel.db) file"
@@ -305,25 +302,6 @@ class AndroidHangoutsMessagePlugin(interface.SQLitePlugin):
         }
     ]
 
-    def _GetDateTimeRowValue(self, query_hash, row, value_name):
-        """Retrieves a POSIX time in microseconds date and time value from the row.
-
-        Args:
-          query_hash (int): hash of the query, that uniquely identifies the query
-              that produced the row.
-          row (sqlite3.Row): row.
-          value_name (str): name of the value.
-
-        Returns:
-          dfdatetime.PosixTimeInMicroseconds: date and time value or None if not
-              available.
-        """
-        timestamp = self._GetRowValue(query_hash, row, value_name)
-        if not timestamp:
-            return None
-
-        return dfdatetime_posix_time.PosixTimeInMicroseconds(timestamp=timestamp)
-
     def ParseMessagesRow(self, parser_mediator, query, row, **unused_kwargs):
         """Parses an Messages row.
 
@@ -337,7 +315,7 @@ class AndroidHangoutsMessagePlugin(interface.SQLitePlugin):
 
         event_data = AndroidHangoutsMessageData()
         event_data.body = self._GetRowValue(query_hash, row, "text")
-        event_data.creation_time = self._GetDateTimeRowValue(
+        event_data.creation_time = self._GetPosixTimeInMicrosecondsRowValue(
             query_hash, row, "timestamp"
         )
         event_data.message_status = self._GetRowValue(query_hash, row, "status")

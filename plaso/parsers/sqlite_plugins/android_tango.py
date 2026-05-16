@@ -5,8 +5,6 @@ import codecs
 
 from base64 import b64decode as base64_decode
 
-from dfdatetime import java_time as dfdatetime_java_time
-
 from plaso.containers import events
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
@@ -201,24 +199,6 @@ class AndroidTangoProfilePlugin(interface.SQLitePlugin):
 
         return None
 
-    def _GetDateTimeRowValue(self, query_hash, row, value_name):
-        """Retrieves a date and time value from the row.
-
-        Args:
-          query_hash (int): hash of the query, that uniquely identifies the query
-              that produced the row.
-          row (sqlite3.Row): row.
-          value_name (str): name of the value.
-
-        Returns:
-          dfdatetime.JavaTime: date and time value or None if not available.
-        """
-        timestamp = self._GetRowValue(query_hash, row, value_name)
-        if not timestamp:
-            return None
-
-        return dfdatetime_java_time.JavaTime(timestamp=timestamp)
-
     def ParseContactRow(self, parser_mediator, query, row, **unused_kwargs):
         """Parses a contact row from the database.
 
@@ -233,7 +213,7 @@ class AndroidTangoProfilePlugin(interface.SQLitePlugin):
         is_friend = self._GetRowValue(query_hash, row, "friend")
 
         event_data = AndroidTangoContactEventData()
-        event_data.access_time = self._GetDateTimeRowValue(
+        event_data.access_time = self._GetJavaTimeRowValue(
             query_hash, row, "last_access_time"
         )
         event_data.birthday = self._GetRowValue(query_hash, row, "birthday")
@@ -244,7 +224,7 @@ class AndroidTangoProfilePlugin(interface.SQLitePlugin):
         event_data.friend_request_message = self._GetBase64RowValue(
             parser_mediator, query_hash, row, "friend_request_message"
         )
-        event_data.friend_request_time = self._GetDateTimeRowValue(
+        event_data.friend_request_time = self._GetJavaTimeRowValue(
             query_hash, row, "friend_request_time"
         )
         event_data.friend_request_type = self._GetRowValue(
@@ -252,7 +232,7 @@ class AndroidTangoProfilePlugin(interface.SQLitePlugin):
         )
         event_data.gender = self._GetRowValue(query_hash, row, "gender")
         event_data.is_friend = bool(is_friend)
-        event_data.last_active_time = self._GetDateTimeRowValue(
+        event_data.last_active_time = self._GetJavaTimeRowValue(
             query_hash, row, "last_active_time"
         )
         event_data.last_name = self._GetBase64RowValue(
@@ -341,24 +321,6 @@ class AndroidTangoTCPlugin(interface.SQLitePlugin):
         }
     ]
 
-    def _GetDateTimeRowValue(self, query_hash, row, value_name):
-        """Retrieves a date and time value from the row.
-
-        Args:
-          query_hash (int): hash of the query, that uniquely identifies the query
-              that produced the row.
-          row (sqlite3.Row): row.
-          value_name (str): name of the value.
-
-        Returns:
-          dfdatetime.JavaTime: date and time value or None if not available.
-        """
-        timestamp = self._GetRowValue(query_hash, row, value_name)
-        if not timestamp:
-            return None
-
-        return dfdatetime_java_time.JavaTime(timestamp=timestamp)
-
     def ParseConversationRow(self, parser_mediator, query, row, **unused_kwargs):
         """Parses a conversation row from the database.
 
@@ -397,12 +359,12 @@ class AndroidTangoTCPlugin(interface.SQLitePlugin):
         # payload = self._GetRowValue(query_hash, row, 'payload')
 
         event_data = AndroidTangoMessageEventData()
-        event_data.creation_time = self._GetDateTimeRowValue(
+        event_data.creation_time = self._GetJavaTimeRowValue(
             query_hash, row, "create_time"
         )
         event_data.direction = self._GetRowValue(query_hash, row, "direction")
         event_data.message_identifier = self._GetRowValue(query_hash, row, "msg_id")
-        event_data.sent_time = self._GetDateTimeRowValue(query_hash, row, "send_time")
+        event_data.sent_time = self._GetJavaTimeRowValue(query_hash, row, "send_time")
 
         parser_mediator.ProduceEventData(event_data)
 

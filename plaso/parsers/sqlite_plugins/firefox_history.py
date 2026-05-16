@@ -1,7 +1,5 @@
 """SQLite parser plugin for Mozilla Firefox history database files."""
 
-from dfdatetime import posix_time as dfdatetime_posix_time
-
 from plaso.containers import events
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
@@ -13,6 +11,7 @@ class FirefoxPlacesBookmarkEventData(events.EventData):
     Attributes:
       added_time (dfdatetime.DateTimeValues): date and time the bookmark was
           added.
+      bookmark_type (int): bookmark type.
       host (str): visited hostname.
       modification_time (dfdatetime.DateTimeValues): date and time the bookmark
           was last modified.
@@ -21,7 +20,6 @@ class FirefoxPlacesBookmarkEventData(events.EventData):
       places_title (str): places title.
       query (str): SQL query that was used to obtain the event data.
       title (str): title of the bookmark folder.
-      type (int): bookmark type.
       url (str): bookmarked URL.
       visit_count (int): visit count.
     """
@@ -32,13 +30,13 @@ class FirefoxPlacesBookmarkEventData(events.EventData):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
         self.added_time = None
+        self.bookmark_type = None
         self.host = None
         self.modification_time = None
         self.offset = None
         self.places_title = None
         self.query = None
         self.title = None
-        self.type = None
         self.url = None
         self.visit_count = None
 
@@ -327,33 +325,10 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
 
     SCHEMAS = [_SCHEMA_V24, _SCHEMA_V25]
 
-    # Cache queries.
     URL_CACHE_QUERY = (
         "SELECT h.id AS id, p.url, p.rev_host FROM moz_places p, "
         "moz_historyvisits h WHERE p.id = h.place_id"
     )
-
-    # TODO: move to formatter.
-    _BOOKMARK_TYPES = {1: "URL", 2: "Folder", 3: "Separator"}
-
-    def _GetDateTimeRowValue(self, query_hash, row, value_name):
-        """Retrieves a POSIX time in microseconds date and time value from the row.
-
-        Args:
-          query_hash (int): hash of the query, that uniquely identifies the query
-              that produced the row.
-          row (sqlite3.Row): row.
-          value_name (str): name of the value.
-
-        Returns:
-          dfdatetime.PosixTimeInMicroseconds: date and time value or None if not
-              available.
-        """
-        timestamp = self._GetRowValue(query_hash, row, value_name)
-        if not timestamp:
-            return None
-
-        return dfdatetime_posix_time.PosixTimeInMicroseconds(timestamp=timestamp)
 
     def _GetUrl(self, url_id, cache, database):
         """Retrieves a URL from a reference to an entry in the from_visit table.
@@ -418,9 +393,11 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
         query_hash = hash(query)
 
         event_data = FirefoxPlacesBookmarkAnnotationEventData()
-        event_data.added_time = self._GetDateTimeRowValue(query_hash, row, "dateAdded")
+        event_data.added_time = self._GetPosixTimeInMicrosecondsRowValue(
+            query_hash, row, "dateAdded"
+        )
         event_data.content = self._GetRowValue(query_hash, row, "content")
-        event_data.modification_time = self._GetDateTimeRowValue(
+        event_data.modification_time = self._GetPosixTimeInMicrosecondsRowValue(
             query_hash, row, "lastModified"
         )
         event_data.offset = self._GetRowValue(query_hash, row, "id")
@@ -444,8 +421,10 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
         title = self._GetRowValue(query_hash, row, "title")
 
         event_data = FirefoxPlacesBookmarkFolderEventData()
-        event_data.added_time = self._GetDateTimeRowValue(query_hash, row, "dateAdded")
-        event_data.modification_time = self._GetDateTimeRowValue(
+        event_data.added_time = self._GetPosixTimeInMicrosecondsRowValue(
+            query_hash, row, "dateAdded"
+        )
+        event_data.modification_time = self._GetPosixTimeInMicrosecondsRowValue(
             query_hash, row, "lastModified"
         )
         event_data.offset = self._GetRowValue(query_hash, row, "id")
@@ -465,20 +444,19 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
         """
         query_hash = hash(query)
 
-        rev_host = self._GetRowValue(query_hash, row, "rev_host")
-        bookmark_type = self._GetRowValue(query_hash, row, "type")
-
         event_data = FirefoxPlacesBookmarkEventData()
-        event_data.added_time = self._GetDateTimeRowValue(query_hash, row, "dateAdded")
-        event_data.host = rev_host or "N/A"
-        event_data.modification_time = self._GetDateTimeRowValue(
+        event_data.added_time = self._GetPosixTimeInMicrosecondsRowValue(
+            query_hash, row, "dateAdded"
+        )
+        event_data.bookmark_type = self._GetRowValue(query_hash, row, "type")
+        event_data.host = self._GetRowValue(query_hash, row, "rev_host")
+        event_data.modification_time = self._GetPosixTimeInMicrosecondsRowValue(
             query_hash, row, "lastModified"
         )
         event_data.offset = self._GetRowValue(query_hash, row, "id")
         event_data.places_title = self._GetRowValue(query_hash, row, "places_title")
         event_data.query = query
         event_data.title = self._GetRowValue(query_hash, row, "bookmark_title")
-        event_data.type = self._BOOKMARK_TYPES.get(bookmark_type, "N/A")
         event_data.url = self._GetRowValue(query_hash, row, "url")
         event_data.visit_count = self._GetRowValue(query_hash, row, "visit_count")
 
@@ -509,7 +487,7 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
         event_data.from_visit = from_visit
         event_data.hidden = self._GetRowValue(query_hash, row, "hidden")
         event_data.host = self._ReverseHostname(rev_host)
-        event_data.last_visited_time = self._GetDateTimeRowValue(
+        event_data.last_visited_time = self._GetPosixTimeInMicrosecondsRowValue(
             query_hash, row, "visit_date"
         )
         event_data.offset = self._GetRowValue(query_hash, row, "id")

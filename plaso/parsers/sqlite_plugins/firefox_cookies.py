@@ -75,27 +75,6 @@ class BaseFirefoxCookiePlugin(
 
         return dfdatetime_posix_time.PosixTime(timestamp=timestamp)
 
-    def _GetPosixTimeInMicrosecondsDateTimeRowValue(self, query_hash, row, value_name):
-        """Retrieves a POSIX time in microseconds date and time value from the row.
-
-        Args:
-          query_hash (int): hash of the query, that uniquely identifies the query
-              that produced the row.
-          row (sqlite3.Row): row.
-          value_name (str): name of the value.
-
-        Returns:
-          dfdatetime.PosixTimeInMicroseconds: date and time value or None if not
-              available.
-        """
-        timestamp = self._GetRowValue(query_hash, row, value_name)
-        # Note that pysqlite3 can return an empty string for a NULL value.
-        # Also see: https://github.com/log2timeline/plaso/issues/4961
-        if timestamp is None or not isinstance(timestamp, int):
-            return None
-
-        return dfdatetime_posix_time.PosixTimeInMicroseconds(timestamp=timestamp)
-
     def ParseCookieRow(self, parser_mediator, query, row, **unused_kwargs):
         """Parses a cookie row.
 
@@ -124,11 +103,11 @@ class BaseFirefoxCookiePlugin(
         url = f"{url_scheme:s}://{hostname:s}{path:s}"
 
         event_data = FirefoxCookieEventData()
-        event_data.access_time = self._GetPosixTimeInMicrosecondsDateTimeRowValue(
+        event_data.access_time = self._GetPosixTimeInMicrosecondsRowValue(
             query_hash, row, "lastAccessed"
         )
         event_data.cookie_name = cookie_name
-        event_data.creation_time = self._GetPosixTimeInMicrosecondsDateTimeRowValue(
+        event_data.creation_time = self._GetPosixTimeInMicrosecondsRowValue(
             query_hash, row, "creationTime"
         )
         event_data.data = cookie_data
@@ -150,7 +129,6 @@ class BaseFirefoxCookiePlugin(
         event_data.expiration_time = self._GetPosixTimeDateTimeRowValue(
             query_hash, row, "expiry"
         )
-
         parser_mediator.ProduceEventData(event_data)
 
         self._ParseCookie(parser_mediator, cookie_name, cookie_data, url)
@@ -169,17 +147,17 @@ class FirefoxCookie2Plugin(BaseFirefoxCookiePlugin):
     REQUIRED_STRUCTURE = {
         "moz_cookies": frozenset(
             [
-                "id",
                 "baseDomain",
-                "name",
-                "value",
-                "host",
-                "path",
-                "expiry",
-                "lastAccessed",
                 "creationTime",
-                "isSecure",
+                "expiry",
+                "host",
+                "id",
                 "isHttpOnly",
+                "isSecure",
+                "lastAccessed",
+                "name",
+                "path",
+                "value",
             ]
         )
     }

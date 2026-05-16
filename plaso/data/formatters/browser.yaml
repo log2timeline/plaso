@@ -370,8 +370,16 @@ source: 'Firefox History'
 ---
 type: 'conditional'
 data_type: 'firefox:places:bookmark'
+enumeration_helpers:
+- input_attribute: 'bookmark_type'
+  output_attribute: 'bookmark_type_string'
+  default_value: 'UNKOWN'
+  values:
+    1: 'URL'
+    2: 'Folder'
+    3: 'Separator'
 message:
-- 'Bookmark {type}'
+- 'Bookmark {bookmark_type_string}'
 - '{title}'
 - '({url})'
 - '[{places_title}]'

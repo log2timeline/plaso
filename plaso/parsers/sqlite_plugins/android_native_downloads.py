@@ -10,8 +10,6 @@ Also see :
     https://android.googlesource.com/platform/frameworks/base/+/HEAD/core/java/android/app/DownloadManager.java
 """
 
-from dfdatetime import java_time as dfdatetime_java_time
-
 from plaso.containers import events
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
@@ -89,24 +87,24 @@ class AndroidNativeDownloadsPlugin(interface.SQLitePlugin):
     REQUIRED_STRUCTURE = {
         "downloads": frozenset(
             [
-                "_id",
-                "uri",
-                "_data",
-                "mimetype",
-                "destination",
-                "visibility",
-                "status",
-                "lastmod",
-                "notificationpackage",
-                "total_bytes",
                 "current_bytes",
-                "etag",
-                "title",
-                "description",
-                "is_visible_in_downloads_ui",
-                "mediaprovider_uri",
+                "_data",
                 "deleted",
+                "description",
+                "destination",
                 "errorMsg",
+                "etag",
+                "_id",
+                "is_visible_in_downloads_ui",
+                "lastmod",
+                "mediaprovider_uri",
+                "mimetype",
+                "notificationpackage",
+                "status",
+                "title",
+                "total_bytes",
+                "uri",
+                "visibility",
             ]
         )
     }
@@ -157,24 +155,6 @@ class AndroidNativeDownloadsPlugin(interface.SQLitePlugin):
         }
     ]
 
-    def _GetDateTimeRowValue(self, query_hash, row, value_name):
-        """Retrieves a date and time value from the row.
-
-        Args:
-          query_hash (int): hash of the query, that uniquely identifies the query
-              that produced the row.
-          row (sqlite3.Row): row.
-          value_name (str): name of the value.
-
-        Returns:
-          dfdatetime.JavaTime: date and time value or None if not available.
-        """
-        timestamp = self._GetRowValue(query_hash, row, value_name)
-        if timestamp is None:
-            return None
-
-        return dfdatetime_java_time.JavaTime(timestamp=timestamp)
-
     def ParseDownloadsRow(self, parser_mediator, query, row, **unused_kwargs):
         """Parses a download row.
 
@@ -200,7 +180,7 @@ class AndroidNativeDownloadsPlugin(interface.SQLitePlugin):
         event_data.is_visible_in_downloads_ui = self._GetRowValue(
             query_hash, row, "is_visible_in_downloads_ui"
         )
-        event_data.modification_time = self._GetDateTimeRowValue(
+        event_data.modification_time = self._GetJavaTimeRowValue(
             query_hash, row, "lastmod"
         )
         event_data.media_provider_uri = self._GetRowValue(

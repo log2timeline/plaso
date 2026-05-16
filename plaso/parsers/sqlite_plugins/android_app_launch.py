@@ -1,7 +1,5 @@
 """SQLite parser plugin for Android application launch database files."""
 
-from dfdatetime import java_time as dfdatetime_java_time
-
 from plaso.containers import events
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
@@ -46,13 +44,13 @@ class AndroidAppLaunchPlugin(interface.SQLitePlugin):
     REQUIRED_STRUCTURE = {
         "EchoAppLaunchMetricsEvents": frozenset(
             [
-                "timestampMillis",
-                "packageName",
-                "launchLocationId",
-                "predictionUiSurfaceId",
-                "predictionSourceId",
-                "predictionRank",
                 "id",
+                "launchLocationId",
+                "packageName",
+                "predictionRank",
+                "predictionSourceId",
+                "predictionUiSurfaceId",
+                "timestampMillis",
             ]
         )
     }
@@ -60,11 +58,11 @@ class AndroidAppLaunchPlugin(interface.SQLitePlugin):
     QUERIES = [
         (
             (
-                "SELECT timestampMillis, packageName, launchLocationId, "
-                "predictionUiSurfaceId, predictionSourceId, predictionRank, id "
+                "SELECT id, launchLocationId, packageName, predictionRank, "
+                "predictionSourceId, predictionUiSurfaceId, timestampMillis "
                 "FROM EchoAppLaunchMetricsEvents"
             ),
-            "ParseAppLaunchRow",
+            "_ParseAppLaunchRow",
         )
     ]
 
@@ -84,25 +82,7 @@ class AndroidAppLaunchPlugin(interface.SQLitePlugin):
         ),
     }
 
-    def _GetTimeRowValue(self, query_hash, row, value_name):
-        """Retrieves a date and time value from the row.
-
-        Args:
-          query_hash (int): hash of the query, that uniquely identifies the query
-              that produced the row.
-          row (sqlite3.Row): row.
-
-        Returns:
-          dfdatetime.JavaTime: date and time value or None if not available.
-        """
-        timestamp = self._GetRowValue(query_hash, row, value_name)
-        if timestamp is None:
-            return None
-
-        return dfdatetime_java_time.JavaTime(timestamp=timestamp)
-
-    # pylint: disable=unused-argument
-    def ParseAppLaunchRow(self, parser_mediator, query, row, **unused_kwargs):
+    def _ParseAppLaunchRow(self, parser_mediator, query, row, **unused_kwargs):
         """Parses an event record row.
 
         Args:
@@ -128,10 +108,9 @@ class AndroidAppLaunchPlugin(interface.SQLitePlugin):
         event_data.prediction_ui_surface_identifier = self._GetRowValue(
             query_hash, row, "predictionUiSurfaceId"
         )
-        event_data.start_time = self._GetTimeRowValue(
+        event_data.start_time = self._GetJavaTimeRowValue(
             query_hash, row, "timestampMillis"
         )
-
         parser_mediator.ProduceEventData(event_data)
 
 

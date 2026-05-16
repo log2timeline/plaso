@@ -1,7 +1,5 @@
 """SQLite parser plugin for Android application usage database files."""
 
-from dfdatetime import posix_time as dfdatetime_posix_time
-
 from plaso.containers import events
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
@@ -32,15 +30,17 @@ class AndroidSQLiteAppUsage(interface.SQLitePlugin):
     DATA_FORMAT = "Android application usage SQLite database (app_usage) file"
 
     REQUIRED_STRUCTURE = {
-        "events": frozenset(["_id", "timestamp", "package_id"]),
+        "events": frozenset(["_id", "package_id", "timestamp"]),
         "packages": frozenset(["_id", "package_name"]),
     }
 
     QUERIES = [
         (
-            "SELECT events.timestamp, packages.package_name FROM events JOIN "
-            "packages ON packages._id = events.package_id",
-            "ParseAppUsageRow",
+            (
+                "SELECT events.timestamp, packages.package_name FROM events "
+                "JOIN packages ON packages._id = events.package_id"
+            ),
+            "_ParseAppUsageRow",
         )
     ]
 
@@ -61,7 +61,7 @@ class AndroidSQLiteAppUsage(interface.SQLitePlugin):
         }
     ]
 
-    def ParseAppUsageRow(self, parser_mediator, query, row, **unused_kwargs):
+    def _ParseAppUsageRow(self, parser_mediator, query, row, **unused_kwargs):
         """Parses an event record row.
 
         Args:
@@ -72,12 +72,10 @@ class AndroidSQLiteAppUsage(interface.SQLitePlugin):
         """
         query_hash = hash(query)
 
-        timestamp = self._GetRowValue(query_hash, row, "timestamp")
-
         event_data = AndroidAppUsage()
         event_data.package_name = self._GetRowValue(query_hash, row, "package_name")
-        event_data.start_time = dfdatetime_posix_time.PosixTimeInMilliseconds(
-            timestamp=timestamp
+        event_data.start_time = self._GetPosixTimeInMillisecondsRowValue(
+            query_hash, row, "timestamp"
         )
 
         parser_mediator.ProduceEventData(event_data)

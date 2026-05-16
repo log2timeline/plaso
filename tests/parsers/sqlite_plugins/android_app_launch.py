@@ -4,6 +4,7 @@
 import unittest
 
 from plaso.parsers.sqlite_plugins import android_app_launch
+
 from tests.parsers.sqlite_plugins import test_lib
 
 
@@ -13,8 +14,9 @@ class AndroidAppLaunchPluginTest(test_lib.SQLitePluginTestCase):
     def testProcess(self):
         """Test the Process function on an Android SimpleStorage file."""
         plugin = android_app_launch.AndroidAppLaunchPlugin()
-        storage_writer = self._ParseDatabaseFileWithPlugin(["SimpleStorage"], plugin)
-
+        storage_writer = self._ParseDatabaseFileWithPlugin(
+            ["android", "SimpleStorage"], plugin
+        )
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -31,6 +33,7 @@ class AndroidAppLaunchPluginTest(test_lib.SQLitePluginTestCase):
         self.assertEqual(number_of_warnings, 0)
 
         expected_event_values = {
+            "data_type": "android:sqlite:app_launch",
             "identifier": 2980,
             "launch_location_identifier": 4,
             "package_name": "com.android.settings",
@@ -39,7 +42,6 @@ class AndroidAppLaunchPluginTest(test_lib.SQLitePluginTestCase):
             "prediction_ui_surface_identifier": 1,
             "start_time": "2022-12-04T16:59:28.274+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

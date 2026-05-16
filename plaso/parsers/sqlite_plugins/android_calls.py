@@ -1,4 +1,8 @@
-"""SQLite parser plugin for Android call history database files."""
+"""SQLite parser plugin for Android call history database files.
+
+The Android call history database file is typically stored in:
+  contacts2.db
+"""
 
 from dfdatetime import java_time as dfdatetime_java_time
 
@@ -39,23 +43,19 @@ class AndroidCallEventData(events.EventData):
 
 
 class AndroidCallPlugin(interface.SQLitePlugin):
-    """SQLite parser plugin for Android call history database files.
-
-    The Android call history database file is typically stored in:
-    contacts2.db
-    """
+    """SQLite parser plugin for Android call history database files."""
 
     NAME = "android_calls"
     DATA_FORMAT = "Android call history SQLite database (contacts2.db) file"
 
     REQUIRED_STRUCTURE = {
-        "calls": frozenset(["_id", "date", "number", "name", "duration", "type"])
+        "calls": frozenset(["date", "duration", "_id", "name", "number", "type"])
     }
 
     QUERIES = [
         (
-            "SELECT _id AS id, date, number, name, duration, type FROM calls",
-            "ParseCallsRow",
+            "SELECT _id, date, duration, name, number, type FROM calls",
+            "_ParseCallsRow",
         )
     ]
 
@@ -183,7 +183,29 @@ class AndroidCallPlugin(interface.SQLitePlugin):
         }
     ]
 
-    def ParseCallsRow(self, parser_mediator, query, row, **unused_kwargs):
+    def _GetEndTimeValue(self, query_hash, row):
+        """Retrieves the end date and time value.
+
+        Args:
+          query_hash (int): hash of the query, that uniquely identifies the query
+              that produced the row.
+          row (sqlite3.Row): row.
+
+        Returns:
+          dfdatetime.JavaTime: date and time value or None if not available.
+        """
+        date = self._GetRowValue(query_hash, row, "date")
+        duration = self._GetRowValue(query_hash, row, "duration")
+
+        if None in (date, duration):
+            return None
+
+        # date is in milliseconds and duration in seconds.
+        timestamp = date + (duration * definitions.MILLISECONDS_PER_SECOND)
+
+        return dfdatetime_java_time.JavaTime(timestamp=timestamp)
+
+    def _ParseCallsRow(self, parser_mediator, query, row, **unused_kwargs):
         """Parses a Call record row.
 
         Args:
@@ -194,23 +216,15 @@ class AndroidCallPlugin(interface.SQLitePlugin):
         """
         query_hash = hash(query)
 
-        duration = self._GetRowValue(query_hash, row, "duration")
-        timestamp = self._GetRowValue(query_hash, row, "date")
-
         event_data = AndroidCallEventData()
         event_data.call_type = self._GetRowValue(query_hash, row, "type")
         event_data.duration = self._GetRowValue(query_hash, row, "duration")
+        event_data.end_time = self._GetEndTimeValue(query_hash, row)
         event_data.name = self._GetRowValue(query_hash, row, "name")
         event_data.number = self._GetRowValue(query_hash, row, "number")
-        event_data.offset = self._GetRowValue(query_hash, row, "id")
+        event_data.offset = self._GetRowValue(query_hash, row, "_id")
         event_data.query = query
-        event_data.start_time = dfdatetime_java_time.JavaTime(timestamp=timestamp)
-
-        if duration:
-            # The duration is in seconds and the date value in milliseconds.
-            timestamp += duration * definitions.MILLISECONDS_PER_SECOND
-
-            event_data.end_time = dfdatetime_java_time.JavaTime(timestamp=timestamp)
+        event_data.start_time = self._GetJavaTimeRowValue(query_hash, row, "date")
 
         parser_mediator.ProduceEventData(event_data)
 

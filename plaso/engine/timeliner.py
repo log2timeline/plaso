@@ -482,8 +482,8 @@ class EventDataTimeliner:
 
                 self.number_of_produced_events += 1
 
-        # Create a place holder event for event_data without date and time
-        # values to map.
+        # Create a place holder event for event_data without date and time values to
+        # map.
         if not number_of_events and event_data.data_type in self._place_holder_event:
             date_time = dfdatetime_semantic_time.NotSet()
             event = self._GetEvent(

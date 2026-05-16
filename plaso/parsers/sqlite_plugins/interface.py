@@ -3,6 +3,9 @@
 import sqlite3
 
 from dfdatetime import filetime as dfdatetime_filetime
+from dfdatetime import java_time as dfdatetime_java_time
+from dfdatetime import posix_time as dfdatetime_posix_time
+from dfdatetime import semantic_time as dfdatetime_semantic_time
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.parsers import logger
@@ -55,7 +58,7 @@ class SQLitePlugin(plugins.BasePlugin):
           dfdatetime.TimeElements: date and time value or None if not available.
         """
         date_time_string = self._GetRowValue(query_hash, row, value_name)
-        if date_time_string is None:
+        if date_time_string in (None, ""):
             return None
 
         date_time = dfdatetime_time_elements.TimeElements()
@@ -72,13 +75,86 @@ class SQLitePlugin(plugins.BasePlugin):
           value_name (str): name of the value.
 
         Returns:
-          dfdatetime.Filetime: date and time value or None if not available.
+          dfdatetime.DateTimeValues: date and time value or None if not available.
         """
         timestamp = self._GetRowValue(query_hash, row, value_name)
-        if timestamp is None:
+        # Note that pysqlite3 can return an empty string for a NULL value.
+        # Also see: https://github.com/log2timeline/plaso/issues/4961
+        if timestamp in (None, ""):
             return None
 
+        if timestamp == 0:
+            return dfdatetime_semantic_time.NotSet()
+
         return dfdatetime_filetime.Filetime(timestamp=timestamp)
+
+    def _GetJavaTimeRowValue(self, query_hash, row, value_name):
+        """Retrieves a Java date and time value from the row.
+
+        Args:
+          query_hash (int): hash of the query, that uniquely identifies the query
+              that produced the row.
+          row (sqlite3.Row): row.
+          value_name (str): name of the value.
+
+        Returns:
+          dfdatetime.DateTimeValues: date and time value or None if not available.
+        """
+        timestamp = self._GetRowValue(query_hash, row, value_name)
+        # Note that pysqlite3 can return an empty string for a NULL value.
+        # Also see: https://github.com/log2timeline/plaso/issues/4961
+        if timestamp in (None, ""):
+            return None
+
+        if timestamp == 0:
+            return dfdatetime_semantic_time.NotSet()
+
+        return dfdatetime_java_time.JavaTime(timestamp=timestamp)
+
+    def _GetPosixTimeInMicrosecondsRowValue(self, query_hash, row, value_name):
+        """Retrieves a POSIX time in microseconds date and time value from the row.
+
+        Args:
+          query_hash (int): hash of the query, that uniquely identifies the query
+              that produced the row.
+          row (sqlite3.Row): row.
+          value_name (str): name of the value.
+
+        Returns:
+          dfdatetime.DateTimeValues: date and time value or None if not available.
+        """
+        timestamp = self._GetRowValue(query_hash, row, value_name)
+        # Note that pysqlite3 can return an empty string for a NULL value.
+        # Also see: https://github.com/log2timeline/plaso/issues/4961
+        if timestamp in (None, ""):
+            return None
+
+        if timestamp == 0:
+            return dfdatetime_semantic_time.NotSet()
+
+        return dfdatetime_posix_time.PosixTimeInMicroseconds(timestamp=timestamp)
+
+    def _GetPosixTimeInMillisecondsRowValue(self, query_hash, row, value_name):
+        """Retrieves a POSIX time in milliseconds date and time value from the row.
+
+        Args:
+          query_hash (int): hash of the query, that uniquely identifies the query
+              that produced the row.
+          row (sqlite3.Row): row.
+
+        Returns:
+          dfdatetime.DateTimeValues: date and time value or None if not available.
+        """
+        timestamp = self._GetRowValue(query_hash, row, value_name)
+        # Note that pysqlite3 can return an empty string for a NULL value.
+        # Also see: https://github.com/log2timeline/plaso/issues/4961
+        if timestamp in (None, ""):
+            return None
+
+        if timestamp == 0:
+            return dfdatetime_semantic_time.NotSet()
+
+        return dfdatetime_posix_time.PosixTimeInMilliseconds(timestamp=timestamp)
 
     def _GetRowValue(self, query_hash, row, value_name):
         """Retrieves a value from the row.
@@ -165,10 +241,8 @@ class SQLitePlugin(plugins.BasePlugin):
 
             except Exception as exception:  # pylint: disable=broad-except
                 parser_mediator.ProduceExtractionWarning(
-                    (
-                        f"unable to parse row: {index:d} with callback: "
-                        f"{callback.__name__:s} on database with error: {exception!s}"
-                    )
+                    f"unable to parse row: {index:d} with callback: "
+                    f"{callback.__name__:s} on database with error: {exception!s}"
                 )
                 # TODO: consider removing return.
                 return
@@ -251,8 +325,8 @@ class SQLitePlugin(plugins.BasePlugin):
             callback = getattr(self, callback_method, None)
             if callback is None:
                 logger.warning(
-                    f"[{self.NAME:s}] missing callback method: "
-                    f"{callback_method:s} for query: {query:s}"
+                    f"[{self.NAME:s}] missing callback method: {callback_method:s} for "
+                    f"query: {query:s}"
                 )
                 continue
 
