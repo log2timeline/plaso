@@ -16,6 +16,14 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
 
     _EXPECTED_OUTPUT_COMPARE_STORES = """\
 
+************************ Events generated per data type ************************
+Data type name : Number of events
+--------------------------------------------------------------------------------
+       fs:stat : 3 (6)
+         total : 3 (38)
+--------------------------------------------------------------------------------
+
+
 ************************* Events generated per parser **************************
 Parser (plugin) name : Number of events
 --------------------------------------------------------------------------------

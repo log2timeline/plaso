@@ -1,19 +1,19 @@
 
 ************************** Plaso Storage Information ***************************
             Filename : pinfo_test.plaso
-      Format version : 20230327
+      Format version : 20260516
 Serialization format : json
 --------------------------------------------------------------------------------
 
 *********************************** Sessions ***********************************
-b9556ec0-c5ab-44ae-aa24-2b06037ecb30 : 2026-05-12T09:34:11.613767+00:00
+7ec8ee95-5a21-4591-91fc-63ed00667ac5 : 2026-05-16T16:42:38.470460+00:00
 --------------------------------------------------------------------------------
 
-**************** Session: b9556ec0-c5ab-44ae-aa24-2b06037ecb30 *****************
-                Start time : 2026-05-12T09:34:11.613767+00:00
-           Completion time : 2026-05-12T09:34:22.002986+00:00
+**************** Session: 7ec8ee95-5a21-4591-91fc-63ed00667ac5 *****************
+                Start time : 2026-05-16T16:42:38.470460+00:00
+           Completion time : 2026-05-16T16:42:48.840705+00:00
               Product name : plaso
-           Product version : 20260511
+           Product version : 20260512
     Command line arguments : ./plaso/scripts/log2timeline.py --partition=all
                              --quiet --storage-file pinfo_test.plaso
                              test_data/tsk_volume_system.raw
@@ -81,8 +81,9 @@ Enabled parser and plugins : android_app_usage, asl_log, bencode,
                              sqlite/imessage, sqlite/instagram_ios,
                              sqlite/ios_accounts, sqlite/ios_datausage,
                              sqlite/ios_imohdchat_message, sqlite/ios_netusage,
-                             sqlite/ios_powerlog, sqlite/ios_screentime,
-                             sqlite/kik_ios, sqlite/kodi, sqlite/ls_quarantine,
+                             sqlite/ios_notes, sqlite/ios_powerlog,
+                             sqlite/ios_screentime, sqlite/kik_ios,
+                             sqlite/kodi, sqlite/ls_quarantine,
                              sqlite/mac_document_versions,
                              sqlite/mac_knowledgec, sqlite/mac_notes,
                              sqlite/mac_notificationcenter,
@@ -154,6 +155,13 @@ Enabled parser and plugins : android_app_usage, asl_log, bencode,
                 Debug mode : False
           Artifact filters : N/A
                Filter file : N/A
+--------------------------------------------------------------------------------
+
+************************ Events generated per data type ************************
+Data type name : Number of events
+--------------------------------------------------------------------------------
+       fs:stat : 3
+         Total : 3
 --------------------------------------------------------------------------------
 
 ************************* Events generated per parser **************************
