@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Tests for iOS Health Wrist Temperature SQLite database plugin."""
 
-import math
 import unittest
 
 from plaso.parsers.sqlite_plugins import ios_health_wrist_temperature
+
 from tests.parsers.sqlite_plugins import test_lib
 
 
@@ -15,13 +15,14 @@ class IOSHealthWristTemperatureTest(test_lib.SQLitePluginTestCase):
         """Test the plugin's Process function on a test database."""
         plugin = ios_health_wrist_temperature.IOSHealthWristTemperaturePlugin()
         storage_writer = self._ParseDatabaseFileWithPlugin(
-            ["ios", "healthdb_secure.sqlite"], plugin
+            ["ios", "healthdb_secure_iOS_13_4_1.sqlite"], plugin
         )
+        # 266 wrist temperature (sample) event data
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
-        self.assertGreater(number_of_event_data, 0)
+        self.assertEqual(number_of_event_data, 266)
 
         number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
             "extraction_warning"
@@ -33,36 +34,26 @@ class IOSHealthWristTemperatureTest(test_lib.SQLitePluginTestCase):
         )
         self.assertEqual(number_of_recovery_warnings, 0)
 
-        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
-
-        self.assertIsNotNone(event_data.start_time_str)
-        self.assertTrue(event_data.start_time_str.startswith("2020-04-12T18:00:00"))
-
-        self.assertIsNotNone(event_data.end_time_str)
-        self.assertTrue(event_data.end_time_str.startswith("2020-04-12T19:00:00"))
-
-        self.assertIsNotNone(event_data.date_added_str)
-        self.assertTrue(event_data.date_added_str.startswith("2020-04-12T18:58:43"))
-
-        self.assertIsNotNone(event_data.date_time)
-        self.assertEqual(event_data.date_time, event_data.start_time)
-
+        # Check wrist temperature (sample) event data.
         expected_event_values = {
+            "added_time": "2020-04-16T15:06:51.871307+00:00",
+            "algorithm_version": None,
+            "data_type": "ios:health:wrist_temperature",
             "device_manufacturer": "Apple Inc.",
             "device_model": "Watch",
             "device_name": "Apple Watch",
+            "end_time": "2020-04-16T16:00:00.000000+00:00",
             "hardware_version": "Watch4,3",
-            "software_version": "6.1.3",
-            "source": "This Is’s Apple Watch",
-            "wrist_temperature_c": 36.6,
+            "software_version": "6.2.1",
+            "source": "This Iss Apple Watch",
+            "start_time": "2020-04-16T15:00:00.000000+00:00",
+            "surface_temperature_c": None,
+            "surface_temperature_f": None,
+            "wrist_temperature_c": None,
+            "wrist_temperature_f": None,
         }
-
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
-
-        wrist_temp_f = getattr(event_data, "wrist_temperature_f", None)
-        if wrist_temp_f is not None:
-            expected_f = 36.6 * 1.8 + 32
-            self.assertTrue(math.isclose(wrist_temp_f, expected_f, rel_tol=1e-6))
 
 
 if __name__ == "__main__":

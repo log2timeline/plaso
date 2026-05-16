@@ -14,7 +14,7 @@ class IOSHealthAchievementsEventData(events.EventData):
       creation_time (dfdatetime.DateTimeValues): data and time of the creation of
           the achievement.
       creator_device (int): identifier of the device that created the achievement.
-      earned_date (dfdatetime.DateTimeValues): Date the achievement was earned.
+      earned_date (str): Date the achievement was earned.
       sync_provenance (int): Identifier for the sync provenance.
       template_unique_name (str): Unique name of the achievement template.
       value_canonical_unit (str): Unit of the value (e.g., "count").
@@ -37,14 +37,15 @@ class IOSHealthAchievementsEventData(events.EventData):
 
 
 class IOSHealthHeartRateEventData(events.EventData):
-    """iOS Health heart rate trace event data.
+    """iOS Health heart rate (sample) event data.
 
     Attributes:
-      added_time (dfdatetime.DateTimeValues): data and time the trace was added.
+      added_time (dfdatetime.DateTimeValues): data and time the sample was added to the
+          database.
       bpm (int): beats per minute.
       context (float): context.
       device_name (str): source device name.
-      end_time (str): date and time the trace ended.
+      end_time (dfdatetime.DateTimeValues): date and time the sample ended.
       hardware (str): source device hardware.
       manufacturer (str): source device manufacturer.
       series_count (int): quantity_sample_series.count (iOS 15+ plugin).
@@ -52,7 +53,7 @@ class IOSHealthHeartRateEventData(events.EventData):
       software_version (str): software version.
       source_name (str): source name.
       source_options (str): source options.
-      start_time (dfdatetime.DateTimeValues): date and time the trace started.
+      start_time (dfdatetime.DateTimeValues): date and time the sample started.
       time_zone (str): time zone.
     """
 
@@ -78,11 +79,11 @@ class IOSHealthHeartRateEventData(events.EventData):
 
 
 class IOSHealthHeightEventData(events.EventData):
-    """iOS Health Height event data.
+    """iOS Health height (sample) event data.
 
     Attributes:
-      date_time (dfdatetime.DateTimeValues): primary timestamp for timeline.
       height (float): height in meters.
+      start_time (dfdatetime.DateTimeValues): date and time the sample started.
     """
 
     DATA_TYPE = "ios:health:height"
@@ -90,8 +91,79 @@ class IOSHealthHeightEventData(events.EventData):
     def __init__(self):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
-        self.date_time = None
         self.height = None
+        self.start_time = None
+
+
+# TODO: merge with IOSHealthHeartRateEventData
+class IOSHealthRestingHeartRateEventData(events.EventData):
+    """iOS Health resting heart rate (sample) event data.
+
+    Attributes:
+      added_time (dfdatetime.DateTimeValues): date and time the sample was added to the
+          database.
+      end_time (dfdatetime.DateTimeValues): date and time the sample ended.
+      hardware (str): device hardware.
+      resting_heart_rate (int): resting heart rate in beats per minute (BPM).
+      source (str): source name.
+      start_time (dfdatetime.DateTimeValues): date and time the sample started.
+    """
+
+    DATA_TYPE = "ios:health:resting_heart_rate"
+
+    def __init__(self):
+        """Initializes event data."""
+        super().__init__(data_type=self.DATA_TYPE)
+        self.added_time = None
+        self.end_time = None
+        self.hardware = None
+        self.resting_heart_rate = None
+        self.source = None
+        self.start_time = None
+
+
+class IOSHealthStepsEventData(events.EventData):
+    """iOS Health steps (sample) event data.
+
+    Attributes:
+      device (str): device used to record the data (e.g. Apple Watch).
+      duration (float): duration in seconds.
+      end_time (dfdatetime.DateTimeValues): date and time the sample ended.
+      number_of_steps (float): total number of steps.
+      start_time (dfdatetime.DateTimeValues): date and time the sample started.
+    """
+
+    DATA_TYPE = "ios:health:steps"
+
+    def __init__(self):
+        """Initializes event data."""
+        super().__init__(data_type=self.DATA_TYPE)
+        self.device = None
+        self.duration = None
+        self.end_time = None
+        self.number_of_steps = None
+        self.start_time = None
+
+
+class IOSHealthWeightEventData(events.EventData):
+    """iOS Health weight (sample) event data.
+
+    Attributes:
+      start_time (dfdatetime.DateTimeValues): date and time the sample started.
+      weight (float): Weight in kilograms.
+      weight_lbs (float): Weight in pounds.
+      weight_stone (str): Weight in stone and pounds, such as '12 Stone 12 Pounds'.
+    """
+
+    DATA_TYPE = "ios:health:weight"
+
+    def __init__(self):
+        """Initializes event data."""
+        super().__init__(data_type=self.DATA_TYPE)
+        self.start_time = None
+        self.weight = None
+        self.weight_lbs = None
+        self.weight_stone = None
 
 
 class IOSHealthPlugin(interface.SQLitePlugin):
@@ -103,24 +175,24 @@ class IOSHealthPlugin(interface.SQLitePlugin):
     REQUIRED_STRUCTURE = {
         "ACHAchievementsPlugin_earned_instances": frozenset(
             [
-                "template_unique_name",
                 "created_date",
-                "earned_date",
-                "value_in_canonical_unit",
-                "value_canonical_unit",
                 "creator_device",
+                "earned_date",
                 "sync_provenance",
+                "template_unique_name",
+                "value_canonical_unit",
+                "value_in_canonical_unit",
             ]
         ),
         "data_provenances": frozenset(
             ["ROWID", "device_id", "source_id", "source_version", "tz_name"]
         ),
-        "metadata_values": frozenset(["object_id", "numerical_value"]),
-        "objects": frozenset(["data_id", "provenance", "creation_date", "type"]),
+        "metadata_values": frozenset(["numerical_value", "object_id"]),
+        "objects": frozenset(["creation_date", "data_id", "provenance", "type"]),
         "quantity_samples": frozenset(["data_id", "quantity"]),
         "samples": frozenset(["data_id", "data_type", "end_date", "start_date"]),
-        "source_devices": frozenset(["ROWID", "name", "manufacturer", "hardware"]),
-        "sources": frozenset(["ROWID", "name", "source_options"]),
+        "source_devices": frozenset(["ROWID", "hardware", "manufacturer", "name"]),
+        "sources": frozenset(["ROWID", "name", "product_type", "source_options"]),
     }
 
     QUERIES = [
@@ -134,29 +206,39 @@ class IOSHealthPlugin(interface.SQLitePlugin):
         ),
         (
             (
-                "SELECT s.start_date AS start_date, s.end_date AS end_date, "
-                "CAST(ROUND(qs.quantity * 60.0) AS INT) AS bpm, mv.numerical_value "
-                "AS context, o.creation_date AS added_date, sd.name AS device_name, "
-                "sd.manufacturer AS manufacturer, sd.hardware AS hardware, "
-                "src.name AS source_name, dp.source_version AS software_version, "
-                "dp.tz_name AS tz_name, src.source_options AS source_options "
-                "FROM samples s LEFT JOIN quantity_samples qs ON "
-                "qs.data_id = s.data_id LEFT JOIN metadata_values mv ON "
-                "mv.object_id = s.data_id LEFT JOIN objects o ON o.data_id = s.data_id "
-                "LEFT JOIN data_provenances dp ON dp.ROWID = o.provenance LEFT JOIN "
-                "source_devices sd ON sd.ROWID = dp.device_id LEFT JOIN sources src "
-                "ON src.ROWID = dp.source_id WHERE s.data_type = 5 AND o.type != 2"
+                "SELECT "
+                "data_provenances.origin_product_type AS origin_product_type, "
+                "data_provenances.source_version AS software_version, "
+                "data_provenances.tz_name AS tz_name, "
+                "category_samples.value AS category_value, "
+                "metadata_values.numerical_value AS context, "
+                "objects.creation_date AS creation_date, "
+                "objects.type AS object_type, "
+                "quantity_samples.quantity as quantity, "
+                "samples.data_type AS sample_type, "
+                "samples.end_date AS end_date, "
+                "samples.start_date AS start_date, "
+                "source_devices.hardware AS device_hardware, "
+                "source_devices.manufacturer AS device_manufacturer, "
+                "source_devices.name AS device_name, "
+                "sources.name AS source_name, "
+                "sources.product_type AS source_product_type, "
+                "sources.source_options AS source_options "
+                "FROM samples "
+                "LEFT JOIN category_samples "
+                "ON samples.data_id = category_samples.data_id "
+                "LEFT JOIN metadata_values "
+                "ON metadata_values.object_id = samples.data_id "
+                "LEFT JOIN objects ON objects.data_id = samples.data_id "
+                "LEFT JOIN quantity_samples "
+                "ON quantity_samples.data_id = samples.data_id "
+                "LEFT JOIN data_provenances "
+                "ON data_provenances.ROWID = objects.provenance "
+                "LEFT JOIN source_devices "
+                "ON source_devices.ROWID = data_provenances.device_id "
+                "LEFT JOIN sources ON sources.ROWID = data_provenances.source_id"
             ),
-            "_ParseHeartRateRow",
-        ),
-        (
-            (
-                "SELECT samples.start_date AS start_date, quantity_samples.quantity AS "
-                "height_meters FROM samples LEFT JOIN quantity_samples ON "
-                "samples.data_id = quantity_samples.data_id WHERE "
-                "samples.data_type = 2 AND quantity_samples.quantity IS NOT NULL"
-            ),
-            "_ParseHeightRow",
+            "_ParseSamplesRow",
         ),
     ]
 
@@ -542,6 +624,28 @@ class IOSHealthPlugin(interface.SQLitePlugin):
 
     REQUIRE_SCHEMA_MATCH = False
 
+    # TODO: refactor
+    @staticmethod
+    def _FormatStonePounds(weight_in_stone, weight_in_pounds):
+        """Formats 'X Stone Y Pounds' with carry handling.
+
+        Args:
+          weight_in_stone (int): weight in stone.
+          weight_in_pounds (int): weight in pounds.
+
+        Returns:
+          str: formatted weight string or None.
+        """
+        try:
+            s = int(weight_in_stone) if weight_in_stone is not None else 0
+            p = int(weight_in_pounds) if weight_in_pounds is not None else 0
+            if p == 14:
+                s += 1
+                p = 0
+            return f"{s} Stone {p} Pounds"
+        except (TypeError, ValueError):
+            return None
+
     def _GetDateTimeRowValue(self, query_hash, row, value_name):
         """Retrieves a date and time value from the row.
 
@@ -590,29 +694,33 @@ class IOSHealthPlugin(interface.SQLitePlugin):
         event_data.sync_provenance = self._GetRowValue(
             query_hash, row, "sync_provenance"
         )
-
         parser_mediator.ProduceEventData(event_data)
 
-    def _ParseHeartRateRow(self, parser_mediator, query, row, **unused_kwargs):
-        """Parses a heart rate row.
+    def _ParseHeartRateSample(self, parser_mediator, query_hash, row):
+        """Parses a heart rate sample.
 
         Args:
           parser_mediator (ParserMediator): mediates interactions between
               parsers and other components, such as storage and dfVFS.
-          query (str): query that created the row.
-          row (sqlite3.Row): row.
+          query_hash (int): hash of the query, that uniquely identifies the query
+              that produced the row.
+          row (sqlite3.Row): row that contains the sample.
         """
-        query_hash = hash(query)
+        quantity = self._GetRowValue(query_hash, row, "quantity")
 
         event_data = IOSHealthHeartRateEventData()
-        event_data.added_time = self._GetDateTimeRowValue(query_hash, row, "added_date")
-        event_data.bpm = self._GetRowValue(query_hash, row, "bpm")
+        event_data.added_time = self._GetDateTimeRowValue(
+            query_hash, row, "creation_date"
+        )
+        event_data.bpm = int((quantity or 0.0) * 60.0)
         event_data.context = self._GetRowValue(query_hash, row, "context")
         # TODO: remove device name of "__NONE__"
         event_data.device_name = self._GetRowValue(query_hash, row, "device_name")
         event_data.end_time = self._GetDateTimeRowValue(query_hash, row, "end_date")
-        event_data.hardware = self._GetRowValue(query_hash, row, "hardware")
-        event_data.manufacturer = self._GetRowValue(query_hash, row, "manufacturer")
+        event_data.hardware = self._GetRowValue(query_hash, row, "device_hardware")
+        event_data.manufacturer = self._GetRowValue(
+            query_hash, row, "device_manufacturer"
+        )
         event_data.software_version = self._GetRowValue(
             query_hash, row, "software_version"
         )
@@ -623,8 +731,54 @@ class IOSHealthPlugin(interface.SQLitePlugin):
 
         parser_mediator.ProduceEventData(event_data)
 
-    def _ParseHeightRow(self, parser_mediator, query, row, **unused_kwargs):
-        """Parses a height row.
+    def _ParseHeightSample(self, parser_mediator, query_hash, row):
+        """Parses a height sample.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between
+              parsers and other components, such as storage and dfVFS.
+          query_hash (int): hash of the query, that uniquely identifies the query
+              that produced the row.
+          row (sqlite3.Row): row that contains the sample.
+        """
+        quantity = self._GetRowValue(query_hash, row, "quantity")
+        if quantity is None:
+            return
+
+        event_data = IOSHealthHeightEventData()
+        event_data.height = quantity
+        event_data.start_time = self._GetDateTimeRowValue(query_hash, row, "start_date")
+
+        parser_mediator.ProduceEventData(event_data)
+
+    def _ParseRestingHeartRateSample(self, parser_mediator, query_hash, row):
+        """Parses a resting heart rate sample.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between
+              parsers and other components, such as storage and dfVFS.
+          query_hash (int): hash of the query, that uniquely identifies the query
+              that produced the row.
+          row (sqlite3.Row): row that contains the sample.
+        """
+        quantity = self._GetRowValue(query_hash, row, "quantity")
+        if quantity is None:
+            return
+
+        event_data = IOSHealthRestingHeartRateEventData()
+        event_data.added_time = self._GetDateTimeRowValue(
+            query_hash, row, "creation_date"
+        )
+        event_data.end_time = self._GetDateTimeRowValue(query_hash, row, "end_date")
+        event_data.hardware = self._GetRowValue(query_hash, row, "source_product_type")
+        event_data.resting_heart_rate = int(quantity)
+        event_data.source = self._GetRowValue(query_hash, row, "source_name")
+        event_data.start_time = self._GetDateTimeRowValue(query_hash, row, "start_date")
+
+        parser_mediator.ProduceEventData(event_data)
+
+    def _ParseSamplesRow(self, parser_mediator, query, row, **unused_kwargs):
+        """Parses a samples rate row.
 
         Args:
           parser_mediator (ParserMediator): mediates interactions between
@@ -634,11 +788,82 @@ class IOSHealthPlugin(interface.SQLitePlugin):
         """
         query_hash = hash(query)
 
-        event_data = IOSHealthHeightEventData()
+        sample_type = self._GetRowValue(query_hash, row, "sample_type")
 
-        event_data.date_time = self._GetDateTimeRowValue(query_hash, row, "start_date")
-        event_data.height = self._GetRowValue(query_hash, row, "height_meters")
+        if sample_type == 2:
+            self._ParseHeightSample(parser_mediator, query_hash, row)
 
+        elif sample_type == 3:
+            self._ParseWeightSample(parser_mediator, query_hash, row)
+
+        elif sample_type == 5:
+            object_type = self._GetRowValue(query_hash, row, "object_type")
+            if object_type != 2:
+                self._ParseHeartRateSample(parser_mediator, query_hash, row)
+
+        elif sample_type == 7:
+            self._ParseStepsSample(parser_mediator, query_hash, row)
+
+        elif sample_type == 118:
+            self._ParseRestingHeartRateSample(parser_mediator, query_hash, row)
+
+    def _ParseStepsSample(self, parser_mediator, query_hash, row):
+        """Parses a steps sample.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between
+              parsers and other components, such as storage and dfVFS.
+          query_hash (int): hash of the query, that uniquely identifies the query
+              that produced the row.
+          row (sqlite3.Row): row that contains the sample.
+        """
+        quantity = self._GetRowValue(query_hash, row, "quantity")
+        if quantity is None:
+            return
+
+        event_data = IOSHealthStepsEventData()
+        event_data.device = self._GetRowValue(query_hash, row, "origin_product_type")
+        event_data.end_time = self._GetDateTimeRowValue(query_hash, row, "end_date")
+        event_data.number_of_steps = quantity
+        event_data.start_time = self._GetDateTimeRowValue(query_hash, row, "start_date")
+
+        if (
+            event_data.end_time
+            and event_data.start_time
+            and event_data.end_time.timestamp is not None
+            and event_data.start_time.timestamp is not None
+        ):
+            event_data.duration = (
+                event_data.end_time.timestamp - event_data.start_time.timestamp
+            )
+
+        parser_mediator.ProduceEventData(event_data)
+
+    def _ParseWeightSample(self, parser_mediator, query_hash, row):
+        """Parses a weight sample.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between
+              parsers and other components, such as storage and dfVFS.
+          query_hash (int): hash of the query, that uniquely identifies the query
+              that produced the row.
+          row (sqlite3.Row): row that contains the sample.
+        """
+        quantity = self._GetRowValue(query_hash, row, "quantity")
+        if quantity is None:
+            return
+
+        quantity_in_stone = quantity / 6.35029317
+        weight_in_stone = int(quantity_in_stone)
+        weight_in_pounds = int(((quantity_in_stone - weight_in_stone) * 14) + 0.5)
+
+        event_data = IOSHealthWeightEventData()
+        event_data.start_time = self._GetDateTimeRowValue(query_hash, row, "start_date")
+        event_data.weight = self._GetRowValue(query_hash, row, "quantity")
+        event_data.weight_lbs = quantity * 2.20462262
+        event_data.weight_stone = self._FormatStonePounds(
+            weight_in_stone, weight_in_pounds
+        )
         parser_mediator.ProduceEventData(event_data)
 
 

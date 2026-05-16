@@ -11,8 +11,8 @@ class IOSHealthSourceDevicesEventData(events.EventData):
     """iOS Health Source Devices event data.
 
     Attributes:
-      creation_date_str (str): rendered creation date.
-      date_time (dfdatetime.DateTimeValues): primary timestamp for timeline.
+      added_time (dfdatetime.DateTimeValues): date and time the device was added to the
+          database.
       device_name (str): name of the device.
       firmware (str): firmware version of the device.
       hardware (str): hardware version of the device.
@@ -20,7 +20,7 @@ class IOSHealthSourceDevicesEventData(events.EventData):
       manufacturer (str): manufacturer of the device.
       model (str): model of the device.
       software (str): software version of the device.
-      sync_provenance (str): sync provenance information.
+      sync_provenance (int): sync provenance information.
     """
 
     DATA_TYPE = "ios:health:source_devices"
@@ -28,8 +28,7 @@ class IOSHealthSourceDevicesEventData(events.EventData):
     def __init__(self):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
-        self.creation_date_str = None
-        self.date_time = None
+        self.added_time = None
         self.device_name = None
         self.firmware = None
         self.hardware = None
@@ -49,15 +48,15 @@ class IOSHealthSourceDevicesPlugin(interface.SQLitePlugin):
     REQUIRED_STRUCTURE = {
         "source_devices": frozenset(
             [
-                "name",
+                "creation_date",
+                "firmware",
+                "hardware",
+                "localIdentifier",
                 "manufacturer",
                 "model",
-                "hardware",
-                "firmware",
+                "name",
                 "software",
-                "localIdentifier",
                 "sync_provenance",
-                "creation_date",
             ]
         )
     }
@@ -65,10 +64,10 @@ class IOSHealthSourceDevicesPlugin(interface.SQLitePlugin):
     QUERIES = [
         (
             (
-                "SELECT creation_date, name AS device_name, manufacturer, model, "
-                "hardware, firmware, software, localIdentifier, sync_provenance "
-                'FROM source_devices WHERE name NOT LIKE "__NONE__" AND '
-                'localIdentifier NOT LIKE "__NONE__" ORDER BY creation_date'
+                "SELECT creation_date, firmware, hardware, localIdentifier, "
+                "manufacturer, model, name, software, sync_provenance "
+                "FROM source_devices WHERE name NOT LIKE '__NONE__' AND "
+                "localIdentifier NOT LIKE '__NONE__'"
             ),
             "ParseSourceDevicesRow",
         )
@@ -108,22 +107,6 @@ class IOSHealthSourceDevicesPlugin(interface.SQLitePlugin):
         except (ValueError, TypeError):
             return None
 
-    def _CopyToRfc3339String(self, dfdt):
-        """Returns RFC3339/ISO string from a dfdatetime object.
-
-        Args:
-          dfdt (dfdatetime.DateTimeValues): date time value.
-
-        Returns:
-          str: formatted date time string or None.
-        """
-        if dfdt is None:
-            return None
-        try:
-            return dfdt.CopyToDateTimeString()
-        except (AttributeError, TypeError, ValueError):
-            return None
-
     def ParseSourceDevicesRow(self, parser_mediator, query, row, **unused_kwargs):
         """Parses a single source device row.
 
@@ -133,29 +116,23 @@ class IOSHealthSourceDevicesPlugin(interface.SQLitePlugin):
           row (sqlite3.Row): row.
         """
         query_hash = hash(query)
-        event_data = IOSHealthSourceDevicesEventData()
 
-        event_data.date_time = self._GetDateTimeRowValue(
+        local_identifier = self._GetRowValue(query_hash, row, "localIdentifier")
+
+        event_data = IOSHealthSourceDevicesEventData()
+        event_data.added_time = self._GetDateTimeRowValue(
             query_hash, row, "creation_date"
         )
-        event_data.creation_date_str = self._CopyToRfc3339String(event_data.date_time)
-
-        if not event_data.creation_date_str:
-            event_data.creation_date_str = "Invalid or unknown creation date"
-
-        event_data.device_name = self._GetRowValue(query_hash, row, "device_name")
+        event_data.device_name = self._GetRowValue(query_hash, row, "name")
+        event_data.firmware = self._GetRowValue(query_hash, row, "firmware") or None
+        event_data.hardware = self._GetRowValue(query_hash, row, "hardware")
+        event_data.local_identifier = local_identifier or None
         event_data.manufacturer = self._GetRowValue(query_hash, row, "manufacturer")
         event_data.model = self._GetRowValue(query_hash, row, "model")
-        event_data.hardware = self._GetRowValue(query_hash, row, "hardware")
-        event_data.firmware = self._GetRowValue(query_hash, row, "firmware")
         event_data.software = self._GetRowValue(query_hash, row, "software")
-        event_data.local_identifier = self._GetRowValue(
-            query_hash, row, "localIdentifier"
-        )
         event_data.sync_provenance = self._GetRowValue(
             query_hash, row, "sync_provenance"
         )
-
         parser_mediator.ProduceEventData(event_data)
 
 
