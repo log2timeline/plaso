@@ -445,7 +445,7 @@ class EventDataTimeliner:
         ):
             return
 
-        data_type_name = getattr(event_data, 'data_type', None)
+        data_type_name = getattr(event_data, "data_type", None)
 
         parser_name = None
         parser_chain = getattr(event_data, "_parser_chain", None)
