@@ -164,6 +164,18 @@ cp ${TEST_FILE}.output.txt ${OLD_PWD}/test_data/
 
 popd
 
+# TODO: automatically update:
+# test_data/end_to_end/dynamic.log
+# test_data/end_to_end/dynamic_time_zone.log
+# test_data/end_to_end/dynamic_without_dynamic_time.log
+# test_data/end_to_end/json.log
+# test_data/end_to_end/json_line.log
+# test_data/end_to_end/l2tcsv.log
+# test_data/end_to_end/l2tcsv_time_zone.log
+# test_data/end_to_end/l2ttln.log
+# test_data/end_to_end/rawpy.log
+# test_data/end_to_end/tln.log
+
 rm -rf ${TEST_DIRECTORY}
 
 exit ${EXIT_SUCCESS}
