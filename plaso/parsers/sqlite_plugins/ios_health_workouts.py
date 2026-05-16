@@ -12,15 +12,12 @@ class IOSHealthWorkoutsEventData(events.EventData):
 
     Attributes:
       activity_type (str): workout activity type.
-      date_time (dfdatetime.DateTimeValues): primary timestamp for timeline.
       duration (float): duration in seconds (raw from DB).
       duration_in_minutes (float): duration in minutes.
-      end_date (dfdatetime.DateTimeValues): Cocoa time end date.
-      end_date_str (str): ISO/RFC3339 timestamp string from end_date.
+      end_time (dfdatetime.DateTimeValues): date and time the sample ended.
       goal (str): workout goal value.
       goal_type (str): workout goal type.
-      start_date (dfdatetime.DateTimeValues): Cocoa time start date.
-      start_date_str (str): ISO/RFC3339 timestamp string from start_date.
+      start_time (dfdatetime.DateTimeValues): date and time the sample started.
       total_basal_energy_burned (float): basal energy (kcal).
       total_distance_km (float): distance in kilometers.
       total_distance_miles (float): distance in miles.
@@ -36,15 +33,12 @@ class IOSHealthWorkoutsEventData(events.EventData):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
         self.activity_type = None
-        self.date_time = None
         self.duration = None
         self.duration_in_minutes = None
-        self.end_date = None
-        self.end_date_str = None
+        self.end_time = None
         self.goal = None
         self.goal_type = None
-        self.start_date = None
-        self.start_date_str = None
+        self.start_time = None
         self.total_basal_energy_burned = None
         self.total_distance_km = None
         self.total_distance_miles = None
@@ -89,7 +83,7 @@ class IOSHealthWorkoutsPlugin(interface.SQLitePlugin):
                 "workouts.total_flights_climbed AS total_flights_climbed, "
                 "workouts.total_w_steps AS total_w_steps FROM workouts LEFT JOIN "
                 "samples ON samples.data_id = workouts.data_id GROUP BY "
-                "workouts.data_id ORDER BY samples.start_date"
+                "workouts.data_id"
             ),
             "ParseWorkoutRow",
         )
@@ -125,25 +119,6 @@ class IOSHealthWorkoutsPlugin(interface.SQLitePlugin):
         if timestamp is None:
             return None
         return dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
-
-    def _CopyToRfc3339String(self, dfdt):
-        """Returns RFC3339/ISO string from a dfdatetime object.
-
-        Args:
-          dfdt (dfdatetime.DateTimeValues): date time value.
-
-        Returns:
-          str: formatted date time string or None.
-        """
-        if dfdt is None:
-            return None
-        try:
-            to_rfc3339 = getattr(dfdt, "CopyToDateTimeStringRFC3339", None)
-            if callable(to_rfc3339):
-                return to_rfc3339()
-            return dfdt.CopyToDateTimeString()
-        except (AttributeError, TypeError, ValueError):
-            return None
 
     def _SecondsToHMS(self, seconds_value):
         """Converts seconds to 'HH:MM:SS'.
@@ -189,17 +164,31 @@ class IOSHealthWorkoutsPlugin(interface.SQLitePlugin):
           row (sqlite3.Row): row.
         """
         query_hash = hash(query)
-        event_data = IOSHealthWorkoutsEventData()
-
-        event_data.start_date = self._GetDateTimeRowValue(query_hash, row, "start_date")
-        event_data.end_date = self._GetDateTimeRowValue(query_hash, row, "end_date")
-        event_data.start_date_str = self._CopyToRfc3339String(event_data.start_date)
-        event_data.end_date_str = self._CopyToRfc3339String(event_data.end_date)
-        event_data.date_time = event_data.start_date
-        event_data.activity_type = self._GetRowValue(query_hash, row, "activity_type")
 
         duration_seconds = self._GetRowValue(query_hash, row, "duration")
+        total_distance = self._GetRowValue(query_hash, row, "total_distance")
+
+        km_val, miles_val = self._DistanceToKmMiles(total_distance)
+
+        event_data = IOSHealthWorkoutsEventData()
+        event_data.activity_type = self._GetRowValue(query_hash, row, "activity_type")
         event_data.duration = duration_seconds
+        event_data.end_time = self._GetDateTimeRowValue(query_hash, row, "end_date")
+        event_data.goal = self._GetRowValue(query_hash, row, "goal")
+        event_data.goal_type = self._GetRowValue(query_hash, row, "goal_type")
+        event_data.start_time = self._GetDateTimeRowValue(query_hash, row, "start_date")
+        event_data.total_basal_energy_burned = self._GetRowValue(
+            query_hash, row, "total_basal_energy_burned"
+        )
+        event_data.total_distance_km = km_val
+        event_data.total_distance_miles = miles_val
+        event_data.total_energy_burned = self._GetRowValue(
+            query_hash, row, "total_energy_burned"
+        )
+        event_data.total_flights_climbed = self._GetRowValue(
+            query_hash, row, "total_flights_climbed"
+        )
+        event_data.total_w_steps = self._GetRowValue(query_hash, row, "total_w_steps")
         event_data.workout_duration = self._SecondsToHMS(duration_seconds)
 
         if duration_seconds is not None:
@@ -207,24 +196,6 @@ class IOSHealthWorkoutsPlugin(interface.SQLitePlugin):
                 event_data.duration_in_minutes = float(duration_seconds) / 60.0
             except (TypeError, ValueError):
                 event_data.duration_in_minutes = None
-
-        total_distance = self._GetRowValue(query_hash, row, "total_distance")
-        km_val, miles_val = self._DistanceToKmMiles(total_distance)
-        event_data.total_distance_km = km_val
-        event_data.total_distance_miles = miles_val
-
-        event_data.total_energy_burned = self._GetRowValue(
-            query_hash, row, "total_energy_burned"
-        )
-        event_data.total_basal_energy_burned = self._GetRowValue(
-            query_hash, row, "total_basal_energy_burned"
-        )
-        event_data.goal_type = self._GetRowValue(query_hash, row, "goal_type")
-        event_data.goal = self._GetRowValue(query_hash, row, "goal")
-        event_data.total_flights_climbed = self._GetRowValue(
-            query_hash, row, "total_flights_climbed"
-        )
-        event_data.total_w_steps = self._GetRowValue(query_hash, row, "total_w_steps")
 
         parser_mediator.ProduceEventData(event_data)
 

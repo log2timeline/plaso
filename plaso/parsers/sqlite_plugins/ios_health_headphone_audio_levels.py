@@ -13,18 +13,15 @@ class IOSHealthHeadphoneAudioEventData(events.EventData):
     Attributes:
       bundle_name (str): app/bundle/source from metadata_values.string_value.
       data_id (int): samples.data_id.
-      date_time (dfdatetime.DateTimeValues): primary timestamp for timeline.
       decibels (float): sound level from quantity_samples.quantity.
       device_manufacturer (str): source_devices.manufacturer.
       device_model (str): source_devices.model.
       device_name (str): source_devices.name.
-      end_date (dfdatetime.DateTimeValues): Cocoa time end date.
-      end_date_str (str): ISO/RFC3339 timestamp string from end_date.
+      end_time (dfdatetime.DateTimeValues): Cocoa time end date.
       key (str): metadata_keys.key (if any).
       local_identifier (str): source_devices.localIdentifier.
-      start_date (dfdatetime.DateTimeValues): Cocoa time start date.
-      start_date_str (str): ISO/RFC3339 timestamp string from start_date.
-      total_time_duration (str): 'HH:MM:SS' from (end_date - start_date).
+      start_time (dfdatetime.DateTimeValues): Cocoa time start date.
+      total_time_duration (str): duration as 'HH:MM:SS'.
     """
 
     DATA_TYPE = "ios:health:headphone_audio_levels"
@@ -34,17 +31,14 @@ class IOSHealthHeadphoneAudioEventData(events.EventData):
         super().__init__(data_type=self.DATA_TYPE)
         self.bundle_name = None
         self.data_id = None
-        self.date_time = None
         self.decibels = None
         self.device_manufacturer = None
         self.device_model = None
         self.device_name = None
-        self.end_date = None
-        self.end_date_str = None
+        self.end_time = None
         self.key = None
         self.local_identifier = None
-        self.start_date = None
-        self.start_date_str = None
+        self.start_time = None
         self.total_time_duration = None
 
 
@@ -141,25 +135,6 @@ class IOSHealthHeadphoneAudioPlugin(interface.SQLitePlugin):
             return None
         return dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
 
-    def _CopyToRfc3339String(self, dfdt):
-        """Returns RFC3339/ISO string from a dfdatetime object or None.
-
-        Args:
-          dfdt (dfdatetime.DateTimeValues): date time value.
-
-        Returns:
-          str: formatted date time string or None.
-        """
-        if dfdt is None:
-            return None
-        try:
-            to_rfc3339 = getattr(dfdt, "CopyToDateTimeStringRFC3339", None)
-            if callable(to_rfc3339):
-                return to_rfc3339()
-            return dfdt.CopyToDateTimeString()
-        except (AttributeError, TypeError, ValueError):
-            return None
-
     def ParseRow(self, parser_mediator, query, row, **unused_kwargs):
         """Parses a headphone audio level row.
 
@@ -171,29 +146,23 @@ class IOSHealthHeadphoneAudioPlugin(interface.SQLitePlugin):
         query_hash = hash(query)
 
         event_data = IOSHealthHeadphoneAudioEventData()
-        event_data.start_date = self._GetDateTimeRowValue(query_hash, row, "start_date")
-        event_data.end_date = self._GetDateTimeRowValue(query_hash, row, "end_date")
-        event_data.start_date_str = self._CopyToRfc3339String(event_data.start_date)
-        event_data.end_date_str = self._CopyToRfc3339String(event_data.end_date)
-        event_data.date_time = event_data.start_date
-
-        event_data.total_time_duration = self._GetRowValue(
-            query_hash, row, "total_time_duration"
-        )
-        event_data.decibels = self._GetRowValue(query_hash, row, "decibels")
         event_data.bundle_name = self._GetRowValue(query_hash, row, "bundle_name")
-
-        event_data.device_name = self._GetRowValue(query_hash, row, "device_name")
+        event_data.data_id = self._GetRowValue(query_hash, row, "data_id")
+        event_data.decibels = self._GetRowValue(query_hash, row, "decibels")
         event_data.device_manufacturer = self._GetRowValue(
             query_hash, row, "device_manufacturer"
         )
         event_data.device_model = self._GetRowValue(query_hash, row, "device_model")
+        event_data.device_name = self._GetRowValue(query_hash, row, "device_name")
+        event_data.end_time = self._GetDateTimeRowValue(query_hash, row, "end_date")
+        event_data.key = self._GetRowValue(query_hash, row, "key")
         event_data.local_identifier = self._GetRowValue(
             query_hash, row, "local_identifier"
         )
-
-        event_data.key = self._GetRowValue(query_hash, row, "key")
-        event_data.data_id = self._GetRowValue(query_hash, row, "data_id")
+        event_data.start_time = self._GetDateTimeRowValue(query_hash, row, "start_date")
+        event_data.total_time_duration = self._GetRowValue(
+            query_hash, row, "total_time_duration"
+        )
 
         parser_mediator.ProduceEventData(event_data)
 

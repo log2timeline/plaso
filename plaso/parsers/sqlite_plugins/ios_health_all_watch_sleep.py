@@ -11,13 +11,10 @@ class IOSHealthAllWatchSleepEventData(events.EventData):
     """iOS Health - All Watch Sleep event data (raw code: 0/1).
 
     Attributes:
-      date_time (dfdatetime.DateTimeValues): primary timestamp (Sleep Start).
-      end_date (dfdatetime.DateTimeValues): date and time the sleep ended.
-      end_date_str (str): end date formatted as 'YYYY-MM-DD HH:MM:SS+00:00'.
+      end_time (dfdatetime.DateTimeValues): date and time the sleep ended.
       sleep_state_code (int): sleep state code (0 or 1).
       sleep_state_hms (str): duration of sleep formatted as 'HH:MM:SS'.
-      start_date (dfdatetime.DateTimeValues): date and time the sleep started.
-      start_date_str (str): start date formatted as 'YYYY-MM-DD HH:MM:SS+00:00'.
+      start_time (dfdatetime.DateTimeValues): date and time the sleep started.
     """
 
     DATA_TYPE = "ios:health:all_watch_sleep"
@@ -25,13 +22,10 @@ class IOSHealthAllWatchSleepEventData(events.EventData):
     def __init__(self):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
-        self.date_time = None
-        self.end_date = None
-        self.end_date_str = None
+        self.end_time = None
         self.sleep_state_code = None
         self.sleep_state_hms = None
-        self.start_date = None
-        self.start_date_str = None
+        self.start_time = None
 
 
 class IOSHealthAllWatchSleepPlugin(interface.SQLitePlugin):
@@ -51,14 +45,19 @@ class IOSHealthAllWatchSleepPlugin(interface.SQLitePlugin):
 
     QUERIES = [
         (
-            "SELECT s.start_date AS start_cocoa, s.end_date AS end_cocoa, "
-            "cs.value AS state_code FROM samples s "
-            "LEFT JOIN category_samples cs ON s.data_id = cs.data_id "
-            "LEFT JOIN objects o ON s.data_id = o.data_id "
-            "LEFT JOIN data_provenances dp ON o.provenance = dp.rowid "
-            'AND dp.origin_product_type LIKE "%Watch%" '
-            'WHERE s.data_type IN (63, "63") AND cs.value IN (0, 1) '
-            "ORDER BY s.start_date ASC",
+            (
+                "SELECT "
+                "s.start_date AS start_date, "
+                "s.end_date AS end_date, "
+                "cs.value AS category_value "
+                "FROM samples s "
+                "LEFT JOIN category_samples cs ON s.data_id = cs.data_id "
+                "LEFT JOIN objects o ON s.data_id = o.data_id "
+                "LEFT JOIN data_provenances dp ON o.provenance = dp.rowid "
+                'AND dp.origin_product_type LIKE "%Watch%" '
+                'WHERE s.data_type IN (63, "63") AND cs.value IN (0, 1) '
+                "ORDER BY s.start_date ASC"
+            ),
             "ParseSleepRow",
         )
     ]
@@ -78,25 +77,6 @@ class IOSHealthAllWatchSleepPlugin(interface.SQLitePlugin):
         if ts is None:
             return None
         return dfdatetime_cocoa_time.CocoaTime(timestamp=ts)
-
-    def _RFC3339Space(self, dfdt):
-        """Formats a dfdatetime object to a string with space instead of 'T'.
-
-        Args:
-          dfdt (dfdatetime.DateTimeValues): date time value.
-
-        Returns:
-          str: formatted date time string or None.
-        """
-        if dfdt is None:
-            return None
-        # We catch AttributeError to handle cases where dfdt is not formatted.
-        try:
-            fn = getattr(dfdt, "CopyToDateTimeStringRFC3339", None)
-            s = fn() if callable(fn) else dfdt.CopyToDateTimeString()
-            return s.replace("T", " ")
-        except (AttributeError, ValueError, TypeError):
-            return None
 
     @staticmethod
     def _SecondsToHMS(seconds_value):
@@ -118,32 +98,35 @@ class IOSHealthAllWatchSleepPlugin(interface.SQLitePlugin):
         return f"{hh:02d}:{mm:02d}:{ss:02d}"
 
     def ParseSleepRow(self, parser_mediator, query, row, **unused_kwargs):
-        """Parses a sleep data row.
+        """Parses a sleep sample.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions.
+          parser_mediator (ParserMediator): mediates interactions between
+              parsers and other components, such as storage and dfVFS.
           query (str): query that created the row.
           row (sqlite3.Row): row.
         """
-        qh = hash(query)
+        query_hash = hash(query)
+
         event_data = IOSHealthAllWatchSleepEventData()
 
-        start_dt = self._GetCocoaDateTime(qh, row, "start_cocoa")
-        end_dt = self._GetCocoaDateTime(qh, row, "end_cocoa")
-
-        event_data.date_time = start_dt
-        event_data.start_date = start_dt
-        event_data.end_date = end_dt
-        event_data.start_date_str = self._RFC3339Space(start_dt)
-        event_data.end_date_str = self._RFC3339Space(end_dt)
-        event_data.sleep_state_code = self._GetRowValue(qh, row, "state_code")
+        event_data.start_time = self._GetCocoaDateTime(query_hash, row, "start_date")
+        event_data.end_time = self._GetCocoaDateTime(query_hash, row, "end_date")
+        event_data.sleep_state_code = self._GetRowValue(
+            query_hash, row, "category_value"
+        )
 
         duration_seconds = None
-        if start_dt and end_dt:
-            try:
-                duration_seconds = end_dt.timestamp - start_dt.timestamp
-            except (AttributeError, TypeError):
-                duration_seconds = None
+        if (
+            event_data.start_time
+            and event_data.end_time
+            and event_data.end_time.timestamp is not None
+            and event_data.start_time.timestamp is not None
+        ):
+            duration_seconds = (
+                event_data.end_time.timestamp - event_data.start_time.timestamp
+            )
+
         event_data.sleep_state_hms = self._SecondsToHMS(duration_seconds)
 
         parser_mediator.ProduceEventData(event_data)

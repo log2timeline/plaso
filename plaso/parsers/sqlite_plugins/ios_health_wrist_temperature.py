@@ -11,22 +11,19 @@ class IOSHealthWristTemperatureEventData(events.EventData):
     """iOS Health Wrist Temperature event data.
 
     Attributes:
+      added_time (dfdatetime.DateTimeValues): data and time the sample was added to the
+          database.
       algorithm_version (float): algorithm version.
-      date_added (dfdatetime.DateTimeValues): Cocoa time when record was added.
-      date_added_str (str): ISO/RFC3339 from date_added.
-      date_time (dfdatetime.DateTimeValues): primary timestamp (start).
       device_manufacturer (str): device manufacturer.
       device_model (str): device model.
       device_name (str): device name.
-      end_time (dfdatetime.DateTimeValues): Cocoa time end time.
-      end_time_str (str): ISO/RFC3339 from end_time.
+      end_time (dfdatetime.DateTimeValues): date and time the sample ended.
       hardware_version (str): hardware version.
       software_version (str): software version.
-      start_time (dfdatetime.DateTimeValues): Cocoa time start time.
-      start_time_str (str): ISO/RFC3339 from start_time.
+      source (str): source name.
+      start_time (dfdatetime.DateTimeValues): date and time the sample started.
       surface_temperature_c (float): skin surface temp (°C).
       surface_temperature_f (float): skin surface temp (°F).
-      source (str): source name.
       wrist_temperature_c (float): degrees Celsius.
       wrist_temperature_f (float): degrees Fahrenheit.
     """
@@ -36,22 +33,18 @@ class IOSHealthWristTemperatureEventData(events.EventData):
     def __init__(self):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
+        self.added_time = None
         self.algorithm_version = None
-        self.date_added = None
-        self.date_added_str = None
-        self.date_time = None
         self.device_manufacturer = None
         self.device_model = None
         self.device_name = None
         self.end_time = None
-        self.end_time_str = None
         self.hardware_version = None
         self.software_version = None
+        self.source = None
         self.start_time = None
-        self.start_time_str = None
         self.surface_temperature_c = None
         self.surface_temperature_f = None
-        self.source = None
         self.wrist_temperature_c = None
         self.wrist_temperature_f = None
 
@@ -155,25 +148,6 @@ class IOSHealthWristTemperaturePlugin(interface.SQLitePlugin):
 
         return dfdatetime_cocoa_time.CocoaTime(timestamp=ts_float)
 
-    def _CopyToRfc3339String(self, dfdt):
-        """Returns RFC3339/ISO string from a dfdatetime object or None.
-
-        Args:
-          dfdt (dfdatetime.DateTimeValues): date time value.
-
-        Returns:
-          str: formatted date time string or None.
-        """
-        if dfdt is None:
-            return None
-        try:
-            to_rfc3339 = getattr(dfdt, "CopyToDateTimeStringRFC3339", None)
-            if callable(to_rfc3339):
-                return to_rfc3339()
-            return dfdt.CopyToDateTimeString()
-        except (AttributeError, TypeError, ValueError):
-            return None
-
     def _CleanText(self, value):
         """Cleans common text artifacts (NBSP, mojibake).
 
@@ -205,37 +179,11 @@ class IOSHealthWristTemperaturePlugin(interface.SQLitePlugin):
           row (sqlite3.Row): row.
         """
         query_hash = hash(query)
+
         event_data = IOSHealthWristTemperatureEventData()
-
-        event_data.start_time = self._GetDateTimeRowValue(query_hash, row, "start_date")
-        event_data.end_time = self._GetDateTimeRowValue(query_hash, row, "end_date")
-        event_data.date_added = self._GetDateTimeRowValue(
-            query_hash, row, "creation_date"
-        )
-        event_data.start_time_str = self._CopyToRfc3339String(event_data.start_time)
-        event_data.end_time_str = self._CopyToRfc3339String(event_data.end_time)
-        event_data.date_added_str = self._CopyToRfc3339String(event_data.date_added)
-
-        event_data.date_time = event_data.start_time
-
-        event_data.wrist_temperature_c = self._GetRowValue(
-            query_hash, row, "wrist_temp_c"
-        )
-        event_data.wrist_temperature_f = self._GetRowValue(
-            query_hash, row, "wrist_temp_f"
-        )
         event_data.algorithm_version = self._GetRowValue(query_hash, row, "alg_version")
-        event_data.surface_temperature_c = self._GetRowValue(
-            query_hash, row, "surf_temp_c"
-        )
-        event_data.surface_temperature_f = self._GetRowValue(
-            query_hash, row, "surf_temp_f"
-        )
-        event_data.source = self._CleanText(
-            self._GetRowValue(query_hash, row, "source")
-        )
-        event_data.device_name = self._CleanText(
-            self._GetRowValue(query_hash, row, "device_name")
+        event_data.added_time = self._GetDateTimeRowValue(
+            query_hash, row, "creation_date"
         )
         event_data.device_manufacturer = self._CleanText(
             self._GetRowValue(query_hash, row, "device_manufacturer")
@@ -243,12 +191,33 @@ class IOSHealthWristTemperaturePlugin(interface.SQLitePlugin):
         event_data.device_model = self._CleanText(
             self._GetRowValue(query_hash, row, "device_model")
         )
+        event_data.device_name = self._CleanText(
+            self._GetRowValue(query_hash, row, "device_name")
+        )
+        event_data.end_time = self._GetDateTimeRowValue(query_hash, row, "end_date")
         event_data.hardware_version = self._CleanText(
             self._GetRowValue(query_hash, row, "hardware_version")
         )
         event_data.software_version = self._CleanText(
             self._GetRowValue(query_hash, row, "software_version")
         )
+        event_data.source = self._CleanText(
+            self._GetRowValue(query_hash, row, "source")
+        )
+        event_data.start_time = self._GetDateTimeRowValue(query_hash, row, "start_date")
+        event_data.surface_temperature_c = self._GetRowValue(
+            query_hash, row, "surf_temp_c"
+        )
+        event_data.surface_temperature_f = self._GetRowValue(
+            query_hash, row, "surf_temp_f"
+        )
+        event_data.wrist_temperature_c = self._GetRowValue(
+            query_hash, row, "wrist_temp_c"
+        )
+        event_data.wrist_temperature_f = self._GetRowValue(
+            query_hash, row, "wrist_temp_f"
+        )
+
         parser_mediator.ProduceEventData(event_data)
 
 

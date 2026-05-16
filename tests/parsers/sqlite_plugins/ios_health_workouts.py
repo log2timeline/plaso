@@ -14,57 +14,44 @@ class IOSHealthWorkoutsPluginGoldenTest(test_lib.SQLitePluginTestCase):
         """Tests the Process function on a healthdb_secure.sqlite file."""
         plugin = ios_health_workouts.IOSHealthWorkoutsPlugin()
         storage_writer = self._ParseDatabaseFileWithPlugin(
-            ["ios", "healthdb_secure.sqlite"], plugin
+            ["ios", "healthdb_secure_iOS_13_4_1.sqlite"], plugin
         )
+        # 6 workouts (sample) event data
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
-        self.assertGreater(number_of_event_data, 0)
+        self.assertEqual(number_of_event_data, 6)
 
-        self.assertEqual(
-            storage_writer.GetNumberOfAttributeContainers("extraction_warning"), 0
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
         )
-        self.assertEqual(
-            storage_writer.GetNumberOfAttributeContainers("recovery_warning"), 0
-        )
+        self.assertEqual(number_of_warnings, 0)
 
+        number_of_recovery_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "recovery_warning"
+        )
+        self.assertEqual(number_of_recovery_warnings, 0)
+
+        # Check workouts (sample) event data.
         expected_event_values = {
-            "activity_type": "HKWorkoutActivityTypeRunning",
+            "activity_type": 37,
             "data_type": "ios:health:workouts",
-            "date_time": "2023-10-27T10:00:00+00:00",
-            "duration": 1800.0,
-            "duration_in_minutes": 30.0,
-            "end_date_str": "2023-10-27T10:30:00+00:00",
-            "goal": "5.0",
-            "goal_type": "HKQuantityTypeIdentifierDistanceWalkingRunning",
-            "start_date_str": "2023-10-27T10:00:00+00:00",
-            "total_basal_energy_burned": 50.5,
-            "total_distance_km": 5.0,
-            "total_distance_miles": 3.106855,
-            "total_energy_burned": 350.0,
-            "total_flights_climbed": 2.0,
-            "total_w_steps": 6000.0,
-            "workout_duration": "00:30:00",
+            "duration": 1080.1204969882965,
+            "duration_in_minutes": 18.002008283138274,
+            "end_time": "2020-03-27T19:15:39.483301+00:00",
+            "goal": None,
+            "goal_type": 0,
+            "start_time": "2020-03-27T18:57:39.362805+00:00",
+            "total_basal_energy_burned": 26.335517881735733,
+            "total_distance_km": 3.2479800059968365,
+            "total_distance_miles": 2.0182005843062605,
+            "total_energy_burned": 208.57206077784014,
+            "total_flights_climbed": None,
+            "total_w_steps": None,
+            "workout_duration": "00:18:00",
         }
-
-        matched_index = None
-        for i in range(number_of_event_data):
-            event_data = storage_writer.GetAttributeContainerByIndex("event_data", i)
-            if (
-                getattr(event_data, "activity_type", None)
-                == "HKWorkoutActivityTypeRunning"
-                and getattr(event_data, "total_w_steps", None) == 6000.0
-            ):
-                matched_index = i
-                break
-
-        msg = "Golden workout event not found in parsed results."
-        self.assertIsNotNone(matched_index, msg=msg)
-
-        event_data = storage_writer.GetAttributeContainerByIndex(
-            "event_data", matched_index
-        )
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
 

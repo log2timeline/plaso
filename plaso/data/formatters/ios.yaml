@@ -121,7 +121,24 @@ short_source: 'SQLITE'
 source: 'iOS Health database'
 ---
 type: 'conditional'
-data_type: 'ios:health:all_watch_sleep_latest'
+data_type: 'ios:health:all_watch_sleep'
+enumeration_helpers:
+- input_attribute: 'sleep_state_code'
+  output_attribute: 'sleep_state_code'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'In Bed'
+    1: 'Asleep'
+message:
+- 'Sleep Status: {sleep_state_code}'
+- 'Duration: {sleep_state_hms}'
+short_message:
+- 'Sleep Status: {sleep_state_code} ({sleep_state_hms})'
+short_source: 'SQLITE'
+source: 'iOS Health database'
+---
+type: 'conditional'
+data_type: 'ios:health:all_watch_sleep_ios17'
 enumeration_helpers:
 - input_attribute: 'sleep_state_code'
   output_attribute: 'sleep_state_label'
@@ -135,29 +152,8 @@ enumeration_helpers:
 message:
 - 'Sleep State: {sleep_state_label}'
 - 'Duration: {sleep_state_hms}'
-- 'Start: {start_date_str}'
-- 'End: {end_date_str}'
 short_message:
 - '{sleep_state_label} for {sleep_state_hms}'
-short_source: 'SQLITE'
-source: 'iOS Health database'
----
-type: 'conditional'
-data_type: 'ios:health:all_watch_sleep'
-enumeration_helpers:
-- input_attribute: 'sleep_state_code'
-  output_attribute: 'sleep_state_code'
-  default_value: 'UNKNOWN'
-  values:
-    0: 'In Bed'
-    1: 'Asleep'
-message:
-- 'Sleep Status: {sleep_state_code}'
-- 'Start Time: {start_date_str}'
-- 'End Time: {end_date_str}'
-- 'Duration: {sleep_state_hms}'
-short_message:
-- 'Sleep Status: {sleep_state_code} ({sleep_state_hms})'
 short_source: 'SQLITE'
 source: 'iOS Health database'
 ---
@@ -169,8 +165,6 @@ message:
 - 'Bundle Name: {bundle_name}'
 - 'Device: {device_name} ({device_model})'
 - 'Manufacturer: {device_manufacturer}'
-- 'Start: {start_date_str}'
-- 'End: {end_date_str}'
 - 'Data ID: {data_id}'
 short_message:
 - '{decibels} dB via {device_name} for {total_time_duration}'
@@ -219,9 +213,6 @@ message:
 - 'Resting Heart Rate: {resting_heart_rate} BPM'
 - 'Source: {source}'
 - 'Hardware: {hardware}'
-- 'Start Time: {start_date_str}'
-- 'End Time: {end_date_str}'
-- 'Added to Health: {date_added_to_health_str}'
 short_message:
 - 'Resting HR: {resting_heart_rate} BPM'
 short_source: 'SQLITE'
@@ -263,13 +254,11 @@ source: 'iOS Health database'
 type: 'conditional'
 data_type: 'ios:health:steps'
 message:
-- 'Steps: {steps}'
+- 'Steps: {number_of_steps}'
 - 'Device: {device}'
 - 'Duration: {duration} seconds'
-- 'Start Time: {start_date_str}'
-- 'End Time: {end_date_str}'
 short_message:
-- '{steps} steps via {device}'
+- '{number_of_steps} steps via {device}'
 short_source: 'SQLITE'
 source: 'iOS Health database'
 ---
@@ -318,12 +307,11 @@ source: 'iOS Health database'
 type: 'conditional'
 data_type: 'ios:health:weight'
 message:
-- 'Weight: {weight_kg_str} kg'
-- 'Weight (lbs): {weight_lbs_str} lbs'
+- 'Weight: {weight:.2f} kg'
+- 'Weight (lbs): {weight_lbs:.2f} lbs'
 - 'Weight (stone): {weight_stone_str}'
-- 'Timestamp: {weight_value_ts_str}'
 short_message:
-- 'Weight: {weight_kg_str} kg ({weight_lbs_str} lbs)'
+- 'Weight: {weight:.2f} kg ({weight_lbs:.2f} lbs)'
 short_source: 'SQLITE'
 source: 'iOS Health database'
 ---
@@ -561,9 +549,6 @@ message:
 - 'Hardware/Software: {hardware_version} / {software_version}'
 - 'Algorithm Version: {algorithm_version}'
 - 'Source: {source}'
-- 'Start Time: {start_time_str}'
-- 'End Time: {end_time_str}'
-- 'Added to Health: {date_added_str}'
 short_message:
 - 'Wrist Temp: {wrist_temperature_c}°C via {device_model}'
 short_source: 'SQLITE'
