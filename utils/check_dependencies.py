@@ -15,7 +15,6 @@ if __name__ == "__main__":
         build_instructions_url = (
             "https://plaso.readthedocs.io/en/latest/sources/user/Users-Guide.html"
         )
-
         print(f"See: {build_instructions_url:s} on how to set up plaso.")
         print("")
 
