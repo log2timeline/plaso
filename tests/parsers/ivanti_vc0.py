@@ -25,18 +25,24 @@ class _TestFileEntry:
 class IvantiVC0ParserTest(test_lib.ParserTestCase):
     """Tests for the Ivanti Connect Secure (.vc0) log parser."""
 
+    # pylint: disable=protected-access
+
     def testFileEntryFilter(self):
         """Tests the file entry filter."""
         file_entry_filter = ivanti_vc0.VC0FileEntryFilter()
 
         for filename in (
-            "log.access.vc0",
-            "log.admin.vc0",
-            "log.events.vc0",
-            "log.events.vc0.old",
-            "LOG.EVENTS.VC0",
+            "test.access.vc0",
+            "test.admin.vc0",
+            "test.diagnosticlog.vc0",
+            "test.events.vc0",
+            "test.events.vc0.old",
+            "test.policytrace.vc0",
+            "test.sensorslog.vc0",
+            "TEST.EVENTS.VC0",
         ):
-            self.assertTrue(file_entry_filter.Match(_TestFileEntry(filename)))
+            file_entry = _TestFileEntry(filename)
+            self.assertTrue(file_entry_filter.Match(file_entry))
 
         for filename in (
             "events.vc0",
@@ -45,9 +51,49 @@ class IvantiVC0ParserTest(test_lib.ParserTestCase):
             "log.events.vc0.tmp",
             "random.bin",
         ):
-            self.assertFalse(file_entry_filter.Match(_TestFileEntry(filename)))
+            file_entry = _TestFileEntry(filename)
+            self.assertFalse(file_entry_filter.Match(file_entry))
 
         self.assertFalse(file_entry_filter.Match(None))
+
+    def testGetLogType(self):
+        """Tests the _GetLogType function."""
+        parser = ivanti_vc0.IvantiVC0Parser()
+
+        filenames = ["test.access.vc0", "test.access.vc0.old"]
+        for filename in filenames:
+            log_type = parser._GetLogType(filename)
+            self.assertEqual(log_type, "access")
+
+        filenames = ["test.admin.vc0", "test.admin.vc0.old"]
+        for filename in filenames:
+            log_type = parser._GetLogType(filename)
+            self.assertEqual(log_type, "admin")
+
+        filenames = ["test.diagnosticlog.vc0", "test.diagnosticlog.vc0.old"]
+        for filename in filenames:
+            log_type = parser._GetLogType(filename)
+            self.assertEqual(log_type, "diagnosticlog")
+
+        filenames = ["test.events.vc0", "test.events.vc0.old"]
+        for filename in filenames:
+            log_type = parser._GetLogType(filename)
+            self.assertEqual(log_type, "events")
+
+        filenames = ["test.policytrace.vc0", "test.policytrace.vc0.old"]
+        for filename in filenames:
+            log_type = parser._GetLogType(filename)
+            self.assertEqual(log_type, "policytrace")
+
+        filenames = ["test.sensorslog.vc0", "test.sensorslog.vc0.old"]
+        for filename in filenames:
+            log_type = parser._GetLogType(filename)
+            self.assertEqual(log_type, "sensorslog")
+
+        filenames = ["bogus.vc0", "bogus.vc0.old"]
+        for filename in filenames:
+            log_type = parser._GetLogType(filename)
+            self.assertIsNone(log_type)
 
     def testParse(self):
         """Tests the Parse function."""
@@ -79,8 +125,8 @@ class IvantiVC0ParserTest(test_lib.ParserTestCase):
             "log_type": "events",
             "message_code": "SYS12345",
             "realm": "Root",
-            "record_identifier": "65c4a64f.00000001",
             "recorded_time": "2024-02-08T10:00:47+00:00",
+            "record_identifier": "65c4a64f.00000001",
             "username": "jdoe",
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
