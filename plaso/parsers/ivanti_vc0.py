@@ -1,8 +1,8 @@
-"""Parser for Ivanti Connect Secure .vc0 log files."""
+"""Parser for Ivanti Connect Secure (.vc0) log files."""
 
-import codecs
 import ipaddress
 import re
+import os
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
@@ -14,21 +14,20 @@ from plaso.parsers import manager
 
 
 class IvantiVC0EventData(events.EventData):
-    """Ivanti Connect Secure .vc0 log record.
+    """Ivanti Connect Secure (.vc0) log record.
 
     Attributes:
       body (str): short record text for formatters.
       hostname (str): appliance hostname.
       ip_address (str): IP address found in the record values.
-      line_identifier (str): identifier after the timestamp in the record ID.
-      log_file_type (str): log family, such as "access" or "events".
+      line_number (str): line number.
+      log_type (str): log family, "admin", "access", "diagnostic log", "events",
+          "policy trace" or "sensor log".
       message_code (str): Ivanti message code.
       realm (str): Ivanti realm.
-      record_identifier (str): original record identifier in the form
-          hex_timestamp.hex_line_identifier.
-      record_values (str): original tab-separated values after the realm field.
       recorded_time (dfdatetime.DateTimeValues): record timestamp.
-      source_filename (str): name of the source log file.
+      record_identifier (str): original record identifier in the format:
+          "{timestamp:08x}.{line_number:08x}".
       username (str): username found in the record values.
     """
 
@@ -40,21 +39,19 @@ class IvantiVC0EventData(events.EventData):
         self.body = None
         self.hostname = None
         self.ip_address = None
-        self.line_identifier = None
-        self.log_file_type = None
+        self.line_number = None
+        self.log_type = None
         self.message_code = None
         self.realm = None
-        self.record_identifier = None
-        self.record_values = None
         self.recorded_time = None
-        self.source_filename = None
+        self.record_identifier = None
         self.username = None
 
 
 class VC0FileEntryFilter(interface.BaseFileEntryFilter):
-    """File entry filter for Ivanti Connect Secure .vc0 log files."""
+    """File entry filter for Ivanti Connect Secure (.vc0) log files."""
 
-    _FILENAME_RE = re.compile(r"^log\..+?\.vc0(?:\.old)?$")
+    _FILENAME_RE = re.compile(r"^log\..+?\.vc0(?:\.old)?$", flags=re.IGNORECASE)
 
     def Match(self, file_entry):
         """Determines if a file entry is an Ivanti .vc0 log file.
@@ -68,14 +65,14 @@ class VC0FileEntryFilter(interface.BaseFileEntryFilter):
         if not file_entry:
             return False
 
-        return bool(self._FILENAME_RE.match(file_entry.name.lower()))
+        return bool(self._FILENAME_RE.match(file_entry.name))
 
 
 class IvantiVC0Parser(interface.FileObjectParser):
     """Parser for Ivanti Connect Secure .vc0 log files."""
 
     NAME = "ivanti_vc0"
-    DATA_FORMAT = "Ivanti Connect Secure .vc0 log file"
+    DATA_FORMAT = "Ivanti Connect Secure (.vc0) log file"
 
     FILTERS = frozenset([VC0FileEntryFilter()])
 
@@ -84,50 +81,42 @@ class IvantiVC0Parser(interface.FileObjectParser):
     _HEADER_SIGNATURE = b"\x05\x00\x00\x00\x01\x00\x00\x00"
     _MAXIMUM_BODY_VALUES = 8
 
-    _LOG_FILENAME_RE = re.compile(r"^log\.(?P<log_file_type>.+?)\.vc0(?:\.old)?$")
+    _LOG_FILENAME_RE = re.compile(r"^log\.(?P<log_type>.+?)\.vc0(?:\.old)?$")
     _MESSAGE_CODE_RE = re.compile(r"^[A-Z]{3}\d{5}$")
 
     _NON_PRINTABLE_CHARACTER_TRANSLATION_TABLE = (
         definitions.NON_PRINTABLE_CHARACTER_TRANSLATION_TABLE.copy()
     )
-    _NON_PRINTABLE_CHARACTER_TRANSLATION_TABLE.pop(ord("\n"), None)
     _NON_PRINTABLE_CHARACTER_TRANSLATION_TABLE.pop(ord("\t"), None)
 
-    _RECORD_SEPARATOR_RE = re.compile(r"[\x17\x15\x13\x12\x05\x04\x03\x02\x01\x00]")
+    _RECORD_SEPARATORS_RE = re.compile(b"[\\x00-\\x05\\x0a\\x12\\x13\\x15\\x17]")
 
-    def _CheckHeader(self, file_object):
-        """Checks the .vc0 header signature.
+    def _CheckHeader(self, file_object, file_size):
+        """Checks if the file-like object contains a .vc0 header.
 
         Args:
           file_object (dfvfs.FileIO): a file-like object.
+          file_size (int): file size.
 
         Returns:
-          bool: True if the header signature matches.
+          bool: True if a file-like object contains .vc0 header.
         """
-        file_object.seek(0)
-        header = file_object.read(len(self._HEADER_SIGNATURE))
+        if file_size < self._HEADER_SIZE:
+            return False
 
-        return header == self._HEADER_SIGNATURE
+        file_object.seek(0, os.SEEK_SET)
 
-    def _CleanText(self, text):
-        """Normalizes .vc0 record text.
+        header_data = file_object.read(self._HEADER_SIZE)
 
-        Args:
-          text (str): text to clean.
+        return header_data[0:8] == self._HEADER_SIGNATURE and not any(header_data[8:])
 
-        Returns:
-          str: normalized text.
-        """
-        text = self._RECORD_SEPARATOR_RE.sub("\n", text)
-        return text.translate(self._NON_PRINTABLE_CHARACTER_TRANSLATION_TABLE)
-
-    def _CreateBody(self, record_values, ip_address, realm, username):
+    def _CreateBody(self, record_values, realm, ip_address, username):
         """Builds the short body used by formatters.
 
         Args:
           record_values (list[str]): values after the realm field.
-          ip_address (str): IP address found in the record values.
           realm (str): Ivanti realm.
+          ip_address (str): IP address found in the record values.
           username (str): username found in the record values.
 
         Returns:
@@ -136,7 +125,6 @@ class IvantiVC0Parser(interface.FileObjectParser):
         body_values = [
             value.strip() for value in record_values if value and value.strip()
         ]
-
         leading_metadata_values = {
             value for value in (ip_address, realm, username) if value
         }
@@ -153,6 +141,24 @@ class IvantiVC0Parser(interface.FileObjectParser):
 
         return " | ".join(body_values)
 
+    def _GetLogType(self, parser_mediator):
+        """Determines the log type from the source filename.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+
+        Returns:
+          str: log type or None if not available.
+        """
+        filename = parser_mediator.GetFilename()
+        if filename:
+            match = self._LOG_FILENAME_RE.match(filename)
+            if match:
+                return match.group("log_type").lower()
+
+        return None
+
     def _ExtractIPAddress(self, value):
         """Extracts an IP address from a value.
 
@@ -168,24 +174,6 @@ class IvantiVC0Parser(interface.FileObjectParser):
             return None
 
         return str(ip_address)
-
-    def _ExtractLogFileType(self, source_filename):
-        """Extracts the log file type from the source filename.
-
-        Args:
-          source_filename (str): name of the source log file.
-
-        Returns:
-          str: log file type or None if not available.
-        """
-        if not source_filename:
-            return None
-
-        match = self._LOG_FILENAME_RE.match(source_filename)
-        if match:
-            return match.group("log_file_type")
-
-        return None
 
     def _ExtractMessageCode(self, fields):
         """Extracts an Ivanti message code from record fields.
@@ -206,105 +194,146 @@ class IvantiVC0Parser(interface.FileObjectParser):
 
         return None
 
-    def _ReadRecords(self, file_object):
+    def _ReadRecords(self, file_object, file_size):
         """Reads .vc0 records.
 
         Args:
           file_object (dfvfs.FileIO): a file-like object.
+          file_size (int): file size.
 
         Yields:
-          str: record string.
+          tuple: containing:
+
+            bytes: record data.
+            int: offset of the record data relative to the start of the file.
         """
-        file_object.seek(self._HEADER_SIZE)
+        file_data = b""
 
-        decoder = codecs.getincrementaldecoder("utf-8")(errors="replace")
-        record_buffer = ""
+        record_offset = self._HEADER_SIZE
+        file_object.seek(record_offset, os.SEEK_SET)
 
-        while True:
+        while record_offset < file_size:
             data = file_object.read(self._CHUNK_SIZE)
             if not data:
                 break
 
-            text = decoder.decode(data)
-            text = self._CleanText(text)
+            file_data = b"".join([file_data, data])
 
-            if record_buffer:
-                text = "".join([record_buffer, text])
+            records = self._RECORD_SEPARATORS_RE.split(file_data)
+            for record_data in records[:-1]:
+                if record_data:
+                    yield record_data, record_offset
+                record_offset += len(record_data) + 1
 
-            records = text.split("\n")
-            for record in records[:-1]:
-                record = record.strip()
-                if record:
-                    yield record
+            file_data = records[-1]
 
-            record_buffer = records[-1]
+        if file_data:
+            yield file_data, record_offset
 
-        text = decoder.decode(b"", final=True)
-        if text:
-            record_buffer = "".join([record_buffer, self._CleanText(text)])
-
-        record = record_buffer.strip()
-        if record:
-            yield record
-
-    def _ParseRecord(self, parser_mediator, record, source_filename):
+    def _ParseRecord(self, parser_mediator, log_type, record_data, record_offset):
         """Parses a .vc0 record.
 
         Args:
           parser_mediator (ParserMediator): mediates interactions between parsers
               and other components, such as storage and dfVFS.
-          record (str): record string.
-          source_filename (str): name of the source log file.
-
-        Returns:
-          IvantiVC0EventData: event data, or None for unsupported records.
+          log_type (str): log type.
+          record_data (bytes): record data.
+          record_offset (int): offset of the record data relative to the start of the
+              file.
         """
-        fields = record.split("\t")
-        if len(fields) < 3 or "." not in fields[0]:
-            return None
+        try:
+            record = record_data.decode("utf-8")
+        except UnicodeDecodeError:
+            parser_mediator.ProduceExtractionWarning(
+                f"Invalid record at offset: 0x{record_offset:08x} - unable to decode "
+                f"as UTF-8"
+            )
+            return
 
-        record_identifier = fields[0].strip()
-        hexadecimal_timestamp, _, line_identifier = record_identifier.partition(".")
-        if not hexadecimal_timestamp or not line_identifier:
-            return None
+        # TODO: determine if this is needed.
+        record = record.translate(self._NON_PRINTABLE_CHARACTER_TRANSLATION_TABLE)
+
+        fields = record.split("\t")
+
+        number_of_fields = len(fields)
+        if number_of_fields < 3:
+            parser_mediator.ProduceExtractionWarning(
+                f"Invalid record at offset: 0x{record_offset:08x} - unsupported number "
+                f"of fields: {number_of_fields:d}"
+            )
+            return
+
+        record_identifier = fields[0]
+        if "." not in record_identifier:
+            parser_mediator.ProduceExtractionWarning(
+                f"Invalid record at offset: 0x{record_offset:08x} - record identifier: "
+                f"{record_identifier:s} missing '.'"
+            )
+            return
+
+        timestamp_string, _, line_number_string = record_identifier.partition(".")
+
+        if not timestamp_string:
+            parser_mediator.ProduceExtractionWarning(
+                f"Invalid record at offset: 0x{record_offset:08x} - record identifier: "
+                f"{record_identifier:s} missing timestamp"
+            )
+            return
+
+        if not line_number_string:
+            parser_mediator.ProduceExtractionWarning(
+                f"Invalid record at offset: 0x{record_offset:08x} - record identifier: "
+                f"{record_identifier:s} missing line number"
+            )
+            return
+
+        try:
+            timestamp = int(timestamp_string, 16)
+        except ValueError:
+            parser_mediator.ProduceExtractionWarning(
+                f"Invalid record at offset: 0x{record_offset:08x} - record identifier: "
+                f"{record_identifier:s} unsupported timestamp"
+            )
+            return
+
+        try:
+            line_number = int(line_number_string, 16)
+        except ValueError:
+            parser_mediator.ProduceExtractionWarning(
+                f"Invalid record at offset: 0x{record_offset:08x} - record identifier: "
+                f"{record_identifier:s} unsupported line number"
+            )
+            return
 
         message_code = self._ExtractMessageCode(fields)
         if not message_code:
-            return None
-
-        try:
-            timestamp = int(hexadecimal_timestamp, 16)
-        except ValueError:
             parser_mediator.ProduceExtractionWarning(
-                f"invalid VC0 timestamp in record: {record_identifier:s}"
+                f"Invalid record at offset: 0x{record_offset:08x} - unable to extract "
+                f"message code"
             )
-            return None
 
         event_data = IvantiVC0EventData()
-        event_data.hostname = fields[1].strip() or None
-        event_data.ip_address = (
-            self._ExtractIPAddress(fields[5]) if len(fields) > 5 else None
-        )
-        event_data.line_identifier = line_identifier
-        event_data.log_file_type = self._ExtractLogFileType(source_filename)
+        event_data.hostname = fields[1] or None
+        event_data.line_number = line_number
+        event_data.log_type = log_type
         event_data.message_code = message_code
-        event_data.realm = fields[4].strip() if len(fields) > 4 else None
-        event_data.record_identifier = record_identifier
         event_data.recorded_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-        event_data.source_filename = source_filename
-        event_data.username = fields[6].strip() if len(fields) > 6 else None
-        event_data.username = event_data.username or None
+        event_data.record_identifier = record_identifier
 
-        record_values = fields[5:]
-        event_data.record_values = "\t".join(record_values) or None
+        if number_of_fields > 4:
+            event_data.realm = fields[4] or None
+        if number_of_fields > 5:
+            event_data.ip_address = self._ExtractIPAddress(fields[5])
+        if number_of_fields > 6:
+            event_data.username = fields[6] or None
+
         event_data.body = self._CreateBody(
-            record_values, event_data.ip_address, event_data.realm, event_data.username
+            fields[5:], event_data.realm, event_data.ip_address, event_data.username
         )
-
-        return event_data
+        parser_mediator.ProduceEventData(event_data)
 
     def ParseFileObject(self, parser_mediator, file_object):
-        """Parses an Ivanti Connect Secure .vc0 log file-like object.
+        """Parses an Ivanti Connect Secure (.vc0) log file-like object.
 
         Args:
           parser_mediator (ParserMediator): mediates interactions between parsers
@@ -315,25 +344,17 @@ class IvantiVC0Parser(interface.FileObjectParser):
           WrongParser: when the file cannot be parsed.
         """
         file_size = file_object.get_size()
-        if file_size < self._HEADER_SIZE or not self._CheckHeader(file_object):
-            raise errors.WrongParser("Not an Ivanti .vc0 log file.")
+        if not self._CheckHeader(file_object, file_size):
+            raise errors.WrongParser("Not an Ivanti Connect Secure (.vc0) log file.")
 
-        # Empty .vc0 logs are valid header-only files. Claim them here so another
-        # parser does not try to interpret the header bytes as a different format.
-        if file_size == self._HEADER_SIZE:
-            return
+        if file_size > self._HEADER_SIZE:
+            log_type = self._GetLogType(parser_mediator)
 
-        source_filename = parser_mediator.GetFilename()
+            for record_data, record_offset in self._ReadRecords(file_object, file_size):
+                if parser_mediator.abort:
+                    break
 
-        for record in self._ReadRecords(file_object):
-            if parser_mediator.abort:
-                break
-
-            event_data = self._ParseRecord(parser_mediator, record, source_filename)
-            if not event_data:
-                continue
-
-            parser_mediator.ProduceEventData(event_data)
+                self._ParseRecord(parser_mediator, log_type, record_data, record_offset)
 
 
 manager.ParsersManager.RegisterParser(IvantiVC0Parser)
