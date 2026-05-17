@@ -195,7 +195,7 @@ class IvantiVC0Parser(interface.FileObjectParser):
         return None
 
     def _ReadRecords(self, file_object, file_size):
-        """Reads .vc0 records.
+        """Reads records.
 
         Args:
           file_object (dfvfs.FileIO): a file-like object.
@@ -231,7 +231,7 @@ class IvantiVC0Parser(interface.FileObjectParser):
             yield file_data, record_offset
 
     def _ParseRecord(self, parser_mediator, log_type, record_data, record_offset):
-        """Parses a .vc0 record.
+        """Parses a record.
 
         Args:
           parser_mediator (ParserMediator): mediates interactions between parsers
@@ -327,9 +327,11 @@ class IvantiVC0Parser(interface.FileObjectParser):
         if number_of_fields > 6:
             event_data.username = fields[6] or None
 
-        event_data.body = self._CreateBody(
-            fields[5:], event_data.realm, event_data.ip_address, event_data.username
-        )
+        if number_of_fields > 5:
+            event_data.body = self._CreateBody(
+                fields[5:], event_data.realm, event_data.ip_address, event_data.username
+            )
+
         parser_mediator.ProduceEventData(event_data)
 
     def ParseFileObject(self, parser_mediator, file_object):
