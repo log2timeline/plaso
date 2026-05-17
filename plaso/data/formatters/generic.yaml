@@ -225,7 +225,7 @@ type: 'conditional'
 data_type: 'ivanti:connect_secure:vc0:record'
 message:
 - '[{message_code}]'
-- '{log_file_type}'
+- '{log_type}'
 - '{body}'
 - 'Hostname: {hostname}'
 - 'Realm: {realm}'
@@ -233,7 +233,7 @@ message:
 - 'Username: {username}'
 short_message:
 - '[{message_code}]'
-- '{log_file_type}'
+- '{log_type}'
 - '{body}'
 source: 'Ivanti Connect Secure VC0 log'
 short_source: 'LOG'
