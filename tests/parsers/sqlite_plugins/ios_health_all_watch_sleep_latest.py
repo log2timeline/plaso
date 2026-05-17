@@ -34,7 +34,7 @@ class IOSHealthAllWatchSleepLatestPluginGoldenTest(test_lib.SQLitePluginTestCase
         )
         self.assertEqual(number_of_recovery_warnings, 0)
 
-        # Check watch sleep event data.
+        # Check watch sleep (sample) event data.
         expected_event_values = {
             "data_type": "ios:health:all_watch_sleep_ios17",
             "end_time": "2024-07-23T03:44:36.786187+00:00",

@@ -316,7 +316,113 @@ short_source: 'SQLITE'
 source: 'iOS Health database'
 ---
 type: 'conditional'
-data_type: 'ios:health:workouts_latest'
+data_type: 'ios:health:workouts'
+enumeration_helpers:
+- input_attribute: 'activity_type'
+  output_attribute: 'activity_label'
+  default_value: 'OTHER'
+  values:
+    1: "AMERICAN FOOTBALL"
+    2: "ARCHERY"
+    3: "AUSTRALIAN FOOTBALL"
+    4: "BADMINTON"
+    5: "BASEBALL"
+    6: "BASKETBALL"
+    7: "BOWLING"
+    8: "BOXING"
+    9: "CLIMBING"
+    10: "CRICKET"
+    11: "CROSS TRAINING"
+    12: "CURLING"
+    13: "CYCLING"
+    16: "ELLIPTICAL"
+    17: "EQUESTRIAN SPORTS"
+    18: "FENCING"
+    19: "FISHING"
+    20: "FUNCTION STRENGTH TRAINING"
+    21: "GOLF"
+    22: "GYMNASTICS"
+    23: "HANDBALL"
+    24: "HIKING"
+    25: "HOCKEY"
+    26: "HUNTING"
+    27: "LACROSS"
+    28: "MARTIAL ARTS"
+    29: "MIND AND BODY"
+    31: "PADDLE SPORTS"
+    32: "PLAY"
+    33: "PREPARATION AND RECOVERY"
+    34: "RACQUETBALL"
+    35: "ROWING"
+    36: "RUGBY"
+    37: "RUNNING"
+    38: "SAILING"
+    39: "SKATING SPORTS"
+    40: "SNOW SPORTS"
+    41: "SOCCER"
+    42: "SOFTBALL"
+    43: "SQUASH"
+    44: "STAIRSTEPPER"
+    45: "SURFING SPORTS"
+    46: "SWIMMING"
+    47: "TABLE TENNIS"
+    48: "TENNIS"
+    49: "TRACK AND FIELD"
+    50: "TRADITIONAL STRENGTH TRAINING"
+    51: "VOLLEYBALL"
+    52: "WALKING"
+    53: "WATER FITNESS"
+    54: "WATER POLO"
+    55: "WATER SPORTS"
+    56: "WRESTLING"
+    57: "YOGA"
+    58: "BARRE"
+    59: "CORE TRAINING"
+    60: "CROSS COUNTRY SKIING"
+    61: "DOWNHILL SKIING"
+    62: "FLEXIBILITY"
+    63: "HIGH INTENSITY INTERVAL TRAINING (HIIT)"
+    64: "JUMP ROPE"
+    65: "KICKBOXING"
+    66: "PILATES"
+    67: "SNOWBOARDING"
+    68: "STAIRS"
+    69: "STEP TRAINING"
+    70: "WHEELCHAIR WALK PACE"
+    71: "WHEELCHAIR RUN PACE"
+    72: "TAI CHI"
+    73: "MIXED CARDIO"
+    74: "HAND CYCLING"
+    75: "DISC SPORTS"
+    76: "FITNESS GAMING"
+    77: "DANCE"
+    78: "SOCIAL DANCE"
+    79: "PICKLEBALL"
+    80: "COOLDOWN"
+    3000: "OTHER"
+- input_attribute: 'goal_type'
+  output_attribute: 'goal_label'
+  default_value: 'Unknown'
+  values:
+    0: "Open"
+    1: "Distance in meters"
+    2: "Time in seconds"
+    3: "Kilocalories"
+message:
+- 'Activity: {activity_label}'
+- 'Duration: {workout_duration}'
+- 'Distance: {total_distance_km} km ({total_distance_miles} miles)'
+- 'Energy: {total_energy_burned} kcal Active / {total_basal_energy_burned} kcal Basal'
+- 'Steps: {total_w_steps}'
+- 'Flights Climbed: {total_flights_climbed}'
+- 'Goal: {goal_label} ({goal})'
+short_message:
+- '{activity_label}: {total_distance_km}km in {workout_duration}'
+short_source: 'SQLITE'
+source: 'iOS Health database'
+---
+type: 'conditional'
+data_type: 'ios:health:workouts_ios16'
 enumeration_helpers:
 - input_attribute: 'activity_type'
   output_attribute: 'activity_label'
@@ -427,114 +533,6 @@ message:
 - 'Device: {hardware} (Source: {source})'
 - 'Timezone: {timezone}'
 - 'Added to Health: {added_timestamp_str}'
-short_message:
-- '{activity_label}: {total_distance_km}km in {workout_duration}'
-short_source: 'SQLITE'
-source: 'iOS Health database'
----
-type: 'conditional'
-data_type: 'ios:health:workouts'
-enumeration_helpers:
-- input_attribute: 'activity_type'
-  output_attribute: 'activity_label'
-  default_value: 'OTHER'
-  values:
-    1: "AMERICAN FOOTBALL"
-    2: "ARCHERY"
-    3: "AUSTRALIAN FOOTBALL"
-    4: "BADMINTON"
-    5: "BASEBALL"
-    6: "BASKETBALL"
-    7: "BOWLING"
-    8: "BOXING"
-    9: "CLIMBING"
-    10: "CRICKET"
-    11: "CROSS TRAINING"
-    12: "CURLING"
-    13: "CYCLING"
-    16: "ELLIPTICAL"
-    17: "EQUESTRIAN SPORTS"
-    18: "FENCING"
-    19: "FISHING"
-    20: "FUNCTION STRENGTH TRAINING"
-    21: "GOLF"
-    22: "GYMNASTICS"
-    23: "HANDBALL"
-    24: "HIKING"
-    25: "HOCKEY"
-    26: "HUNTING"
-    27: "LACROSS"
-    28: "MARTIAL ARTS"
-    29: "MIND AND BODY"
-    31: "PADDLE SPORTS"
-    32: "PLAY"
-    33: "PREPARATION AND RECOVERY"
-    34: "RACQUETBALL"
-    35: "ROWING"
-    36: "RUGBY"
-    37: "RUNNING"
-    38: "SAILING"
-    39: "SKATING SPORTS"
-    40: "SNOW SPORTS"
-    41: "SOCCER"
-    42: "SOFTBALL"
-    43: "SQUASH"
-    44: "STAIRSTEPPER"
-    45: "SURFING SPORTS"
-    46: "SWIMMING"
-    47: "TABLE TENNIS"
-    48: "TENNIS"
-    49: "TRACK AND FIELD"
-    50: "TRADITIONAL STRENGTH TRAINING"
-    51: "VOLLEYBALL"
-    52: "WALKING"
-    53: "WATER FITNESS"
-    54: "WATER POLO"
-    55: "WATER SPORTS"
-    56: "WRESTLING"
-    57: "YOGA"
-    58: "BARRE"
-    59: "CORE TRAINING"
-    60: "CROSS COUNTRY SKIING"
-    61: "DOWNHILL SKIING"
-    62: "FLEXIBILITY"
-    63: "HIGH INTENSITY INTERVAL TRAINING (HIIT)"
-    64: "JUMP ROPE"
-    65: "KICKBOXING"
-    66: "PILATES"
-    67: "SNOWBOARDING"
-    68: "STAIRS"
-    69: "STEP TRAINING"
-    70: "WHEELCHAIR WALK PACE"
-    71: "WHEELCHAIR RUN PACE"
-    72: "TAI CHI"
-    73: "MIXED CARDIO"
-    74: "HAND CYCLING"
-    75: "DISC SPORTS"
-    76: "FITNESS GAMING"
-    77: "DANCE"
-    78: "SOCIAL DANCE"
-    79: "PICKLEBALL"
-    80: "COOLDOWN"
-    3000: "OTHER"
-- input_attribute: 'goal_type'
-  output_attribute: 'goal_label'
-  default_value: 'Unknown'
-  values:
-    0: "Open"
-    1: "Distance in meters"
-    2: "Time in seconds"
-    3: "Kilocalories"
-message:
-- 'Activity: {activity_label}'
-- 'Duration: {workout_duration}'
-- 'Distance: {total_distance_km} km ({total_distance_miles} miles)'
-- 'Energy: {total_energy_burned} kcal Active / {total_basal_energy_burned} kcal Basal'
-- 'Steps: {total_w_steps}'
-- 'Flights Climbed: {total_flights_climbed}'
-- 'Goal: {goal_label} ({goal})'
-- 'Start: {start_date_str}'
-- 'End: {end_date_str}'
 short_message:
 - '{activity_label}: {total_distance_km}km in {workout_duration}'
 short_source: 'SQLITE'

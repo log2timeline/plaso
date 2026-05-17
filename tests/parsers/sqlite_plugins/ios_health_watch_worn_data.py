@@ -14,52 +14,34 @@ class IOSHealthWatchWornGoldenTest(test_lib.SQLitePluginTestCase):
         """Tests the Process function on a healthdb_secure.sqlite file."""
         plugin = ios_health_watch_worn_data.IOSHealthWatchWornPlugin()
         storage_writer = self._ParseDatabaseFileWithPlugin(
-            ["ios", "healthdb_secure.sqlite"], plugin
+            ["ios", "healthdb_secure_iOS_13_4_1.sqlite"], plugin
         )
+        # 19 worn data (sample) event data
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
-        self.assertGreater(number_of_event_data, 0)
+        self.assertEqual(number_of_event_data, 19)
 
-        self.assertEqual(
-            storage_writer.GetNumberOfAttributeContainers("extraction_warning"), 0
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
         )
-        self.assertEqual(
-            storage_writer.GetNumberOfAttributeContainers("recovery_warning"), 0
-        )
+        self.assertEqual(number_of_warnings, 0)
 
+        number_of_recovery_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "recovery_warning"
+        )
+        self.assertEqual(number_of_recovery_warnings, 0)
+
+        # Check worn data (sample) event data.
         expected_event_values = {
             "data_type": "ios:health:watch_worn",
-            "date_time": "2020-03-22T00:00:00+00:00",
+            "end_time": "2020-03-22T03:00:00.000000+00:00",
             "hours_off_before_next": 8,
             "hours_worn": 3,
-            "last_worn_time_str": "2020-03-22 03:00:00+00:00",
-            "start_time_str": "2020-03-22 00:00:00+00:00",
+            "start_time": "2020-03-22T00:00:00.000000+00:00",
         }
-
-        matched_index = None
-        for i in range(number_of_event_data):
-            event_data = storage_writer.GetAttributeContainerByIndex("event_data", i)
-            if (
-                getattr(event_data, "start_time_str", None)
-                == expected_event_values["start_time_str"]
-                and getattr(event_data, "last_worn_time_str", None)
-                == expected_event_values["last_worn_time_str"]
-                and getattr(event_data, "hours_worn", None)
-                == expected_event_values["hours_worn"]
-                and getattr(event_data, "hours_off_before_next", None)
-                == expected_event_values["hours_off_before_next"]
-            ):
-                matched_index = i
-                break
-
-        msg = "Golden watch-worn event not found in parsed results."
-        self.assertIsNotNone(matched_index, msg=msg)
-
-        event_data = storage_writer.GetAttributeContainerByIndex(
-            "event_data", matched_index
-        )
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
 
