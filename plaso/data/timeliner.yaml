@@ -703,7 +703,7 @@ attribute_mappings:
   description: 'Workout Start Time'
 place_holder_event: true
 ---
-data_type: 'ios:health:workouts_latest'
+data_type: 'ios:health:workouts_ios16'
 attribute_mappings:
 - name: 'date_time'
   description: 'Workouts Latest Start'

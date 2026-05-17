@@ -12,10 +12,11 @@ class IOSHealthWatchWornEventData(events.EventData):
 
     Attributes:
       date_time (dfdatetime.DateTimeValues): primary timestamp for timeline.
+      end_time (dfdatetime.DateTimeValues): date and time the sample ended.
       hours_off_before_next (int): hours the watch was off before the next period.
       hours_worn (int): total hours the watch was worn.
       last_worn_time_str (str): rendered last worn time string.
-      start_time_str (str): rendered start time string.
+      start_time (dfdatetime.DateTimeValues): date and time the sample started.
     """
 
     DATA_TYPE = "ios:health:watch_worn"
@@ -24,10 +25,11 @@ class IOSHealthWatchWornEventData(events.EventData):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
         self.date_time = None
+        self.end_time = None
         self.hours_off_before_next = None
         self.hours_worn = None
         self.last_worn_time_str = None
-        self.start_time_str = None
+        self.start_time = None
 
 
 class IOSHealthWatchWornPlugin(interface.SQLitePlugin):
@@ -93,25 +95,6 @@ class IOSHealthWatchWornPlugin(interface.SQLitePlugin):
         except (ValueError, TypeError):
             return None
 
-    def _CopyToRfc3339String(self, dfdt):
-        """Returns RFC3339/ISO string from a dfdatetime object.
-
-        Args:
-          dfdt (dfdatetime.DateTimeValues): date time value.
-
-        Returns:
-          str: formatted date time string or None.
-        """
-        if dfdt is None:
-            return None
-        try:
-            to_rfc3339 = getattr(dfdt, "CopyToDateTimeStringRFC3339", None)
-            if callable(to_rfc3339):
-                return to_rfc3339()
-            return dfdt.CopyToDateTimeString()
-        except (AttributeError, TypeError, ValueError):
-            return None
-
     def ParseWatchWornRow(self, parser_mediator, query, row, **unused_kwargs):
         """Parses a Watch Worn summary row (one worn period).
 
@@ -121,18 +104,14 @@ class IOSHealthWatchWornPlugin(interface.SQLitePlugin):
           row (sqlite3.Row): row.
         """
         query_hash = hash(query)
+
         event_data = IOSHealthWatchWornEventData()
-
-        start_dt = self._GetCocoaDateTime(query_hash, row, "start_cocoa")
-        end_dt = self._GetCocoaDateTime(query_hash, row, "end_cocoa")
-
-        event_data.date_time = start_dt
-        event_data.start_time_str = self._CopyToRfc3339String(start_dt)
-        event_data.last_worn_time_str = self._CopyToRfc3339String(end_dt)
-        event_data.hours_worn = self._GetRowValue(query_hash, row, "hours_worn")
+        event_data.end_time = self._GetCocoaDateTime(query_hash, row, "end_cocoa")
         event_data.hours_off_before_next = self._GetRowValue(
             query_hash, row, "hours_off_before_next"
         )
+        event_data.hours_worn = self._GetRowValue(query_hash, row, "hours_worn")
+        event_data.start_time = self._GetCocoaDateTime(query_hash, row, "start_cocoa")
 
         parser_mediator.ProduceEventData(event_data)
 

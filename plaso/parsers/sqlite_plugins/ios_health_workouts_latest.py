@@ -12,15 +12,13 @@ class IOSHealthWorkoutsLatestEventData(events.EventData):
 
     Attributes:
       activity_type (int): RAW code from workout_activities.activity_type.
-      added_timestamp (dfdatetime.DateTimeValues): when workout was added.
-      added_timestamp_str (str): rendered added timestamp.
+      added_time (dfdatetime.DateTimeValues): data and time the sample was added to the
+          database.
       average_mets (float): average METs value.
       avg_heart_rate_bpm (int): average heart rate in BPM.
       core_duration (float): duration spent in core sleep (if applicable).
-      date_time (dfdatetime.DateTimeValues): primary timestamp (start).
       duration_in_minutes (float): duration_seconds / 60.
-      end_date (dfdatetime.DateTimeValues): Cocoa time end date.
-      end_date_str (str): RFC3339 string from end_date.
+      end_time (dfdatetime.DateTimeValues): date and time the sample ended.
       goal (str): workout goal value.
       goal_type (int): RAW code from workouts.goal_type.
       hardware (str): source_devices.hardware.
@@ -34,8 +32,7 @@ class IOSHealthWorkoutsLatestEventData(events.EventData):
       min_heart_rate_bpm (int): minimum heart rate in BPM.
       software_version (str): data_provenances.source_version.
       source (str): sources.name.
-      start_date (dfdatetime.DateTimeValues): Cocoa time start date.
-      start_date_str (str): RFC3339 string from start_date.
+      start_time (dfdatetime.DateTimeValues): date and time the sample started.
       temperature_c (float): temperature in Celsius.
       temperature_f (float): temperature in Fahrenheit.
       timezone (str): data_provenances.tz_name.
@@ -47,20 +44,17 @@ class IOSHealthWorkoutsLatestEventData(events.EventData):
       workout_duration (str): HH:MM:SS from duration seconds.
     """
 
-    DATA_TYPE = "ios:health:workouts_latest"
+    DATA_TYPE = "ios:health:workouts_ios16"
 
     def __init__(self):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
         self.activity_type = None
-        self.added_timestamp = None
-        self.added_timestamp_str = None
+        self.added_time = None
         self.average_mets = None
         self.avg_heart_rate_bpm = None
-        self.date_time = None
         self.duration_in_minutes = None
-        self.end_date = None
-        self.end_date_str = None
+        self.end_time = None
         self.goal = None
         self.goal_type = None
         self.hardware = None
@@ -74,8 +68,7 @@ class IOSHealthWorkoutsLatestEventData(events.EventData):
         self.min_heart_rate_bpm = None
         self.software_version = None
         self.source = None
-        self.start_date = None
-        self.start_date_str = None
+        self.start_time = None
         self.temperature_c = None
         self.temperature_f = None
         self.timezone = None
@@ -167,7 +160,7 @@ class IOSHealthWorkoutsLatestPlugin(interface.SQLitePlugin):
                 "wa.owner_id LEFT JOIN data_provenances AS dp ON dp.ROWID = "
                 "o.provenance LEFT JOIN source_devices ON source_devices.ROWID = "
                 "dp.device_id LEFT JOIN sources ON sources.ROWID = dp.source_id GROUP "
-                "BY wa.ROWID ORDER BY wa.start_date"
+                "BY wa.ROWID"
             ),
             "ParseWorkoutActivitiesRow",
         )
@@ -243,18 +236,47 @@ class IOSHealthWorkoutsLatestPlugin(interface.SQLitePlugin):
 
     def ParseWorkoutActivitiesRow(self, parser_mediator, query, row, **unused_kwargs):
         """Parses a row from workout_activities local join."""
-        qh = hash(query)
-        event_data = IOSHealthWorkoutsLatestEventData()
+        query_hash = hash(query)
 
-        event_data.start_date = self._GetDateTimeRowValue(qh, row, "start_cocoa")
-        event_data.end_date = self._GetDateTimeRowValue(qh, row, "end_cocoa")
-        event_data.start_date_str = self._CopyToRfc3339String(event_data.start_date)
-        event_data.end_date_str = self._CopyToRfc3339String(event_data.end_date)
-        event_data.date_time = event_data.start_date
-        event_data.activity_type = self._GetRowValue(qh, row, "activity_type_code")
-        event_data.location_type = self._GetRowValue(qh, row, "location_type_code")
-        event_data.goal_type = self._GetRowValue(qh, row, "goal_type_code")
-        duration_seconds = self._GetRowValue(qh, row, "duration_seconds")
+        duration_seconds = self._GetRowValue(query_hash, row, "duration_seconds")
+        temp_f = self._GetRowValue(query_hash, row, "temp_f")
+
+        event_data = IOSHealthWorkoutsLatestEventData()
+        event_data.activity_type = self._GetRowValue(
+            query_hash, row, "activity_type_code"
+        )
+        event_data.added_time = self._GetDateTimeRowValue(
+            query_hash, row, "added_cocoa"
+        )
+        event_data.average_mets = self._GetRowValue(query_hash, row, "avg_mets")
+        event_data.avg_heart_rate_bpm = self._GetRowValue(query_hash, row, "avg_hr_bpm")
+        event_data.end_time = self._GetDateTimeRowValue(query_hash, row, "end_cocoa")
+        event_data.goal = self._GetRowValue(query_hash, row, "goal_value")
+        event_data.goal_type = self._GetRowValue(query_hash, row, "goal_type_code")
+        event_data.hardware = self._GetRowValue(query_hash, row, "hardware") or None
+        event_data.humidity_percent = self._GetRowValue(query_hash, row, "humidity_pct")
+        event_data.latitude = self._GetRowValue(query_hash, row, "lat")
+        event_data.location_type = self._GetRowValue(
+            query_hash, row, "location_type_code"
+        )
+        event_data.longitude = self._GetRowValue(query_hash, row, "lon")
+        event_data.max_ground_elevation_m = self._GetRowValue(
+            query_hash, row, "max_elev_m"
+        )
+        event_data.max_heart_rate_bpm = self._GetRowValue(query_hash, row, "max_hr_bpm")
+        event_data.min_ground_elevation_m = self._GetRowValue(
+            query_hash, row, "min_elev_m"
+        )
+        event_data.min_heart_rate_bpm = self._GetRowValue(query_hash, row, "min_hr_bpm")
+        event_data.software_version = self._GetRowValue(
+            query_hash, row, "software_version"
+        )
+        event_data.source = self._GetRowValue(query_hash, row, "source_name")
+        event_data.start_time = self._GetDateTimeRowValue(
+            query_hash, row, "start_cocoa"
+        )
+        event_data.temperature_f = temp_f
+        event_data.timezone = self._GetRowValue(query_hash, row, "timezone_name")
         event_data.workout_duration = self._SecondsToHMS(duration_seconds)
 
         if duration_seconds is not None:
@@ -263,8 +285,8 @@ class IOSHealthWorkoutsLatestPlugin(interface.SQLitePlugin):
             except (TypeError, ValueError):
                 event_data.duration_in_minutes = None
 
-        sample_start = self._GetRowValue(qh, row, "sample_start_cocoa")
-        sample_end = self._GetRowValue(qh, row, "sample_end_cocoa")
+        sample_start = self._GetRowValue(query_hash, row, "sample_start_cocoa")
+        sample_end = self._GetRowValue(query_hash, row, "sample_end_cocoa")
         try:
             if sample_end is not None and sample_start is not None:
                 total_secs = int(sample_end) - int(sample_start)
@@ -272,27 +294,19 @@ class IOSHealthWorkoutsLatestPlugin(interface.SQLitePlugin):
         except (TypeError, ValueError):
             event_data.total_time_duration = None
 
-        km_raw = self._GetRowValue(qh, row, "total_distance_km")
+        km_raw = self._GetRowValue(query_hash, row, "total_distance_km")
         km, miles = self._DistanceToKmMiles(km_raw)
         event_data.total_distance_km = round(km, 2) if km is not None else None
         event_data.total_distance_miles = round(miles, 2) if miles is not None else None
 
-        event_data.goal = self._GetRowValue(qh, row, "goal_value")
-        act = self._GetRowValue(qh, row, "total_active_kcal")
-        rest = self._GetRowValue(qh, row, "total_resting_kcal")
+        act = self._GetRowValue(query_hash, row, "total_active_kcal")
+        rest = self._GetRowValue(query_hash, row, "total_resting_kcal")
         event_data.total_active_energy_kcal = (
             round(float(act), 2) if act is not None else None
         )
         event_data.total_resting_energy_kcal = (
             round(float(rest), 2) if rest is not None else None
         )
-
-        event_data.average_mets = self._GetRowValue(qh, row, "avg_mets")
-        event_data.min_heart_rate_bpm = self._GetRowValue(qh, row, "min_hr_bpm")
-        event_data.max_heart_rate_bpm = self._GetRowValue(qh, row, "max_hr_bpm")
-        event_data.avg_heart_rate_bpm = self._GetRowValue(qh, row, "avg_hr_bpm")
-        temp_f = self._GetRowValue(qh, row, "temp_f")
-        event_data.temperature_f = temp_f
 
         if temp_f is not None:
             try:
@@ -301,20 +315,6 @@ class IOSHealthWorkoutsLatestPlugin(interface.SQLitePlugin):
                 )
             except (TypeError, ValueError):
                 event_data.temperature_c = None
-
-        event_data.humidity_percent = self._GetRowValue(qh, row, "humidity_pct")
-        event_data.latitude = self._GetRowValue(qh, row, "lat")
-        event_data.longitude = self._GetRowValue(qh, row, "lon")
-        event_data.min_ground_elevation_m = self._GetRowValue(qh, row, "min_elev_m")
-        event_data.max_ground_elevation_m = self._GetRowValue(qh, row, "max_elev_m")
-        event_data.hardware = self._GetRowValue(qh, row, "hardware")
-        event_data.source = self._GetRowValue(qh, row, "source_name")
-        event_data.software_version = self._GetRowValue(qh, row, "software_version")
-        event_data.timezone = self._GetRowValue(qh, row, "timezone_name")
-        event_data.added_timestamp = self._GetDateTimeRowValue(qh, row, "added_cocoa")
-        event_data.added_timestamp_str = self._CopyToRfc3339String(
-            event_data.added_timestamp
-        )
 
         parser_mediator.ProduceEventData(event_data)
 
