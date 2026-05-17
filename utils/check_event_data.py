@@ -141,7 +141,6 @@ def Main():
     argument_parser = argparse.ArgumentParser(
         description=("Checks the event data schema of Plaso.")
     )
-
     argument_parser.parse_args()
 
     validator = EventDataAttributeContainersSchemaValidator()

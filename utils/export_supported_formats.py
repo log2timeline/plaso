@@ -149,7 +149,6 @@ class DataFormatInformationExtractor:
             f"The information below is based of version {plaso.__version__:s}",
             "",
         ]
-
         descriptors_per_category = collections.defaultdict(list)
         for data_format_descriptor in data_format_descriptors:
             descriptors_per_category[data_format_descriptor.category].append(
@@ -187,7 +186,6 @@ class DataFormatInformationExtractor:
                         f"* [{data_format_descriptor.name:s}]({url:s}) using "
                         f"[{library_name:s}]({library_url:s})"
                     )
-
                 elif url.startswith("http:") or url.startswith("https:"):
                     line = f"* [{data_format_descriptor.name:s}]({url:s})"
 
@@ -239,7 +237,6 @@ class DataFormatInformationExtractor:
                     if issubclass(
                         cls, (parsers_interface.BaseParser, parsers_plugins.BasePlugin)
                     ):
-
                         # TODO: detect corresponding dtFabric .yaml file
                         parser_name = getattr(cls, "NAME", None)
                         if (
@@ -251,7 +248,6 @@ class DataFormatInformationExtractor:
                         category = self._DATA_FORMAT_CATEGORY_PER_PACKAGE_PATH.get(
                             package_path, "File formats"
                         )
-
                         data_format = getattr(cls, "DATA_FORMAT", None)
                         if not data_format:
                             print(
@@ -305,7 +301,6 @@ def Main():
     argument_parser = argparse.ArgumentParser(
         description=("Extract data format information from Plaso.")
     )
-
     # TODO: option to export for information on forensicswiki.
     # TODO: add information about supported compressed stream formats.
     # TODO: add information about supported archive file formats.

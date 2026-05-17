@@ -18,7 +18,6 @@ def Main():
     argument_parser = argparse.ArgumentParser(
         description=("Generate Windows time zone name to Python mappings.")
     )
-
     argument_parser.parse_args()
 
     url = (

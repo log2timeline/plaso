@@ -23,7 +23,6 @@ def Main():
     argument_parser = argparse.ArgumentParser(
         description=("Plots CPU usage from profiling data.")
     )
-
     argument_parser.add_argument(
         "--output",
         dest="output_file",
@@ -34,7 +33,6 @@ def Main():
             "of the filename."
         ),
     )
-
     argument_parser.add_argument(
         "--process",
         dest="process",
@@ -42,7 +40,6 @@ def Main():
         default="",
         help=("comma separated list of names of processes to graph."),
     )
-
     argument_parser.add_argument(
         "--profiler",
         dest="profiler",
@@ -50,13 +47,11 @@ def Main():
         default="processing",
         help=("name of the CPU profiler to graph."),
     )
-
     argument_parser.add_argument(
         "profile_path",
         type=str,
         help=("path to the directory containing the profiling data."),
     )
-
     options = argument_parser.parse_args()
 
     if not os.path.isdir(options.profile_path):
@@ -103,7 +98,6 @@ def Main():
             names=names,
             skip_header=1,
         )
-
         if data.size > 0:
             for name in numpy.unique(data["name"]):
                 # Ignore process_sources since it is a single sample that contains

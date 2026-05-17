@@ -93,7 +93,6 @@ def Main():
     argument_parser = argparse.ArgumentParser(
         description=("Extract the event data schema from Plaso.")
     )
-
     argument_parser.parse_args()
 
     extractor = EventDataAttributeContainersSchemaExtractor()
