@@ -21,8 +21,8 @@ class IvantiVC0EventData(events.EventData):
       hostname (str): appliance hostname.
       ip_address (str): IP address found in the record values.
       line_number (str): line number.
-      log_type (str): log family, "admin", "access", "diagnostic log", "events",
-          "policy trace" or "sensor log".
+      log_type (str): log family, "admin", "access", "diagnosticlog", "events",
+          "policytrace" or "sensorslog".
       message_code (str): Ivanti message code.
       realm (str): Ivanti realm.
       recorded_time (dfdatetime.DateTimeValues): record timestamp.
@@ -51,7 +51,13 @@ class IvantiVC0EventData(events.EventData):
 class VC0FileEntryFilter(interface.BaseFileEntryFilter):
     """File entry filter for Ivanti Connect Secure (.vc0) log files."""
 
-    _FILENAME_RE = re.compile(r"^log\..+?\.vc0(?:\.old)?$", flags=re.IGNORECASE)
+    _FILENAME_RE = re.compile(
+        (
+            r"^.*[.](access|admin|diagnosticlog|events|policytrace|sensorslog)"
+            "[.]vc0(?:[.]old)?$"
+        ),
+        flags=re.IGNORECASE,
+    )
 
     def Match(self, file_entry):
         """Determines if a file entry is an Ivanti .vc0 log file.
@@ -81,7 +87,7 @@ class IvantiVC0Parser(interface.FileObjectParser):
     _HEADER_SIGNATURE = b"\x05\x00\x00\x00\x01\x00\x00\x00"
     _MAXIMUM_BODY_VALUES = 8
 
-    _LOG_FILENAME_RE = re.compile(r"^log\.(?P<log_type>.+?)\.vc0(?:\.old)?$")
+    _LOG_FILENAME_RE = re.compile(r"^.*[.](?P<log_type>.+?)[.]vc0(?:[.]old)?$")
     _MESSAGE_CODE_RE = re.compile(r"^[A-Z]{3}\d{5}$")
 
     _NON_PRINTABLE_CHARACTER_TRANSLATION_TABLE = (
@@ -141,17 +147,15 @@ class IvantiVC0Parser(interface.FileObjectParser):
 
         return " | ".join(body_values)
 
-    def _GetLogType(self, parser_mediator):
-        """Determines the log type from the source filename.
+    def _GetLogType(self, filename):
+        """Determines the log type from the filename.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          filename (str): file name.
 
         Returns:
           str: log type or None if not available.
         """
-        filename = parser_mediator.GetFilename()
         if filename:
             match = self._LOG_FILENAME_RE.match(filename)
             if match:
@@ -350,7 +354,8 @@ class IvantiVC0Parser(interface.FileObjectParser):
             raise errors.WrongParser("Not an Ivanti Connect Secure (.vc0) log file.")
 
         if file_size > self._HEADER_SIZE:
-            log_type = self._GetLogType(parser_mediator)
+            filename = parser_mediator.GetFilename()
+            log_type = self._GetLogType(filename)
 
             for record_data, record_offset in self._ReadRecords(file_object, file_size):
                 if parser_mediator.abort:
