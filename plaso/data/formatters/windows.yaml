@@ -315,19 +315,6 @@ short_source: 'RECBIN'
 source: 'Recycle Bin'
 ---
 type: 'conditional'
-data_type: 'windows:pca_log:entry'
-message:
-- '[{executable}] was executed - '
-- 'Description: {description}'
-- 'Version: {version}'
-- 'Vendor: {vendor}'
-- 'Exit code: {exit_code}'
-short_message:
-- '{executable} was run'
-short_source: 'LOG'
-source: 'Program Compatibility Assistant (PCA) Log'
----
-type: 'conditional'
 data_type: 'windows:onedrive:log'
 message:
 - 'Code filename: {code_filename}'
@@ -339,6 +326,19 @@ short_message:
 - 'Decoded parameters: {decoded_parameters}'
 short_source: 'LOG'
 source: 'OneDrive Log file'
+---
+type: 'conditional'
+data_type: 'windows:pca_log:entry'
+message:
+- '[{executable}] was executed - '
+- 'Description: {description}'
+- 'Version: {version}'
+- 'Vendor: {vendor}'
+- 'Exit code: {exit_code}'
+short_message:
+- '{executable} was run'
+short_source: 'LOG'
+source: 'Program Compatibility Assistant (PCA) Log'
 ---
 type: 'conditional'
 data_type: 'windows:prefetch:execution'
@@ -517,6 +517,23 @@ short_source: 'REG'
 source: 'Registry Key'
 ---
 type: 'conditional'
+data_type: 'windows:registry:motherboard_info'
+message:
+- 'Motherboard Manufacturer: {motherboard_manufacturer}'
+- 'Motherboard Model: {motherboard_model}'
+- 'BIOS Release Date: {bios_release_date}'
+- 'BIOS Version: {bios_version}'
+- 'Origin: {key_path}'
+short_message:
+- '{motherboard_manufacturer}'
+- '{motherboard_model}'
+- '{bios_release_date}'
+- '{bios_version}'
+- 'Origin: {key_path}'
+short_source: 'REG'
+source: 'Registry Key'
+---
+type: 'conditional'
 data_type: 'windows:registry:mount_points2'
 message:
 - '[{key_path}]'
@@ -532,23 +549,6 @@ short_message:
 - 'Share_Name: {share_name}'
 - 'Type: {type}'
 - 'Volume: {name}'
-short_source: 'REG'
-source: 'Registry Key'
----
-type: 'conditional'
-data_type: 'windows:registry:motherboard_info'
-message:
-- 'Motherboard Manufacturer: {motherboard_manufacturer}'
-- 'Motherboard Model: {motherboard_model}'
-- 'BIOS Release Date: {bios_release_date}'
-- 'BIOS Version: {bios_version}'
-- 'Origin: {key_path}'
-short_message:
-- '{motherboard_manufacturer}'
-- '{motherboard_model}'
-- '{bios_release_date}'
-- '{bios_version}'
-- 'Origin: {key_path}'
 short_source: 'REG'
 source: 'Registry Key'
 ---
@@ -886,6 +886,15 @@ short_source: 'LOG'
 source: 'System Resource Usage Monitor'
 ---
 type: 'conditional'
+data_type: 'windows:srum:network_connectivity'
+message:
+- 'Application: {application}'
+short_message:
+- '{application}'
+short_source: 'LOG'
+source: 'System Resource Usage Monitor'
+---
+type: 'conditional'
 data_type: 'windows:srum:network_usage'
 message:
 - 'Application: {application}'
@@ -893,15 +902,6 @@ message:
 - 'Bytes sent: {bytes_sent}'
 - 'Interface LUID: {interface_luid}'
 - 'User identifier: {user_identifier}'
-short_message:
-- '{application}'
-short_source: 'LOG'
-source: 'System Resource Usage Monitor'
----
-type: 'conditional'
-data_type: 'windows:srum:network_connectivity'
-message:
-- 'Application: {application}'
 short_message:
 - '{application}'
 short_source: 'LOG'

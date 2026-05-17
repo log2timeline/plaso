@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Script to sort timeliner.yaml in alphabetical order."""
+"""Script to sort a Plaso YAML file."""
 
 import argparse
 import os
@@ -54,18 +54,29 @@ def Main():
     Returns:
       int: exit code that is provided to sys.exit().
     """
-    argument_parser = argparse.ArgumentParser(description="Sorts timeliner.yaml")
-    argument_parser.parse_args()
+    argument_parser = argparse.ArgumentParser(description="Sorts a Plaso YAML file")
 
-    yaml_file = os.path.join("plaso", "data", "timeliner.yaml")
+    argument_parser.add_argument(
+        "yaml_file",
+        type=str,
+        help=("path to the Plaso YAML file."),
+    )
+    options = argument_parser.parse_args()
 
-    if not os.path.isfile(yaml_file):
-        print(f"No such file: {yaml_file:s}")
+    if not os.path.isfile(options.yaml_file):
+        print(f"No such file: {options.yaml_file:s}")
         return 1
 
-    # TODO: check header for "# Plaso timeliner configuration."
+    with open(options.yaml_file, encoding="utf8") as file_object:
+        header = file_object.readline()
+        if header == "# Plaso timeliner configuration.\n":
+            pass
+        elif not header.startswith("# Plaso ") or not header.endswith(
+            " event formatters.\n"
+        ):
+            print("Unsupported Plaso YAML file format.")
+            return 1
 
-    with open(yaml_file, encoding="utf8") as file_object:
         yaml_documents = list(yaml.load_all(file_object, Loader=yaml.SafeLoader))
 
     key = "data_type"
@@ -74,8 +85,8 @@ def Main():
         yaml_documents,
         key=lambda yaml_document: (yaml_document.get(key, "") if yaml_document else ""),
     )
-    with open(yaml_file, "w", encoding="utf8") as file_object:
-        file_object.write("# Plaso timeliner configuration.\n---\n")
+    with open(options.yaml_file, "w", encoding="utf8") as file_object:
+        file_object.write(f"{header:s}---\n")
         yaml.dump_all(
             sorted_yaml_documents,
             file_object,

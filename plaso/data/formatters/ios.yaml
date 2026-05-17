@@ -107,6 +107,22 @@ short_source: 'IMO HD Chat message'
 source: 'IMO HD Chat Message SQLite database'
 ---
 type: 'conditional'
+data_type: 'ios:instagram:message'
+message:
+- 'Sender Identifier: {sender_identifier}'
+- 'Username: {username}'
+- 'Message: {message}'
+- 'Video Chat Identifier: {video_chat_call_identifier}'
+- 'Video Chat Title: {video_chat_title}'
+- 'Shared Media Identifier: {shared_media_identifier}'
+- 'Shared Media URL: {shared_media_url}'
+short_message:
+- 'Username: {username}'
+- 'Message: {message}'
+short_source: 'Instagram iOS'
+source: 'Instagram iOS threads'
+---
+type: 'conditional'
 data_type: 'ios:kik:messaging'
 enumeration_helpers:
 - input_attribute: 'message_status'
@@ -144,22 +160,6 @@ short_source: 'Kik iOS'
 source: 'Kik iOS messages'
 ---
 type: 'conditional'
-data_type: 'ios:instagram:message'
-message:
-- 'Sender Identifier: {sender_identifier}'
-- 'Username: {username}'
-- 'Message: {message}'
-- 'Video Chat Identifier: {video_chat_call_identifier}'
-- 'Video Chat Title: {video_chat_title}'
-- 'Shared Media Identifier: {shared_media_identifier}'
-- 'Shared Media URL: {shared_media_url}'
-short_message:
-- 'Username: {username}'
-- 'Message: {message}'
-short_source: 'Instagram iOS'
-source: 'Instagram iOS threads'
----
-type: 'conditional'
 data_type: 'ios:lockdownd_log:entry'
 message:
 - 'Process identifer: {process_identifier}'
@@ -188,6 +188,21 @@ short_source: 'PLIST'
 source: 'Apple iOS Mobile Backup application plist'
 ---
 type: 'conditional'
+data_type: 'ios:netusage:process'
+message:
+- 'Process Name: {process_name}'
+- 'WiFi In: {wifi_in}'
+- 'WiFi Out: {wifi_out}'
+- 'Wired In: {wired_in}'
+- 'Wired Out: {wired_out}'
+- 'Wireless Wan In: {wireless_wan_in}'
+- 'Wireless Wan Out: {wireless_wan_out}'
+short_message:
+- 'Process Name: {process_name}'
+short_source: 'HISTORY'
+source: 'iOS netusage.sqlite database'
+---
+type: 'conditional'
 data_type: 'ios:netusage:route'
 enumeration_helpers:
 - input_attribute: 'network_type'
@@ -205,21 +220,6 @@ message:
 short_message:
 - 'Network Identifier: {network_identifier}'
 - 'Network Type: {network_type}'
-short_source: 'HISTORY'
-source: 'iOS netusage.sqlite database'
----
-type: 'conditional'
-data_type: 'ios:netusage:process'
-message:
-- 'Process Name: {process_name}'
-- 'WiFi In: {wifi_in}'
-- 'WiFi Out: {wifi_out}'
-- 'Wired In: {wired_in}'
-- 'Wired Out: {wired_out}'
-- 'Wireless Wan In: {wireless_wan_in}'
-- 'Wireless Wan Out: {wireless_wan_out}'
-short_message:
-- 'Process Name: {process_name}'
 short_source: 'HISTORY'
 source: 'iOS netusage.sqlite database'
 ---
@@ -273,16 +273,6 @@ short_source: 'PLIST'
 source: 'iOS SIM Info'
 ---
 type: 'conditional'
-data_type: 'ios:sysdiagnose:logd:line'
-message:
-- 'Logger: {logger}'
-- 'Body: {body}'
-short_message:
-- 'Body: {body}'
-short_source: 'LOG'
-source: 'iOS sysdiagnose log'
----
-type: 'conditional'
 data_type: 'ios:sysdiag_log:entry'
 message:
 - 'Originating call: {originating_call}'
@@ -291,6 +281,16 @@ short_message:
 - 'Body: {body}'
 short_source: 'LOG'
 source: 'iOS sysdiag log'
+---
+type: 'conditional'
+data_type: 'ios:sysdiagnose:logd:line'
+message:
+- 'Logger: {logger}'
+- 'Body: {body}'
+short_message:
+- 'Body: {body}'
+short_source: 'LOG'
+source: 'iOS sysdiagnose log'
 ---
 type: 'conditional'
 data_type: 'ios:twitter:contact'
