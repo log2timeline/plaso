@@ -176,6 +176,11 @@ Copied with permission from [Digital Corpora](https://digitalcorpora.org/):
 * ios/Accounts3.sqlite
 * ios/com.apple.commcenter.data.plist
 * ios/com.apple.MobileBackup.plist
+* ios/healthdb_secure_iOS_13_3_1.sqlite
+* ios/healthdb_secure_iOS_13_4_1.sqlite
+* ios/healthdb_secure_iOS_15.sqlite
+* ios/healthdb_secure_iOS_16.sqlite
+* ios/healthdb_secure_iOS_17.sqlite
 * ios/IMODb2.sqlite
 * ios/NoteStore.sqlite
 * viber_data
