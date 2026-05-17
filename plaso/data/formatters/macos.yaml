@@ -144,29 +144,6 @@ short_source: 'LOG'
 source: 'MacOS ASL Log'
 ---
 type: 'conditional'
-data_type: 'macos:unified_logging:event'
-message:
-- 'Subsystem: {subsystem}'
-- 'Thread Identifier: 0x{thread_identifier:x}'
-- 'Process Identifier: {process_identifier}'
-- 'Effective User Identifier: {euid}'
-- 'Boot Identifier: {boot_identifier}'
-- 'Time To Live: {ttl}'
-- 'Process image identifier: {process_image_identifier}'
-- 'Process image path: {process_image_path}'
-- 'Sender image identifier: {sender_image_identifier}'
-- 'Sender image path: {sender_image_path}'
-- 'Activity identifier: {activity_identifier}'
-- 'Category: {category}'
-- 'Event type: {event_type}'
-- 'Event message: {event_message}'
-short_message:
-- 'Subsystem: {subsystem}'
-- 'Event messaeg: {event_message}'
-short_source: 'LOG'
-source: 'Apple Unified Logging'
----
-type: 'conditional'
 data_type: 'macos:asl:file'
 boolean_helpers:
 - input_attribute: 'is_dirty'
@@ -360,6 +337,13 @@ short_message:
 short_source: 'WEBHIST'
 source: 'MacOS KnowledgeC (Safari)'
 ---
+type: 'basic'
+data_type: 'macos:launchd:entry'
+message: 'Launchd service config {name} points to {program} with user:{user_name} group:{group_name}'
+short_message: 'Launchd service config {name} points to {program} with user:{user_name} group:{group_name}'
+short_source: 'PLIST'
+source: 'MacOS launchd plist'
+---
 type: 'conditional'
 data_type: 'macos:launchd_log:entry'
 message:
@@ -370,55 +354,6 @@ short_message:
 - 'Body: {body}'
 short_source: 'Launchd'
 source: 'MacOS Launchd'
----
-type: 'conditional'
-data_type: 'macos:lsquarantine:entry'
-message:
-- '[{agent}]'
-- 'Downloaded: {url}'
-- '<{data}>'
-short_message:
-- '{url}'
-short_source: 'LOG'
-source: 'MacOS LS Quarantine Database'
----
-type: 'conditional'
-data_type: 'macos:notes:entry'
-message:
-- 'title:{title}'
-- 'note_text:{text}'
-short_message:
-- 'title:{title}'
-short_source: 'Mac Notes'
-source: 'MacOS Notes'
----
-type: 'conditional'
-data_type: 'macos:notification_center:entry'
-enumeration_helpers:
-- input_attribute: 'presented'
-  output_attribute: 'presented'
-  default_value: 'UNKNOWN'
-  values:
-    0: 'No'
-    1: 'Yes'
-message:
-- 'Title: {title}'
-- '(subtitle: {subtitle})'
-- 'registered by: {bundle_name}'
-- 'Presented: {presented}'
-- 'Content: {body}'
-short_message:
-- 'Title: {title},'
-- 'Content: {body}'
-short_source: 'NOTIFICATION'
-source: 'MacOS Notification Center database'
----
-type: 'basic'
-data_type: 'macos:launchd:entry'
-message: 'Launchd service config {name} points to {program} with user:{user_name} group:{group_name}'
-short_message: 'Launchd service config {name} points to {program} with user:{user_name} group:{group_name}'
-short_source: 'PLIST'
-source: 'MacOS launchd plist'
 ---
 type: 'conditional'
 data_type: 'macos:login_items:entry'
@@ -467,6 +402,48 @@ short_source: 'PLIST'
 source: 'Mac OS login window plist'
 ---
 type: 'conditional'
+data_type: 'macos:lsquarantine:entry'
+message:
+- '[{agent}]'
+- 'Downloaded: {url}'
+- '<{data}>'
+short_message:
+- '{url}'
+short_source: 'LOG'
+source: 'MacOS LS Quarantine Database'
+---
+type: 'conditional'
+data_type: 'macos:notes:entry'
+message:
+- 'title:{title}'
+- 'note_text:{text}'
+short_message:
+- 'title:{title}'
+short_source: 'Mac Notes'
+source: 'MacOS Notes'
+---
+type: 'conditional'
+data_type: 'macos:notification_center:entry'
+enumeration_helpers:
+- input_attribute: 'presented'
+  output_attribute: 'presented'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'No'
+    1: 'Yes'
+message:
+- 'Title: {title}'
+- '(subtitle: {subtitle})'
+- 'registered by: {bundle_name}'
+- 'Presented: {presented}'
+- 'Content: {body}'
+short_message:
+- 'Title: {title},'
+- 'Content: {body}'
+short_source: 'NOTIFICATION'
+source: 'MacOS Notification Center database'
+---
+type: 'conditional'
 data_type: 'macos:securityd_log:entry'
 message:
 - 'Sender: {sender}'
@@ -504,13 +481,6 @@ short_message:
 short_source: 'PLIST'
 source: 'MacOS startup item plist'
 ---
-type: 'basic'
-data_type: 'macos:time_machine:backup'
-message: 'TimeMachine Backup in {backup_alias} ({device_identifier})'
-short_message: 'TimeMachine Backup in {backup_alias} ({device_identifier})'
-short_source: 'PLIST'
-source: 'MacOS TimeMachine plist'
----
 type: 'conditional'
 data_type: 'macos:tcc_entry'
 enumeration_helpers:
@@ -530,6 +500,36 @@ short_message:
 - '{client}'
 short_source: 'MacOS TCC'
 source: 'MacOS Transparenty, Control and Consent logs'
+---
+type: 'basic'
+data_type: 'macos:time_machine:backup'
+message: 'TimeMachine Backup in {backup_alias} ({device_identifier})'
+short_message: 'TimeMachine Backup in {backup_alias} ({device_identifier})'
+short_source: 'PLIST'
+source: 'MacOS TimeMachine plist'
+---
+type: 'conditional'
+data_type: 'macos:unified_logging:event'
+message:
+- 'Subsystem: {subsystem}'
+- 'Thread Identifier: 0x{thread_identifier:x}'
+- 'Process Identifier: {process_identifier}'
+- 'Effective User Identifier: {euid}'
+- 'Boot Identifier: {boot_identifier}'
+- 'Time To Live: {ttl}'
+- 'Process image identifier: {process_image_identifier}'
+- 'Process image path: {process_image_path}'
+- 'Sender image identifier: {sender_image_identifier}'
+- 'Sender image path: {sender_image_path}'
+- 'Activity identifier: {activity_identifier}'
+- 'Category: {category}'
+- 'Event type: {event_type}'
+- 'Event message: {event_message}'
+short_message:
+- 'Subsystem: {subsystem}'
+- 'Event messaeg: {event_message}'
+short_source: 'LOG'
+source: 'Apple Unified Logging'
 ---
 type: 'conditional'
 data_type: 'macos:user:entry'

@@ -26,6 +26,17 @@ short_source: 'AirGuard AirTag Tracker'
 source: 'AirGuard AirTag Tracker event data.'
 ---
 type: 'conditional'
+data_type: 'android:app_usage'
+message:
+- 'Package: {package}'
+- 'Component: {component}'
+short_message:
+- 'Package: {package}'
+- 'Component: {component}'
+short_source: 'LOG'
+source: 'Android App Usage'
+---
+type: 'conditional'
 data_type: 'android:burners'
 message:
 - 'Phone Number: {phone_number}'
@@ -40,17 +51,6 @@ short_message:
 - 'User: {user_identifier}'
 short_source: 'SQLITE'
 source: 'Android burners database'
----
-type: 'conditional'
-data_type: 'android:app_usage'
-message:
-- 'Package: {package}'
-- 'Component: {component}'
-short_message:
-- 'Package: {package}'
-- 'Component: {component}'
-short_source: 'LOG'
-source: 'Android App Usage'
 ---
 type: 'conditional'
 data_type: 'android:event:battery'

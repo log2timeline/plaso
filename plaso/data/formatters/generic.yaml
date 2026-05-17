@@ -222,25 +222,6 @@ short_source: 'LOG'
 source: 'Confluence access log'
 ---
 type: 'conditional'
-data_type: 'jira:access'
-message:
-- 'http_request: {http_request_method} '
-- '{http_request_uri}'
-- 'from: {remote_name}'
-- 'via: {forwarded_for}'
-- 'user: {user_name}'
-- 'code: {http_response_code}'
-- 'referer: {http_request_referer}'
-- 'user_agent: {http_request_user_agent}'
-- 'thread: {thread_name}'
-short_message:
-- '{http_request_method}'
-- '{http_request_uri}'
-- 'from: {remote_name}'
-short_source: 'LOG'
-source: 'Jira access log'
----
-type: 'conditional'
 data_type: 'cri:container:log:entry'
 message:
 - 'Stream: {stream}'
@@ -540,6 +521,25 @@ short_message:
 - 'Download URL: {url}'
 short_source: 'JAVA_IDX'
 source: 'Java Cache IDX'
+---
+type: 'conditional'
+data_type: 'jira:access'
+message:
+- 'http_request: {http_request_method} '
+- '{http_request_uri}'
+- 'from: {remote_name}'
+- 'via: {forwarded_for}'
+- 'user: {user_name}'
+- 'code: {http_response_code}'
+- 'referer: {http_request_referer}'
+- 'user_agent: {http_request_user_agent}'
+- 'thread: {thread_name}'
+short_message:
+- '{http_request_method}'
+- '{http_request_uri}'
+- 'from: {remote_name}'
+short_source: 'LOG'
+source: 'Jira access log'
 ---
 type: 'conditional'
 data_type: 'kodi:videos:viewing'

@@ -444,62 +444,6 @@ short_source: 'WEBHIST'
 source: 'Firefox History'
 ---
 type: 'conditional'
-data_type: 'msiecf:leak'
-boolean_helpers:
-- input_attribute: 'recovered'
-  output_attribute: 'recovered_string'
-  value_if_true: '[Recovered Entry]'
-custom_helpers:
-- identifier: 'msiecf_cached_path'
-  output_attribute: 'cached_file_path'
-message:
-- 'Cached file: {cached_file_path}'
-- 'Cached file size: {cached_file_size}'
-- '{recovered_string}'
-short_message:
-- 'Cached file: {cached_file_path}'
-short_source: 'WEBHIST'
-source: 'MSIE Cache File leak record'
----
-type: 'conditional'
-data_type: 'msiecf:redirected'
-boolean_helpers:
-- input_attribute: 'recovered'
-  output_attribute: 'recovered_string'
-  value_if_true: '[Recovered Entry]'
-message:
-- 'Location: {url}'
-- '{recovered_string}'
-short_message:
-- 'Location: {url}'
-short_source: 'WEBHIST'
-source: 'MSIE Cache File redirected record'
----
-type: 'conditional'
-data_type: 'msiecf:url'
-boolean_helpers:
-- input_attribute: 'recovered'
-  output_attribute: 'recovered_string'
-  value_if_true: '[Recovered Entry]'
-custom_helpers:
-- identifier: 'msiecf_cached_path'
-  output_attribute: 'cached_file_path'
-- identifier: 'msiecf_http_headers'
-  output_attribute: 'http_headers'
-message:
-- 'Location: {url}'
-- 'Number of hits: {number_of_hits}'
-- 'Cached file: {cached_file_path}'
-- 'Cached file size: {cached_file_size}'
-- 'HTTP headers: {http_headers}'
-- '{recovered_string}'
-short_message:
-- 'Location: {url}'
-- 'Cached file: {cached_file_path}'
-short_source: 'WEBHIST'
-source: 'MSIE Cache File URL record'
----
-type: 'conditional'
 data_type: 'msie:webcache:container'
 message:
 - 'URL: {url}'
@@ -566,6 +510,62 @@ short_message:
 - 'Directory: {directory}'
 short_source: 'WEBHIST'
 source: 'MSIE WebCache partitions record'
+---
+type: 'conditional'
+data_type: 'msiecf:leak'
+boolean_helpers:
+- input_attribute: 'recovered'
+  output_attribute: 'recovered_string'
+  value_if_true: '[Recovered Entry]'
+custom_helpers:
+- identifier: 'msiecf_cached_path'
+  output_attribute: 'cached_file_path'
+message:
+- 'Cached file: {cached_file_path}'
+- 'Cached file size: {cached_file_size}'
+- '{recovered_string}'
+short_message:
+- 'Cached file: {cached_file_path}'
+short_source: 'WEBHIST'
+source: 'MSIE Cache File leak record'
+---
+type: 'conditional'
+data_type: 'msiecf:redirected'
+boolean_helpers:
+- input_attribute: 'recovered'
+  output_attribute: 'recovered_string'
+  value_if_true: '[Recovered Entry]'
+message:
+- 'Location: {url}'
+- '{recovered_string}'
+short_message:
+- 'Location: {url}'
+short_source: 'WEBHIST'
+source: 'MSIE Cache File redirected record'
+---
+type: 'conditional'
+data_type: 'msiecf:url'
+boolean_helpers:
+- input_attribute: 'recovered'
+  output_attribute: 'recovered_string'
+  value_if_true: '[Recovered Entry]'
+custom_helpers:
+- identifier: 'msiecf_cached_path'
+  output_attribute: 'cached_file_path'
+- identifier: 'msiecf_http_headers'
+  output_attribute: 'http_headers'
+message:
+- 'Location: {url}'
+- 'Number of hits: {number_of_hits}'
+- 'Cached file: {cached_file_path}'
+- 'Cached file size: {cached_file_size}'
+- 'HTTP headers: {http_headers}'
+- '{recovered_string}'
+short_message:
+- 'Location: {url}'
+- 'Cached file: {cached_file_path}'
+short_source: 'WEBHIST'
+source: 'MSIE Cache File URL record'
 ---
 type: 'conditional'
 data_type: 'opera:history:entry'
