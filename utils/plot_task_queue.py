@@ -23,7 +23,6 @@ def Main():
     argument_parser = argparse.ArgumentParser(
         description=("Plots memory usage from profiling data.")
     )
-
     argument_parser.add_argument(
         "--output",
         dest="output_file",
@@ -34,13 +33,11 @@ def Main():
             "of the filename."
         ),
     )
-
     argument_parser.add_argument(
         "profile_path",
         type=str,
         help=("path to the directory containing the profiling data."),
     )
-
     options = argument_parser.parse_args()
 
     if not os.path.isdir(options.profile_path):
@@ -59,7 +56,6 @@ def Main():
             names=names,
             skip_header=1,
         )
-
         if data.size > 0:
             pyplot.plot(data["time"], data["queued"], label="queued")
             pyplot.plot(data["time"], data["processing"], label="processing")
