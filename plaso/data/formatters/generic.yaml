@@ -222,6 +222,23 @@ short_source: 'LOG'
 source: 'Confluence access log'
 ---
 type: 'conditional'
+data_type: 'ivanti:connect_secure:vc0:record'
+message:
+- '[{message_code}]'
+- '{log_type}'
+- '{body}'
+- 'Hostname: {hostname}'
+- 'Realm: {realm}'
+- 'IP address: {ip_address}'
+- 'Username: {username}'
+short_message:
+- '[{message_code}]'
+- '{log_type}'
+- '{body}'
+source: 'Ivanti Connect Secure VC0 log'
+short_source: 'LOG'
+---
+type: 'conditional'
 data_type: 'jira:access'
 message:
 - 'http_request: {http_request_method} '
