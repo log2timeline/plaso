@@ -24,14 +24,14 @@ sudo dnf install python-virtualenv
 
 To install virtualenv on Ubuntu (or equivalent) run:
 ```
-sudo apt-get install python-virtualenv
+sudo apt install python-virtualenv
 ```
 
 ### Installing build dependencies
 
 **TODO add more text**
 ```
-sudo apt-get install libyaml-dev liblzma-dev
+sudo apt install libyaml-dev liblzma-dev
 ```
 
 ## MacOS

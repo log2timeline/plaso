@@ -35,8 +35,8 @@ supported.
 First make sure all currently installed packages are up-to-date by running:
 
 ```bash
-$ sudo apt-get update
-$ sudo apt-get upgrade
+$ sudo apt update
+$ sudo apt upgrade
 ```
 
 Then re-run the check dependencies script. If that still hasn't fixed the issue
@@ -136,7 +136,7 @@ correct this you may have to specifically indicate the version you want to
 install.
 
 ```bash
-$ sudo apt-get install python-pyparsing=2.0.3-1
+$ sudo apt install python-pyparsing=2.0.3-1
 ```
 
 ### Common package conflicts
@@ -178,14 +178,14 @@ The solution here is to remove the **libewf2** package from the system and
 replace it with the **libewf**  package from the GIFT PPA.
 
 ```bash
-$ sudo apt-get remove libewf2
+$ sudo apt remove libewf2
 ```
 
 Note that this may remove other packages as well that depend on **libewf2**,
 which are likely to be out dated as well.
 
 ```bash
-$ sudo apt-get install libewf libewf2=20140608-1
+$ sudo apt install libewf libewf2=20140608-1
 ```
 
 Installing **libewf2** from the GIFT PPA prevents your package manager

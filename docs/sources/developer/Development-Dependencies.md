@@ -83,7 +83,7 @@ To install Plaso from the GIFT PPA you'll need to have Ubuntu universe enabled:
 
 ```bash
 sudo add-apt-repository universe
-sudo apt-get update
+sudo apt update
 ```
 
 To add the dev track to your apt configuration run:

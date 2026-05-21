@@ -160,20 +160,20 @@ DEBUG_DEPENDENCIES="libbde-dbg
                     libvslvm-python3-dbg";
 
 sudo add-apt-repository ppa:gift/${GIFT_PPA_TRACK} -y
-sudo apt-get update -q
-sudo apt-get install -q -y ${PYTHON_DEPENDENCIES}
+sudo apt update -q
+sudo apt install -q -y ${PYTHON_DEPENDENCIES}
 
 if [[ "$*" =~ "include-debug" ]];
 then
-	sudo apt-get install -q -y ${DEBUG_DEPENDENCIES}
+	sudo apt install -q -y ${DEBUG_DEPENDENCIES}
 fi
 
 if [[ "$*" =~ "include-development" ]];
 then
-	sudo apt-get install -q -y ${DEVELOPMENT_DEPENDENCIES}
+	sudo apt install -q -y ${DEVELOPMENT_DEPENDENCIES}
 fi
 
 if [[ "$*" =~ "include-test" ]];
 then
-	sudo apt-get install -q -y ${TEST_DEPENDENCIES}
+	sudo apt install -q -y ${TEST_DEPENDENCIES}
 fi
