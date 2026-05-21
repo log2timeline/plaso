@@ -19,8 +19,8 @@ sudo add-apt-repository ppa:gift/stable
 Update and install Plaso:
 
 ```
-sudo apt-get update
-sudo apt-get install plaso-tools
+sudo apt update
+sudo apt install plaso-tools
 ```
 
 ### SANS Investigative Forensic Toolkit (SIFT) Workstation

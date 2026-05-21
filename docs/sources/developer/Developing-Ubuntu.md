@@ -3,7 +3,7 @@
 ## Git
 To download the latest version of Plaso you'll need to install the git tools:
 ```
-sudo apt-get install git
+sudo apt install git
 ```
 
 Checkout the Plaso source from the git repo:

@@ -7,7 +7,7 @@ AUXILIARY_DATA_PATH="/media/auxiliary";
 # Exit on error.
 set -e
 
-sudo apt-get install -y curl unzip
+sudo apt install -y curl unzip
 
 cd config/end_to_end;
 
