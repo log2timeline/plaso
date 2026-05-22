@@ -131,7 +131,6 @@ Test data:
 
 Copied with permission from [the GRR project](https://github.com/google/grr):
 * History
-* index.dat
 * places.sqlite
 
 Copied with permission granted by Jerome Marty:
@@ -161,6 +160,8 @@ Copied with permission from [the Greendale data set](https://github.com/dfirlabs
 * esedb/student-pc1/Windows.edb
 * evtx/dc1/System.evtx
 * mdmp/student-pc1/WER1090.tmp.mdmp
+* msiecf/student-pc1/msiecf/Content.IE5/index.dat
+* msiecf/student-pc1/msiecf/History.IE5/index.dat
 * regf/studentpc8/SAM
 
 Generated with the [Windows PE/COFF resource file specimens project](https://github.com/dfirlabs/wrc-specimens):
