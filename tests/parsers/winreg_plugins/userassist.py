@@ -49,12 +49,12 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
             "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\"
             "Explorer\\UserAssist\\{75048700-EF1F-11D0-9888-006097DEACF9}"
         )
-        win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
-        registry_key = win_registry.GetKeyByPath(key_path)
-
         plugin = userassist.UserAssistPlugin()
-        storage_writer = self._ParseKeyWithPlugin(
-            registry_key, plugin, file_entry=test_file_entry
+
+        storage_writer = self._ParseKeyPathWithFileEntry(
+            test_file_entry,
+            key_path,
+            plugin,
         )
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
@@ -88,12 +88,12 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
             "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\"
             "Explorer\\UserAssist\\{CEBFF5CD-ACE2-4F4F-9178-9926F41749EA}"
         )
-        win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
-        registry_key = win_registry.GetKeyByPath(key_path)
-
         plugin = userassist.UserAssistPlugin()
-        storage_writer = self._ParseKeyWithPlugin(
-            registry_key, plugin, file_entry=test_file_entry
+
+        storage_writer = self._ParseKeyPathWithFileEntry(
+            test_file_entry,
+            key_path,
+            plugin,
         )
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"

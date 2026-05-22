@@ -18,22 +18,19 @@ class USBStorPlugin(test_lib.RegistryPluginTestCase):
         self._AssertFiltersOnKeyPath(
             plugin, "HKEY_LOCAL_MACHINE\\System", "ControlSet001\\Enum\\USBSTOR"
         )
-
         self._AssertNotFiltersOnKeyPath(plugin, "HKEY_LOCAL_MACHINE\\System", "Bogus")
 
     def testProcess(self):
         """Tests the Process function."""
         test_file_entry = self._GetTestFileEntry(["SYSTEM"])
         key_path = "HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Enum\\USBSTOR"
-
-        win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
-        registry_key = win_registry.GetKeyByPath(key_path)
-
         plugin = usbstor.USBStorPlugin()
-        storage_writer = self._ParseKeyWithPlugin(
-            registry_key, plugin, file_entry=test_file_entry
-        )
 
+        storage_writer = self._ParseKeyPathWithFileEntry(
+            test_file_entry,
+            key_path,
+            plugin,
+        )
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -65,7 +62,6 @@ class USBStorPlugin(test_lib.RegistryPluginTestCase):
             "revision": "Rev_1024",
             "vendor": "Ven_HP",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

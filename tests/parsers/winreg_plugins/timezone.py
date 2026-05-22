@@ -30,7 +30,6 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
             offset=153,
             relative_key_path="ControlSet001\\Control\\TimeZoneInformation",
         )
-
         value_data = "C:\\Downloads\\plaso-static.rar".encode("utf_16_le")
         registry_value = dfwinreg_fake.FakeWinRegistryValue(
             "1", data=value_data, data_type=dfwinreg_definitions.REG_SZ, offset=612
@@ -116,11 +115,10 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
             "HKEY_LOCAL_MACHINE\\System",
             ("ControlSet001\\Control\\TimeZoneInformation"),
         )
-
         self._AssertNotFiltersOnKeyPath(plugin, "HKEY_LOCAL_MACHINE\\System", "Bogus")
 
-    def testProcessMock(self):
-        """Tests the Process function on created key."""
+    def testProcess(self):
+        """Tests the Process function."""
         registry_key = self._CreateTestKey()
 
         plugin = timezone.WinRegTimezonePlugin()
@@ -164,21 +162,19 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
-    def testProcessFile(self):
-        """Tests the Process function on registry file."""
+    def testProcessWithSystem(self):
+        """Tests the Process function on a SYSTEM file."""
         test_file_entry = self._GetTestFileEntry(["SYSTEM"])
         key_path = (
             "HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Control\\TimeZoneInformation"
         )
-
-        win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
-        registry_key = win_registry.GetKeyByPath(key_path)
-
         plugin = timezone.WinRegTimezonePlugin()
-        storage_writer = self._ParseKeyWithPlugin(
-            registry_key, plugin, file_entry=test_file_entry
-        )
 
+        storage_writer = self._ParseKeyPathWithFileEntry(
+            test_file_entry,
+            key_path,
+            plugin,
+        )
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -209,7 +205,6 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
             "key_path": key_path,
             "last_written_time": "2012-03-11T07:00:00.0006424+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
