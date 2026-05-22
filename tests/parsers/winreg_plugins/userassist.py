@@ -49,7 +49,6 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
             "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\"
             "Explorer\\UserAssist\\{75048700-EF1F-11D0-9888-006097DEACF9}"
         )
-
         win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
         registry_key = win_registry.GetKeyByPath(key_path)
 
@@ -57,7 +56,6 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
         storage_writer = self._ParseKeyWithPlugin(
             registry_key, plugin, file_entry=test_file_entry
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -80,18 +78,16 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
             "number_of_executions": 14,
             "value_name": "UEME_RUNPIDL:%csidl2%\\MSN.lnk",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
-    def testProcessOnWin7(self):
-        """Tests the Process function on a Windows 7 Registry file."""
-        test_file_entry = self._GetTestFileEntry(["NTUSER-WIN7.DAT"])
+    def testProcessOnWindows8NtUserDat(self):
+        """Tests the Process function on a Windows 8 NTUSER.DAT file."""
+        test_file_entry = self._GetTestFileEntry(["regf", "NTUSER.DAT"])
         key_path = (
             "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\"
             "Explorer\\UserAssist\\{CEBFF5CD-ACE2-4F4F-9178-9926F41749EA}"
         )
-
         win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
         registry_key = win_registry.GetKeyByPath(key_path)
 
@@ -99,11 +95,10 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
         storage_writer = self._ParseKeyWithPlugin(
             registry_key, plugin, file_entry=test_file_entry
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
-        self.assertEqual(number_of_event_data, 61)
+        self.assertEqual(number_of_event_data, 9)
 
         number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
             "extraction_warning"
@@ -116,16 +111,15 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
         self.assertEqual(number_of_warnings, 0)
 
         expected_event_values = {
-            "application_focus_count": 21,
-            "application_focus_duration": 420000,
+            "application_focus_count": 8,
+            "application_focus_duration": 842124,
             "data_type": "windows:registry:userassist",
             "key_path": f"{key_path:s}\\Count",
-            "last_execution_time": "2010-11-10T07:49:37.0780676+00:00",
-            "number_of_executions": 14,
-            "value_name": "Microsoft.Windows.GettingStarted",
+            "last_execution_time": "2016-10-09T19:58:01.7670000+00:00",
+            "number_of_executions": 2,
+            "value_name": "Microsoft.InternetExplorer.Default",
         }
-
-        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 2)
         self.CheckEventData(event_data, expected_event_values)
 
 

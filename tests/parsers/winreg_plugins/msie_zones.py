@@ -46,7 +46,7 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
         )
         self._AssertNotFiltersOnKeyPath(plugin, "HKEY_LOCAL_MACHINE\\Software", "Bogus")
 
-    def testProcessLockdownZonesKeyWithNtUserDat(self):
+    def testProcessWithLockdownZonesKeyInNtUserDat(self):
         """Tests the Process function on a Lockdown_Zones key in a NTUSER.DAT file."""
         test_file_entry = self._GetTestFileEntry(["regf", "NTUSER.DAT"])
         key_path = (
@@ -94,7 +94,7 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 
-    def testProcessZonesKeyWithNtUserDat(self):
+    def testProcessWithZonesKeyInNtUserDat(self):
         """Tests the Process function on a Zones key in a NTUSER.DAT file."""
         test_file_entry = self._GetTestFileEntry(["regf", "NTUSER.DAT"])
         key_path = (
@@ -116,7 +116,7 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
         number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
             "extraction_warning"
         )
-        self.assertEqual(number_of_warnings, 4)
+        self.assertEqual(number_of_warnings, 0)
 
         number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
             "recovery_warning"
@@ -145,7 +145,7 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 
-    def testProcessLockdownZonesKeyWithSoftware(self):
+    def testProcessWithLockdownZonesKeyInSoftware(self):
         """Tests the Process function on a Lockdown_Zones key in a SOFTWARE file."""
         test_file_entry = self._GetTestFileEntry(["regf", "SOFTWARE"])
         key_path = (
@@ -271,7 +271,7 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 
-    def testProcessZonesKeyWithSoftware(self):
+    def testProcessWithZonesKeyInSoftware(self):
         """Tests the Process function on a Zones key in a SOFTWARE file."""
         test_file_entry = self._GetTestFileEntry(["SOFTWARE"])
         key_path = (

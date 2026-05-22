@@ -40,10 +40,9 @@ class MSIEZoneSettingsFormatterHelper(interface.CustomEventFormatterHelper):
     }
 
     _KNOWN_FEATURE_CONTROLS = {
-        "1200": "Run ActiveX controls and plug-ins",
-        "1400": "Active scripting",
         "1001": "Download signed ActiveX controls",
         "1004": "Download unsigned ActiveX controls",
+        "1200": "Run ActiveX controls and plug-ins",
         "1201": "Initialize and script ActiveX controls not marked as safe",
         "1206": "Allow scripting of IE Web browser control",
         "1207": "Reserved",
@@ -51,6 +50,7 @@ class MSIEZoneSettingsFormatterHelper(interface.CustomEventFormatterHelper):
         "1209": "Allow Scriptlets",
         "120A": "Override Per-Site (domain-based) ActiveX restrictions",
         "120B": "Override Per-Site (domain-based) ActiveX restrictions",
+        "1400": "Active scripting",
         "1402": "Scripting of Java applets",
         "1405": "Script ActiveX controls marked as safe for scripting",
         "1406": "Access data sources across domains",
@@ -105,8 +105,6 @@ class MSIEZoneSettingsFormatterHelper(interface.CustomEventFormatterHelper):
         "2402": ".NET: Loose XAML",
         "2500": "Turn on Protected Mode",
         "2600": "Enable .NET Framework setup",
-        "{AEBA21FA-782A-4A90-978D-B72164C80120}": "First Party Cookie",
-        "{A8A88C49-5EB2-4990-A1A2-0876022C854F}": "Third Party Cookie",
     }
 
     _KNOWN_PERMISSIONS_SETTINGS = frozenset(

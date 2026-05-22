@@ -93,8 +93,11 @@ class MSIEZoneSettingsPlugin(interface.WindowsRegistryPlugin):
             # TODO: this plugin currently just dumps the values and does not
             # distinguish between what is a feature control or not.
             for value in zone_key.GetValues():
-                # Ignore the default value.
-                if not value.name:
+                # TODO: add support to parse first and third party cookie values.
+                if not value.name or value.name in (
+                    "{A8A88C49-5EB2-4990-A1A2-0876022C854F}",  # Third Party Cookie
+                    "{AEBA21FA-782A-4A90-978D-B72164C80120}",  # First Party Cookie
+                ):
                     continue
 
                 if value.DataIsString():

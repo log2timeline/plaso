@@ -107,7 +107,7 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
         number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
             "extraction_warning"
         )
-        self.assertEqual(number_of_warnings, 4)
+        self.assertEqual(number_of_warnings, 0)
 
         number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
             "recovery_warning"

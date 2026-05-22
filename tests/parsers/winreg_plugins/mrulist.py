@@ -13,7 +13,7 @@ from tests.parsers.winreg_plugins import test_lib
 
 
 class TestMRUListStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
-    """Tests for the string MRUList plugin."""
+    """Tests for the string MRUList Windows Registry plugin."""
 
     def _CreateTestKey(self):
         """Creates Registry keys and values for testing.
@@ -129,7 +129,7 @@ class TestMRUListStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
 
 
 class TestMRUListShellItemListWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
-    """Tests for the shell item list MRUList plugin."""
+    """Tests for the shell item list MRUList Windows Registry plugin."""
 
     _MRULIST_VALUE_DATA = b"a\x00\x00\x00"
 
