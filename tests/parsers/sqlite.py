@@ -20,7 +20,7 @@ class SQLiteDatabaseTest(test_lib.ParserTestCase):
 
     def testOpenClose(self):
         """Tests the Open and Close functions."""
-        database_file_path = self._GetTestFilePath(["contacts2.db"])
+        database_file_path = self._GetTestFilePath(["android", "contacts2.db"])
         self._SkipIfPathNotExists(database_file_path)
 
         database = sqlite.SQLiteDatabase("contacts2.db")
@@ -130,7 +130,7 @@ class SQLiteParserTest(test_lib.ParserTestCase):
     def testParseFileEntry(self):
         """Tests the ParseFileEntry function."""
         parser = sqlite.SQLiteParser()
-        storage_writer = self._ParseFile(["contacts2.db"], parser)
+        storage_writer = self._ParseFile(["android", "contacts2.db"], parser)
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
