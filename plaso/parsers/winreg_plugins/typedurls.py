@@ -1,4 +1,4 @@
-"""File containing a Windows Registry plugin to parse the typed URLs key."""
+"""Windows Registry plugin to Windows Explorer typed paths and URLs Registry data."""
 
 import re
 
@@ -11,7 +11,7 @@ class TypedURLsEventData(events.EventData):
     """Typed URLs event data attribute container.
 
     Attributes:
-      entries (str): typed URLs or paths entries.
+      entries (list[str]): typed URLs or paths.
       key_path (str): Windows Registry key path.
       last_written_time (dfdatetime.DateTimeValues): entry last written date and
           time.
@@ -28,16 +28,15 @@ class TypedURLsEventData(events.EventData):
 
 
 class TypedURLsPlugin(interface.WindowsRegistryPlugin):
-    """A Windows Registry plugin for typed URLs history."""
+    """Windows Registry plugin to parse TypedPaths and TypedURLs keys."""
 
     NAME = "windows_typed_urls"
-    DATA_FORMAT = "Windows Explorer typed URLs Registry data"
+    DATA_FORMAT = "Windows Explorer typed paths and URLs Registry data"
 
     FILTERS = frozenset(
         [
             interface.WindowsRegistryKeyPathFilter(
-                "HKEY_CURRENT_USER\\Software\\Microsoft\\Internet Explorer\\"
-                "TypedURLs"
+                "HKEY_CURRENT_USER\\Software\\Microsoft\\Internet Explorer\\TypedURLs"
             ),
             interface.WindowsRegistryKeyPathFilter(
                 "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\"
@@ -72,7 +71,7 @@ class TypedURLsPlugin(interface.WindowsRegistryPlugin):
             entries.append(f"{value_name:s}: {value_string:s}")
 
         event_data = TypedURLsEventData()
-        event_data.entries = " ".join(entries) or None
+        event_data.entries = entries or None
         event_data.key_path = registry_key.path
         event_data.last_written_time = registry_key.last_written_time
 

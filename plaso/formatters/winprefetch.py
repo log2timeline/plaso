@@ -50,10 +50,8 @@ class WindowsPrefetchVolumesStringFormatterHelper(interface.CustomEventFormatter
                 volume_device_path = volume_device_paths[volume_index]
 
             volumes_strings.append(
-                (
-                    f"volume: {volume_index + 1:d} [serial number: "
-                    f"{volume_serial_number:s}, device path: {volume_device_path:s}]"
-                )
+                f"volume: {volume_index + 1:d} [serial number: "
+                f"{volume_serial_number:s}, device path: {volume_device_path:s}]"
             )
 
         if volumes_strings:

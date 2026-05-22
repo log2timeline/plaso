@@ -75,18 +75,17 @@ class MacOSKnowledgeCPlugin(interface.SQLitePlugin):
 
     QUERIES = [
         (
-            ("""
-        SELECT
-          ZOBJECT.ZCREATIONDATE AS "entry_creation", 
-          ZOBJECT.ZSTARTDATE AS "start", 
-          ZOBJECT.ZENDDATE AS "end",
-          ZOBJECT.ZSTREAMNAME AS "action",
-          ZOBJECT.ZVALUESTRING AS "zvaluestring",
-          ZSTRUCTUREDMETADATA.Z_DKSAFARIHISTORYMETADATAKEY__TITLE AS "title"
-        FROM ZOBJECT
-        LEFT JOIN ZSTRUCTUREDMETADATA 
-        ON ZOBJECT.ZSTRUCTUREDMETADATA = ZSTRUCTUREDMETADATA.Z_PK
-        """),
+            (
+                "SELECT "
+                "ZOBJECT.ZCREATIONDATE AS 'entry_creation', "
+                "ZOBJECT.ZSTARTDATE AS 'start', "
+                "ZOBJECT.ZENDDATE AS 'end', "
+                "ZOBJECT.ZSTREAMNAME AS 'action', "
+                "ZOBJECT.ZVALUESTRING AS 'zvaluestring', "
+                "ZSTRUCTUREDMETADATA.Z_DKSAFARIHISTORYMETADATAKEY__TITLE AS 'title' "
+                "FROM ZOBJECT LEFT JOIN ZSTRUCTUREDMETADATA "
+                "ON ZOBJECT.ZSTRUCTUREDMETADATA = ZSTRUCTUREDMETADATA.Z_PK"
+            ),
             "KnowledgeCRow",
         )
     ]
