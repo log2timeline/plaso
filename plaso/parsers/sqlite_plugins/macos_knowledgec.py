@@ -75,8 +75,7 @@ class MacOSKnowledgeCPlugin(interface.SQLitePlugin):
 
     QUERIES = [
         (
-            (
-                """
+            ("""
         SELECT
           ZOBJECT.ZCREATIONDATE AS "entry_creation", 
           ZOBJECT.ZSTARTDATE AS "start", 
@@ -87,8 +86,7 @@ class MacOSKnowledgeCPlugin(interface.SQLitePlugin):
         FROM ZOBJECT
         LEFT JOIN ZSTRUCTUREDMETADATA 
         ON ZOBJECT.ZSTRUCTUREDMETADATA = ZSTRUCTUREDMETADATA.Z_PK
-        """
-            ),
+        """),
             "KnowledgeCRow",
         )
     ]
