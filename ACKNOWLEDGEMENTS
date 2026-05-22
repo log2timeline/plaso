@@ -131,7 +131,6 @@ Test data:
 
 Copied with permission from [the GRR project](https://github.com/google/grr):
 * History
-* index.dat
 * places.sqlite
 
 Copied with permission granted by Jerome Marty:
@@ -143,25 +142,26 @@ Copied with permission granted by Antoine Brodin:
 
 Copyright SANS Institute - Digital Forensics and Incident Response.
 Copied with permission granted by Rob Lee:
-* 1b4dd67f29cb1962.automaticDestinations-ms
-* 5afe4de1b92fc382.customDestinations-ms
 * Catalog1.edb
-* example.lnk
 * MFT
 * nfury_index.dat
 * nromanoff@stark-research-labs.com.pst
 * Ntuser.dat (multiple instances)
 * Outlook.NK2
 * SysEvent.Evt
-* Windows.edb
 
 Copied with permission granted by Ange Albertini:
 * test_driver.sys
 
 Copied with permission from [the Greendale data set](https://github.com/dfirlabs/greendale-specimens):
 * agdb/student-pc1/AgGlGlobalHistory.db
+* automaticDestinations-ms/student-pc1/1b4dd67f29cb1962.automaticDestinations-ms
+* customDestinations-ms/student-pc1/5afe4de1b92fc382.customDestinations-ms
+* esedb/student-pc1/Windows.edb
 * evtx/dc1/System.evtx
 * mdmp/student-pc1/WER1090.tmp.mdmp
+* msiecf/student-pc1/msiecf/Content.IE5/index.dat
+* msiecf/student-pc1/msiecf/History.IE5/index.dat
 * regf/studentpc8/SAM
 
 Generated with the [Windows PE/COFF resource file specimens project](https://github.com/dfirlabs/wrc-specimens):

@@ -15,9 +15,8 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
         """Tests the Parse function."""
         parser = custom_destinations.CustomDestinationsParser()
         storage_writer = self._ParseFile(
-            ["custom_destinations", "5afe4de1b92fc382.customDestinations-ms"], parser
+            ["customDestinations-ms", "5afe4de1b92fc382.customDestinations-ms"], parser
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -43,7 +42,7 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
             "creation_time": "2009-07-13T23:55:56.2481035+00:00",
             "data_type": "windows:lnk:link",
             "description": "@%systemroot%\\\\system32\\\\oobefldr.dll,-1262",
-            "drive_serial_number": 0x24BA718B,
+            "drive_serial_number": 0x885029E6,
             "drive_type": 3,
             "env_var_location": "%SystemRoot%\\\\system32\\\\GettingStarted.exe",
             "file_attribute_flags": 0x00000020,
@@ -55,35 +54,32 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
             "local_path": "C:\\\\Windows\\\\System32\\\\GettingStarted.exe",
             "modification_time": "2009-07-14T01:39:11.3880000+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 43)
         self.CheckEventData(event_data, expected_event_values)
 
         # Test distributed link tracking event data.
         expected_event_values = {
-            "creation_time": "2010-11-10T19:08:32.6562596+00:00",
+            "creation_time": "2009-07-14T05:08:04.1036207+00:00",
             "data_type": "windows:distributed_link_tracking:creation",
-            "mac_address": "00:0c:29:03:1e:1e",
+            "mac_address": "00:1d:09:fa:5a:1c",
             "origin": "5afe4de1b92fc382.customDestinations-ms",
-            "uuid": "e9215b24-ecfd-11df-a81c-000c29031e1e",
+            "uuid": "4f6fe1af-7034-11de-b675-001d09fa5a1c",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 4)
         self.CheckEventData(event_data, expected_event_values)
 
         # Test shell item event data.
         expected_event_values = {
-            "access_time": "2010-11-10T07:41:04+00:00",
+            "access_time": "2015-08-24T10:46:16+00:00",
             "creation_time": "2009-07-14T03:20:12+00:00",
             "data_type": "windows:shell_item:file_entry",
-            "file_reference": "2331-1",
+            "file_reference": "2305-1",
             "long_name": "System32",
-            "modification_time": "2010-11-10T07:41:04+00:00",
+            "modification_time": "2015-08-24T10:46:16+00:00",
             "name": "System32",
             "origin": "5afe4de1b92fc382.customDestinations-ms",
             "shell_item_path": "<My Computer> C:\\\\Windows\\\\System32",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 41)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -91,9 +87,8 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
         """Tests the Parse function with an empty jump list."""
         parser = custom_destinations.CustomDestinationsParser()
         storage_writer = self._ParseFile(
-            ["custom_destinations", "c98dce577f884ef8.customDestinations-ms"], parser
+            ["customDestinations-ms", "c98dce577f884ef8.customDestinations-ms"], parser
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -113,9 +108,8 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
         """Tests the Parse function with a complex jump list."""
         parser = custom_destinations.CustomDestinationsParser()
         storage_writer = self._ParseFile(
-            ["custom_destinations", "368d807282ccde9d.customDestinations-ms"], parser
+            ["customDestinations-ms", "368d807282ccde9d.customDestinations-ms"], parser
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -142,7 +136,6 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
             "origin": "368d807282ccde9d.customDestinations-ms",
             "shell_item_path": "<My Computer> C:\\\\test",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -162,7 +155,6 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
             "local_path": "C:\\\\test",
             "modification_time": "2023-07-14T04:04:00.3349887+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -173,7 +165,6 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
             "origin": "368d807282ccde9d.customDestinations-ms",
             "uuid": "d78dbcb3-20de-11ee-a2f8-525400eeb605",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 2)
         self.CheckEventData(event_data, expected_event_values)
 

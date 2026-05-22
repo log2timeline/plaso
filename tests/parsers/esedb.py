@@ -79,7 +79,6 @@ class ESEDBParserTest(test_lib.ParserTestCase):
         generator = storage_writer.GetAttributeContainers(
             warnings.ExtractionWarning.CONTAINER_TYPE
         )
-
         test_warnings = list(generator)
         test_warning = test_warnings[0]
         self.assertIsNotNone(test_warning)
