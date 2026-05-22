@@ -48,7 +48,6 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
         registry_key = dfwinreg_fake.FakeWinRegistryKey(
             name, key_path_prefix=key_path_prefix, relative_key_path=relative_key_path
         )
-
         result = self._CheckFiltersOnKeyPath(plugin, registry_key)
         self.assertTrue(result)
 
@@ -64,7 +63,6 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
         registry_key = dfwinreg_fake.FakeWinRegistryKey(
             name, key_path_prefix=key_path_prefix, relative_key_path=relative_key_path
         )
-
         result = self._CheckFiltersOnKeyPath(plugin, registry_key)
         self.assertFalse(result)
 
@@ -112,16 +110,12 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
         """Parses a key within a Windows Registry file using the plugin.
 
         Args:
-          registry_key (dfwinreg.WinRegistryKey): Windows Registry Key.
+          registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
           plugin (WindowsRegistryPlugin): Windows Registry plugin.
           file_entry (Optional[dfvfs.FileEntry]): file entry.
 
         Returns:
           FakeStorageWriter: storage writer.
-
-        Raises:
-          SkipTest: if the path inside the test data directory does not exist and
-              the test should be skipped.
         """
         self.assertIsNotNone(registry_key)
 
@@ -142,5 +136,45 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
         parser_mediator.AppendToParserChain("winreg")
 
         plugin.UpdateChainAndProcess(parser_mediator, registry_key)
+
+        return storage_writer
+
+    def _ParseKeyPathWithFileEntry(self, file_entry, key_path, plugin):
+        """Parses a key path within a Windows Registry file using the plugin.
+
+        Args:
+          file_entry (dfvfs.FileEntry): file entry of the Windows Registry file.
+          key_path (str): key path.
+          plugin (WindowsRegistryPlugin): Windows Registry plugin.
+
+        Returns:
+          FakeStorageWriter: storage writer.
+        """
+        win_registry = self._GetWinRegistryFromFileEntry(file_entry)
+
+        registry_key = win_registry.GetKeyByPath(key_path)
+        self.assertIsNotNone(registry_key)
+
+        parser_mediator = parsers_mediator.ParserMediator()
+
+        storage_writer = self._CreateStorageWriter()
+        parser_mediator.SetStorageWriter(storage_writer)
+
+        parser_mediator.SetFileEntry(file_entry)
+
+        if file_entry:
+            event_data_stream = events.EventDataStream()
+            event_data_stream.path_spec = file_entry.path_spec
+
+            parser_mediator.ProduceEventDataStream(event_data_stream)
+
+        # AppendToParserChain needs to be run after SetFileEntry.
+        parser_mediator.AppendToParserChain("winreg")
+
+        kwargs = {}
+        for attribute_name, context_key_path in plugin.CONTEXT_KEYS.items():
+            kwargs[attribute_name] = win_registry.GetKeyByPath(context_key_path)
+
+        plugin.UpdateChainAndProcess(parser_mediator, registry_key, **kwargs)
 
         return storage_writer

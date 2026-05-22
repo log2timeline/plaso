@@ -34,12 +34,12 @@ class TypedURLsPluginTest(test_lib.RegistryPluginTestCase):
             "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\"
             "Explorer\\TypedPaths"
         )
-        win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
-        registry_key = win_registry.GetKeyByPath(key_path)
-
         plugin = typedurls.TypedURLsPlugin()
-        storage_writer = self._ParseKeyWithPlugin(
-            registry_key, plugin, file_entry=test_file_entry
+
+        storage_writer = self._ParseKeyPathWithFileEntry(
+            test_file_entry,
+            key_path,
+            plugin,
         )
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
@@ -71,12 +71,12 @@ class TypedURLsPluginTest(test_lib.RegistryPluginTestCase):
         key_path = (
             "HKEY_CURRENT_USER\\Software\\Microsoft\\Internet Explorer\\TypedURLs"
         )
-        win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
-        registry_key = win_registry.GetKeyByPath(key_path)
-
         plugin = typedurls.TypedURLsPlugin()
-        storage_writer = self._ParseKeyWithPlugin(
-            registry_key, plugin, file_entry=test_file_entry
+
+        storage_writer = self._ParseKeyPathWithFileEntry(
+            test_file_entry,
+            key_path,
+            plugin,
         )
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"

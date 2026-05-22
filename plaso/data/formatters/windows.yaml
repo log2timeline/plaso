@@ -769,6 +769,17 @@ short_source: 'REG'
 source: 'Typed URLs Registry Key'
 ---
 type: 'conditional'
+data_type: 'windows:registry:typedurlstime'
+message:
+- '[{key_path}]'
+- 'Entry: {entry}'
+short_message:
+- '[{key_path}]'
+- 'Entry: {entry}'
+short_source: 'REG'
+source: 'Typed URLs Time Registry Key'
+---
+type: 'conditional'
 data_type: 'windows:registry:usb'
 message:
 - '[{key_path}]'
