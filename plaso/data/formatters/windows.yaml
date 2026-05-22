@@ -566,10 +566,17 @@ short_message: '[{key_path}] {entries}'
 short_source: 'REG'
 source: 'MRUListEx Registry Key'
 ---
-type: 'basic'
+type: 'conditional'
 data_type: 'windows:registry:msie_zone_settings'
-message: '[{key_path}] {settings}'
-short_message: '[{key_path}] {settings}'
+custom_helpers:
+- identifier: 'msie_zone_settings'
+  output_attribute: 'settings'
+message:
+- '[{key_path}]'
+- 'Settings: {settings}'
+short_message:
+- '[{key_path}]'
+- '{settings}'
 short_source: 'REG'
 source: 'Registry Key'
 ---
@@ -580,6 +587,7 @@ message:
 - 'Username hint: {username}'
 short_message:
 - '[{key_path}]'
+- '{username}'
 short_source: 'REG'
 source: 'RDP Connection Registry Key'
 ---

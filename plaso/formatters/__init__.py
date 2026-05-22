@@ -5,6 +5,7 @@ from plaso.formatters import chrome_preferences
 from plaso.formatters import file_system
 from plaso.formatters import firefox
 from plaso.formatters import msiecf
+from plaso.formatters import msie_zones
 from plaso.formatters import shell_items
 from plaso.formatters import winevt
 from plaso.formatters import winlnk

@@ -17,11 +17,13 @@ class WindowsRegistryValuesFormatterHelper(interface.CustomEventFormatterHelper)
           event_values (dict[str, object]): event values.
         """
         values = event_values.get("values")
-        if not values:
-            values_string = "(empty)"
+        if isinstance(values, str):
+            return
 
-        elif isinstance(values, list):
-            value_strings = []
+        if not values:
+            event_values["values"] = "(empty)"
+        else:
+            string_parts = []
             for name, data_type, data in sorted(values):
                 if not name:
                     name = "(default)"
@@ -30,14 +32,9 @@ class WindowsRegistryValuesFormatterHelper(interface.CustomEventFormatterHelper)
                 elif isinstance(data, bytes):
                     data = f"({len(data):d} bytes)"
 
-                value_strings.append(f"{name:s}: [{data_type:s}] {data:s}")
+                string_parts.append(f"{name:s}: [{data_type:s}] {data!s}")
 
-            values_string = " ".join(value_strings)
-
-        else:
-            values_string = values
-
-        event_values["values"] = values_string
+            event_values["values"] = ", ".join(string_parts)
 
 
 manager.FormattersManager.RegisterEventFormatterHelper(

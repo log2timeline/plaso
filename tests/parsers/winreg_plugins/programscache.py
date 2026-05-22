@@ -20,7 +20,6 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestC
             "HKEY_CURRENT_USER",
             ("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StartPage"),
         )
-
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_CURRENT_USER",
@@ -36,7 +35,6 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestC
             "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\"
             "Explorer\\StartPage"
         )
-
         win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
         registry_key = win_registry.GetKeyByPath(key_path)
 
@@ -44,7 +42,6 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestC
         storage_writer = self._ParseKeyWithPlugin(
             registry_key, plugin, file_entry=test_file_entry
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -70,7 +67,6 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestC
             "origin": f"{key_path:s} ProgramsCache",
             "shell_item_path": "Programs",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -97,14 +93,12 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestC
             "18: Programs Accessories\\\\System Tools "
             "19: Internet Explorer (No Add-ons).lnk"
         )
-
         expected_event_values = {
             "data_type": "windows:registry:explorer:programcache",
             "entries": expected_entries,
             "key_path": key_path,
             "last_written_time": "2009-08-04T15:22:18.4196250+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 25)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -121,7 +115,6 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestC
                 ("StartMenu_Balloon_Time", "REG_BINARY", "(8 bytes)"),
             ],
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 26)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -132,7 +125,6 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestC
             "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\"
             "Explorer\\StartPage2"
         )
-
         win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
         registry_key = win_registry.GetKeyByPath(key_path)
 
@@ -140,7 +132,6 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestC
         storage_writer = self._ParseKeyWithPlugin(
             registry_key, plugin, file_entry=test_file_entry
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -164,7 +155,6 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestC
             "origin": f"{key_path:s} ProgramsCache",
             "shell_item_path": "Programs",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

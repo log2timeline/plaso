@@ -17,6 +17,28 @@ class WindowsRegistryValuesFormatterHelperTest(test_lib.EventFormatterTestCase):
 
         output_mediator = self._CreateOutputMediator()
 
+        event_values = {"values": [("value1", "REG_SZ", "string1")]}
+        formatter_helper.FormatEventValues(output_mediator, event_values)
+        self.assertEqual(event_values["values"], "value1: [REG_SZ] string1")
+
+        event_values = {
+            "values": [("value1", "REG_SZ", "string1"), ("value2", "REG_DWORD", 2)]
+        }
+        formatter_helper.FormatEventValues(output_mediator, event_values)
+        self.assertEqual(
+            event_values["values"], "value1: [REG_SZ] string1, value2: [REG_DWORD] 2"
+        )
+
+        event_values = {"values": [("", "REG_SZ", "string1")]}
+        formatter_helper.FormatEventValues(output_mediator, event_values)
+        self.assertEqual(event_values["values"], "(default): [REG_SZ] string1")
+
+        event_values = {"values": [("value1", "REG_SZ", None)]}
+        formatter_helper.FormatEventValues(output_mediator, event_values)
+        self.assertEqual(event_values["values"], "value1: [REG_SZ] (empty)")
+
+        # TODO: add test for data of type bytes
+
         event_values = {"values": "value1, value2"}
         formatter_helper.FormatEventValues(output_mediator, event_values)
         self.assertEqual(event_values["values"], "value1, value2")

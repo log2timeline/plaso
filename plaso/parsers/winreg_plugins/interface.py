@@ -63,7 +63,6 @@ class WindowsRegistryKeyPathFilter(BaseWindowsRegistryKeyFilter):
             self._key_path_prefix, _, self._key_path_suffix = key_path.partition(
                 "CurrentControlSet".upper()
             )
-
         else:
             self._key_path_prefix = None
             self._key_path_suffix = None
@@ -110,7 +109,6 @@ class WindowsRegistryKeyPathFilter(BaseWindowsRegistryKeyFilter):
             if key_path.startswith(self._key_path_prefix) and key_path.endswith(
                 self._key_path_suffix
             ):
-
                 key_path_segment = key_path[
                     len(self._key_path_prefix) : -len(self._key_path_suffix)
                 ]
@@ -200,7 +198,6 @@ class WindowsRegistryKeyWithValuesFilter(BaseWindowsRegistryKeyFilter):
         value_names = frozenset(
             [registry_value.name for registry_value in registry_key.GetValues()]
         )
-
         return self._value_names.issubset(value_names)
 
 
@@ -334,7 +331,6 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
         event_data.values = self._GetValuesFromKey(
             parser_mediator, registry_key, names_to_skip=names_to_skip
         )
-
         parser_mediator.ProduceEventData(event_data)
 
     # pylint: disable=arguments-differ

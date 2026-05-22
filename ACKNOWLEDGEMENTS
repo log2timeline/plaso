@@ -162,7 +162,10 @@ Copied with permission from [the Greendale data set](https://github.com/dfirlabs
 * mdmp/student-pc1/WER1090.tmp.mdmp
 * msiecf/student-pc1/msiecf/Content.IE5/index.dat
 * msiecf/student-pc1/msiecf/History.IE5/index.dat
+* regf/studentpc8/NTUSER.DAT
 * regf/studentpc8/SAM
+* regf/studentpc8/SOFTWARE
+* regf/studentpc8/UsrClass.dat
 
 Generated with the [Windows PE/COFF resource file specimens project](https://github.com/dfirlabs/wrc-specimens):
 * wrc-test-wevt_template.dll

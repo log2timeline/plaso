@@ -23,16 +23,14 @@ class TestMRUListStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
         """
         filetime = dfdatetime_filetime.Filetime()
         filetime.CopyFromDateTimeString("2012-08-28 09:23:49.002031")
+
         registry_key = dfwinreg_fake.FakeWinRegistryKey(
             "MRU",
             key_path_prefix="HKEY_CURRENT_USER",
             last_written_time=filetime.timestamp,
             offset=1456,
-            relative_key_path=(
-                "Software\\Microsoft\\Some Windows\\InterestingApp\\MRU"
-            ),
+            relative_key_path="Software\\Microsoft\\Some Windows\\InterestingApp\\MRU",
         )
-
         value_data = b"a\x00c\x00b\x00\x00\x00"
         registry_value = dfwinreg_fake.FakeWinRegistryValue(
             "MRUList",
@@ -69,11 +67,8 @@ class TestMRUListStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
         registry_key = dfwinreg_fake.FakeWinRegistryKey(
             "MRUlist",
             key_path_prefix="HKEY_CURRENT_USER",
-            relative_key_path=(
-                "Software\\Microsoft\\Some Windows\\InterestingApp\\MRU"
-            ),
+            relative_key_path="Software\\Microsoft\\Some Windows\\InterestingApp\\MRU",
         )
-
         result = self._CheckFiltersOnKeyPath(plugin, registry_key)
         self.assertFalse(result)
 
@@ -91,10 +86,7 @@ class TestMRUListStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
         self._AssertNotFiltersOnKeyPath(
             plugin,
             "HKEY_CURRENT_USER",
-            (
-                "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\"
-                "DesktopStreamMRU"
-            ),
+            "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\DesktopStreamMRU",
         )
 
     def testProcess(self):
@@ -119,11 +111,6 @@ class TestMRUListStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
         )
         self.assertEqual(number_of_warnings, 0)
 
-        expected_key_path = (
-            "HKEY_CURRENT_USER\\Software\\Microsoft\\Some Windows\\"
-            "InterestingApp\\MRU"
-        )
-
         expected_event_values = {
             "data_type": "windows:registry:mrulist",
             "entries": [
@@ -131,16 +118,29 @@ class TestMRUListStringWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
                 "Index: 2 [MRU Value c]: C:/looks_legit.exe",
                 "Index: 3 [MRU Value b]: c:/evil.exe",
             ],
-            "key_path": expected_key_path,
+            "key_path": (
+                "HKEY_CURRENT_USER\\Software\\Microsoft\\Some Windows\\InterestingApp\\"
+                "MRU"
+            ),
             "last_written_time": "2012-08-28T09:23:49.0020310+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
 
 class TestMRUListShellItemListWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
     """Tests for the shell item list MRUList plugin."""
+
+    _MRULIST_VALUE_DATA = b"a\x00\x00\x00"
+
+    _A_VALUE_DATA = (
+        b"\x14\x00\x1f\x00\xe0O\xd0 \xea:i\x10\xa2\xd8\x08\x00+00\x9d\x19\x00#C:\\\x00"
+        b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x11\xee\x15"
+        b"\x001\x00\x00\x00\x00\x00.>z`\x10\x80Winnt\x00\x00\x18\x001\x00\x00\x00\x00"
+        b"\x00.>\xe4b\x10\x00Profiles\x00\x00%\x001\x00\x00\x00\x00\x00.>\xe4b\x10\x00"
+        b"Administrator\x00ADMINI~1\x00\x17\x001\x00\x00\x00\x00\x00.>\xe4b\x10\x00"
+        b"Desktop\x00\x00\x00\x00"
+    )
 
     def _CreateTestKey(self):
         """Creates MRUList Registry keys and values for testing.
@@ -150,6 +150,7 @@ class TestMRUListShellItemListWindowsRegistryPlugin(test_lib.RegistryPluginTestC
         """
         filetime = dfdatetime_filetime.Filetime()
         filetime.CopyFromDateTimeString("2012-08-28 09:23:49.002031")
+
         registry_key = dfwinreg_fake.FakeWinRegistryKey(
             "DesktopStreamMRU",
             key_path_prefix="HKEY_CURRENT_USER",
@@ -160,177 +161,19 @@ class TestMRUListShellItemListWindowsRegistryPlugin(test_lib.RegistryPluginTestC
                 "DesktopStreamMRU"
             ),
         )
-
-        value_data = b"a\x00\x00\x00"
         registry_value = dfwinreg_fake.FakeWinRegistryValue(
             "MRUList",
-            data=value_data,
+            data=self._MRULIST_VALUE_DATA,
             data_type=dfwinreg_definitions.REG_SZ,
             offset=123,
         )
         registry_key.AddValue(registry_value)
 
-        value_data = bytes(
-            bytearray(
-                [
-                    0x14,
-                    0x00,
-                    0x1F,
-                    0x00,
-                    0xE0,
-                    0x4F,
-                    0xD0,
-                    0x20,
-                    0xEA,
-                    0x3A,
-                    0x69,
-                    0x10,
-                    0xA2,
-                    0xD8,
-                    0x08,
-                    0x00,
-                    0x2B,
-                    0x30,
-                    0x30,
-                    0x9D,
-                    0x19,
-                    0x00,
-                    0x23,
-                    0x43,
-                    0x3A,
-                    0x5C,
-                    0x00,
-                    0x00,
-                    0x00,
-                    0x00,
-                    0x00,
-                    0x00,
-                    0x00,
-                    0x00,
-                    0x00,
-                    0x00,
-                    0x00,
-                    0x00,
-                    0x00,
-                    0x00,
-                    0x00,
-                    0x00,
-                    0x00,
-                    0x11,
-                    0xEE,
-                    0x15,
-                    0x00,
-                    0x31,
-                    0x00,
-                    0x00,
-                    0x00,
-                    0x00,
-                    0x00,
-                    0x2E,
-                    0x3E,
-                    0x7A,
-                    0x60,
-                    0x10,
-                    0x80,
-                    0x57,
-                    0x69,
-                    0x6E,
-                    0x6E,
-                    0x74,
-                    0x00,
-                    0x00,
-                    0x18,
-                    0x00,
-                    0x31,
-                    0x00,
-                    0x00,
-                    0x00,
-                    0x00,
-                    0x00,
-                    0x2E,
-                    0x3E,
-                    0xE4,
-                    0x62,
-                    0x10,
-                    0x00,
-                    0x50,
-                    0x72,
-                    0x6F,
-                    0x66,
-                    0x69,
-                    0x6C,
-                    0x65,
-                    0x73,
-                    0x00,
-                    0x00,
-                    0x25,
-                    0x00,
-                    0x31,
-                    0x00,
-                    0x00,
-                    0x00,
-                    0x00,
-                    0x00,
-                    0x2E,
-                    0x3E,
-                    0xE4,
-                    0x62,
-                    0x10,
-                    0x00,
-                    0x41,
-                    0x64,
-                    0x6D,
-                    0x69,
-                    0x6E,
-                    0x69,
-                    0x73,
-                    0x74,
-                    0x72,
-                    0x61,
-                    0x74,
-                    0x6F,
-                    0x72,
-                    0x00,
-                    0x41,
-                    0x44,
-                    0x4D,
-                    0x49,
-                    0x4E,
-                    0x49,
-                    0x7E,
-                    0x31,
-                    0x00,
-                    0x17,
-                    0x00,
-                    0x31,
-                    0x00,
-                    0x00,
-                    0x00,
-                    0x00,
-                    0x00,
-                    0x2E,
-                    0x3E,
-                    0xE4,
-                    0x62,
-                    0x10,
-                    0x00,
-                    0x44,
-                    0x65,
-                    0x73,
-                    0x6B,
-                    0x74,
-                    0x6F,
-                    0x70,
-                    0x00,
-                    0x00,
-                    0x00,
-                    0x00,
-                ]
-            )
-        )
-
         registry_value = dfwinreg_fake.FakeWinRegistryValue(
-            "a", data=value_data, data_type=dfwinreg_definitions.REG_BINARY, offset=612
+            "a",
+            data=self._A_VALUE_DATA,
+            data_type=dfwinreg_definitions.REG_BINARY,
+            offset=612,
         )
         registry_key.AddValue(registry_value)
 
@@ -343,12 +186,8 @@ class TestMRUListShellItemListWindowsRegistryPlugin(test_lib.RegistryPluginTestC
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_CURRENT_USER",
-            (
-                "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\"
-                "DesktopStreamMRU"
-            ),
+            "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\DesktopStreamMRU",
         )
-
         self._AssertNotFiltersOnKeyPath(plugin, "HKEY_CURRENT_USER", "Bogus")
 
     def testProcess(self):
@@ -377,8 +216,7 @@ class TestMRUListShellItemListWindowsRegistryPlugin(test_lib.RegistryPluginTestC
             "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\"
             "Explorer\\DesktopStreamMRU"
         )
-
-        # MRUList event data.
+        # Check MRUList event data.
         expected_event_values = {
             "data_type": "windows:registry:mrulist",
             "entries": [
@@ -388,11 +226,10 @@ class TestMRUListShellItemListWindowsRegistryPlugin(test_lib.RegistryPluginTestC
             "key_path": expected_key_path,
             "last_written_time": "2012-08-28T09:23:49.0020310+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 4)
         self.CheckEventData(event_data, expected_event_values)
 
-        # Shell item event data.
+        # Check Shell item event data.
         expected_event_values = {
             "access_time": None,
             "creation_time": None,
@@ -402,7 +239,6 @@ class TestMRUListShellItemListWindowsRegistryPlugin(test_lib.RegistryPluginTestC
             "origin": expected_key_path,
             "shell_item_path": "<My Computer> C:\\\\Winnt",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

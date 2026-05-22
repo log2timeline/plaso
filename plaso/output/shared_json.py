@@ -15,8 +15,7 @@ from plaso.serializer import json_serializer
 class JSONFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
     """JSON output module field formatting helper."""
 
-    # Maps the name of a fields to a a callback function that formats
-    # the field value.
+    # Maps the name of a fields to a a callback function that formats the field value.
     _FIELD_FORMAT_CALLBACKS = {
         "display_name": "_FormatDisplayName",
         "filename": "_FormatFilename",
@@ -25,8 +24,8 @@ class JSONFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
         "values": "_FormatValues",
     }
 
-    # The field format callback methods require specific arguments hence
-    # the check for unused arguments is disabled here.
+    # The field format callback methods require specific arguments hence the check for
+    # unused arguments is disabled here.
     # pylint: disable=unused-argument
 
     def _FormatValues(self, output_mediator, event, event_data, event_data_stream):
@@ -218,13 +217,11 @@ class SharedJSONOutputModule(text_file.TextFileOutputModule):
         field_values["message"] = self._field_formatting_helper.GetFormattedField(
             output_mediator, "message", event, event_data, event_data_stream, event_tag
         )
-
         if event_tag:
             event_tag_values = {
                 "__container_type__": "event_tag",
                 "__type__": "AttributeContainer",
             }
-
             for attribute_name, attribute_value in event_tag.GetAttributes():
                 # Ignore attribute container identifier values.
                 if isinstance(
