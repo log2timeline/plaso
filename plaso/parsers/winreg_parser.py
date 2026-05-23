@@ -131,16 +131,21 @@ class WinRegistryParser(interface.FileObjectParser):
         format_specification.AddNewSignature(b"regf", offset=0)
         return format_specification
 
-    def _ParseKeyWithPlugin(self, parser_mediator, registry_key, plugin):
+    def _ParseKeyWithPlugin(self, parser_mediator, win_registry, registry_key, plugin):
         """Parses the Registry key with a specific plugin.
 
         Args:
           parser_mediator (ParserMediator): parser mediator.
+          win_registry (dfwinreg.WinRegistry): Windows Registry.
           registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
           plugin (WindowsRegistryPlugin): Windows Registry plugin.
         """
+        kwargs = {}
+        for attribute_name, context_key_path in plugin.CONTEXT_KEYS.items():
+            kwargs[attribute_name] = win_registry.GetKeyByPath(context_key_path)
+
         try:
-            plugin.UpdateChainAndProcess(parser_mediator, registry_key)
+            plugin.UpdateChainAndProcess(parser_mediator, registry_key, **kwargs)
         except (OSError, dfwinreg_errors.WinRegistryValueError) as exception:
             parser_mediator.ProduceExtractionWarning(
                 f"in key: {registry_key.path:s} error: {exception!s}"
@@ -168,11 +173,12 @@ class WinRegistryParser(interface.FileObjectParser):
         # CurrentControlSet.
         return "".join([self._NORMALIZED_CONTROL_SET_PREFIX, normalized_key_path[39:]])
 
-    def _ParseKey(self, parser_mediator, registry_key):
+    def _ParseKey(self, parser_mediator, win_registry, registry_key):
         """Parses the Registry key with a specific plugin.
 
         Args:
           parser_mediator (ParserMediator): parser mediator.
+          win_registry (dfwinreg.WinRegistry): Windows Registry.
           registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
         """
         matching_plugin = None
@@ -200,19 +206,22 @@ class WinRegistryParser(interface.FileObjectParser):
             matching_plugin = self._default_plugin
 
         if matching_plugin:
-            self._ParseKeyWithPlugin(parser_mediator, registry_key, matching_plugin)
+            self._ParseKeyWithPlugin(
+                parser_mediator, win_registry, registry_key, matching_plugin
+            )
 
-    def _ParseRecurseKeys(self, parser_mediator, registry_key):
+    def _ParseRecurseKeys(self, parser_mediator, win_registry, registry_key):
         """Parses the Registry keys recursively.
 
         Args:
           parser_mediator (ParserMediator): parser mediator.
+          win_registry (dfwinreg.WinRegistry): Windows Registry.
           registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
         """
         # Note that we do not use dfWinReg generators here to be able to catch
         # exceptions raised by corrupt files.
 
-        self._ParseKey(parser_mediator, registry_key)
+        self._ParseKey(parser_mediator, win_registry, registry_key)
 
         for subkey_index in range(registry_key.number_of_subkeys):
             if parser_mediator.abort:
@@ -220,7 +229,7 @@ class WinRegistryParser(interface.FileObjectParser):
 
             try:
                 subkey = registry_key.GetSubkeyByIndex(subkey_index)
-                self._ParseRecurseKeys(parser_mediator, subkey)
+                self._ParseRecurseKeys(parser_mediator, win_registry, subkey)
 
             except OSError as exception:
                 parser_mediator.ProduceExtractionWarning(
@@ -232,7 +241,7 @@ class WinRegistryParser(interface.FileObjectParser):
 
         Args:
           parser_mediator (ParserMediator): parser mediator.
-          win_registry (dfwinreg.WinRegistryKey): root Windows Registry key.
+          win_registry (dfwinreg.WinRegistry): Windows Registry.
           find_specs (dfwinreg.FindSpecs): Keys to search for.
         """
         searcher = dfwinreg_registry_searcher.WinRegistrySearcher(win_registry)
@@ -241,7 +250,7 @@ class WinRegistryParser(interface.FileObjectParser):
                 break
 
             registry_key = searcher.GetKeyByPath(registry_key_path)
-            self._ParseKey(parser_mediator, registry_key)
+            self._ParseKey(parser_mediator, win_registry, registry_key)
 
     def ParseFileObject(self, parser_mediator, file_object):
         """Parses a Windows Registry file-like object.
@@ -271,10 +280,10 @@ class WinRegistryParser(interface.FileObjectParser):
             if root_key:
                 # For now treat AMCache.hve separately.
                 if root_key.name.lower() in self._AMCACHE_ROOT_KEY_NAMES:
-                    self._ParseRecurseKeys(parser_mediator, root_key)
+                    self._ParseRecurseKeys(parser_mediator, win_registry, root_key)
 
                 elif not parser_mediator.registry_find_specs:
-                    self._ParseRecurseKeys(parser_mediator, root_key)
+                    self._ParseRecurseKeys(parser_mediator, win_registry, root_key)
 
                 elif not self._ARTIFACTS_FILTER_HELPER.CheckKeyCompatibility(
                     key_path_prefix
@@ -283,7 +292,6 @@ class WinRegistryParser(interface.FileObjectParser):
                         f"Artifacts filters are not supported for Windows Registry "
                         f'file with key path prefix: "{key_path_prefix:s}".'
                     )
-
                 else:
                     win_registry.MapFile(key_path_prefix, registry_file)
                     # Note that win_registry will close the mapped registry_file.

@@ -207,9 +207,11 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
     NAME = "winreg_plugin"
     DATA_FORMAT = "Windows Registry data"
 
-    # List of Windows Registry key filters (instances of
-    # BaseWindowsRegistryKeyFilter) that should match for the plugin to
-    # parse the Windows Registry key or its values.
+    # Path of a Windows Registry key per argument name to pass to UpdateChainAndProcess.
+    CONTEXT_KEYS = {}
+
+    # List of Windows Registry key filters (instances of BaseWindowsRegistryKeyFilter)
+    # that should match for the plugin to parse the Windows Registry key or its values.
     FILTERS = frozenset()
 
     def _GetValueDataFromKey(self, registry_key, value_name):
@@ -359,8 +361,9 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
         if registry_key is None:
             raise ValueError("Windows Registry key is not set.")
 
-        # This will raise if unhandled keyword arguments are passed.
-        super().Process(parser_mediator, **kwargs)
+        if not self.CONTEXT_KEYS:
+            # This will raise if unhandled keyword arguments are passed.
+            super().Process(parser_mediator, **kwargs)
 
         self.ExtractEvents(parser_mediator, registry_key, **kwargs)
 

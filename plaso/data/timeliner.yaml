@@ -1787,6 +1787,12 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: true
 ---
+data_type: 'windows:registry:typedurlstime'
+attribute_mappings:
+- name: 'last_visited_time'
+  description: 'Last Visited Time'
+place_holder_event: true
+---
 data_type: 'windows:registry:usb'
 attribute_mappings:
 - name: 'last_written_time'
