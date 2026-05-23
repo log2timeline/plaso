@@ -18,22 +18,19 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         self._AssertFiltersOnKeyPath(
             plugin, "HKEY_LOCAL_MACHINE\\SAM", "SAM\\Domains\\Account\\Users"
         )
-
         self._AssertNotFiltersOnKeyPath(plugin, "HKEY_LOCAL_MACHINE\\SAM", "Bogus")
 
     def testProcess(self):
         """Tests the Process function."""
         test_file_entry = self._GetTestFileEntry(["regf", "SAM"])
         key_path = "HKEY_LOCAL_MACHINE\\SAM\\SAM\\Domains\\Account\\Users"
-
-        win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
-        registry_key = win_registry.GetKeyByPath(key_path)
-
         plugin = sam_users.SAMUsersWindowsRegistryPlugin()
-        storage_writer = self._ParseKeyWithPlugin(
-            registry_key, plugin, file_entry=test_file_entry
-        )
 
+        storage_writer = self._ParseKeyPathWithFileEntry(
+            test_file_entry,
+            key_path,
+            plugin,
+        )
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -60,7 +57,6 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
             "login_count": 3,
             "username": "Administrator",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

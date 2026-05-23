@@ -33,7 +33,6 @@ class WindowsRegistryInstallationEventDataTest(shared_test_lib.BaseTestCase):
             "service_pack",
             "version",
         ]
-
         attribute_names = sorted(attribute_container.GetAttributeNames())
 
         self.assertEqual(attribute_names, expected_attribute_names)
@@ -57,7 +56,6 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
             offset=153,
             relative_key_path="Microsoft\\Windows NT\\CurrentVersion",
         )
-
         value_data = "Service Pack 1".encode("utf_16_le")
         registry_value = dfwinreg_fake.FakeWinRegistryValue(
             "CSDVersion",
@@ -114,7 +112,6 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
             "HKEY_LOCAL_MACHINE\\Software",
             ("Microsoft\\Windows NT\\CurrentVersion"),
         )
-
         self._AssertNotFiltersOnKeyPath(plugin, "HKEY_LOCAL_MACHINE\\Software", "Bogus")
 
     def testProcess(self):
@@ -142,7 +139,6 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
         expected_key_path = (
             "HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion"
         )
-
         expected_event_values = {
             "data_type": "windows:registry:installation",
             "installation_time": "2012-08-31T20:09:55+00:00",
@@ -152,7 +148,6 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
             "service_pack": "Service Pack 1",
             "version": "5.1",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -167,23 +162,20 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
                 ("RegisteredOwner", "REG_SZ", "A Concerned Citizen"),
             ],
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 
-    def testProcessFile(self):
-        """Tests the Process function on a Windows Registry file."""
+    def testProcessWithSoftware(self):
+        """Tests the Process function with a SOFTWARE file."""
         test_file_entry = self._GetTestFileEntry(["SOFTWARE-RunTests"])
         key_path = "HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion"
-
-        win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
-        registry_key = win_registry.GetKeyByPath(key_path)
-
         plugin = windows_version.WindowsVersionPlugin()
-        storage_writer = self._ParseKeyWithPlugin(
-            registry_key, plugin, file_entry=test_file_entry
-        )
 
+        storage_writer = self._ParseKeyPathWithFileEntry(
+            test_file_entry,
+            key_path,
+            plugin,
+        )
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -208,7 +200,6 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
             "service_pack": "Service Pack 1",
             "version": "6.1",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

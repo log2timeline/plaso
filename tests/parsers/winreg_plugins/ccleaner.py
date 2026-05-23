@@ -20,21 +20,19 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
         self._AssertFiltersOnKeyPath(
             plugin, "HKEY_CURRENT_USER\\Software", "Piriform\\CCleaner"
         )
-
         self._AssertNotFiltersOnKeyPath(plugin, "HKEY_LOCAL_MACHINE\\Software", "Bogus")
 
     def testProcess(self):
         """Tests the Process function."""
-        plugin = ccleaner.CCleanerPlugin()
         test_file_entry = self._GetTestFileEntry(["NTUSER-CCLEANER.DAT"])
         key_path = "HKEY_CURRENT_USER\\Software\\Piriform\\CCleaner"
+        plugin = ccleaner.CCleanerPlugin()
 
-        win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
-        registry_key = win_registry.GetKeyByPath(key_path)
-        storage_writer = self._ParseKeyWithPlugin(
-            registry_key, plugin, file_entry=test_file_entry
+        storage_writer = self._ParseKeyPathWithFileEntry(
+            test_file_entry,
+            key_path,
+            plugin,
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -55,7 +53,6 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
             "key_path": key_path,
             "update_time": "2013-07-13T10:03:14",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -77,14 +74,12 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
             "WINDOW_TOP: 102 "
             "WINDOW_WIDTH: 733"
         )
-
         expected_event_values = {
             "configuration": expected_configuration,
             "data_type": "ccleaner:configuration",
             "key_path": key_path,
             "last_written_time": "2013-07-13T14:03:26.8616882+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 

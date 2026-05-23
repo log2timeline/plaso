@@ -47,13 +47,14 @@ class TestBagMRUWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
 
     def testProcessWithNtUserDat(self):
         """Tests the Process function on a NTUSER.DAT file."""
-        plugin = bagmru.BagMRUWindowsRegistryPlugin()
         test_file_entry = self._GetTestFileEntry(["regf", "NTUSER.DAT"])
         key_path = "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\Shell\\BagMRU"
-        win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
-        registry_key = win_registry.GetKeyByPath(key_path)
-        storage_writer = self._ParseKeyWithPlugin(
-            registry_key, plugin, file_entry=test_file_entry
+        plugin = bagmru.BagMRUWindowsRegistryPlugin()
+
+        storage_writer = self._ParseKeyPathWithFileEntry(
+            test_file_entry,
+            key_path,
+            plugin,
         )
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
@@ -81,16 +82,17 @@ class TestBagMRUWindowsRegistryPlugin(test_lib.RegistryPluginTestCase):
 
     def testProcessWithUsrClassDat(self):
         """Tests the Process function on an UsrClass.dat file."""
-        plugin = bagmru.BagMRUWindowsRegistryPlugin()
         test_file_entry = self._GetTestFileEntry(["regf", "UsrClass.dat"])
         key_path = (
             "HKEY_CURRENT_USER\\Software\\Classes\\Local Settings\\Software\\"
             "Microsoft\\Windows\\Shell\\BagMRU"
         )
-        win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
-        registry_key = win_registry.GetKeyByPath(key_path)
-        storage_writer = self._ParseKeyWithPlugin(
-            registry_key, plugin, file_entry=test_file_entry
+        plugin = bagmru.BagMRUWindowsRegistryPlugin()
+
+        storage_writer = self._ParseKeyPathWithFileEntry(
+            test_file_entry,
+            key_path,
+            plugin,
         )
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"

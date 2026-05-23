@@ -30,7 +30,6 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
             offset=1456,
             relative_key_path=("ControlSet001\\services\\TestDriver"),
         )
-
         value_data = b"\x02\x00\x00\x00"
         registry_value = dfwinreg_fake.FakeWinRegistryValue(
             "Type",
@@ -105,7 +104,6 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
             key_path_prefix="HKEY_LOCAL_MACHINE\\System",
             relative_key_path="ControlSet001\\services\\TestDriver",
         )
-
         result = self._CheckFiltersOnKeyPath(plugin, registry_key)
         self.assertFalse(result)
 
@@ -145,7 +143,6 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
         expected_key_path = (
             "HKEY_LOCAL_MACHINE\\System\\ControlSet001\\services\\TestDriver"
         )
-
         expected_event_values = {
             "data_type": "windows:registry:service",
             "error_control": 1,
@@ -164,21 +161,20 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
                 ),
             ],
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
-    def testProcessFile(self):
-        """Tests the Process function on a key in a file."""
+    def testProcessWithSystem(self):
+        """Tests the Process function on a SYSTEM file."""
         test_file_entry = self._GetTestFileEntry(["SYSTEM"])
         key_path = "HKEY_LOCAL_MACHINE\\System\\ControlSet001\\services\\BITS"
-
-        win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
-        registry_key = win_registry.GetKeyByPath(key_path)
-
         plugin = services.ServicesPlugin()
-        storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
+        storage_writer = self._ParseKeyPathWithFileEntry(
+            test_file_entry,
+            key_path,
+            plugin,
+        )
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -202,7 +198,6 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
             "service_type": 0x20,
             "start_type": 3,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

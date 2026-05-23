@@ -20,43 +20,36 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
             "HKEY_CURRENT_USER",
             ("Software\\Microsoft\\Office\\14.0\\Access\\File MRU"),
         )
-
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_CURRENT_USER",
             ("Software\\Microsoft\\Office\\14.0\\Access\\Place MRU"),
         )
-
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_CURRENT_USER",
             ("Software\\Microsoft\\Office\\14.0\\Excel\\File MRU"),
         )
-
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_CURRENT_USER",
             ("Software\\Microsoft\\Office\\14.0\\Excel\\Place MRU"),
         )
-
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_CURRENT_USER",
             ("Software\\Microsoft\\Office\\14.0\\PowerPoint\\File MRU"),
         )
-
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_CURRENT_USER",
             ("Software\\Microsoft\\Office\\14.0\\PowerPoint\\Place MRU"),
         )
-
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_CURRENT_USER",
             ("Software\\Microsoft\\Office\\14.0\\Word\\File MRU"),
         )
-
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_CURRENT_USER",
@@ -71,14 +64,13 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
         key_path = (
             "HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\Word\\File MRU"
         )
-        win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
-        registry_key = win_registry.GetKeyByPath(key_path)
-
         plugin = officemru.OfficeMRUPlugin()
-        storage_writer = self._ParseKeyWithPlugin(
-            registry_key, plugin, file_entry=test_file_entry
-        )
 
+        storage_writer = self._ParseKeyPathWithFileEntry(
+            test_file_entry,
+            key_path,
+            plugin,
+        )
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -112,7 +104,6 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
             ),
             "last_written_time": "2012-03-13T18:27:15.0898020+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 5)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -126,7 +117,6 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
                 "SA-23E Mitchell-Hyundyne Starfury.docx"
             ),
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
