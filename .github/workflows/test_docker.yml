@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        version: ['43']
+        version: ['44']
     container:
       image: registry.fedoraproject.org/fedora:${{ matrix.version }}
     steps:
