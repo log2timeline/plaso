@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "plaso"
-version = "20260526"
+version = "20260527"
 description = "Plaso (log2timeline) - Super timeline all the things"
 maintainers = [
     { name = "Log2Timeline maintainers", email = "log2timeline-maintainers@googlegroups.com" },
@@ -102,6 +102,15 @@ include = "\\.pyi?$"
 black = true
 non-cap = ["bool:", "dfDateTime", "dfVFS", "dfWinReg", "dtFabric", "int:", "iMessage", "iOS", "iPod", "iterator:", "mDNS", "str:", "uTorrent"]
 non-strict = true
+
+[tool.l2tdevtools]
+name = "plaso (log2timeline)"
+status = "beta"
+description = """
+Plaso (log2timeline) is a framework to create super timelines. Its purpose is \
+to extract timestamps from various files found on typical computer systems and \
+aggregate them. \
+"""
 
 [tool.setuptools]
 package-dir = {"plaso" = "plaso"}

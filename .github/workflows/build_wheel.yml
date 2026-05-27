@@ -1,0 +1,73 @@
+# Build Python sdist and wheel.
+name: build_wheels
+on:
+  pull_request:
+  push:
+  release:
+    types: [published]
+  # Allow trigger via API
+  workflow_dispatch:
+permissions: read-all
+jobs:
+  build_sdist:
+    name: Build sdist
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+    - name: Install build dependencies
+      run: |
+        sudo apt update
+        sudo apt -y install python3-build
+    - name: Build sdist
+      run: |
+        python -m build --sdist
+    - uses: actions/upload-artifact@v7
+      with:
+        name: cibw-sdist
+        path: dist/*.tar.gz
+  build_wheel:
+    name: Build wheel
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+    - name: Install build dependencies
+      run: |
+        sudo apt update
+        sudo apt -y install python3-build python3-wheel
+    - name: Build wheel
+      run: |
+        python -m build --wheel
+    - uses: actions/upload-artifact@v7
+      with:
+        name: cibw-wheels
+        path: dist/*.whl
+  upload_test_pypi:
+    needs: [build_sdist, build_wheel]
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    if: github.event_name == 'release' && github.event.action == 'published'
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: cibw-*
+          path: dist
+          merge-multiple: true
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+  upload_pypi:
+    needs: [upload_test_pypi]
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    if: github.event_name == 'release' && github.event.action == 'published'
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: cibw-*
+          path: dist
+          merge-multiple: true
+      - uses: pypa/gh-action-pypi-publish@release/v1
