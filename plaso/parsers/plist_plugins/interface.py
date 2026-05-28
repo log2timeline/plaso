@@ -840,8 +840,10 @@ class PlistPlugin(plugins.BasePlugin):
 
             for sub_plist_item in plist_item:
                 yield from self._RecurseKey(
-                    sub_plist_item, depth=depth - 1, key_path=key_path,
-                    visited_object_ids=visited_object_ids
+                    sub_plist_item,
+                    depth=depth - 1,
+                    key_path=key_path,
+                    visited_object_ids=visited_object_ids,
                 )
 
         elif hasattr(plist_item, "items"):
@@ -862,8 +864,10 @@ class PlistPlugin(plugins.BasePlugin):
                     if isinstance(sub_plist_item, dict):
                         subkey_path = "/".join([key_path, subkey_name])
                         yield from self._RecurseKey(
-                            sub_plist_item, depth=depth - 1, key_path=subkey_path,
-                            visited_object_ids=visited_object_ids
+                            sub_plist_item,
+                            depth=depth - 1,
+                            key_path=subkey_path,
+                            visited_object_ids=visited_object_ids,
                         )
 
     # pylint: disable=arguments-differ
