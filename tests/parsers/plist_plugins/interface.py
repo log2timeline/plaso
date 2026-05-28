@@ -185,6 +185,97 @@ class TestPlistPlugin(test_lib.PlistPluginTestCase):
         expected = {"DeviceCache", "44-00-00-00-00-04", "44-00-00-00-00-02"}
         self.assertTrue(expected == set(my_keys))
 
+    def testRecurseKeyShared(self):
+        """Tests the _RecurseKey function with shared object references."""
+        plugin = MockPlugin()
+ 
+        # The same dictionary is referenced by multiple keys, which forms a
+        # directed acyclic graph rather than a tree. _RecurseKey must flatten a
+        # shared dictionary once, not once per path that reaches it.
+        shared_dict = {"shared_key": "shared_value"}
+        intermediate_dict = {"first": shared_dict, "second": shared_dict}
+        top_level = {"left": intermediate_dict, "right": intermediate_dict}
+ 
+        result = list(plugin._RecurseKey(top_level))
+ 
+        number_of_shared_keys = 0
+        for _, key, _ in result:
+            if key == "shared_key":
+                number_of_shared_keys += 1
+        self.assertEqual(number_of_shared_keys, 1)
+ 
+    def testRecurseKeyCyclic(self):
+        """Tests the _RecurseKey function with a cyclic reference."""
+        plugin = MockPlugin()
+ 
+        # A dictionary that references itself must not cause _RecurseKey to
+        # recurse without bound.
+        top_level = {"name": "root"}
+        top_level["cycle"] = top_level
+ 
+        result = list(plugin._RecurseKey(top_level))
+ 
+        number_of_name_keys = 0
+        for _, key, _ in result:
+            if key == "name":
+                number_of_name_keys += 1
+        self.assertEqual(number_of_name_keys, 1)
+
+        
+class TestPlistPluginRecursionLimits(test_lib.PlistPluginTestCase):
+    """Tests the plist plugin interface with pathological object graphs."""
+ 
+    # pylint: disable=protected-access
+ 
+    def _CreateSharedGraph(self, fanout, depth):
+        """Creates a plist object graph that shares sub-objects.
+ 
+        Each level is a dictionary whose keys all reference the same next-level
+        dictionary, so a small number of objects is reachable by fanout**depth
+        distinct paths. plistlib produces this kind of graph when a binary plist
+        stores multiple references to the same object.
+ 
+        Args:
+          fanout (int): number of references to the shared sub-object per level.
+          depth (int): number of nested levels.
+ 
+        Returns:
+          dict[str, object]: top level object of the graph.
+        """
+        node = {"timestamp_key": "2009-06-15T12:00:00"}
+        for _ in range(depth):
+            node = {f"key{index:d}": node for index in range(fanout)}
+        return node
+ 
+    def testRecurseKeySharedGraph(self):
+        """Tests the _RecurseKey function with a deeply shared object graph."""
+        plugin = MockPlugin()
+ 
+        top_level = self._CreateSharedGraph(fanout=6, depth=14)
+ 
+        # Without deduplication this walk would not complete; with it the number
+        # of yielded values is bounded by the number of distinct objects.
+        result = list(plugin._RecurseKey(top_level))
+ 
+        self.assertLess(len(result), 1000)
+ 
+    def testRecurseKeyCyclicGraph(self):
+        """Tests the _RecurseKey function with a cyclic object graph."""
+        plugin = MockPlugin()
+ 
+        top_level = {"name": "root"}
+        child = {"parent": top_level}
+        top_level["child"] = child
+ 
+        result = list(plugin._RecurseKey(top_level))
+ 
+        number_of_name_keys = 0
+        for _, key, _ in result:
+            if key == "name":
+                number_of_name_keys += 1
+        self.assertEqual(number_of_name_keys, 1)
+
+
 
 if __name__ == "__main__":
     unittest.main()
