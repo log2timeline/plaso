@@ -516,7 +516,7 @@ message:
 - '{log_type}'
 - '{body}'
 - 'Hostname: {hostname}'
-- 'Realm: {realm}'
+- 'Log context: {log_context}'
 - 'IP address: {ip_address}'
 - 'Username: {username}'
 short_message:

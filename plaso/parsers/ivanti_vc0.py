@@ -21,10 +21,10 @@ class IvantiVC0EventData(events.EventData):
       hostname (str): appliance hostname.
       ip_address (str): IP address found in the record values.
       line_number (str): line number.
+      log_context (str): context value found before the record values.
       log_type (str): log family, "admin", "access", "diagnosticlog", "events",
           "policytrace" or "sensorslog".
       message_code (str): Ivanti message code.
-      realm (str): Ivanti realm.
       recorded_time (dfdatetime.DateTimeValues): record timestamp.
       record_identifier (str): original record identifier in the format:
           "{timestamp:08x}.{line_number:08x}".
@@ -40,9 +40,9 @@ class IvantiVC0EventData(events.EventData):
         self.hostname = None
         self.ip_address = None
         self.line_number = None
+        self.log_context = None
         self.log_type = None
         self.message_code = None
-        self.realm = None
         self.recorded_time = None
         self.record_identifier = None
         self.username = None
@@ -116,12 +116,12 @@ class IvantiVC0Parser(interface.FileObjectParser):
 
         return header_data[0:8] == self._HEADER_SIGNATURE and not any(header_data[8:])
 
-    def _CreateBody(self, record_values, realm, ip_address, username):
+    def _CreateBody(self, record_values, log_context, ip_address, username):
         """Builds the short body used by formatters.
 
         Args:
-          record_values (list[str]): values after the realm field.
-          realm (str): Ivanti realm.
+          record_values (list[str]): values after the context field.
+          log_context (str): context value found before the record values.
           ip_address (str): IP address found in the record values.
           username (str): username found in the record values.
 
@@ -132,7 +132,7 @@ class IvantiVC0Parser(interface.FileObjectParser):
             value.strip() for value in record_values if value and value.strip()
         ]
         leading_metadata_values = {
-            value for value in (ip_address, realm, username) if value
+            value for value in (ip_address, log_context, username) if value
         }
         while body_values and body_values[0] in leading_metadata_values:
             body_values.pop(0)
@@ -245,14 +245,7 @@ class IvantiVC0Parser(interface.FileObjectParser):
           record_offset (int): offset of the record data relative to the start of the
               file.
         """
-        try:
-            record = record_data.decode("utf-8")
-        except UnicodeDecodeError:
-            parser_mediator.ProduceExtractionWarning(
-                f"Invalid record at offset: 0x{record_offset:08x} - unable to decode "
-                f"as UTF-8"
-            )
-            return
+        record = record_data.decode("utf-8", errors="replace")
 
         # TODO: determine if this is needed.
         record = record.translate(self._NON_PRINTABLE_CHARACTER_TRANSLATION_TABLE)
@@ -325,7 +318,7 @@ class IvantiVC0Parser(interface.FileObjectParser):
         event_data.record_identifier = record_identifier
 
         if number_of_fields > 4:
-            event_data.realm = fields[4] or None
+            event_data.log_context = fields[4] or None
         if number_of_fields > 5:
             event_data.ip_address = self._ExtractIPAddress(fields[5])
         if number_of_fields > 6:
@@ -333,7 +326,10 @@ class IvantiVC0Parser(interface.FileObjectParser):
 
         if number_of_fields > 5:
             event_data.body = self._CreateBody(
-                fields[5:], event_data.realm, event_data.ip_address, event_data.username
+                fields[5:],
+                event_data.log_context,
+                event_data.ip_address,
+                event_data.username,
             )
 
         parser_mediator.ProduceEventData(event_data)
