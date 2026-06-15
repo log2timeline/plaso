@@ -121,9 +121,9 @@ class LinuxStandardBaseReleasePlugin(interface.FileArtifactPreprocessorPlugin):
         product_values = {}
         for line in text_file_object.readlines():
             line = line.strip()
-            if line.startswith("#"):
+            if line.startswith("#") or "=" not in line:
                 continue
-            key, value = line.split("=")
+            key, _, value = line.partition("=")
             key = key.strip().upper()
             value = value.strip().strip('"')
             product_values[key] = value
@@ -160,7 +160,7 @@ class LinuxSystemdOperatingSystemPlugin(interface.FileArtifactPreprocessorPlugin
             if "=" not in line:
                 continue
 
-            key, value = line.split("=")
+            key, _, value = line.partition("=")
             key = key.upper()
             value = value.strip('"')
             product_values[key] = value

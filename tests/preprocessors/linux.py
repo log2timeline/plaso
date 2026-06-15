@@ -80,10 +80,14 @@ class LinuxStandardBaseReleasePluginTest(test_lib.ArtifactPreprocessorPluginTest
     """Tests for the Linux standard base (LSB) release plugin."""
 
     _FILE_DATA = b"""\
+# Distribution release information.
 DISTRIB_CODENAME=trusty
 DISTRIB_DESCRIPTION="Ubuntu 14.04 LTS"
 DISTRIB_ID=Ubuntu
-DISTRIB_RELEASE=14.04"""
+DISTRIB_RELEASE=14.04
+
+DISTRIB_NOTE=key=value=pair
+"""
 
     def testParseFileData(self):
         """Tests the _ParseFileData function."""
@@ -123,6 +127,9 @@ class LinuxSystemdOperatingSystemPluginTest(
         b"PRIVACY_POLICY_URL=https://fedoraproject.org/wiki/Legal:PrivacyPolicy\n"
         b'VARIANT="Workstation Edition"\n'
         b"VARIANT_ID=workstation\n"
+        b"# Documentation references.\n"
+        b"\n"
+        b'DOCUMENTATION_URL="https://docs.fedoraproject.org/?lang=en"\n'
     )
 
     def testParseFileData(self):
