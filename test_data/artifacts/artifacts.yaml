@@ -16,6 +16,13 @@ sources:
 labels: [System]
 supported_os: [Linux]
 ---
+name: LinuxTimezoneFile
+doc: Linux timezone file.
+sources:
+- type: FILE
+  attributes: {paths: ['/etc/timezone']}
+supported_os: [Linux]
+---
 name: LinuxPasswdFile
 doc: |
   Linux passwd file.

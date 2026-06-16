@@ -4,9 +4,11 @@
 import unittest
 
 from dfvfs.helpers import fake_file_system_builder
+from dfvfs.helpers import file_system_searcher
 from dfvfs.path import fake_path_spec
 
 from plaso.preprocessors import linux
+from plaso.preprocessors import mediator
 
 from tests.preprocessors import test_lib
 
@@ -244,6 +246,99 @@ class LinuxTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
         self.assertEqual(number_of_warnings, 1)
 
         self.assertIsNone(test_mediator.time_zone)
+
+
+class LinuxTimeZoneDebianPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
+    """Tests for the Linux Debian time zone plugin."""
+
+    def testParseFileData(self):
+        """Tests the _ParseFileData function on an /etc/timezone file."""
+        file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+        file_system_builder.AddFile("/etc/timezone", b"Europe/Zurich\n")
+
+        mount_point = fake_path_spec.FakePathSpec(location="/")
+
+        storage_writer = self._CreateTestStorageWriter()
+
+        plugin = linux.LinuxTimeZoneDebianPlugin()
+        test_mediator = self._RunPreprocessorPluginOnFileSystem(
+            file_system_builder.file_system, mount_point, storage_writer, plugin
+        )
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "preprocessing_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        self.assertEqual(test_mediator.time_zone.zone, "Europe/Zurich")
+
+    def testParseFileDataWithBogusTimeZone(self):
+        """Tests the _ParseFileData function with an unsupported time zone."""
+        file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+        file_system_builder.AddFile("/etc/timezone", b"Bogus/Zone\n")
+
+        mount_point = fake_path_spec.FakePathSpec(location="/")
+
+        storage_writer = self._CreateTestStorageWriter()
+
+        plugin = linux.LinuxTimeZoneDebianPlugin()
+        test_mediator = self._RunPreprocessorPluginOnFileSystem(
+            file_system_builder.file_system, mount_point, storage_writer, plugin
+        )
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "preprocessing_warning"
+        )
+        self.assertEqual(number_of_warnings, 1)
+
+        self.assertIsNone(test_mediator.time_zone)
+
+    def testTimeZoneFileTakesPrecedenceOverLocalTime(self):
+        """Tests that /etc/timezone overrides the /etc/localtime abbreviation."""
+        test_file_path = self._GetTestFilePath(["localtime.tzif"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+        file_system_builder.AddFileReadData("/etc/localtime", test_file_path)
+        file_system_builder.AddFile("/etc/timezone", b"Europe/Zurich\n")
+
+        mount_point = fake_path_spec.FakePathSpec(location="/")
+
+        storage_writer = self._CreateTestStorageWriter()
+
+        # The two plugins are run on a shared mediator in the same order they are
+        # registered in linux.py: LinuxTimeZonePlugin first derives the "CET"
+        # abbreviation from the copied /etc/localtime file, then
+        # LinuxTimeZoneDebianPlugin overrides it with the IANA name read from
+        # /etc/timezone.
+        test_mediator = mediator.PreprocessMediator(storage_writer)
+        searcher = file_system_searcher.FileSystemSearcher(
+            file_system_builder.file_system, mount_point
+        )
+
+        local_time_plugin = linux.LinuxTimeZonePlugin()
+        local_time_definition = self._artifacts_registry.GetDefinitionByName(
+            local_time_plugin.ARTIFACT_DEFINITION_NAME
+        )
+        local_time_plugin.Collect(
+            test_mediator,
+            local_time_definition,
+            searcher,
+            file_system_builder.file_system,
+        )
+        self.assertEqual(test_mediator.time_zone.zone, "CET")
+
+        debian_plugin = linux.LinuxTimeZoneDebianPlugin()
+        debian_definition = self._artifacts_registry.GetDefinitionByName(
+            debian_plugin.ARTIFACT_DEFINITION_NAME
+        )
+        debian_plugin.Collect(
+            test_mediator,
+            debian_definition,
+            searcher,
+            file_system_builder.file_system,
+        )
+        self.assertEqual(test_mediator.time_zone.zone, "Europe/Zurich")
 
 
 class LinuxUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):

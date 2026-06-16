@@ -217,6 +217,46 @@ class LinuxTimeZonePlugin(interface.FileEntryArtifactPreprocessorPlugin):
                 )
 
 
+class LinuxTimeZoneDebianPlugin(interface.FileArtifactPreprocessorPlugin):
+    """Linux time zone plugin for the /etc/timezone file.
+
+    The /etc/timezone file, used by Debian-based distributions, contains the
+    IANA time zone name, for example "Europe/Zurich". This is preferred over
+    the time zone abbreviation that LinuxTimeZonePlugin derives from a copied
+    /etc/localtime file, for example "CET", which is ambiguous. This plugin is
+    registered after LinuxTimeZonePlugin so that the IANA name, when present,
+    takes precedence.
+    """
+
+    ARTIFACT_DEFINITION_NAME = "LinuxTimezoneFile"
+
+    def _ParseFileData(self, mediator, file_object):
+        """Parses file content (data) for a time zone preprocessing attribute.
+
+        Args:
+          mediator (PreprocessMediator): mediates interactions between preprocess
+              plugins and other components, such as storage.
+          file_object (dfvfs.FileIO): file-like object that contains the artifact
+              value data.
+
+        Raises:
+          errors.PreProcessFail: if the preprocessing fails.
+        """
+        text_file_object = dfvfs_text_file.TextFile(file_object, encoding="utf-8")
+
+        time_zone = text_file_object.readline()
+        time_zone = time_zone.strip()
+
+        if time_zone:
+            try:
+                mediator.SetTimeZone(time_zone)
+            except ValueError:
+                mediator.ProducePreprocessingWarning(
+                    self.ARTIFACT_DEFINITION_NAME,
+                    f"Unable to set time zone: {time_zone:s} in knowledge base.",
+                )
+
+
 class LinuxUserAccountsPlugin(interface.FileArtifactPreprocessorPlugin):
     """The Linux user accounts plugin."""
 
@@ -333,6 +373,10 @@ manager.PreprocessPluginsManager.RegisterPlugins(
         LinuxStandardBaseReleasePlugin,
         LinuxSystemdOperatingSystemPlugin,
         LinuxTimeZonePlugin,
+        # LinuxTimeZoneDebianPlugin is registered after LinuxTimeZonePlugin so
+        # that the IANA time zone name from /etc/timezone takes precedence over
+        # the time zone abbreviation derived from a copied /etc/localtime file.
+        LinuxTimeZoneDebianPlugin,
         LinuxUserAccountsPlugin,
     ]
 )
