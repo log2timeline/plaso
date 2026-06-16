@@ -286,11 +286,33 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
 
         return entry_object_offsets
 
-    @staticmethod
-    def _SplitFieldData(field_data):
+    def _DecodeFieldData(self, parser_mediator, byte_data):
+        """Decodes journal field data as UTF-8.
+
+        Produces an extraction warning when the data contains invalid UTF-8,
+        which is replaced rather than raising.
+
+        Args:
+          parser_mediator (ParserMediator): parser mediator.
+          byte_data (bytes): journal field data to decode.
+
+        Returns:
+          str: data decoded as UTF-8, with invalid bytes replaced.
+        """
+        try:
+            return byte_data.decode("utf-8")
+        except UnicodeDecodeError:
+            parser_mediator.ProduceExtractionWarning(
+                "Unable to decode journal field data as UTF-8, replaced invalid "
+                "characters"
+            )
+            return byte_data.decode("utf-8", errors="replace")
+
+    def _SplitFieldData(self, parser_mediator, field_data):
         """Splits journal field data into a key and value.
 
         Args:
+          parser_mediator (ParserMediator): parser mediator.
           field_data (bytes): journal field data, which is "key=value" where the
               value can contain arbitrary binary (non-UTF-8) data.
 
@@ -300,16 +322,17 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
         """
         key, _, value = field_data.partition(b"=")
         return (
-            key.decode("utf-8", errors="replace"),
-            value.decode("utf-8", errors="replace"),
+            self._DecodeFieldData(parser_mediator, key),
+            self._DecodeFieldData(parser_mediator, value),
         )
 
-    def _ParseJournalEntry(self, file_object, file_offset):
+    def _ParseJournalEntry(self, parser_mediator, file_object, file_offset):
         """Parses a journal entry.
 
         This method will generate an event per ENTRY object.
 
         Args:
+          parser_mediator (ParserMediator): parser mediator.
           file_object (dfvfs.FileIO): a file-like object.
           file_offset (int): offset of the entry object relative to the start
               of the file-like object.
@@ -354,7 +377,7 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
                 )
 
             field_data = self._ParseDataObject(file_object, entry_item.object_offset)
-            key, value = self._SplitFieldData(field_data)
+            key, value = self._SplitFieldData(parser_mediator, field_data)
             fields[key] = value
 
         return fields
@@ -416,7 +439,9 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
                 continue
 
             try:
-                fields = self._ParseJournalEntry(file_object, entry_object_offset)
+                fields = self._ParseJournalEntry(
+                    parser_mediator, file_object, entry_object_offset
+                )
             except errors.ParseError as exception:
                 parser_mediator.ProduceExtractionWarning(
                     f"Unable to parse journal entry at offset: "

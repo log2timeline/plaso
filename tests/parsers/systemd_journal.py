@@ -19,16 +19,28 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
     def testSplitFieldData(self):
         """Tests the _SplitFieldData function with text and binary values."""
         parser = systemd_journal.SystemdJournalParser()
+        storage_writer = self._CreateStorageWriter()
+        parser_mediator = self._CreateParserMediator(storage_writer)
 
-        key, value = parser._SplitFieldData(b"MESSAGE=hello world")
+        key, value = parser._SplitFieldData(parser_mediator, b"MESSAGE=hello world")
         self.assertEqual(key, "MESSAGE")
         self.assertEqual(value, "hello world")
 
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
         # A value with non-UTF-8 bytes must decode with replacement characters
-        # rather than raising a UnicodeDecodeError.
-        key, value = parser._SplitFieldData(b"MESSAGE=abc\xff\xfexyz")
+        # and produce an extraction warning rather than silently replacing them.
+        key, value = parser._SplitFieldData(parser_mediator, b"MESSAGE=abc\xff\xfexyz")
         self.assertEqual(key, "MESSAGE")
         self.assertEqual(value, "abc" + chr(0xFFFD) * 2 + "xyz")
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 1)
 
     def testParseDataObjectWithCorruptCompressedData(self):
         """Tests _ParseDataObject raises ParseError on corrupt compressed data."""
