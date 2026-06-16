@@ -141,7 +141,7 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
         if data_object.object_flags & self._OBJECT_COMPRESSED_FLAG_XZ:
             try:
                 data = lzma.decompress(data)
-            except (lzma.LZMAError, EOFError) as exception:
+            except (EOFError, lzma.LZMAError) as exception:
                 raise errors.ParseError(
                     f"Unable to decompress XZ at offset: 0x{data_offset:08x} with "
                     f"error: {exception!s}"
@@ -164,7 +164,7 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
                 data = lz4_block.decompress(
                     data[8:], uncompressed_size=uncompressed_size
                 )
-            except (lz4_block.LZ4BlockError, ValueError) as exception:
+            except (ValueError, lz4_block.LZ4BlockError) as exception:
                 raise errors.ParseError(
                     f"Unable to decompress LZ4 at offset: 0x{data_offset:08x} with "
                     f"error: {exception!s}"
