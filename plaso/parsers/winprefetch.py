@@ -112,11 +112,18 @@ class WinPrefetchParser(interface.FileObjectParser):
                 if not filename:
                     continue
 
-                if filename.startswith(volume_device_path) and filename.endswith(
-                    executable_filename
-                ):
+                if filename.startswith(volume_device_path):
                     _, _, path = filename.partition(volume_device_path)
-                    path_hints.append(path)
+                    _, _, basename = path.rpartition("\\")
+                    if basename.lower() == executable_filename.lower():
+                        path_hints.append(path)
+                    elif (
+                        len(executable_filename) == 29
+                        and basename.lower().startswith(
+                            executable_filename.lower()
+                        )
+                    ):
+                        path_hints.append(path)
 
         mapped_files = []
         for entry_index, file_metrics in enumerate(scca_file.file_metrics_entries):

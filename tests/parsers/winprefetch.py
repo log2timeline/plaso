@@ -506,6 +506,55 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
+    def testParse31TruncatedFilename(self):
+        """Tests Parse on a version 30 Prefetch file with a truncated filename."""
+        parser = winprefetch.WinPrefetchParser()
+        storage_writer = self._ParseFile(
+            ["winprefetch", "AM_DELTA_PATCH_1.443.990.0.EX-7037CF86.pf"], parser
+        )
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 2)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "recovery_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        # Check the prefetch execution event data.
+        expected_event_values = {
+            "data_type": "windows:prefetch:execution",
+            "executable": "AM_DELTA_PATCH_1.443.990.0.EX",
+            "path_hints": [
+                "\\WINDOWS\\SOFTWAREDISTRIBUTION\\DOWNLOAD\\INSTALL\\"
+                "AM_DELTA_PATCH_1.443.990.0.EXE"
+            ],
+            "prefetch_hash": 0x7037CF86,
+            "run_count": 1,
+            "version": 31,
+        }
+
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # Check the volume creation event data.
+        expected_event_values = {
+            "data_type": "windows:volume:creation",
+            "device_path": "\\VOLUME{01dc94cf1f08c4a4-bc1f1bfc}",
+            "origin": "AM_DELTA_PATCH_1.443.990.0.EX-7037CF86.pf",
+            "serial_number": 0xBC1F1BFC,
+        }
+
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
+
 
 if __name__ == "__main__":
     unittest.main()
