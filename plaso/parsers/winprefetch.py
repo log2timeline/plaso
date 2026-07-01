@@ -117,11 +117,8 @@ class WinPrefetchParser(interface.FileObjectParser):
                     _, _, basename = path.rpartition("\\")
                     if basename.lower() == executable_filename.lower():
                         path_hints.append(path)
-                    elif (
-                        len(executable_filename) == 29
-                        and basename.lower().startswith(
-                            executable_filename.lower()
-                        )
+                    elif len(executable_filename) == 29 and basename.lower().startswith(
+                        executable_filename.lower()
                     ):
                         path_hints.append(path)
 
