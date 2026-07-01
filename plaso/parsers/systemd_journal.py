@@ -286,30 +286,8 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
 
         return entry_object_offsets
 
-    def _DecodeFieldData(self, parser_mediator, byte_data):
-        """Decodes journal field data as UTF-8.
-
-        Produces an extraction warning when the data contains invalid UTF-8,
-        which is replaced rather than raising.
-
-        Args:
-          parser_mediator (ParserMediator): parser mediator.
-          byte_data (bytes): journal field data to decode.
-
-        Returns:
-          str: data decoded as UTF-8, with invalid bytes replaced.
-        """
-        try:
-            return byte_data.decode("utf-8")
-        except UnicodeDecodeError:
-            parser_mediator.ProduceExtractionWarning(
-                "Unable to decode journal field data as UTF-8, replaced invalid "
-                "characters"
-            )
-            return byte_data.decode("utf-8", errors="replace")
-
-    def _SplitFieldData(self, parser_mediator, field_data):
-        """Splits journal field data into a key and value.
+    def _ParseKeyValuePair(self, parser_mediator, field_data):
+        """Parses a key value pair.
 
         Args:
           parser_mediator (ParserMediator): parser mediator.
@@ -320,11 +298,27 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
           tuple[str, str]: key and value decoded as UTF-8, with invalid bytes
               replaced rather than raising.
         """
-        key, _, value = field_data.partition(b"=")
-        return (
-            self._DecodeFieldData(parser_mediator, key),
-            self._DecodeFieldData(parser_mediator, value),
-        )
+        key_data, _, value_data = field_data.partition(b"=")
+
+        try:
+            key = key_data.decode("utf-8")
+        except UnicodeDecodeError:
+            parser_mediator.ProduceExtractionWarning(
+                "Unable to decode journal field key as UTF-8. Unsupported code points "
+                "are escaped."
+            )
+            key = key_data.decode("utf-8", errors="backslashreplace")
+
+        try:
+            value = value_data.decode("utf-8")
+        except UnicodeDecodeError:
+            parser_mediator.ProduceExtractionWarning(
+                f"Unable to decode journal field with key: {key:s} value as UTF-8. "
+                f"Unsupported code points are escaped."
+            )
+            value = value_data.decode("utf-8", errors="backslashreplace")
+
+        return key, value
 
     def _ParseJournalEntry(self, parser_mediator, file_object, file_offset):
         """Parses a journal entry.
@@ -363,8 +357,8 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
                 )
             except (ValueError, errors.ParseError) as exception:
                 raise errors.ParseError(
-                    f"Unable to parse entry item at offset: 0x{file_offset:08x} "
-                    f"with error: {exception!s}"
+                    f"Unable to parse entry item at offset: 0x{file_offset:08x} with "
+                    f"error: {exception!s}"
                 )
 
             file_offset += entry_item_data_size
@@ -377,7 +371,7 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
                 )
 
             field_data = self._ParseDataObject(file_object, entry_item.object_offset)
-            key, value = self._SplitFieldData(parser_mediator, field_data)
+            key, value = self._ParseKeyValuePair(parser_mediator, field_data)
             fields[key] = value
 
         return fields
