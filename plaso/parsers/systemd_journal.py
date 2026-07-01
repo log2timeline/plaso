@@ -139,7 +139,13 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
         data = file_object.read(data_size)
 
         if data_object.object_flags & self._OBJECT_COMPRESSED_FLAG_XZ:
-            data = lzma.decompress(data)
+            try:
+                data = lzma.decompress(data)
+            except (EOFError, lzma.LZMAError) as exception:
+                raise errors.ParseError(
+                    f"Unable to decompress XZ at offset: 0x{data_offset:08x} with "
+                    f"error: {exception!s}"
+                )
 
         elif data_object.object_flags & self._OBJECT_COMPRESSED_FLAG_LZ4:
             uncompressed_size_map = self._GetDataTypeMap("uint32le")
@@ -154,7 +160,15 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
                     f"0x{data_offset:08x} with error: {exception!s}"
                 )
 
-            data = lz4_block.decompress(data[8:], uncompressed_size=uncompressed_size)
+            try:
+                data = lz4_block.decompress(
+                    data[8:], uncompressed_size=uncompressed_size
+                )
+            except (ValueError, lz4_block.LZ4BlockError) as exception:
+                raise errors.ParseError(
+                    f"Unable to decompress LZ4 at offset: 0x{data_offset:08x} with "
+                    f"error: {exception!s}"
+                )
 
         elif data_object.object_flags & self._OBJECT_COMPRESSED_FLAG_ZSTD:
             try:
@@ -272,12 +286,47 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
 
         return entry_object_offsets
 
-    def _ParseJournalEntry(self, file_object, file_offset):
+    def _ParseKeyValuePair(self, parser_mediator, field_data):
+        """Parses a key value pair.
+
+        Args:
+          parser_mediator (ParserMediator): parser mediator.
+          field_data (bytes): journal field data, which is "key=value" where the
+              value can contain arbitrary binary (non-UTF-8) data.
+
+        Returns:
+          tuple[str, str]: key and value decoded as UTF-8, with invalid bytes
+              replaced rather than raising.
+        """
+        key_data, _, value_data = field_data.partition(b"=")
+
+        try:
+            key = key_data.decode("utf-8")
+        except UnicodeDecodeError:
+            parser_mediator.ProduceExtractionWarning(
+                "Unable to decode journal field key as UTF-8. Unsupported code points "
+                "are escaped."
+            )
+            key = key_data.decode("utf-8", errors="backslashreplace")
+
+        try:
+            value = value_data.decode("utf-8")
+        except UnicodeDecodeError:
+            parser_mediator.ProduceExtractionWarning(
+                f"Unable to decode journal field with key: {key:s} value as UTF-8. "
+                f"Unsupported code points are escaped."
+            )
+            value = value_data.decode("utf-8", errors="backslashreplace")
+
+        return key, value
+
+    def _ParseJournalEntry(self, parser_mediator, file_object, file_offset):
         """Parses a journal entry.
 
         This method will generate an event per ENTRY object.
 
         Args:
+          parser_mediator (ParserMediator): parser mediator.
           file_object (dfvfs.FileIO): a file-like object.
           file_offset (int): offset of the entry object relative to the start
               of the file-like object.
@@ -308,8 +357,8 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
                 )
             except (ValueError, errors.ParseError) as exception:
                 raise errors.ParseError(
-                    f"Unable to parse entry item at offset: 0x{file_offset:08x} "
-                    f"with error: {exception!s}"
+                    f"Unable to parse entry item at offset: 0x{file_offset:08x} with "
+                    f"error: {exception!s}"
                 )
 
             file_offset += entry_item_data_size
@@ -321,9 +370,8 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
                     f"{self._maximum_journal_file_offset:d})"
                 )
 
-            event_data = self._ParseDataObject(file_object, entry_item.object_offset)
-            event_string = event_data.decode("utf-8")
-            key, value = event_string.split("=", 1)
+            field_data = self._ParseDataObject(file_object, entry_item.object_offset)
+            key, value = self._ParseKeyValuePair(parser_mediator, field_data)
             fields[key] = value
 
         return fields
@@ -385,13 +433,15 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
                 continue
 
             try:
-                fields = self._ParseJournalEntry(file_object, entry_object_offset)
+                fields = self._ParseJournalEntry(
+                    parser_mediator, file_object, entry_object_offset
+                )
             except errors.ParseError as exception:
                 parser_mediator.ProduceExtractionWarning(
                     f"Unable to parse journal entry at offset: "
                     f"0x{entry_object_offset:08x} with error: {exception!s}"
                 )
-                return
+                continue
 
             date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
                 timestamp=fields["real_time"]
