@@ -324,11 +324,11 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
         """
         # Some parsers have written bytes values to storage.
         if isinstance(field, bytes):
-            field = field.decode("utf-8", "replace")
             logger.warning(
-                f"Found bytes value for attribute: {attribute_name:s} of data type: "
-                f'{data_type!s}. Value was converted to UTF-8: "{field:s}"'
+                f"Found bytes value for attribute '{attribute_name:s}' for data type: "
+                f"{data_type!s}. Unsupported UTF-8 code points are escaped."
             )
+            field = field.decode("utf-8", "backslashreplace")
 
         return field
 

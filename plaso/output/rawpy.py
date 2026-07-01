@@ -164,12 +164,12 @@ class NativePythonOutputModule(text_file.TextFileOutputModule):
 
             # Some parsers have written bytes values to storage.
             if isinstance(attribute_value, bytes):
-                attribute_value = attribute_value.decode("utf-8", "replace")
                 logger.warning(
-                    f'Found bytes value for attribute "{attribute_name:s}" for data '
-                    f"type: {event_data.data_type!s}. Value was converted to UTF-8: "
-                    f'"{attribute_value:s}"'
+                    f"Found bytes value for attribute '{attribute_name:s}' for "
+                    f"data type: {event_data.data_type!s}. Unsupported UTF-8 code "
+                    f"points are escaped."
                 )
+                attribute_value = attribute_value.decode("utf-8", "backslashreplace")
 
             # Output _parser_chain as parser for backwards compatibility.
             if attribute_name == "_parser_chain":

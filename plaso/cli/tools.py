@@ -108,10 +108,9 @@ class CLITool:
                 logger.error(
                     "Unable to properly write output due to encoding error. "
                     "Switching to error tolerant encoding which can result in "
-                    'non Basic Latin (C0) characters to be replaced with "?" or '
-                    '"\\ufffd".'
+                    "unsupported code points being escaped."
                 )
-                self._encode_errors = "replace"
+                self._encode_errors = "backslashreplace"
 
             encoded_string = string.encode(
                 self.preferred_encoding, errors=self._encode_errors
@@ -361,16 +360,13 @@ class CLITool:
                 command_line_arguments = [
                     argument.decode(encoding) for argument in command_line_arguments
                 ]
-
             except UnicodeDecodeError:
                 logger.error(
                     "Unable to properly read command line input due to encoding "
-                    'error. Replacing non Basic Latin (C0) characters with "?" or '
-                    '"\\ufffd".'
+                    "error. Unsupported code points are escaped."
                 )
-
                 command_line_arguments = [
-                    argument.decode(encoding, errors="replace")
+                    argument.decode(encoding, errors="backslashreplace")
                     for argument in command_line_arguments
                 ]
 
@@ -580,10 +576,9 @@ class FileObjectInputReader(CLIInputReader):
                 logger.error(
                     "Unable to properly read input due to encoding error. "
                     "Switching to error tolerant encoding which can result in "
-                    'non Basic Latin (C0) characters to be replaced with "?" or '
-                    '"\\ufffd".'
+                    "unsupported code points being escaped."
                 )
-                self._errors = "replace"
+                self._errors = "backslashreplace"
 
             string = codecs.decode(encoded_string, self._encoding, self._errors)
 
@@ -646,10 +641,9 @@ class FileObjectOutputWriter(CLIOutputWriter):
                 logger.error(
                     "Unable to properly write output due to encoding error. "
                     "Switching to error tolerant encoding which can result in "
-                    'non Basic Latin (C0) characters to be replaced with "?" or '
-                    '"\\ufffd".'
+                    "unsupported code points being escaped."
                 )
-                self._errors = "replace"
+                self._errors = "backslashreplace"
 
             encoded_string = codecs.encode(string, self._encoding, self._errors)
 
