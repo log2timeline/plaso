@@ -7,7 +7,6 @@ import os
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
-from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.parsers import interface
 from plaso.parsers import manager
@@ -89,11 +88,6 @@ class IvantiVC0Parser(interface.FileObjectParser):
 
     _LOG_FILENAME_RE = re.compile(r"^.*[.](?P<log_type>.+?)[.]vc0(?:[.]old)?$")
     _MESSAGE_CODE_RE = re.compile(r"^[A-Z]{3}\d{5}$")
-
-    _NON_PRINTABLE_CHARACTER_TRANSLATION_TABLE = (
-        definitions.NON_PRINTABLE_CHARACTER_TRANSLATION_TABLE.copy()
-    )
-    _NON_PRINTABLE_CHARACTER_TRANSLATION_TABLE.pop(ord("\t"), None)
 
     _RECORD_SEPARATOR_RE = re.compile(b"\\x05")
 
@@ -249,13 +243,10 @@ class IvantiVC0Parser(interface.FileObjectParser):
             record = record_data.decode("utf-8")
         except UnicodeDecodeError:
             parser_mediator.ProduceExtractionWarning(
-                f"Invalid record at offset: 0x{record_offset:08x} - unable to decode "
-                f"as UTF-8"
+                f"unable to decode record at offset: 0x{record_offset:08x} as UTF-8. "
+                f"Unsupported code points are escaped."
             )
-            return
-
-        # TODO: determine if this is needed.
-        record = record.translate(self._NON_PRINTABLE_CHARACTER_TRANSLATION_TABLE)
+            record = record_data.decode("utf-8", errors="backslashreplace")
 
         fields = record.split("\t")
 

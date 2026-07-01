@@ -15,15 +15,13 @@ class WinRecycleBinEventData(events.EventData):
     """Windows Recycle Bin event data.
 
     Attributes:
-      deletion_time (dfdatetime.DateTimeValues): file entry deletion date
-          and time.
+      deletion_time (dfdatetime.DateTimeValues): file entry deletion date and time.
       drive_number (int): drive number.
       file_size (int): file size.
-      offset (int): offset of the Recycle Bin record relative to the start of
-          the file, from which the event data was extracted.
+      offset (int): offset of the Recycle Bin record relative to the start of the file,
+          from which the event data was extracted.
       original_filename (str): filename.
-      record_index (int): index of the record, from which the event data was
-          extracted.
+      record_index (int): index of the record, from which the event data was extracted.
       short_filename (str): short filename.
     """
 
@@ -113,8 +111,8 @@ class WinRecycleBinParser(interface.FileObjectParser, dtfabric_helper.DtFabricHe
             )
         except (ValueError, errors.ParseError) as exception:
             raise errors.WrongParser(
-                f"Unable to parse Windows Recycle.Bin metadata file header with "
-                f"error: {exception!s}"
+                f"Unable to parse Windows Recycle.Bin metadata file header with error: "
+                f"{exception!s}"
             )
 
         if file_header.format_version not in self._SUPPORTED_FORMAT_VERSIONS:
@@ -180,10 +178,8 @@ class WinRecyclerInfo2Parser(
             )
         except (ValueError, errors.ParseError) as exception:
             raise errors.ParseError(
-                (
-                    f"Unable to map record data at offset: 0x{record_offset:08x} "
-                    f"with error: {exception!s}"
-                )
+                f"Unable to map record data at offset: 0x{record_offset:08x} "
+                f"with error: {exception!s}"
             )
 
         code_page = parser_mediator.GetCodePage()
@@ -195,11 +191,11 @@ class WinRecyclerInfo2Parser(
         try:
             ascii_filename = ascii_filename.decode(code_page)
         except UnicodeDecodeError:
-            ascii_filename = ascii_filename.decode(code_page, errors="replace")
-
             parser_mediator.ProduceExtractionWarning(
-                "unable to decode original filename."
+                f"unable to decode original filename with code page: '{code_page:s}'. "
+                f"Unsupported code points are escaped."
             )
+            ascii_filename = ascii_filename.decode(code_page, errors="backslashreplace")
 
         unicode_filename = None
         if record_size > 280:
@@ -207,17 +203,14 @@ class WinRecyclerInfo2Parser(
             utf16_string_map = self._GetDataTypeMap(
                 "recycler_info2_file_entry_utf16le_string"
             )
-
             try:
                 unicode_filename = self._ReadStructureFromByteStream(
                     record_data[280:], record_offset, utf16_string_map
                 )
             except (ValueError, errors.ParseError) as exception:
                 raise errors.ParseError(
-                    (
-                        f"Unable to map record data at offset: 0x{record_offset:08x} "
-                        f"with error: {exception!s}"
-                    )
+                    f"Unable to map record data at offset: 0x{record_offset:08x} with "
+                    f"error: {exception!s}"
                 )
 
         event_data = WinRecycleBinEventData()
@@ -241,8 +234,8 @@ class WinRecyclerInfo2Parser(
         """Parses a Windows Recycler INFO2 file-like object.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): file-like object.
 
         Raises:
@@ -264,10 +257,8 @@ class WinRecyclerInfo2Parser(
             )
         except (ValueError, errors.ParseError) as exception:
             raise errors.WrongParser(
-                (
-                    f"Unable to parse Windows Recycler INFO2 file header with "
-                    f"error: {exception!s}"
-                )
+                f"Unable to parse Windows Recycler INFO2 file header with error: "
+                f"{exception!s}"
             )
 
         if file_header.unknown1 != 5:
@@ -288,7 +279,6 @@ class WinRecyclerInfo2Parser(
             self._ParseInfo2Record(
                 parser_mediator, file_object, file_offset, file_entry_size
             )
-
             file_offset += file_entry_size
 
 
