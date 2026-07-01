@@ -510,6 +510,23 @@ short_source: 'LOG'
 source: 'Google Log'
 ---
 type: 'conditional'
+data_type: 'ivanti:connect_secure:vc0:record'
+message:
+- '[{message_code}]'
+- '{log_type}'
+- '{body}'
+- 'Hostname: {hostname}'
+- 'IP address: {ip_address}'
+- 'Username: {username}'
+- 'Authentication realm: {authentication_realm}'
+short_message:
+- '[{message_code}]'
+- '{log_type}'
+- '{body}'
+source: 'Ivanti Connect Secure VC0 log'
+short_source: 'LOG'
+---
+type: 'conditional'
 data_type: 'java:download:idx'
 message:
 - 'IDX Version: {idx_version}'

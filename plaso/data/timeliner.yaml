@@ -721,6 +721,12 @@ attribute_mappings:
   description: 'Last Connection Time'
 place_holder_event: true
 ---
+data_type: 'ivanti:connect_secure:vc0:record'
+attribute_mappings:
+- name: 'recorded_time'
+  description: 'Recorded Time'
+place_holder_event: true
+---
 data_type: 'java:download:idx'
 attribute_mappings:
 - name: 'downloaded_time'
