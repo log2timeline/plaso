@@ -58,8 +58,8 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
         )
         self.assertEqual(number_of_warnings, 0)
 
-        # A value with non-UTF-8 code points must decode with replacement characters
-        # and produce an extraction warning rather than silently replacing them.
+        # A key value pair containing invalid UTF-8 code points must decode with them
+        # escaped and produce an extraction warning.
         key, value = parser._ParseKeyValuePair(
             parser_mediator, b"MESSAGE=abc\xff\xfexyz"
         )
@@ -77,7 +77,6 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
         storage_writer = self._ParseFile(
             ["systemd", "journal", "system.journal"], parser
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -101,7 +100,6 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
             "reporter": "systemd",
             "written_time": "2017-01-27T09:40:55.913258+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -114,7 +112,6 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
             "reporter": "root",
             "written_time": "2017-02-06T16:24:32.564585+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 2098)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -124,7 +121,6 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
         storage_writer = self._ParseFile(
             ["systemd", "journal", "system.journal.lz4"], parser
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -148,14 +144,13 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
             "reporter": "systemd",
             "written_time": "2018-07-03T15:00:16.682340+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
         # Test a LZ4 compressed data log entry.
-        # The text used in the test message was triplicated to make it long enough
-        # to trigger the LZ4 compression.
-        # Source: https://github.com/systemd/systemd/issues/6237
+        # The text used in the test message was trippled to make it long enough to
+        # trigger the LZ4 compression. Also see:
+        # https://github.com/systemd/systemd/issues/6237
         expected_body_parts = [" textual user names."]
         expected_body_parts.extend(
             (
@@ -176,7 +171,6 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
             "reporter": "test",
             "written_time": "2018-07-03T15:19:04.667807+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 84)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -186,7 +180,6 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
         storage_writer = self._ParseFile(
             ["systemd", "journal", "user-1000.journal"], parser
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -212,7 +205,6 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
             "reporter": "testapp",
             "written_time": "2023-09-26T07:42:46.445209+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -228,15 +220,11 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
             ],
             parser,
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
         self.assertEqual(number_of_event_data, 2211)
 
-        # The parser skips each corrupt entry and continues instead of aborting
-        # at the first one, so every corrupt entry in the unclean tail is
-        # reported rather than only the first.
         number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
             "extraction_warning"
         )
@@ -257,14 +245,12 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
             "reporter": "systemd-journald",
             "written_time": "2016-10-24T13:20:01.063423+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
         generator = storage_writer.GetAttributeContainers(
             warnings.ExtractionWarning.CONTAINER_TYPE
         )
-
         test_warnings = list(generator)
         test_warning = test_warnings[0]
         self.assertIsNotNone(test_warning)
@@ -275,9 +261,8 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
         )
         self.assertEqual(test_warning.message, expected_message)
 
-        # The 46 warnings are 1 corrupt entry pointer plus 45 unused/zeroed
-        # objects in the unclean tail; check the breakdown and the last warning
-        # so the count is documented rather than an opaque magic number.
+        # The 46 warnings are 1 corrupt entry pointer plus 45 unused/zeroed objects in
+        # the unclean tail.
         unsupported_warnings = [
             warning
             for warning in test_warnings
