@@ -80,7 +80,6 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
             ),
             "\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\IE7\\SPUNINST\\IERESETICONS.EXE",
         ]
-
         expected_event_values = {
             "data_type": "windows:prefetch:execution",
             "executable": "CMD.EXE",
@@ -90,7 +89,6 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
             "version": 17,
             "volume_serial_numbers": [0x24CB074B],
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -102,7 +100,6 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
             "origin": "CMD.EXE-087B4001.pf",
             "serial_number": 0x24CB074B,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -112,7 +109,6 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         storage_writer = self._ParseFile(
             ["winprefetch", "PING.EXE-B29F6629.pf"], parser
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -140,7 +136,6 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
             "volume_device_paths": ["\\DEVICE\\HARDDISKVOLUME1"],
             "volume_serial_numbers": [0xAC036525],
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -152,7 +147,6 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
             "origin": "PING.EXE-B29F6629.pf",
             "serial_number": 0xAC036525,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -162,7 +156,6 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         storage_writer = self._ParseFile(
             ["winprefetch", "WUAUCLT.EXE-830BCC14.pf"], parser
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -202,7 +195,6 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
                 0xAC036525,
             ],
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 5)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -214,7 +206,6 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
             "origin": "WUAUCLT.EXE-830BCC14.pf",
             "serial_number": 0xAC036525,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -224,7 +215,6 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         storage_writer = self._ParseFile(
             ["winprefetch", "TASKHOST.EXE-3AE259FC.pf"], parser
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -245,10 +235,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
             "\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\NTDLL.DLL [46299-1]",
             "\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\TASKHOST.EXE",
             "\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\KERNEL32.DLL [45747-1]",
-            (
-                "\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\KERNELBASE.DLL "
-                "[45734-1]"
-            ),
+            "\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\KERNELBASE.DLL [45734-1]",
             "\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\LOCALE.NLS [45777-1]",
             "\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\MSVCRT.DLL [46033-1]",
             "\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\RPCRT4.DLL [46668-1]",
@@ -318,7 +305,6 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
             "\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\BCRYPT.DLL [44346-1]",
             "\\DEVICE\\HARDDISKVOLUME2\\WINDOWS\\SYSTEM32\\NTASN1.DLL [46261-1]",
         ]
-
         expected_event_values = {
             "data_type": "windows:prefetch:execution",
             "executable": "TASKHOST.EXE",
@@ -333,7 +319,6 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
             "run_count": 4,
             "version": 26,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -345,7 +330,6 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
             "origin": "TASKHOST.EXE-3AE259FC.pf",
             "serial_number": 0x686C4249,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -355,7 +339,6 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         storage_writer = self._ParseFile(
             ["winprefetch", "BYTECODEGENERATOR.EXE-C1E9BCE6.pf"], parser
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -388,7 +371,6 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
             "run_count": 7,
             "version": 30,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -412,7 +394,6 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         storage_writer = self._ParseFile(
             ["winprefetch", "ONEDRIVE.EXE-7E152375.pf"], parser
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -438,7 +419,6 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
             "run_count": 2,
             "version": 30,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -452,7 +432,6 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
             "origin": "ONEDRIVE.EXE-7E152375.pf",
             "serial_number": 0x3E0D2D25,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -462,7 +441,6 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         storage_writer = self._ParseFile(
             ["winprefetch", "NOTEPAD.EXE-D8414F97.pf"], parser
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -488,7 +466,6 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
             "run_count": 2,
             "version": 30,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -502,7 +479,52 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
             "origin": "NOTEPAD.EXE-D8414F97.pf",
             "serial_number": 0x2CA3D1AE,
         }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
 
+    def testParse31TruncatedFilename(self):
+        """Tests Parse on a version 30 Prefetch file with a truncated filename."""
+        parser = winprefetch.WinPrefetchParser()
+        storage_writer = self._ParseFile(
+            ["winprefetch", "AM_DELTA_PATCH_1.443.990.0.EX-7037CF86.pf"], parser
+        )
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 2)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "recovery_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        # Check the prefetch execution event data.
+        expected_event_values = {
+            "data_type": "windows:prefetch:execution",
+            "executable": "AM_DELTA_PATCH_1.443.990.0.EX",
+            "path_hints": [
+                "\\WINDOWS\\SOFTWAREDISTRIBUTION\\DOWNLOAD\\INSTALL\\"
+                "AM_DELTA_PATCH_1.443.990.0.EXE"
+            ],
+            "prefetch_hash": 0x7037CF86,
+            "run_count": 1,
+            "version": 31,
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # Check the volume creation event data.
+        expected_event_values = {
+            "data_type": "windows:volume:creation",
+            "device_path": "\\VOLUME{01dc94cf1f08c4a4-bc1f1bfc}",
+            "origin": "AM_DELTA_PATCH_1.443.990.0.EX-7037CF86.pf",
+            "serial_number": 0xBC1F1BFC,
+        }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
