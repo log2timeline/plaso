@@ -516,9 +516,9 @@ message:
 - '{log_type}'
 - '{body}'
 - 'Hostname: {hostname}'
-- 'Log context: {log_context}'
 - 'IP address: {ip_address}'
 - 'Username: {username}'
+- 'Authentication realm: {authentication_realm}'
 short_message:
 - '[{message_code}]'
 - '{log_type}'

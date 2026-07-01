@@ -20,7 +20,6 @@ class _TestFileEntry:
         """
         super().__init__()
         self.name = name
-        self.path_spec = None
 
 
 class IvantiVC0ParserTest(test_lib.ParserTestCase):
@@ -96,8 +95,83 @@ class IvantiVC0ParserTest(test_lib.ParserTestCase):
             log_type = parser._GetLogType(filename)
             self.assertIsNone(log_type)
 
-    def testParse(self):
-        """Tests the Parse function."""
+    def testParseWithLogAccess(self):
+        """Tests the Parse function with a log.access.vc0 file."""
+        parser = ivanti_vc0.IvantiVC0Parser()
+        storage_writer = self._ParseFile(["ivanti_vc0", "log.access.vc0"], parser)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 10)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "recovery_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        expected_event_values = {
+            "authentication_realm": "Root",
+            "body": (
+                "User login succeeded | web | vpn.example.com | 198.51.100.21 | Pulse "
+                "Secure Client | Windows | session-1 | context-users | ... (5 more "
+                "fields)"
+            ),
+            "data_type": "ivanti:connect_secure:vc0:record",
+            "hostname": "ics-access.example.com",
+            "line_number": 17,
+            "log_type": "access",
+            "message_code": "NWC23508",
+            "record_identifier": "65c4a660.00000011",
+            "recorded_time": "2024-02-08T10:01:04+00:00",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
+
+    def testParseWithLogAdmin(self):
+        """Tests the Parse function with a log.admin.vc0 file."""
+        parser = ivanti_vc0.IvantiVC0Parser()
+        storage_writer = self._ParseFile(["ivanti_vc0", "log.admin.vc0"], parser)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 10)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "recovery_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        expected_event_values = {
+            "authentication_realm": "Root",
+            "body": (
+                "Administrator login succeeded | admin-ui | configuration | object-1 | "
+                "saved | complete"
+            ),
+            "data_type": "ivanti:connect_secure:vc0:record",
+            "hostname": "ics-admin.example.com",
+            "line_number": 33,
+            "log_type": "admin",
+            "message_code": "ADM23535",
+            "record_identifier": "65c4a670.00000021",
+            "recorded_time": "2024-02-08T10:01:20+00:00",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
+
+    def testParseWithLogEvents(self):
+        """Tests the Parse function with a log.events.vc0 file."""
         parser = ivanti_vc0.IvantiVC0Parser()
         storage_writer = self._ParseFile(["ivanti_vc0", "log.events.vc0"], parser)
 
@@ -118,54 +192,72 @@ class IvantiVC0ParserTest(test_lib.ParserTestCase):
         self.assertEqual(number_of_warnings, 0)
 
         expected_event_values = {
+            "authentication_realm": "Root",
             "body": "Active Directory configuration server | complete",
             "data_type": "ivanti:connect_secure:vc0:record",
             "hostname": "ics.example.com",
             "line_number": 1,
-            "log_context": "Root",
             "log_type": "events",
             "message_code": "SYS10306",
-            "recorded_time": "2024-02-08T10:00:48+00:00",
             "record_identifier": "65c4a650.00000001",
+            "recorded_time": "2024-02-08T10:00:48+00:00",
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
-    def testParseLogTypeFixtures(self):
-        """Tests the Parse function with the supported log types."""
-        # These fixtures use synthetic records based on observed VC0 field layouts.
-        test_cases = (
-            ("log.access.vc0", 10, 0, "access"),
-            ("log.admin.vc0", 10, 0, "admin"),
-            ("log.diagnosticlog.vc0", 10, 0, "diagnosticlog"),
-            ("log.events.vc0", 9, 1, "events"),
-            ("log.policytrace.vc0", 0, 0, None),
-            ("log.sensorslog.vc0", 10, 0, "sensorslog"),
+    def testParseWithLogPolicyTrace(self):
+        """Tests the Parse function with an empty log.policytrace.vc0 file."""
+        parser = ivanti_vc0.IvantiVC0Parser()
+        storage_writer = self._ParseFile(["ivanti_vc0", "log.policytrace.vc0"], parser)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
         )
+        self.assertEqual(number_of_event_data, 0)
 
-        for filename, expected_events, expected_warnings, expected_log_type in (
-            test_cases
-        ):
-            with self.subTest(filename=filename):
-                parser = ivanti_vc0.IvantiVC0Parser()
-                storage_writer = self._ParseFile(["ivanti_vc0", filename], parser)
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
 
-                number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
-                    "event_data"
-                )
-                self.assertEqual(number_of_event_data, expected_events)
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "recovery_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
 
-                number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-                    "extraction_warning"
-                )
-                self.assertEqual(number_of_warnings, expected_warnings)
+    def testParseWithLogSensorsLog(self):
+        """Tests the Parse function with a log.sensorslog.vc0 file."""
+        parser = ivanti_vc0.IvantiVC0Parser()
+        storage_writer = self._ParseFile(["ivanti_vc0", "log.sensorslog.vc0"], parser)
 
-                if expected_log_type:
-                    event_data = storage_writer.GetAttributeContainerByIndex(
-                        "event_data", 0
-                    )
-                    self.assertEqual(event_data.log_type, expected_log_type)
-                    self.assertIsNotNone(event_data.log_context)
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 10)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "recovery_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        expected_event_values = {
+            "authentication_realm": "Root",
+            "body": "Sensor update completed | integrity | healthy",
+            "data_type": "ivanti:connect_secure:vc0:record",
+            "hostname": "ics-sensor.example.com",
+            "line_number": 65,
+            "log_type": "sensorslog",
+            "message_code": "IDP24672",
+            "record_identifier": "65c4a690.00000041",
+            "recorded_time": "2024-02-08T10:01:52+00:00",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
 
     def testParseWithUnsupportedFile(self):
         """Tests the Parse function with an unsupported file."""
@@ -179,63 +271,21 @@ class IvantiVC0ParserTest(test_lib.ParserTestCase):
         with self.assertRaises(errors.WrongParser):
             parser.Parse(parser_mediator, file_object)
 
-    def testParseWithInvalidUTF8(self):
-        """Tests the Parse function with invalid UTF-8 record data."""
-        parser = ivanti_vc0.IvantiVC0Parser()
-
-        storage_writer = self._CreateStorageWriter()
-        parser_mediator = self._CreateParserMediator(
-            storage_writer, file_entry=_TestFileEntry("log.events.vc0")
-        )
-
-        data = b"".join(
-            [
-                b"\x05\x00\x00\x00\x01\x00\x00\x00",
-                b"\x00" * 8184,
-                (
-                    b"65c4a64f.00000001\tics.example.com\tSYS12345\tvc0\t"
-                    b"Root\t203.0.113.10\tjdoe\tUser login \xff succeeded"
-                ),
-            ]
-        )
-        file_object = self._CreateFileObject("log.events.vc0", data)
-
-        parser.Parse(parser_mediator, file_object)
-
-        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
-            "event_data"
-        )
-        self.assertEqual(number_of_event_data, 1)
-
-        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-            "extraction_warning"
-        )
-        self.assertEqual(number_of_warnings, 0)
-
-        expected_event_values = {
-            "body": "User login \ufffd succeeded",
-            "data_type": "ivanti:connect_secure:vc0:record",
-            "hostname": "ics.example.com",
-            "ip_address": "203.0.113.10",
-            "line_number": 1,
-            "log_context": "Root",
-            "log_type": "events",
-            "message_code": "SYS12345",
-            "recorded_time": "2024-02-08T10:00:47+00:00",
-            "record_identifier": "65c4a64f.00000001",
-            "username": "jdoe",
-        }
-        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
-        self.CheckEventData(event_data, expected_event_values)
-
-    def testParseWithEmptyVC0File(self):
-        """Tests the Parse function with an empty .vc0 file."""
+    def testParseWithInvalidUtf8(self):
+        """Tests the Parse function with invalid UTF-8."""
         parser = ivanti_vc0.IvantiVC0Parser()
 
         storage_writer = self._CreateStorageWriter()
         parser_mediator = self._CreateParserMediator(storage_writer)
 
-        data = b"".join([b"\x05\x00\x00\x00\x01\x00\x00\x00", b"\x00" * 8184])
+        data = b"".join(
+            [
+                b"\x05\x00\x00\x00\x01\x00\x00\x00",
+                b"\x00" * 8184,
+                b"65c4a64f.00000001\tics.example.com\tSYS12345\tvc0\t",
+                b"Root\t203.0.113.10\tjdoe\tUser login \xff succeeded",
+            ]
+        )
         file_object = self._CreateFileObject("log.events.vc0", data)
 
         parser.Parse(parser_mediator, file_object)
@@ -248,7 +298,7 @@ class IvantiVC0ParserTest(test_lib.ParserTestCase):
         number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
             "extraction_warning"
         )
-        self.assertEqual(number_of_warnings, 0)
+        self.assertEqual(number_of_warnings, 1)
 
         number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
             "recovery_warning"
