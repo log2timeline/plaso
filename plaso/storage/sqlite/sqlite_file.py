@@ -339,16 +339,7 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
         """
         schema = self._GetAttributeContainerSchema(container_type)
         if schema and container_type != self._CONTAINER_TYPE_EVENT_DATA:
-            container = super().GetAttributeContainerByIndex(container_type, index)
-
-            # TODO: the YearLessLogHelper attribute container is kept for backwards
-            # compatibility remove once storage format 20230327 is obsolete.
-            if container_type == "year_less_log_helper":
-                year_less_log_helper = container
-                container = events.DateLessLogHelper()
-                container.CopyFromYearLessLogHelper(year_less_log_helper)
-
-            return container
+            return super().GetAttributeContainerByIndex(container_type, index)
 
         container = self._GetCachedAttributeContainer(container_type, index)
         if container:
@@ -412,18 +403,9 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
         """
         schema = self._GetAttributeContainerSchema(container_type)
         if schema and container_type != self._CONTAINER_TYPE_EVENT_DATA:
-            for container in super().GetAttributeContainers(
+            yield from super().GetAttributeContainers(
                 container_type, filter_expression=filter_expression
-            ):
-                # TODO: the YearLessLogHelper attribute container is kept for backwards
-                # compatibility remove once storage format 20230327 is obsolete.
-                if container_type == "year_less_log_helper":
-                    year_less_log_helper = container
-                    container = events.DateLessLogHelper()
-                    container.CopyFromYearLessLogHelper(year_less_log_helper)
-
-                yield container
-
+            )
         else:
             sql_filter_expression = None
             if filter_expression:

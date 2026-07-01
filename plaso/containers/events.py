@@ -124,19 +124,6 @@ class DateLessLogHelper(interface.AttributeContainer):
         self.last_relative_date = None
         self.latest_date = None
 
-    # TODO: the YearLessLogHelper attribute container is kept for backwards
-    # compatibility remove once storage format 20230327 is obsolete.
-    def CopyFromYearLessLogHelper(self, year_less_log_helper):
-        """Copy the values of a year-less log helper.
-
-        Args:
-          year_less_log_helper (YearLessLogHelper): year-less log helper.
-        """
-        self.earliest_date = (year_less_log_helper.earliest_year, 1, 1)
-        self.granularity = self.GRANULARITY_NO_YEAR
-        self.last_relative_date = (year_less_log_helper.last_relative_year, 0, 0)
-        self.latest_date = (year_less_log_helper.latest_year, 1, 1)
-
     def GetEarliestDate(self):
         """Retrieves the earliest date adjusted to the granularity.
 
@@ -528,62 +515,6 @@ class EventTripple(interface.AttributeContainer):
         self.event_data_stream = None
 
 
-# TODO: the YearLessLogHelper attribute container is kept for backwards
-# compatibility remove once storage format 20230327 is obsolete.
-class YearLessLogHelper(interface.AttributeContainer):
-    """Year-less log helper attribute container.
-
-    Attributes:
-      earliest_year (int): earliest possible year the event data stream was
-          created.
-      last_relative_year (int): last relative year determined by the year-less
-          log helper.
-      latest_year (int): latest possible year the event data stream was created.
-    """
-
-    CONTAINER_TYPE = "year_less_log_helper"
-
-    SCHEMA = {
-        "_event_data_stream_identifier": "AttributeContainerIdentifier",
-        "earliest_year": "int",
-        "last_relative_year": "int",
-        "latest_year": "int",
-    }
-
-    _SERIALIZABLE_PROTECTED_ATTRIBUTES = ["_event_data_stream_identifier"]
-
-    def __init__(self):
-        """Initializes a year-less log helper attribute container."""
-        super().__init__()
-        self._event_data_stream_identifier = None
-        self.earliest_year = None
-        self.last_relative_year = None
-        self.latest_year = None
-
-    def GetEventDataStreamIdentifier(self):
-        """Retrieves the identifier of the associated event data stream.
-
-        The event data stream identifier is a storage specific value that requires
-        special handling during serialization.
-
-        Returns:
-          AttributeContainerIdentifier: event data stream or None when not set.
-        """
-        return self._event_data_stream_identifier
-
-    def SetEventDataStreamIdentifier(self, event_data_stream_identifier):
-        """Sets the identifier of the associated event data stream.
-
-        The event data stream identifier is a storage specific value that requires
-        special handling during serialization.
-
-        Args:
-          event_data_stream_identifier (AttributeContainerIdentifier): event data
-              stream identifier.
-        """
-        self._event_data_stream_identifier = event_data_stream_identifier
-
-
 manager.AttributeContainersManager.RegisterAttributeContainers(
     [
         DateLessLogHelper,
@@ -592,6 +523,5 @@ manager.AttributeContainersManager.RegisterAttributeContainers(
         EventObject,
         EventTag,
         EventTripple,
-        YearLessLogHelper,
     ]
 )
