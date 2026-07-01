@@ -187,39 +187,5 @@ class EventTagTest(shared_test_lib.BaseTestCase):
         attribute_container.SetEventIdentifier(None)
 
 
-# TODO: the YearLessLogHelper attribute container is kept for backwards
-# compatibility remove once storage format 20230327 is obsolete.
-class YearLessLogHelperTest(shared_test_lib.BaseTestCase):
-    """Tests for the year-less log helper attribute container."""
-
-    def testGetAttributeNames(self):
-        """Tests the GetAttributeNames function."""
-        attribute_container = events.YearLessLogHelper()
-
-        expected_attribute_names = [
-            "_event_data_stream_identifier",
-            "earliest_year",
-            "last_relative_year",
-            "latest_year",
-        ]
-
-        attribute_names = sorted(attribute_container.GetAttributeNames())
-
-        self.assertEqual(attribute_names, expected_attribute_names)
-
-    def testGetEventDataStreamIdentifier(self):
-        """Tests the GetEventDataStreamIdentifier function."""
-        attribute_container = events.YearLessLogHelper()
-
-        identifier = attribute_container.GetEventDataStreamIdentifier()
-        self.assertIsNone(identifier)
-
-    def testSetEventDataStreamIdentifier(self):
-        """Tests the SetEventDataStreamIdentifier function."""
-        attribute_container = events.YearLessLogHelper()
-
-        attribute_container.SetEventDataStreamIdentifier(None)
-
-
 if __name__ == "__main__":
     unittest.main()
