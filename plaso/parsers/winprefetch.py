@@ -81,6 +81,8 @@ class WinPrefetchParser(interface.FileObjectParser):
         """
         format_version = scca_file.format_version
         executable_filename = scca_file.executable_filename
+        executable_filename_lower = executable_filename.lower()
+        executable_filename_length = len(executable_filename)
         prefetch_hash = scca_file.prefetch_hash
         run_count = scca_file.run_count
         number_of_volumes = scca_file.number_of_volumes
@@ -108,19 +110,20 @@ class WinPrefetchParser(interface.FileObjectParser):
 
                 parser_mediator.ProduceEventData(event_data)
 
+            volume_device_path_length = len(volume_device_path)
             for filename in iter(scca_file.filenames):
-                if not filename:
+                if not filename or not filename.startswith(volume_device_path):
                     continue
 
-                if filename.startswith(volume_device_path):
-                    _, _, path = filename.partition(volume_device_path)
-                    _, _, basename = path.rpartition("\\")
-                    if basename.lower() == executable_filename.lower():
-                        path_hints.append(path)
-                    elif len(executable_filename) == 29 and basename.lower().startswith(
-                        executable_filename.lower()
-                    ):
-                        path_hints.append(path)
+                path = filename[volume_device_path_length:]
+                _, _, basename = path.rpartition("\\")
+                basename_lower = basename.lower()
+                if executable_filename_length == 29 and basename_lower.startswith(
+                    executable_filename_lower
+                ):
+                    path_hints.append(path)
+                elif basename_lower == executable_filename_lower:
+                    path_hints.append(path)
 
         mapped_files = []
         for entry_index, file_metrics in enumerate(scca_file.file_metrics_entries):
