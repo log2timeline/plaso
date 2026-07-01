@@ -193,7 +193,11 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
             try:
                 dll_name = dll_name.decode("ascii")
             except UnicodeDecodeError:
-                dll_name = dll_name.decode("ascii", errors="replace")
+                parser_mediator.ProduceExtractionWarning(
+                    "unable to decode delay import table DLL name as ASCII. "
+                    "Unsupported code points are escaped."
+                )
+                dll_name = dll_name.decode("ascii", errors="backslashreplace")
 
             event_data = PEDLLImportEventData()
             event_data.delayed_import = True
@@ -204,10 +208,12 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
             parser_mediator.ProduceEventData(event_data)
 
-    def _ParseExportTable(self, pefile_object, event_data):
+    def _ParseExportTable(self, parser_mediator, pefile_object, event_data):
         """Parses the export table.
 
         Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
           pefile_object (pefile.PE): pefile object.
           event_data (PEFileEventData): event data.
         """
@@ -219,7 +225,11 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         try:
             dll_name = dll_name.decode("ascii")
         except UnicodeDecodeError:
-            dll_name = dll_name.decode("ascii", errors="replace")
+            parser_mediator.ProduceExtractionWarning(
+                "unable to decode export table DLL name as ASCII. Unsupported code "
+                "points are escaped."
+            )
+            dll_name = dll_name.decode("ascii", errors="backslashreplace")
 
         event_data.export_dll_name = dll_name or None
 
@@ -249,7 +259,11 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
             try:
                 dll_name = dll_name.decode("ascii")
             except UnicodeDecodeError:
-                dll_name = dll_name.decode("ascii", errors="replace")
+                parser_mediator.ProduceExtractionWarning(
+                    "unable to decode import table DLL name as ASCII. Unsupported code "
+                    "points are escaped."
+                )
+                dll_name = dll_name.decode("ascii", errors="backslashreplace")
 
             event_data = PEDLLImportEventData()
             event_data.delayed_import = False
@@ -616,7 +630,7 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
                 timestamp=timestamp
             )
 
-        self._ParseExportTable(pefile_object, event_data)
+        self._ParseExportTable(parser_mediator, pefile_object, event_data)
 
         self._ParseLoadConfigurationTable(pefile_object, event_data)
 

@@ -115,14 +115,11 @@ class SAMUsersWindowsRegistryPlugin(
         try:
             username = descriptor_data.decode("utf-16-le")
         except (UnicodeDecodeError, UnicodeEncodeError) as exception:
-            username = descriptor_data.decode("utf-16-le", errors="replace")
             parser_mediator.ProduceExtractionWarning(
-                (
-                    f'unable to decode "V" value string with error: {exception!s}. '
-                    f'Characters that cannot be decoded will be replaced with "?" or '
-                    f'"\\ufffd".'
-                )
+                f'unable to decode "V" value string with error: {exception!s}. '
+                f"Unsupported code points are escaped."
             )
+            username = descriptor_data.decode("utf-16-le", errors="backslashreplace")
 
         return username
 

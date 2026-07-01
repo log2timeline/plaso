@@ -293,7 +293,7 @@ class IvantiVC0ParserTest(test_lib.ParserTestCase):
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
-        self.assertEqual(number_of_event_data, 0)
+        self.assertEqual(number_of_event_data, 1)
 
         number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
             "extraction_warning"
@@ -304,6 +304,20 @@ class IvantiVC0ParserTest(test_lib.ParserTestCase):
             "recovery_warning"
         )
         self.assertEqual(number_of_warnings, 0)
+
+        expected_event_values = {
+            "authentication_realm": "Root",
+            "body": "User login \\xff succeeded",
+            "data_type": "ivanti:connect_secure:vc0:record",
+            "hostname": "ics.example.com",
+            "line_number": 1,
+            "log_type": None,
+            "message_code": "SYS12345",
+            "record_identifier": "65c4a64f.00000001",
+            "recorded_time": "2024-02-08T10:00:47+00:00",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == "__main__":
