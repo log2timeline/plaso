@@ -134,11 +134,7 @@ class WindowsPathEnvironmentVariablePreprocessorPlugin(
 
     _NAME = None
 
-    _WINDOWS_PATHS = frozenset([
-        '\\Windows',
-        '\\WinNT',
-        '\\WINNT35',
-        '\\WTSRV'])
+    _WINDOWS_PATHS = frozenset(["\\Windows", "\\WinNT", "\\WINNT35", "\\WTSRV"])
 
     def _ParsePathSpecification(
         self, mediator, searcher, file_system, path_specification, path_separator
@@ -202,7 +198,7 @@ class WindowsPathEnvironmentVariablePreprocessorPlugin(
             find_spec = file_system_searcher.FindSpec(
                 case_sensitive=False,
                 location_glob=path,
-                location_separator='\\',
+                location_separator="\\",
             )
             for path_specification in searcher.Find(find_specs=[find_spec]):
                 try:
@@ -211,7 +207,7 @@ class WindowsPathEnvironmentVariablePreprocessorPlugin(
                         searcher,
                         file_system,
                         path_specification,
-                        '\\',
+                        "\\",
                     )
                     last_exception = None
 
