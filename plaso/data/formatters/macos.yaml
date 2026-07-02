@@ -134,7 +134,7 @@ message:
 - 'Host: {computer_name}'
 - 'Sender: {sender}'
 - 'Facility: {facility}'
-- 'Message: {message}'
+- 'Message: {message_body}'
 - '{extra_information}'
 short_message:
 - 'Host: {host}'
@@ -450,9 +450,9 @@ message:
 - '({sender_pid})'
 - 'Level: {level}'
 - 'Facility: {facility}'
-- 'Text: {message}'
+- 'Text: {message_body}'
 short_message:
-- 'Text: {message}'
+- 'Text: {message_body}'
 short_source: 'LOG'
 source: 'MacOS Securityd Log'
 ---
@@ -618,8 +618,8 @@ source: 'Spotlight store database'
 ---
 type: 'basic'
 data_type: 'spotlight_searched_terms:entry'
-message: 'Spotlight term searched "{Spotlight term searched}" associate to {display_name} ({path})'
-short_message: 'Spotlight term searched "{Spotlight term searched}" associate to {display_name} ({path})'
+message: 'Spotlight term searched "{Spotlight term searched}" associate to {application_display_name} ({path})'
+short_message: 'Spotlight term searched "{Spotlight term searched}" associate to {application_display_name} ({path})'
 short_source: 'PLIST'
 source: 'Spotlight searched terms plist'
 ---

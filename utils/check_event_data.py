@@ -152,6 +152,9 @@ def Main():
 
     reserved_names = validator.GetReservedNames(formatting_helpers)
 
+    # Additional names preferable not to be used.
+    reserved_names.add("body")
+
     attribute_containers = validator.GetAttributeContainers()
     if not attribute_containers:
         print("Unable to determine event data attribute containers")

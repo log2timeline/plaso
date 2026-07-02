@@ -33,14 +33,11 @@ class AndroidLogcatTextPluginTest(test_lib.TextPluginTestCase):
 
         # Check non-matching format.
         file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
-        file_system_builder.AddFile(
-            "/file.txt",
-            (
-                b"Jan 22 07:52:33 myhostname.myhost.com client[30840]: INFO No new "
-                b"content in image.dd.\n"
-            ),
+        data = (
+            b"Jan 22 07:52:33 myhostname.myhost.com client[30840]: INFO No new "
+            b"content in image.dd.\n"
         )
-
+        file_system_builder.AddFile("/file.txt", data)
         file_entry = file_system_builder.file_system.GetFileEntryByPath("/file.txt")
 
         parser_mediator = self._CreateParserMediator(None, file_entry=file_entry)
@@ -76,13 +73,12 @@ class AndroidLogcatTextPluginTest(test_lib.TextPluginTestCase):
         expected_event_values = {
             "component_tag": "threadtime",
             "data_type": "android:logcat",
-            "message": "test of default threadtime format",
+            "message_body": "test of default threadtime format",
             "pid": 1234,
             "priority": "D",
             "recorded_time": "0000-01-01T01:02:03.123",
             "thread_identifier": 1234,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -91,14 +87,13 @@ class AndroidLogcatTextPluginTest(test_lib.TextPluginTestCase):
         expected_event_values = {
             "component_tag": "App",
             "data_type": "android:logcat",
-            "message": "test of threadtime w/ UTC and year",
+            "message_body": "test of threadtime w/ UTC and year",
             "pid": 1885,
             "priority": "E",
             "recorded_time": "2022-01-02T01:20:03.171+00:00",
             "thread_identifier": 3066,
             "user_identifier": None,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 2)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -107,14 +102,13 @@ class AndroidLogcatTextPluginTest(test_lib.TextPluginTestCase):
         expected_event_values = {
             "component_tag": "App",
             "data_type": "android:logcat",
-            "message": "test of threadtime w/ year, uid, usec",
+            "message_body": "test of threadtime w/ year, uid, usec",
             "pid": 1885,
             "priority": "E",
             "recorded_time": "2022-01-02T01:20:07.171997",
             "thread_identifier": 3066,
             "user_identifier": 1000,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 4)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -123,14 +117,13 @@ class AndroidLogcatTextPluginTest(test_lib.TextPluginTestCase):
         expected_event_values = {
             "component_tag": "AppTag",
             "data_type": "android:logcat",
-            "message": "test of threadtime w/ year, zone, usec",
+            "message_body": "test of threadtime w/ year, zone, usec",
             "pid": 9346,
             "priority": "E",
             "recorded_time": "2022-01-02T11:20:07.171997+10:00",
             "thread_identifier": 9347,
             "user_identifier": None,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 5)
         self.CheckEventData(event_data, expected_event_values)
 

@@ -25,16 +25,13 @@ class GoogleLogEventData(events.EventData):
 
     Attributes:
       file_name (str): the name of the source file that logged the message.
-      last_written_time (dfdatetime.DateTimeValues): entry last written date and
-          time.
-      line_number (int): the line number in the source file where the logging
-          statement is.
-      message (str): the log message.
-      priority (str): the priority of the message - I, W, E or F. These values
-          represent messages logged at INFO, WARNING, ERROR or FATAL severities,
-          respectively.
-      thread_identifier (int): the identifier of the thread that recorded the
-          message.
+      last_written_time (dfdatetime.DateTimeValues): entry last written date and time.
+      line_number (int): the line number in the source file where the logging statement
+          is.
+      message_body (str): the message body.
+      priority (str): the priority of the event - I, W, E or F. These values represent
+          events logged at INFO, WARNING, ERROR or FATAL severities, respectively.
+      thread_identifier (int): the identifier of the thread that recorded the event.
     """
 
     DATA_TYPE = "googlelog:log"
@@ -49,7 +46,7 @@ class GoogleLogEventData(events.EventData):
         self.file_name = None
         self.last_written_time = None
         self.line_number = None
-        self.message = None
+        self.message_body = None
         self.priority = None
         self.thread_identifier = None
 
@@ -106,7 +103,7 @@ class GoogleLogTextPlugin(
         + pyparsing.Word(pyparsing.nums).set_results_name("line_number")
         + pyparsing.Suppress("] ")
         + pyparsing.Regex(".*?(?=($|\n[IWEF][0-9]{4}))", re.DOTALL).set_results_name(
-            "message"
+            "message_body"
         )
         + _END_OF_LINE
     )
@@ -210,7 +207,7 @@ class GoogleLogTextPlugin(
         event_data.file_name = self._GetValueFromStructure(structure, "file_name")
         event_data.last_written_time = self._ParseTimeElements(time_elements_structure)
         event_data.line_number = self._GetValueFromStructure(structure, "line_number")
-        event_data.message = self._GetValueFromStructure(structure, "message")
+        event_data.message_body = self._GetValueFromStructure(structure, "message_body")
         event_data.priority = self._GetValueFromStructure(structure, "priority")
         event_data.thread_identifier = self._GetValueFromStructure(
             structure, "thread_identifier"

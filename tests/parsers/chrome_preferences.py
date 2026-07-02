@@ -33,28 +33,25 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
 
         expected_event_values = {
             "data_type": "chrome:preferences:extensions_autoupdater",
-            "message": "Chrome extensions autoupdater last run",
+            "message_body": "Chrome extensions autoupdater last run",
             "recorded_time": "2014-11-12T13:01:43.926143+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
         expected_event_values = {
             "data_type": "chrome:preferences:extensions_autoupdater",
-            "message": "Chrome extensions autoupdater next run",
+            "message_body": "Chrome extensions autoupdater next run",
             "recorded_time": "2014-11-12T18:20:21.519200+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 
         expected_event_values = {
             "data_type": "chrome:preferences:extensions_autoupdater",
-            "message": "Chrome history was cleared by user",
+            "message_body": "Chrome history was cleared by user",
             "recorded_time": "2016-06-08T16:17:47.453766+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 2)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -68,7 +65,6 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
                 "resources\\chrome_app"
             ),
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 17)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -78,7 +74,6 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
             "permission": "midi_sysex",
             "primary_url": "https://rawgit.com:443",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 27)
         self.CheckEventData(event_data, expected_event_values)
 

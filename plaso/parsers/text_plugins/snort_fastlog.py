@@ -37,7 +37,7 @@ class SnortFastAlertEventData(events.EventData):
       destination_port (int): destination TCP/UDP port number.
       last_written_time (dfdatetime.DateTimeValues): entry last written date and
           time.
-      message (str): message associated with the alert.
+      message_body (str): message body.
       priority (int): priorty, ranging from 1 (high) to 4 (very low).
       rule_identifier (str): identifier of the Snort3/Suricata rule that generated
           the alert.
@@ -54,7 +54,7 @@ class SnortFastAlertEventData(events.EventData):
         self.destination_ip = None
         self.destination_port = None
         self.last_written_time = None
-        self.message = None
+        self.message_body = None
         self.priority = None
         self.protocol = None
         self.rule_identifier = None
@@ -114,7 +114,7 @@ class SnortFastLogTextPlugin(
                 pyparsing.Word(pyparsing.printables, excludeChars='["')
                 | pyparsing.White(" ", max=2)
             )
-        ).set_results_name("message")
+        ).set_results_name("message_body")
         + pyparsing.Optional(pyparsing.Suppress('"'))
     )
 
@@ -208,7 +208,9 @@ class SnortFastLogTextPlugin(
             structure, "destination_port"
         )
         event_data.last_written_time = self._ParseTimeElements(time_elements_structure)
-        event_data.message = self._GetStringValueFromStructure(structure, "message")
+        event_data.message_body = self._GetStringValueFromStructure(
+            structure, "message_body"
+        )
         event_data.priority = self._GetValueFromStructure(structure, "priority")
         event_data.protocol = self._GetValueFromStructure(structure, "protocol")
         event_data.source_ip = self._GetValueFromStructure(

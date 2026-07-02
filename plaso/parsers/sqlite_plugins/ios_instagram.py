@@ -16,7 +16,7 @@ class IOSInstagramMessageEventData(events.EventData):
     """Instagram message event data.
 
     Attributes:
-      message (str): Content of the direct message or chat sent in the thread.
+      message_body (str): Content of the direct message or chat sent in the thread.
       query (str): SQL query that was used to obtain the event data.
       sender_identifier (str): unique identifier (or primary key) of the sender
           account.
@@ -34,7 +34,7 @@ class IOSInstagramMessageEventData(events.EventData):
     def __init__(self):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
-        self.message = None
+        self.message_body = None
         self.query = None
         self.sender_identifier = None
         self.shared_media_identifier = None
@@ -160,14 +160,14 @@ class IOSInstagramPlugin(interface.SQLitePlugin):
         thread_activity = content.get(
             "IGDirectThreadActivityAnnouncement*threadActivity", {}
         )
-
         photo = media.get(
             "IGDirectPublishedMessagePermanentMedia*permanentMedia", {}
         ).get("IGPhoto*photo", {})
+
         image_versions = photo.get("imageVersions")
 
         event_data = IOSInstagramMessageEventData()
-        event_data.message = content.get("NSString*string")
+        event_data.message_body = content.get("NSString*string")
         event_data.query = query
         event_data.sender_identifier = metadata.get("NSString*senderPk")
         event_data.sent_time = metadata.get("NSDate*serverTimestamp")

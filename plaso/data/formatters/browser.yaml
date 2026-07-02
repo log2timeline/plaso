@@ -239,9 +239,9 @@ source: 'Chrome Preferences'
 type: 'conditional'
 data_type: 'chrome:preferences:extensions_autoupdater'
 message:
-- '{message}'
+- '{message_body}'
 short_message:
-- '{message}'
+- '{message_body}'
 short_source: 'LOG'
 source: 'Chrome Preferences'
 ---
