@@ -4,6 +4,7 @@
 import unittest
 
 from dfvfs.helpers import fake_file_system_builder
+from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfwinreg import fake as dfwinreg_fake
@@ -15,6 +16,7 @@ from plaso.containers import artifacts
 from plaso.preprocessors import manager
 from plaso.preprocessors import mediator
 from plaso.preprocessors import windows
+from plaso.storage.fake import writer as fake_writer
 
 from tests.preprocessors import test_lib
 
@@ -753,29 +755,38 @@ class WindowsSystemRootEnvironmentVariablePluginTest(
         mount_point = path_spec_factory.Factory.NewPathSpec(
             dfvfs_definitions.TYPE_INDICATOR_FAKE, location="/"
         )
+        storage_writer = fake_writer.FakeStorageWriter()
+        test_mediator = mediator.PreprocessMediator(storage_writer)
 
-        storage_writer = self._CreateTestStorageWriter()
+        searcher = file_system_searcher.FileSystemSearcher(
+            file_system_builder.file_system, mount_point
+        )
         plugin = windows.WindowsSystemRootEnvironmentVariablePlugin()
-        self._RunPreprocessorPluginOnFileSystem(
-            file_system_builder.file_system, mount_point, storage_writer, plugin
-        )
 
-        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-            "preprocessing_warning"
-        )
-        self.assertEqual(number_of_warnings, 0)
+        storage_writer.Open()
 
-        number_of_artifacts = storage_writer.GetNumberOfAttributeContainers(
-            "environment_variable"
-        )
-        self.assertEqual(number_of_artifacts, 1)
+        try:
+            plugin.Collect(
+                test_mediator, None, searcher, file_system_builder.file_system
+            )
+            number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+                "preprocessing_warning"
+            )
+            self.assertEqual(number_of_warnings, 0)
 
-        environment_variable = storage_writer.GetAttributeContainerByIndex(
-            "environment_variable", 0
-        )
-        self.assertIsNotNone(environment_variable)
-        self.assertEqual(environment_variable.name, "systemroot")
-        self.assertEqual(environment_variable.value, "\\Windows")
+            number_of_artifacts = storage_writer.GetNumberOfAttributeContainers(
+                "environment_variable"
+            )
+            self.assertEqual(number_of_artifacts, 1)
+
+            environment_variable = storage_writer.GetAttributeContainerByIndex(
+                "environment_variable", 0
+            )
+            self.assertIsNotNone(environment_variable)
+            self.assertEqual(environment_variable.name, "systemroot")
+            self.assertEqual(environment_variable.value, "\\Windows")
+        finally:
+            storage_writer.Close()
 
 
 class WindowsServicesAndDriversPluginTest(WindowsArtifactPreprocessorPluginTestCase):
@@ -978,29 +989,38 @@ class WindowsWinDirEnvironmentVariablePluginTest(
         mount_point = path_spec_factory.Factory.NewPathSpec(
             dfvfs_definitions.TYPE_INDICATOR_FAKE, location="/"
         )
+        storage_writer = fake_writer.FakeStorageWriter()
+        test_mediator = mediator.PreprocessMediator(storage_writer)
 
-        storage_writer = self._CreateTestStorageWriter()
+        searcher = file_system_searcher.FileSystemSearcher(
+            file_system_builder.file_system, mount_point
+        )
         plugin = windows.WindowsWinDirEnvironmentVariablePlugin()
-        self._RunPreprocessorPluginOnFileSystem(
-            file_system_builder.file_system, mount_point, storage_writer, plugin
-        )
 
-        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-            "preprocessing_warning"
-        )
-        self.assertEqual(number_of_warnings, 0)
+        storage_writer.Open()
 
-        number_of_artifacts = storage_writer.GetNumberOfAttributeContainers(
-            "environment_variable"
-        )
-        self.assertEqual(number_of_artifacts, 1)
+        try:
+            plugin.Collect(
+                test_mediator, None, searcher, file_system_builder.file_system
+            )
+            number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+                "preprocessing_warning"
+            )
+            self.assertEqual(number_of_warnings, 0)
 
-        environment_variable = storage_writer.GetAttributeContainerByIndex(
-            "environment_variable", 0
-        )
-        self.assertIsNotNone(environment_variable)
-        self.assertEqual(environment_variable.name, "windir")
-        self.assertEqual(environment_variable.value, "\\Windows")
+            number_of_artifacts = storage_writer.GetNumberOfAttributeContainers(
+                "environment_variable"
+            )
+            self.assertEqual(number_of_artifacts, 1)
+
+            environment_variable = storage_writer.GetAttributeContainerByIndex(
+                "environment_variable", 0
+            )
+            self.assertIsNotNone(environment_variable)
+            self.assertEqual(environment_variable.name, "windir")
+            self.assertEqual(environment_variable.value, "\\Windows")
+        finally:
+            storage_writer.Close()
 
 
 if __name__ == "__main__":

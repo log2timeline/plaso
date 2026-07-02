@@ -2,6 +2,8 @@
 
 import os
 
+from dfvfs.helpers import file_system_searcher
+
 from plaso.containers import artifacts
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
@@ -125,12 +127,18 @@ class WindowsProfilePathEnvironmentVariableArtifactPreprocessorPlugin(
             )
 
 
-class WindowsPathEnvironmentVariableArtifactPreprocessorPlugin(
+class WindowsPathEnvironmentVariablePreprocessorPlugin(
     interface.FileSystemArtifactPreprocessorPlugin
 ):
     """Windows path environment variable plugin interface."""
 
     _NAME = None
+
+    _WINDOWS_PATHS = frozenset([
+        '\\Windows',
+        '\\WinNT',
+        '\\WINNT35',
+        '\\WTSRV'])
 
     def _ParsePathSpecification(
         self, mediator, searcher, file_system, path_specification, path_separator
@@ -153,7 +161,7 @@ class WindowsPathEnvironmentVariableArtifactPreprocessorPlugin(
         relative_path = searcher.GetRelativePath(path_specification)
         if not relative_path:
             raise errors.PreProcessFail(
-                f"Unable to read: {self.ARTIFACT_DEFINITION_NAME:s} with error: "
+                f"Unable to determine environment variable: {self._NAME:s} with error: "
                 f"missing relative path."
             )
 
@@ -169,9 +177,51 @@ class WindowsPathEnvironmentVariableArtifactPreprocessorPlugin(
             mediator.AddEnvironmentVariable(environment_variable)
         except KeyError:
             mediator.ProducePreprocessingWarning(
-                self.ARTIFACT_DEFINITION_NAME,
+                "WindowsPathEnvironmentVariablePreprocessorPlugin",
                 f"Unable to set environment variable: {self._NAME:s}.",
             )
+
+    # pylint: disable=unused-argument
+    def Collect(self, mediator, artifact_definition, searcher, file_system):
+        """Collects values using a file artifact definition.
+
+        Args:
+          mediator (PreprocessMediator): mediates interactions between preprocess
+              plugins and other components, such as storage and knowledge base.
+          artifact_definition (artifacts.ArtifactDefinition): artifact definition.
+          searcher (dfvfs.FileSystemSearcher): file system searcher to preprocess
+              the file system.
+          file_system (dfvfs.FileSystem): file system to be preprocessed.
+
+        Raises:
+          PreProcessFail: if the preprocessing fails.
+        """
+        last_exception = None
+
+        for path in self._WINDOWS_PATHS:
+            find_spec = file_system_searcher.FindSpec(
+                case_sensitive=False,
+                location_glob=path,
+                location_separator='\\',
+            )
+            for path_specification in searcher.Find(find_specs=[find_spec]):
+                try:
+                    self._ParsePathSpecification(
+                        mediator,
+                        searcher,
+                        file_system,
+                        path_specification,
+                        '\\',
+                    )
+                    last_exception = None
+
+                except errors.PreProcessFail as exception:
+                    last_exception = exception
+
+        if last_exception:
+            # Only raise an exception if none of the paths were successfully
+            # pre-processed.
+            raise last_exception
 
 
 class WindowsAllUsersAppDataKnowledgeBasePlugin(
@@ -903,11 +953,9 @@ class WindowsSystemProductPlugin(
 
 
 class WindowsSystemRootEnvironmentVariablePlugin(
-    WindowsPathEnvironmentVariableArtifactPreprocessorPlugin
+    WindowsPathEnvironmentVariablePreprocessorPlugin
 ):
     """The Windows %SystemRoot% environment variable plugin."""
-
-    ARTIFACT_DEFINITION_NAME = "WindowsEnvironmentVariableSystemRoot"
 
     _NAME = "systemroot"
 
@@ -1049,11 +1097,9 @@ class WindowsUserAccountsPlugin(interface.WindowsRegistryKeyArtifactPreprocessor
 
 
 class WindowsWinDirEnvironmentVariablePlugin(
-    WindowsPathEnvironmentVariableArtifactPreprocessorPlugin
+    WindowsPathEnvironmentVariablePreprocessorPlugin
 ):
     """The Windows %WinDir% environment variable plugin."""
-
-    ARTIFACT_DEFINITION_NAME = "WindowsEnvironmentVariableWinDir"
 
     _NAME = "windir"
 

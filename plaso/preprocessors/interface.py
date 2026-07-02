@@ -85,8 +85,8 @@ class FileSystemArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
                             path_specification,
                             source.separator,
                         )
-
                         last_exception = None
+
                     except errors.PreProcessFail as exception:
                         last_exception = exception
 
