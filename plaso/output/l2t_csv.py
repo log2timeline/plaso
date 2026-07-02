@@ -231,12 +231,12 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
 
             # Some parsers have written bytes values to storage.
             if isinstance(attribute_value, bytes):
-                attribute_value = attribute_value.decode("utf-8", "replace")
                 logger.warning(
-                    f'Found bytes value for attribute "{attribute_name:s}" for '
-                    f"data type: {event_data.data_type!s}. Value was converted to "
-                    f'UTF-8: "{attribute_value:s}"'
+                    f"Found bytes value for attribute '{attribute_name:s}' for "
+                    f"data type: {event_data.data_type!s}. Unsupported UTF-8 code "
+                    f"points are escaped."
                 )
+                attribute_value = attribute_value.decode("utf-8", "backslashreplace")
 
             # With ! in {name!s} we force a string conversion since some of the extra
             # attributes values can be integer, float point or boolean values.
