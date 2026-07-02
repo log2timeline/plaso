@@ -58,7 +58,6 @@ class GCPLogEventData(events.EventData):
       source_images (list[str]): source images of disks attached to a compute
           engine instance.
       status_code (str): operation success or failure code.
-      status_message (str): operation success or failure message.
       status_reasons (list[str]): reasons for operation failure.
       text_payload (str): text payload for logs not using a JSON or proto payload.
       user_agent (str): user agent used in the request.
@@ -107,7 +106,6 @@ class GCPLogEventData(events.EventData):
         self.severity = None
         self.source_images = None
         self.status_code = None
-        self.status_message = None
         self.status_reasons = None
         self.text_payload = None
         self.user_agent = None
@@ -260,7 +258,7 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
             # Empty `code` and `message` fields indicate the operation was successful.
 
             event_data.status_code = str(self._GetJSONValue(status, "code", ""))
-            event_data.status_message_body = self._GetJSONValue(status, "message")
+            event_data.message_body = self._GetJSONValue(status, "message")
 
             # `protoPayload.status.details[].reason` contains reason for an operation
             # failure.

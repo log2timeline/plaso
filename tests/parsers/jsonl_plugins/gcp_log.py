@@ -133,7 +133,6 @@ class GCPLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
             "severity": "NOTICE",
             "source_images": ["projects/fake-project/global/images/fake-source-image"],
             "status_code": None,
-            "status_message": None,
             "text_payload": None,
             "user_agent": (
                 "fake-user-agent-string command/gcloud.compute.instances.insert"
@@ -166,7 +165,10 @@ class GCPLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
             "log_name": (
                 "projects/ketchup/logs/cloudaudit.googleapis.com%2F" "activity"
             ),
-            "message_body": None,
+            "message_body": (
+                'Permission "iam.serviceAccounts.create" denied on resource (or it may '
+                "not exist)."
+            ),
             "method_name": "google.iam.admin.v1.CreateServiceAccount",
             "permissions": ["iam.serviceAccounts.create"],
             "policy_deltas": None,
@@ -197,10 +199,6 @@ class GCPLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
             "severity": "ERROR",
             "source_images": None,
             "status_code": "7",
-            "status_message": (
-                'Permission "iam.serviceAccounts.create" denied on resource (or it may '
-                "not exist)."
-            ),
             "status_reasons": ["IAM_PERMISSION_DENIED"],
             "text_payload": None,
             "user_agent": "(gzip),gzip(gfe)",
