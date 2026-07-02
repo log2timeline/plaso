@@ -37,8 +37,8 @@ class MacOSTaggingFileTest(test_lib.TaggingFileTestCase):
         )
 
         # Test: data_type is 'syslog:line' AND
-        #       body contains 'COMMAND=/bin/launchctl'
-        attribute_values_per_name = {"body": ["COMMAND=/bin/launchctl"]}
+        #       message_body contains 'COMMAND=/bin/launchctl'
+        attribute_values_per_name = {"message_body": ["COMMAND=/bin/launchctl"]}
         self._CheckTaggingRule(
             syslog.SyslogLineEventData,
             attribute_values_per_name,

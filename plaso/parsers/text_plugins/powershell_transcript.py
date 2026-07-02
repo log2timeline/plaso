@@ -106,7 +106,7 @@ class PowerShellTranscriptLogTextPlugin(interface.TextPlugin):
 
     _LOG_LINE = (
         pyparsing.NotAny(_SEPARATOR)
-        + pyparsing.restOfLine().set_results_name("body")
+        + pyparsing.restOfLine().set_results_name("message_body")
         + _END_OF_LINE
     )
 
@@ -236,9 +236,11 @@ class PowerShellTranscriptLogTextPlugin(interface.TextPlugin):
         """
         if self._in_command_history:
             if key == "log_line":
-                body = self._GetStringValueFromStructure(structure, "body")
-                if body:
-                    self._command_history.append(body)
+                message_body = self._GetStringValueFromStructure(
+                    structure, "message_body"
+                )
+                if message_body:
+                    self._command_history.append(message_body)
 
             elif key == "separator_line":
                 event_data = copy.deepcopy(self._event_data)
@@ -252,9 +254,13 @@ class PowerShellTranscriptLogTextPlugin(interface.TextPlugin):
 
         else:
             if key == "log_line":
-                body = self._GetStringValueFromStructure(structure, "body")
-                if ":" in body:
-                    date_time_structure = body.rsplit(":", maxsplit=1)[-1].strip()
+                message_body = self._GetStringValueFromStructure(
+                    structure, "message_body"
+                )
+                if ":" in message_body:
+                    date_time_structure = message_body.rsplit(":", maxsplit=1)[
+                        -1
+                    ].strip()
 
                     try:
                         time_elements_structure = self._DATE_TIME.parse_string(
