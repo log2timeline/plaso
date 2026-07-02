@@ -3,6 +3,7 @@
 
 import unittest
 
+from plaso.containers import warnings
 from plaso.parsers import utmp
 
 from tests.parsers import test_lib
@@ -82,6 +83,56 @@ class UtmpParserTest(test_lib.ParserTestCase):
 
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
+
+    def testParseCorruptUtmpFile(self):
+        """Tests that corrupt records do not abort parsing of the rest.
+
+        The file is: valid (alice), two consecutive unsupported-type records,
+        valid (bob), then a truncated trailing record.
+        """
+        parser = utmp.UtmpParser()
+        storage_writer = self._ParseFile(["utmp_corrupted"], parser)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 2)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 2)
+
+        # The valid record after the two skipped corrupt records is recovered;
+        # its offset (1152) proves it was read past them. The truncated trailing
+        # record is treated as the end of the file (no extra warning).
+        expected_event_values = {
+            "data_type": "linux:utmp:event",
+            "hostname": "10.0.0.5",
+            "ip_address": "10.0.0.5",
+            "offset": 1152,
+            "pid": 3003,
+            "terminal": "pts/0",
+            "type": 7,
+            "username": "bob",
+            "written_time": "2023-11-14T22:46:40.000000+00:00",
+        }
+
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
+        self.CheckEventData(event_data, expected_event_values)
+
+        generator = storage_writer.GetAttributeContainers(
+            warnings.ExtractionWarning.CONTAINER_TYPE
+        )
+        test_warnings = list(generator)
+        self.assertEqual(
+            test_warnings[0].message,
+            "Unable to parse utmp entry at offset: 0x00000180, skipping record",
+        )
+        self.assertEqual(
+            test_warnings[1].message,
+            "Unable to parse utmp entry at offset: 0x00000300, skipping record",
+        )
 
 
 if __name__ == "__main__":

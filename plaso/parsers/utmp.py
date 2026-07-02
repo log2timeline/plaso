@@ -61,6 +61,9 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
     _INIT_PROCESS_TYPE = 5
     _DEAD_PROCESS_TYPE = 8
 
+    # A libc6 utmp entry is a fixed-size record.
+    _ENTRY_SIZE = 384
+
     def _ReadEntry(self, parser_mediator, file_object, file_offset):
         """Reads an utmp entry.
 
@@ -208,8 +211,20 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
                     parser_mediator, file_object, file_offset
                 )
             except errors.ParseError:
-                # Note that the utmp file can contain trailing data.
-                break
+                # A single corrupt fixed-size record should not abort parsing of
+                # the remaining records. Skip it and continue if a full record
+                # could still follow; otherwise treat the remainder as trailing
+                # data.
+                if file_size - file_offset < self._ENTRY_SIZE:
+                    break
+
+                parser_mediator.ProduceExtractionWarning(
+                    f"Unable to parse utmp entry at offset: 0x{file_offset:08x}, "
+                    f"skipping record"
+                )
+                file_offset += self._ENTRY_SIZE
+                file_object.seek(file_offset)
+                continue
 
             parser_mediator.ProduceEventData(event_data)
 
