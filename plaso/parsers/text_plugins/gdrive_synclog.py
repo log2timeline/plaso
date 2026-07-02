@@ -78,7 +78,9 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPluginWithLineContinuation):
     )
 
     _LOG_LINE = (
-        _LOG_LINE_START + pyparsing.restOfLine().set_results_name("body") + _END_OF_LINE
+        _LOG_LINE_START
+        + pyparsing.restOfLine().set_results_name("message_body")
+        + _END_OF_LINE
     )
 
     _LINE_STRUCTURES = [("log_line", _LOG_LINE)]
@@ -122,8 +124,9 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPluginWithLineContinuation):
         """
         time_elements_structure = self._GetValueFromStructure(structure, "date_time")
 
-        body = self._GetValueFromStructure(structure, "body", default_value="")
-        body = body.strip()
+        message_body = self._GetValueFromStructure(
+            structure, "message_body", default_value=""
+        ).strip()
 
         event_data = GoogleDriveSyncLogEventData()
         event_data.added_time = self._ParseTimeElements(time_elements_structure)
@@ -135,7 +138,7 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPluginWithLineContinuation):
         event_data.source_code = self._GetValueFromStructure(structure, "source_code")
 
         self._event_data = event_data
-        self._body_lines = [body]
+        self._body_lines = [message_body]
 
     def _ParseRecord(self, parser_mediator, key, structure):
         """Parses a pyparsing structure.
@@ -150,8 +153,8 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPluginWithLineContinuation):
           ParseError: if the structure cannot be parsed.
         """
         if key == "_line_continuation":
-            body = structure.replace("\n", " ").strip()
-            self._body_lines.append(body)
+            message_body = structure.replace("\n", " ").strip()
+            self._body_lines.append(message_body)
 
         else:
             if self._event_data:

@@ -22,9 +22,8 @@ class SyslogCommentEventData(events.EventData):
     """Syslog comment event data.
 
     Attributes:
-      body (str): message body.
-      last_written_time (dfdatetime.DateTimeValues): entry last written date and
-          time.
+      last_written_time (dfdatetime.DateTimeValues): entry last written date and time.
+      message_body (str): message body.
     """
 
     DATA_TYPE = "syslog:comment"
@@ -32,19 +31,18 @@ class SyslogCommentEventData(events.EventData):
     def __init__(self):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
-        self.body = None
         self.last_written_time = None
+        self.message_body = None
 
 
 class SyslogLineEventData(events.EventData):
     """Syslog line event data.
 
     Attributes:
-      body (str): message body.
       facility (str): facility.
       hostname (str): hostname of the reporter.
-      last_written_time (dfdatetime.DateTimeValues): entry last written date and
-          time.
+      last_written_time (dfdatetime.DateTimeValues): entry last written date and time.
+      message_body (str): message body.
       message_identifier (str): message identifier.
       pid (str): process identifier of the reporter.
       reporter (str): reporter.
@@ -60,10 +58,10 @@ class SyslogLineEventData(events.EventData):
           data_type (Optional[str]): event data type indicator.
         """
         super().__init__(data_type=data_type)
-        self.body = None
         self.facility = None
         self.hostname = None
         self.last_written_time = None
+        self.message_body = None
         self.message_identifier = None
         self.pid = None
         self.reporter = None
@@ -75,8 +73,7 @@ class SyslogCronTaskRunEventData(SyslogLineEventData):
 
     Attributes:
       command (str): command executed.
-      last_written_time (dfdatetime.DateTimeValues): entry last written date and
-          time.
+      last_written_time (dfdatetime.DateTimeValues): entry last written date and time.
       username (str): name of user the command was executed.
     """
 
@@ -97,8 +94,7 @@ class SyslogSSHEventData(SyslogLineEventData):
       authentication_method (str): authentication method.
       fingerprint (str): fingerprint.
       ip_address (str): IP address.
-      last_written_time (dfdatetime.DateTimeValues): entry last written date and
-          time.
+      last_written_time (dfdatetime.DateTimeValues): entry last written date and time.
       port (str): port.
       protocol (str): protocol.
       username (str): name of user the command was executed.
@@ -216,17 +212,17 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
         ^ pyparsing.Group(_SSHD_OPENED_CONNECTION).set_results_name("opened_connection")
     )
 
-    def _ParseCronMessageBody(self, body):
+    def _ParseCronMessageBody(self, message_body):
         """Parses a cron syslog message body.
 
         Args:
-          body (str): syslog message body.
+          message_body (str): syslog message body.
 
         Returns:
           SyslogCronTaskRunEventData: event data or None if not available.
         """
         try:
-            structure = self._CRON_MESSAGE.parse_string(body)
+            structure = self._CRON_MESSAGE.parse_string(message_body)
         except pyparsing.ParseException as exception:
             logger.debug(f"Unable to parse cron message body with error: {exception!s}")
             return None
@@ -242,7 +238,7 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
             return None
 
         event_data = SyslogCronTaskRunEventData()
-        event_data.body = structure.get("body")
+        event_data.message_body = structure.get("message_body")
         event_data.command = structure.get("command")
         event_data.hostname = structure.get("hostname")
         event_data.pid = structure.get("pid")
@@ -252,17 +248,17 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
 
         return event_data
 
-    def _ParseSshdMessageBody(self, body):
+    def _ParseSshdMessageBody(self, message_body):
         """Parses a sshd syslog message body.
 
         Args:
-          body (str): syslog message body.
+          message_body (str): syslog message body.
 
         Returns:
           SyslogCronTaskRunEventData: event data or None if not available.
         """
         try:
-            structure = self._SSHD_MESSAGE.parse_string(body)
+            structure = self._SSHD_MESSAGE.parse_string(message_body)
         except pyparsing.ParseException as exception:
             logger.debug(f"Unable to parse sshd message body with error: {exception!s}")
             return None
@@ -284,7 +280,7 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
             return None
 
         event_data.authentication_method = structure.get("authentication_method", None)
-        event_data.body = structure.get("body")
+        event_data.message_body = structure.get("message_body")
         event_data.fingerprint = structure.get("fingerprint")
         event_data.hostname = structure.get("hostname")
         event_data.ip_address = structure.get("ip_address")
@@ -481,7 +477,7 @@ class SyslogTextPlugin(BaseSyslogTextPlugin):
         _DATE_TIME_RFC3339.set_results_name("date_time")
         + (_CHROMEOS_SYSLOG_LINE_BODY ^ _RSYSLOG_LINE_BODY)
         + pyparsing.Optional(pyparsing.Suppress(":"))
-        + pyparsing.Regex(_BODY_PATTERN, re.DOTALL).set_results_name("body")
+        + pyparsing.Regex(_BODY_PATTERN, re.DOTALL).set_results_name("message_body")
         + _END_OF_LINE
     )
 
@@ -508,7 +504,7 @@ class SyslogTextPlugin(BaseSyslogTextPlugin):
         )
         + pyparsing.Word(pyparsing.printables).set_results_name("message_identifier")
         + pyparsing.Word(pyparsing.printables).set_results_name("structured_data")
-        + pyparsing.Regex(_BODY_PATTERN, re.DOTALL).set_results_name("body")
+        + pyparsing.Regex(_BODY_PATTERN, re.DOTALL).set_results_name("message_body")
         + _END_OF_LINE
     )
 
@@ -533,7 +529,7 @@ class SyslogTextPlugin(BaseSyslogTextPlugin):
         """
         time_elements_structure = self._GetValueFromStructure(structure, "date_time")
 
-        body = self._GetValueFromStructure(structure, "body")
+        message_body = self._GetValueFromStructure(structure, "message_body")
         reporter = self._GetValueFromStructure(structure, "reporter")
 
         if key == "rsyslog_protocol_23_line":
@@ -551,17 +547,17 @@ class SyslogTextPlugin(BaseSyslogTextPlugin):
 
         event_data = None
         if reporter == "CRON":
-            event_data = self._ParseCronMessageBody(body)
+            event_data = self._ParseCronMessageBody(message_body)
         elif reporter == "sshd":
-            event_data = self._ParseSshdMessageBody(body)
+            event_data = self._ParseSshdMessageBody(message_body)
 
         if not event_data:
             event_data = SyslogLineEventData()
 
-        event_data.body = body
         event_data.facility = facility
         event_data.hostname = self._GetValueFromStructure(structure, "hostname")
         event_data.last_written_time = self._ParseTimeElements(time_elements_structure)
+        event_data.message_body = message_body
         event_data.message_identifier = message_identifier
         event_data.pid = self._GetValueFromStructure(structure, "pid")
         event_data.reporter = reporter
@@ -785,21 +781,21 @@ class TraditionalSyslogTextPlugin(
             + pyparsing.Suppress(">")
         )
         + pyparsing.Optional(pyparsing.Suppress(":"))
-        + pyparsing.Regex(_BODY_PATTERN, re.DOTALL).set_results_name("body")
+        + pyparsing.Regex(_BODY_PATTERN, re.DOTALL).set_results_name("message_body")
     )
 
     _SYSLOG_COMMENT_END = pyparsing.Suppress("---") + _END_OF_LINE
 
     _SYSLOG_COMMENT_BODY = (
         pyparsing.Suppress(": ---")
-        + pyparsing.SkipTo(_SYSLOG_COMMENT_END).set_results_name("body")
+        + pyparsing.SkipTo(_SYSLOG_COMMENT_END).set_results_name("message_body")
         + pyparsing.Suppress("---")
     )
 
     _KERNEL_SYSLOG_BODY = (
         pyparsing.Literal("kernel").set_results_name("reporter")
         + pyparsing.Suppress(":")
-        + pyparsing.Regex(_BODY_PATTERN, re.DOTALL).set_results_name("body")
+        + pyparsing.Regex(_BODY_PATTERN, re.DOTALL).set_results_name("message_body")
     )
 
     _LOG_LINE = (
@@ -831,21 +827,21 @@ class TraditionalSyslogTextPlugin(
         """
         time_elements_structure = self._GetValueFromStructure(structure, "date_time")
 
-        body = self._GetValueFromStructure(structure, "body")
+        message_body = self._GetValueFromStructure(structure, "message_body")
         reporter = self._GetValueFromStructure(structure, "reporter")
 
         event_data = None
         if reporter == "CRON":
-            event_data = self._ParseCronMessageBody(body)
+            event_data = self._ParseCronMessageBody(message_body)
         elif reporter == "sshd":
-            event_data = self._ParseSshdMessageBody(body)
+            event_data = self._ParseSshdMessageBody(message_body)
 
         if not event_data:
             event_data = SyslogLineEventData()
 
-        event_data.body = body
         event_data.hostname = self._GetValueFromStructure(structure, "hostname")
         event_data.last_written_time = self._ParseTimeElements(time_elements_structure)
+        event_data.message_body = message_body
         event_data.pid = self._GetValueFromStructure(structure, "pid")
         event_data.reporter = reporter
         event_data.severity = self._GetValueFromStructure(structure, "severity")

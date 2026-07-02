@@ -77,9 +77,9 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
             ["application_execution"],
         )
 
-        # Test: reporter is 'sudo' AND body contains 'COMMAND='
+        # Test: reporter is 'sudo' AND message_body contains 'COMMAND='
         attribute_values_per_name = {
-            "body": ["test if my COMMAND=bogus"],
+            "message_body": ["test if my COMMAND=bogus"],
             "reporter": ["sudo"],
         }
         self._CheckTaggingRule(
@@ -88,9 +88,9 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
             ["application_execution"],
         )
 
-        # Test: reporter is 'CROND' AND body contains 'CMD'
+        # Test: reporter is 'CROND' AND message_body contains 'CMD'
         attribute_values_per_name = {
-            "body": ["test if my CMD bogus"],
+            "message_body": ["test if my CMD bogus"],
             "reporter": ["CROND"],
         }
         self._CheckTaggingRule(
@@ -111,38 +111,39 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
             selinux.SELinuxLogEventData, attribute_values_per_name, ["login"]
         )
 
-        # Test: reporter is 'login' AND (body contains 'logged in' OR
-        #       body contains 'ROOT LOGIN' OR body contains 'session opened')
+        # Test: reporter is 'login' AND (message_body contains 'logged in' OR
+        #       message_body contains 'ROOT LOGIN' OR
+        #       message_body contains 'session opened')
         attribute_values_per_name = {
-            "body": ["logged in", "ROOT LOGIN", "session opened"],
+            "message_body": ["logged in", "ROOT LOGIN", "session opened"],
             "reporter": ["login"],
         }
         self._CheckTaggingRule(
             syslog.SyslogLineEventData, attribute_values_per_name, ["login"]
         )
 
-        # Test: reporter is 'sshd' AND (body contains 'session opened' OR
-        #       body contains 'Starting session')
+        # Test: reporter is 'sshd' AND (message_body contains 'session opened' OR
+        #       message_body contains 'Starting session')
         attribute_values_per_name = {
-            "body": ["session opened", "Starting session"],
+            "message_body": ["session opened", "Starting session"],
             "reporter": ["sshd"],
         }
         self._CheckTaggingRule(
             syslog.SyslogLineEventData, attribute_values_per_name, ["login"]
         )
 
-        # Test: reporter is 'dovecot' AND body contains 'imap-login: Login:'
+        # Test: reporter is 'dovecot' AND message_body contains 'imap-login: Login:'
         attribute_values_per_name = {
-            "body": ["imap-login: Login:"],
+            "message_body": ["imap-login: Login:"],
             "reporter": ["dovecot"],
         }
         self._CheckTaggingRule(
             syslog.SyslogLineEventData, attribute_values_per_name, ["login"]
         )
 
-        # Test: reporter is 'postfix/submission/smtpd' AND body contains 'sasl_'
+        # Test: reporter is 'postfix/submission/smtpd' AND message_body contains 'sasl_'
         attribute_values_per_name = {
-            "body": ["sasl_method=PLAIN, sasl_username="],
+            "message_body": ["sasl_method=PLAIN, sasl_username="],
             "reporter": ["postfix/submission/smtpd"],
         }
         self._CheckTaggingRule(
@@ -167,8 +168,8 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
             selinux.SELinuxLogEventData, attribute_values_per_name, ["login_failed"]
         )
 
-        # Test: data_type is 'syslog:line' AND body contains 'pam_tally2'
-        attribute_values_per_name = {"body": ["pam_tally2"]}
+        # Test: data_type is 'syslog:line' AND message_body contains 'pam_tally2'
+        attribute_values_per_name = {"message_body": ["pam_tally2"]}
         self._CheckTaggingRule(
             syslog.SyslogLineEventData, attribute_values_per_name, ["login_failed"]
         )
@@ -177,9 +178,9 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
         #        reporter is 'login' OR
         #        reporter is 'postfix/submission/smtpd' OR
         #        reporter is 'sudo') AND
-        #        body contains 'uthentication fail'
+        #        message_body contains 'uthentication fail'
         attribute_values_per_name = {
-            "body": [
+            "message_body": [
                 "authentication failed",
                 "authentication failure",
                 "Authentication failure",
@@ -192,17 +193,20 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
 
         # Test: (reporter is 'xscreensaver' or
         #        reporter is 'login') AND
-        #       body contains 'FAILED LOGIN'
+        #       message_body contains 'FAILED LOGIN'
         attribute_values_per_name = {
-            "body": ["FAILED LOGIN"],
+            "message_body": ["FAILED LOGIN"],
             "reporter": ["login", "xscreensaver"],
         }
         self._CheckTaggingRule(
             syslog.SyslogLineEventData, attribute_values_per_name, ["login_failed"]
         )
 
-        # Test: reporter is 'su' AND body contains 'DENIED'
-        attribute_values_per_name = {"body": ["DENIED su from"], "reporter": ["su"]}
+        # Test: reporter is 'su' AND message_body contains 'DENIED'
+        attribute_values_per_name = {
+            "message_body": ["DENIED su from"],
+            "reporter": ["su"],
+        }
         self._CheckTaggingRule(
             syslog.SyslogLineEventData, attribute_values_per_name, ["login_failed"]
         )
@@ -215,8 +219,11 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
 
     def testRuleUserAdd(self):
         """Tests the useradd tagging rule."""
-        # Test: reporter is 'useradd' AND body contains 'new user'
-        attribute_values_per_name = {"reporter": ["useradd"], "body": ["new user"]}
+        # Test: reporter is 'useradd' AND message_body contains 'new user'
+        attribute_values_per_name = {
+            "reporter": ["useradd"],
+            "message_body": ["new user"],
+        }
         self._CheckTaggingRule(
             syslog.SyslogLineEventData, attribute_values_per_name, ["useradd"]
         )
@@ -229,8 +236,11 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
 
     def testRuleGroupAdd(self):
         """Tests the groupadd tagging rule."""
-        # Test: reporter is 'useradd' AND body contains 'new group'
-        attribute_values_per_name = {"reporter": ["useradd"], "body": ["new group"]}
+        # Test: reporter is 'useradd' AND message_body contains 'new group'
+        attribute_values_per_name = {
+            "reporter": ["useradd"],
+            "message_body": ["new group"],
+        }
         self._CheckTaggingRule(
             syslog.SyslogLineEventData, attribute_values_per_name, ["groupadd"]
         )
@@ -249,8 +259,11 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
 
     def testRuleUserDel(self):
         """Tests the userdel tagging rule."""
-        # Test: reporter is 'userdel' AND body contains 'delete user'
-        attribute_values_per_name = {"reporter": ["userdel"], "body": ["delete user"]}
+        # Test: reporter is 'userdel' AND message_body contains 'delete user'
+        attribute_values_per_name = {
+            "reporter": ["userdel"],
+            "message_body": ["delete user"],
+        }
         self._CheckTaggingRule(
             syslog.SyslogLineEventData, attribute_values_per_name, ["userdel"]
         )
@@ -263,8 +276,11 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
 
     def testRuleGroupDel(self):
         """Tests the groupdel tagging rule."""
-        # Test: reporter is 'userdel' AND body contains 'removed group'
-        attribute_values_per_name = {"reporter": ["userdel"], "body": ["removed group"]}
+        # Test: reporter is 'userdel' AND message_body contains 'removed group'
+        attribute_values_per_name = {
+            "reporter": ["userdel"],
+            "message_body": ["removed group"],
+        }
         self._CheckTaggingRule(
             syslog.SyslogLineEventData, attribute_values_per_name, ["groupdel"]
         )
@@ -328,33 +344,39 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
 
         self._CheckLabels(storage_writer, ["logout"])
 
-        # Test: reporter is 'login' AND body contains 'session closed'
-        attribute_values_per_name = {"body": ["session closed"], "reporter": ["login"]}
+        # Test: reporter is 'login' AND message_body contains 'session closed'
+        attribute_values_per_name = {
+            "message_body": ["session closed"],
+            "reporter": ["login"],
+        }
         self._CheckTaggingRule(
             syslog.SyslogLineEventData, attribute_values_per_name, ["logout"]
         )
 
-        # Test: reporter is 'sshd' AND (body contains 'session closed' OR
-        #       body contains 'Close session')
+        # Test: reporter is 'sshd' AND (message_body contains 'session closed' OR
+        #       message_body contains 'Close session')
         attribute_values_per_name = {
-            "body": ["Close session", "session closed"],
+            "message_body": ["Close session", "session closed"],
             "reporter": ["sshd"],
         }
         self._CheckTaggingRule(
             syslog.SyslogLineEventData, attribute_values_per_name, ["logout"]
         )
 
-        # Test: reporter is 'systemd-logind' AND body contains 'logged out'
+        # Test: reporter is 'systemd-logind' AND message_body contains 'logged out'
         attribute_values_per_name = {
-            "body": ["logged out"],
+            "message_body": ["logged out"],
             "reporter": ["systemd-logind"],
         }
         self._CheckTaggingRule(
             syslog.SyslogLineEventData, attribute_values_per_name, ["logout"]
         )
 
-        # Test: reporter is 'dovecot' AND body contains 'Logged out'
-        attribute_values_per_name = {"body": ["Logged out"], "reporter": ["dovecot"]}
+        # Test: reporter is 'dovecot' AND message_body contains 'Logged out'
+        attribute_values_per_name = {
+            "message_body": ["Logged out"],
+            "reporter": ["dovecot"],
+        }
         self._CheckTaggingRule(
             syslog.SyslogLineEventData, attribute_values_per_name, ["logout"]
         )
@@ -367,9 +389,9 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
 
     def testRuleSessionStart(self):
         """Tests the session_start tagging rule."""
-        # Test: reporter is 'systemd-logind' and body contains 'New session'
+        # Test: reporter is 'systemd-logind' and message_body contains 'New session'
         attribute_values_per_name = {
-            "body": ["New session"],
+            "message_body": ["New session"],
             "reporter": ["systemd-logind"],
         }
         self._CheckTaggingRule(
@@ -378,9 +400,9 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
 
     def testRuleSessionStop(self):
         """Tests the session_stop tagging rule."""
-        # Test: reporter is 'systemd-logind' and body contains 'Removed session'
+        # Test: reporter is 'systemd-logind' and message_body contains 'Removed session'
         attribute_values_per_name = {
-            "body": ["Removed session"],
+            "message_body": ["Removed session"],
             "reporter": ["systemd-logind"],
         }
         self._CheckTaggingRule(
@@ -441,9 +463,9 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
 
     def testRuleDeviceConnection(self):
         """Tests the device_connection tagging rule."""
-        # Test: reporter is 'kernel' AND body contains 'New USB device found'
+        # Test: reporter is 'kernel' AND message_body contains 'New USB device found'
         attribute_values_per_name = {
-            "body": ["New USB device found"],
+            "message_body": ["New USB device found"],
             "reporter": ["kernel"],
         }
         self._CheckTaggingRule(
@@ -452,8 +474,11 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
 
     def testRuleDeviceDisconnection(self):
         """Tests the device_disconnection tagging rule."""
-        # Test: reporter is 'kernel' AND body contains 'USB disconnect'
-        attribute_values_per_name = {"body": ["USB disconnect"], "reporter": ["kernel"]}
+        # Test: reporter is 'kernel' AND message_body contains 'USB disconnect'
+        attribute_values_per_name = {
+            "message_body": ["USB disconnect"],
+            "reporter": ["kernel"],
+        }
         self._CheckTaggingRule(
             syslog.SyslogLineEventData,
             attribute_values_per_name,
@@ -463,8 +488,8 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
     def testRuleApplicationInstall(self):
         """Tests the application_install tagging rule."""
         # Test: data_type is 'linux:dpkg_log:entry' AND
-        #       body contains 'status installed'
-        attribute_values_per_name = {"body": ["status installed"]}
+        #       message_body contains 'status installed'
+        attribute_values_per_name = {"message_body": ["status installed"]}
         self._CheckTaggingRule(
             dpkg.DpkgEventData, attribute_values_per_name, ["application_install"]
         )
@@ -493,9 +518,9 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
             selinux.SELinuxLogEventData, attribute_values_per_name, ["promiscuous"]
         )
 
-        # Test: reporter is 'kernel' AND body contains 'promiscuous mode'
+        # Test: reporter is 'kernel' AND message_body contains 'promiscuous mode'
         attribute_values_per_name = {
-            "body": ["promiscuous mode"],
+            "message_body": ["promiscuous mode"],
             "reporter": ["kernel"],
         }
         self._CheckTaggingRule(
@@ -510,8 +535,11 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
             selinux.SELinuxLogEventData, attribute_values_per_name, ["crash"]
         )
 
-        # Test: reporter is 'kernel' AND body contains 'segfault'
-        attribute_values_per_name = {"body": ["segfault"], "reporter": ["kernel"]}
+        # Test: reporter is 'kernel' AND message_body contains 'segfault'
+        attribute_values_per_name = {
+            "message_body": ["segfault"],
+            "reporter": ["kernel"],
+        }
         self._CheckTaggingRule(
             syslog.SyslogLineEventData, attribute_values_per_name, ["crash"]
         )

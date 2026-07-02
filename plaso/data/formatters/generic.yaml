@@ -987,7 +987,7 @@ message:
 - 'for user: {username}'
 - 'pid: {pid}'
 short_message:
-- '{body}'
+- '{message_body}'
 short_source: 'LOG'
 source: 'Cron log'
 ---
@@ -998,14 +998,14 @@ message:
 - '['
 - '{reporter}'
 - ', pid: {pid}'
-- '] {body}'
+- '] {message_body}'
 separator: ''
 short_message:
 - '{severity} '
 - '['
 - '{reporter}'
 - ', pid: {pid}'
-- '] {body}'
+- '] {message_body}'
 short_source: 'LOG'
 source: 'Log File'
 ---
@@ -1019,7 +1019,7 @@ message:
 - 'ssh pid: {pid}'
 separator: ''
 short_message:
-- '{body}'
+- '{message_body}'
 short_source: 'LOG'
 source: 'SSH Log'
 ---
@@ -1033,7 +1033,7 @@ message:
 - 'ssh pid: {pid}'
 separator: ''
 short_message:
-- '{body}'
+- '{message_body}'
 short_source: 'LOG'
 source: 'SSH Log'
 ---
@@ -1045,7 +1045,7 @@ message:
 - 'ssh pid: {pid}'
 separator: ''
 short_message:
-- '{body}'
+- '{message_body}'
 short_source: 'LOG'
 source: 'SSH Log'
 ---

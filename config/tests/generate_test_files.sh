@@ -89,13 +89,13 @@ PYTHONPATH=. python ./plaso/scripts/log2timeline.py \
 
 cat > tagging.txt <<EOI
 anacron1
-  body contains 'anacron'
+  message_body contains 'anacron'
 
 exit1
-  body contains ' exit '
+  message_body contains ' exit '
 
 repeated
-  body contains 'last message repeated'
+  message_body contains 'last message repeated'
 EOI
 
 PYTHONPATH=. python ./plaso/scripts/psort.py \
@@ -107,13 +107,13 @@ PYTHONPATH=. python ./plaso/scripts/psort.py \
 # Run tagging twice.
 cat > tagging.txt <<EOI
 anacron2
-  body contains 'anacron'
+  message_body contains 'anacron'
 
 exit2
-  body contains ' exit '
+  message_body contains ' exit '
 
 repeated
-  body contains 'last message repeated'
+  message_body contains 'last message repeated'
 EOI
 
 PYTHONPATH=. python ./plaso/scripts/psort.py \
