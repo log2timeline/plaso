@@ -118,8 +118,10 @@ class TestCase:
         """
         if command[0].endswith("py"):
             command.insert(0, sys.executable)
+
         command_string = " ".join(command)
         logging.info(f"Running: {command_string:s}")
+
         with subprocess.Popen(command, stdout=stdout, stderr=stderr) as child:
             child.communicate()
             exit_code = child.returncode
@@ -398,10 +400,8 @@ class TestDefinitionReader:
 
                 if not test_case.ReadAttributes(self, test_definition):
                     logging.warning(
-                        (
-                            f"Unable to read attributes of test case: "
-                            f"{test_definition.case:s}"
-                        )
+                        f"Unable to read attributes of test case: "
+                        f"{test_definition.case:s}"
                     )
                     continue
 
@@ -731,14 +731,12 @@ class StorageFileTestCase(TestCase):
         profiling_options = self._GetProfilinggOptions(
             test_definition.profiling_options
         )
-
         stdout_file = os.path.join(
             temp_directory, f"{test_definition.name:s}-psort.out"
         )
         stderr_file = os.path.join(
             temp_directory, f"{test_definition.name:s}-psort.err"
         )
-
         command = [self._psort_path]
         command.extend(analysis_options)
         command.extend(output_options)
@@ -872,14 +870,12 @@ class ExtractAndOutputTestCase(StorageFileTestCase):
         profiling_options = self._GetProfilinggOptions(
             test_definition.profiling_options
         )
-
         stdout_file = os.path.join(
             temp_directory, f"{test_definition.name:s}-log2timeline.out"
         )
         stderr_file = os.path.join(
             temp_directory, f"{test_definition.name:s}-log2timeline.err"
         )
-
         command = [self._log2timeline_path]
         command.extend(extract_options)
         command.extend(logging_options)
@@ -918,51 +914,39 @@ class ExtractAndOutputTestCase(StorageFileTestCase):
         test_definition.custom_formatter_file = test_definition_reader.GetConfigValue(
             test_definition.name, "custom_formatter_file"
         )
-
         test_definition.extract_options = test_definition_reader.GetConfigValue(
             test_definition.name, "extract_options", default=[], split_string=True
         )
-
         test_definition.filter_file = test_definition_reader.GetConfigValue(
             test_definition.name, "filter_file"
         )
-
         test_definition.logging_options = test_definition_reader.GetConfigValue(
             test_definition.name, "logging_options", default=[], split_string=True
         )
-
         test_definition.output_file = test_definition_reader.GetConfigValue(
             test_definition.name, "output_file"
         )
-
         test_definition.output_format = test_definition_reader.GetConfigValue(
             test_definition.name, "output_format"
         )
-
         test_definition.output_options = test_definition_reader.GetConfigValue(
             test_definition.name, "output_options", default=[], split_string=True
         )
-
         test_definition.profiling_options = test_definition_reader.GetConfigValue(
             test_definition.name, "profiling_options", default=[], split_string=True
         )
-
         test_definition.reference_output_file = test_definition_reader.GetConfigValue(
             test_definition.name, "reference_output_file"
         )
-
         test_definition.reference_storage_file = test_definition_reader.GetConfigValue(
             test_definition.name, "reference_storage_file"
         )
-
         test_definition.source = test_definition_reader.GetConfigValue(
             test_definition.name, "source"
         )
-
         test_definition.yara_rules = test_definition_reader.GetConfigValue(
             test_definition.name, "yara_rules"
         )
-
         return True
 
     def Run(self, test_definition):
@@ -1001,7 +985,6 @@ class ExtractAndOutputTestCase(StorageFileTestCase):
             storage_file = os.path.join(
                 temp_directory, f"{test_definition.name:s}.plaso"
             )
-
             # Extract events with log2timeline.
             if not self._RunLog2Timeline(
                 test_definition, temp_directory, storage_file, source_path
@@ -1120,14 +1103,12 @@ class ExtractAndOutputWithPstealTestCase(StorageFileTestCase):
         profiling_options = self._GetProfilinggOptions(
             test_definition.profiling_options
         )
-
         stdout_file = os.path.join(
             temp_directory, f"{test_definition.name:s}-psteal.out"
         )
         stderr_file = os.path.join(
             temp_directory, f"{test_definition.name:s}-psteal.err"
         )
-
         command = [self._psteal_path]
         command.extend(psteal_options)
         command.extend(logging_options)
@@ -1167,43 +1148,33 @@ class ExtractAndOutputWithPstealTestCase(StorageFileTestCase):
         test_definition.custom_formatter_file = test_definition_reader.GetConfigValue(
             test_definition.name, "custom_formatter_file"
         )
-
         test_definition.extract_options = test_definition_reader.GetConfigValue(
             test_definition.name, "extract_options", default=[], split_string=True
         )
-
         test_definition.logging_options = test_definition_reader.GetConfigValue(
             test_definition.name, "logging_options", default=[], split_string=True
         )
-
         test_definition.output_file = test_definition_reader.GetConfigValue(
             test_definition.name, "output_file"
         )
-
         test_definition.output_format = test_definition_reader.GetConfigValue(
             test_definition.name, "output_format"
         )
-
         test_definition.output_options = test_definition_reader.GetConfigValue(
             test_definition.name, "output_options", default=[], split_string=True
         )
-
         test_definition.profiling_options = test_definition_reader.GetConfigValue(
             test_definition.name, "profiling_options", default=[], split_string=True
         )
-
         test_definition.reference_output_file = test_definition_reader.GetConfigValue(
             test_definition.name, "reference_output_file"
         )
-
         test_definition.reference_storage_file = test_definition_reader.GetConfigValue(
             test_definition.name, "reference_storage_file"
         )
-
         test_definition.source = test_definition_reader.GetConfigValue(
             test_definition.name, "source"
         )
-
         return True
 
     def Run(self, test_definition):
@@ -1242,7 +1213,6 @@ class ExtractAndOutputWithPstealTestCase(StorageFileTestCase):
             storage_file = os.path.join(
                 temp_directory, f"{test_definition.name:s}.plaso"
             )
-
             # Extract and output events with psteal.
             if not self._RunPsteal(
                 test_definition,
@@ -1287,7 +1257,6 @@ class ExtractAndAnalyzeTestCase(ExtractAndOutputTestCase):
         test_definition.analysis_options = test_definition_reader.GetConfigValue(
             test_definition.name, "analysis_options", default=[], split_string=True
         )
-
         return True
 
     def Run(self, test_definition):
@@ -1311,7 +1280,6 @@ class ExtractAndAnalyzeTestCase(ExtractAndOutputTestCase):
             storage_file = os.path.join(
                 temp_directory, f"{test_definition.name:s}.plaso"
             )
-
             # Extract events with log2timeline.
             if not self._RunLog2Timeline(
                 test_definition, temp_directory, storage_file, source_path
@@ -1368,7 +1336,6 @@ class ExtractAndTagTestCase(ExtractAndOutputTestCase):
         test_definition.tagging_file = test_definition_reader.GetConfigValue(
             test_definition.name, "tagging_file"
         )
-
         return True
 
     def Run(self, test_definition):
@@ -1392,7 +1359,6 @@ class ExtractAndTagTestCase(ExtractAndOutputTestCase):
             storage_file = os.path.join(
                 temp_directory, f"{test_definition.name:s}.plaso"
             )
-
             # Extract events with log2timeline.
             if not self._RunLog2Timeline(
                 test_definition, temp_directory, storage_file, source_path
@@ -1495,10 +1461,8 @@ class ImageExportTestCase(TestCase):
 
             if not os.path.exists(reference_hashes_file_path):
                 logging.error(
-                    (
-                        f"No such reference hashes file: "
-                        f"{reference_hashes_file_path:s}"
-                    )
+                    f"No such reference hashes file: "
+                    f"{reference_hashes_file_path:s}"
                 )
                 return False
 
@@ -1552,10 +1516,8 @@ class ImageExportTestCase(TestCase):
 
             if not os.path.exists(reference_hashes_json_file_path):
                 logging.error(
-                    (
-                        f"No such reference hashes.json file: "
-                        f"{reference_hashes_json_file_path:s}"
-                    )
+                    f"No such reference hashes.json file: "
+                    f"{reference_hashes_json_file_path:s}"
                 )
                 return False
 
@@ -1670,14 +1632,12 @@ class ImageExportTestCase(TestCase):
         profiling_options = self._GetProfilinggOptions(
             test_definition.profiling_options
         )
-
         stdout_file = os.path.join(
             temp_directory, f"{test_definition.name:s}-image_export.out"
         )
         stderr_file = os.path.join(
             temp_directory, f"{test_definition.name:s}-image_export.err"
         )
-
         command = [self._image_export_path]
         command.extend(export_options)
         command.extend(output_options)
@@ -1721,37 +1681,29 @@ class ImageExportTestCase(TestCase):
         test_definition.export_options = test_definition_reader.GetConfigValue(
             test_definition.name, "export_options", default=[], split_string=True
         )
-
         test_definition.filter_file = test_definition_reader.GetConfigValue(
             test_definition.name, "filter_file"
         )
-
         test_definition.hashes_file = test_definition_reader.GetConfigValue(
             test_definition.name, "hashes_file"
         )
-
         test_definition.logging_options = test_definition_reader.GetConfigValue(
             test_definition.name, "logging_options", default=[], split_string=True
         )
-
         test_definition.profiling_options = test_definition_reader.GetConfigValue(
             test_definition.name, "profiling_options", default=[], split_string=True
         )
-
         test_definition.reference_hashes_file = test_definition_reader.GetConfigValue(
             test_definition.name, "reference_hashes_file"
         )
-
         test_definition.reference_hashes_json_file = (
             test_definition_reader.GetConfigValue(
                 test_definition.name, "reference_hashes_json_file"
             )
         )
-
         test_definition.source = test_definition_reader.GetConfigValue(
             test_definition.name, "source"
         )
-
         return True
 
     def Run(self, test_definition):
@@ -1816,43 +1768,33 @@ class MultiExtractAndOutputTestCase(ExtractAndOutputTestCase):
         test_definition.extract_options = test_definition_reader.GetConfigValue(
             test_definition.name, "extract_options", default=[], split_string=True
         )
-
         test_definition.logging_options = test_definition_reader.GetConfigValue(
             test_definition.name, "logging_options", default=[], split_string=True
         )
-
         test_definition.output_file = test_definition_reader.GetConfigValue(
             test_definition.name, "output_file"
         )
-
         test_definition.output_format = test_definition_reader.GetConfigValue(
             test_definition.name, "output_format"
         )
-
         test_definition.output_options = test_definition_reader.GetConfigValue(
             test_definition.name, "output_options", default=[], split_string=True
         )
-
         test_definition.profiling_options = test_definition_reader.GetConfigValue(
             test_definition.name, "profiling_options", default=[], split_string=True
         )
-
         test_definition.reference_output_file = test_definition_reader.GetConfigValue(
             test_definition.name, "reference_output_file"
         )
-
         test_definition.reference_storage_file = test_definition_reader.GetConfigValue(
             test_definition.name, "reference_storage_file"
         )
-
         test_definition.source1 = test_definition_reader.GetConfigValue(
             test_definition.name, "source1"
         )
-
         test_definition.source2 = test_definition_reader.GetConfigValue(
             test_definition.name, "source2"
         )
-
         return True
 
     def Run(self, test_definition):
@@ -1884,7 +1826,6 @@ class MultiExtractAndOutputTestCase(ExtractAndOutputTestCase):
             storage_file = os.path.join(
                 temp_directory, f"{test_definition.name:s}.plaso"
             )
-
             # Extract events with log2timeline.
             if not self._RunLog2Timeline(
                 test_definition, temp_directory, storage_file, source1_path
@@ -1972,47 +1913,36 @@ class AnalyzeAndOutputTestCase(StorageFileTestCase):
         test_definition.analysis_options = test_definition_reader.GetConfigValue(
             test_definition.name, "analysis_options", default=[], split_string=True
         )
-
         test_definition.custom_formatter_file = test_definition_reader.GetConfigValue(
             test_definition.name, "custom_formatter_file"
         )
-
         test_definition.logging_options = test_definition_reader.GetConfigValue(
             test_definition.name, "logging_options", default=[], split_string=True
         )
-
         test_definition.output_file = test_definition_reader.GetConfigValue(
             test_definition.name, "output_file"
         )
-
         test_definition.output_filter = test_definition_reader.GetConfigValue(
             test_definition.name, "output_filter", default=""
         )
-
         test_definition.output_format = test_definition_reader.GetConfigValue(
             test_definition.name, "output_format"
         )
-
         test_definition.output_options = test_definition_reader.GetConfigValue(
             test_definition.name, "output_options", default=[], split_string=True
         )
-
         test_definition.profiling_options = test_definition_reader.GetConfigValue(
             test_definition.name, "profiling_options", default=[], split_string=True
         )
-
         test_definition.reference_output_file = test_definition_reader.GetConfigValue(
             test_definition.name, "reference_output_file"
         )
-
         test_definition.source = test_definition_reader.GetConfigValue(
             test_definition.name, "source"
         )
-
         test_definition.source_options = test_definition_reader.GetConfigValue(
             test_definition.name, "source_options", default=[], split_string=True
         )
-
         return True
 
     def Run(self, test_definition):
@@ -2094,47 +2024,36 @@ class MultiAnalyzeAndOutputTestCase(AnalyzeAndOutputTestCase):
         test_definition.analysis_options1 = test_definition_reader.GetConfigValue(
             test_definition.name, "analysis_options1", default=[], split_string=True
         )
-
         test_definition.analysis_options2 = test_definition_reader.GetConfigValue(
             test_definition.name, "analysis_options2", default=[], split_string=True
         )
-
         test_definition.custom_formatter_file = test_definition_reader.GetConfigValue(
             test_definition.name, "custom_formatter_file"
         )
-
         test_definition.logging_options = test_definition_reader.GetConfigValue(
             test_definition.name, "logging_options", default=[], split_string=True
         )
-
         test_definition.output_file = test_definition_reader.GetConfigValue(
             test_definition.name, "output_file"
         )
-
         test_definition.output_filter = test_definition_reader.GetConfigValue(
             test_definition.name, "output_filter", default=""
         )
-
         test_definition.output_format = test_definition_reader.GetConfigValue(
             test_definition.name, "output_format"
         )
-
         test_definition.output_options = test_definition_reader.GetConfigValue(
             test_definition.name, "output_options", default=[], split_string=True
         )
-
         test_definition.profiling_options = test_definition_reader.GetConfigValue(
             test_definition.name, "profiling_options", default=[], split_string=True
         )
-
         test_definition.reference_output_file = test_definition_reader.GetConfigValue(
             test_definition.name, "reference_output_file"
         )
-
         test_definition.source = test_definition_reader.GetConfigValue(
             test_definition.name, "source"
         )
-
         return True
 
     def Run(self, test_definition):
@@ -2226,7 +2145,6 @@ def Main():
         add_help=False,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-
     argument_parser.add_argument(
         "-c",
         "--config",
@@ -2236,7 +2154,6 @@ def Main():
         default=None,
         help="path of the test configuration file.",
     )
-
     argument_parser.add_argument(
         "--debug",
         dest="debug_output",
@@ -2244,11 +2161,9 @@ def Main():
         default=False,
         help="enable debug output.",
     )
-
     argument_parser.add_argument(
         "-h", "--help", action="help", help="show this help message and exit."
     )
-
     argument_parser.add_argument(
         "--references-directory",
         "--references_directory",
@@ -2259,7 +2174,6 @@ def Main():
         default=None,
         help=("The location of the directory where the test references are " "stored."),
     )
-
     argument_parser.add_argument(
         "--results-directory",
         "--results_directory",
@@ -2270,7 +2184,6 @@ def Main():
         default=None,
         help=("The location of the directory where to store the test results."),
     )
-
     argument_parser.add_argument(
         "--sources-directory",
         "--sources_directory",
@@ -2281,7 +2194,6 @@ def Main():
         default=None,
         help=("The location of the directory where the test sources are stored."),
     )
-
     argument_parser.add_argument(
         "--scripts-directory",
         "--scripts_directory",
@@ -2294,7 +2206,6 @@ def Main():
         default=None,
         help="The location of the plaso scripts directory.",
     )
-
     options = argument_parser.parse_args()
 
     if not options.config_file:
@@ -2307,7 +2218,7 @@ def Main():
     if not os.path.exists(options.config_file):
         print(f"No such config file: {options.config_file:s}")
         print("")
-        return False
+        return 1
 
     logging.basicConfig(format="[%(levelname)s] %(message)s", level=logging.INFO)
 
@@ -2321,22 +2232,20 @@ def Main():
     if test_sources_path and not os.path.isdir(test_sources_path):
         print(f"No such sources directory: {test_sources_path:s}")
         print("")
-        return False
+        return 1
 
     test_references_path = options.references_directory
     if test_references_path and not os.path.isdir(test_references_path):
         print(f"No such references directory: {test_references_path:s}")
         print("")
-        return False
+        return 1
 
     test_results_path = options.results_directory
     if not test_results_path:
         test_results_path = os.getcwd()
 
     if not os.path.isdir(test_results_path):
-        print(f"No such results directory: {test_results_path:s}")
-        print("")
-        return False
+        os.makedirs(test_results_path, exist_ok=True)
 
     tests = []
     with open(options.config_file, "r", encoding="utf-8") as file_object:
@@ -2366,13 +2275,10 @@ def Main():
             print(f" {failed_test:s}")
 
         print("")
-        return False
+        return 1
 
-    return True
+    return 0
 
 
 if __name__ == "__main__":
-    if not Main():
-        sys.exit(1)
-    else:
-        sys.exit(0)
+    sys.exit(Main())
