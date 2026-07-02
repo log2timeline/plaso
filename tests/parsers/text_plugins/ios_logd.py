@@ -59,12 +59,11 @@ class IOSSysdiagnoseLogdUnitTest(test_lib.TextPluginTestCase):
         self.assertEqual(number_of_warnings, 0)
 
         expected_event_values = {
-            "body": "libtrace_kic=1",
             "data_type": "ios:sysdiagnose:logd:line",
             "logger": "logd[29]",
+            "message_body": "libtrace_kic=1",
             "written_time": "2021-08-11T05:50:23-07:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 2)
         self.CheckEventData(event_data, expected_event_values)
 

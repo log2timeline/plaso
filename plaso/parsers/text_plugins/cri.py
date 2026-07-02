@@ -20,9 +20,9 @@ class CRIEventData(events.EventData):
     """CRI log event data.
 
     Attributes:
-      body (str): the log message body.
       event_datetime (time_elements.TimeElementsInNanoseconds): the datetime of
           the log message.
+      message_body (str): message body.
       stream (str): the log stream.  Currently only 'stdout' and 'stderr' are
           supported.
       tag (str): the log tag.  Currently only 'P' (partial) and 'F' (full) are
@@ -34,8 +34,8 @@ class CRIEventData(events.EventData):
     def __init__(self):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
-        self.body = None
         self.event_datetime = None
+        self.message_body = None
         self.stream = None
         self.tag = None
 
@@ -61,11 +61,11 @@ class CRITextPlugin(interface.TextPlugin):
     # F indicates a complete or the end of a multiline log.
     _TAG = pyparsing.oneOf(["P", "F"]).setResultsName("tag")
 
-    _LOG = (
+    _MESSAGE_BODY = (
         pyparsing.restOfLine() + pyparsing.Suppress(pyparsing.LineEnd())
-    ).setResultsName("body")
+    ).setResultsName("message_body")
 
-    _LOG_LINE = _DATE_AND_TIME + _STREAM + _TAG + _LOG
+    _LOG_LINE = _DATE_AND_TIME + _STREAM + _TAG + _MESSAGE_BODY
     _LINE_STRUCTURES = [("log_line", _LOG_LINE)]
 
     VERIFICATION_GRAMMAR = _LOG_LINE
@@ -89,7 +89,9 @@ class CRITextPlugin(interface.TextPlugin):
             )
             event_data = CRIEventData()
             event_data.event_datetime = date_time
-            event_data.body = self._GetValueFromStructure(structure, "body")[0]
+            event_data.message_body = self._GetValueFromStructure(
+                structure, "message_body"
+            )[0]
             event_data.stream = self._GetValueFromStructure(structure, "stream")
             event_data.tag = self._GetValueFromStructure(structure, "tag")
             parser_mediator.ProduceEventData(event_data)

@@ -56,7 +56,7 @@ class USBStorPlugin(test_lib.RegistryPluginTestCase):
             "driver_last_installation_time": "2011-04-01T04:52:38.6860000+00:00",
             "firmware_time": None,
             "key_path": (
-                f"{key_path:s}\\Disk&Ven_HP&Prod_v100w&Rev_1024\\" f"AA951D0000007252&0"
+                f"{key_path:s}\\Disk&Ven_HP&Prod_v100w&Rev_1024\\AA951D0000007252&0"
             ),
             "product": "Prod_v100w",
             "revision": "Rev_1024",

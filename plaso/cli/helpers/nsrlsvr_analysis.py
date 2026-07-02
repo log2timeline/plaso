@@ -68,9 +68,7 @@ class NsrlsvrAnalysisArgumentsHelper(interface.ArgumentsHelper):
             action="store",
             default=cls._DEFAULT_LABEL,
             metavar="LABEL",
-            help=(
-                f"Label to apply to events, the default is: " f"{cls._DEFAULT_LABEL:s}."
-            ),
+            help=(f"Label to apply to events, the default is: {cls._DEFAULT_LABEL:s}."),
         )
 
         argument_group.add_argument(

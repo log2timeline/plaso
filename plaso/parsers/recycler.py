@@ -117,7 +117,7 @@ class WinRecycleBinParser(interface.FileObjectParser, dtfabric_helper.DtFabricHe
 
         if file_header.format_version not in self._SUPPORTED_FORMAT_VERSIONS:
             raise errors.WrongParser(
-                f"Unsupported format version: " f"{file_header.format_version:d}."
+                f"Unsupported format version: {file_header.format_version:d}."
             )
 
         event_data = WinRecycleBinEventData()

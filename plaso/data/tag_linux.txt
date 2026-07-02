@@ -21,7 +21,7 @@ login
 # Tags Linux failed log-in events.
 login_failed
   data_type is 'selinux:line' AND audit_type is 'ANOM_LOGIN_FAILURES'
-  data_type is 'selinux:line' AND audit_type is 'USER_LOGIN' AND body contains 'res=failed'
+  data_type is 'selinux:line' AND audit_type is 'USER_LOGIN' AND message_body contains 'res=failed'
   data_type is 'syslog:line' AND body contains 'pam_tally2'
   (reporter is 'sshd' OR reporter is 'login' OR reporter is 'postfix/submission/smtpd' OR reporter is 'sudo') AND body contains 'uthentication fail'
   reporter is 'sshd' AND (body contains 'Access denied for user' OR body contains 'not allowed because')

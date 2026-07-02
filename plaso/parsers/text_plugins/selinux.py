@@ -29,9 +29,8 @@ class SELinuxLogEventData(events.EventData):
 
     Attributes:
       audit_type (str): audit type.
-      body (str): body of the log line.
-      last_written_time (dfdatetime.DateTimeValues): entry last written date and
-          time.
+      last_written_time (dfdatetime.DateTimeValues): entry last written date and time.
+      message_body (str): message body.
       pid (int): process identifier (PID) that created the SELinux log line.
     """
 
@@ -41,8 +40,8 @@ class SELinuxLogEventData(events.EventData):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
         self.audit_type = None
-        self.body = None
         self.last_written_time = None
+        self.message_body = None
         self.pid = None
 
 
@@ -80,7 +79,7 @@ class SELinuxTextPlugin(interface.TextPlugin):
         + pyparsing.Suppress(":")
         + _INTEGER
         + pyparsing.Suppress("):")
-        + pyparsing.restOfLine().set_results_name("body")
+        + pyparsing.restOfLine().set_results_name("message_body")
         + _END_OF_LINE
     )
 
@@ -105,13 +104,14 @@ class SELinuxTextPlugin(interface.TextPlugin):
                 structure, "timestamp"
             )
 
-            # Try to parse the body text as key value pairs. Note that not
-            # all log lines will be properly formatted key value pairs.
-            body = self._GetValueFromStructure(structure, "body", default_value="")
-            body = body.strip()
+            # Try to parse the message body as key value pairs. Note that not all log
+            # lines will be properly formatted key value pairs.
+            message_body = self._GetValueFromStructure(
+                structure, "message_body", default_value=""
+            ).strip()
 
             try:
-                body_structure = self._KEY_VALUE_DICT.parse_string(body)
+                body_structure = self._KEY_VALUE_DICT.parse_string(message_body)
 
                 process_identifier = self._GetValueFromStructure(body_structure, "pid")
             except pyparsing.ParseException:
@@ -119,7 +119,7 @@ class SELinuxTextPlugin(interface.TextPlugin):
 
             event_data = SELinuxLogEventData()
             event_data.audit_type = self._GetValueFromStructure(structure, "type")
-            event_data.body = body or None
+            event_data.message_body = message_body or None
             event_data.last_written_time = self._ParseTimeElements(
                 time_elements_structure
             )

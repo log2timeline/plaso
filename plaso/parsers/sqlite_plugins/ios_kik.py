@@ -11,7 +11,8 @@ class IOSKikMessageEventData(events.EventData):
     """Kik message event data.
 
     Attributes:
-      body (str): content of the message.
+      application_display_name (str): application display name.
+      message_body (str): message body.
       message_status (str): message status, such as:
           read, unread, not sent, delivered, etc.
       message_type (str): message type, either Sent or Received.
@@ -28,8 +29,8 @@ class IOSKikMessageEventData(events.EventData):
     def __init__(self):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
-        self.body = None
-        self.displayname = None
+        self.application_display_name = None
+        self.message_body = None
         self.message_status = None
         self.message_type = None
         self.offset = None
@@ -171,8 +172,10 @@ class IOSKikPlugin(interface.SQLitePlugin):
         query_hash = hash(query)
 
         event_data = IOSKikMessageEventData()
-        event_data.body = self._GetRowValue(query_hash, row, "ZBODY")
-        event_data.displayname = self._GetRowValue(query_hash, row, "ZDISPLAYNAME")
+        event_data.application_display_name = self._GetRowValue(
+            query_hash, row, "ZDISPLAYNAME"
+        )
+        event_data.message_body = self._GetRowValue(query_hash, row, "ZBODY")
         event_data.message_status = self._GetRowValue(query_hash, row, "ZSTATE")
         event_data.message_type = self._GetRowValue(query_hash, row, "ZTYPE")
         event_data.offset = self._GetRowValue(query_hash, row, "id")

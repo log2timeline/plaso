@@ -347,11 +347,11 @@ source: 'MacOS launchd plist'
 type: 'conditional'
 data_type: 'macos:launchd_log:entry'
 message:
-- 'Body: {body}'
+- 'Message: {message_body}'
 - 'Process Name: {process_name}'
 - 'Severity: {severity}'
 short_message:
-- 'Body: {body}'
+- 'Message: {message_body}'
 short_source: 'Launchd'
 source: 'MacOS Launchd'
 ---
@@ -436,10 +436,10 @@ message:
 - '(subtitle: {subtitle})'
 - 'registered by: {bundle_name}'
 - 'Presented: {presented}'
-- 'Content: {body}'
+- 'Message: {message_body}'
 short_message:
 - 'Title: {title},'
-- 'Content: {body}'
+- 'Message: {message_body}'
 short_source: 'NOTIFICATION'
 source: 'MacOS Notification Center database'
 ---

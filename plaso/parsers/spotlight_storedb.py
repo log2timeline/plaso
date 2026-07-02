@@ -1007,7 +1007,7 @@ class SpotlightStoreDatabaseParser(
             )
         except dtfabric_errors.MappingError as exception:
             raise errors.ParseError(
-                f"Unable to parse array of byte values with error: " f"{exception!s}"
+                f"Unable to parse array of byte values with error: {exception!s}"
             )
 
         if bytes_read == 0:
@@ -1218,7 +1218,7 @@ class SpotlightStoreDatabaseParser(
             )
         except dtfabric_errors.MappingError as exception:
             raise errors.ParseError(
-                f"Unable to parse array of string values with error: " f"{exception!s}"
+                f"Unable to parse array of string values with error: {exception!s}"
             )
 
         if property_type & 0x03 == 0x03:

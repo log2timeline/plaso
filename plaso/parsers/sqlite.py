@@ -348,9 +348,8 @@ class SQLiteParser(interface.FileEntryParser):
 
         except (OSError, ValueError, sqlite3.DatabaseError) as exception:
             parser_mediator.ProduceExtractionWarning(
-                f"unable to open SQLite database and WAL with error: " f"{exception!s}"
+                f"unable to open SQLite database and WAL with error: {exception!s}"
             )
-
             return None, None
 
         return database_wal, wal_file_entry
@@ -378,13 +377,11 @@ class SQLiteParser(interface.FileEntryParser):
 
         if not result:
             logger.debug(
-                f"Skipped parsing file: "
-                f"{display_name} with plugin: "
-                f"{plugin.NAME}"
+                f"Skipped parsing file: {display_name:s} with plugin: {plugin.NAME:s}"
             )
             return
 
-        logger.debug(f"Parsing file: " f"{display_name} with plugin: " f"{plugin.NAME}")
+        logger.debug(f"Parsing file: {display_name} with plugin: {plugin.NAME}")
 
         parser_mediator.SampleStartTiming(profiling_name)
 

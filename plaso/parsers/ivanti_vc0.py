@@ -17,13 +17,13 @@ class IvantiVC0EventData(events.EventData):
 
     Attributes:
       authentication_realm (str): authentication realm.
-      body (str): short record text for formatters.
       hostname (str): appliance hostname.
       ip_address (str): IP address found in the record values.
       line_number (str): line number.
       log_type (str): log family, "admin", "access", "diagnosticlog", "events",
           "policytrace" or "sensorslog".
       message_code (str): Ivanti message code.
+      message_body (str): message body.
       recorded_time (dfdatetime.DateTimeValues): record timestamp.
       record_identifier (str): original record identifier in the format:
           "{timestamp:08x}.{line_number:08x}".
@@ -36,12 +36,12 @@ class IvantiVC0EventData(events.EventData):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
         self.authentication_realm = None
-        self.body = None
         self.hostname = None
         self.ip_address = None
         self.line_number = None
         self.log_type = None
         self.message_code = None
+        self.message_body = None
         self.recorded_time = None
         self.record_identifier = None
         self.username = None
@@ -110,8 +110,10 @@ class IvantiVC0Parser(interface.FileObjectParser):
 
         return header_data[0:8] == self._HEADER_SIGNATURE and not any(header_data[8:])
 
-    def _CreateBody(self, record_values, authentication_realm, ip_address, username):
-        """Builds the short body used by formatters.
+    def _CreateMessageBody(
+        self, record_values, authentication_realm, ip_address, username
+    ):
+        """Builds the message body.
 
         Args:
           record_values (list[str]): values after the context field.
@@ -120,7 +122,7 @@ class IvantiVC0Parser(interface.FileObjectParser):
           username (str): username found in the record values.
 
         Returns:
-          str: body or None if not available.
+          str: message body or None if not available.
         """
         body_values = [
             value.strip() for value in record_values if value and value.strip()
@@ -323,7 +325,7 @@ class IvantiVC0Parser(interface.FileObjectParser):
             event_data.username = fields[6] or None
 
         if number_of_fields > 5:
-            event_data.body = self._CreateBody(
+            event_data.message_body = self._CreateMessageBody(
                 fields[5:],
                 event_data.authentication_realm,
                 event_data.ip_address,

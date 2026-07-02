@@ -20,8 +20,8 @@ class SystemdJournalEventData(events.EventData):
     """Systemd journal event data.
 
     Attributes:
-      body (str): message body.
       hostname (str): hostname.
+      message_body (str): message body.
       pid (int): process identifier (PID).
       reporter (str): reporter.
       written_time (dfdatetime.DateTimeValues): date and time the log entry
@@ -33,8 +33,8 @@ class SystemdJournalEventData(events.EventData):
     def __init__(self):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
-        self.body = None
         self.hostname = None
+        self.message_body = None
         self.pid = None
         self.reporter = None
         self.written_time = None
@@ -448,8 +448,8 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
             )
             event_data = SystemdJournalEventData()
 
-            event_data.body = fields.get("MESSAGE")
             event_data.hostname = fields.get("_HOSTNAME")
+            event_data.message_body = fields.get("MESSAGE")
             event_data.reporter = fields.get("SYSLOG_IDENTIFIER")
             event_data.written_time = date_time
 

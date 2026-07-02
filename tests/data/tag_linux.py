@@ -158,10 +158,10 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
         )
 
         # Test: data_type is 'selinux:line' AND audit_type is 'USER_LOGIN' AND
-        #       body contains 'res=failed'
+        #       message_body contains 'res=failed'
         attribute_values_per_name = {
             "audit_type": ["USER_LOGIN"],
-            "body": ["res=failed"],
+            "message_body": ["res=failed"],
         }
         self._CheckTaggingRule(
             selinux.SELinuxLogEventData, attribute_values_per_name, ["login_failed"]

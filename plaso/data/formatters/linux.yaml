@@ -17,22 +17,19 @@ source: 'APT History Log'
 type: 'conditional'
 data_type: 'linux:dpkg_log:entry'
 message:
-- '{body}'
+- '{message_body}'
 short_message:
-- '{body}'
+- '{message_body}'
 short_source: 'LOG'
 source: 'dpkg log file'
 ---
-# TODO: paths is kept for backwards compatibility
 type: 'conditional'
 data_type: 'linux:locate_database:entry'
 message:
 - 'Folder Path: {path}'
-- 'Folder Paths: {paths}'
 - 'Entries: {entries}'
 short_message:
 - '{path}'
-- '{paths}'
 - '{entries}'
 short_source: 'LOCATE'
 source: 'Locate Database record (updatedb)'
@@ -99,13 +96,13 @@ message:
 - 'audit_type: {audit_type}'
 - ', pid: {pid}'
 - ']'
-- ' {body}'
+- ' {message_body}'
 separator: ''
 short_message:
 - '['
 - 'audit_type: {audit_type}'
 - ', pid: {pid}'
 - ']'
-- ' {body}'
+- ' {message_body}'
 short_source: 'LOG'
 source: 'Audit Log'

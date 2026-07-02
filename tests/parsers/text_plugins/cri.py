@@ -60,7 +60,7 @@ class CRILogTextPluginTest(test_lib.TextPluginTestCase):
         expected_event_values = {
             "data_type": "cri:container:log:entry",
             "event_datetime": "2016-10-06T00:17:09.669794202+00:00",
-            "body": " log content 1",
+            "message_body": " log content 1",
             "stream": "stdout",
             "tag": "P",
         }

@@ -83,7 +83,6 @@ class YAMLFormattersFile:
                 value_if_false=value_if_false,
                 value_if_true=value_if_true,
             )
-
             formatter.AddHelper(helper)
 
     def _ReadCustomHelpers(self, formatter, custom_helpers_definition_values):
@@ -148,7 +147,6 @@ class YAMLFormattersFile:
                 output_attribute=output_attribute,
                 values=values,
             )
-
             formatter.AddHelper(helper)
 
     def _ReadFlagsHelpers(self, formatter, flags_helpers_definition_values):
@@ -182,7 +180,6 @@ class YAMLFormattersFile:
                 output_attribute=output_attribute,
                 values=values,
             )
-
             formatter.AddHelper(helper)
 
     def _ReadFormatterDefinition(self, formatter_definition_values):
@@ -213,10 +210,8 @@ class YAMLFormattersFile:
 
         if formatter_type not in ("basic", "conditional"):
             raise errors.ParseError(
-                (
-                    f"Invalid event formatter definition unsupported type: "
-                    f"{formatter_type!s}."
-                )
+                f"Invalid event formatter definition unsupported type: "
+                f"{formatter_type!s}."
             )
 
         data_type = formatter_definition_values.get("data_type")
@@ -234,19 +229,15 @@ class YAMLFormattersFile:
         short_message = formatter_definition_values.get("short_message")
         if not short_message:
             raise errors.ParseError(
-                (
-                    f"Invalid event formatter definition: {data_type:s} missing short "
-                    f"message."
-                )
+                f"Invalid event formatter definition: {data_type:s} missing short "
+                f"message."
             )
 
         short_source = formatter_definition_values.get("short_source")
         if not short_source:
             raise errors.ParseError(
-                (
-                    f"Invalid event formatter definition: {data_type:s} missing short "
-                    f"source."
-                )
+                f"Invalid event formatter definition: {data_type:s} missing short "
+                f"source."
             )
 
         source = formatter_definition_values.get("source")
@@ -313,5 +304,5 @@ class YAMLFormattersFile:
         Yields:
           EventFormatter: an event formatter.
         """
-        with open(path, "r", encoding="utf-8") as file_object:
+        with open(path, encoding="utf-8") as file_object:
             yield from self._ReadFromFileObject(file_object)
