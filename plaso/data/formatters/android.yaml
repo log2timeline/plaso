@@ -160,11 +160,11 @@ enumeration_helpers:
     2: 'RECEIVED'
 message:
 - 'Sender: {sender}'
-- 'Body: {body}'
+- 'Message: {message_body}'
 - 'Status: {message_status}'
 - 'Type: {message_type}'
 short_message:
-- '{body}'
+- '{message_body}'
 short_source: 'HANGOUTS'
 source: 'Google Hangouts Message'
 ---
@@ -187,9 +187,9 @@ message:
 - 'Type: {sms_type}'
 - 'Address: {address}'
 - 'Status: {sms_read}'
-- 'Message: {body}'
+- 'Message: {message_body}'
 short_message:
-- '{body}'
+- '{message_body}'
 short_source: 'LOG'
 source: 'Android SMS messages'
 ---

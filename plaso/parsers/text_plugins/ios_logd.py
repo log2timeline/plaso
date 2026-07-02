@@ -14,8 +14,8 @@ class IOSSysdiagnoseLogdData(events.EventData):
     """iOS sysdiagnose logd event data.
 
     Attributes:
-      body (str): body of the event line.
       logger (str): name of the process that generated the event.
+      message_body (str): message body.
       written_time (dfdatetime.DateTimeValues): date and time the log entry was
           written.
     """
@@ -25,8 +25,8 @@ class IOSSysdiagnoseLogdData(events.EventData):
     def __init__(self):
         """Initializes iOS sysdiagnose logd event data."""
         super().__init__(data_type=self.DATA_TYPE)
-        self.body = None
         self.logger = None
+        self.message_body = None
         self.written_time = None
 
 
@@ -74,7 +74,7 @@ class IOSSysdiagnoseLogdTextPlugin(interface.TextPlugin):
         _DATE_TIME.set_results_name("date_time")
         + _LOGGER.set_results_name("logger")
         + pyparsing.Suppress(": ")
-        + pyparsing.restOfLine().set_results_name("body")
+        + pyparsing.restOfLine().set_results_name("message_body")
         + _END_OF_LINE
     )
 
@@ -97,12 +97,8 @@ class IOSSysdiagnoseLogdTextPlugin(interface.TextPlugin):
         time_elements_structure = self._GetValueFromStructure(structure, "date_time")
 
         event_data = IOSSysdiagnoseLogdData()
-        event_data.body = self._GetValueFromStructure(
-            structure, "body", default_value=""
-        )
-        event_data.logger = self._GetValueFromStructure(
-            structure, "logger", default_value=""
-        )
+        event_data.message_body = self._GetValueFromStructure(structure, "message_body")
+        event_data.logger = self._GetValueFromStructure(structure, "logger")
         event_data.written_time = self._ParseTimeElements(time_elements_structure)
 
         parser_mediator.ProduceEventData(event_data)

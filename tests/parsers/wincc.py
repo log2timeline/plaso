@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests the for bodyfile parser."""
+"""Tests the for WinCC log file parser."""
 
 import unittest
 
@@ -33,7 +33,7 @@ class SIMATICTest(test_lib.ParserTestCase):
         expected_event_values = {
             "data_type": "wincc:simatic_s7:entry",
             "creation_time": "2019-05-27T10:05:43+00:00",
-            "body": ("419 INFO     | LogFileCount  : 3"),
+            "message_body": ("419 INFO     | LogFileCount  : 3"),
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 2)
         self.CheckEventData(event_data, expected_event_values)
@@ -63,15 +63,15 @@ class WinCCSyslogTest(test_lib.ParserTestCase):
 
         expected_event_values = {
             "data_type": "wincc:sys_log:entry",
-            "log_identifier": 2303,
             "creation_time": "2019-05-27T10:10:04.712",
             "event_number": 1012301,
             "log_hostname": "BMS001",
-            "source_device": "CCWriteArchiveServer",
-            "body": (
+            "log_identifier": 2303,
+            "message_body": (
                 "[(null) 224]failed to insert into MSARCLONG with "
                 "0x80004005(#0 '2019-05-27 08:10:03.602') MSG_STATE_COME"
             ),
+            "source_device": "CCWriteArchiveServer",
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 2)
         self.CheckEventData(event_data, expected_event_values)

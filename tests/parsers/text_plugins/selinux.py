@@ -61,26 +61,24 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
         # Test case: normal entry.
         expected_event_values = {
             "audit_type": "LOGIN",
-            "body": (
+            "data_type": "selinux:line",
+            "message_body": (
                 "pid=25443 uid=0 old auid=4294967295 new auid=0 old ses=4294967295 "
                 "new ses=1165"
             ),
-            "data_type": "selinux:line",
             "last_written_time": "2012-05-24T07:40:01.174+00:00",
             "pid": "25443",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
         # Test case: short date.
         expected_event_values = {
             "audit_type": "SHORTDATE",
-            "body": "check rounding",
             "data_type": "selinux:line",
+            "message_body": "check rounding",
             "last_written_time": "2012-05-24T07:40:01.000+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -90,22 +88,20 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
             "data_type": "selinux:line",
             "last_written_time": "2012-05-24T07:40:22.174+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 2)
         self.CheckEventData(event_data, expected_event_values)
 
         # Test case: under score.
         expected_event_values = {
             "audit_type": "UNDER_SCORE",
-            "body": (
+            "data_type": "selinux:line",
+            "message_body": (
                 "pid=25444 uid=0 old auid=4294967295 new auid=54321 old "
                 "ses=4294967295 new ses=1166"
             ),
-            "data_type": "selinux:line",
             "last_written_time": "2012-05-24T07:47:46.174+00:00",
             "pid": "25444",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 3)
         self.CheckEventData(event_data, expected_event_values)
 

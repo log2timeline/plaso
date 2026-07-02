@@ -56,9 +56,7 @@ class ZeroMQQueuesTest(shared_test_lib.BaseTestCase):
 
     def _testItemTransferred(self, push_queue, pop_queue):
         """Tests than item can be transferred between two queues."""
-        item = (
-            f"This is an item going from {push_queue.name:s} to " f"{pop_queue.name:s}"
-        )
+        item = f"This is an item going from {push_queue.name:s} to {pop_queue.name:s}"
         push_queue.PushItem(item)
 
         popped_item = pop_queue.PopItem()

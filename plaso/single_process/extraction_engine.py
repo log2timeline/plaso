@@ -309,18 +309,15 @@ class SingleProcessEngine(engine.BaseEngine):
         # from being killed by an uncaught exception.
         except Exception as exception:  # pylint: disable=broad-except
             parser_mediator.ProduceExtractionWarning(
-                (f"unable to process path specification with error: " f"{exception!s}"),
+                f"unable to process path specification with error: {exception!s}",
                 path_spec=path_spec,
             )
-
             if getattr(self._processing_configuration, "debug_output", False):
                 self._StopStatusUpdateThread()
 
                 logger.warning(
-                    (
-                        f"Unhandled exception while processing path spec: "
-                        f"{self._current_display_name:s}."
-                    )
+                    f"Unhandled exception while processing path spec: "
+                    f"{self._current_display_name:s}."
                 )
                 logger.exception(exception)
 
@@ -406,7 +403,6 @@ class SingleProcessEngine(engine.BaseEngine):
             0,
             0,
         )
-
         if self._status_update_callback:
             self._status_update_callback(self._processing_status)
 
@@ -460,7 +456,6 @@ class SingleProcessEngine(engine.BaseEngine):
             resolver_context=resolver_context,
             system_configurations=system_configurations,
         )
-
         parser_mediator.SetExtractWinEvtResources(
             processing_configuration.extraction.extract_winevt_resources
         )
@@ -476,7 +471,6 @@ class SingleProcessEngine(engine.BaseEngine):
         parser_mediator.SetTemporaryDirectory(
             processing_configuration.temporary_directory
         )
-
         parser_mediator.SetWindowsEventLogProviders(windows_event_log_providers)
 
         return parser_mediator
@@ -518,7 +512,6 @@ class SingleProcessEngine(engine.BaseEngine):
         windows_event_log_providers = list(
             storage_writer.GetAttributeContainers("windows_eventlog_provider")
         )
-
         parser_mediator = self._CreateParserMediator(
             storage_writer,
             resolver_context,
@@ -534,17 +527,14 @@ class SingleProcessEngine(engine.BaseEngine):
                 processing_configuration.parser_filter_expression
             ),
         )
-
         self._extraction_worker.SetExtractionConfiguration(
             processing_configuration.extraction
         )
-
         self._event_data_timeliner = timeliner.EventDataTimeliner(
             data_location=processing_configuration.data_location,
             preferred_year=processing_configuration.preferred_year,
             system_configurations=system_configurations,
         )
-
         try:
             self._event_data_timeliner.SetPreferredTimeZone(
                 processing_configuration.preferred_time_zone

@@ -14,9 +14,9 @@ class SIMATICS7EventData(events.EventData):
     """SIMATIC S7 event data.
 
     Attributes:
-      body (str): the message content of the event.
       creation_time (dfdatetime.DateTimeValues): date and time the log entry
           was created.
+      message_body (str): message body.
     """
 
     DATA_TYPE = "wincc:simatic_s7:entry"
@@ -24,20 +24,20 @@ class SIMATICS7EventData(events.EventData):
     def __init__(self):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
-        self.body = None
         self.creation_time = None
+        self.message_body = None
 
 
 class WinCCSysLogEventData(events.EventData):
     """WinCC Sys Log event data.
 
     Attributes:
-      body (str): the content of the log's message.
       creation_time (dfdatetime.DateTimeValues): date and time the log entry
           was created.
       event_number (int): a number specifying the type of event.
       log_hostname (str): the hostname of the machine logging the event.
       log_identifier (int): identifier for this log file.
+      message_body (str): message body.
       source_device (str): which device generated the event.
     """
 
@@ -46,11 +46,11 @@ class WinCCSysLogEventData(events.EventData):
     def __init__(self):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
-        self.body = None
         self.creation_time = None
         self.event_number = None
         self.log_hostname = None
         self.log_identifier = None
+        self.message_body = None
         self.source_device = None
 
 
@@ -124,7 +124,7 @@ class SIMATICLogParser(interface.FileObjectParser):
             )
             parser_mediator.ProduceExtractionWarning(message)
 
-        event_data.body = ",".join(values[1:]).strip()
+        event_data.message_body = ",".join(values[1:]).strip()
 
         parser_mediator.ProduceEventData(event_data)
 
@@ -314,7 +314,7 @@ class WinCCSysLogParser(interface.FileObjectParser):
         # but also sometimes contains a message string.
 
         text_message = " ".join(values[8:])
-        event_data.body = text_message
+        event_data.message_body = text_message
 
         parser_mediator.ProduceEventData(event_data)
 

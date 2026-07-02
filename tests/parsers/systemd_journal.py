@@ -93,9 +93,9 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
         self.assertEqual(number_of_warnings, 0)
 
         expected_event_values = {
-            "body": "Started User Manager for UID 1000.",
             "data_type": "systemd:journal",
             "hostname": "test-VirtualBox",
+            "message_body": "Started User Manager for UID 1000.",
             "pid": "1",
             "reporter": "systemd",
             "written_time": "2017-01-27T09:40:55.913258+00:00",
@@ -105,9 +105,9 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
 
         # Test a XZ compressed data log entry.
         expected_event_values = {
-            "body": "a" * 692,
             "data_type": "systemd:journal",
             "hostname": "test-VirtualBox",
+            "message_body": "a" * 692,
             "pid": "22921",
             "reporter": "root",
             "written_time": "2017-02-06T16:24:32.564585+00:00",
@@ -137,9 +137,9 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
         self.assertEqual(number_of_warnings, 0)
 
         expected_event_values = {
-            "body": "Reached target Paths.",
             "data_type": "systemd:journal",
             "hostname": "testlol",
+            "message_body": "Reached target Paths.",
             "pid": "822",
             "reporter": "systemd",
             "written_time": "2018-07-03T15:00:16.682340+00:00",
@@ -151,8 +151,8 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
         # The text used in the test message was trippled to make it long enough to
         # trigger the LZ4 compression. Also see:
         # https://github.com/systemd/systemd/issues/6237
-        expected_body_parts = [" textual user names."]
-        expected_body_parts.extend(
+        expected_message_body_parts = [" textual user names."]
+        expected_message_body_parts.extend(
             (
                 "  Yes, as you found out 0day is not a valid username. I wonder which "
                 "tool permitted you to create it in the first place. Note that not "
@@ -161,12 +161,12 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
             )
             * 3
         )
-        expected_body = "".join(expected_body_parts)
+        expected_message_body = "".join(expected_message_body_parts)
 
         expected_event_values = {
-            "body": expected_body,
             "data_type": "systemd:journal",
             "hostname": "testlol",
+            "message_body": expected_message_body,
             "pid": "34757",
             "reporter": "test",
             "written_time": "2018-07-03T15:19:04.667807+00:00",
@@ -198,9 +198,9 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
         large_string = "A" * 512
 
         expected_event_values = {
-            "body": f"Some large string: {large_string:s}",
             "data_type": "systemd:journal",
             "hostname": "DESKTOP-QCDE2BT",
+            "message_body": f"Some large string: {large_string:s}",
             "pid": "197",
             "reporter": "testapp",
             "written_time": "2023-09-26T07:42:46.445209+00:00",
@@ -236,11 +236,11 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
         self.assertEqual(number_of_warnings, 0)
 
         expected_event_values = {
-            "body": (
-                "Runtime journal (/run/log/journal/) is 1.2M, max 9.9M, 8.6M " "free."
-            ),
             "data_type": "systemd:journal",
             "hostname": "test-VirtualBox",
+            "message_body": (
+                "Runtime journal (/run/log/journal/) is 1.2M, max 9.9M, 8.6M " "free."
+            ),
             "pid": "569",
             "reporter": "systemd-journald",
             "written_time": "2016-10-24T13:20:01.063423+00:00",

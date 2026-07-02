@@ -14,7 +14,7 @@ class MacOSLaunchdEventData(events.EventData):
     """Mac OS launchd log event data.
 
     Attributes:
-      body (str): content of the log event.
+      message_body (str): message body.
       process_name (str): name of the process that created the record.
       severity (str): severity of the message.
       written_time (dfdatetime.DateTimeValues): date and time the log entry was
@@ -26,7 +26,7 @@ class MacOSLaunchdEventData(events.EventData):
     def __init__(self):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
-        self.body = None
+        self.message_body = None
         self.process_name = None
         self.severity = None
         self.written_time = None
@@ -55,7 +55,7 @@ class MacOSLaunchdLogTextPlugin(interface.TextPlugin):
         _DATE_TIME
         + pyparsing.Optional(_PROCESS_NAME)
         + _SEVERITY
-        + pyparsing.restOfLine().set_results_name("body")
+        + pyparsing.restOfLine().set_results_name("message_body")
         + _END_OF_LINE
     )
 
@@ -81,7 +81,9 @@ class MacOSLaunchdLogTextPlugin(interface.TextPlugin):
             )
 
             event_data = MacOSLaunchdEventData()
-            event_data.body = self._GetValueFromStructure(structure, "body")
+            event_data.message_body = self._GetValueFromStructure(
+                structure, "message_body"
+            )
             event_data.process_name = self._GetValueFromStructure(
                 structure, "process_name"
             )

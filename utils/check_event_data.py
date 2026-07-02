@@ -153,7 +153,7 @@ def Main():
     reserved_names = validator.GetReservedNames(formatting_helpers)
 
     # Additional names preferable not to be used.
-    reserved_names.add("body")
+    reserved_names.update(["body", "displayname", "host_name", "user_name"])
 
     attribute_containers = validator.GetAttributeContainers()
     if not attribute_containers:

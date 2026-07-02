@@ -78,7 +78,8 @@ UserAccount:        SYSTEM"""
         self.assertEqual(number_of_warnings, 0)
 
         expected_event_values_multi_line = {
-            "body": self._TEST_BODY,
+            "data_type": "teamviewer:application_log:entry",
+            "message_body": self._TEST_BODY,
             "process_identifier": 2136,
             "recorded_time": "2024-02-16T06:05:19.561+00:00",
         }
@@ -86,7 +87,8 @@ UserAccount:        SYSTEM"""
         self.CheckEventData(event_data, expected_event_values_multi_line)
 
         expected_event_values_single_line = {
-            "body": "MDV2: IsDeviceManagementEnabled: mdv2: 1 management: 1",
+            "data_type": "teamviewer:application_log:entry",
+            "message_body": "MDV2: IsDeviceManagementEnabled: mdv2: 1 management: 1",
             "process_identifier": 5276,
             "recorded_time": "2024-02-16T06:18:36.370+00:00",
         }

@@ -83,9 +83,9 @@ source: 'Task Cache Registry Key'
 type: 'conditional'
 data_type: 'wincc:simatic_s7:entry'
 message:
-- '{body}'
+- '{message_body}'
 short_message:
-- '{body}'
+- '{message_body}'
 short_source: 'LOG'
 source: 'SIMATIC S7 log'
 ---
@@ -94,10 +94,10 @@ data_type: 'wincc:sys_log:entry'
 message:
 - 'Hostname: {log_hostname}'
 - 'Source: {source_device}'
-- '{body}'
+- '{message_body}'
 short_message:
 - '{source_device}'
-- '{body}'
+- '{message_body}'
 short_source: 'LOG'
 source: 'WinCC Sys Log'
 ---

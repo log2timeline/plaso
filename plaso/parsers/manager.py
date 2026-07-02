@@ -337,9 +337,7 @@ class ParsersManager:
         """
         parser_name = parser_class.NAME.lower()
         if parser_name in cls._parser_classes:
-            raise KeyError(
-                f"Parser class already set for name: " f"{parser_class.NAME:s}."
-            )
+            raise KeyError(f"Parser class already set for name: {parser_class.NAME:s}.")
 
         cls._parser_classes[parser_name] = parser_class
 

@@ -117,16 +117,16 @@ class IvantiVC0ParserTest(test_lib.ParserTestCase):
 
         expected_event_values = {
             "authentication_realm": "Root",
-            "body": (
-                "User login succeeded | web | vpn.example.com | 198.51.100.21 | Pulse "
-                "Secure Client | Windows | session-1 | context-users | ... (5 more "
-                "fields)"
-            ),
             "data_type": "ivanti:connect_secure:vc0:record",
             "hostname": "ics-access.example.com",
             "line_number": 17,
             "log_type": "access",
             "message_code": "NWC23508",
+            "message_body": (
+                "User login succeeded | web | vpn.example.com | 198.51.100.21 | Pulse "
+                "Secure Client | Windows | session-1 | context-users | ... (5 more "
+                "fields)"
+            ),
             "record_identifier": "65c4a660.00000011",
             "recorded_time": "2024-02-08T10:01:04+00:00",
         }
@@ -155,15 +155,15 @@ class IvantiVC0ParserTest(test_lib.ParserTestCase):
 
         expected_event_values = {
             "authentication_realm": "Root",
-            "body": (
-                "Administrator login succeeded | admin-ui | configuration | object-1 | "
-                "saved | complete"
-            ),
             "data_type": "ivanti:connect_secure:vc0:record",
             "hostname": "ics-admin.example.com",
             "line_number": 33,
             "log_type": "admin",
             "message_code": "ADM23535",
+            "message_body": (
+                "Administrator login succeeded | admin-ui | configuration | object-1 | "
+                "saved | complete"
+            ),
             "record_identifier": "65c4a670.00000021",
             "recorded_time": "2024-02-08T10:01:20+00:00",
         }
@@ -193,12 +193,12 @@ class IvantiVC0ParserTest(test_lib.ParserTestCase):
 
         expected_event_values = {
             "authentication_realm": "Root",
-            "body": "Active Directory configuration server | complete",
             "data_type": "ivanti:connect_secure:vc0:record",
             "hostname": "ics.example.com",
             "line_number": 1,
             "log_type": "events",
             "message_code": "SYS10306",
+            "message_body": "Active Directory configuration server | complete",
             "record_identifier": "65c4a650.00000001",
             "recorded_time": "2024-02-08T10:00:48+00:00",
         }
@@ -247,12 +247,12 @@ class IvantiVC0ParserTest(test_lib.ParserTestCase):
 
         expected_event_values = {
             "authentication_realm": "Root",
-            "body": "Sensor update completed | integrity | healthy",
             "data_type": "ivanti:connect_secure:vc0:record",
             "hostname": "ics-sensor.example.com",
             "line_number": 65,
             "log_type": "sensorslog",
             "message_code": "IDP24672",
+            "message_body": "Sensor update completed | integrity | healthy",
             "record_identifier": "65c4a690.00000041",
             "recorded_time": "2024-02-08T10:01:52+00:00",
         }
@@ -307,12 +307,12 @@ class IvantiVC0ParserTest(test_lib.ParserTestCase):
 
         expected_event_values = {
             "authentication_realm": "Root",
-            "body": "User login \\xff succeeded",
             "data_type": "ivanti:connect_secure:vc0:record",
             "hostname": "ics.example.com",
             "line_number": 1,
             "log_type": None,
             "message_code": "SYS12345",
+            "message_body": "User login \\xff succeeded",
             "record_identifier": "65c4a64f.00000001",
             "recorded_time": "2024-02-08T10:00:47+00:00",
         }
