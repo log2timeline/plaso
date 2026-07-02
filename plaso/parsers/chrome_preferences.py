@@ -39,7 +39,7 @@ class ChromeExtensionsAutoupdaterEventData(events.EventData):
     """Chrome Extension Autoupdater event data.
 
     Attributes:
-      message (str): message.
+      message_body (str): message body.
       recorded_time (dfdatetime.DateTimeValues): date and time the entry
           was recorded.
     """
@@ -49,8 +49,7 @@ class ChromeExtensionsAutoupdaterEventData(events.EventData):
     def __init__(self):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
-        # TODO: refactor this in something more descriptive.
-        self.message = None
+        self.message_body = None
         self.recorded_time = None
 
 
@@ -258,16 +257,14 @@ class ChromePreferencesParser(interface.FileObjectParser):
             autoupdate_lastcheck_timestamp = extensions_autoupdate_dict.get(
                 "last_check"
             )
-
             if autoupdate_lastcheck_timestamp:
                 autoupdate_lastcheck = int(autoupdate_lastcheck_timestamp, 10)
 
                 event_data = ChromeExtensionsAutoupdaterEventData()
-                event_data.message = "Chrome extensions autoupdater last run"
+                event_data.message_body = "Chrome extensions autoupdater last run"
                 event_data.recorded_time = dfdatetime_webkit_time.WebKitTime(
                     timestamp=autoupdate_lastcheck
                 )
-
                 parser_mediator.ProduceEventData(event_data)
 
             autoupdate_nextcheck_timestamp = extensions_autoupdate_dict.get(
@@ -277,11 +274,10 @@ class ChromePreferencesParser(interface.FileObjectParser):
                 autoupdate_nextcheck = int(autoupdate_nextcheck_timestamp, 10)
 
                 event_data = ChromeExtensionsAutoupdaterEventData()
-                event_data.message = "Chrome extensions autoupdater next run"
+                event_data.message_body = "Chrome extensions autoupdater next run"
                 event_data.recorded_time = dfdatetime_webkit_time.WebKitTime(
                     timestamp=autoupdate_nextcheck
                 )
-
                 parser_mediator.ProduceEventData(event_data)
 
         browser_dict = json_dict.get("browser")
@@ -289,16 +285,14 @@ class ChromePreferencesParser(interface.FileObjectParser):
             last_clear_history_timestamp = browser_dict.get(
                 "last_clear_browsing_data_time"
             )
-
             if last_clear_history_timestamp:
                 last_clear_history = int(last_clear_history_timestamp, 10)
 
                 event_data = ChromeExtensionsAutoupdaterEventData()
-                event_data.message = "Chrome history was cleared by user"
+                event_data.message_body = "Chrome history was cleared by user"
                 event_data.recorded_time = dfdatetime_webkit_time.WebKitTime(
                     timestamp=last_clear_history
                 )
-
                 parser_mediator.ProduceEventData(event_data)
 
         self._ExtractExtensionInstallEvents(extensions_dict, parser_mediator)

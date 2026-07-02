@@ -133,13 +133,13 @@ source: 'Files by Google event data.'
 type: 'conditional'
 data_type: 'android:logcat'
 message:
-- '{message}'
+- '{message_body}'
 - 'Component Tag: {component_tag}'
 - 'PID: {pid}'
 - 'Thread: {thread_identifier}'
 - 'User identifier: {user_identifier}'
 short_message:
-- '{message}'
+- '{message_body}'
 short_source: 'LOG'
 source: 'Android logcat'
 ---

@@ -36,9 +36,9 @@ class TeamViewerConnectionsIncomingEventData(events.EventData):
     Attributes:
       activity_type (str): Type of the activity, such as RemoteSupport or
           FileTransfer.
+      connection_display_name (string): The display name of the incoming connection
+          source. Usually the computer name or the TeamViewer user name.
       connection_identifier (str): identifier of the connection, contains an UUID.
-      display_name (string): The display name of the incoming connection source.
-          Usually the computer name or the TeamViewer user name.
       end_time (dfdatetime.DateTimeValues): connection end time in UTC.
       local_account (str): The local user account associated with this activity.
       source_identifier (int): TeamViewer identifier of the incoming connection.
@@ -51,8 +51,8 @@ class TeamViewerConnectionsIncomingEventData(events.EventData):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
         self.activity_type = None
+        self.connection_display_name = None
         self.connection_identifier = None
-        self.display_name = None
         self.end_time = None
         self.local_account = None
         self.source_identifier = None
@@ -505,10 +505,12 @@ class TeamViewerConnectionsIncomingLogTextPlugin(interface.TextPlugin):
         event_data.activity_type = self._GetValueFromStructure(
             structure, "activity_type"
         )
+        event_data.connection_display_name = self._GetValueFromStructure(
+            structure, "display_name"
+        )
         event_data.connection_identifier = self._GetValueFromStructure(
             structure, "connection_identifier"
         )
-        event_data.display_name = self._GetValueFromStructure(structure, "display_name")
         event_data.end_time = self._ParseTimeElements(end_time_elements)
         event_data.local_account = self._GetValueFromStructure(
             structure, "local_account"

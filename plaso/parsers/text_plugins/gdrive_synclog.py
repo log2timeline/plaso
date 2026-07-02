@@ -14,11 +14,9 @@ class GoogleDriveSyncLogEventData(events.EventData):
     """Google Drive Sync log event data.
 
     Attributes:
-      added_time (dfdatetime.DateTimeValues): date and time the log entry
-          was added.
-      level (str): logging level of event such as "DEBUG", "WARN", "INFO" and
-          "ERROR".
-      message (str): log message.
+      added_time (dfdatetime.DateTimeValues): date and time the log entry was added.
+      level (str): logging level of event such as "DEBUG", "WARN", "INFO" and "ERROR".
+      message_body (str): message body.
       process_identifier (int): process identifier of process which logged event.
       source_code (str): filename:line_number of source file which logged event.
       thread (str): colon-separated thread identifier in the form "ID:name"
@@ -32,7 +30,7 @@ class GoogleDriveSyncLogEventData(events.EventData):
         super().__init__(data_type=self.DATA_TYPE)
         self.added_time = None
         self.level = None
-        self.message = None
+        self.message_body = None
         self.process_identifier = None
         self.source_code = None
         self.thread = None
@@ -109,7 +107,7 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPluginWithLineContinuation):
               and other components, such as storage and dfVFS.
         """
         if self._event_data:
-            self._event_data.message = " ".join(self._body_lines)
+            self._event_data.message_body = " ".join(self._body_lines)
             self._body_lines = None
 
             parser_mediator.ProduceEventData(self._event_data)
@@ -157,7 +155,7 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPluginWithLineContinuation):
 
         else:
             if self._event_data:
-                self._event_data.message = " ".join(self._body_lines)
+                self._event_data.message_body = " ".join(self._body_lines)
 
                 parser_mediator.ProduceEventData(self._event_data)
 

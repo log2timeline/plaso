@@ -46,8 +46,8 @@ class AndroidLogcatEventData(events.EventData):
     Attributes:
       component_tag (str): the tag that indicates the system component from which
           the logcat line originates.
-      file_offset (int): the file offset of where the log message was parsed.
-      message (str): the log message.
+      file_offset (int): the file offset of where the logcat record was parsed.
+      message_body (str): the message body.
       pid (int): process identifier (PID) that created the logcat line.
       priority (str): a character in the set {V, D, I, W, E, F, S}, which is
           ordered from lowest to highest priority.
@@ -66,7 +66,7 @@ class AndroidLogcatEventData(events.EventData):
         super().__init__(data_type=self.DATA_TYPE)
         self.component_tag = None
         self.file_offset = None
-        self.message = None
+        self.message_body = None
         self.pid = None
         self.priority = None
         self.recorded_time = None
@@ -178,7 +178,7 @@ class AndroidLogcatTextPlugin(
         + pyparsing.Optional(_TIME_ZONE_OFFSET).set_results_name("time_zone_offset")
         + (_THREADTIME_LINE_BODY ^ _TIME_LINE_BODY)
         + pyparsing.Suppress(": ")
-        + pyparsing.restOfLine().set_results_name("message")
+        + pyparsing.restOfLine().set_results_name("message_body")
         + _END_OF_LINE
     )
 
@@ -204,7 +204,9 @@ class AndroidLogcatTextPlugin(
                 structure, "tag"
             )
             event_data.file_offset = self._current_offset
-            event_data.message = self._GetValueFromStructure(structure, "message")
+            event_data.message_body = self._GetValueFromStructure(
+                structure, "message_body"
+            )
             event_data.pid = self._GetValueFromStructure(structure, "pid")
             event_data.priority = self._GetValueFromStructure(structure, "priority")
             event_data.recorded_time = self._ParseTimeElements(structure)
@@ -214,7 +216,6 @@ class AndroidLogcatTextPlugin(
             event_data.user_identifier = self._GetValueFromStructure(
                 structure, "user_identifier"
             )
-
             parser_mediator.ProduceEventData(event_data)
 
     def _ParseTimeElements(self, structure):
@@ -282,7 +283,6 @@ class AndroidLogcatTextPlugin(
                 seconds,
                 fraction_of_second,
             )
-
             if len(fraction_of_second_string) == 3:
                 date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
                     is_delta=(not has_year),

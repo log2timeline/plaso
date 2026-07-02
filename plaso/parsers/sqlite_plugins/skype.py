@@ -11,13 +11,14 @@ class SkypeAccountEventData(events.EventData):
     """Skype account event data.
 
     Attributes:
+      account_display_name (str): display name of the account.
       authentication_request_time (dfdatetime.DateTimeValues): date and time
            the account was last requested to authenticate.
       authentication_request_sent_time (dfdatetime.DateTimeValues): date and time
            the last authentication request was sent.
       country (str): home country of the account holder.
-      display_name (str): display name of the account holder.
       email (str): registered email address of the account holder.
+      fullname (str): full name of the account holder.
       last_online_time (dfdatetime.DateTimeValues): date and time the account
            was last online.
       last_used_time (dfdatetime.DateTimeValues): date and time the account
@@ -29,7 +30,6 @@ class SkypeAccountEventData(events.EventData):
       profile_change_time (dfdatetime.DateTimeValues): date and time the profile
            was last changed.
       query (str): SQL query that was used to obtain the event data.
-      username (str): full name of the Skype account holder and display name.
     """
 
     DATA_TYPE = "skype:event:account"
@@ -37,20 +37,18 @@ class SkypeAccountEventData(events.EventData):
     def __init__(self):
         """Initialize event data."""
         super().__init__(data_type=self.DATA_TYPE)
+        self.account_display_name = None
         self.authentication_request_time = None
         self.authentication_request_sent_time = None
         self.country = None
-        # TODO: rename to skype_display_name after May 2026 release
-        self.display_name = None
         self.email = None
+        self.fullname = None
         self.last_online_time = None
         self.last_used_time = None
         self.mood_change_time = None
         self.offset = None
         self.profile_change_time = None
         self.query = None
-        # TODO: remove username after May 2026 release
-        self.username = None
 
 
 class SkypeCallEventData(events.EventData):
@@ -609,10 +607,10 @@ class SkypePlugin(interface.SQLitePlugin):
         """
         query_hash = hash(query)
 
-        display_name = self._GetRowValue(query_hash, row, "given_displayname")
-        fullname = self._GetRowValue(query_hash, row, "fullname")
-
         event_data = SkypeAccountEventData()
+        event_data.account_display_name = self._GetRowValue(
+            query_hash, row, "given_displayname"
+        )
         event_data.authentication_request_time = self._GetDateTimeRowValue(
             query_hash, row, "authreq_timestamp"
         )
@@ -620,8 +618,8 @@ class SkypePlugin(interface.SQLitePlugin):
             query_hash, row, "sent_authrequest_time"
         )
         event_data.country = self._GetRowValue(query_hash, row, "country")
-        event_data.display_name = display_name
         event_data.email = self._GetRowValue(query_hash, row, "emails")
+        event_data.fullname = self._GetRowValue(query_hash, row, "fullname")
         event_data.last_online_time = self._GetDateTimeRowValue(
             query_hash, row, "lastonline_timestamp"
         )
@@ -636,7 +634,6 @@ class SkypePlugin(interface.SQLitePlugin):
             query_hash, row, "profile_timestamp"
         )
         event_data.query = query
-        event_data.username = f"{fullname!s} <{display_name!s}>"
 
         parser_mediator.ProduceEventData(event_data)
 

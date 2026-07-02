@@ -111,14 +111,14 @@ data_type: 'ios:instagram:message'
 message:
 - 'Sender Identifier: {sender_identifier}'
 - 'Username: {username}'
-- 'Message: {message}'
+- 'Message: {message_body}'
 - 'Video Chat Identifier: {video_chat_call_identifier}'
 - 'Video Chat Title: {video_chat_title}'
 - 'Shared Media Identifier: {shared_media_identifier}'
 - 'Shared Media URL: {shared_media_url}'
 short_message:
 - 'Username: {username}'
-- 'Message: {message}'
+- 'Message: {message_body}'
 short_source: 'Instagram iOS'
 source: 'Instagram iOS threads'
 ---

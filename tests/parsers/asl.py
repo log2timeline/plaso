@@ -699,7 +699,6 @@ class ASLParserTest(test_lib.ParserTestCase):
         file_object = self._CreateFileObject(
             "asl", b"".join([b"\xff\xff\xff\xff", file_header_data[4:]])
         )
-
         storage_writer = self._CreateStorageWriter()
         parser_mediator = self._CreateParserMediator(storage_writer)
 
@@ -710,7 +709,6 @@ class ASLParserTest(test_lib.ParserTestCase):
         file_object = self._CreateFileObject(
             "asl", b"".join([file_header_data, self._TEST_RECORD[:452]])
         )
-
         parser.ParseFileObject(parser_mediator, file_object)
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
@@ -754,7 +752,6 @@ class ASLParserTest(test_lib.ParserTestCase):
             "format_version": 2,
             "is_dirty": False,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 2)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -771,7 +768,7 @@ class ASLParserTest(test_lib.ParserTestCase):
             "facility": "com.apple.locationd",
             "group_identifier": 205,
             "level": 4,
-            "message": (
+            "message_body": (
                 "Incorrect NSStringEncoding value 0x8000100 detected. "
                 "Assuming NSASCIIStringEncoding. Will stop this compatiblity "
                 "mapping behavior in the near future."
@@ -785,7 +782,6 @@ class ASLParserTest(test_lib.ParserTestCase):
             "user_identifier": 205,
             "written_time": "2013-11-25T09:45:35.705481000+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -801,7 +797,7 @@ class ASLParserTest(test_lib.ParserTestCase):
             "facility": "com.apple.locationd",
             "group_identifier": 205,
             "level": 4,
-            "message": (
+            "message_body": (
                 "Incorrect NSStringEncoding value 0x8000100 detected. "
                 "Assuming NSASCIIStringEncoding. Will stop this compatiblity "
                 "mapping behavior in the near future."
@@ -815,7 +811,6 @@ class ASLParserTest(test_lib.ParserTestCase):
             "user_identifier": 205,
             "written_time": "2013-11-25T17:12:43.571140000+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -845,7 +840,6 @@ class ASLParserTest(test_lib.ParserTestCase):
             "format_version": 2,
             "is_dirty": True,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 318)
         self.CheckEventData(event_data, expected_event_values)
 
