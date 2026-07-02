@@ -220,6 +220,14 @@ plaso.parsers.winreg\_plugins.typedurls module
    :show-inheritance:
    :undoc-members:
 
+plaso.parsers.winreg\_plugins.typedurlstime module
+--------------------------------------------------
+
+.. automodule:: plaso.parsers.winreg_plugins.typedurlstime
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 plaso.parsers.winreg\_plugins.usb module
 ----------------------------------------
 

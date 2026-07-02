@@ -20,6 +20,7 @@ firefox_cache | Parser for Mozilla Firefox Cache version 1 file (version 31 or e
 firefox_cache2 | Parser for Mozilla Firefox Cache version 2 file (version 32 or later).
 fish_history | Parser for Fish history files.
 fseventsd | Parser for MacOS File System Events Disk Log Stream (fseventsd) files.
+ivanti_vc0 | Parser for Ivanti Connect Secure (.vc0) log files.
 java_idx | Parser for Java WebStart Cache IDX files.
 jsonl | Parser for JSON-L log files.
 lnk | Parser for Windows Shortcut (LNK) files.
@@ -281,7 +282,8 @@ windows_services | Parser for Windows drivers and services Registry data.
 windows_shutdown | Parser for Windows last shutdown Registry data.
 windows_task_cache | Parser for Windows Task Scheduler cache Registry data.
 windows_timezone | Parser for Windows time zone Registry data.
-windows_typed_urls | Parser for Windows Explorer typed URLs Registry data.
+windows_typed_urls | Parser for Windows Explorer typed paths and URLs Registry data.
+windows_typed_urls_time | Parser for Windows Explorer typed URLs time Registry data.
 windows_usb_devices | Parser for Windows USB device Registry data.
 windows_usbstor_devices | Parser for Windows USB Plug And Play Manager USBStor Registry data.
 windows_version | Parser for Windows version (product) Registry data.
