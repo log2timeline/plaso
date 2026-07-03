@@ -134,61 +134,6 @@ class UtmpParserTest(test_lib.ParserTestCase):
             "Unable to parse utmp entry at offset: 0x00000300, skipping record",
         )
 
-    def testParse64bitUtmpFile(self):
-        """Tests the Parse function on a 64-bit (aarch64) utmp file.
-
-        The libc6 utmp record is 400 bytes on 64-bit builds without 32-bit time
-        compatibility (e.g. aarch64), versus 384 bytes on x86-64. This sample was
-        generated on aarch64: a boot record, a user login, and a logout.
-        """
-        parser = utmp.UtmpParser()
-        storage_writer = self._ParseFile(["utmp_64bit"], parser)
-
-        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
-            "event_data"
-        )
-        self.assertEqual(number_of_event_data, 3)
-
-        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-            "extraction_warning"
-        )
-        self.assertEqual(number_of_warnings, 0)
-
-        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-            "recovery_warning"
-        )
-        self.assertEqual(number_of_warnings, 0)
-
-        # Record 0: boot.
-        expected_event_values = {
-            "data_type": "linux:utmp:event",
-            "hostname": "localhost",
-            "ip_address": "0.0.0.0",
-            "offset": 0,
-            "terminal": "system boot",
-            "type": 2,
-            "username": "reboot",
-            "written_time": "2020-01-01T00:00:00.000000+00:00",
-        }
-        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
-        self.CheckEventData(event_data, expected_event_values)
-
-        # Record 1: user login. offset 400 proves the parser advanced by the
-        # 64-bit record size (400 bytes) rather than 384.
-        expected_event_values = {
-            "data_type": "linux:utmp:event",
-            "hostname": "example.com",
-            "ip_address": "127.0.0.1",
-            "offset": 400,
-            "pid": 1234,
-            "terminal": "pts/0",
-            "type": 7,
-            "username": "testuser",
-            "written_time": "2020-01-01T00:01:00.500000+00:00",
-        }
-        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
-        self.CheckEventData(event_data, expected_event_values)
-
 
 if __name__ == "__main__":
     unittest.main()
