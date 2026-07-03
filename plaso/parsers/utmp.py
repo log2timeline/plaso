@@ -235,10 +235,11 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
         The 32-bit (384-byte) and 64-bit (400-byte) record layouts are told
         apart by reading the first records with each: a record read with the
-        wrong record size misaligns and violates the record invariants. The
-        layout with the most valid non-empty records is selected. A file is only
-        accepted when enough valid non-empty records are found, so the parser
-        does not claim files that are not utmp files.
+        wrong record size misaligns and violates the record invariants. A layout
+        is only considered when its first record is valid, and the layout with
+        the most valid non-empty records is selected. A file is only accepted
+        when enough valid non-empty records are found, so the parser does not
+        claim files, such as executables, that are not utmp files.
 
         Args:
           file_object (dfvfs.FileIO): a file-like object.
@@ -260,6 +261,20 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
                 continue
 
             entry_map = self._GetDataTypeMap(definition_name)
+
+            # The first record must itself be a valid utmp record. Files that
+            # are not utmp files, such as executables, typically start with data
+            # that is not, which keeps the parser from claiming them.
+            try:
+                first_entry, _ = self._ReadStructureFromFileObject(
+                    file_object, 0, entry_map
+                )
+            except (ValueError, errors.ParseError):
+                continue
+
+            if not self._IsValidEntry(first_entry):
+                continue
+
             count = self._CountValidEntries(
                 file_object, entry_map, entry_size, file_size
             )
