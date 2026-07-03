@@ -17,6 +17,8 @@ class EventDataAttributeContainersSchemaValidator:
 
     _ALLOWED_OVERRIDES = frozenset(
         [
+            "filename",
+            "inode",
             "hostname",
             "username",
             "values",
@@ -166,6 +168,8 @@ def Main():
             "desc",
             "displayname",
             "event_datetime",
+            "file",
+            "file_name",
             "host",
             "host_name",
             "log_line",

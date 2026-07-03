@@ -136,7 +136,7 @@ class OutputModuleOptionsTest(test_lib.CLIToolTestCase):
 usage: tool_options.py [--additional_fields ADDITIONAL_FIELDS]
                        [--custom_fields CUSTOM_FIELDS]
                        [--custom_formatter_definitions PATH] [--dynamic_time]
-                       [--output_fallback_hostname]
+                       [--output_fallback_hostname] [--output_fallback_path]
                        [--output_time_zone TIME_ZONE]
 
 Test argument parser.
@@ -167,7 +167,12 @@ Test argument parser.
                         Output formats that support dynamic time are: dynamic
   --output_fallback_hostname, --output-fallback-hostname
                         Indicate that the output should use the hostname value
-                        derived by pre-processing as fallback
+                        derived by pre-processing as fallback for the hostname
+                        output field
+  --output_fallback_path, --output-fallback-path
+                        Indicate that the output should use the event data
+                        stream path specification value as fallback for the
+                        filename and inode output fields
   --output_time_zone, --output-time-zone TIME_ZONE
                         time zone of date and time values written to the
                         output, if supported by the output format. Use "list"
@@ -180,7 +185,7 @@ Test argument parser.
 usage: tool_options.py [--additional_fields ADDITIONAL_FIELDS]
                        [--custom_fields CUSTOM_FIELDS]
                        [--custom_formatter_definitions PATH] [--dynamic_time]
-                       [--output_fallback_hostname]
+                       [--output_fallback_hostname] [--output_fallback_path]
                        [--output_time_zone TIME_ZONE]
 
 Test argument parser.
@@ -211,7 +216,12 @@ Test argument parser.
                         Output formats that support dynamic time are: dynamic
   --output_fallback_hostname, --output-fallback-hostname
                         Indicate that the output should use the hostname value
-                        derived by pre-processing as fallback
+                        derived by pre-processing as fallback for the hostname
+                        output field
+  --output_fallback_path, --output-fallback-path
+                        Indicate that the output should use the event data
+                        stream path specification value as fallback for the
+                        filename and inode output fields
   --output_time_zone TIME_ZONE, --output-time-zone TIME_ZONE
                         time zone of date and time values written to the
                         output, if supported by the output format. Use "list"

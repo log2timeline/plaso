@@ -219,7 +219,9 @@ class ProcessingConfiguration(interface.AttributeContainer):
           files.
       temporary_directory (str): path of the directory for temporary files.
       use_fallback_hostname (bool): use the hostname value derived pre-processing as
-          fallback.
+          fallback for the hostname output field.
+      use_fallback_path (bool): use the event data stream path specification value as
+          fallback for the filename and inode output fields.
     """
 
     CONTAINER_TYPE = "processing_configuration"
@@ -251,3 +253,4 @@ class ProcessingConfiguration(interface.AttributeContainer):
         self.task_storage_path = None
         self.temporary_directory = None
         self.use_fallback_hostname = None
+        self.use_fallback_path = None
