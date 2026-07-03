@@ -61,10 +61,12 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
     _INIT_PROCESS_TYPE = 5
     _DEAD_PROCESS_TYPE = 8
 
-    # A libc6 utmp entry is a fixed-size record.
-    _ENTRY_SIZE = 384
+    # A libc6 utmp record is a fixed-size structure: 384 bytes for the 32-bit
+    # layout and 400 bytes for the 64-bit layout (e.g. aarch64).
+    _ENTRY_SIZE_32BIT = 384
+    _ENTRY_SIZE_64BIT = 400
 
-    def _ReadEntry(self, parser_mediator, file_object, file_offset):
+    def _ReadEntry(self, parser_mediator, file_object, file_offset, entry_map):
         """Reads an utmp entry.
 
         Args:
@@ -73,6 +75,7 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
           file_object (dfvfs.FileIO): a file-like object.
           file_offset (int): offset of the data relative to the start of
               the file-like object.
+          entry_map (dtfabric.DataTypeMap): data type map of the utmp entry.
 
         Returns:
           tuple: containing:
@@ -83,7 +86,6 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         Raises:
           ParseError: if the entry cannot be parsed.
         """
-        entry_map = self._GetDataTypeMap("linux_libc6_utmp_entry")
         warning_strings = []
 
         try:
@@ -156,6 +158,58 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
         return event_data, warning_strings
 
+    def _IsValidFirstEntry(self, file_object, entry_map):
+        """Checks whether the first record is a valid utmp entry for a layout.
+
+        Used to tell the 32-bit and 64-bit record layouts apart. The subsecond
+        (microseconds) field is defined to be less than 1,000,000; a record read
+        with the wrong layout has the wider seconds field spill into it, so a
+        value outside that range indicates the layout is incorrect.
+
+        Args:
+          file_object (dfvfs.FileIO): a file-like object.
+          entry_map (dtfabric.DataTypeMap): candidate utmp entry data type map.
+
+        Returns:
+          bool: True if the first record is a valid utmp entry.
+        """
+        try:
+            entry, _ = self._ReadStructureFromFileObject(file_object, 0, entry_map)
+        except (ValueError, errors.ParseError):
+            return False
+
+        return entry.type in self._SUPPORTED_TYPES and 0 <= entry.microseconds < 1000000
+
+    def _GetEntryFormat(self, file_object, file_size):
+        """Determines the utmp record size and data type map for a file.
+
+        A libc6 utmp file is an array of fixed-size records: 384 bytes for the
+        32-bit layout or 400 bytes for the 64-bit layout (e.g. aarch64, where the
+        session and timeval fields are wider). The layout selected is the one
+        whose first record is valid. The 32-bit layout is checked first: a 64-bit
+        record read as 32-bit is reliably rejected (its seconds field spills into
+        the subsecond field), whereas a 32-bit record read as 64-bit can look
+        valid; see _IsValidFirstEntry.
+
+        Args:
+          file_object (dfvfs.FileIO): a file-like object.
+          file_size (int): size of the file-like object.
+
+        Returns:
+          tuple[int, dtfabric.DataTypeMap]: utmp record size and data type map.
+        """
+        for entry_size, definition_name in (
+            (self._ENTRY_SIZE_32BIT, "linux_libc6_utmp_entry"),
+            (self._ENTRY_SIZE_64BIT, "linux_libc6_utmp_entry_64bit"),
+        ):
+            if file_size < entry_size:
+                continue
+            entry_map = self._GetDataTypeMap(definition_name)
+            if self._IsValidFirstEntry(file_object, entry_map):
+                return entry_size, entry_map
+
+        return self._ENTRY_SIZE_32BIT, self._GetDataTypeMap("linux_libc6_utmp_entry")
+
     def ParseFileObject(self, parser_mediator, file_object):
         """Parses an utmp file-like object.
 
@@ -167,11 +221,14 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         Raises:
           WrongParser: when the file cannot be parsed.
         """
+        file_size = file_object.get_size()
+        entry_size, entry_map = self._GetEntryFormat(file_object, file_size)
+
         file_offset = 0
 
         try:
             event_data, warning_strings = self._ReadEntry(
-                parser_mediator, file_object, file_offset
+                parser_mediator, file_object, file_offset, entry_map
             )
         except errors.ParseError as exception:
             raise errors.WrongParser(
@@ -200,7 +257,6 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         parser_mediator.ProduceEventData(event_data)
 
         file_offset = file_object.tell()
-        file_size = file_object.get_size()
 
         while file_offset < file_size:
             if parser_mediator.abort:
@@ -208,21 +264,21 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
             try:
                 event_data, warning_strings = self._ReadEntry(
-                    parser_mediator, file_object, file_offset
+                    parser_mediator, file_object, file_offset, entry_map
                 )
             except errors.ParseError:
                 # A single corrupt fixed-size record should not abort parsing of
                 # the remaining records. Skip it and continue if a full record
                 # could still follow; otherwise treat the remainder as trailing
                 # data.
-                if file_size - file_offset < self._ENTRY_SIZE:
+                if file_size - file_offset < entry_size:
                     break
 
                 parser_mediator.ProduceExtractionWarning(
                     f"Unable to parse utmp entry at offset: 0x{file_offset:08x}, "
                     f"skipping record"
                 )
-                file_offset += self._ENTRY_SIZE
+                file_offset += entry_size
                 file_object.seek(file_offset)
                 continue
 
