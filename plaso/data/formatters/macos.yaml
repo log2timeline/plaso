@@ -56,7 +56,7 @@ message:
 - '{text}'
 - '['
 - 'URL: {url}'
-- 'Event ID: {record_id}'
+- 'Record identifier: {record_identifier}'
 - 'Room: {room}'
 - ']'
 short_message:

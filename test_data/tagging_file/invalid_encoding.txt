@@ -12,4 +12,4 @@ security_event
   data_type == 'windows:evt:record' and source_name == 'Security'
 
 text_contains
-  body contains 'a message'
+  message_body contains 'a message'
