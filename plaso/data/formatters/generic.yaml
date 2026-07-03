@@ -501,7 +501,7 @@ source: 'Google Drive Sync Log'
 type: 'conditional'
 data_type: 'googlelog:log'
 message:
-- '{file_name}:'
+- '{filename}:'
 - '{line_number}]'
 - '{message_body}'
 short_message:

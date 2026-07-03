@@ -75,7 +75,7 @@ class GooglelogParserTest(test_lib.TextPluginTestCase):
         # Test a single-line log entry.
         expected_event_values = {
             "data_type": "googlelog:log",
-            "file_name": "logging_functional_test_helper.py",
+            "filename": "logging_functional_test_helper.py",
             "line_number": "65",
             "message_body": "This line is log level 0",
             "last_written_time": "0000-12-31T23:59:59.000002",
@@ -86,6 +86,8 @@ class GooglelogParserTest(test_lib.TextPluginTestCase):
         # Test a multi-line log entry.
         expected_event_values = {
             "data_type": "googlelog:log",
+            "filename": "logging_functional_test_helper.py",
+            "line_number": "70",
             "message_body": "Interesting Stuff\n    that spans two lines",
             "last_written_time": "0000-12-31T23:59:59.000003",
         }

@@ -30,7 +30,6 @@ class SpotlightStoreDatabaseParserTest(test_lib.ParserTestCase):
         test_path_spec = path_spec_factory.Factory.NewPathSpec(
             dfvfs_definitions.TYPE_INDICATOR_GPT, location="/p1", parent=test_path_spec
         )
-
         test_file_path = (
             "/.Spotlight-V100/Store-V2/D980C3E8-1007-4F67-9911-9143A0B3427A/"
             ".store.db"
@@ -40,7 +39,6 @@ class SpotlightStoreDatabaseParserTest(test_lib.ParserTestCase):
             location=test_file_path,
             parent=test_path_spec,
         )
-
         parser = spotlight_storedb.SpotlightStoreDatabaseParser()
         storage_writer = self._ParseFileByPathSpec(test_path_spec, parser)
 
@@ -68,8 +66,8 @@ class SpotlightStoreDatabaseParserTest(test_lib.ParserTestCase):
             "creation_time": "2023-06-22T18:34:06.000000+00:00",
             "data_type": "spotlight:metadata_item",
             "downloaded_time": None,
-            "file_name": "LICENSE",
             "file_system_identifier": 20,
+            "filename": "LICENSE",
             "kind": "Unknown document",
             "modification_time": "2023-06-22T18:34:06.000000+00:00",
             "parent_file_system_identifier": 2,
@@ -78,7 +76,6 @@ class SpotlightStoreDatabaseParserTest(test_lib.ParserTestCase):
             "update_time": "2023-06-22T18:34:08.287881+00:00",
             "used_times": None,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 2)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -111,8 +108,8 @@ class SpotlightStoreDatabaseParserTest(test_lib.ParserTestCase):
             "creation_time": None,
             "data_type": "spotlight:metadata_item",
             "downloaded_time": None,
-            "file_name": None,
             "file_system_identifier": None,
+            "filename": None,
             "kind": None,
             "modification_time": None,
             "purchase_time": None,
@@ -120,7 +117,6 @@ class SpotlightStoreDatabaseParserTest(test_lib.ParserTestCase):
             "update_time": "2019-09-17T09:22:07.536585+00:00",
             "used_times": None,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -138,7 +134,6 @@ class SpotlightStoreDatabaseParserTest(test_lib.ParserTestCase):
         test_path_spec = path_spec_factory.Factory.NewPathSpec(
             dfvfs_definitions.TYPE_INDICATOR_GPT, location="/p1", parent=test_path_spec
         )
-
         test_file_path = (
             "/.Spotlight-V100/Store-V2/B8A60235-5AE9-4A1A-9004-3F40B6FF4C28/"
             ".store.db"
@@ -148,7 +143,6 @@ class SpotlightStoreDatabaseParserTest(test_lib.ParserTestCase):
             location=test_file_path,
             parent=test_path_spec,
         )
-
         parser = spotlight_storedb.SpotlightStoreDatabaseParser()
         storage_writer = self._ParseFileByPathSpec(test_path_spec, parser)
 
@@ -176,8 +170,8 @@ class SpotlightStoreDatabaseParserTest(test_lib.ParserTestCase):
             "creation_time": "2023-06-20T05:10:24.000000+00:00",
             "data_type": "spotlight:metadata_item",
             "downloaded_time": None,
-            "file_name": "LICENSE",
             "file_system_identifier": 18,
+            "filename": "LICENSE",
             "kind": "Document",
             "modification_time": "2023-06-20T05:10:24.000000+00:00",
             "parent_file_system_identifier": 2,
@@ -186,7 +180,6 @@ class SpotlightStoreDatabaseParserTest(test_lib.ParserTestCase):
             "update_time": "2023-06-21T03:42:12.717812+00:00",
             "used_times": None,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 2)
         self.CheckEventData(event_data, expected_event_values)
 

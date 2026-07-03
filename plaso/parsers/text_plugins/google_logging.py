@@ -24,14 +24,13 @@ class GoogleLogEventData(events.EventData):
     """Google-formatted log file event data.
 
     Attributes:
-      file_name (str): the name of the source file that logged the message.
+      filename (str): name of the file related to the event.
       last_written_time (dfdatetime.DateTimeValues): entry last written date and time.
-      line_number (int): the line number in the source file where the logging statement
-          is.
+      line_number (str): line number of the log record.
       message_body (str): the message body.
       priority (str): the priority of the event - I, W, E or F. These values represent
           events logged at INFO, WARNING, ERROR or FATAL severities, respectively.
-      thread_identifier (int): the identifier of the thread that recorded the event.
+      thread_identifier (str): the identifier of the thread that recorded the event.
     """
 
     DATA_TYPE = "googlelog:log"
@@ -43,7 +42,7 @@ class GoogleLogEventData(events.EventData):
           data_type (Optional[str]): event data type indicator.
         """
         super().__init__(data_type=data_type)
-        self.file_name = None
+        self.filename = None
         self.last_written_time = None
         self.line_number = None
         self.message_body = None
@@ -97,7 +96,7 @@ class GoogleLogTextPlugin(
         + _DATE_TIME
         + pyparsing.Word(pyparsing.nums).set_results_name("thread_identifier")
         + pyparsing.Word(pyparsing.printables.replace(":", "")).set_results_name(
-            "file_name"
+            "filename"
         )
         + pyparsing.Suppress(":")
         + pyparsing.Word(pyparsing.nums).set_results_name("line_number")
@@ -204,7 +203,7 @@ class GoogleLogTextPlugin(
         time_elements_structure = self._GetValueFromStructure(structure, "date_time")
 
         event_data = GoogleLogEventData()
-        event_data.file_name = self._GetValueFromStructure(structure, "file_name")
+        event_data.filename = self._GetValueFromStructure(structure, "filename")
         event_data.last_written_time = self._ParseTimeElements(time_elements_structure)
         event_data.line_number = self._GetValueFromStructure(structure, "line_number")
         event_data.message_body = self._GetValueFromStructure(structure, "message_body")
@@ -212,7 +211,6 @@ class GoogleLogTextPlugin(
         event_data.thread_identifier = self._GetValueFromStructure(
             structure, "thread_identifier"
         )
-
         parser_mediator.ProduceEventData(event_data)
 
     def _ParseRecord(self, parser_mediator, key, structure):
@@ -247,7 +245,6 @@ class GoogleLogTextPlugin(
             month, day_of_month, hours, minutes, seconds, microseconds = (
                 time_elements_structure
             )
-
             self._UpdateYear(month)
 
             relative_year = self._GetRelativeYear()
@@ -261,11 +258,9 @@ class GoogleLogTextPlugin(
                 seconds,
                 microseconds,
             )
-
             date_time = dfdatetime_time_elements.TimeElementsInMicroseconds(
                 is_delta=True, time_elements_tuple=time_elements_tuple
             )
-
             date_time.is_local_time = True
 
             return date_time
@@ -308,7 +303,6 @@ class GoogleLogTextPlugin(
             dfdatetime_time_elements.TimeElements(
                 time_elements_tuple=time_elements_tuple
             )
-
         except (IndexError, TypeError, ValueError):
             return False
 

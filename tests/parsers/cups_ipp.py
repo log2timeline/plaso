@@ -375,7 +375,6 @@ class CupsIppParserTest(test_lib.ParserTestCase):
 
         expected_event_values = {
             "application": "LibreOffice",
-            "computer_name": "localhost",
             "copies": 1,
             "creation_time": "2013-11-03T18:07:21+00:00",
             "data_type": "cups:ipp:event",
@@ -383,6 +382,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
             "end_time": "2013-11-03T18:07:32+00:00",
             "job_id": "urn:uuid:d51116d9-143c-3863-62aa-6ef0202de49a",
             "job_name": "Assignament 1",
+            "hostname": "localhost",
             "owner": "Joaquin Moreno Garijo",
             "printer_id": "RHULBW",
             "start_time": "2013-11-03T18:07:21+00:00",
