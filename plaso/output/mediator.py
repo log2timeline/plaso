@@ -17,6 +17,8 @@ class OutputMediator:
 
     Attributes:
       data_location (Optional[str]): path of the formatter data files.
+      use_fallback_path_spec (bool): use the event data stream path specification as
+          fallback for the filename and inode fields.
     """
 
     _DEFAULT_ENCODING = "utf-8"
@@ -35,6 +37,7 @@ class OutputMediator:
         dynamic_time=False,
         preferred_encoding="utf-8",
         use_fallback_hostname=False,
+        use_fallback_path_spec=False,
     ):
         """Initializes an output mediator.
 
@@ -45,7 +48,9 @@ class OutputMediator:
               represented in their granularity or semantically.
           preferred_encoding (Optional[str]): preferred encoding to output.
           use_fallback_hostname (Optional[bool]): use the hostname value derived
-              pre-processing as fallback.
+              pre-processing as fallback for the hostname field.
+          use_fallback_path_spec (Optional[bool]): use the event data stream path
+              specification as fallback for the filename and inode fields.
         """
         super().__init__()
         self._dynamic_time = dynamic_time
@@ -62,6 +67,7 @@ class OutputMediator:
         self._username_by_identifier = {}
 
         self.data_location = data_location
+        self.use_fallback_path_spec = use_fallback_path_spec
 
     @property
     def dynamic_time(self):
@@ -82,10 +88,9 @@ class OutputMediator:
         """Reads a message formatters configuration file.
 
         Args:
-          path (str): path of file that contains the message formatters
-              configuration.
-          override_existing (bool): True if existing message formatters should
-              be overridden.
+          path (str): path of file that contains the message formatters configuration.
+          override_existing (bool): True if existing message formatters should be
+              overridden.
 
         Raises:
           KeyError: if the message formatter is already set for the corresponding
@@ -127,12 +132,12 @@ class OutputMediator:
         """
         # TODO: get username related to the source.
         filter_expression = f'identifier == "{user_identifier:s}"'
+
         user_accounts = list(
             self._storage_reader.GetAttributeContainers(
                 "user_account", filter_expression=filter_expression
             )
         )
-
         if not user_accounts:
             return None
 
@@ -374,9 +379,8 @@ class OutputMediator:
           WinevtResourcesHelper: Windows EventLog resources helper.
         """
         lcid = self._lcid
-        if not lcid:
-            # TODO: determine LCID from system configurations
-            pass
+
+        # TODO: determine LCID from system configurations
         if not lcid:
             lcid = self._DEFAULT_LCID
 
@@ -402,10 +406,9 @@ class OutputMediator:
         """Reads message formatters from a file.
 
         Args:
-          path (str): path of file that contains the message formatters
-              configuration.
-          override_existing (bool): True if existing message formatters should
-              be overridden.
+          path (str): path of file that contains the message formatters configuration.
+          override_existing (bool): True if existing message formatters should be
+              overridden.
 
         Raises:
           KeyError: if the message formatter is already set for the corresponding
@@ -417,8 +420,8 @@ class OutputMediator:
         """Sets the preferred language identifier.
 
         Args:
-          language_tag (str): language tag such as "en-US" for US English or
-              "is-IS" for Icelandic.
+          language_tag (str): language tag such as "en-US" for US English or "is-IS"
+              for Icelandic.
 
         Raises:
           ValueError: if the language tag is not a string type or no LCID can

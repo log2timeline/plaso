@@ -17,8 +17,6 @@ class NativePythonOutputModule(text_file.TextFileOutputModule):
     NAME = "rawpy"
     DESCRIPTION = 'native (or "raw") Python output.'
 
-    _GENERATED_FIELD_VALUES = ["display_name", "filename", "inode"]
-
     # Note that native Python output defines certain fields as part of the format.
     _RESERVED_FIELDS = frozenset(
         [
@@ -26,10 +24,8 @@ class NativePythonOutputModule(text_file.TextFileOutputModule):
             "data_type",
             "date_time",
             "display_name",
-            "filename",
             "hostname",
             "http_headers",
-            "inode",
             "mapped_files",
             "metadata",
             "offset",
@@ -50,6 +46,7 @@ class NativePythonOutputModule(text_file.TextFileOutputModule):
         """Initializes an output module."""
         super().__init__()
         self._field_formatting_helper = dynamic.DynamicFieldFormattingHelper()
+        self._generated_field_values = None
 
     def _GetString(self, field_values):
         """Retrieves an output string.
@@ -88,7 +85,6 @@ class NativePythonOutputModule(text_file.TextFileOutputModule):
             lines_of_text.extend(
                 [f"  {line:s}" for line in path_specification.comparable.split("\n")]
             )
-
             # Remove additional empty line.
             lines_of_text.pop()
 
@@ -123,6 +119,11 @@ class NativePythonOutputModule(text_file.TextFileOutputModule):
         Returns:
           dict[str, str]: output field values per name.
         """
+        if self._generated_field_values is None:
+            self._generated_field_values = ["display_name"]
+            if output_mediator.use_fallback_path_spec:
+                self._generated_field_values.extend(["filename", "inode"])
+
         event_identifier = event.GetIdentifier()
         event_identifier_string = event_identifier.CopyToString()
 
@@ -135,7 +136,6 @@ class NativePythonOutputModule(text_file.TextFileOutputModule):
             "_event_identifier": event_identifier_string,
             "_timestamp": date_time_string,
         }
-
         event_attributes = list(event_data.GetAttributes())
         if event_data_stream:
             event_attributes.extend(event_data_stream.GetAttributes())
@@ -177,7 +177,7 @@ class NativePythonOutputModule(text_file.TextFileOutputModule):
 
             field_values[attribute_name] = attribute_value
 
-        for field_name in self._GENERATED_FIELD_VALUES:
+        for field_name in self._generated_field_values:
             if field_name not in field_values:
                 field_value = field_values.get(field_name)
                 if field_value is None:

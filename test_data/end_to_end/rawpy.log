@@ -8,9 +8,7 @@
 [Reserved attributes]:
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog/syslog
-  {filename} /tmp/test/test_data/syslog/syslog
   {hostname} myhostname.myhost.com
-  {inode} -
   {parser} text/syslog_traditional
 
 [Additional attributes]:
@@ -29,9 +27,7 @@
 [Reserved attributes]:
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog/syslog
-  {filename} /tmp/test/test_data/syslog/syslog
   {hostname} myhostname.myhost.com
-  {inode} -
   {parser} text/syslog_traditional
 
 [Additional attributes]:
@@ -50,9 +46,7 @@
 [Reserved attributes]:
   {data_type} syslog:cron:task_run
   {display_name} OS:/tmp/test/test_data/syslog/syslog
-  {filename} /tmp/test/test_data/syslog/syslog
   {hostname} myhostname.myhost.com
-  {inode} -
   {parser} text/syslog_traditional
   {username} root
 
@@ -73,9 +67,7 @@
 [Reserved attributes]:
   {data_type} syslog:cron:task_run
   {display_name} OS:/tmp/test/test_data/syslog/syslog
-  {filename} /tmp/test/test_data/syslog/syslog
   {hostname} myhostname.myhost.com
-  {inode} -
   {parser} text/syslog_traditional
   {username} root
 
@@ -96,9 +88,7 @@
 [Reserved attributes]:
   {data_type} syslog:cron:task_run
   {display_name} OS:/tmp/test/test_data/syslog/syslog
-  {filename} /tmp/test/test_data/syslog/syslog
   {hostname} myhostname.myhost.com
-  {inode} -
   {parser} text/syslog_traditional
   {username} root
 
@@ -119,9 +109,7 @@
 [Reserved attributes]:
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog/syslog
-  {filename} /tmp/test/test_data/syslog/syslog
   {hostname} myhostname.myhost.com
-  {inode} -
   {parser} text/syslog_traditional
 
 [Additional attributes]:
@@ -139,9 +127,7 @@
 [Reserved attributes]:
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog/syslog
-  {filename} /tmp/test/test_data/syslog/syslog
   {hostname} :
-  {inode} -
   {parser} text/syslog_traditional
 
 [Additional attributes]:
@@ -159,9 +145,7 @@
 [Reserved attributes]:
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog/syslog
-  {filename} /tmp/test/test_data/syslog/syslog
   {hostname} myhostname.myhost.com
-  {inode} -
   {parser} text/syslog_traditional
 
 [Additional attributes]:
@@ -183,9 +167,7 @@
 [Reserved attributes]:
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog/syslog
-  {filename} /tmp/test/test_data/syslog/syslog
   {hostname} myhostname.myhost.com
-  {inode} -
   {parser} text/syslog_traditional
 
 [Additional attributes]:
@@ -204,9 +186,7 @@
 [Reserved attributes]:
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog/syslog
-  {filename} /tmp/test/test_data/syslog/syslog
   {hostname} myhostname.myhost.com
-  {inode} -
   {parser} text/syslog_traditional
 
 [Additional attributes]:
@@ -225,9 +205,7 @@
 [Reserved attributes]:
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog/syslog
-  {filename} /tmp/test/test_data/syslog/syslog
   {hostname} myhostname.myhost.com
-  {inode} -
   {parser} text/syslog_traditional
 
 [Additional attributes]:
@@ -247,9 +225,7 @@
 [Reserved attributes]:
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog/syslog
-  {filename} /tmp/test/test_data/syslog/syslog
   {hostname} myhostname.myhost.com
-  {inode} -
   {parser} text/syslog_traditional
 
 [Additional attributes]:
@@ -268,9 +244,7 @@
 [Reserved attributes]:
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog/syslog
-  {filename} /tmp/test/test_data/syslog/syslog
   {hostname} victoria
-  {inode} -
   {parser} text/syslog_traditional
 
 [Additional attributes]:
@@ -289,9 +263,7 @@
 [Reserved attributes]:
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog/syslog
-  {filename} /tmp/test/test_data/syslog/syslog
   {hostname} :
-  {inode} -
   {parser} text/syslog_traditional
 
 [Additional attributes]:
@@ -312,8 +284,6 @@
 [Reserved attributes]:
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog/syslog
-  {filename} /tmp/test/test_data/syslog/syslog
-  {inode} -
   {parser} text/syslog_traditional
 
 [Additional attributes]:
@@ -331,9 +301,7 @@
 [Reserved attributes]:
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog/syslog
-  {filename} /tmp/test/test_data/syslog/syslog
   {hostname} victoria
-  {inode} -
   {parser} text/syslog_traditional
 
 [Additional attributes]:
@@ -351,8 +319,6 @@
 [Reserved attributes]:
   {data_type} fs:stat
   {display_name} OS:/tmp/test/test_data/syslog/syslog
-  {filename} /tmp/test/test_data/syslog/syslog
-  {inode} 351025
   {parser} filestat
 
 [Additional attributes]:
@@ -360,7 +326,9 @@
   {file_entry_type} file
   {file_size} 1509
   {file_system_type} OS
+  {filename} /tmp/test/test_data/syslog/syslog
   {group_identifier} 1000
+  {inode} 351025
   {is_allocated} True
   {mode} 420
   {number_of_links} 1
@@ -377,8 +345,6 @@
 [Reserved attributes]:
   {data_type} fs:stat
   {display_name} OS:/tmp/test/test_data/syslog/syslog
-  {filename} /tmp/test/test_data/syslog/syslog
-  {inode} 351025
   {parser} filestat
 
 [Additional attributes]:
@@ -386,7 +352,9 @@
   {file_entry_type} file
   {file_size} 1509
   {file_system_type} OS
+  {filename} /tmp/test/test_data/syslog/syslog
   {group_identifier} 1000
+  {inode} 351025
   {is_allocated} True
   {mode} 420
   {number_of_links} 1
@@ -403,8 +371,6 @@
 [Reserved attributes]:
   {data_type} fs:stat
   {display_name} OS:/tmp/test/test_data/syslog/syslog
-  {filename} /tmp/test/test_data/syslog/syslog
-  {inode} 351025
   {parser} filestat
 
 [Additional attributes]:
@@ -412,7 +378,9 @@
   {file_entry_type} file
   {file_size} 1509
   {file_system_type} OS
+  {filename} /tmp/test/test_data/syslog/syslog
   {group_identifier} 1000
+  {inode} 351025
   {is_allocated} True
   {mode} 420
   {number_of_links} 1
@@ -429,8 +397,6 @@
 [Reserved attributes]:
   {data_type} fs:stat
   {display_name} OS:/tmp/test/test_data/syslog/syslog
-  {filename} /tmp/test/test_data/syslog/syslog
-  {inode} 351025
   {parser} filestat
 
 [Additional attributes]:
@@ -438,7 +404,9 @@
   {file_entry_type} file
   {file_size} 1509
   {file_system_type} OS
+  {filename} /tmp/test/test_data/syslog/syslog
   {group_identifier} 1000
+  {inode} 351025
   {is_allocated} True
   {mode} 420
   {number_of_links} 1

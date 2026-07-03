@@ -110,6 +110,7 @@ class OutputModuleOptions:
         self._output_custom_formatters_path = None
         self._output_dynamic_time = None
         self._output_fallback_hostname = None
+        self._output_fallback_path = None
         self._output_filename = None
         self._output_format = None
         self._output_module = None
@@ -262,6 +263,7 @@ class OutputModuleOptions:
         self._output_fallback_hostname = getattr(
             options, "output_fallback_hostname", False
         )
+        self._output_fallback_path = getattr(options, "output_fallback_path", False)
 
         time_zone_string = self.ParseStringOption(options, "output_time_zone")
         if isinstance(time_zone_string, str):
@@ -363,7 +365,19 @@ class OutputModuleOptions:
             default=False,
             help=(
                 "Indicate that the output should use the hostname value derived by "
-                "pre-processing as fallback"
+                "pre-processing as fallback for the hostname output field"
+            ),
+        )
+        argument_group.add_argument(
+            "--output_fallback_path",
+            "--output-fallback-path",
+            dest="output_fallback_path",
+            action="store_true",
+            default=False,
+            help=(
+                "Indicate that the output should use the event data stream path "
+                "specification value as fallback for the filename and inode output "
+                "fields"
             ),
         )
         # Note the default here is None so we can determine if the time zone option was

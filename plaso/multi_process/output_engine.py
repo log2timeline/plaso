@@ -142,6 +142,7 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
             dynamic_time=processing_configuration.dynamic_time,
             preferred_encoding=processing_configuration.preferred_encoding,
             use_fallback_hostname=processing_configuration.use_fallback_hostname,
+            use_fallback_path_spec=processing_configuration.use_fallback_path,
         )
         if processing_configuration.preferred_language:
             try:

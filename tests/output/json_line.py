@@ -93,9 +93,7 @@ class JSONLinesOutputTest(test_lib.OutputModuleTestCase):
             },
             "data_type": "test:event",
             "display_name": "TSK:/var/log/syslog.1",
-            "filename": "/var/log/syslog.1",
             "hostname": "ubuntu",
-            "inode": "15",
             "message": (
                 "Reporter <CRON> PID: |8442| (pam_unix(cron:session): "
                 "session closed for user root)"
