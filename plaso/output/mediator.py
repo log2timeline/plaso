@@ -34,6 +34,7 @@ class OutputMediator:
         data_location=None,
         dynamic_time=False,
         preferred_encoding="utf-8",
+        use_fallback_hostname=False,
     ):
         """Initializes an output mediator.
 
@@ -43,6 +44,8 @@ class OutputMediator:
           dynamic_time (Optional[bool]): True if date and time values should be
               represented in their granularity or semantically.
           preferred_encoding (Optional[str]): preferred encoding to output.
+          use_fallback_hostname (Optional[bool]): use the hostname value derived
+              pre-processing as fallback.
         """
         super().__init__()
         self._dynamic_time = dynamic_time
@@ -55,6 +58,7 @@ class OutputMediator:
         self._storage_reader = storage_reader
         self._system_configurations = None
         self._time_zone = None
+        self._use_fallback_hostname = use_fallback_hostname
         self._username_by_identifier = {}
 
         self.data_location = data_location
@@ -158,6 +162,9 @@ class OutputMediator:
         hostname = getattr(event_data, "hostname", None)
         if hostname:
             return hostname
+
+        if not self._use_fallback_hostname:
+            return default_hostname
 
         if self._system_configurations is None:
             self._system_configurations = list(

@@ -17,6 +17,7 @@ class EventDataAttributeContainersSchemaValidator:
 
     _ALLOWED_OVERRIDES = frozenset(
         [
+            "hostname",
             "username",
             # Used in l2tcsv, but is always 2.
             "version",
@@ -153,11 +154,19 @@ def Main():
 
     reserved_names = validator.GetReservedNames(formatting_helpers)
 
-    # Additional names preferable not to be used.
+    # Names preferable not to be used.
     reserved_names.update(
-        ["body", "desc", "displayname", "host_name", "log_line", "user_name"]
+        [
+            "body",
+            "desc",
+            "displayname",
+            "host",
+            "host_name",
+            "log_line",
+            "user",
+            "user_name",
+        ]
     )
-
     attribute_containers = validator.GetAttributeContainers()
     if not attribute_containers:
         print("Unable to determine event data attribute containers")
