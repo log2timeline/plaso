@@ -113,7 +113,6 @@ class OutputModuleOptions:
         self._output_format = None
         self._output_module = None
         self._output_time_zone = None
-        self._output_use_default = None
 
         self.list_time_zones = False
 
@@ -259,7 +258,6 @@ class OutputModuleOptions:
         self._output_custom_formatters_path = custom_formatters_path
 
         self._output_dynamic_time = getattr(options, "dynamic_time", False)
-        self._output_use_default = getattr(options, "output_use_default", False)
 
         time_zone_string = self.ParseStringOption(options, "output_time_zone")
         if isinstance(time_zone_string, str):
