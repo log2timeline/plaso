@@ -71,10 +71,8 @@ class KMLOutputModule(rawpy.NativePythonOutputModule):
               modules and other components, such as storage and dfVFS.
         """
         self.WriteText(
-            (
-                f'<?xml version="1.0" encoding="{output_mediator.encoding:s}"?>'
-                f'<kml xmlns="http://www.opengis.net/kml/2.2"><Document>'
-            )
+            f'<?xml version="1.0" encoding="{output_mediator.encoding:s}"?>'
+            f'<kml xmlns="http://www.opengis.net/kml/2.2"><Document>'
         )
 
 

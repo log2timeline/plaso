@@ -19,12 +19,12 @@ class USBStorDeviceInstanceEventData(events.EventData):
     """USBStor device instance event data attribute container.
 
     Attributes:
+      device_display_name (str): display name of the USB device.
       device_last_arrival_time (dfdatetime.DateTimeValues): date and time of
           the device insertion.
       device_last_removal_time (dfdatetime.DateTimeValues): date and time of
           the removal insertion.
       device_type (str): type of USB device.
-      display_name (str): display name of the USB device.
       key_path (str): Windows Registry key path.
       driver_first_installation_time (dfdatetime.DateTimeValues): date and time of
           when the device instance was first installed in the system
@@ -42,10 +42,10 @@ class USBStorDeviceInstanceEventData(events.EventData):
     def __init__(self):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
+        self.device_display_name = None
         self.device_last_arrival_time = None
         self.device_last_removal_time = None
         self.device_type = None
-        self.display_name = None
         self.driver_first_installation_time = None
         self.driver_last_installation_time = None
         self.firmware_time = None
@@ -173,12 +173,16 @@ class USBStorPlugin(interface.WindowsRegistryPlugin, dtfabric_helper.DtFabricHel
                             lookup_key = ":".join(
                                 [property_set_key.name, property_key.name]
                             ).lower()
+
                             value_type = self._GetPropertyValueType(property_value_key)
                             properties[lookup_key] = self._GetPropertyValueData(
                                 property_value_key, value_type
                             )
 
             event_data = USBStorDeviceInstanceEventData()
+            event_data.device_display_name = self._GetValueFromKey(
+                device_instance_key, "FriendlyName"
+            )
             event_data.device_last_arrival_time = properties.get(
                 "{83da6326-97a6-4088-9453-a1923f573b29}:00000066", None
             )
@@ -186,9 +190,6 @@ class USBStorPlugin(interface.WindowsRegistryPlugin, dtfabric_helper.DtFabricHel
                 "{83da6326-97a6-4088-9453-a1923f573b29}:00000067", None
             )
             event_data.device_type = device_type
-            event_data.display_name = self._GetValueFromKey(
-                device_instance_key, "FriendlyName"
-            )
             event_data.driver_first_installation_time = properties.get(
                 "{83da6326-97a6-4088-9453-a1923f573b29}:00000064", None
             )

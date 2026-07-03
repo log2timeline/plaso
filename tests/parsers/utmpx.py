@@ -34,14 +34,13 @@ class UtmpxParserTest(test_lib.ParserTestCase):
         expected_event_values = {
             "data_type": "macos:utmpx:entry",
             "hostname": "localhost",
+            "login_type": 7,
             "pid": 67,
             "terminal": "console",
             "terminal_identifier": 65583,
-            "type": 7,
             "username": "moxilo",
             "written_time": "2013-11-13T17:52:41.736713+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 

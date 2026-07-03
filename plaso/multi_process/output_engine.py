@@ -141,8 +141,9 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
             data_location=processing_configuration.data_location,
             dynamic_time=processing_configuration.dynamic_time,
             preferred_encoding=processing_configuration.preferred_encoding,
+            use_fallback_hostname=processing_configuration.use_fallback_hostname,
+            use_fallback_path_spec=processing_configuration.use_fallback_path,
         )
-
         if processing_configuration.preferred_language:
             try:
                 mediator.SetPreferredLanguageIdentifier(
@@ -150,10 +151,8 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
                 )
             except (KeyError, TypeError):
                 logger.warning(
-                    (
-                        f"Unable to to set preferred language: "
-                        f"{processing_configuration.preferred_language!s}"
-                    )
+                    f"Unable to to set preferred language: "
+                    f"{processing_configuration.preferred_language!s}"
                 )
 
         mediator.SetTimeZone(processing_configuration.preferred_time_zone)
@@ -163,7 +162,6 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
             processing_configuration.data_location,
             processing_configuration.custom_formatters_path,
         )
-
         return mediator
 
     def _ExportEvent(
@@ -460,10 +458,8 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
                 output_mediator_object.ReadMessageFormattersFromFile(formatters_file)
             except KeyError as exception:
                 raise errors.BadConfigOption(
-                    (
-                        f"Unable to read message formatters from file: "
-                        f"{formatters_file:s} with error: {exception!s}"
-                    )
+                    f"Unable to read message formatters from file: "
+                    f"{formatters_file:s} with error: {exception!s}"
                 )
 
         else:
@@ -476,10 +472,8 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
                 )
             except KeyError as exception:
                 raise errors.BadConfigOption(
-                    (
-                        f"Unable to read custrom message formatters from file: "
-                        f"{formatters_file:s} with error: {exception!s}"
-                    )
+                    f"Unable to read custrom message formatters from file: "
+                    f"{formatters_file:s} with error: {exception!s}"
                 )
 
     def _UpdateForemanProcessStatus(self):
@@ -503,7 +497,6 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
             0,
             0,
         )
-
         self._processing_status.UpdateEventsStatus(self._events_status)
 
     def _UpdateStatus(self):
@@ -557,7 +550,6 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
                     "parser_count"
                 )
             }
-
             total_number_of_events = parsers_counter["total"]
 
         self._events_status.total_number_of_events = total_number_of_events
@@ -565,7 +557,6 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
         self._output_mediator = self._CreateOutputMediator(
             storage_reader, processing_configuration
         )
-
         output_module.WriteHeader(output_mediator)
 
         self._StartStatusUpdateThread()

@@ -29,7 +29,7 @@ class ApacheAccessLogEventData(events.EventData):
           was recorded.
       remote_name (str): remote logname (from identd, if supplied).
       server_name (str): canonical hostname of the server serving the request.
-      user_name (str): logged user name.
+      username (str): username.
     """
 
     DATA_TYPE = "apache:access_log:entry"
@@ -47,7 +47,7 @@ class ApacheAccessLogEventData(events.EventData):
         self.recorded_time = None
         self.remote_name = None
         self.server_name = None
-        self.user_name = None
+        self.username = None
 
 
 class ApacheAccessLogTextPlugin(interface.TextPlugin):
@@ -148,7 +148,7 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
         pyparsing.Word(pyparsing.alphanums + "@" + pyparsing.alphanums + ".")
         | pyparsing.Word(pyparsing.alphanums)
         | pyparsing.Literal("-")
-    ).set_results_name("user_name")
+    ).set_results_name("username")
 
     _END_OF_LINE = pyparsing.Suppress(pyparsing.LineEnd())
 
@@ -245,9 +245,9 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
         if remote_name == "-":
             remote_name = None
 
-        user_name = self._GetValueFromStructure(structure, "user_name")
-        if user_name == "-":
-            user_name = None
+        username = self._GetValueFromStructure(structure, "username")
+        if username == "-":
+            username = None
 
         event_data = ApacheAccessLogEventData()
         event_data.http_request = http_request
@@ -260,7 +260,7 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
         event_data.ip_address = self._GetValueFromStructure(structure, "ip_address")
         event_data.recorded_time = self._ParseTimeElements(time_elements_structure)
         event_data.remote_name = remote_name
-        event_data.user_name = user_name
+        event_data.username = username
 
         if key in ("combined_log_format", "vhost_combined_log_format"):
             referer = self._GetValueFromStructure(structure, "referer")

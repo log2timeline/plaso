@@ -18,9 +18,9 @@ class AndroidHangoutsMessageData(events.EventData):
     """Google Hangouts Message event data.
 
     Attributes:
-      body (str): content of the SMS text message.
       creation_time (dfdatetime.DateTimeValues): date and time the Google Hangouts
           message was created.
+      message_body (str): content of the SMS text message.
       message_status (int): message status.
       message_type (int): message type.
       offset (str): identifier of the row, from which the event data was
@@ -34,8 +34,8 @@ class AndroidHangoutsMessageData(events.EventData):
     def __init__(self):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
-        self.body = None
         self.creation_time = None
+        self.message_body = None
         self.message_status = None
         self.message_type = None
         self.offset = None
@@ -314,7 +314,7 @@ class AndroidHangoutsMessagePlugin(interface.SQLitePlugin):
         query_hash = hash(query)
 
         event_data = AndroidHangoutsMessageData()
-        event_data.body = self._GetRowValue(query_hash, row, "text")
+        event_data.message_body = self._GetRowValue(query_hash, row, "text")
         event_data.creation_time = self._GetPosixTimeInMicrosecondsRowValue(
             query_hash, row, "timestamp"
         )

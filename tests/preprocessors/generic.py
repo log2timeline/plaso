@@ -29,7 +29,6 @@ class DetermineOperatingSystemPluginTest(test_lib.ArtifactPreprocessorPluginTest
         file_system_builder.AddFileReadData(
             "/Windows/System32/config/SYSTEM", test_file_path
         )
-
         storage_writer = fake_writer.FakeStorageWriter()
         test_mediator = mediator.PreprocessMediator(storage_writer)
 
@@ -37,7 +36,6 @@ class DetermineOperatingSystemPluginTest(test_lib.ArtifactPreprocessorPluginTest
         searcher = file_system_searcher.FileSystemSearcher(
             file_system_builder.file_system, mount_point
         )
-
         plugin = generic.DetermineOperatingSystemPlugin()
 
         storage_writer.Open()

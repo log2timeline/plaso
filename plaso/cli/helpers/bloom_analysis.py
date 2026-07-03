@@ -42,8 +42,8 @@ class BloomAnalysisArgumentsHelper(interface.ArgumentsHelper):
                 f"{cls._DEFAULT_BLOOM_DATABASE_PATH:s}"
             ),
         )
-
         supported_hashes = ", ".join(cls._SUPPORTED_HASHES)
+
         argument_group.add_argument(
             "--bloom-hash",
             "--bloom_hash",
@@ -59,7 +59,6 @@ class BloomAnalysisArgumentsHelper(interface.ArgumentsHelper):
                 f"{cls._DEFAULT_HASH:s}. Supported options: {supported_hashes:s}."
             ),
         )
-
         argument_group.add_argument(
             "--bloom-label",
             "--bloom_label",
@@ -68,9 +67,7 @@ class BloomAnalysisArgumentsHelper(interface.ArgumentsHelper):
             action="store",
             default=cls._DEFAULT_LABEL,
             metavar="LABEL",
-            help=(
-                f"Label to apply to events, the default is: " f"{cls._DEFAULT_LABEL:s}."
-            ),
+            help=f"Label to apply to events, the default is: {cls._DEFAULT_LABEL:s}.",
         )
 
     @classmethod

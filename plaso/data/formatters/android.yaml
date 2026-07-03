@@ -117,13 +117,13 @@ enumeration_helpers:
 message:
 - 'File root path: {root_path}'
 - 'File root relative path: {root_relative_path}'
-- 'File name: {file_name}'
+- 'Filename: {filename}'
 - 'Media type: {media_type}'
 - 'Mime type: {mime_type}'
 - 'File visibility: {is_hidden}'
 short_message:
 - 'File root relative path: {root_relative_path}'
-- 'File name: {file_name}'
+- 'Filename: {filename}'
 - 'Mime type: {mime_type}'
 - 'File visibility: {is_hidden}'
 separator: ', '
@@ -133,13 +133,13 @@ source: 'Files by Google event data.'
 type: 'conditional'
 data_type: 'android:logcat'
 message:
-- '{message}'
+- '{message_body}'
 - 'Component Tag: {component_tag}'
 - 'PID: {pid}'
 - 'Thread: {thread_identifier}'
 - 'User identifier: {user_identifier}'
 short_message:
-- '{message}'
+- '{message_body}'
 short_source: 'LOG'
 source: 'Android logcat'
 ---
@@ -160,11 +160,11 @@ enumeration_helpers:
     2: 'RECEIVED'
 message:
 - 'Sender: {sender}'
-- 'Body: {body}'
+- 'Message: {message_body}'
 - 'Status: {message_status}'
 - 'Type: {message_type}'
 short_message:
-- '{body}'
+- '{message_body}'
 short_source: 'HANGOUTS'
 source: 'Google Hangouts Message'
 ---
@@ -187,9 +187,9 @@ message:
 - 'Type: {sms_type}'
 - 'Address: {address}'
 - 'Status: {sms_read}'
-- 'Message: {body}'
+- 'Message: {message_body}'
 short_message:
-- '{body}'
+- '{message_body}'
 short_source: 'LOG'
 source: 'Android SMS messages'
 ---
@@ -290,7 +290,7 @@ message:
 - 'Notification Package: {notification_package}'
 - 'Title: {title}'
 - 'Media Provider URI: {media_provider_uri}'
-- 'Error Msg: {error_msg}'
+- 'Error message: {error_message}'
 - 'Is Visible in Downloads UI: {is_visible_in_downloads_ui}'
 - 'Destination Type: {destination_string}'
 - 'UI Visibility: {ui_visibility_string}'
@@ -432,13 +432,13 @@ source: 'Android Viber Call History'
 type: 'conditional'
 data_type: 'android:webview:cookie'
 message:
-- 'Host: {host}'
+- 'Hostname: {hostname}'
 - 'Path: {path}'
 - 'Cookie name: {name}'
 - 'Value: {value}'
 - 'Secure: {secure}'
 short_message:
-- '{host}'
+- '{hostname}'
 - '{name}'
 - '{value}'
 short_source: 'WebView'

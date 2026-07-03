@@ -14,24 +14,24 @@ class GCPLogEventData(events.EventData):
 
     Attributes:
       caller_ip (str): IP address of the client that requested the operation.
-      container (str): TODO
+      container (str): container.
       dcsa_emails (list[str]): default compute service account attached to a
           Google Compute Engine (GCE) instance.
       dcsa_scopes (list[str]): OAuth scopes granted to the default compute service
           account.
       delegation_chain (str): service account delegation chain.
       event_subtype (str): JSON event sub type or protocol buffer method.
-      event_type (str): TODO
-      filename (str): TODO
+      event_type (str): event type.
+      filename (str): filename.
       firewall_rules (list[str]): firewall rules.
       firewall_source_ranges (list[str]): firewall source ranges.
       gcloud_command_identity (str): unique gcloud command identity.
       gcloud_command_partial (str): partial gcloud command.
       log_name (str): name of the log entry.
-      message (str): TODO
+      message_body (str): message string.
       method_name (str): operation performed.
       permissions (list[str]): IAM permission used for the operation.
-      policy_deltas (list[str]): TODO
+      policy_deltas (list[str]): policy deltas.
       principal_email (str): email address of the requester.
       principal_subject (str): subject name of the requester.
       recorded_time (dfdatetime.DateTimeValues): date and time the log entry
@@ -45,7 +45,7 @@ class GCPLogEventData(events.EventData):
       request_member (str): member of the request.
       request_metadata (list[str]): request metadata values.
       request_name (str): name of the request.
-      request_target_tags (str): TODO
+      request_target_tags (str): request target tags.
       resource_labels (list[str]): resource labels.
       resource_name (str): name of the resource.
       service_account_delegation (list[str]): service accounts delegation in the
@@ -58,7 +58,6 @@ class GCPLogEventData(events.EventData):
       source_images (list[str]): source images of disks attached to a compute
           engine instance.
       status_code (str): operation success or failure code.
-      status_message (str): operation success or failure message.
       status_reasons (list[str]): reasons for operation failure.
       text_payload (str): text payload for logs not using a JSON or proto payload.
       user_agent (str): user agent used in the request.
@@ -83,7 +82,7 @@ class GCPLogEventData(events.EventData):
         self.gcloud_command_partial = None
         self.log_name = None
         self.method_name = None
-        self.message = None
+        self.message_body = None
         self.permissions = None
         self.policy_deltas = None
         self.principal_email = None
@@ -107,7 +106,6 @@ class GCPLogEventData(events.EventData):
         self.severity = None
         self.source_images = None
         self.status_code = None
-        self.status_message = None
         self.status_reasons = None
         self.text_payload = None
         self.user_agent = None
@@ -138,7 +136,7 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
         event_data.event_subtype = self._GetJSONValue(json_payload, "event_subtype")
         event_data.event_type = self._GetJSONValue(json_payload, "event_type")
         event_data.filename = self._GetJSONValue(json_payload, "filename")
-        event_data.message = self._GetJSONValue(json_payload, "message")
+        event_data.message_body = self._GetJSONValue(json_payload, "message")
 
         actor_json = self._GetJSONValue(json_payload, "actor")
         if actor_json:
@@ -260,7 +258,7 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
             # Empty `code` and `message` fields indicate the operation was successful.
 
             event_data.status_code = str(self._GetJSONValue(status, "code", ""))
-            event_data.status_message = self._GetJSONValue(status, "message")
+            event_data.message_body = self._GetJSONValue(status, "message")
 
             # `protoPayload.status.details[].reason` contains reason for an operation
             # failure.

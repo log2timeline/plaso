@@ -158,15 +158,6 @@ class DSVParser(interface.FileObjectParser):
         file_object.seek(original_file_position, os.SEEK_SET)
         return result
 
-    @classmethod
-    def GetFormatSpecification(cls):
-        """Retrieves the format specification.
-
-        Returns:
-          FormatSpecification: format specification.
-        """
-        return specification.FormatSpecification(cls.NAME, text_format=True)
-
     def _CheckForByteOrderMark(self, file_object):
         """Check if the file contains a byte-order-mark (BOM).
 
@@ -202,6 +193,27 @@ class DSVParser(interface.FileObjectParser):
             return "utf-16-le", 2
 
         return None, 0
+
+    def _GetRowValue(self, row, value_name):
+        """Retrieves a row value.
+
+        Args:
+          row (): row.
+          value_name (str): name of the value to retrieve.
+
+        Returns:
+          str: value or None if empty.
+        """
+        return row.get(value_name) or None
+
+    @classmethod
+    def GetFormatSpecification(cls):
+        """Retrieves the format specification.
+
+        Returns:
+          FormatSpecification: format specification.
+        """
+        return specification.FormatSpecification(cls.NAME, text_format=True)
 
     def ParseFileObject(self, parser_mediator, file_object):
         """Parses a DSV text file-like object.

@@ -18,12 +18,12 @@ class UtmpxMacOSEventData(events.EventData):
 
     Attributes:
       hostname (str): hostname or IP address.
+      login_type (int): login type.
       offset (int): offset of the utmpx record relative to the start of the file,
           from which the event data was extracted.
       pid (int): process identifier (PID).
       terminal (str): name of the terminal.
       terminal_identifier (int): inittab identifier.
-      type (int): type of login.
       username (str): user name.
       written_time (dfdatetime.DateTimeValues): entry written date and time.
     """
@@ -34,11 +34,11 @@ class UtmpxMacOSEventData(events.EventData):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
         self.hostname = None
+        self.login_type = None
         self.offset = None
         self.pid = None
         self.terminal = None
         self.terminal_identifier = None
-        self.type = None
         self.username = None
         self.written_time = None
 
@@ -84,8 +84,8 @@ class UtmpxParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
                 f"error: {exception!s}"
             )
 
-        if entry.type not in self._SUPPORTED_TYPES:
-            raise errors.ParseError(f"Unsupported type: {entry.type:d}")
+        if entry.login_type not in self._SUPPORTED_TYPES:
+            raise errors.ParseError(f"Unsupported login type: {entry.login_type:d}")
 
         code_page = parser_mediator.GetCodePage()
 
@@ -122,11 +122,11 @@ class UtmpxParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
         event_data = UtmpxMacOSEventData()
         event_data.hostname = hostname
+        event_data.login_type = entry.login_type
         event_data.pid = entry.pid
         event_data.offset = file_offset
         event_data.terminal = terminal or None
         event_data.terminal_identifier = entry.terminal_identifier
-        event_data.type = entry.type
         event_data.username = username or None
         event_data.written_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
             timestamp=timestamp
@@ -170,10 +170,9 @@ class UtmpxParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
                 "Unable to parse utmpx file header with error: unsupported username"
             )
 
-        if event_data.type != self._FILE_HEADER_TYPE:
+        if event_data.login_type != self._FILE_HEADER_TYPE:
             raise errors.WrongParser(
-                "Unable to parse utmp file header with error: unsupported type of "
-                "login"
+                "Unable to parse utmp file header with error: unsupported login type"
             )
 
         file_offset = file_object.tell()

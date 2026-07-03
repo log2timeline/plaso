@@ -17,7 +17,6 @@ class IOSInstagramThreadsTest(test_lib.SQLitePluginTestCase):
         storage_writer = self._ParseDatabaseFileWithPlugin(
             ["ios", "9368974384.db"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -34,7 +33,8 @@ class IOSInstagramThreadsTest(test_lib.SQLitePluginTestCase):
         self.assertEqual(number_of_warnings, 0)
 
         expected_event_values = {
-            "message": None,
+            "data_type": "ios:instagram:message",
+            "message_body": None,
             "sender_identifier": "9368974384",
             "sent_time": "2020-03-22T19:12:02.808456+00:00",
             "shared_media_identifier": None,
@@ -43,12 +43,12 @@ class IOSInstagramThreadsTest(test_lib.SQLitePluginTestCase):
             "video_chat_call_identifier": "18135614113062170",
             "video_chat_title": "Video chat ended",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
         expected_event_values = {
-            "message": (
+            "data_type": "ios:instagram:message",
+            "message_body": (
                 "Clicked over to Threads. I still do not understand why this app "
                 "exists."
             ),
@@ -60,12 +60,12 @@ class IOSInstagramThreadsTest(test_lib.SQLitePluginTestCase):
             "video_chat_call_identifier": None,
             "video_chat_title": None,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 
         expected_event_values = {
-            "message": None,
+            "data_type": "ios:instagram:message",
+            "message_body": None,
             "sender_identifier": "9368974384",
             "sent_time": "2020-03-25T01:49:04.901623+00:00",
             "shared_media_identifier": "251704772664178",
@@ -82,7 +82,6 @@ class IOSInstagramThreadsTest(test_lib.SQLitePluginTestCase):
             "video_chat_call_identifier": None,
             "video_chat_title": None,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 5)
         self.CheckEventData(event_data, expected_event_values)
 

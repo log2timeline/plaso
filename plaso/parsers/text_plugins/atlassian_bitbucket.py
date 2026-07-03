@@ -35,20 +35,19 @@ class AtlassianBitbucketEventData(events.EventData):
     """Bitbucket application log event data.
 
     Attributes:
-      body (str): the freeform body of the log line (the log message).
       ip_address (str): the client IP address associated with the request, if
           present in the log line.
       level (str): the logging level of the event, such as INFO, WARN or ERROR.
       logger_class (str): the abbreviated or full class name responsible for
           logging the event, such as c.a.b.m.r.DefaultRepositoryManager.
+      message_body (str): message body.
       request_action (str): the request action string, such as
           "TransactionService/Transact", if present.
       request_id (str): the unique request identifier, such as
           2CM38K4Fx339x113x2, if present.
       session_identifier (str): the session identifier, if present.
       thread (str): the JVM thread name from which the log event originated.
-      user_name (str): the name of the user associated with the request, if
-          present in the log line.
+      username (str): username.
       written_time (dfdatetime.DateTimeValues): entry written date and time.
     """
 
@@ -57,15 +56,15 @@ class AtlassianBitbucketEventData(events.EventData):
     def __init__(self):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
-        self.body = None
         self.ip_address = None
         self.level = None
         self.logger_class = None
+        self.message_body = None
         self.request_action = None
         self.request_identifier = None
         self.session_identifier = None
         self.thread = None
-        self.user_name = None
+        self.username = None
         self.written_time = None
 
 
@@ -131,7 +130,7 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
 
     # Log message body: rest of line.
     _BITBUCKET_LOG_MESSAGE = pyparsing.SkipTo(pyparsing.LineEnd()).set_results_name(
-        "body"
+        "message_body"
     )
 
     # The %request context block between [thread] and logger_class is optional.
@@ -149,7 +148,7 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
     _NOT_BRACKET = pyparsing.NotAny(pyparsing.Literal("["))
 
     # Complete log line structure:
-    # <timestamp> <level> [<thread>] [optional request context] <logger> <body>
+    # <timestamp> <level> [<thread>] [optional request context] <logger> <message_body>
     # _NOT_BRACKET before _REQUEST_CONTEXT_RAW ensures the first non-whitespace
     # character after [thread] is not '[', rejecting Confluence-format lines.
     _BITBUCKET_LOG_LINE = (
@@ -180,10 +179,10 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
     _RE_REQUEST_ACTION = pyparsing.QuotedString('"')
 
     # Username: word characters, dots, hyphens, slashes.
-    _RE_USER_NAME = pyparsing.Regex(r"[A-Za-z][A-Za-z0-9._\-/]*")
+    _RE_USERNAME = pyparsing.Regex(r"[A-Za-z][A-Za-z0-9._\-/]*")
 
     _REQUEST_CONTEXT_GRAMMAR = (
-        pyparsing.Optional(_RE_USER_NAME.set_results_name("request_user"))
+        pyparsing.Optional(_RE_USERNAME.set_results_name("username"))
         + pyparsing.Optional(_REQUEST_IDENTIFIER.set_results_name("request_identifier"))
         + pyparsing.Optional(_SESSION_IDENTIFIER.set_results_name("session_identifier"))
         + pyparsing.Optional(_RE_IP_ADDRESS.set_results_name("ip_address"))
@@ -211,24 +210,25 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
 
         time_elements_structure = self._GetValueFromStructure(structure, "date_time")
 
+        message_body = self._GetValueFromStructure(
+            structure, "message_body", default_value=""
+        ).strip()
+
         request_context_text = self._GetValueFromStructure(
             structure, "request_context_text", default_value=""
         ).strip()
 
         event_data = AtlassianBitbucketEventData()
-        event_data.body = (
-            self._GetValueFromStructure(structure, "body", default_value="").strip()
-            or None
-        )
         event_data.level = self._GetValueFromStructure(structure, "level")
         event_data.logger_class = self._GetValueFromStructure(structure, "logger_class")
+        event_data.message_body = message_body or None
         event_data.thread = self._GetValueFromStructure(structure, "thread")
 
         if request_context_text:
             request_context = self._REQUEST_CONTEXT_GRAMMAR.parse_string(
                 request_context_text, parse_all=False
             )
-            event_data.user_name = request_context.get("request_user") or None
+            event_data.username = request_context.get("username") or None
             event_data.request_identifier = (
                 request_context.get("request_identifier") or None
             )
@@ -260,7 +260,6 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
             date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
                 time_elements_tuple=time_elements_structure
             )
-
             date_time.is_local_time = True
 
             return date_time

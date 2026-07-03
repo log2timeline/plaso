@@ -13,11 +13,11 @@ class MacOSNotificationCenterEventData(events.EventData):
     """MacOS NotificationCenter event data.
 
     Attributes:
-      body (str): body of the notification message.
       bundle_name (str): name of the application's bundle that generated
           the notification.
       creation_time (dfdatetime.DateTimeValues): date and time the entry was
           created.
+      message_body (str): message body.
       presented (int): either 1 or 0 if the notification has been shown to the
           user.
       subtitle (str): optional. Subtitle of the notification message.
@@ -31,9 +31,9 @@ class MacOSNotificationCenterEventData(events.EventData):
     def __init__(self):
         """Initialize event data."""
         super().__init__(data_type=self.DATA_TYPE)
-        self.body = None
         self.bundle_name = None
         self.creation_time = None
+        self.message_body = None
         self.presented = None
         self.subtitle = None
         self.title = None
@@ -142,11 +142,11 @@ class MacOSNotificationCenterPlugin(interface.SQLitePlugin):
             req_property = {}
 
         event_data = MacOSNotificationCenterEventData()
-        event_data.body = req_property.get("body")
         event_data.bundle_name = self._GetRowValue(query_hash, row, "bundle_name")
         event_data.creation_time = self._GetDateTimeRowValue(
             query_hash, row, "timestamp"
         )
+        event_data.message_body = req_property.get("body")
         event_data.presented = self._GetRowValue(query_hash, row, "presented")
         event_data.subtitle = req_property.get("subt")
         event_data.title = req_property.get("titl")

@@ -16,15 +16,13 @@ class AzureApplicationGatewayAccessEventData(events.EventData):
       client_response_time (int): Duration, in seconds, from the first byte of
           a client request to be processed up to the first byte sent as response
           to the client.
-      host (str): Address listed in the host header of the request. If rewritten
-          using header rewrite, contains the updated host name.
       http_method (str): HTTP method used by the request.
       http_status (int): HTTP status code returned to the client from application
           gateway.
       http_version (str): HTTP version of the request.
       instance_identifier (str): Application gateway instance that served
           the request.
-      original_host (str): Original request host name.
+      original_request_host (str): Original IP address or name of the requested host.
       original_request_uri (str): Original request URL, including arguments.
       received_bytes (int): Size of packet received, in bytes.
       recorded_time (dfdatetime.DateTimeValues): date and time the log entry
@@ -35,6 +33,8 @@ class AzureApplicationGatewayAccessEventData(events.EventData):
           the back-end servers. SERVER-STATUS: HTTP response code that application
           gateway received from the back-end.
       request_uri (str): URI of the received request.
+      request_host (str): IP address or name fo the requested host as listed in the
+          x-original-host header, which could have been changed by a reverse proxy.
       sent_bytes (int): Size of packet sent, in bytes.
       server_response_latency (str): Latency of the response (in seconds) from
           the back-end server.
@@ -71,15 +71,15 @@ class AzureApplicationGatewayAccessEventData(events.EventData):
         self.client_ip = None
         self.client_port = None
         self.client_response_time = None
-        self.host = None
         self.http_method = None
         self.http_status = None
         self.http_version = None
         self.instance_identifier = None
-        self.original_host = None
+        self.original_request_host = None
         self.original_request_uri = None
         self.received_bytes = None
         self.recorded_time = None
+        self.request_host = None
         self.request_query = None
         self.request_uri = None
         self.sent_bytes = None
@@ -116,14 +116,13 @@ class AzureApplicationGatewayAccessLogJSONLPlugin(interface.JSONLPlugin):
         properties_json_dict = self._GetJSONValue(
             json_dict, "properties", default_value={}
         )
-
         event_data = AzureApplicationGatewayAccessEventData()
         event_data.client_ip = self._GetJSONValue(properties_json_dict, "clientIP")
         event_data.client_port = self._GetJSONValue(properties_json_dict, "clientPort")
         event_data.client_response_time = self._GetJSONValue(
             properties_json_dict, "clientResponseTime"
         )
-        event_data.host = self._GetJSONValue(properties_json_dict, "host")
+        event_data.request_host = self._GetJSONValue(properties_json_dict, "host")
         event_data.http_method = self._GetJSONValue(properties_json_dict, "httpMethod")
         event_data.http_status = self._GetJSONValue(properties_json_dict, "httpStatus")
         event_data.http_version = self._GetJSONValue(
@@ -132,7 +131,7 @@ class AzureApplicationGatewayAccessLogJSONLPlugin(interface.JSONLPlugin):
         event_data.instance_identifier = self._GetJSONValue(
             properties_json_dict, "instanceId"
         )
-        event_data.original_host = self._GetJSONValue(
+        event_data.original_request_host = self._GetJSONValue(
             properties_json_dict, "originalHost"
         )
         event_data.original_request_uri = self._GetJSONValue(

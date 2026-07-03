@@ -22,12 +22,12 @@ class MacKeeperCacheEventData(events.EventData):
       offset (str): identifier of the row, from which the event data was
           extracted.
       query (str): SQL query that was used to obtain the event data.
-      record_id (int): record identifier.
+      record_identifier (int): record identifier.
       room (str): room.
       text (str): text.
       url (str): URL.
-      user_name (str): user name.
       user_sid (str): user security identifier (SID).
+      username (str): username.
     """
 
     DATA_TYPE = "mackeeper:cache"
@@ -40,12 +40,12 @@ class MacKeeperCacheEventData(events.EventData):
         self.event_type = None
         self.offset = None
         self.query = None
-        self.record_id = None
+        self.record_identifier = None
         self.room = None
         self.text = None
         self.url = None
-        self.user_name = None
         self.user_sid = None
+        self.username = None
 
 
 class MacKeeperCachePlugin(interface.SQLitePlugin):
@@ -290,12 +290,12 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
         event_data.event_type = data.get("event_type")
         event_data.offset = self._GetRowValue(query_hash, row, "id")
         event_data.query = query
-        event_data.record_id = data.get("id")
+        event_data.record_identifier = data.get("id")
         event_data.room = data.get("room")
         event_data.text = data.get("text")
         event_data.url = key_url
-        event_data.user_name = data.get("user")
         event_data.user_sid = data.get("sid")
+        event_data.username = data.get("user")
 
         parser_mediator.ProduceEventData(event_data)
 

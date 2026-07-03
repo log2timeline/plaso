@@ -37,7 +37,6 @@ class AMCachePluginTest(test_lib.RegistryPluginTestCase):
         storage_writer = self._ParseKeyWithPlugin(
             registry_key, plugin, file_entry=test_file_entry
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -57,7 +56,6 @@ class AMCachePluginTest(test_lib.RegistryPluginTestCase):
             "c:\\users\\user\\appdata\\local\\temp\\chocolatey\\"
             "is-f4510.tmp\\idafree50.tmp"
         )
-
         expected_event_values = {
             "application_key_last_written_time": None,
             "data_type": "windows:registry:amcache",
@@ -70,7 +68,6 @@ class AMCachePluginTest(test_lib.RegistryPluginTestCase):
             "msi_installation_time": None,
             "sha1": "82274eef0911a948f91425f5e5b0e730517fe75e",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1420)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -90,7 +87,6 @@ class AMCachePluginTest(test_lib.RegistryPluginTestCase):
                 "CurrentVersion\\Uninstall\\FileInsight"
             ],
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 3480)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -109,7 +105,6 @@ class AMCachePluginTest(test_lib.RegistryPluginTestCase):
         storage_writer = self._ParseKeyWithPlugin(
             registry_key, plugin, file_entry=test_file_entry
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -131,14 +126,13 @@ class AMCachePluginTest(test_lib.RegistryPluginTestCase):
             "file_creation_time": None,
             "file_identifier": "000075c5a97f521f760e32a4a9639a653eed862e9c61",
             "file_modification_time": None,
-            "file_name": "svchost.exe",
+            "filename": "svchost.exe",
             "full_path": "c:\\windows\\system32\\svchost.exe",
             "installation_time": None,
             "last_written_time": None,
             "link_time": "1997-01-10T22:26:24+00:00",
             "msi_installation_time": None,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 135)
         self.CheckEventData(event_data, expected_event_values)
 

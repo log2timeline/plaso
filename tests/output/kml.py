@@ -78,12 +78,10 @@ class KMLOutputTest(test_lib.OutputModuleTestCase):
         event, event_data, event_data_stream = (
             containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0])
         )
-
         # TODO: add test for event_tag.
         field_values = output_module.GetFieldValues(
             output_mediator, event, event_data, event_data_stream, None
         )
-
         output_module.WriteFieldValues(output_mediator, field_values)
 
         event_body = test_file_object.getvalue()
@@ -99,12 +97,10 @@ class KMLOutputTest(test_lib.OutputModuleTestCase):
         event, event_data, event_data_stream = (
             containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[1])
         )
-
         # TODO: add test for event_tag.
         field_values = output_module.GetFieldValues(
             output_mediator, event, event_data, event_data_stream, None
         )
-
         output_module.WriteFieldValues(output_mediator, field_values)
 
         event_body = test_file_object.getvalue()
@@ -134,9 +130,7 @@ class KMLOutputTest(test_lib.OutputModuleTestCase):
             "[Reserved attributes]:",
             "  {data_type} test:output",
             "  {display_name} TSK:/var/log/syslog.1",
-            "  {filename} /var/log/syslog.1",
             "  {hostname} ubuntu",
-            "  {inode} 15",
             "  {username} root",
             "",
             "[Additional attributes]:",
@@ -154,9 +148,7 @@ class KMLOutputTest(test_lib.OutputModuleTestCase):
                 "</Point></Placemark>"
             ),
         ]
-
-        # Compare the output as list of lines which makes it easier to spot
-        # differences.
+        # Compare the output as list of lines which makes it easier to spot differences.
         self.assertEqual(event_body.split("\n"), expected_event_body_lines)
 
     def testWriteFooter(self):
@@ -185,7 +177,6 @@ class KMLOutputTest(test_lib.OutputModuleTestCase):
             '<?xml version="1.0" encoding="utf-8"?>'
             '<kml xmlns="http://www.opengis.net/kml/2.2"><Document>'
         )
-
         header = test_file_object.getvalue()
         self.assertEqual(header, expected_header)
 

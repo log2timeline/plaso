@@ -19,7 +19,7 @@ class MacOSAppFirewallLogEventData(events.EventData):
       added_time (dfdatetime.DateTimeValues): date and time the log entry
           was added.
       agent (str): agent that save the log.
-      computer_name (str): name of the computer.
+      hostname (str): hostname.
       process_name (str): name of the entity that tried to do the action.
       status (str): saved status action.
     """
@@ -32,7 +32,7 @@ class MacOSAppFirewallLogEventData(events.EventData):
         self.action = None
         self.added_time = None
         self.agent = None
-        self.computer_name = None
+        self.hostname = None
         self.process_name = None
         self.status = None
 
@@ -89,7 +89,7 @@ class MacOSAppFirewallTextPlugin(
 
     _LOG_LINE_START = (
         _DATE_TIME.set_results_name("date_time")
-        + pyparsing.Word(pyparsing.printables).set_results_name("computer_name")
+        + pyparsing.Word(pyparsing.printables).set_results_name("hostname")
         + _AGENT.set_results_name("agent")
     )
 
@@ -159,9 +159,7 @@ class MacOSAppFirewallTextPlugin(
         event_data.action = self._GetValueFromStructure(structure, "action")
         event_data.added_time = self._ParseTimeElements(time_elements_structure)
         event_data.agent = self._GetValueFromStructure(structure, "agent")
-        event_data.computer_name = self._GetValueFromStructure(
-            structure, "computer_name"
-        )
+        event_data.hostname = self._GetValueFromStructure(structure, "hostname")
         event_data.process_name = self._GetStringValueFromStructure(
             structure, "process_name"
         )

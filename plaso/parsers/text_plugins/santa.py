@@ -72,7 +72,7 @@ class SantaExecutionEventData(events.EventData):
       process_path (str): process file path.
       reason (str): reason behind Santa decision to execute or block a process.
       uid (str): user identifier associated with the executed process.
-      user (str): user name associated with the executed process.
+      username (str): username associated with the executed process.
     """
 
     DATA_TYPE = "santa:execution"
@@ -98,7 +98,7 @@ class SantaExecutionEventData(events.EventData):
         self.quarantine_url = None
         self.reason = None
         self.uid = None
-        self.user = None
+        self.username = None
 
 
 class SantaFileSystemEventData(events.EventData):
@@ -120,7 +120,7 @@ class SantaFileSystemEventData(events.EventData):
       process_path (str): process file path.
       process (str): process name.
       uid (str): user identifier associated with the executed process.
-      user (str): user name associated with the executed process.
+      username (str): username associated with the executed process.
     """
 
     DATA_TYPE = "santa:file_system_event"
@@ -140,7 +140,7 @@ class SantaFileSystemEventData(events.EventData):
         self.process = None
         self.process_path = None
         self.uid = None
-        self.user = None
+        self.username = None
 
 
 class SantaProcessExitEventData(events.EventData):
@@ -316,7 +316,9 @@ class SantaTextPlugin(interface.TextPlugin):
 
     _UID = pyparsing.Suppress("|uid=") + _SKIP_TO_SEPARATOR.set_results_name("uid")
 
-    _USER = pyparsing.Suppress("|user=") + _SKIP_TO_SEPARATOR.set_results_name("user")
+    _USER = pyparsing.Suppress("|user=") + _SKIP_TO_SEPARATOR.set_results_name(
+        "username"
+    )
 
     _VOLUME = pyparsing.Suppress("|volume=") + _SKIP_TO_SEPARATOR.set_results_name(
         "volume"
@@ -490,7 +492,7 @@ class SantaTextPlugin(interface.TextPlugin):
             event_data.process_path = self._GetValueFromStructure(structure, "path")
             event_data.reason = self._GetValueFromStructure(structure, "reason")
             event_data.uid = self._GetValueFromStructure(structure, "uid")
-            event_data.user = self._GetValueFromStructure(structure, "user")
+            event_data.username = self._GetValueFromStructure(structure, "username")
 
         if key == "process_exit_line":
             event_data = SantaProcessExitEventData()
@@ -522,7 +524,7 @@ class SantaTextPlugin(interface.TextPlugin):
                 structure, "processpath"
             )
             event_data.uid = self._GetValueFromStructure(structure, "uid")
-            event_data.user = self._GetValueFromStructure(structure, "user")
+            event_data.username = self._GetValueFromStructure(structure, "username")
 
         elif key == "unmount_line":
             event_data = SantaMountEventData()
@@ -570,7 +572,6 @@ class SantaTextPlugin(interface.TextPlugin):
             year, month, day_of_month, hours, minutes, seconds, milliseconds = (
                 time_elements_structure
             )
-
             # Ensure time_elements_tuple is not a pyparsing.ParseResults otherwise
             # copy.deepcopy() of the dfDateTime object will fail on Python 3.8 with:
             # "TypeError: 'str' object is not callable" due to pyparsing.ParseResults
@@ -585,7 +586,6 @@ class SantaTextPlugin(interface.TextPlugin):
                 seconds,
                 milliseconds,
             )
-
             return dfdatetime_time_elements.TimeElementsInMilliseconds(
                 time_elements_tuple=time_elements_tuple
             )

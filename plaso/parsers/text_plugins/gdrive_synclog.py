@@ -14,11 +14,9 @@ class GoogleDriveSyncLogEventData(events.EventData):
     """Google Drive Sync log event data.
 
     Attributes:
-      added_time (dfdatetime.DateTimeValues): date and time the log entry
-          was added.
-      level (str): logging level of event such as "DEBUG", "WARN", "INFO" and
-          "ERROR".
-      message (str): log message.
+      added_time (dfdatetime.DateTimeValues): date and time the log entry was added.
+      level (str): logging level of event such as "DEBUG", "WARN", "INFO" and "ERROR".
+      message_body (str): message body.
       process_identifier (int): process identifier of process which logged event.
       source_code (str): filename:line_number of source file which logged event.
       thread (str): colon-separated thread identifier in the form "ID:name"
@@ -32,7 +30,7 @@ class GoogleDriveSyncLogEventData(events.EventData):
         super().__init__(data_type=self.DATA_TYPE)
         self.added_time = None
         self.level = None
-        self.message = None
+        self.message_body = None
         self.process_identifier = None
         self.source_code = None
         self.thread = None
@@ -80,7 +78,9 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPluginWithLineContinuation):
     )
 
     _LOG_LINE = (
-        _LOG_LINE_START + pyparsing.restOfLine().set_results_name("body") + _END_OF_LINE
+        _LOG_LINE_START
+        + pyparsing.restOfLine().set_results_name("message_body")
+        + _END_OF_LINE
     )
 
     _LINE_STRUCTURES = [("log_line", _LOG_LINE)]
@@ -109,7 +109,7 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPluginWithLineContinuation):
               and other components, such as storage and dfVFS.
         """
         if self._event_data:
-            self._event_data.message = " ".join(self._body_lines)
+            self._event_data.message_body = " ".join(self._body_lines)
             self._body_lines = None
 
             parser_mediator.ProduceEventData(self._event_data)
@@ -124,8 +124,9 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPluginWithLineContinuation):
         """
         time_elements_structure = self._GetValueFromStructure(structure, "date_time")
 
-        body = self._GetValueFromStructure(structure, "body", default_value="")
-        body = body.strip()
+        message_body = self._GetValueFromStructure(
+            structure, "message_body", default_value=""
+        ).strip()
 
         event_data = GoogleDriveSyncLogEventData()
         event_data.added_time = self._ParseTimeElements(time_elements_structure)
@@ -137,7 +138,7 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPluginWithLineContinuation):
         event_data.source_code = self._GetValueFromStructure(structure, "source_code")
 
         self._event_data = event_data
-        self._body_lines = [body]
+        self._body_lines = [message_body]
 
     def _ParseRecord(self, parser_mediator, key, structure):
         """Parses a pyparsing structure.
@@ -152,12 +153,12 @@ class GoogleDriveSyncLogTextPlugin(interface.TextPluginWithLineContinuation):
           ParseError: if the structure cannot be parsed.
         """
         if key == "_line_continuation":
-            body = structure.replace("\n", " ").strip()
-            self._body_lines.append(body)
+            message_body = structure.replace("\n", " ").strip()
+            self._body_lines.append(message_body)
 
         else:
             if self._event_data:
-                self._event_data.message = " ".join(self._body_lines)
+                self._event_data.message_body = " ".join(self._body_lines)
 
                 parser_mediator.ProduceEventData(self._event_data)
 

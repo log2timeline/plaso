@@ -17,8 +17,11 @@ class EventDataAttributeContainersSchemaValidator:
 
     _ALLOWED_OVERRIDES = frozenset(
         [
-            # Used in l2tcsv, but is always 2.
-            "version",
+            "filename",
+            "inode",
+            "hostname",
+            "username",
+            "values",
         ]
     )
 
@@ -124,6 +127,12 @@ class EventDataAttributeContainersSchemaValidator:
                 logging.warning(f"Unable to inspect: {cls.__name__:s}")
                 continue
 
+            if cls.__name__ in (
+                "L2TCSVFieldFormattingHelper",
+                "TLNFieldFormattingHelper",
+            ):
+                continue
+
             # pylint: disable=protected-access
             for name in helper._FIELD_FORMAT_CALLBACKS.keys():
                 if name not in self._ALLOWED_OVERRIDES:
@@ -152,6 +161,25 @@ def Main():
 
     reserved_names = validator.GetReservedNames(formatting_helpers)
 
+    # Names preferable not to be used.
+    reserved_names.update(
+        [
+            "body",
+            "computer_name",
+            "desc",
+            "displayname",
+            "event",
+            "event_data",
+            "event_datetime",
+            "file",
+            "file_name",
+            "host",
+            "host_name",
+            "log_line",
+            "user",
+            "user_name",
+        ]
+    )
     attribute_containers = validator.GetAttributeContainers()
     if not attribute_containers:
         print("Unable to determine event data attribute containers")

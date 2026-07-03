@@ -92,7 +92,6 @@ class AtlassianBitbucketTextPluginTest(test_lib.TextPluginTestCase):
         storage_writer = self._ParseTextFileWithPlugin(
             ["atlassian-bitbucket.log"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -109,22 +108,21 @@ class AtlassianBitbucketTextPluginTest(test_lib.TextPluginTestCase):
         self.assertEqual(number_of_warnings, 0)
 
         expected_event_values = {
-            "body": (
-                "Repository 0030-8a2a778e2d97e278f541-5 has been created and "
-                "configured successfully"
-            ),
             "data_type": "atlassian:bitbucket:line",
             "ip_address": "10.229.31.195",
             "level": "INFO",
             "logger_class": "c.a.b.m.r.DefaultRepositoryManager",
+            "message_body": (
+                "Repository 0030-8a2a778e2d97e278f541-5 has been created and "
+                "configured successfully"
+            ),
             "request_action": "TransactionService/Transact",
             "request_identifier": "2CM38K4Fx339x113x2",
             "session_identifier": "@5XDWX5x339x568x0,4SJOMSOBx339x40x2",
             "thread": "tx:thread-2",
-            "user_name": "admin",
+            "username": "admin",
             "written_time": "2022-04-12T05:39:57.408",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 

@@ -48,15 +48,15 @@ class USBStorPlugin(test_lib.RegistryPluginTestCase):
 
         expected_event_values = {
             "data_type": "windows:registry:usbstor:instance",
+            "device_display_name": "HP v100w USB Device",
             "device_last_arrival_time": None,
             "device_last_removal_time": None,
             "device_type": "Disk",
-            "display_name": "HP v100w USB Device",
             "driver_first_installation_time": "2011-04-01T04:52:38.6860000+00:00",
             "driver_last_installation_time": "2011-04-01T04:52:38.6860000+00:00",
             "firmware_time": None,
             "key_path": (
-                f"{key_path:s}\\Disk&Ven_HP&Prod_v100w&Rev_1024\\" f"AA951D0000007252&0"
+                f"{key_path:s}\\Disk&Ven_HP&Prod_v100w&Rev_1024\\AA951D0000007252&0"
             ),
             "product": "Prod_v100w",
             "revision": "Rev_1024",

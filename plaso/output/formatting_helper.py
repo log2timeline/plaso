@@ -106,7 +106,6 @@ class FieldFormattingHelper:
                 year, month, day_of_month, hours, minutes, seconds = (
                     date_time.GetDateWithTimeOfDay()
                 )
-
                 try:
                     datetime_object = datetime.datetime(
                         year,
@@ -117,11 +116,9 @@ class FieldFormattingHelper:
                         seconds,
                         tzinfo=pytz.UTC,
                     )
-
                     datetime_object = datetime_object.astimezone(
                         output_mediator.time_zone
                     )
-
                     isoformat_string = datetime_object.isoformat()
                     iso8601_string = "".join(
                         [
@@ -140,7 +137,6 @@ class FieldFormattingHelper:
                 timestamp, fraction_of_second = (
                     event.date_time.CopyToPosixTimestampWithFractionOfSecond()
                 )
-
                 timestamp = (timestamp or 0) * 1000000
 
                 if fraction_of_second:
@@ -176,15 +172,12 @@ class FieldFormattingHelper:
 
             except (OSError, OverflowError, TypeError, ValueError) as exception:
                 iso8601_string = "0000-00-00T00:00:00.000000+00:00"
-                self._ReportEventError(
-                    event,
-                    event_data,
-                    (
-                        f"unable to copy timestamp: {event.timestamp!s} to a human "
-                        f"readable date and time with error: {exception!s}. Defaulting "
-                        f'to: "{iso8601_string:s}"'
-                    ),
+                message = (
+                    f"unable to copy timestamp: {event.timestamp!s} to a human "
+                    f"readable date and time with error: {exception!s}. Defaulting to: "
+                    f'"{iso8601_string:s}"'
                 )
+                self._ReportEventError(event, event_data, message)
 
         return iso8601_string
 
@@ -231,7 +224,7 @@ class FieldFormattingHelper:
           str: filename field.
         """
         filename = getattr(event_data, "filename", None)
-        if not filename:
+        if not filename and output_mediator.use_fallback_path_spec:
             path_spec = getattr(event_data_stream, "path_spec", None)
             if path_spec:
                 filename = output_mediator.GetRelativePathForPathSpec(path_spec)
@@ -271,7 +264,7 @@ class FieldFormattingHelper:
         inode = getattr(event_data, "inode", None)
 
         # Note that inode can contain 0.
-        if inode is None:
+        if inode is None and output_mediator.use_fallback_path_spec:
             path_specification = getattr(event_data_stream, "path_spec", None)
             if path_specification:
                 if path_specification.type_indicator in (
@@ -467,7 +460,6 @@ class FieldFormattingHelper:
                 datetime_object = datetime.datetime(
                     year, month, day_of_month, hours, minutes, seconds, tzinfo=pytz.UTC
                 )
-
                 datetime_object = datetime_object.astimezone(output_mediator.time_zone)
 
                 hours, minutes, seconds = (
@@ -475,7 +467,6 @@ class FieldFormattingHelper:
                     datetime_object.minute,
                     datetime_object.second,
                 )
-
             except (OSError, OverflowError, TypeError, ValueError):
                 hours, minutes, seconds = (None, None, None)
 
@@ -484,11 +475,8 @@ class FieldFormattingHelper:
                 f"unable to copy timestamp: {event.timestamp!s} to a human readable "
                 f'time. Defaulting to: "--:--:--"'
             )
-            self._ReportEventError(
-                event,
-                event_data,
-                message,
-            )
+            self._ReportEventError(event, event_data, message)
+
             return "--:--:--"
 
         return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
@@ -521,7 +509,6 @@ class FieldFormattingHelper:
         year, month, day_of_month, hours, minutes, seconds = (
             date_time.GetDateWithTimeOfDay()
         )
-
         try:
             # For tzname to work the datetime object must be naive (without
             # a time zone).
@@ -535,11 +522,8 @@ class FieldFormattingHelper:
                 f"unable to copy timestamp: {event.timestamp!s} to a human readable "
                 f'time zone. Defaulting to: "-"'
             )
-            self._ReportEventError(
-                event,
-                event_data,
-                message,
-            )
+            self._ReportEventError(event, event_data, message)
+
             return "-"
 
     def _FormatUsername(self, output_mediator, event, event_data, event_data_stream):
@@ -558,7 +542,7 @@ class FieldFormattingHelper:
         return output_mediator.GetUsername(event_data)
 
     def _FormatValues(self, output_mediator, event, event_data, event_data_stream):
-        """Formats a values.
+        """Formats values.
 
         Args:
           output_mediator (OutputMediator): mediates interactions between output

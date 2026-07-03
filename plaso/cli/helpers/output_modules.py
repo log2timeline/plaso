@@ -19,12 +19,12 @@ class OutputModulesArgumentsHelper(interface.ArgumentsHelper):
     def AddArguments(cls, argument_group):
         """Adds command line arguments to an argument group.
 
-        This function takes an argument parser or an argument group object and adds
-        to it all the command line arguments this helper supports.
+        This function takes an argument parser or an argument group object and adds to
+        it all the command line arguments this helper supports.
 
         Args:
-          argument_group (argparse._ArgumentGroup|argparse.ArgumentParser):
-              argparse group.
+          argument_group (argparse._ArgumentGroup|argparse.ArgumentParser): argparse
+              group.
         """
         argument_group.add_argument(
             "-o",
@@ -34,11 +34,10 @@ class OutputModulesArgumentsHelper(interface.ArgumentsHelper):
             dest="output_format",
             default="dynamic",
             help=(
-                'The output format. Use "-o list" to see a list of available '
-                "output formats."
+                'The output format. Use "-o list" to see a list of available output '
+                "formats."
             ),
         )
-
         argument_group.add_argument(
             "-w",
             "--write",
@@ -46,7 +45,6 @@ class OutputModulesArgumentsHelper(interface.ArgumentsHelper):
             dest="write",
             help="Output filename.",
         )
-
         # TODO: determine if this is repeated elsewhere and refactor this into
         # a helper function.
         arguments = sys.argv[1:]
@@ -80,8 +78,8 @@ class OutputModulesArgumentsHelper(interface.ArgumentsHelper):
 
         Raises:
           BadConfigObject: when the configuration object is of the wrong type.
-          BadConfigOption: when the output format is not supported or the output
-              is not provided or already exists.
+          BadConfigOption: when the output format is not supported or the output is not
+              provided or already exists.
         """
         if not isinstance(configuration_object, tools.CLITool):
             raise errors.BadConfigObject(

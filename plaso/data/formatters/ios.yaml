@@ -111,14 +111,14 @@ data_type: 'ios:instagram:message'
 message:
 - 'Sender Identifier: {sender_identifier}'
 - 'Username: {username}'
-- 'Message: {message}'
+- 'Message: {message_body}'
 - 'Video Chat Identifier: {video_chat_call_identifier}'
 - 'Video Chat Title: {video_chat_title}'
 - 'Shared Media Identifier: {shared_media_identifier}'
 - 'Shared Media URL: {shared_media_url}'
 short_message:
 - 'Username: {username}'
-- 'Message: {message}'
+- 'Message: {message_body}'
 short_source: 'Instagram iOS'
 source: 'Instagram iOS threads'
 ---
@@ -150,12 +150,12 @@ enumeration_helpers:
     4: 'message to group'
 message:
 - 'Username: {username}'
-- 'Displayname: {displayname}'
+- 'Display name: {application_display_name}'
 - 'Status: {message_status}'
 - 'Type: {message_type}'
-- 'Message: {body}'
+- 'Message: {message_body}'
 short_message:
-- '{body}'
+- '{message_body}'
 short_source: 'Kik iOS'
 source: 'Kik iOS messages'
 ---
@@ -163,9 +163,9 @@ type: 'conditional'
 data_type: 'ios:lockdownd_log:entry'
 message:
 - 'Process identifer: {process_identifier}'
-- 'Body: {body}'
+- 'Message: {message_body}'
 short_message:
-- 'Body: {body}'
+- 'Message: {message_body}'
 short_source: 'LOG'
 source: 'iOS lockdown daemon log'
 ---
@@ -276,9 +276,9 @@ type: 'conditional'
 data_type: 'ios:sysdiag_log:entry'
 message:
 - 'Originating call: {originating_call}'
-- 'Body: {body}'
+- 'Message: {message_body}'
 short_message:
-- 'Body: {body}'
+- 'Message: {message_body}'
 short_source: 'LOG'
 source: 'iOS sysdiag log'
 ---
@@ -286,9 +286,9 @@ type: 'conditional'
 data_type: 'ios:sysdiagnose:logd:line'
 message:
 - 'Logger: {logger}'
-- 'Body: {body}'
+- 'Message: {message_body}'
 short_message:
-- 'Body: {body}'
+- 'Message: {message_body}'
 short_source: 'LOG'
 source: 'iOS sysdiagnose log'
 ---

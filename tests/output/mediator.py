@@ -70,7 +70,35 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
             _, event_data, _ = containers_test_lib.CreateEventFromValues(
                 self._TEST_EVENTS[0]
             )
+            hostname = output_mediator.GetHostname(event_data)
+            self.assertEqual(hostname, "ubuntu")
 
+            event_data.hostname = None
+
+            hostname = output_mediator.GetHostname(event_data)
+            self.assertEqual(hostname, "-")
+
+        finally:
+            storage_writer.Close()
+
+    def testGetHostnameWithFallback(self):
+        """Tests the GetHostname function with pre-processing fallback."""
+        system_configuration = artifacts.SystemConfigurationArtifact()
+        system_configuration.hostname = artifacts.HostnameArtifact(name="myhost")
+
+        storage_writer = fake_writer.FakeStorageWriter()
+        storage_writer.Open()
+
+        try:
+            storage_writer.AddAttributeContainer(system_configuration)
+
+            output_mediator = mediator.OutputMediator(
+                storage_writer,
+                use_fallback_hostname=True,
+            )
+            _, event_data, _ = containers_test_lib.CreateEventFromValues(
+                self._TEST_EVENTS[0]
+            )
             hostname = output_mediator.GetHostname(event_data)
             self.assertEqual(hostname, "ubuntu")
 
@@ -113,7 +141,6 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
             user_directory="C:\\Users\\testuser1",
             username="testuser1",
         )
-
         storage_writer = fake_writer.FakeStorageWriter()
         storage_writer.Open()
 
@@ -125,7 +152,6 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
             _, event_data, _ = containers_test_lib.CreateEventFromValues(
                 self._TEST_EVENTS[0]
             )
-
             username = output_mediator.GetUsername(event_data)
             self.assertEqual(username, "root")
 

@@ -62,7 +62,6 @@ UserAccount:        SYSTEM"""
         storage_writer = self._ParseTextFileWithPlugin(
             ["teamviewer", "TeamViewer15_Logfile.log"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -79,20 +78,20 @@ UserAccount:        SYSTEM"""
         self.assertEqual(number_of_warnings, 0)
 
         expected_event_values_multi_line = {
-            "body": self._TEST_BODY,
+            "data_type": "teamviewer:application_log:entry",
+            "message_body": self._TEST_BODY,
             "process_identifier": 2136,
             "recorded_time": "2024-02-16T06:05:19.561+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 17)
         self.CheckEventData(event_data, expected_event_values_multi_line)
 
         expected_event_values_single_line = {
-            "body": "MDV2: IsDeviceManagementEnabled: mdv2: 1 management: 1",
+            "data_type": "teamviewer:application_log:entry",
+            "message_body": "MDV2: IsDeviceManagementEnabled: mdv2: 1 management: 1",
             "process_identifier": 5276,
             "recorded_time": "2024-02-16T06:18:36.370+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1012)
         self.CheckEventData(event_data, expected_event_values_single_line)
 
@@ -106,7 +105,6 @@ class TeamViewerConnectionsIncomingLogTextPluginTest(test_lib.TextPluginTestCase
         storage_writer = self._ParseTextFileWithPlugin(
             ["teamviewer", "connections_incoming.txt"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -124,15 +122,14 @@ class TeamViewerConnectionsIncomingLogTextPluginTest(test_lib.TextPluginTestCase
 
         expected_event_values = {
             "activity_type": "RemoteControl",
+            "connection_display_name": "TestUserRedacted",
             "connection_identifier": "{b3a4df33-d027-44d5-b50f-4e61115494d4}",
             "data_type": "teamviewer:connections_incoming:entry",
-            "display_name": "TestUserRedacted",
             "end_time": "2024-02-16T14:18:36+00:00",
             "local_account": "IEUser",
             "source_identifier": 1660360496,
             "start_time": "2024-02-16T14:16:32+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -146,7 +143,6 @@ class TeamViewerConnectionsOutgoingLogTextPluginTest(test_lib.TextPluginTestCase
         storage_writer = self._ParseTextFileWithPlugin(
             ["teamviewer", "Connections.txt"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -171,7 +167,6 @@ class TeamViewerConnectionsOutgoingLogTextPluginTest(test_lib.TextPluginTestCase
             "local_account": "IEUser",
             "start_time": "2024-02-20T13:10:33+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

@@ -337,16 +337,13 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
 
         except Exception as exception:  # pylint: disable=broad-except
             parser_mediator.ProduceExtractionWarning(
-                (f"unable to process path specification with error: " f"{exception!s}"),
+                (f"unable to process path specification with error: {exception!s}"),
                 path_spec=path_spec,
             )
-
             if self._processing_configuration.debug_output:
                 logger.warning(
-                    (
-                        f"Unhandled exception while processing path specification: "
-                        f"{self._current_display_name:s}."
-                    )
+                    f"Unhandled exception while processing path specification: "
+                    f"{self._current_display_name:s}."
                 )
                 logger.exception(exception)
 

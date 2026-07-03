@@ -17,7 +17,6 @@ class FilesByGooglePluginTest(test_lib.SQLitePluginTestCase):
         storage_writer = self._ParseDatabaseFileWithPlugin(
             ["files_master_database"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -34,8 +33,9 @@ class FilesByGooglePluginTest(test_lib.SQLitePluginTestCase):
         self.assertEqual(number_of_warnings, 0)
 
         expected_event_values = {
-            "file_name": "PXL_20220816_213228168.MP.jpg",
+            "data_type": "android:files_by_google:record",
             "file_size": 5274656,
+            "filename": "PXL_20220816_213228168.MP.jpg",
             "is_hidden": 0,
             "media_type": 1,
             "mime_type": "image/jpeg",
@@ -46,7 +46,6 @@ class FilesByGooglePluginTest(test_lib.SQLitePluginTestCase):
             "title": "PXL_20220816_213228168.MP",
             "uri": "content://media/external/file/1000000019",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

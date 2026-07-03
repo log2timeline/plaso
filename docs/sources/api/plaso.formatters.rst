@@ -68,6 +68,14 @@ plaso.formatters.manager module
    :show-inheritance:
    :undoc-members:
 
+plaso.formatters.msie\_zones module
+-----------------------------------
+
+.. automodule:: plaso.formatters.msie_zones
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 plaso.formatters.msiecf module
 ------------------------------
 

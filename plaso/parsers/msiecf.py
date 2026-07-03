@@ -172,17 +172,15 @@ class MSIECFParser(interface.FileObjectParser):
             except UnicodeDecodeError:
                 decode_error = True
                 cache_directory_name = cache_directory_name.decode(
-                    "ascii", errors="replace"
+                    "ascii", errors="backslashreplace"
                 )
 
             cache_directories.append(cache_directory_name)
 
         if decode_error:
             parser_mediator.ProduceExtractionWarning(
-                (
-                    "unable to decode cache directory names. Characters that cannot "
-                    'be decoded will be replaced with "?" or "\\ufffd".'
-                )
+                "unable to decode cache directory names as ASCII. Unsupported code "
+                "points are escaped."
             )
 
         for item_index in range(0, msiecf_file.number_of_items):
@@ -303,8 +301,8 @@ class MSIECFParser(interface.FileObjectParser):
                     except UnicodeDecodeError:
                         warning_message = (
                             f"unable to decode HTTP headers of URL record at offset: "
-                            f"0x{msiecf_item.offset:08x}. Characters that cannot be "
-                            f'decoded will be replaced with "?" or "\\ufffd".'
+                            f"0x{msiecf_item.offset:08x} as ASCII. Unsupported code "
+                            f"points are escaped."
                         )
                         if recovered:
                             parser_mediator.ProduceRecoveryWarning(warning_message)
@@ -312,7 +310,7 @@ class MSIECFParser(interface.FileObjectParser):
                             parser_mediator.ProduceExtractionWarning(warning_message)
 
                         http_headers = msiecf_item.data[:-1].decode(
-                            "ascii", errors="replace"
+                            "ascii", errors="backslashreplace"
                         )
 
             # TODO: parse data of other URL item type like history which requires

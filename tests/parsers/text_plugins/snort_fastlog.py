@@ -19,14 +19,12 @@ class SnortFastLogTextPluginTest(test_lib.TextPluginTestCase):
         plugin = snort_fastlog.SnortFastLogTextPlugin()
 
         file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
-        file_system_builder.AddFile(
-            "/file.txt",
-            (
-                b'12/28-12:55:38.765402 [**] [1:366:11] "PROTOCOL-ICMP PING '
-                b'Unix" [**] [Priority: 3] {ICMP} 2001:df1:c200:c:0:0:0:35 -> '
-                b"2001:4860:4860:0:0:0:0:8888\n"
-            ),
+        data = (
+            b'12/28-12:55:38.765402 [**] [1:366:11] "PROTOCOL-ICMP PING '
+            b'Unix" [**] [Priority: 3] {ICMP} 2001:df1:c200:c:0:0:0:35 -> '
+            b"2001:4860:4860:0:0:0:0:8888\n"
         )
+        file_system_builder.AddFile("/file.txt", data)
 
         file_entry = file_system_builder.file_system.GetFileEntryByPath("/file.txt")
 
@@ -40,13 +38,11 @@ class SnortFastLogTextPluginTest(test_lib.TextPluginTestCase):
 
         # Check non-matching format.
         file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
-        file_system_builder.AddFile(
-            "/file.txt",
-            (
-                b"Jan 22 07:52:33 myhostname.myhost.com client[30840]: INFO No new "
-                b"content in image.dd.\n"
-            ),
+        data = (
+            b"Jan 22 07:52:33 myhostname.myhost.com client[30840]: INFO No new "
+            b"content in image.dd.\n"
         )
+        file_system_builder.AddFile("/file.txt", data)
 
         file_entry = file_system_builder.file_system.GetFileEntryByPath("/file.txt")
 
@@ -64,7 +60,6 @@ class SnortFastLogTextPluginTest(test_lib.TextPluginTestCase):
         storage_writer = self._ParseTextFileWithPlugin(
             ["snort3_alert_fast.log"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -84,14 +79,13 @@ class SnortFastLogTextPluginTest(test_lib.TextPluginTestCase):
             "classification": None,
             "data_type": "snort:fastlog:alert",
             "destination_ip": "2001:4860:4860:0:0:0:0:8888",
-            "message": "PROTOCOL-ICMP PING Unix",
+            "message_body": "PROTOCOL-ICMP PING Unix",
             "last_written_time": "0000-12-28T12:55:38.765402",
             "priority": 3,
             "protocol": "ICMP",
             "rule_identifier": "1:366:11",
             "source_ip": "2001:df1:c200:c:0:0:0:35",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -101,7 +95,6 @@ class SnortFastLogTextPluginTest(test_lib.TextPluginTestCase):
         storage_writer = self._ParseTextFileWithPlugin(
             ["suricata_alert_fast.log"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -123,9 +116,9 @@ class SnortFastLogTextPluginTest(test_lib.TextPluginTestCase):
             "destination_ip": "192.168.1.4",
             "destination_port": 56068,
             "last_written_time": "2010-05-10T10:08:59.667372",
-            "message": (
-                "ET WEB_CLIENT ACTIVEX iDefense COMRaider ActiveX Control "
-                "Arbitrary File Deletion"
+            "message_body": (
+                "ET WEB_CLIENT ACTIVEX iDefense COMRaider ActiveX Control Arbitrary "
+                "File Deletion"
             ),
             "priority": 3,
             "protocol": "TCP",
@@ -133,7 +126,6 @@ class SnortFastLogTextPluginTest(test_lib.TextPluginTestCase):
             "source_ip": "11.11.232.144",
             "source_port": 80,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

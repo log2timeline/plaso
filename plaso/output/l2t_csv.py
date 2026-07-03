@@ -69,8 +69,7 @@ class L2TCSVEventFormattingHelper(shared_dsv.DSVEventFormattingHelper):
 class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
     """L2T CSV output module field formatting helper."""
 
-    # Maps the name of a fields to a a callback function that formats
-    # the field value.
+    # Maps the name of a fields to a a callback function that formats the field value.
     _FIELD_FORMAT_CALLBACKS = {
         "date": "_FormatDate",
         "desc": "_FormatMessage",
@@ -120,8 +119,8 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
         ]
     )
 
-    # The field format callback methods require specific arguments hence
-    # the check for unused arguments is disabled here.
+    # The field format callback methods require specific arguments hence the check for
+    # unused arguments is disabled here.
     # pylint: disable=unused-argument
 
     def _FormatDate(self, output_mediator, event, event_data, event_data_stream):
@@ -231,12 +230,12 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
 
             # Some parsers have written bytes values to storage.
             if isinstance(attribute_value, bytes):
-                attribute_value = attribute_value.decode("utf-8", "replace")
                 logger.warning(
-                    f'Found bytes value for attribute "{attribute_name:s}" for '
-                    f"data type: {event_data.data_type!s}. Value was converted to "
-                    f'UTF-8: "{attribute_value:s}"'
+                    f"Found bytes value for attribute '{attribute_name:s}' for "
+                    f"data type: {event_data.data_type!s}. Unsupported UTF-8 code "
+                    f"points are escaped."
                 )
+                attribute_value = attribute_value.decode("utf-8", "backslashreplace")
 
             # With ! in {name!s} we force a string conversion since some of the extra
             # attributes values can be integer, float point or boolean values.

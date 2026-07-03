@@ -17,12 +17,12 @@ class ASLEventData(events.EventData):
     """Apple System Log (ASL) event data.
 
     Attributes:
-      computer_name (str): name of the host.
       extra_information (str): extra fields associated to the event.
       facility (str): facility.
       group_identifier (int): group identifier (GID).
+      hostname (str): hostname.
       level (str): level of criticality of the event.
-      message (str): message of the event.
+      message_body (str): message body.
       message_identifier (int): message identifier.
       process_identifier (int): process identifier (PID).
       read_group_identifier (int): the group identifier that can read this file,
@@ -40,12 +40,12 @@ class ASLEventData(events.EventData):
     def __init__(self):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
-        self.computer_name = None
         self.extra_information = None
         self.facility = None
         self.group_identifier = None
+        self.hostname = None
         self.level = None
-        self.message = None
+        self.message_body = None
         self.message_identifier = None
         self.process_identifier = None
         self.read_group_identifier = None
@@ -115,14 +115,6 @@ class ASLParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
                 f"with error: {exception!s}"
             )
 
-        hostname = self._ParseRecordString(file_object, record.hostname_string_offset)
-
-        sender = self._ParseRecordString(file_object, record.sender_string_offset)
-
-        facility = self._ParseRecordString(file_object, record.facility_string_offset)
-
-        message = self._ParseRecordString(file_object, record.message_string_offset)
-
         file_offset = record_offset + record_data_size
         additional_data_size = record.data_size + 6 - record_data_size
 
@@ -156,25 +148,32 @@ class ASLParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         ) + record.written_time_nanoseconds
 
         event_data = ASLEventData()
-        event_data.computer_name = hostname
         event_data.extra_information = ", ".join(
             [f"{name:s}: {value!s}" for name, value in sorted(extra_fields.items())]
         )
-        event_data.facility = facility
+        event_data.facility = self._ParseRecordString(
+            file_object, record.facility_string_offset
+        )
         event_data.group_identifier = record.group_identifier
+        event_data.hostname = self._ParseRecordString(
+            file_object, record.hostname_string_offset
+        )
         event_data.level = record.alert_level
-        event_data.message = message
+        event_data.message_body = self._ParseRecordString(
+            file_object, record.message_string_offset
+        )
         event_data.message_identifier = record.message_identifier
         event_data.process_identifier = record.process_identifier
         event_data.read_group_identifier = record.read_group_identifier
         event_data.read_user_identifier = record.read_user_identifier
         event_data.record_position = record_offset
-        event_data.sender = sender
+        event_data.sender = self._ParseRecordString(
+            file_object, record.sender_string_offset
+        )
         event_data.user_identifier = record.user_identifier
         event_data.written_time = dfdatetime_posix_time.PosixTimeInNanoseconds(
             timestamp=timestamp
         )
-
         parser_mediator.ProduceEventData(event_data)
 
         return record.next_record_offset

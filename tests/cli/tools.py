@@ -248,13 +248,12 @@ class FileObjectInputReaderTest(unittest.TestCase):
 
         # UTF-8 string with non-ASCII characters.
         string = input_reader.Read()
-        self.assertEqual(string, "\ufffd\ufffdri\ufffd\ufffdja string\n")
+        self.assertEqual(string, "\\xc3\\xberi\\xc3\\xb0ja string\n")
 
         # UTF-16 string with non-ASCII characters.
         string = input_reader.Read()
         expected_string = (
-            "\ufffd\ufffdf\x00j\x00\ufffd\x00r\x00\ufffd\x00a\x00 "
-            "\x00b\x00a\x00n\x00d\x00"
+            "\\xff\\xfef\x00j\x00\\xf3\x00r\x00\\xf0\x00a\x00 \x00b\x00a\x00n\x00d\x00"
         )
         self.assertEqual(string, expected_string)
 
@@ -276,8 +275,7 @@ class FileObjectInputReaderTest(unittest.TestCase):
         # UTF-16 string with non-ASCII characters.
         string = input_reader.Read()
         expected_string = (
-            "\ufffd\ufffdf\x00j\x00\ufffd\x00r\x00\ufffd\x00a\x00 "
-            "\x00b\x00a\x00n\x00d\x00"
+            "\\xff\\xfef\x00j\x00\\xf3\x00r\x00\\xf0\x00a\x00 \x00b\x00a\x00n\x00d\x00"
         )
         self.assertEqual(string, expected_string)
 
@@ -337,7 +335,7 @@ class FileObjectOutputWriterTest(unittest.TestCase):
         output_writer.Write("þriðja string\n")
 
         byte_stream = self._ReadOutput(file_object)
-        self.assertEqual(byte_stream, b"?ri?ja string\n")
+        self.assertEqual(byte_stream, b"\\xferi\\xf0ja string\n")
 
     def testWriteUtf8(self):
         """Tests the Write function with UTF-8 encoding."""

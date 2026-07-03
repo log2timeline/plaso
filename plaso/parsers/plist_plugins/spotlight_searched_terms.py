@@ -16,7 +16,7 @@ class SpotlightSearchedTermsEventData(events.EventData):
     """Spotlight searched terms event data.
 
     Attributes:
-      display_name (str): display name.
+      application_display_name (str): display name.
       last_used_time (dfdatetime.DateTimeValues): last date and time the search
           term was last used.
       path (str): path.
@@ -28,7 +28,7 @@ class SpotlightSearchedTermsEventData(events.EventData):
     def __init__(self):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
-        self.display_name = None
+        self.application_display_name = None
         self.last_used_time = None
         self.path = None
         self.search_term = None
@@ -58,7 +58,7 @@ class SpotlightSearchedTermsPlistPlugin(interface.PlistPlugin):
         shortcuts = match.get("UserShortcuts", {})
         for search_term, plist_key in shortcuts.items():
             event_data = SpotlightSearchedTermsEventData()
-            event_data.display_name = plist_key.get("DISPLAY_NAME")
+            event_data.application_display_name = plist_key.get("DISPLAY_NAME")
             event_data.last_used_time = self._GetDateTimeValueFromPlistKey(
                 plist_key, "LAST_USED"
             )

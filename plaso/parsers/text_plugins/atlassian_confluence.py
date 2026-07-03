@@ -18,10 +18,10 @@ class AtlassianConfluenceEventData(events.EventData):
     """Confluence event data.
 
     Attributes:
-      body (str): the freeform body of the log line.
       level (str): the logging level of the event.
       logger_class (str): the Confluence class responsible for logging.
       logger_method (str): name of the method within the class.
+      message_body (str): message body.
       thread (str): the Confluence thread from which the log event originated.
       written_time (dfdatetime.DateTimeValues): entry written date and time.
     """
@@ -31,10 +31,10 @@ class AtlassianConfluenceEventData(events.EventData):
     def __init__(self):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
-        self.body = None
         self.level = None
         self.logger_class = None
         self.logger_method = None
+        self.message_body = None
         self.thread = None
         self.written_time = None
 
@@ -107,7 +107,7 @@ class AtlassianConfluenceTextPlugin(interface.TextPlugin):
 
     # Log message body - rest of line
     _CONFLUENCE_LOG_MESSAGE = pyparsing.SkipTo(pyparsing.LineEnd()).set_results_name(
-        "body"
+        "message_body"
     )
 
     # Complete log line structure
@@ -144,16 +144,17 @@ class AtlassianConfluenceTextPlugin(interface.TextPlugin):
 
         time_elements_structure = self._GetValueFromStructure(structure, "date_time")
 
+        message_body = self._GetValueFromStructure(
+            structure, "message_body", default_value=""
+        ).strip()
+
         event_data = AtlassianConfluenceEventData()
-        event_data.body = (
-            self._GetValueFromStructure(structure, "body", default_value="").strip()
-            or None
-        )
         event_data.level = self._GetValueFromStructure(structure, "level")
         event_data.logger_class = self._GetValueFromStructure(structure, "logger_class")
         event_data.logger_method = self._GetValueFromStructure(
             structure, "logger_method"
         )
+        event_data.message_body = message_body or None
         event_data.thread = self._GetValueFromStructure(structure, "thread")
         event_data.written_time = self._ParseTimeElements(time_elements_structure)
 
@@ -177,7 +178,6 @@ class AtlassianConfluenceTextPlugin(interface.TextPlugin):
             date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
                 time_elements_tuple=time_elements_structure
             )
-
             date_time.is_local_time = True
 
             return date_time

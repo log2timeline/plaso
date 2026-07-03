@@ -36,8 +36,8 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
         # Check a page visited entry.
         expected_event_values = {
             "data_type": "firefox:places:page_visited",
-            "host": "news.google.com",
             "last_visited_time": "2011-07-01T11:16:21.371935+00:00",
+            "hostname": "news.google.com",
             "title": "Google News",
             "url": "http://news.google.com/",
             "visit_count": 1,
@@ -51,7 +51,7 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
             "added_time": "2011-07-01T11:13:59.266344+00:00",
             "bookmark_type": 1,
             "data_type": "firefox:places:bookmark",
-            "host": None,
+            "hostname": None,
             "modification_time": "2011-07-01T11:13:59.267198+00:00",
             "offset": 6,
             "places_title": (
@@ -116,7 +116,7 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
         expected_event_values = {
             "data_type": "firefox:places:page_visited",
             "last_visited_time": "2013-10-30T21:57:11.281942+00:00",
-            "host": "code.google.com",
+            "hostname": "code.google.com",
             "url": "http://code.google.com/p/plaso",
             "visit_count": 1,
             "visit_type": 2,

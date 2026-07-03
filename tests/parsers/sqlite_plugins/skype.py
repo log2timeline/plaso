@@ -40,25 +40,24 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
             "title": "European Competitor | need to know if you got it..",
             "to_account": "european.bbq.competitor",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 
         # Test account entry.
         expected_event_values = {
+            "account_display_name": None,
             "authentication_request_time": None,
             "authentication_request_sent_time": None,
             "country": "us",
             "data_type": "skype:event:account",
             "email": "genberinger@gmail.com",
+            "fullname": "Gen Beringer",
             "last_online_time": None,
             "last_used_time": None,
             "mood_change_time": None,
             "offset": 1,
             "profile_change_time": "2013-07-30T21:22:08+00:00",
-            "username": "Gen Beringer <None>",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 15)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -72,7 +71,6 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
                 "pay it... ;)"
             ),
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 16)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -81,13 +79,14 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
             "accept_time": None,
             "data_type": "skype:event:transferfile",
             "end_time": None,
-            "destination": "european.bbq.competitor <European BBQ>",
-            "source": "gen.beringer <Gen Beringer>",
+            "receiver": "european.bbq.competitor",
+            "receiver_display_name": "European BBQ",
+            "sender": "gen.beringer",
+            "sender_display_name": "Gen Beringer",
             "start_time": "2013-10-24T21:49:32+00:00",
             "transfer_status": 2,
             "transferred_filename": "secret-project.pdf",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 17)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -102,7 +101,6 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
             "user_start_call": False,
             "video_conference": False,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 19)
         self.CheckEventData(event_data, expected_event_values)
 

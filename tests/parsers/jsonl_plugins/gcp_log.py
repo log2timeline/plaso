@@ -42,7 +42,7 @@ class GCPLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
             "log_name": (
                 "projects/fake-project/logs/cloudaudit.googleapis.com%2Factivity"
             ),
-            "message": None,
+            "message_body": None,
             "policy_deltas": None,
             "recorded_time": "2021-10-19T02:57:47.339377+00:00",
             "request_account_identifier": None,
@@ -63,7 +63,6 @@ class GCPLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
             "text_payload": None,
             "user_agent": "UserAgent",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -93,7 +92,7 @@ class GCPLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
                 "projects/fake-project/logs/cloudaudit.googleapis.com%2Factivity"
             ),
             "method_name": "beta.compute.instances.insert",
-            "message": None,
+            "message_body": None,
             "permissions": [
                 "compute.instances.create",
                 "compute.disks.create",
@@ -134,14 +133,12 @@ class GCPLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
             "severity": "NOTICE",
             "source_images": ["projects/fake-project/global/images/fake-source-image"],
             "status_code": None,
-            "status_message": None,
             "text_payload": None,
             "user_agent": (
                 "fake-user-agent-string command/gcloud.compute.instances.insert"
                 " invocation-id/a1b2c3d4e5f6 environment/GCE"
             ),
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 9)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -168,7 +165,10 @@ class GCPLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
             "log_name": (
                 "projects/ketchup/logs/cloudaudit.googleapis.com%2F" "activity"
             ),
-            "message": None,
+            "message_body": (
+                'Permission "iam.serviceAccounts.create" denied on resource (or it may '
+                "not exist)."
+            ),
             "method_name": "google.iam.admin.v1.CreateServiceAccount",
             "permissions": ["iam.serviceAccounts.create"],
             "policy_deltas": None,
@@ -199,15 +199,10 @@ class GCPLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
             "severity": "ERROR",
             "source_images": None,
             "status_code": "7",
-            "status_message": (
-                'Permission "iam.serviceAccounts.create" denied on'
-                " resource (or it may not exist)."
-            ),
             "status_reasons": ["IAM_PERMISSION_DENIED"],
             "text_payload": None,
             "user_agent": "(gzip),gzip(gfe)",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 10)
         self.CheckEventData(event_data, expected_event_values)
 

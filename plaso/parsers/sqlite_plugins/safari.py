@@ -11,7 +11,6 @@ class SafariHistoryPageVisitedEventData(events.EventData):
     """Safari history event data.
 
     Attributes:
-      host (str): hostname of the server.
       last_visited_time (dfdatetime.DateTimeValues): date and time the URL was
           last visited.
       offset (str): identifier of the row, from which the event data was
@@ -29,7 +28,6 @@ class SafariHistoryPageVisitedEventData(events.EventData):
     def __init__(self):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
-        self.host = None
         self.last_visited_time = None
         self.offset = None
         self.query = None

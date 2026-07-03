@@ -22,7 +22,7 @@ class FirefoxCookieEventData(events.EventData):
           expires.
       httponly (bool): True if the cookie cannot be accessed through client
           side script.
-      host (str): hostname of host that set the cookie value.
+      hostname (str): name of the host or domain the cookie is tied to.
       offset (str): identifier of the row, from which the event data was
           extracted.
       path (str): URI of the page that set the cookie.
@@ -41,7 +41,7 @@ class FirefoxCookieEventData(events.EventData):
         self.creation_time = None
         self.data = None
         self.expiration_time = None
-        self.host = None
+        self.hostname = None
         self.httponly = None
         self.offset = None
         self.path = None
@@ -111,7 +111,7 @@ class BaseFirefoxCookiePlugin(
             query_hash, row, "creationTime"
         )
         event_data.data = cookie_data
-        event_data.host = hostname
+        event_data.hostname = hostname
         event_data.httponly = bool(self._GetRowValue(query_hash, row, "isHttpOnly"))
         event_data.offset = self._GetRowValue(query_hash, row, "id")
         event_data.path = path

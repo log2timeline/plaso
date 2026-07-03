@@ -19,12 +19,12 @@ class UtmpEventData(events.EventData):
       exit_status (int): exit status.
       hostname (str): hostname or IP address.
       ip_address (str): IP address from the connection.
+      login_type (int): login type.
       offset (int): offset of the utmp record relative to the start of the file,
           from which the event data was extracted.
       pid (int): process identifier (PID).
       terminal_identifier (int): inittab identifier.
       terminal (str): type of terminal.
-      type (int): type of login.
       username (str): user name.
       written_time (dfdatetime.DateTimeValues): entry written date and time.
     """
@@ -37,11 +37,11 @@ class UtmpEventData(events.EventData):
         self.exit_status = None
         self.hostname = None
         self.ip_address = None
+        self.login_type = None
         self.offset = None
         self.pid = None
         self.terminal_identifier = None
         self.terminal = None
-        self.type = None
         self.username = None
         self.written_time = None
 
@@ -104,14 +104,12 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
             )
         except (ValueError, errors.ParseError) as exception:
             raise errors.ParseError(
-                (
-                    f"Unable to parse utmp entry at offset: 0x{file_offset:08x} with "
-                    f"error: {exception!s}."
-                )
+                f"Unable to parse utmp entry at offset: 0x{file_offset:08x} with "
+                f"error: {exception!s}."
             )
 
-        if entry.type not in self._SUPPORTED_TYPES:
-            raise errors.ParseError(f"Unsupported type: {entry.type:d}")
+        if entry.login_type not in self._SUPPORTED_TYPES:
+            raise errors.ParseError(f"Unsupported login type: {entry.login_type:d}")
 
         code_page = parser_mediator.GetCodePage()
 
@@ -150,22 +148,20 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         timestamp = entry.microseconds + (
             entry.timestamp * definitions.MICROSECONDS_PER_SECOND
         )
-
         # TODO: add termination status.
         event_data = UtmpEventData()
         event_data.hostname = hostname
         event_data.exit_status = entry.exit_status
         event_data.ip_address = ip_address
+        event_data.login_type = entry.login_type
         event_data.offset = file_offset
         event_data.pid = entry.pid
         event_data.terminal = terminal or None
         event_data.terminal_identifier = entry.terminal_identifier
-        event_data.type = entry.type
         event_data.username = username or None
         event_data.written_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
             timestamp=timestamp
         )
-
         return event_data, warning_strings
 
     def _IsValidEntry(self, entry):
@@ -181,7 +177,7 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         Returns:
           bool: True if the record is a plausible utmp record.
         """
-        if entry.type < 0 or entry.type > self._MAXIMUM_VALIDATION_TYPE:
+        if entry.login_type < 0 or entry.login_type > self._MAXIMUM_VALIDATION_TYPE:
             return False
 
         if (
@@ -192,7 +188,7 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
         # A non-empty record is expected to identify a terminal.
         if (
-            entry.type != 0
+            entry.login_type != 0
             and not entry.terminal_identifier
             and not entry.terminal.split(b"\x00")[0]
         ):
@@ -229,7 +225,7 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
             except (ValueError, errors.ParseError):
                 continue
 
-            if entry.type != 0 and self._IsValidEntry(entry):
+            if entry.login_type != 0 and self._IsValidEntry(entry):
                 count += 1
 
         return count

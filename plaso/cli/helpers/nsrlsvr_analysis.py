@@ -45,7 +45,6 @@ class NsrlsvrAnalysisArgumentsHelper(interface.ArgumentsHelper):
                 f"{cls._DEFAULT_HASH:s}. Supported options: {supported_hashes:s}"
             ),
         )
-
         argument_group.add_argument(
             "--nsrlsvr-host",
             "--nsrlsvr_host",
@@ -59,7 +58,6 @@ class NsrlsvrAnalysisArgumentsHelper(interface.ArgumentsHelper):
                 f"default is: {cls._DEFAULT_HOST:s}"
             ),
         )
-
         argument_group.add_argument(
             "--nsrlsvr-label",
             "--nsrlsvr_label",
@@ -68,11 +66,8 @@ class NsrlsvrAnalysisArgumentsHelper(interface.ArgumentsHelper):
             action="store",
             default=cls._DEFAULT_LABEL,
             metavar="LABEL",
-            help=(
-                f"Label to apply to events, the default is: " f"{cls._DEFAULT_LABEL:s}."
-            ),
+            help=f"Label to apply to events, the default is: {cls._DEFAULT_LABEL:s}.",
         )
-
         argument_group.add_argument(
             "--nsrlsvr-port",
             "--nsrlsvr_port",

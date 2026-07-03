@@ -19,7 +19,6 @@ class SpotlightSearchedTermsPlistPluginTest(test_lib.PlistPluginTestCase):
         storage_writer = self._ParsePlistFileWithPlugin(
             plugin, [plist_name], plist_name
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -36,13 +35,12 @@ class SpotlightSearchedTermsPlistPluginTest(test_lib.PlistPluginTestCase):
         self.assertEqual(number_of_warnings, 0)
 
         expected_event_values = {
+            "application_display_name": "Grab",
             "data_type": "spotlight_searched_terms:entry",
-            "display_name": "Grab",
             "last_used_time": "2013-12-23T18:21:41.900938+00:00",
             "path": "/Applications/Utilities/Grab.app",
             "search_term": "gr",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 8)
         self.CheckEventData(event_data, expected_event_values)
 

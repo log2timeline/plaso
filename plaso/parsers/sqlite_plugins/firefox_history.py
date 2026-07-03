@@ -12,7 +12,7 @@ class FirefoxPlacesBookmarkEventData(events.EventData):
       added_time (dfdatetime.DateTimeValues): date and time the bookmark was
           added.
       bookmark_type (int): bookmark type.
-      host (str): visited hostname.
+      hostname (str): name of the visited host or domain.
       modification_time (dfdatetime.DateTimeValues): date and time the bookmark
           was last modified.
       offset (str): identifier of the row, from which the event data was
@@ -31,7 +31,7 @@ class FirefoxPlacesBookmarkEventData(events.EventData):
         super().__init__(data_type=self.DATA_TYPE)
         self.added_time = None
         self.bookmark_type = None
-        self.host = None
+        self.hostname = None
         self.modification_time = None
         self.offset = None
         self.places_title = None
@@ -103,7 +103,7 @@ class FirefoxPlacesPageVisitedEventData(events.EventData):
     Attributes:
       from_visit (str): URL that referred to the visited page.
       hidden (str): value to indicated if the URL was hidden.
-      host (str): visited hostname.
+      hostname (str): name of the visited host or domain.
       last_visited_time (dfdatetime.DateTimeValues): date and time the URL was
           last visited.
       offset (str): identifier of the row, from which the event data was
@@ -123,7 +123,7 @@ class FirefoxPlacesPageVisitedEventData(events.EventData):
         super().__init__(data_type=self.DATA_TYPE)
         self.from_visit = None
         self.hidden = None
-        self.host = None
+        self.hostname = None
         self.last_visited_time = None
         self.offset = None
         self.query = None
@@ -348,38 +348,36 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
             cache.CacheQueryResults(result_set, "url", "id", ("url", "rev_host"))
             url_cache_results = cache.GetResults("url")
 
-        url, reverse_host = url_cache_results.get(url_id, ["", ""])
+        url, reversed_hostname = url_cache_results.get(url_id, ["", ""])
 
         if not url:
             return ""
 
-        hostname = self._ReverseHostname(reverse_host)
+        hostname = self._ReverseHostname(reversed_hostname)
         return f"{url:s} ({hostname:s})"
 
-    def _ReverseHostname(self, hostname):
+    def _ReverseHostname(self, reversed_hostname):
         """Reverses the hostname and strips the leading dot.
 
-        The hostname entry is reversed:
-          moc.elgoog.www.
-        Should be:
-          www.google.com
+        For example the reversed hostname "moc.elgoog.www." is converted into
+        "www.google.com".
 
         Args:
-          hostname (str): reversed hostname.
+          reversed_hostname (str): reversed hostname.
 
         Returns:
           str: hostname without a leading dot.
         """
-        if not hostname:
+        if not reversed_hostname:
             return ""
 
-        if len(hostname) <= 1:
-            return hostname
+        if len(reversed_hostname) <= 1:
+            return reversed_hostname
 
-        if hostname[-1] == ".":
-            return hostname[::-1][1:]
+        if reversed_hostname[-1] == ".":
+            return reversed_hostname[::-1][1:]
 
-        return hostname[::-1][0:]
+        return reversed_hostname[::-1][0:]
 
     def ParseBookmarkAnnotationRow(self, parser_mediator, query, row, **unused_kwargs):
         """Parses a bookmark annotation row.
@@ -449,7 +447,7 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
             query_hash, row, "dateAdded"
         )
         event_data.bookmark_type = self._GetRowValue(query_hash, row, "type")
-        event_data.host = self._GetRowValue(query_hash, row, "rev_host")
+        event_data.hostname = self._GetRowValue(query_hash, row, "rev_host")
         event_data.modification_time = self._GetPosixTimeInMicrosecondsRowValue(
             query_hash, row, "lastModified"
         )
@@ -481,12 +479,12 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
         if from_visit is not None:
             from_visit = self._GetUrl(from_visit, cache, database)
 
-        rev_host = self._GetRowValue(query_hash, row, "rev_host")
+        reversed_hostname = self._GetRowValue(query_hash, row, "rev_host")
 
         event_data = FirefoxPlacesPageVisitedEventData()
         event_data.from_visit = from_visit
         event_data.hidden = self._GetRowValue(query_hash, row, "hidden")
-        event_data.host = self._ReverseHostname(rev_host)
+        event_data.hostname = self._ReverseHostname(reversed_hostname)
         event_data.last_visited_time = self._GetPosixTimeInMicrosecondsRowValue(
             query_hash, row, "visit_date"
         )

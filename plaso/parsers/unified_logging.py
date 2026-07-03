@@ -1684,9 +1684,7 @@ class SignpostDescriptionAttributeFormatStringDecoder(BaseFormatStringDecoder):
             value, format_string_operator=format_string_operator
         )
 
-        return (
-            f"__##__signpost.description#____#attribute" f"#_##_#{string_value:s}##__##"
-        )
+        return f"__##__signpost.description#____#attribute#_##_#{string_value:s}##__##"
 
 
 class SignpostDescriptionTimeFormatStringDecoder(BaseFormatStringDecoder):
@@ -3497,9 +3495,7 @@ class TraceV3File(BaseUnifiedLoggingFile):
             chunk_data, data_offset, data_type_map
         )
 
-        proc_id = (
-            f"{firehose_header.proc_id_upper:d}@" f"{firehose_header.proc_id_lower:d}"
-        )
+        proc_id = f"{firehose_header.proc_id_upper:d}@{firehose_header.proc_id_lower:d}"
         process_information_entry = self._catalog_process_information_entries.get(
             proc_id
         )
@@ -4213,7 +4209,7 @@ class TraceV3File(BaseUnifiedLoggingFile):
         )
 
         proc_id = (
-            f"{simpledump_chunk.proc_id_upper:d}@" f"{simpledump_chunk.proc_id_lower:d}"
+            f"{simpledump_chunk.proc_id_upper:d}@{simpledump_chunk.proc_id_lower:d}"
         )
         process_information_entry = self._catalog_process_information_entries.get(
             proc_id
@@ -4281,9 +4277,7 @@ class TraceV3File(BaseUnifiedLoggingFile):
             chunk_data, data_offset, data_type_map, context=context
         )
 
-        proc_id = (
-            f"{statedump_chunk.proc_id_upper:d}@" f"{statedump_chunk.proc_id_lower:d}"
-        )
+        proc_id = f"{statedump_chunk.proc_id_upper:d}@{statedump_chunk.proc_id_lower:d}"
         process_information_entry = self._catalog_process_information_entries.get(
             proc_id
         )

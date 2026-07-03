@@ -45,7 +45,7 @@ type: structure
 attributes:
   byte_order: little-endian
 members:
-- name: type
+- name: login_type
   data_type: int32
 - name: pid
   data_type: uint32
@@ -87,7 +87,7 @@ type: structure
 attributes:
   byte_order: little-endian
 members:
-- name: type
+- name: login_type
   data_type: int32
 - name: pid
   data_type: uint32
@@ -141,7 +141,7 @@ members:
   number_of_elements: 32
 - name: pid
   data_type: uint32
-- name: type
+- name: login_type
   data_type: int16
 - name: unknown1
   data_type: int16

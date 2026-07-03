@@ -55,10 +55,9 @@ class SpotlightStoreMetadataItemEventData(events.EventData):
           created (_kMDItemCreationDate).
       downloaded_time (dfdatetime.DateTimeValues): date and time the item was
           downloaded (kMDItemDownloadedDate).
-      file_name (str): name of the corresponding file (system) entry
-          (_kMDItemFileName).
       file_system_identifier (int): file system identifier, for example the
           catalog node identifier (CNID) on HFS.
+      filename (str): name of the corresponding file (system) entry (_kMDItemFileName).
       kind (str): item kind (kMDItemKind).
       modification_time (dfdatetime.DateTimeValues): date and time the item was
           last modified (_kMDItemContentChangeDate).
@@ -86,8 +85,8 @@ class SpotlightStoreMetadataItemEventData(events.EventData):
         self.content_type = None
         self.creation_time = None
         self.downloaded_time = None
-        self.file_name = None
         self.file_system_identifier = None
+        self.filename = None
         self.kind = None
         self.modification_time = None
         self.parent_file_system_identifier = None
@@ -597,7 +596,7 @@ class SpotlightStoreDatabaseParser(
         event_data.downloaded_time = self._GetDateTimeMetadataItemValue(
             metadata_item, "kMDItemDownloadedDate"
         )
-        event_data.file_name = self._GetMetadataItemValue(
+        event_data.filename = self._GetMetadataItemValue(
             metadata_item, "_kMDItemFileName"
         )
         event_data.kind = self._GetMetadataItemValue(metadata_item, "kMDItemKind")
@@ -1007,7 +1006,7 @@ class SpotlightStoreDatabaseParser(
             )
         except dtfabric_errors.MappingError as exception:
             raise errors.ParseError(
-                f"Unable to parse array of byte values with error: " f"{exception!s}"
+                f"Unable to parse array of byte values with error: {exception!s}"
             )
 
         if bytes_read == 0:
@@ -1218,7 +1217,7 @@ class SpotlightStoreDatabaseParser(
             )
         except dtfabric_errors.MappingError as exception:
             raise errors.ParseError(
-                f"Unable to parse array of string values with error: " f"{exception!s}"
+                f"Unable to parse array of string values with error: {exception!s}"
             )
 
         if property_type & 0x03 == 0x03:

@@ -11,11 +11,11 @@ class MacOSApplicationUsageEventData(events.EventData):
     """MacOS application usage event data.
 
     Attributes:
+      activity (str): activity, such as "launch" or "activate".
       application (str): name of the application.
       application_version (str): version of the application.
       bundle_identifier (str): bundle identifier of the application.
       count (int): number of occurances of the event.
-      event (str): event.
       last_used_time (dfdatetime.DateTimeValues): last date and time
           the application was last used.
       query (str): SQL query that was used to obtain the event data.
@@ -26,11 +26,11 @@ class MacOSApplicationUsageEventData(events.EventData):
     def __init__(self):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
+        self.activity = None
         self.application = None
         self.application_version = None
         self.bundle_identifier = None
         self.count = None
-        self.event = None
         self.last_used_time = None
         self.query = None
 
@@ -118,13 +118,13 @@ class MacOSApplicationUsagePlugin(interface.SQLitePlugin):
         query_hash = hash(query)
 
         event_data = MacOSApplicationUsageEventData()
+        event_data.activity = self._GetRowValue(query_hash, row, "event")
         event_data.application = self._GetRowValue(query_hash, row, "app_path")
         event_data.application_version = self._GetRowValue(
             query_hash, row, "app_version"
         )
         event_data.bundle_identifier = self._GetRowValue(query_hash, row, "bundle_id")
         event_data.count = self._GetRowValue(query_hash, row, "number_times")
-        event_data.event = self._GetRowValue(query_hash, row, "event")
         event_data.last_used_time = self._GetDateTimeRowValue(
             query_hash, row, "last_time"
         )

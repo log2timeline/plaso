@@ -33,7 +33,7 @@ message:
 - '[HTTP only] = {httponly}'
 - '[Persistent] = {persistent}'
 short_message:
-- '{host}'
+- '{hostname}'
 - '({cookie_name})'
 short_source: 'WEBHIST'
 source: 'Chrome Cookies'
@@ -239,9 +239,9 @@ source: 'Chrome Preferences'
 type: 'conditional'
 data_type: 'chrome:preferences:extensions_autoupdater'
 message:
-- '{message}'
+- '{message_body}'
 short_message:
-- '{message}'
+- '{message_body}'
 short_source: 'LOG'
 source: 'Chrome Preferences'
 ---
@@ -356,7 +356,7 @@ message:
 - '[HTTP only]: {httponly}'
 - '(GA analysis: {ga_data})'
 short_message:
-- '{host}'
+- '{hostname}'
 - '({cookie_name})'
 short_source: 'WEBHIST'
 source: 'Firefox Cache'
@@ -433,7 +433,7 @@ message:
 - '{url}'
 - '({title})'
 - '[count: {visit_count}]'
-- 'Host: {host}'
+- 'Hostname: {hostname}'
 - 'visited from: {from_visit}'
 - '{url_hidden_string}'
 - '{url_typed_string}'

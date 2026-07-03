@@ -14,7 +14,7 @@ class TeamViewerApplicationEventData(events.EventData):
     """TeamViewer application log event data.
 
     Attributes:
-      body (str): body of the log entry.
+      message_body (str): message body.
       process_identifier (int): process identifier that generated the log entry.
       recorded_time (dfdatetime.DateTimeValues): date and time the log entry
           was recorded.
@@ -25,7 +25,7 @@ class TeamViewerApplicationEventData(events.EventData):
     def __init__(self):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
-        self.body = None
+        self.message_body = None
         self.process_identifier = None
         self.recorded_time = None
 
@@ -36,9 +36,9 @@ class TeamViewerConnectionsIncomingEventData(events.EventData):
     Attributes:
       activity_type (str): Type of the activity, such as RemoteSupport or
           FileTransfer.
+      connection_display_name (string): The display name of the incoming connection
+          source. Usually the computer name or the TeamViewer user name.
       connection_identifier (str): identifier of the connection, contains an UUID.
-      display_name (string): The display name of the incoming connection source.
-          Usually the computer name or the TeamViewer user name.
       end_time (dfdatetime.DateTimeValues): connection end time in UTC.
       local_account (str): The local user account associated with this activity.
       source_identifier (int): TeamViewer identifier of the incoming connection.
@@ -51,8 +51,8 @@ class TeamViewerConnectionsIncomingEventData(events.EventData):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
         self.activity_type = None
+        self.connection_display_name = None
         self.connection_identifier = None
-        self.display_name = None
         self.end_time = None
         self.local_account = None
         self.source_identifier = None
@@ -130,7 +130,7 @@ class TeamViewerApplicationLogTextPlugin(interface.TextPluginWithLineContinuatio
         +
         # Field with unknown purpose.
         pyparsing.Suppress(pyparsing.Word(pyparsing.alphanums + "!"))
-        + pyparsing.restOfLine().set_results_name("body")
+        + pyparsing.restOfLine().set_results_name("message_body")
         + pyparsing.Suppress(pyparsing.LineEnd())
     )
 
@@ -152,7 +152,7 @@ class TeamViewerApplicationLogTextPlugin(interface.TextPluginWithLineContinuatio
               and other components, such as storage and dfVFS.
         """
         if self._event_data:
-            self._event_data.body = "".join(self._body_lines)
+            self._event_data.message_body = "".join(self._body_lines)
             self._body_lines = None
 
             parser_mediator.ProduceEventData(self._event_data)
@@ -173,9 +173,9 @@ class TeamViewerApplicationLogTextPlugin(interface.TextPluginWithLineContinuatio
         )
         event_data.recorded_time = self._ParseTimeElements(time_elements_structure)
 
-        body = self._GetValueFromStructure(structure, "body").strip()
+        message_body = self._GetValueFromStructure(structure, "message_body").strip()
 
-        self._body_lines = [body]
+        self._body_lines = [message_body]
         self._event_data = event_data
 
     def _ParseRecord(self, parser_mediator, key, structure):
@@ -191,12 +191,12 @@ class TeamViewerApplicationLogTextPlugin(interface.TextPluginWithLineContinuatio
           ParseError: if the structure cannot be parsed.
         """
         if key == "_line_continuation":
-            body = structure.strip()
-            self._body_lines.append(body)
+            message_body = structure.strip()
+            self._body_lines.append(message_body)
 
         else:
             if self._event_data:
-                self._event_data.body = "".join(self._body_lines)
+                self._event_data.message_body = "".join(self._body_lines)
                 parser_mediator.ProduceEventData(self._event_data)
 
             self._ParseLogLine(structure)
@@ -505,10 +505,12 @@ class TeamViewerConnectionsIncomingLogTextPlugin(interface.TextPlugin):
         event_data.activity_type = self._GetValueFromStructure(
             structure, "activity_type"
         )
+        event_data.connection_display_name = self._GetValueFromStructure(
+            structure, "display_name"
+        )
         event_data.connection_identifier = self._GetValueFromStructure(
             structure, "connection_identifier"
         )
-        event_data.display_name = self._GetValueFromStructure(structure, "display_name")
         event_data.end_time = self._ParseTimeElements(end_time_elements)
         event_data.local_account = self._GetValueFromStructure(
             structure, "local_account"

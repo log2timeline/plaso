@@ -17,22 +17,19 @@ source: 'APT History Log'
 type: 'conditional'
 data_type: 'linux:dpkg_log:entry'
 message:
-- '{body}'
+- '{message_body}'
 short_message:
-- '{body}'
+- '{message_body}'
 short_source: 'LOG'
 source: 'dpkg log file'
 ---
-# TODO: paths is kept for backwards compatibility
 type: 'conditional'
 data_type: 'linux:locate_database:entry'
 message:
 - 'Folder Path: {path}'
-- 'Folder Paths: {paths}'
 - 'Entries: {entries}'
 short_message:
 - '{path}'
-- '{paths}'
 - '{entries}'
 short_source: 'LOCATE'
 source: 'Locate Database record (updatedb)'
@@ -62,8 +59,8 @@ source: 'Popularity Contest Log'
 type: 'conditional'
 data_type: 'linux:utmp:event'
 enumeration_helpers:
-- input_attribute: 'type'
-  output_attribute: 'status'
+- input_attribute: 'login_type'
+  output_attribute: 'login_type_string'
   default_value: 'UNKNOWN'
   values:
     0: 'EMPTY'
@@ -82,13 +79,13 @@ message:
 - 'Terminal: {terminal}'
 - 'PID: {pid}'
 - 'Terminal identifier: {terminal_identifier}'
-- 'Status: {status}'
+- 'Status: {login_type_string}'
 - 'IP Address: {ip_address}'
 - 'Exit status: {exit_status}'
 short_message:
 - 'User: {username}'
 - 'PID: {pid}'
-- 'Status: {status}'
+- 'Status: {login_type_string}'
 short_source: 'LOG'
 source: 'UTMP session'
 ---
@@ -99,13 +96,13 @@ message:
 - 'audit_type: {audit_type}'
 - ', pid: {pid}'
 - ']'
-- ' {body}'
+- ' {message_body}'
 separator: ''
 short_message:
 - '['
 - 'audit_type: {audit_type}'
 - ', pid: {pid}'
 - ']'
-- ' {body}'
+- ' {message_body}'
 short_source: 'LOG'
 source: 'Audit Log'

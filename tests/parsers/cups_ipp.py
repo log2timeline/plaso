@@ -17,41 +17,8 @@ class CupsIppParserTest(test_lib.ParserTestCase):
 
     # pylint: disable=protected-access
 
-    _ATTRIBUTES_GROUP_DATA = bytes(
-        bytearray(
-            [
-                0x01,
-                0x47,
-                0x00,
-                0x12,
-                0x61,
-                0x74,
-                0x74,
-                0x72,
-                0x69,
-                0x62,
-                0x75,
-                0x74,
-                0x65,
-                0x73,
-                0x2D,
-                0x63,
-                0x68,
-                0x61,
-                0x72,
-                0x73,
-                0x65,
-                0x74,
-                0x00,
-                0x05,
-                0x75,
-                0x74,
-                0x66,
-                0x2D,
-                0x38,
-                0x03,
-            ]
-        )
+    _ATTRIBUTES_GROUP_DATA = bytes.fromhex(
+        "01470012617474726962757465732d6368617273657400057574662d3803"
     )
 
     def _CreateAttributeTestData(self, parser, tag_value, name, value_data):
@@ -209,7 +176,6 @@ class CupsIppParserTest(test_lib.ParserTestCase):
         file_object = self._CreateFileObject(
             "cups_ipp", b"".join([b"\xff", self._ATTRIBUTES_GROUP_DATA[1:]])
         )
-
         with self.assertRaises(errors.ParseError):
             list(parser._ParseAttributesGroup(file_object))
 
@@ -261,12 +227,10 @@ class CupsIppParserTest(test_lib.ParserTestCase):
         test_file_entry = file_system_builder.file_system.GetFileEntryByPathSpec(
             test_path_spec
         )
-
         storage_writer = self._CreateStorageWriter()
         parser_mediator = self._CreateParserMediator(
             storage_writer, file_entry=test_file_entry
         )
-
         parser = cups_ipp.CupsIppParser()
 
         header_data = self._CreateHeaderData(parser)
@@ -319,7 +283,6 @@ class CupsIppParserTest(test_lib.ParserTestCase):
         file_object = self._CreateFileObject(
             "cups_ipp", b"".join([header_data, self._ATTRIBUTES_GROUP_DATA])
         )
-
         parser.ParseFileObject(parser_mediator, file_object)
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
@@ -344,7 +307,6 @@ class CupsIppParserTest(test_lib.ParserTestCase):
         file_object = self._CreateFileObject(
             "cups_ipp", b"".join([header_data, self._ATTRIBUTES_GROUP_DATA[:-1]])
         )
-
         parser.ParseFileObject(parser_mediator, file_object)
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
@@ -367,14 +329,12 @@ class CupsIppParserTest(test_lib.ParserTestCase):
         attribute_data = self._CreateAttributeTestData(
             parser, 0x31, "date-time-at-creation", datetime_data
         )
-
         storage_writer = self._CreateStorageWriter()
         parser_mediator = self._CreateParserMediator(storage_writer)
 
         file_object = self._CreateFileObject(
             "cups_ipp", b"".join([header_data, b"\x01", attribute_data, b"\x03"])
         )
-
         parser.ParseFileObject(parser_mediator, file_object)
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
@@ -415,7 +375,6 @@ class CupsIppParserTest(test_lib.ParserTestCase):
 
         expected_event_values = {
             "application": "LibreOffice",
-            "computer_name": "localhost",
             "copies": 1,
             "creation_time": "2013-11-03T18:07:21+00:00",
             "data_type": "cups:ipp:event",
@@ -423,13 +382,13 @@ class CupsIppParserTest(test_lib.ParserTestCase):
             "end_time": "2013-11-03T18:07:32+00:00",
             "job_id": "urn:uuid:d51116d9-143c-3863-62aa-6ef0202de49a",
             "job_name": "Assignament 1",
+            "hostname": "localhost",
             "owner": "Joaquin Moreno Garijo",
             "printer_id": "RHULBW",
             "start_time": "2013-11-03T18:07:21+00:00",
             "uri": "ipp://localhost:631/printers/RHULBW",
-            "user": "moxilo",
+            "username": "moxilo",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

@@ -357,7 +357,7 @@ place_holder_event: true
 ---
 data_type: 'cri:container:log:entry'
 attribute_mappings:
-- name: 'event_datetime'
+- name: 'written_time'
   description: 'Content Modification Time'
 place_holder_event: true
 ---
@@ -719,6 +719,12 @@ data_type: 'ipod:device:entry'
 attribute_mappings:
 - name: 'last_connected_time'
   description: 'Last Connection Time'
+place_holder_event: true
+---
+data_type: 'ivanti:connect_secure:vc0:record'
+attribute_mappings:
+- name: 'recorded_time'
+  description: 'Recorded Time'
 place_holder_event: true
 ---
 data_type: 'java:download:idx'

@@ -12,7 +12,7 @@ class MacOSLaunchdEventData(events.EventData):
       name (str): name.
       group_name (str): name of the group.
       program (str): program and arguments.
-      user_name (str): name of the user.
+      username (str): username.
     """
 
     DATA_TYPE = "macos:launchd:entry"
@@ -23,7 +23,7 @@ class MacOSLaunchdEventData(events.EventData):
         self.name = None
         self.group_name = None
         self.program = None
-        self.user_name = None
+        self.username = None
 
 
 class MacOSLaunchdPlistPlugin(interface.PlistPlugin):
@@ -97,7 +97,7 @@ class MacOSLaunchdPlistPlugin(interface.PlistPlugin):
         event_data.group_name = top_level.get("GroupName")
         event_data.name = top_level.get("Label")
         event_data.program = program
-        event_data.user_name = top_level.get("UserName")
+        event_data.username = top_level.get("UserName")
 
         parser_mediator.ProduceEventData(event_data)
 
