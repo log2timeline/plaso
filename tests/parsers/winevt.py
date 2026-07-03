@@ -53,11 +53,11 @@ class WinEvtParserTest(test_lib.ParserTestCase):
 
         expected_event_values = {
             "creation_time": "2011-07-27T06:41:47+00:00",
-            "computer_name": "WKS-WINXP32BIT",
             "data_type": "windows:evt:record",
             "event_category": 3,
             "event_identifier": 40961,
             "event_type": 2,
+            "hostname": "WKS-WINXP32BIT",
             "record_number": 1392,
             "severity": 2,
             "source_name": "LSASRV",

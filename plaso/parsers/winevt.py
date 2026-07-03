@@ -16,11 +16,11 @@ class WinEvtRecordEventData(events.EventData):
     Attributes:
       creation_time (dfdatetime.DateTimeValues): event record creation date
           and time.
-      computer_name (str): computer name stored in the event record.
       event_category (int): event category.
       event_identifier (int): event identifier.
       event_type (int): event type.
       facility (int): event facility.
+      hostname (str): hostname or computer name stored in the event record.
       message_identifier (int): event message identifier.
       offset (int): offset of the event record relative to the start of the file,
           from which the event data was extracted.
@@ -40,11 +40,11 @@ class WinEvtRecordEventData(events.EventData):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
         self.creation_time = None
-        self.computer_name = None
         self.event_category = None
         self.event_identifier = None
         self.event_type = None
         self.facility = None
+        self.hostname = None
         self.message_identifier = None
         self.offset = None
         self.record_number = None
@@ -132,8 +132,8 @@ class WinEvtParser(interface.FileObjectParser):
         event_data.source_name = evt_record.source_name
 
         # Computer name is the value stored in the event record and does not
-        # necessarily correspond with the actual hostname.
-        event_data.computer_name = evt_record.computer_name
+        # necessarily correspond with the systems hostname.
+        event_data.hostname = evt_record.computer_name
         event_data.user_sid = evt_record.user_security_identifier
 
         event_data.strings = list(evt_record.strings)

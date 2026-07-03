@@ -24,7 +24,6 @@ class SymantecEventData(events.EventData):
       cleaninfo (str): clean information.
       client_group (str): client group.
       compressed (str): compressed.
-      computer (str): computer.
       definfo (str): definfo.
       def_sequence_number (str): def sequence number.
       deleteinfo (str): delete information.
@@ -33,12 +32,13 @@ class SymantecEventData(events.EventData):
       domain_identifier (str): domain identifier (GUID).
       domain_name (str): domain name.
       error_code (str): error code.
-      event_data (str): event data.
-      event (str): event.
+      event_code (str): event code.
+      event_fields (list[str]): event fields.
       extra (str): extra.
-      file (str): file.
+      file_path (str): file path.
       flags (str): flags.
       group_identifier (str): group identifier.
+      hostname (str): hostname of computer name.
       identifier (str): identifier (GUID).
       last_written_time (dfdatetime.DateTimeValues): entry last written date and time.
       license_expiration_date (str): license expiration date.
@@ -92,7 +92,6 @@ class SymantecEventData(events.EventData):
         self.cleaninfo = None
         self.client_group = None
         self.compressed = None
-        self.computer = None
         self.definfo = None
         self.def_sequence_number = None
         self.deleteinfo = None
@@ -101,12 +100,13 @@ class SymantecEventData(events.EventData):
         self.domain_identifier = None
         self.domain_name = None
         self.error_code = None
-        self.event_data = None
-        self.event = None
+        self.event_code = None
+        self.event_fields = None
         self.extra = None
-        self.file = None
+        self.file_path = None
         self.flags = None
         self.group_identifier = None
+        self.hostname = None
         self.identifier = None
         self.last_written_time = None
         self.license_expiration_date = None
@@ -151,13 +151,13 @@ class SymantecParser(dsv_parser.DSVParser):
 
     COLUMNS = [
         "timestamp",
-        "event",
+        "event_code",
         "category",
         "logger",
-        "computer",
+        "hostname",
         "username",
         "virus",
-        "file",
+        "file_path",
         "action1",
         "action2",
         "action0",
@@ -167,7 +167,7 @@ class SymantecParser(dsv_parser.DSVParser):
         "scan_identifier",
         "new_ext",
         "group_identifier",
-        "event_data",
+        "event_fields",
         "vbin_identifier",
         "virus_identifier",
         "quarfwd_status",
@@ -188,7 +188,7 @@ class SymantecParser(dsv_parser.DSVParser):
         "domain_name",
         "ntdomain",
         "mac_address",
-        "version:",
+        "version",
         "remote_machine",
         "remote_ip_address",
         "action1_status",
@@ -285,7 +285,6 @@ class SymantecParser(dsv_parser.DSVParser):
         event_data.cleaninfo = self._GetRowValue(row, "cleaninfo")
         event_data.client_group = self._GetRowValue(row, "client_group")
         event_data.compressed = self._GetRowValue(row, "compressed")
-        event_data.computer = self._GetRowValue(row, "computer")
         event_data.definfo = self._GetRowValue(row, "definfo")
         event_data.def_sequence_number = self._GetRowValue(row, "def_sequence_number")
         event_data.deleteinfo = self._GetRowValue(row, "deleteinfo")
@@ -294,12 +293,13 @@ class SymantecParser(dsv_parser.DSVParser):
         event_data.domain_identifier = self._GetRowValue(row, "domain_identifier")
         event_data.domain_name = self._GetRowValue(row, "domain_name")
         event_data.error_code = self._GetRowValue(row, "error_code")
-        event_data.event_data = self._GetRowValue(row, "event_data")
-        event_data.event = self._GetRowValue(row, "event")
+        event_data.event_code = self._GetRowValue(row, "event_code")
+        event_data.event_fields = row["event_fields"].split("\t") or None
         event_data.extra = self._GetRowValue(row, "extra")
-        event_data.file = self._GetRowValue(row, "file")
+        event_data.file_path = self._GetRowValue(row, "file_path")
         event_data.flags = self._GetRowValue(row, "flags")
         event_data.group_identifier = self._GetRowValue(row, "group_identifier")
+        event_data.hostname = self._GetRowValue(row, "hostname")
         event_data.identifier = self._GetRowValue(row, "identifier")
         event_data.last_written_time = self._ParseTimestamp(timestamp)
         event_data.license_expiration_date = self._GetRowValue(
@@ -342,7 +342,7 @@ class SymantecParser(dsv_parser.DSVParser):
         event_data.vbin_session_identifier = self._GetRowValue(
             row, "vbin_session_identifier"
         )
-        event_data.version = self._GetRowValue(row, "version:")
+        event_data.version = self._GetRowValue(row, "version")
         event_data.virus_identifier = self._GetRowValue(row, "virus_identifier")
         event_data.virus = self._GetRowValue(row, "virus")
         event_data.virustype = self._GetRowValue(row, "virustype")
@@ -368,11 +368,11 @@ class SymantecParser(dsv_parser.DSVParser):
             return False
 
         try:
-            my_event = int(row["event"], 10)
+            event_code = int(row["event_code"], 10)
         except (TypeError, ValueError):
             return False
 
-        if my_event < 1 or my_event > 77:
+        if event_code < 1 or event_code > 77:
             return False
 
         try:

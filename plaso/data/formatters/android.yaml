@@ -117,13 +117,13 @@ enumeration_helpers:
 message:
 - 'File root path: {root_path}'
 - 'File root relative path: {root_relative_path}'
-- 'File name: {file_name}'
+- 'Filename: {filename}'
 - 'Media type: {media_type}'
 - 'Mime type: {mime_type}'
 - 'File visibility: {is_hidden}'
 short_message:
 - 'File root relative path: {root_relative_path}'
-- 'File name: {file_name}'
+- 'Filename: {filename}'
 - 'Mime type: {mime_type}'
 - 'File visibility: {is_hidden}'
 separator: ', '

@@ -62,11 +62,11 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
 
         expected_event_values = {
             "creation_time": "2010-11-21T03:55:59.6264271+00:00",
-            "computer_name": "37L4247F27-26",
             "data_type": "windows:evtx:record",
             "event_identifier": 7036,
             "event_level": 4,
             "event_version": 0,
+            "hostname": "37L4247F27-26",
             "message_identifier": 1073748860,
             "provider_identifier": "{555908d1-a6d7-4695-8e1e-26931d2012f4}",
             "record_number": 1,

@@ -17,7 +17,6 @@ class MacOSApplicationUsagePluginTest(test_lib.SQLitePluginTestCase):
         storage_writer = self._ParseDatabaseFileWithPlugin(
             ["application_usage.sqlite"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -34,15 +33,14 @@ class MacOSApplicationUsagePluginTest(test_lib.SQLitePluginTestCase):
         self.assertEqual(number_of_warnings, 0)
 
         expected_event_values = {
+            "activity": "launch",
             "application": "/Applications/Safari.app",
             "application_version": "9537.75.14",
             "bundle_identifier": "com.apple.Safari",
             "count": 1,
             "data_type": "macos:application_usage:entry",
-            "event": "launch",
             "last_used_time": "2014-05-07T18:52:02+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

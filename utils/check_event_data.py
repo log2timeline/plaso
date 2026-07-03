@@ -165,8 +165,11 @@ def Main():
     reserved_names.update(
         [
             "body",
+            "computer_name",
             "desc",
             "displayname",
+            "event",
+            "event_data",
             "event_datetime",
             "file",
             "file_name",

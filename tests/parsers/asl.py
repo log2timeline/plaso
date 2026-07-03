@@ -236,7 +236,6 @@ class ASLParserTest(test_lib.ParserTestCase):
         # Note that "compatiblity" is spelt incorrectly in the actual message being
         # tested here.
         expected_event_values = {
-            "computer_name": "DarkTemplar-2.local",
             "data_type": "macos:asl:entry",
             "extra_information": (
                 "CFLog Local Time: 2013-11-25 09:45:35.701, "
@@ -245,6 +244,7 @@ class ASLParserTest(test_lib.ParserTestCase):
             ),
             "facility": "com.apple.locationd",
             "group_identifier": 205,
+            "hostname": "DarkTemplar-2.local",
             "level": 4,
             "message_body": (
                 "Incorrect NSStringEncoding value 0x8000100 detected. "
@@ -265,7 +265,6 @@ class ASLParserTest(test_lib.ParserTestCase):
 
         # Check a second event data to ensure record strings are parsed correctly.
         expected_event_values = {
-            "computer_name": "DarkTemplar-2.local",
             "data_type": "macos:asl:entry",
             "extra_information": (
                 "CFLog Local Time: 2013-11-25 17:12:43.537, "
@@ -274,6 +273,7 @@ class ASLParserTest(test_lib.ParserTestCase):
             ),
             "facility": "com.apple.locationd",
             "group_identifier": 205,
+            "hostname": "DarkTemplar-2.local",
             "level": 4,
             "message_body": (
                 "Incorrect NSStringEncoding value 0x8000100 detected. "
