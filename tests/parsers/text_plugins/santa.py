@@ -92,7 +92,7 @@ class SantaTextPluginTest(test_lib.TextPluginTestCase):
                 "/System/Library/CoreServices/Finder.app/Contents/MacOS/Finder"
             ),
             "uid": "501",
-            "user": "qwerty",
+            "username": "qwerty",
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 142)
         self.CheckEventData(event_data, expected_event_values)
@@ -150,7 +150,7 @@ class SantaTextPluginTest(test_lib.TextPluginTestCase):
             "process": "newsyslog",
             "process_path": "/usr/sbin/newsyslog",
             "uid": "0",
-            "user": "root",
+            "username": "root",
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 3)
         self.CheckEventData(event_data, expected_event_values)
@@ -185,7 +185,7 @@ class SantaTextPluginTest(test_lib.TextPluginTestCase):
             "process": "newsyslog",
             "process_path": "/usr/sbin/newsyslog",
             "uid": "0",
-            "user": "root",
+            "username": "root",
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 4)
         self.CheckEventData(event_data, expected_event_values)
@@ -217,7 +217,7 @@ class SantaTextPluginTest(test_lib.TextPluginTestCase):
             "process_path": "/usr/libexec/xpcproxy",
             "reason": "BINARY",
             "uid": "0",
-            "user": "root",
+            "username": "root",
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 6)
         self.CheckEventData(event_data, expected_event_values)

@@ -13,8 +13,7 @@ from plaso.formatters import yaml_formatters_file
 from plaso.lib import errors
 from plaso.output import manager as output_manager
 
-# TODO: pass argument_parser instead of argument_group and add groups
-# in mix-ins.
+# TODO: pass argument_parser instead of argument_group and add groups in mix-ins.
 
 
 class AnalysisPluginOptions:
@@ -37,7 +36,6 @@ class AnalysisPluginOptions:
         analysis_plugins = analysis_manager.AnalysisPluginManager.GetPluginObjects(
             self._analysis_plugins
         )
-
         for analysis_plugin in analysis_plugins.values():
             helpers_manager.ArgumentHelperManager.ParseOptions(options, analysis_plugin)
 
@@ -48,8 +46,8 @@ class AnalysisPluginOptions:
         analysis_plugin_info = (
             analysis_manager.AnalysisPluginManager.GetAllPluginInformation()
         )
-
         column_width = 10
+
         for name, _, _ in analysis_plugin_info:
             column_width = max(column_width, len(name))
 
@@ -61,6 +59,7 @@ class AnalysisPluginOptions:
         # TODO: add support for a 3 column table.
         for name, description, type_string in analysis_plugin_info:
             table_view.AddRow([name, f"{description:s} [{type_string:s}]"])
+
         table_view.Write(self._output_writer)
 
 
@@ -84,9 +83,9 @@ class HashersOptions:
             column_names=["Name", "Description"],
             title="Hashers",
         )
-
         for name, description in sorted(hashers_information):
             table_view.AddRow([name, description])
+
         table_view.Write(self._output_writer)
 
 
@@ -132,12 +131,10 @@ class OutputModuleOptions:
         """
         if self._output_format in self._DEPRECATED_OUTPUT_FORMATS:
             self._PrintUserWarning(
-                (
-                    f"the output format: {self._output_format:s} has significant "
-                    f"limitations such as second-only date and time values and/or "
-                    f"a limited predefined set of output fields. It is strongly "
-                    f"recommend to use an alternative output format like: dynamic."
-                )
+                f"the output format: {self._output_format:s} has significant "
+                f"limitations such as second-only date and time values and/or "
+                f"a limited predefined set of output fields. It is strongly "
+                f"recommend to use an alternative output format like: dynamic."
             )
 
         try:
@@ -174,17 +171,14 @@ class OutputModuleOptions:
         if missing_parameters and self._unattended_mode:
             parameters_string = ", ".join(missing_parameters)
             raise errors.BadConfigOption(
-                (
-                    f"Unable to create output module missing parameters: "
-                    f"{parameters_string:s}"
-                )
+                f"Unable to create output module missing parameters: "
+                f"{parameters_string:s}"
             )
 
         while missing_parameters:
             self._PromptUserForMissingOutputModuleParameters(
                 options, missing_parameters
             )
-
             helpers_manager.ArgumentHelperManager.ParseOptions(options, output_module)
             missing_parameters = output_module.GetMissingArguments()
 
@@ -192,20 +186,16 @@ class OutputModuleOptions:
             output_module.SetAdditionalFields(self._output_additional_fields)
         elif self._output_additional_fields:
             self._PrintUserWarning(
-                (
-                    f"output module: {self._output_format:s} does not support "
-                    f"additional fields"
-                )
+                f"output module: {self._output_format:s} does not support "
+                f"additional fields"
             )
 
         if output_module.SUPPORTS_CUSTOM_FIELDS:
             output_module.SetCustomFields(self._output_custom_fields)
         elif self._output_custom_fields:
             self._PrintUserWarning(
-                (
-                    f"output module: {self._output_format:s} does not support "
-                    f"custom fields"
-                )
+                f"output module: {self._output_format:s} does not support "
+                f"custom fields"
             )
 
         return output_module
@@ -250,13 +240,10 @@ class OutputModuleOptions:
         custom_formatters_path = self.ParseStringOption(
             options, "custom_formatter_definitions_path"
         )
-
         if custom_formatters_path and not os.path.isfile(custom_formatters_path):
             raise errors.BadConfigOption(
-                (
-                    f"Unable to determine path to custom formatter definitions: "
-                    f"{custom_formatters_path:s}"
-                )
+                f"Unable to determine path to custom formatter definitions: "
+                f"{custom_formatters_path:s}"
             )
 
         if custom_formatters_path:
@@ -317,13 +304,12 @@ class OutputModuleOptions:
             action="store",
             default="",
             help=(
-                "Defines additional fields to be included in the output besides "
-                "the default fields. Multiple additional field names can be "
-                "defined as a list of comma separated values. Output formats that "
-                "support additional fields are: dynamic, opensearch and xlsx."
+                "Defines additional fields to be included in the output besides the "
+                "default fields. Multiple additional field names can be defined as a "
+                "list of comma separated values. Output formats that support "
+                "additional fields are: dynamic, opensearch and xlsx."
             ),
         )
-
         argument_group.add_argument(
             "--custom_fields",
             "--custom-fields",
@@ -332,15 +318,14 @@ class OutputModuleOptions:
             action="store",
             default="",
             help=(
-                "Defines custom fields to be included in the output besides "
-                'the default fields. A custom field is defined as "name:value". '
-                "Multiple custom field names can be defined as list of comma "
-                "separated values. Note that regular fields will are favoured "
-                "above custom fields with same name. Output formats that support "
-                "this are: dynamic, opensearch and xlsx."
+                "Defines custom fields to be included in the output besides the "
+                'default fields. A custom field is defined as "name:value". Multiple '
+                "custom field names can be defined as list of comma separated values. "
+                "Note that regular fields will are favoured above custom fields with "
+                "same name. Output formats that support this are: dynamic, opensearch "
+                "and xlsx."
             ),
         )
-
         argument_group.add_argument(
             "--custom_formatter_definitions",
             "--custom-formatter-definitions",
@@ -349,13 +334,12 @@ class OutputModuleOptions:
             metavar="PATH",
             action="store",
             help=(
-                "Path to a file containing custom event formatter definitions, "
-                "which is a .yaml file. Custom event formatter definitions can "
-                "be used to customize event messages and override the built-in "
-                "event formatter definitions."
+                "Path to a file containing custom event formatter definitions, which "
+                "is a .yaml file. Custom event formatter definitions can be used to "
+                "customize event messages and override the built-in event formatter "
+                "definitions."
             ),
         )
-
         argument_group.add_argument(
             "--dynamic_time",
             "--dynamic-time",
@@ -363,13 +347,12 @@ class OutputModuleOptions:
             action="store_true",
             default=False,
             help=(
-                "Indicate that the output should use dynamic time. Output formats "
-                "that support dynamic time are: dynamic"
+                "Indicate that the output should use dynamic time. Output formats that "
+                "support dynamic time are: dynamic"
             ),
         )
-
-        # Note the default here is None so we can determine if the time zone
-        # option was set.
+        # Note the default here is None so we can determine if the time zone option was
+        # set.
         argument_group.add_argument(
             "--output_time_zone",
             "--output-time-zone",
@@ -379,10 +362,10 @@ class OutputModuleOptions:
             type=str,
             default=None,
             help=(
-                "time zone of date and time values written to the output, if "
-                'supported by the output format. Use "list" to see a list of '
-                "available time zones. Output formats that support an output "
-                "time zone are: dynamic and l2t_csv."
+                "time zone of date and time values written to the output, if supported "
+                'by the output format. Use "list" to see a list of available time '
+                "zones. Output formats that support an output time zone are: dynamic "
+                "and l2t_csv."
             ),
         )
 
@@ -393,7 +376,6 @@ class OutputModuleOptions:
             column_names=["Name", "Description"],
             title="Output Modules",
         )
-
         output_classes = sorted(output_manager.OutputManager.GetOutputClasses())
         for name, output_class in output_classes:
             table_view.AddRow([name, output_class.DESCRIPTION])
@@ -436,7 +418,6 @@ class ProfilingOptions:
             column_names=["Name", "Description"],
             title="Profilers",
         )
-
         profilers_information = sorted(
             profiling.ProfilingArgumentsHelper.PROFILERS_INFORMATION.items()
         )

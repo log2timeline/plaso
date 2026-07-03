@@ -32,7 +32,7 @@ class ConfluenceAccessEventData(events.EventData):
           was recorded.
       remote_name (str): remote  hostname or IP address
       thread_name (str): name of the thread that handled the request.
-      user_name (str): response X-AUSERNAME header value.
+      username (str): response authenticated username (X-AUSERNAME) header value.
     """
 
     DATA_TYPE = "confluence:access"
@@ -52,7 +52,7 @@ class ConfluenceAccessEventData(events.EventData):
         self.recorded_time = None
         self.remote_name = None
         self.thread_name = None
-        self.user_name = None
+        self.username = None
 
 
 class ConfluenceAccessTextPlugin(interface.TextPlugin):
@@ -132,7 +132,7 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
         pyparsing.Word(pyparsing.alphanums + "@" + pyparsing.alphanums + ".")
         | pyparsing.Word(pyparsing.alphanums)
         | pyparsing.Literal("-")
-    ).set_results_name("user_name")
+    ).set_results_name("username")
 
     _HTTP_METHOD = pyparsing.one_of(
         ["CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT", "TRACE"]
@@ -252,7 +252,7 @@ class ConfluenceAccessTextPlugin(interface.TextPlugin):
         event_data.recorded_time = self._ParseTimeElements(time_elements_structure)
         event_data.remote_name = self._GetValueFromStructure(structure, "remote_name")
         event_data.thread_name = self._GetValueFromStructure(structure, "thread_name")
-        event_data.user_name = self._GetValueFromStructure(structure, "user_name")
+        event_data.username = self._GetValueFromStructure(structure, "username")
 
         if key == "post_711_format":
             event_data.forwarded_for = self._GetValueFromStructure(

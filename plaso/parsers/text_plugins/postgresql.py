@@ -21,13 +21,13 @@ class PostgreSQLEventData(events.EventData):
     """PostgreSQL application log data.
 
     Attributes:
-      log_line (str): log message.
+      message_body (str): message body.
       pid (int): process identifier (PID).
       recorded_time (dfdatetime.DateTimeValues): date and time the log entry
           was recorded.
       severity (str): severity.
-      user (str): "user@database" string if present. Records the user account and
-          database name that was authenticated or attempting to authenticate.
+      username (str): username and database name that was authenticated or attempting
+          to authenticate, in the format "user@database".
     """
 
     DATA_TYPE = "postgresql:application_log:entry"
@@ -35,11 +35,11 @@ class PostgreSQLEventData(events.EventData):
     def __init__(self):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
-        self.log_line = None
+        self.message_body = None
         self.pid = None
         self.recorded_time = None
         self.severity = None
-        self.user = None
+        self.username = None
 
 
 class PostgreSQLTextPlugin(interface.TextPlugin):
@@ -99,7 +99,7 @@ class PostgreSQLTextPlugin(interface.TextPlugin):
         pyparsing.Word(pyparsing.alphanums)
         + pyparsing.Literal("@")
         + pyparsing.Word(pyparsing.alphanums)
-    ).set_results_name("user_and_database")
+    ).set_results_name("username_and_database")
 
     _SEVERITY = pyparsing.Word(pyparsing.string.ascii_uppercase)
 
@@ -114,7 +114,7 @@ class PostgreSQLTextPlugin(interface.TextPlugin):
         + pyparsing.Optional(_USER_AND_DATABASE)
         + _SEVERITY.set_results_name("severity")
         + pyparsing.Suppress(":")
-        + pyparsing.SkipTo(_LOG_LINE_END).set_results_name("log_line")
+        + pyparsing.SkipTo(_LOG_LINE_END).set_results_name("message_body")
         + pyparsing.ZeroOrMore(_END_OF_LINE)
     )
 
@@ -187,34 +187,34 @@ class PostgreSQLTextPlugin(interface.TextPlugin):
         """
         time_elements_structure = self._GetValueFromStructure(structure, "date_time")
 
-        log_line = self._GetValueFromStructure(structure, "log_line", default_value="")
-        log_line = log_line.lstrip().rstrip()
+        message_body = self._GetValueFromStructure(
+            structure, "message_body", default_value=""
+        ).strip()
 
         pids = self._GetValueFromStructure(structure, "pid", default_value=[])
 
         time_zone_string = self._GetValueFromStructure(structure, "time_zone")
 
-        user_and_database = self._GetValueFromStructure(
-            structure, "user_and_database", default_value=""
+        username_and_database = self._GetValueFromStructure(
+            structure, "username_and_database", default_value=""
         )
-        user_and_database = "".join(user_and_database)
+        username_and_database = "".join(username_and_database)
 
         # TODO: move this into timeliner
         time_zone_string = self._PSQL_TIME_ZONE_MAPPING.get(
             time_zone_string, time_zone_string
         )
-
         date_time = self._ParseTimeElements(time_elements_structure)
         if time_zone_string != "UTC":
             date_time.is_local_time = True
             date_time.time_zone_hint = time_zone_string
 
         event_data = PostgreSQLEventData()
-        event_data.log_line = log_line or None
+        event_data.message_body = message_body or None
         event_data.pid = "".join([str(pid) for pid in pids])
         event_data.recorded_time = date_time
         event_data.severity = self._GetValueFromStructure(structure, "severity")
-        event_data.user = user_and_database or None
+        event_data.username = username_and_database or None
 
         parser_mediator.ProduceEventData(event_data)
 
@@ -242,7 +242,6 @@ class PostgreSQLTextPlugin(interface.TextPlugin):
                 year, month, day_of_month, hours, minutes, seconds = (
                     time_elements_structure
                 )
-
                 date_time = dfdatetime_time_elements.TimeElements(
                     time_elements_tuple=(
                         year,
@@ -258,7 +257,6 @@ class PostgreSQLTextPlugin(interface.TextPlugin):
                 year, month, day_of_month, hours, minutes, seconds, milliseconds = (
                     time_elements_structure
                 )
-
                 date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
                     time_elements_tuple=(
                         year,

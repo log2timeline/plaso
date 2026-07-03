@@ -188,39 +188,38 @@ class ProcessingConfiguration(interface.AttributeContainer):
     """Configuration settings for processing.
 
     Attributes:
-      artifact_definitions_path (str): path to artifact definitions directory
-          or file.
-      artifact_filters (Optional list[str]): names of artifact
-            definitions that are used for filtering file system and Windows
-            Registry key paths.
+      artifact_definitions_path (str): path to artifact definitions directory or file.
+      artifact_filters (Optional list[str]): names of artifact definitions that are used
+          for filtering file system and Windows Registry key paths.
       credentials (list[CredentialConfiguration]): credential configurations.
-      custom_artifacts_path (str): path to custom artifact definitions
-          directory or file.
+      custom_artifacts_path (str): path to custom artifact definitions directory or
+          file.
       custom_formatters_path (str): path to custom formatter definitions file.
       data_location (str): path to the data files.
       debug_output (bool): True if debug output should be enabled.
-      dynamic_time (bool): True if date and time values should be represented
-          in their granularity or semantically.
-      event_extraction (EventExtractionConfiguration): event extraction
-          configuration.
+      dynamic_time (bool): True if date and time values should be represented in their
+          granularity or semantically.
+      event_extraction (EventExtractionConfiguration): event extraction configuration.
       extraction (ExtractionConfiguration): extraction configuration.
       filter_file (str): path to a file with find specifications.
-      force_parser (bool): True if a specified parser should be forced to be used
-          to extract events.
+      force_parser (bool): True if a specified parser should be forced to be used to
+          extract events.
       log_filename (str): name of the log file.
-      parser_filter_expression (str): parser filter expression,
-          where None represents all parsers and plugins.
+      parser_filter_expression (str): parser filter expression, where None represents
+          all parsers and plugins.
       preferred_codepage (str): preferred codepage.
       preferred_encoding (str): preferred output encoding.
       preferred_language (str): preferred language.
       preferred_time_zone (str): preferred time zone.
-      preferred_year (int): preferred initial year value for year-less date and
-          time values.
+      preferred_year (int): preferred initial year value for year-less date and time
+          values.
       profiling (ProfilingConfiguration): profiling configuration.
       task_storage_format (str): format to use for storing task results.
-      task_storage_path (str): path of the directory containing SQLite task
-          storage files.
+      task_storage_path (str): path of the directory containing SQLite task storage
+          files.
       temporary_directory (str): path of the directory for temporary files.
+      use_preprocessing_as_default (bool): use values derived by pre-processing as the
+          default for the hostname and username fields.
     """
 
     CONTAINER_TYPE = "processing_configuration"
@@ -251,3 +250,4 @@ class ProcessingConfiguration(interface.AttributeContainer):
         self.task_storage_format = None
         self.task_storage_path = None
         self.temporary_directory = None
+        self.use_preprocessing_as_default = None

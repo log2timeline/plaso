@@ -19,10 +19,10 @@ class SymantecEventData(events.EventData):
       action2 (str): action2.
       action2_status (str): action2 status.
       address (str): address.
-      backup_id (str): backup identifier.
+      backup_identifier (str): backup identifier.
       cat (str): category.
       cleaninfo (str): clean information.
-      clientgroup (str): client group.
+      client_group (str): client group.
       compressed (str): compressed.
       computer (str): computer.
       definfo (str): definfo.
@@ -30,49 +30,48 @@ class SymantecEventData(events.EventData):
       deleteinfo (str): delete information.
       depth (str): depth.
       description (str): description.
-      domain_guid (str): domain identifier (GUID).
-      domainname (str): domain name.
-      err_code (str): error code.
+      domain_identifier (str): domain identifier (GUID).
+      domain_name (str): domain name.
+      error_code (str): error code.
       event_data (str): event data.
       event (str): event.
       extra (str): extra.
       file (str): file.
       flags (str): flags.
-      groupid (str): group identifier.
-      guid (str): guid.
-      last_written_time (dfdatetime.DateTimeValues): entry last written date and
-          time.
-      license_expiration_dt (str): license expiration date.
+      group_identifier (str): group identifier.
+      identifier (str): identifier (GUID).
+      last_written_time (dfdatetime.DateTimeValues): entry last written date and time.
+      license_expiration_date (str): license expiration date.
       license_feature_name (str): license feature name.
       license_feature_ver (str): license feature ver.
-      license_fulfillment_id (str): license fulfillment identifier.
+      license_fulfillment_identifier (str): license fulfillment identifier.
       license_lifecycle (str): license lifecycle.
       license_seats_delta (str): license seats delta.
       license_seats (str): license seats.
       license_seats_total (str): license seats total.
-      license_serial_num (str): license serial number.
-      license_start_dt (str): license start date.
+      license_serial_number (str): license serial number.
+      license_start_date (str): license start date.
       logger (str): logger.
       login_domain (str): login domain.
-      log_session_guid (str): log session identifier (GUID).
-      macaddr (str): MAC address.
+      log_session_identifier (str): log session identifier (GUID).
+      mac_address (str): MAC address.
       new_ext (str): new ext.
       ntdomain (str): ntdomain.
       offset (str): offset.
       parent (str): parent.
       quarfwd_status (str): quarfwd status.
-      remote_machine_ip (str): remote machine IP address.
+      remote_ip_address (str): remote IP address.
       remote_machine (str): remote machine.
       scanid (str): scan identifier.
       snd_status (str): snd status.
       status (str): status.
       still_infected (str): still infected.
       time (str): time.
-      user (str): user.
-      vbin_id (str): vbin identifier.
-      vbin_session_id (str): vbin session identifier.
+      username (str): username.
+      vbin_identifier (str): vbin identifier.
+      vbin_session_identifier (str): vbin session identifier.
       version (str): version.
-      virus_id (str): virus identifier.
+      virus_identifier (str): virus identifier.
       virus (str): virus.
       virustype (str): virustype.
     """
@@ -89,10 +88,10 @@ class SymantecEventData(events.EventData):
         self.action2 = None
         self.action2_status = None
         self.address = None
-        self.backup_id = None
+        self.backup_identifier = None
         self.cat = None
         self.cleaninfo = None
-        self.clientgroup = None
+        self.client_group = None
         self.compressed = None
         self.computer = None
         self.definfo = None
@@ -100,48 +99,48 @@ class SymantecEventData(events.EventData):
         self.deleteinfo = None
         self.depth = None
         self.description = None
-        self.domain_guid = None
-        self.domainname = None
-        self.err_code = None
+        self.domain_identifier = None
+        self.domain_name = None
+        self.error_code = None
         self.event_data = None
         self.event = None
         self.extra = None
         self.file = None
         self.flags = None
-        self.groupid = None
-        self.guid = None
+        self.group_identifier = None
+        self.identifier = None
         self.last_written_time = None
-        self.license_expiration_dt = None
+        self.license_expiration_date = None
         self.license_feature_name = None
         self.license_feature_ver = None
-        self.license_fulfillment_id = None
+        self.license_fulfillment_identifier = None
         self.license_lifecycle = None
         self.license_seats_delta = None
         self.license_seats = None
         self.license_seats_total = None
-        self.license_serial_num = None
-        self.license_start_dt = None
+        self.license_serial_number = None
+        self.license_start_date = None
         self.logger = None
         self.login_domain = None
-        self.log_session_guid = None
-        self.macaddr = None
+        self.log_session_identifier = None
+        self.mac_address = None
         self.new_ext = None
         self.ntdomain = None
         self.offset = None
         self.parent = None
         self.quarfwd_status = None
-        self.remote_machine_ip = None
+        self.remote_ip_address = None
         self.remote_machine = None
         self.scanid = None
         self.snd_status = None
         self.status = None
         self.still_infected = None
         self.time = None
-        self.user = None
-        self.vbin_id = None
-        self.vbin_session_id = None
+        self.username = None
+        self.vbin_identifier = None
+        self.vbin_session_identifier = None
         self.version = None
-        self.virus_id = None
+        self.virus_identifier = None
         self.virus = None
         self.virustype = None
 
@@ -160,7 +159,7 @@ class SymantecParser(dsv_parser.DSVParser):
         "cat",
         "logger",
         "computer",
-        "user",
+        "username",
         "virus",
         "file",
         "action1",
@@ -171,10 +170,10 @@ class SymantecParser(dsv_parser.DSVParser):
         "description",
         "scanid",
         "new_ext",
-        "groupid",
+        "group_identifier",
         "event_data",
-        "vbin_id",
-        "virus_id",
+        "vbin_identifier",
+        "virus_identifier",
         "quarfwd_status",
         "access",
         "snd_status",
@@ -185,34 +184,34 @@ class SymantecParser(dsv_parser.DSVParser):
         "defseqnumber",
         "cleaninfo",
         "deleteinfo",
-        "backup_id",
+        "backup_identifier",
         "parent",
-        "guid",
-        "clientgroup",
+        "identifier",
+        "client_group",
         "address",
-        "domainname",
+        "domain_name",
         "ntdomain",
-        "macaddr",
+        "mac_address",
         "version:",
         "remote_machine",
-        "remote_machine_ip",
+        "remote_ip_address",
         "action1_status",
         "action2_status",
         "license_feature_name",
         "license_feature_ver",
-        "license_serial_num",
-        "license_fulfillment_id",
-        "license_start_dt",
-        "license_expiration_dt",
+        "license_serial_number",
+        "license_fulfillment_identifier",
+        "license_start_date",
+        "license_expiration_date",
         "license_lifecycle",
         "license_seats_total",
         "license_seats",
-        "err_code",
+        "error_code",
         "license_seats_delta",
         "status",
-        "domain_guid",
-        "log_session_guid",
-        "vbin_session_id",
+        "domain_identifier",
+        "log_session_identifier",
+        "vbin_session_identifier",
         "login_domain",
         "extra",
     ]
@@ -287,10 +286,10 @@ class SymantecParser(dsv_parser.DSVParser):
         event_data.action2 = row.get("action2")
         event_data.action2_status = row.get("action2_status")
         event_data.address = row.get("address")
-        event_data.backup_id = row.get("backup_id")
+        event_data.backup_identifier = row.get("backup_identifier")
         event_data.cat = row.get("cat")
         event_data.cleaninfo = row.get("cleaninfo")
-        event_data.clientgroup = row.get("clientgroup")
+        event_data.client_group = row.get("client_group")
         event_data.compressed = row.get("compressed")
         event_data.computer = row.get("computer")
         event_data.definfo = row.get("definfo")
@@ -298,48 +297,50 @@ class SymantecParser(dsv_parser.DSVParser):
         event_data.deleteinfo = row.get("deleteinfo")
         event_data.depth = row.get("depth")
         event_data.description = row.get("description")
-        event_data.domain_guid = row.get("domain_guid")
-        event_data.domainname = row.get("domainname")
-        event_data.err_code = row.get("err_code")
+        event_data.domain_identifier = row.get("domain_identifier")
+        event_data.domain_name = row.get("domain_name")
+        event_data.error_code = row.get("error_code")
         event_data.event_data = row.get("event_data")
         event_data.event = row.get("event")
         event_data.extra = row.get("extra")
         event_data.file = row.get("file")
         event_data.flags = row.get("flags")
-        event_data.groupid = row.get("groupid")
-        event_data.guid = row.get("guid")
+        event_data.group_identifier = row.get("group_identifier")
+        event_data.identifier = row.get("identifier")
         event_data.last_written_time = self._ParseTimestamp(timestamp)
-        event_data.license_expiration_dt = row.get("license_expiration_dt")
+        event_data.license_expiration_date = row.get("license_expiration_date")
         event_data.license_feature_name = row.get("license_feature_name")
         event_data.license_feature_ver = row.get("license_feature_ver")
-        event_data.license_fulfillment_id = row.get("license_fulfillment_id")
+        event_data.license_fulfillment_identifier = row.get(
+            "license_fulfillment_identifier"
+        )
         event_data.license_lifecycle = row.get("license_lifecycle")
         event_data.license_seats_delta = row.get("license_seats_delta")
         event_data.license_seats = row.get("license_seats")
         event_data.license_seats_total = row.get("license_seats_total")
-        event_data.license_serial_num = row.get("license_serial_num")
-        event_data.license_start_dt = row.get("license_start_dt")
+        event_data.license_serial_number = row.get("license_serial_number")
+        event_data.license_start_date = row.get("license_start_date")
         event_data.logger = row.get("logger")
         event_data.login_domain = row.get("login_domain")
-        event_data.log_session_guid = row.get("log_session_guid")
-        event_data.macaddr = row.get("macaddr")
+        event_data.log_session_identifier = row.get("log_session_identifier")
+        event_data.mac_address = row.get("mac_address")
         event_data.new_ext = row.get("new_ext")
         event_data.ntdomain = row.get("ntdomain")
         event_data.offset = row_offset
         event_data.parent = row.get("parent")
         event_data.quarfwd_status = row.get("quarfwd_status")
-        event_data.remote_machine_ip = row.get("remote_machine_ip")
+        event_data.remote_ip_address = row.get("remote_ip_address")
         event_data.remote_machine = row.get("remote_machine")
         event_data.scanid = row.get("scanid")
         event_data.snd_status = row.get("snd_status")
         event_data.status = row.get("status")
         event_data.still_infected = row.get("still_infected")
         event_data.time = row.get("time")
-        event_data.user = row.get("user")
-        event_data.vbin_id = row.get("vbin_id")
-        event_data.vbin_session_id = row.get("vbin_session_id")
+        event_data.username = row.get("username")
+        event_data.vbin_identifier = row.get("vbin_identifier")
+        event_data.vbin_session_identifier = row.get("vbin_session_identifier")
         event_data.version = row.get("version:")
-        event_data.virus_id = row.get("virus_id")
+        event_data.virus_identifier = row.get("virus_identifier")
         event_data.virus = row.get("virus")
         event_data.virustype = row.get("virustype")
 

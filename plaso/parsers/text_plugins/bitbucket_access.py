@@ -55,7 +55,7 @@ class BitbucketAccessEventData(events.EventData):
           (HTTP/SSH) or nanoseconds (gRPC/Mesh), or None if not available.
       session_identifier (str): session identifier.
       ssh_repository_path (str): SSH repository path for SSH requests, or None.
-      user_name (str): the name of the authenticated user.
+      username (str): username.
     """
 
     DATA_TYPE = "atlassian:bitbucket:access"
@@ -79,7 +79,7 @@ class BitbucketAccessEventData(events.EventData):
         self.request_time = None
         self.session_identifier = None
         self.ssh_repository_path = None
-        self.user_name = None
+        self.username = None
 
 
 class BitbucketAccessTextPlugin(interface.TextPlugin):
@@ -126,7 +126,7 @@ class BitbucketAccessTextPlugin(interface.TextPlugin):
     # User name: alphanumeric with common separators, or '-'.
     _USER_NAME = (
         pyparsing.Word(pyparsing.alphanums + "-_./") | pyparsing.Literal("-")
-    ).set_results_name("user_name")
+    ).set_results_name("username")
 
     # Session identifier: short alphanumeric token or '-'.
     _SESSION_IDENTIFIER = pyparsing.Word(
@@ -361,7 +361,7 @@ class BitbucketAccessTextPlugin(interface.TextPlugin):
         event_data.session_identifier = self._GetStrippedValue(
             structure, "session_identifier"
         )
-        event_data.user_name = self._GetStrippedValue(structure, "user_name")
+        event_data.username = self._GetStrippedValue(structure, "username")
 
         if http_request:
             event_data.http_request_method = self._GetValueFromStructure(
@@ -395,7 +395,6 @@ class BitbucketAccessTextPlugin(interface.TextPlugin):
             date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
                 time_elements_tuple=time_elements_structure
             )
-
             date_time.is_local_time = True
 
             return date_time
