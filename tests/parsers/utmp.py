@@ -134,6 +134,80 @@ class UtmpParserTest(test_lib.ParserTestCase):
             "Unable to parse utmp entry at offset: 0x00000300, skipping record",
         )
 
+    def testParse64bitUtmpFile(self):
+        """Tests the Parse function on a 64-bit (aarch64) utmp file.
+
+        The libc6 utmp record is 400 bytes on 64-bit builds without 32-bit time
+        compatibility (e.g. aarch64), versus 384 bytes on x86-64. This sample was
+        generated on aarch64 with the dfirlabs/utmp-specimens generator: an empty
+        slot, a dead process, a system boot, a run-level change, and old and new
+        time records.
+        """
+        parser = utmp.UtmpParser()
+        storage_writer = self._ParseFile(["utmp_aarch64"], parser)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 6)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "recovery_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        # Record 1: a dead process. Its offset (400) proves the parser advanced
+        # by the 64-bit record size rather than 384.
+        expected_event_values = {
+            "data_type": "linux:utmp:event",
+            "exit_status": 0,
+            "hostname": "localhost",
+            "ip_address": "0.0.0.0",
+            "offset": 400,
+            "pid": 2914,
+            "terminal": "tty2",
+            "terminal_identifier": 12916,
+            "type": 8,
+            "written_time": "2026-07-03T17:14:32.000000+00:00",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # Record 2: system boot.
+        expected_event_values = {
+            "data_type": "linux:utmp:event",
+            "hostname": "0.0.0.0",
+            "ip_address": "0.0.0.0",
+            "offset": 800,
+            "pid": 2914,
+            "terminal": "system boot",
+            "terminal_identifier": 126,
+            "type": 2,
+            "username": "reboot",
+            "written_time": "2026-07-03T17:14:32.000000+00:00",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 2)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # Record 5: the last record, written five minutes later, at offset 2000.
+        expected_event_values = {
+            "data_type": "linux:utmp:event",
+            "offset": 2000,
+            "pid": 2914,
+            "terminal": "}",
+            "terminal_identifier": 32382,
+            "type": 3,
+            "username": "date",
+            "written_time": "2026-07-03T17:19:32.000000+00:00",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 5)
+        self.CheckEventData(event_data, expected_event_values)
+
 
 if __name__ == "__main__":
     unittest.main()
