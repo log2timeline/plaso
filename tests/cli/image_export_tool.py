@@ -845,14 +845,12 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
             test_tool.ProcessSource()
 
             output = output_writer.ReadOutput()
-            error_msg = ", ".join(test_tool._SOURCE_TYPES_TO_PREPROCESS)
-            self.assertEqual(
-                output,
-                (
-                    f'Input must be in "{error_msg}" '
-                    'the type: "file" is not supported.\n'
-                ),
+            source_types = ", ".join(test_tool._SOURCE_TYPES_TO_PREPROCESS)
+            message = (
+                f'Input must be one of "{source_types:s}", type: "file" is not '
+                f"supported.\n"
             )
+            self.assertEqual(output, message)
 
 
 if __name__ == "__main__":

@@ -558,7 +558,7 @@ class FieldFormattingHelper:
         return output_mediator.GetUsername(event_data)
 
     def _FormatValues(self, output_mediator, event, event_data, event_data_stream):
-        """Formats a values.
+        """Formats values.
 
         Args:
           output_mediator (OutputMediator): mediates interactions between output

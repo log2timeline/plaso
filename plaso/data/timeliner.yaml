@@ -357,7 +357,7 @@ place_holder_event: true
 ---
 data_type: 'cri:container:log:entry'
 attribute_mappings:
-- name: 'event_datetime'
+- name: 'written_time'
   description: 'Content Modification Time'
 place_holder_event: true
 ---

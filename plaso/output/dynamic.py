@@ -13,16 +13,13 @@ from plaso.output import shared_dsv
 class DynamicFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
     """Dynamic output module field formatting helper."""
 
-    # TODO: determine why _FormatTimestampDescription is mapped to both
-    # timestamp_desc and type.
+    # TODO: determine why _FormatTimestampDescription is mapped to both timestamp_desc
+    # and type.
 
-    # Maps the name of a fields to a a callback function that formats
-    # the field value.
+    # Maps the name of a fields to a a callback function that formats the field value.
     _FIELD_FORMAT_CALLBACKS = {
         "date": "_FormatDate",
         "datetime": "_FormatDateTime",
-        "description": "_FormatMessage",
-        "description_short": "_FormatMessageShort",
         "display_name": "_FormatDisplayName",
         "filename": "_FormatFilename",
         "host": "_FormatHostname",
@@ -55,8 +52,8 @@ class DynamicFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
         """Formats a date field.
 
         Args:
-          output_mediator (OutputMediator): mediates interactions between output
-              modules and other components, such as storage and dfVFS.
+          output_mediator (OutputMediator): mediates interactions between output modules
+              and other components, such as storage and dfVFS.
           event (EventObject): event.
           event_data (EventData): event data.
           event_data_stream (EventDataStream): event data stream.
@@ -114,8 +111,8 @@ class DynamicFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
         """Formats a timestamp description field.
 
         Args:
-          output_mediator (OutputMediator): mediates interactions between output
-              modules and other components, such as storage and dfVFS.
+          output_mediator (OutputMediator): mediates interactions between output modules
+              and other components, such as storage and dfVFS.
           event (EventObject): event.
           event_data (EventData): event data.
           event_data_stream (EventDataStream): event data stream.
@@ -129,8 +126,8 @@ class DynamicFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
         """Formats a Yara match field.
 
         Args:
-          output_mediator (OutputMediator): mediates interactions between output
-              modules and other components, such as storage and dfVFS.
+          output_mediator (OutputMediator): mediates interactions between output modules
+              and other components, such as storage and dfVFS.
           event (EventObject): event.
           event_data (EventData): event data.
           event_data_stream (EventDataStream): event data stream.

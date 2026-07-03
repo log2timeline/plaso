@@ -37,8 +37,8 @@ class AndroidNativeDownloadsTest(test_lib.SQLitePluginTestCase):
             "deleted": 0,
             "description": None,
             "destination": 4,
-            "error_msg": None,
             "e_tag": '"932f5b7818a3c0c1284cda69b6d7ea30"',
+            "error_message": None,
             "identifier": 46,
             "is_visible_in_downloads_ui": 1,
             "media_provider_uri": (
