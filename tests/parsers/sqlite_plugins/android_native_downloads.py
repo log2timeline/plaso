@@ -33,6 +33,7 @@ class AndroidNativeDownloadsTest(test_lib.SQLitePluginTestCase):
 
         expected_event_values = {
             "current_bytes": 2149749,
+            "data_type": "android:sqlite:downloads",
             "deleted": 0,
             "description": None,
             "destination": 4,
@@ -56,7 +57,6 @@ class AndroidNativeDownloadsTest(test_lib.SQLitePluginTestCase):
                 "622810296226152474/1041012392089370735/IMG_1953.jpg"
             ),
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

@@ -36,14 +36,13 @@ class UtmpParserTest(test_lib.ParserTestCase):
             "exit_status": 0,
             "hostname": "localhost",
             "ip_address": "0.0.0.0",
+            "login_type": 6,
             "pid": 1115,
             "terminal_identifier": 52,
             "terminal": "tty4",
-            "type": 6,
             "username": "LOGIN",
             "written_time": "2013-12-13T14:45:09.000000+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 2)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -72,14 +71,13 @@ class UtmpParserTest(test_lib.ParserTestCase):
             "exit_status": 0,
             "hostname": "10.10.122.1",
             "ip_address": "10.10.122.1",
+            "login_type": 7,
             "pid": 20060,
             "terminal": "pts/32",
             "terminal_identifier": 842084211,
-            "type": 7,
             "username": "userA",
             "written_time": "2011-12-01T17:36:38.432935+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

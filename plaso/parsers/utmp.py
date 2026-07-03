@@ -19,12 +19,12 @@ class UtmpEventData(events.EventData):
       exit_status (int): exit status.
       hostname (str): hostname or IP address.
       ip_address (str): IP address from the connection.
+      login_type (int): login type.
       offset (int): offset of the utmp record relative to the start of the file,
           from which the event data was extracted.
       pid (int): process identifier (PID).
       terminal_identifier (int): inittab identifier.
       terminal (str): type of terminal.
-      type (int): type of login.
       username (str): user name.
       written_time (dfdatetime.DateTimeValues): entry written date and time.
     """
@@ -37,11 +37,11 @@ class UtmpEventData(events.EventData):
         self.exit_status = None
         self.hostname = None
         self.ip_address = None
+        self.login_type = None
         self.offset = None
         self.pid = None
         self.terminal_identifier = None
         self.terminal = None
-        self.type = None
         self.username = None
         self.written_time = None
 
@@ -89,14 +89,12 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
             )
         except (ValueError, errors.ParseError) as exception:
             raise errors.ParseError(
-                (
-                    f"Unable to parse utmp entry at offset: 0x{file_offset:08x} with "
-                    f"error: {exception!s}."
-                )
+                f"Unable to parse utmp entry at offset: 0x{file_offset:08x} with "
+                f"error: {exception!s}."
             )
 
-        if entry.type not in self._SUPPORTED_TYPES:
-            raise errors.ParseError(f"Unsupported type: {entry.type:d}")
+        if entry.login_type not in self._SUPPORTED_TYPES:
+            raise errors.ParseError(f"Unsupported login type: {entry.login_type:d}")
 
         code_page = parser_mediator.GetCodePage()
 
@@ -135,22 +133,20 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         timestamp = entry.microseconds + (
             entry.timestamp * definitions.MICROSECONDS_PER_SECOND
         )
-
         # TODO: add termination status.
         event_data = UtmpEventData()
         event_data.hostname = hostname
         event_data.exit_status = entry.exit_status
         event_data.ip_address = ip_address
+        event_data.login_type = entry.login_type
         event_data.offset = file_offset
         event_data.pid = entry.pid
         event_data.terminal = terminal or None
         event_data.terminal_identifier = entry.terminal_identifier
-        event_data.type = entry.type
         event_data.username = username or None
         event_data.written_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
             timestamp=timestamp
         )
-
         return event_data, warning_strings
 
     def ParseFileObject(self, parser_mediator, file_object):
@@ -180,7 +176,7 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
                 "Unable to parse first utmp entry with error: missing written time"
             )
 
-        if not event_data.username and event_data.type not in (
+        if not event_data.username and event_data.login_type not in (
             self._DEAD_PROCESS_TYPE,
             self._INIT_PROCESS_TYPE,
         ):
