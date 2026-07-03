@@ -19,8 +19,7 @@ class EventDataAttributeContainersSchemaValidator:
         [
             "hostname",
             "username",
-            # Used in l2tcsv, but is always 2.
-            "version",
+            "values",
         ]
     )
 
@@ -126,6 +125,12 @@ class EventDataAttributeContainersSchemaValidator:
                 logging.warning(f"Unable to inspect: {cls.__name__:s}")
                 continue
 
+            if cls.__name__ in (
+                "L2TCSVFieldFormattingHelper",
+                "TLNFieldFormattingHelper",
+            ):
+                continue
+
             # pylint: disable=protected-access
             for name in helper._FIELD_FORMAT_CALLBACKS.keys():
                 if name not in self._ALLOWED_OVERRIDES:
@@ -160,6 +165,7 @@ def Main():
             "body",
             "desc",
             "displayname",
+            "event_datetime",
             "host",
             "host_name",
             "log_line",

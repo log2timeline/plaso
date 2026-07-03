@@ -69,8 +69,7 @@ class L2TCSVEventFormattingHelper(shared_dsv.DSVEventFormattingHelper):
 class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
     """L2T CSV output module field formatting helper."""
 
-    # Maps the name of a fields to a a callback function that formats
-    # the field value.
+    # Maps the name of a fields to a a callback function that formats the field value.
     _FIELD_FORMAT_CALLBACKS = {
         "date": "_FormatDate",
         "desc": "_FormatMessage",
@@ -120,8 +119,8 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
         ]
     )
 
-    # The field format callback methods require specific arguments hence
-    # the check for unused arguments is disabled here.
+    # The field format callback methods require specific arguments hence the check for
+    # unused arguments is disabled here.
     # pylint: disable=unused-argument
 
     def _FormatDate(self, output_mediator, event, event_data, event_data_stream):

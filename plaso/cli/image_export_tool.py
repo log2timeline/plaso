@@ -196,7 +196,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
             file_entry.path_spec
         )
-
         try:
             digest = self._CalculateDigestHash(file_entry, data_stream_name)
         except (OSError, dfvfs_errors.BackEndError) as exception:
@@ -259,7 +258,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
                 f"[skipping] unable to export contents of file entry: "
                 f"{display_name:s} with error: {exception!s}"
             )
-
             try:
                 os.remove(target_path)
             except OSError:
@@ -288,7 +286,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
                 destination_path,
                 skip_duplicates=skip_duplicates,
             )
-
             file_entry_processed = True
 
         if not file_entry_processed:
@@ -335,7 +332,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         extraction_engine.BuildArtifactsRegistry(
             artifact_definitions_path, custom_artifacts_path
         )
-
         storage_writer = fake_writer.FakeStorageWriter()
         storage_writer.Open()
 
@@ -395,12 +391,10 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
                 find_specs=included_find_specs,
                 resolver_context=self._resolver_context,
             )
-
             for path_spec in path_spec_generator:
                 file_entry = path_spec_resolver.Resolver.OpenFileEntry(
                     path_spec, resolver_context=self._resolver_context
                 )
-
                 if not file_entry:
                     path_spec_string = self._GetPathSpecificationString(path_spec)
                     logger.warning(
@@ -603,7 +597,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
             argument_group, names=names
         )
-
         argument_group.add_argument(
             "-x",
             "--extensions",
@@ -616,7 +609,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
                 'multiple comma separated values e.g. "csv,docx,pst".'
             ),
         )
-
         argument_group.add_argument(
             "--names",
             dest="names_string",
@@ -629,7 +621,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
                 '"NTUSER.DAT,UsrClass.dat".'
             ),
         )
-
         argument_group.add_argument(
             "--signatures",
             dest="signature_identifiers",
@@ -692,7 +683,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
             add_help=False,
             formatter_class=argparse.RawDescriptionHelpFormatter,
         )
-
         self.AddBasicOptions(argument_parser)
         self.AddInformationalOptions(argument_parser)
 
@@ -702,7 +692,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
             argument_parser, names=argument_helper_names
         )
-
         self.AddLogFileOptions(argument_parser)
 
         self.AddStorageMediaImageOptions(argument_parser)
@@ -721,7 +710,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
                 "artifact definitions."
             ),
         )
-
         argument_parser.add_argument(
             "-w",
             "--write",
@@ -732,7 +720,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
             default="export",
             help=("The directory in which extracted files should be stored."),
         )
-
         argument_parser.add_argument(
             "--include_duplicates",
             "--include-duplicates",
@@ -746,7 +733,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
                 "include duplicate files in the export."
             ),
         )
-
         argument_parser.add_argument(
             "--no_hashes",
             "--no-hashes",
@@ -755,7 +741,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
             default=False,
             help=(f"Do not generate the {self._HASHES_FILENAME:s} file"),
         )
-
         argument_parser.add_argument(
             self._SOURCE_OPTION,
             nargs="?",
@@ -769,7 +754,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
                 "Plaso supports."
             ),
         )
-
         try:
             options = argument_parser.parse_args(arguments)
         except UnicodeEncodeError:
@@ -794,7 +778,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
             filename=self._log_file,
             quiet_mode=self._quiet_mode,
         )
-
         return True
 
     def ParseOptions(self, options):
@@ -810,7 +793,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         helpers_manager.ArgumentHelperManager.ParseOptions(
             options, self, names=["data_location"]
         )
-
         self.show_troubleshooting = getattr(options, "show_troubleshooting", False)
 
         # Check the list options first otherwise required options will raise.
@@ -829,7 +811,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         self._destination_path = self.ParseStringOption(
             options, "path", default_value="export"
         )
-
         if not self._data_location:
             logger.warning("Unable to automatically determine data location.")
 
@@ -841,7 +822,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         helpers_manager.ArgumentHelperManager.ParseOptions(
             options, self, names=argument_helper_names
         )
-
         if self._vfs_back_end == "fsext":
             dfvfs_definitions.PREFERRED_EXT_BACK_END = (
                 dfvfs_definitions.TYPE_INDICATOR_EXT
@@ -912,10 +892,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
             if self._source_type not in self._SOURCE_TYPES_TO_PREPROCESS:
                 source_types = ", ".join(self._SOURCE_TYPES_TO_PREPROCESS)
                 self._output_writer.Write(
-                    (
-                        f'Input must be in "{source_types:s}" the type: '
-                        f'"{self._source_type}" is not supported.\n'
-                    )
+                    f'Input must be one of "{source_types:s}", type: "file" is not '
+                    f"supported.\n"
                 )
                 return
         except dfvfs_errors.UserAbort as exception:
@@ -936,7 +914,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
             self._custom_artifacts_path,
             skip_duplicates=self._skip_duplicates,
         )
-
         json_data = []
 
         if not self._no_hashes:

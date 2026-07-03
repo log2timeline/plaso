@@ -290,7 +290,7 @@ message:
 - 'Notification Package: {notification_package}'
 - 'Title: {title}'
 - 'Media Provider URI: {media_provider_uri}'
-- 'Error Msg: {error_msg}'
+- 'Error message: {error_message}'
 - 'Is Visible in Downloads UI: {is_visible_in_downloads_ui}'
 - 'Destination Type: {destination_string}'
 - 'UI Visibility: {ui_visibility_string}'

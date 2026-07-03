@@ -142,13 +142,15 @@ class SkypeTransferFileEventData(events.EventData):
     Attributes:
       accept_time (dfdatetime.DateTimeValues): date and time the file transfer was
           accepted.
-      destination (str): account that received the file.
       end_time (dfdatetime.DateTimeValues): date and time the file transfer was
           stopped.
       offset (str): identifier of the row, from which the event data was
           extracted.
       query (str): SQL query that was used to obtain the event data.
-      source (str): account that sent the file.
+      receiver (str): identifier of the account that received the file.
+      receiver_display_name (str): display name of the account that received the file.
+      sender (str): identifier of the account that sent the file.
+      sender_display_name (str): display name of the account that sent the file.
       start_time (dfdatetime.DateTimeValues): date and time the file transfer was
           started.
       transfer_status (int): file transfer status.
@@ -163,11 +165,13 @@ class SkypeTransferFileEventData(events.EventData):
         """Initialize event data."""
         super().__init__(data_type=self.DATA_TYPE)
         self.accept_time = None
-        self.destination = None
         self.end_time = None
         self.offset = None
         self.query = None
-        self.source = None
+        self.receiver = None
+        self.receiver_display_name = None
+        self.sender = None
+        self.sender_display_name = None
         self.start_time = None
         self.transfer_status = None
         self.transferred_filename = None
@@ -773,35 +777,37 @@ class SkypePlugin(interface.SQLitePlugin):
             )
             source_dict = cache.GetResults("source")
 
-        dest_dict = cache.GetResults("destination")
-        if not dest_dict:
+        destination_dict = cache.GetResults("destination")
+        if not destination_dict:
             results = database.Query(self.QUERY_DEST_FROM_TRANSFER)
 
             cache.CacheQueryResults(
                 results, "destination", "parent_id", ("skypeid", "skypename")
             )
-            dest_dict = cache.GetResults("destination")
+            destination_dict = cache.GetResults("destination")
 
-        source = "Unknown"
-        destination = "Unknown"
+        receiver = None
+        receiver_display_name = None
+        sender = None
+        sender_display_name = None
 
         parent_id = self._GetRowValue(query_hash, row, "parent_id")
-        partner_dispname = self._GetRowValue(query_hash, row, "partner_dispname")
-        partner_handle = self._GetRowValue(query_hash, row, "partner_handle")
-
         if parent_id:
-            destination = f"{partner_handle:s} <{partner_dispname:s}>"
-            skype_id, skype_name = source_dict.get(parent_id, [None, None])
-            if skype_name:
-                source = f"{skype_id:s} <{skype_name:s}>"
+            receiver = self._GetRowValue(query_hash, row, "partner_handle")
+            receiver_display_name = self._GetRowValue(
+                query_hash, row, "partner_dispname"
+            )
+
+            sender, sender_display_name = source_dict.get(parent_id, (None, None))
         else:
-            source = f"{partner_handle:s} <{partner_dispname:s}>"
+            sender = self._GetRowValue(query_hash, row, "partner_handle")
+            sender_display_name = self._GetRowValue(query_hash, row, "partner_dispname")
 
             pk_id = self._GetRowValue(query_hash, row, "pk_id")
             if pk_id:
-                skype_id, skype_name = dest_dict.get(pk_id, [None, None])
-                if skype_name:
-                    destination = f"{skype_id:s} <{skype_name:s}>"
+                receiver, receiver_display_name = destination_dict.get(
+                    pk_id, (None, None)
+                )
 
         filename = self._GetRowValue(query_hash, row, "filename")
         filesize = self._GetRowValue(query_hash, row, "filesize")
@@ -818,11 +824,13 @@ class SkypePlugin(interface.SQLitePlugin):
         event_data.accept_time = self._GetDateTimeRowValue(
             query_hash, row, "accepttime"
         )
-        event_data.destination = destination
         event_data.end_time = self._GetDateTimeRowValue(query_hash, row, "finishtime")
         event_data.offset = self._GetRowValue(query_hash, row, "id")
         event_data.query = query
-        event_data.source = source
+        event_data.receiver = receiver
+        event_data.receiver_display_name = receiver_display_name
+        event_data.sender = sender
+        event_data.sender_display_name = sender_display_name
         event_data.start_time = self._GetDateTimeRowValue(query_hash, row, "starttime")
         event_data.transfer_status = self._GetRowValue(query_hash, row, "status")
         event_data.transferred_filename = filename

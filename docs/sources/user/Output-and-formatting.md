@@ -48,8 +48,6 @@ Name | Description
 --- | ---
 date | The date of the event formatted as "YYYY-MM-DD" or "0000-00-00" on error
 datetime | The date and time of the event in ISO 8601 format in microseconds or "0000-00-00T00:00:00.000000+00:00" on error
-description | Equivalent to message
-description_short | Equivalent to message_short
 display_name | Human readable representation of the path specification
 filename | The "filename" attribute if present in the event data, otherwise derived from the path specification
 host | Equivalent to hostname
@@ -334,3 +332,4 @@ Flags helpers are defined as a set of attributes:
 * 20200916 Removed source types from formatters.
 * 20201220 Added support for boolean helpers.
 * 20201227 Added support for custom helpers.
+* 20260703 description and description_short are no longer used as dynamic output field names.
