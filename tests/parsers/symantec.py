@@ -44,10 +44,9 @@ class SymantecAccessProtectionUnitTest(test_lib.ParserTestCase):
             "file": "D:\\Twinkle_Prod$\\VM11 XXX\\outside\\test.exe.txt",
             "last_written_time": "2012-11-30T10:47:29",
             "scanid": "0",
-            "user": "davnads",
+            "username": "davnads",
             "virus": "W32.Changeup!gen33",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 

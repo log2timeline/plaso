@@ -47,6 +47,8 @@ class MacKeeperCachePluginTest(test_lib.SQLitePluginTestCase):
                 "0z40787/?client-id=51e0593fa1a24468673655&callback=jQuery18301357"
                 "1173651143909_1373657420912&_=1373657423647"
             ),
+            "user_sid": None,
+            "username": None,
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 41)
         self.CheckEventData(event_data, expected_event_values)

@@ -48,12 +48,12 @@ Name | Description
 --- | ---
 date | The date of the event formatted as "YYYY-MM-DD" or "0000-00-00" on error
 datetime | The date and time of the event in ISO 8601 format in microseconds or "0000-00-00T00:00:00.000000+00:00" on error
-description | The event message string as defined by the message formatter
-description_short | The short event message string as defined by the message formatter
+description | Equivalent to message
+description_short | Equivalent to message_short
 display_name | Human readable representation of the path specification
 filename | The "filename" attribute if present in the event data, otherwise derived from the path specification
-host | The hostname derived by pre-processing
-hostname | The hostname derived by pre-processing
+host | Equivalent to hostname
+hostname | The "hostname" attribute if present in the event data, otherwise derived by pre-processing
 inode | The "inode" attribute if present in the event data, otherwise derived from the file system identifier (such as inode, MFT entry) in the path specification
 macb | MACB (Modification, Access, Change, Birth) group representation
 message | The event message string as defined by the message formatter
@@ -66,8 +66,8 @@ time | The time of the event in seconds formatted as "HH:MM:SS" or "--:--:--" on
 timestamp_desc | Indication of what the event time represents such as Creation Time or Program Execution Duration
 timezone | Time zone indicator
 type | Indication of what the event time represents such as Creation Time or Program Execution Duration, equivalent to timestamp_desc
-user | The username derived by pre-processing, equivalent to username
-username | The username derived by pre-processing
+user | Equivalent to username
+username | The "username" attribute if present in the event data. Will fallback to trying to resolve the username based on the "user_sid" attribute and user accounts derived by pre-processing.
 zone | Time zone indicator, equivalent to timezone
 
 Note that the `--dynamic-time` output option will change the format of the

@@ -76,9 +76,8 @@ class ApacheAccessLogTextPluginTest(test_lib.TextPluginTestCase):
             "ip_address": "192.168.0.2",
             "recorded_time": "2016-01-13T19:31:20+02:00",
             "remote_name": None,
-            "user_name": None,
+            "username": None,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 4)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -93,9 +92,8 @@ class ApacheAccessLogTextPluginTest(test_lib.TextPluginTestCase):
             "ip_address": "10.0.0.1",
             "recorded_time": "2016-01-13T19:31:16+00:00",
             "remote_name": None,
-            "user_name": None,
+            "username": None,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -115,9 +113,8 @@ class ApacheAccessLogTextPluginTest(test_lib.TextPluginTestCase):
             "recorded_time": "2018-01-13T19:31:17+00:00",
             "remote_name": None,
             "server_name": "plaso.log2timeline.net",
-            "user_name": None,
+            "username": None,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 8)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -130,9 +127,8 @@ class ApacheAccessLogTextPluginTest(test_lib.TextPluginTestCase):
             "ip_address": "192.168.0.64",
             "recorded_time": "2019-11-16T09:46:42+02:00",
             "remote_name": None,
-            "user_name": "pyllyukko@EXAMPLE.COM",
+            "username": "pyllyukko@EXAMPLE.COM",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 13)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -140,7 +136,6 @@ class ApacheAccessLogTextPluginTest(test_lib.TextPluginTestCase):
         generator = storage_writer.GetAttributeContainers(
             warnings.ExtractionWarning.CONTAINER_TYPE
         )
-
         test_warnings = list(generator)
         test_warning = test_warnings[0]
 

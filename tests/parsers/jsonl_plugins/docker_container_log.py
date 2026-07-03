@@ -22,7 +22,6 @@ class DockerContainerLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
             container_identifier,
             "container-json.log",
         ]
-
         plugin = docker_container_log.DockerContainerLogJSONLPlugin()
         storage_writer = self._ParseJSONLFileWithPlugin(path_segments, plugin)
 
@@ -44,14 +43,13 @@ class DockerContainerLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
         expected_event_values = {
             "container_identifier": container_identifier,
             "data_type": "docker:container:log:entry",
-            "log_line": (
+            "log_source": "stdout",
+            "message_body": (
                 "\x1b]0;root@e7d0b7ea5ccf: "
                 "/home/plaso\x07root@e7d0b7ea5ccf:/home/plaso# ls\r\n"
             ),
-            "log_source": "stdout",
             "written_time": "2016-01-07T16:49:10.000000+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

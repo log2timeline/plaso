@@ -47,8 +47,7 @@ class AtlassianBitbucketEventData(events.EventData):
           2CM38K4Fx339x113x2, if present.
       session_identifier (str): the session identifier, if present.
       thread (str): the JVM thread name from which the log event originated.
-      user_name (str): the name of the user associated with the request, if
-          present in the log line.
+      username (str): username.
       written_time (dfdatetime.DateTimeValues): entry written date and time.
     """
 
@@ -65,7 +64,7 @@ class AtlassianBitbucketEventData(events.EventData):
         self.request_identifier = None
         self.session_identifier = None
         self.thread = None
-        self.user_name = None
+        self.username = None
         self.written_time = None
 
 
@@ -180,10 +179,10 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
     _RE_REQUEST_ACTION = pyparsing.QuotedString('"')
 
     # Username: word characters, dots, hyphens, slashes.
-    _RE_USER_NAME = pyparsing.Regex(r"[A-Za-z][A-Za-z0-9._\-/]*")
+    _RE_USERNAME = pyparsing.Regex(r"[A-Za-z][A-Za-z0-9._\-/]*")
 
     _REQUEST_CONTEXT_GRAMMAR = (
-        pyparsing.Optional(_RE_USER_NAME.set_results_name("request_user"))
+        pyparsing.Optional(_RE_USERNAME.set_results_name("username"))
         + pyparsing.Optional(_REQUEST_IDENTIFIER.set_results_name("request_identifier"))
         + pyparsing.Optional(_SESSION_IDENTIFIER.set_results_name("session_identifier"))
         + pyparsing.Optional(_RE_IP_ADDRESS.set_results_name("ip_address"))
@@ -229,7 +228,7 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
             request_context = self._REQUEST_CONTEXT_GRAMMAR.parse_string(
                 request_context_text, parse_all=False
             )
-            event_data.user_name = request_context.get("request_user") or None
+            event_data.username = request_context.get("username") or None
             event_data.request_identifier = (
                 request_context.get("request_identifier") or None
             )

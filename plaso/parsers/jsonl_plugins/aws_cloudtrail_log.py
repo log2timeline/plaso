@@ -25,7 +25,7 @@ class AWSCloudTrailEventData(events.EventData):
       resources (str): resources.
       source_ip (str): source IP address.
       user_identity_arn (str): AWS ARN of the user.
-      user_name (str): name of the AWS user.
+      username (str): username.
     """
 
     DATA_TYPE = "aws:cloudtrail:entry"
@@ -42,7 +42,7 @@ class AWSCloudTrailEventData(events.EventData):
         self.resources = None
         self.source_ip = None
         self.user_identity_arn = None
-        self.user_name = None
+        self.username = None
 
 
 class AWSCloudTrailLogJSONLPlugin(interface.JSONLPlugin):
@@ -104,7 +104,7 @@ class AWSCloudTrailLogJSONLPlugin(interface.JSONLPlugin):
             cloud_trail_event_json, "sourceIPAddress"
         )
         event_data.user_identity_arn = self._GetJSONValue(user_identity_json, "arn")
-        event_data.user_name = self._GetJSONValue(json_dict, "Username")
+        event_data.username = self._GetJSONValue(json_dict, "Username")
 
         parser_mediator.ProduceEventData(event_data)
 

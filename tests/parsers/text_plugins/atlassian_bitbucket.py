@@ -120,7 +120,7 @@ class AtlassianBitbucketTextPluginTest(test_lib.TextPluginTestCase):
             "request_identifier": "2CM38K4Fx339x113x2",
             "session_identifier": "@5XDWX5x339x568x0,4SJOMSOBx339x40x2",
             "thread": "tx:thread-2",
-            "user_name": "admin",
+            "username": "admin",
             "written_time": "2022-04-12T05:39:57.408",
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
