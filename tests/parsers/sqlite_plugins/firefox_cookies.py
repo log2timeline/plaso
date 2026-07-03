@@ -17,7 +17,6 @@ class Firefox2CookiesPluginTest(test_lib.SQLitePluginTestCase):
         storage_writer = self._ParseDatabaseFileWithPlugin(
             ["firefox_cookies", "firefox_2_cookies.sqlite"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -39,12 +38,11 @@ class Firefox2CookiesPluginTest(test_lib.SQLitePluginTestCase):
             "creation_time": "2013-10-30T21:56:03.992499+00:00",
             "data_type": "firefox:cookie:entry",
             "expiration_time": "2015-10-30T21:56:03+00:00",
-            "host": "s.greenqloud.com",
+            "hostname": "s.greenqloud.com",
             "httponly": False,
             "secure": False,
             "url": "http://s.greenqloud.com/",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 13)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -58,7 +56,6 @@ class Firefox10CookiesPluginTest(test_lib.SQLitePluginTestCase):
         storage_writer = self._ParseDatabaseFileWithPlugin(
             ["firefox_cookies", "firefox_10_cookies.sqlite"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -80,12 +77,11 @@ class Firefox10CookiesPluginTest(test_lib.SQLitePluginTestCase):
             "creation_time": "2023-05-05T16:00:44.811189+00:00",
             "data_type": "firefox:cookie:entry",
             "expiration_time": "2023-06-06T12:00:00+00:00",
-            "host": "en.wikipedia.org",
+            "hostname": "en.wikipedia.org",
             "httponly": True,
             "secure": True,
             "url": "https://en.wikipedia.org/",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 4)
         self.CheckEventData(event_data, expected_event_values)
 

@@ -20,9 +20,9 @@ class ChromeCookieEventData(events.EventData):
       data (str): value of the cookie.
       expiration_time (dfdatetime.DateTimeValues): date and time the cookie
           expires.
-      host (str): hostname of host that set the cookie value.
       httponly (bool): True if the cookie cannot be accessed through client
           side script.
+      hostname (str): name of the host or domain the cookie is tied to.
       path (str): path where the cookie got set.
       persistent (bool): True if the cookie is persistent.
       query (str): SQL query that was used to obtain the event data.
@@ -41,7 +41,7 @@ class ChromeCookieEventData(events.EventData):
         self.creation_time = None
         self.data = None
         self.expiration_time = None
-        self.host = None
+        self.hostname = None
         self.httponly = None
         self.path = None
         self.persistent = None
@@ -123,7 +123,7 @@ class BaseChromeCookiePlugin(
         event_data.expiration_time = self._GetDateTimeRowValue(
             query_hash, row, "expires_utc"
         )
-        event_data.host = hostname
+        event_data.hostname = hostname
         event_data.httponly = bool(httponly)
         event_data.path = path
         event_data.persistent = bool(persistent)

@@ -38,11 +38,10 @@ class AndroidWebView(test_lib.SQLitePluginTestCase):
             ),
             "data_type": "android:webview:cookie",
             "expiration_time": "2014-03-05T15:04:44.000+00:00",
-            "host": "skype.com",
+            "hostname": "skype.com",
             "path": "/",
             "secure": False,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

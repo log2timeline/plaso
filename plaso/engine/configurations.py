@@ -218,8 +218,8 @@ class ProcessingConfiguration(interface.AttributeContainer):
       task_storage_path (str): path of the directory containing SQLite task storage
           files.
       temporary_directory (str): path of the directory for temporary files.
-      use_preprocessing_as_default (bool): use values derived by pre-processing as the
-          default for the hostname and username fields.
+      use_fallback_hostname (bool): use the hostname value derived pre-processing as
+          fallback.
     """
 
     CONTAINER_TYPE = "processing_configuration"
@@ -250,4 +250,4 @@ class ProcessingConfiguration(interface.AttributeContainer):
         self.task_storage_format = None
         self.task_storage_path = None
         self.temporary_directory = None
-        self.use_preprocessing_as_default = None
+        self.use_fallback_hostname = None

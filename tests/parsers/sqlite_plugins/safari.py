@@ -39,7 +39,6 @@ class SafariHistoryPluginTest(test_lib.SQLitePluginTestCase):
             "visit_count": 2,
             "was_http_non_get": False,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 

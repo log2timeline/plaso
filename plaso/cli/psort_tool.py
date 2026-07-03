@@ -134,6 +134,7 @@ class PsortTool(analysis_tool.AnalysisTool, tool_options.OutputModuleOptions):
         configuration.profiling.directory = self._profiling_directory
         configuration.profiling.profilers = self._profilers
         configuration.profiling.sample_rate = self._profiling_sample_rate
+        configuration.use_fallback_hostname = self._output_fallback_hostname
 
         return configuration
 

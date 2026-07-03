@@ -53,7 +53,7 @@ description_short | Equivalent to message_short
 display_name | Human readable representation of the path specification
 filename | The "filename" attribute if present in the event data, otherwise derived from the path specification
 host | Equivalent to hostname
-hostname | The "hostname" attribute if present in the event data, otherwise derived by pre-processing
+hostname | The "hostname" attribute if present in the event data. Will fallback to the hostname derived by pre-processing, if the option "--output-fallback-hostname" is enabled.
 inode | The "inode" attribute if present in the event data, otherwise derived from the file system identifier (such as inode, MFT entry) in the path specification
 macb | MACB (Modification, Access, Change, Birth) group representation
 message | The event message string as defined by the message formatter

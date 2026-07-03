@@ -238,7 +238,6 @@ class CLITool:
         argument_group.add_argument(
             "-h", "--help", action="help", help="Show this help message and exit."
         )
-
         argument_group.add_argument(
             "--troubles",
             dest="show_troubleshooting",
@@ -246,7 +245,6 @@ class CLITool:
             default=False,
             help="Show troubleshooting information.",
         )
-
         argument_group.add_argument(
             "-V",
             "--version",
@@ -270,7 +268,6 @@ class CLITool:
             default=False,
             help="Enable debug output.",
         )
-
         argument_group.add_argument(
             "-q",
             "--quiet",
@@ -279,7 +276,6 @@ class CLITool:
             default=False,
             help="Disable informational output.",
         )
-
         argument_group.add_argument(
             "-u",
             "--unattended",
@@ -308,10 +304,9 @@ class CLITool:
             type=str,
             default="",
             help=(
-                f"Path of the file in which to store log messages, by default "
-                f'this file will be named: "{self.NAME:s}-YYYYMMDDThhmmss.log.gz". '
-                f"Note that the file will be gzip compressed if the extension is "
-                f'".gz".'
+                f"Path of the file in which to store log messages, by default this "
+                f'file will be named: "{self.NAME:s}-YYYYMMDDThhmmss.log.gz". Note '
+                f'that the file will be gzip compressed if the extension is ".gz".'
             ),
         )
 
@@ -326,17 +321,12 @@ class CLITool:
 
         if date_time_delta.days > 180:
             logger.warning(
-                (
-                    "This version of plaso is more than 6 months old. We strongly "
-                    "recommend to update it."
-                )
+                "This version of Plaso is more than 6 months old. It is strongly "
+                "recommended to update it."
             )
-
             self._PrintUserWarning(
-                (
-                    "the version of plaso you are using is more than 6 months old. We "
-                    "strongly recommend to update it."
-                )
+                "the version of Plaso you are using is more than 6 months old. It is "
+                "strongly recommended to update it."
             )
 
     def GetCommandLineArguments(self):

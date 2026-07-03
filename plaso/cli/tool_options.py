@@ -109,6 +109,7 @@ class OutputModuleOptions:
         self._output_custom_fields = []
         self._output_custom_formatters_path = None
         self._output_dynamic_time = None
+        self._output_fallback_hostname = None
         self._output_filename = None
         self._output_format = None
         self._output_module = None
@@ -258,6 +259,9 @@ class OutputModuleOptions:
         self._output_custom_formatters_path = custom_formatters_path
 
         self._output_dynamic_time = getattr(options, "dynamic_time", False)
+        self._output_fallback_hostname = getattr(
+            options, "output_fallback_hostname", False
+        )
 
         time_zone_string = self.ParseStringOption(options, "output_time_zone")
         if isinstance(time_zone_string, str):
@@ -349,6 +353,17 @@ class OutputModuleOptions:
             help=(
                 "Indicate that the output should use dynamic time. Output formats that "
                 "support dynamic time are: dynamic"
+            ),
+        )
+        argument_group.add_argument(
+            "--output_fallback_hostname",
+            "--output-fallback-hostname",
+            dest="output_fallback_hostname",
+            action="store_true",
+            default=False,
+            help=(
+                "Indicate that the output should use the hostname value derived by "
+                "pre-processing as fallback"
             ),
         )
         # Note the default here is None so we can determine if the time zone option was
