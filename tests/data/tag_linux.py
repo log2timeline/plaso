@@ -101,8 +101,8 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
 
     def testRuleLogin(self):
         """Tests the login tagging rule."""
-        # Test: data_type is 'linux:utmp:event' AND type == 7
-        attribute_values_per_name = {"type": [7]}
+        # Test: data_type is 'linux:utmp:event' AND login_type == 7
+        attribute_values_per_name = {"login_type": [7]}
         self._CheckTaggingRule(utmp.UtmpEventData, attribute_values_per_name, ["login"])
 
         # Test: data_type is 'selinux:line' AND audit_type is 'LOGIN'
@@ -307,7 +307,9 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
 
     def testRuleLogout(self):
         """Tests the logout tagging rule."""
-        # Test: data_type is 'linux:utmp:event' AND type == 8 AND terminal != '' AND
+        # Test: data_type is 'linux:utmp:event' AND
+        #       login_type == 8 AND
+        #       terminal != '' AND
         #       pid != 0
 
         # Cannot use _CheckTaggingRule here because of terminal != ''
@@ -316,7 +318,7 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
         event.timestamp_desc = definitions.TIME_DESCRIPTION_UNKNOWN
 
         event_data = utmp.UtmpEventData()
-        event_data.type = 0
+        event_data.login_type = 0
         event_data.terminal = "tty1"
         event_data.pid = 1
 
@@ -324,7 +326,7 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
 
         self._CheckLabels(storage_writer, [])
 
-        event_data.type = 8
+        event_data.login_type = 8
         event_data.terminal = ""
 
         storage_writer = self._TagEvent(event, event_data, None)
@@ -411,11 +413,11 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
 
     def testRuleBoot(self):
         """Tests the boot tagging rule."""
-        # Test: data_type is 'linux:utmp:event' AND type == 2 AND
+        # Test: data_type is 'linux:utmp:event' AND login_type == 2 AND
         #       terminal is 'system boot' AND username is 'reboot'
         attribute_values_per_name = {
+            "login_type": [2],
             "terminal": ["system boot"],
-            "type": [2],
             "username": ["reboot"],
         }
         self._CheckTaggingRule(utmp.UtmpEventData, attribute_values_per_name, ["boot"])
@@ -428,12 +430,12 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
 
     def testRuleShutdown(self):
         """Tests the shutdonw tagging rule."""
-        # Test: data_type is 'linux:utmp:event' AND type == 1 AND
+        # Test: data_type is 'linux:utmp:event' AND login_type == 1 AND
         #       (terminal is '~~' OR terminal is 'system boot') AND
         #       username is 'shutdown'
         attribute_values_per_name = {
+            "login_type": [1],
             "terminal": ["~~", "system boot"],
-            "type": [1],
             "username": ["shutdown"],
         }
         self._CheckTaggingRule(
@@ -448,9 +450,9 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
 
     def testRuleRunlevel(self):
         """Tests the runlevel tagging rule."""
-        # Test: data_type is 'linux:utmp:event' AND type == 1 AND
+        # Test: data_type is 'linux:utmp:event' AND login_type == 1 AND
         #       username is 'runlevel'
-        attribute_values_per_name = {"type": [1], "username": ["runlevel"]}
+        attribute_values_per_name = {"login_type": [1], "username": ["runlevel"]}
         self._CheckTaggingRule(
             utmp.UtmpEventData, attribute_values_per_name, ["runlevel"]
         )

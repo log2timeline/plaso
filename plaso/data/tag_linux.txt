@@ -11,7 +11,7 @@ application_execution
 
 # Tags Linux log-in events.
 login
-  data_type is 'linux:utmp:event' AND type == 7
+  data_type is 'linux:utmp:event' AND login_type == 7
   data_type is 'selinux:line' AND audit_type is 'LOGIN'
   reporter is 'login' AND (message_body contains 'logged in' OR message_body contains 'ROOT LOGIN' OR message_body contains 'session opened')
   reporter is 'sshd' AND (message_body contains 'session opened' OR message_body contains 'Starting session')
@@ -58,7 +58,7 @@ firewall_change
 # Tags Linux log-out events.
 logout
   # This will also flag dead gettys that init kills during shutdown/reboot (at least with SysV init)
-  data_type is 'linux:utmp:event' AND type == 8 AND terminal != '' AND pid != 0
+  data_type is 'linux:utmp:event' AND login_type == 8 AND terminal != '' AND pid != 0
   reporter is 'login' AND message_body contains 'session closed'
   reporter is 'sshd' AND (message_body contains 'session closed' OR message_body contains 'Close session')
   reporter is 'systemd-logind' AND message_body contains 'logged out'
@@ -75,17 +75,17 @@ session_stop
 
 # Tags Linux system boot events.
 boot
-  data_type is 'linux:utmp:event' AND type == 2 AND terminal is 'system boot' AND username is 'reboot'
+  data_type is 'linux:utmp:event' AND login_type == 2 AND terminal is 'system boot' AND username is 'reboot'
   data_type is 'selinux:line' AND audit_type is 'SYSTEM_BOOT'
 
 # Tags Linux system shutdown events.
 shutdown
-  data_type is 'linux:utmp:event' AND type == 1 AND (terminal is '~~' OR terminal is 'system boot') AND username is 'shutdown'
+  data_type is 'linux:utmp:event' AND login_type == 1 AND (terminal is '~~' OR terminal is 'system boot') AND username is 'shutdown'
   data_type is 'selinux:line' AND audit_type is 'SYSTEM_SHUTDOWN'
 
 # Tags Linux system run level change events.
 runlevel
-  data_type is 'linux:utmp:event' AND type == 1 AND username is 'runlevel'
+  data_type is 'linux:utmp:event' AND login_type == 1 AND username is 'runlevel'
   data_type is 'selinux:line' AND audit_type is 'SYSTEM_RUNLEVEL'
 
 # Tags Linux device connection events.

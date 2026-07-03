@@ -317,13 +317,10 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
 
             search_query = callback_method(url)
             if not search_query:
-                analysis_mediator.ProduceAnalysisWarning(
-                    (
-                        f"Unable to determine search query: {method_name:s} in URL: "
-                        f"{url:s}"
-                    ),
-                    self.NAME,
+                message = (
+                    f"Unable to determine search query: {method_name:s} in URL: {url:s}"
                 )
+                analysis_mediator.ProduceAnalysisWarning(message, self.NAME)
                 continue
 
             try:
@@ -332,10 +329,10 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
                 search_query = None
 
             if not search_query:
-                analysis_mediator.ProduceAnalysisWarning(
-                    f"Unable to decode search query: {method_name:s} in URL: {url:s}",
-                    self.NAME,
+                message = (
+                    f"Unable to decode search query: {method_name:s} in URL: {url:s}"
                 )
+                analysis_mediator.ProduceAnalysisWarning(message, self.NAME)
                 continue
 
             event_tag = self._CreateEventTag(event, self._EVENT_TAG_LABELS)

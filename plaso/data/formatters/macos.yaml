@@ -550,8 +550,8 @@ source: 'MacOS User plist'
 type: 'conditional'
 data_type: 'macos:utmpx:entry'
 enumeration_helpers:
-- input_attribute: 'type'
-  output_attribute: 'status'
+- input_attribute: 'login_type'
+  output_attribute: 'login_type_string'
   default_value: 'UNKNOWN'
   values:
     0: 'EMPTY'
@@ -568,7 +568,7 @@ enumeration_helpers:
     11: 'SHUTDOWN_TIME'
 message:
 - 'User: {username}'
-- 'Status: {status}'
+- 'Status: {login_type_string}'
 - 'Hostname: {hostname}'
 - 'Terminal: {terminal}'
 - 'PID: {pid}'
@@ -576,7 +576,7 @@ message:
 short_message:
 - 'User: {username}'
 - 'PID: {pid}'
-- 'Status: {status}'
+- 'Status: {login_type_string}'
 short_source: 'LOG'
 source: 'MacOS UTMPX Log'
 ---
