@@ -133,13 +133,12 @@ class UtmpParserTest(test_lib.ParserTestCase):
         )
 
     def testParse64bitUtmpFile(self):
-        """Tests the Parse function on a 64-bit (aarch64) utmp file.
+        """Tests the Parse function on a 64-bit little-endian (aarch64) file.
 
         The libc6 utmp record is 400 bytes on 64-bit builds without 32-bit time
-        compatibility (e.g. aarch64), versus 384 bytes on x86-64. This sample was
-        generated on aarch64 with the dfirlabs/utmp-specimens generator: an empty
-        slot, a dead process, a system boot, a run-level change, and old and new
-        time records.
+        compatibility (e.g. aarch64), versus 384 bytes on x86-64. This is the
+        dtformats utmp-aarch64 specimen: an empty slot, a dead process, a system
+        boot, a run-level change, and old and new time records.
         """
         parser = utmp.UtmpParser()
         storage_writer = self._ParseFile(["utmp_aarch64"], parser)
@@ -165,13 +164,13 @@ class UtmpParserTest(test_lib.ParserTestCase):
             "data_type": "linux:utmp:event",
             "exit_status": 0,
             "hostname": "localhost",
-            "ip_address": "0.0.0.0",
+            "ip_address": "4.3.2.1",
             "offset": 400,
-            "pid": 2914,
+            "pid": 18,
             "terminal": "tty2",
             "terminal_identifier": 12916,
             "login_type": 8,
-            "written_time": "2026-07-03T17:14:32.000000+00:00",
+            "written_time": "2026-07-03T14:57:58.000000+00:00",
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
@@ -180,14 +179,14 @@ class UtmpParserTest(test_lib.ParserTestCase):
         expected_event_values = {
             "data_type": "linux:utmp:event",
             "hostname": "0.0.0.0",
-            "ip_address": "0.0.0.0",
+            "ip_address": "4.3.2.1",
             "offset": 800,
-            "pid": 2914,
+            "pid": 18,
             "terminal": "system boot",
             "terminal_identifier": 126,
             "login_type": 2,
             "username": "reboot",
-            "written_time": "2026-07-03T17:14:32.000000+00:00",
+            "written_time": "2026-07-03T14:57:58.000000+00:00",
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 2)
         self.CheckEventData(event_data, expected_event_values)
@@ -196,14 +195,104 @@ class UtmpParserTest(test_lib.ParserTestCase):
         expected_event_values = {
             "data_type": "linux:utmp:event",
             "offset": 2000,
-            "pid": 2914,
+            "pid": 18,
             "terminal": "}",
             "terminal_identifier": 32382,
             "login_type": 3,
             "username": "date",
-            "written_time": "2026-07-03T17:19:32.000000+00:00",
+            "written_time": "2026-07-03T15:02:58.000000+00:00",
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 5)
+        self.CheckEventData(event_data, expected_event_values)
+
+    def testParseX8664UtmpFile(self):
+        """Tests the Parse function on a 384-byte little-endian (x86-64) file.
+
+        This is the dtformats utmp-x86_64 specimen: the same records as the
+        aarch64 sample but in the 384-byte record layout.
+        """
+        parser = utmp.UtmpParser()
+        storage_writer = self._ParseFile(["utmp_x86_64"], parser)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 6)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        # Record 1: a dead process at offset 384 (the 384-byte record size).
+        expected_event_values = {
+            "data_type": "linux:utmp:event",
+            "hostname": "localhost",
+            "ip_address": "4.3.2.1",
+            "offset": 384,
+            "pid": 19,
+            "terminal": "tty2",
+            "terminal_identifier": 12916,
+            "login_type": 8,
+            "written_time": "2026-07-03T14:58:29.000000+00:00",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
+        self.CheckEventData(event_data, expected_event_values)
+
+    def testParseBigEndianUtmpFile(self):
+        """Tests the Parse function on a big-endian (s390x) utmp file.
+
+        The libc6 utmp format is native-endian, so on a big-endian system such
+        as s390x the record integers are big-endian. This is the dtformats
+        utmp-s390 specimen; the parser detects the layout by validation.
+        """
+        parser = utmp.UtmpParser()
+        storage_writer = self._ParseFile(["utmp_s390"], parser)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 6)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "recovery_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        # Record 1: a dead process. login_type reads as 8 (not a large misread
+        # value), showing the integers were read big-endian.
+        expected_event_values = {
+            "data_type": "linux:utmp:event",
+            "hostname": "localhost",
+            "ip_address": "1.2.3.4",
+            "offset": 400,
+            "pid": 32,
+            "terminal": "tty2",
+            "terminal_identifier": 1949433856,
+            "login_type": 8,
+            "written_time": "2026-07-04T05:00:25.000000+00:00",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # Record 2: system boot.
+        expected_event_values = {
+            "data_type": "linux:utmp:event",
+            "hostname": "0.0.0.0",
+            "ip_address": "1.2.3.4",
+            "offset": 800,
+            "pid": 32,
+            "terminal": "system boot",
+            "login_type": 2,
+            "username": "reboot",
+            "written_time": "2026-07-04T05:00:25.000000+00:00",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 2)
         self.CheckEventData(event_data, expected_event_values)
 
 

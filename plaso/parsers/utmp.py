@@ -233,13 +233,15 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
     def _GetEntryFormat(self, file_object, file_size):
         """Determines the record layout of a utmp file.
 
-        The 32-bit (384-byte) and 64-bit (400-byte) record layouts are told
-        apart by reading the first records with each: a record read with the
-        wrong record size misaligns and violates the record invariants. A layout
-        is only considered when its first record is valid, and the layout with
-        the most valid non-empty records is selected. A file is only accepted
-        when enough valid non-empty records are found, so the parser does not
-        claim files, such as executables, that are not utmp files.
+        The record layout is one of the 32-bit little-endian (384-byte),
+        64-bit little-endian (400-byte) or 64-bit big-endian (400-byte, e.g.
+        s390x) layouts. They are told apart by reading the first records with
+        each: a record read with the wrong layout misaligns, or reads its
+        integers in the wrong byte order, and violates the record invariants. A
+        layout is only considered when its first record is valid, and the layout
+        with the most valid non-empty records is selected. A file is only
+        accepted when enough valid non-empty records are found, so the parser
+        does not claim files, such as executables, that are not utmp files.
 
         Args:
           file_object (dfvfs.FileIO): a file-like object.
@@ -256,6 +258,7 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         for entry_size, definition_name in (
             (self._ENTRY_SIZE_32BIT, "linux_libc6_utmp_entry"),
             (self._ENTRY_SIZE_64BIT, "linux_libc6_utmp_entry_64bit"),
+            (self._ENTRY_SIZE_64BIT, "linux_libc6_utmp_entry_64bit_bigendian"),
         ):
             if file_size < entry_size:
                 continue
