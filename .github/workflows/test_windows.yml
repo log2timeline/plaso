@@ -1,0 +1,46 @@
+# Run tests on Windows.
+name: test_windows
+on: [push, pull_request]
+permissions: read-all
+jobs:
+  test_windows:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+        - os: windows-2025
+          python-version: '3.14'
+          toxenv: 'py314'
+        - os: windows-2025
+          python-version: '3.14'
+          toxenv: 'end2end'
+    steps:
+    - name: Configure git
+      run: git config --global core.autocrlf false
+    - uses: actions/checkout@v6
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v6
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+    - name: Install tox
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install tox tox-gh-actions
+    - name: Install pywin32 to ensure sys.platform is working as expected
+      shell: cmd
+      env:
+        PYTHON: ${{ env.pythonLocation }}
+      run: |
+        python -m pip install pywin32
+        python "%PYTHON%\Scripts\pywin32_postinstall.py" -install
+    - name: Install dependencies
+      shell: cmd
+      run: |
+        git clone https://github.com/log2timeline/l2tdevtools.git ..\l2tdevtools
+        set PYTHONPATH=..\l2tdevtools
+        mkdir downloads
+        python ..\l2tdevtools\tools\update.py --download-directory downloads --machine-type amd64 --track dev acstore artifacts bencode certifi chardet dateutil defusedxml dfdatetime dfvfs dfwinreg dtfabric fakeredis flor libbde libcaes libcreg libesedb libevt libevtx libewf libfcrypto libfsapfs libfsext libfsfat libfshfs libfsntfs libfsxfs libfvde libfwnt libfwsi liblnk libluksde libmodi libmsiecf libolecf libphdi libqcow libregf libscca libsigscan libsmdev libsmraw libvhdi libvmdk libvsapm libvsgpt libvshadow libvslvm lz4 opensearch-py pefile psutil pyparsing pytsk3 pytz pyzmq PyYAML redis requests urllib3 xattr XlsxWriter yara-python zstd
+    - name: Run tests
+      run: |
+        tox -e ${{ matrix.toxenv }}
