@@ -71,7 +71,6 @@ class StatusViewTest(test_lib.CLIToolTestCase):
         test_view.SetSourceInformation(
             "/test/source/path", dfvfs_definitions.SOURCE_TYPE_DIRECTORY
         )
-
         process_status = processing_status.ProcessingStatus()
         process_status.UpdateForemanStatus(
             "f_identifier",
@@ -129,7 +128,6 @@ class StatusViewTest(test_lib.CLIToolTestCase):
             "file: w_test_file\n"
             "\n"
         )
-
         output = output_writer.ReadOutput()
         self.assertEqual(output, expected_output)
 
@@ -141,7 +139,6 @@ class StatusViewTest(test_lib.CLIToolTestCase):
         test_view.SetSourceInformation(
             "/test/source/path", dfvfs_definitions.SOURCE_TYPE_DIRECTORY
         )
-
         process_status = processing_status.ProcessingStatus()
         process_status.UpdateForemanStatus(
             "f_identifier",
@@ -171,7 +168,6 @@ class StatusViewTest(test_lib.CLIToolTestCase):
             "Events          "
             "File"
         )
-
         if not sys.platform.startswith("win"):
             table_header = f"\x1b[1m{table_header:s}\x1b[0m"
 
@@ -195,7 +191,6 @@ class StatusViewTest(test_lib.CLIToolTestCase):
             "",
             "",
         ]
-
         output = output_writer.ReadOutput()
         self._CheckOutput(output, expected_output)
 
@@ -227,7 +222,6 @@ class StatusViewTest(test_lib.CLIToolTestCase):
             "Event Data      "
             "File"
         )
-
         if not sys.platform.startswith("win"):
             table_header = f"\x1b[1m{table_header:s}\x1b[0m"
 
@@ -260,7 +254,6 @@ class StatusViewTest(test_lib.CLIToolTestCase):
             "",
             "",
         ]
-
         output = output_writer.ReadOutput()
         self._CheckOutput(output, expected_output)
 
@@ -274,7 +267,6 @@ class StatusViewTest(test_lib.CLIToolTestCase):
         test_view.SetSourceInformation(
             "/test/source/path", dfvfs_definitions.SOURCE_TYPE_DIRECTORY
         )
-
         process_status.start_time = 0
         processing_time = test_view._FormatProcessingTime(process_status)
 
@@ -308,7 +300,6 @@ class StatusViewTest(test_lib.CLIToolTestCase):
         test_view.SetSourceInformation(
             "/test/source/path", dfvfs_definitions.SOURCE_TYPE_DIRECTORY
         )
-
         test_view.PrintExtractionStatusHeader(None)
 
     # TODO: add tests for PrintExtractionSummary
