@@ -58,7 +58,7 @@ class StatusView:
         super().__init__()
         self._artifact_filters = None
         self._filter_file = None
-        self._have_ansi_support = not win32console
+        self._have_ansi_support = False
         self._mode = self.MODE_WINDOW
         self._output_writer = output_writer
         self._source_path = None
@@ -68,7 +68,10 @@ class StatusView:
         self._storage_file_path = None
         self._tool_name = tool_name
 
-        if win32console:
+        if not sys.platform.startswith("win"):
+            self._have_ansi_support = True
+
+        elif win32console:
             kernel32 = ctypes.windll.kernel32
             stdout_handle = kernel32.GetStdHandle(self._WINAPI_STD_OUTPUT_HANDLE)
             result = kernel32.SetConsoleMode(
@@ -362,6 +365,7 @@ class StatusView:
                 "Reports",
             ],
             column_sizes=[23, 7, 15, 15, 15, 15, 0],
+            have_ansi_support=self._have_ansi_support,
         )
         self._AddsAnalysisProcessStatusTableRow(
             processing_status.foreman_status, table_view
@@ -467,7 +471,9 @@ class StatusView:
             ]
 
         table_view = views.CLITabularTableView(
-            column_names=column_name, column_sizes=[15, 7, 15, 15, 15, 15, 0]
+            column_names=column_name,
+            column_sizes=[15, 7, 15, 15, 15, 15, 0],
+            have_ansi_support=self._have_ansi_support,
         )
         self._AddExtractionProcessStatusTableRow(
             processing_status.foreman_status, table_view, show_events
@@ -507,6 +513,7 @@ class StatusView:
                     "Total",
                 ],
                 column_sizes=[15, 15, 15, 15, 15, 0],
+                have_ansi_support=self._have_ansi_support,
             )
             table_view.AddRow(
                 [
@@ -540,6 +547,7 @@ class StatusView:
                     "Total",
                 ],
                 column_sizes=[15, 7, 15, 15, 15, 0],
+                have_ansi_support=self._have_ansi_support,
             )
             table_view.AddRow(
                 [

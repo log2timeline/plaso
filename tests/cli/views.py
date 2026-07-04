@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Tests for the view classes."""
 
-import sys
 import unittest
 
 from plaso.cli import views
@@ -139,10 +138,27 @@ class CLITabularTableView(shared_test_lib.BaseTestCase):
             "Second name     The second name in the table",
             "",
         ]
+        self.assertEqual(string.split("\n"), expected_strings)
 
-        if not sys.platform.startswith("win"):
-            expected_strings[0] = "\x1b[1mName            Description\x1b[0m"
+    def testWriteWithAnsiSupport(self):
+        """Tests the Write function with ANSI support."""
+        output_writer = test_lib.TestOutputWriter()
 
+        table_view = views.CLITabularTableView(
+            column_names=["Name", "Description"], have_ansi_support=True
+        )
+        table_view.AddRow(["First name", "The first name in the table"])
+        table_view.AddRow(["Second name", "The second name in the table"])
+
+        table_view.Write(output_writer)
+        string = output_writer.ReadOutput()
+
+        expected_strings = [
+            "\x1b[1mName            Description\x1b[0m",
+            "First name      The first name in the table",
+            "Second name     The second name in the table",
+            "",
+        ]
         self.assertEqual(string.split("\n"), expected_strings)
 
 

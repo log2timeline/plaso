@@ -2,11 +2,6 @@
 
 import abc
 
-try:
-    import win32console
-except ImportError:
-    win32console = None
-
 
 class BaseTableView:
     """Table view interface."""
@@ -207,7 +202,9 @@ class CLITabularTableView(BaseTableView):
 
     _NUMBER_OF_SPACES_IN_TAB = 8
 
-    def __init__(self, column_names=None, column_sizes=None, title=None):
+    def __init__(
+        self, column_names=None, column_sizes=None, have_ansi_support=False, title=None
+    ):
         """Initializes a command line table view.
 
         Args:
@@ -217,10 +214,12 @@ class CLITabularTableView(BaseTableView):
               minimum column size the column will be enlarged. Note that the
               minimum columns size will be rounded up to the number of spaces
               of the next tab.
+          have_ansi_support (Option[bool]): True if console has ANSI color support.
           title (Optional[str]): title.
         """
         super().__init__(column_names=column_names, title=title)
         self._column_sizes = column_sizes or []
+        self._have_ansi_support = have_ansi_support
 
     def _WriteRow(self, output_writer, values, in_bold=False):
         """Writes a row of values aligned to the column width.
@@ -242,8 +241,8 @@ class CLITabularTableView(BaseTableView):
 
         row_strings = "".join(row_strings)
 
-        if in_bold and not win32console:
-            # TODO: for win32console get current color and set intensity,
+        if in_bold and self._have_ansi_support:
+            # TODO: for Windows use win32console, get current color and set intensity,
             # write the header separately then reset intensity.
             row_strings = f"\x1b[1m{row_strings:s}\x1b[0m"
 
