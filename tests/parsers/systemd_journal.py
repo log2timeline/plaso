@@ -94,10 +94,22 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
 
         expected_event_values = {
             "data_type": "systemd:journal",
+            "boot_identifier": "493676ee7ee04cff9afb308244ef893c",
+            "command_line": "/sbin/init splash",
+            "executable": "/lib/systemd/systemd",
+            "facility": "system daemons",
+            "group_identifier": "0",
             "hostname": "test-VirtualBox",
+            "machine_identifier": "a447b9eff9fe40a890e8e376e92a4ede",
             "message_body": "Started User Manager for UID 1000.",
             "pid": "1",
+            "process_name": "systemd",
+            "recorded_time": "2017-01-27T09:40:55.855726+00:00",
             "reporter": "systemd",
+            "severity": "INFO",
+            "systemd_unit": "init.scope",
+            "transport": "journal",
+            "user_identifier": "0",
             "written_time": "2017-01-27T09:40:55.913258+00:00",
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
@@ -106,10 +118,19 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
         # Test a XZ compressed data log entry.
         expected_event_values = {
             "data_type": "systemd:journal",
+            "boot_identifier": "493676ee7ee04cff9afb308244ef893c",
+            "facility": "user-level message",
+            "group_identifier": "0",
             "hostname": "test-VirtualBox",
+            "machine_identifier": "a447b9eff9fe40a890e8e376e92a4ede",
             "message_body": "a" * 692,
             "pid": "22921",
+            "process_name": "logger",
+            "recorded_time": "2017-02-06T16:24:32.562231+00:00",
             "reporter": "root",
+            "severity": "NOTICE",
+            "transport": "syslog",
+            "user_identifier": "0",
             "written_time": "2017-02-06T16:24:32.564585+00:00",
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 2098)
@@ -138,13 +159,47 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
 
         expected_event_values = {
             "data_type": "systemd:journal",
+            "audit_login_identifier": "1000",
+            "boot_identifier": "02e8c96371d240b7b3934b11b08a120e",
+            "command_line": "/lib/systemd/systemd --user",
+            "executable": "/lib/systemd/systemd",
+            "facility": "system daemons",
+            "group_identifier": "1000",
             "hostname": "testlol",
+            "machine_identifier": "cf624987d3b145a79c35ae3874368fc7",
             "message_body": "Reached target Paths.",
             "pid": "822",
+            "process_name": "systemd",
+            "recorded_time": "2018-07-03T15:00:16.679635+00:00",
             "reporter": "systemd",
+            "severity": "INFO",
+            "systemd_unit": "user@1000.service",
+            "transport": "journal",
+            "user_identifier": "1000",
             "written_time": "2018-07-03T15:00:16.682340+00:00",
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # Test the reporter fallback to _COMM when SYSLOG_IDENTIFIER is absent.
+        # This entry has no SYSLOG_IDENTIFIER, so reporter (and the pid, which is
+        # only set for non-kernel reporters) are derived from the trusted _COMM.
+        expected_event_values = {
+            "data_type": "systemd:journal",
+            "audit_login_identifier": "1000",
+            "facility": None,
+            "hostname": "testlol",
+            "pid": "1485",
+            "process_name": "indicator-sound",
+            "recorded_time": "2018-07-03T15:00:21.873337+00:00",
+            "reporter": "indicator-sound",
+            "severity": "WARNING",
+            "systemd_unit": "user@1000.service",
+            "transport": "journal",
+            "user_identifier": "1000",
+            "written_time": "2018-07-03T15:00:21.875704+00:00",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 39)
         self.CheckEventData(event_data, expected_event_values)
 
         # Test a LZ4 compressed data log entry.
@@ -165,10 +220,18 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
 
         expected_event_values = {
             "data_type": "systemd:journal",
+            "boot_identifier": "02e8c96371d240b7b3934b11b08a120e",
+            "facility": "user-level message",
+            "group_identifier": "1000",
             "hostname": "testlol",
+            "machine_identifier": "cf624987d3b145a79c35ae3874368fc7",
             "message_body": expected_message_body,
             "pid": "34757",
+            "recorded_time": "2018-07-03T15:19:04.664754+00:00",
             "reporter": "test",
+            "severity": "NOTICE",
+            "transport": "syslog",
+            "user_identifier": "1000",
             "written_time": "2018-07-03T15:19:04.667807+00:00",
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 84)
@@ -197,12 +260,24 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
 
         large_string = "A" * 512
 
+        # This journal was generated on stdout transport: it has no
+        # SYSLOG_FACILITY (facility stays None) and no _SOURCE_REALTIME_TIMESTAMP
+        # (recorded_time stays None).
         expected_event_values = {
             "data_type": "systemd:journal",
+            "boot_identifier": "7dd8f8967ea94fec9efa46beed3d2a71",
+            "facility": None,
+            "group_identifier": "1000",
             "hostname": "DESKTOP-QCDE2BT",
+            "machine_identifier": "9e4a892d275848e797b10057152ae1bf",
             "message_body": f"Some large string: {large_string:s}",
             "pid": "197",
+            "process_name": "cat",
+            "recorded_time": None,
             "reporter": "testapp",
+            "severity": "INFO",
+            "transport": "stdout",
+            "user_identifier": "1000",
             "written_time": "2023-09-26T07:42:46.445209+00:00",
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
@@ -237,12 +312,23 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
 
         expected_event_values = {
             "data_type": "systemd:journal",
+            "boot_identifier": "978fdbbbe8ab4f1d834efb2899083415",
+            "command_line": "/lib/systemd/systemd-journald",
+            "executable": "/lib/systemd/systemd-journald",
+            "facility": "system daemons",
+            "group_identifier": "0",
             "hostname": "test-VirtualBox",
+            "machine_identifier": "49cd46492584496585e147de34ed5816",
             "message_body": (
                 "Runtime journal (/run/log/journal/) is 1.2M, max 9.9M, 8.6M " "free."
             ),
             "pid": "569",
+            "process_name": "systemd-journal",
             "reporter": "systemd-journald",
+            "severity": "INFO",
+            "systemd_unit": "systemd-journald.service",
+            "transport": "driver",
+            "user_identifier": "0",
             "written_time": "2016-10-24T13:20:01.063423+00:00",
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
