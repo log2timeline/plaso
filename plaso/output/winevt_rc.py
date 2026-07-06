@@ -705,7 +705,10 @@ class WinevtResourcesHelper:
         return message_string
 
     def _GetWinevtRcDatabaseParameterMessageString(
-        self, provider_identifier, log_source, message_identifier,
+        self,
+        provider_identifier,
+        log_source,
+        message_identifier,
     ):
         """Retrieves a specific Windows EventLog resource database parameter string.
 
@@ -1022,7 +1025,9 @@ class WinevtResourcesHelper:
                 )
             else:
                 message_string = self._GetWinevtRcDatabaseParameterMessageString(
-                    provider_identifier, log_source, message_identifier,
+                    provider_identifier,
+                    log_source,
+                    message_identifier,
                 )
 
             if message_string:

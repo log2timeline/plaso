@@ -43,13 +43,11 @@ class WinevtResourcesHelperTest(shared_test_lib.BaseTestCase):
         test_helper = winevt_rc.WinevtResourcesHelper(
             None, shared_test_lib.TEST_DATA_PATH, 0x00000409
         )
-        expected_message_string = (
-            "The remote endpoint was not reachable."
-        )
+        expected_message_string = "The remote endpoint was not reachable."
         message_string = test_helper._GetWinevtRcDatabaseParameterMessageString(
             "{15a7a4f8-0072-4eab-abad-f98a4d666aed}",
             "Microsoft-Windows-Dhcp-Client",
-            0x803d0010,
+            0x803D0010,
         )
         self.assertEqual(message_string, expected_message_string)
 
