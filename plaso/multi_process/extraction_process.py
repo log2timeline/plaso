@@ -314,7 +314,6 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
         self._current_display_name = parser_mediator.GetDisplayNameForPathSpec(
             path_spec
         )
-
         try:
             file_entry = path_spec_resolver.Resolver.OpenFileEntry(
                 path_spec, resolver_context=parser_mediator.resolver_context
@@ -337,7 +336,7 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
 
         except Exception as exception:  # pylint: disable=broad-except
             parser_mediator.ProduceExtractionWarning(
-                (f"unable to process path specification with error: {exception!s}"),
+                f"unable to process path specification with error: {exception!s}",
                 path_spec=path_spec,
             )
             if self._processing_configuration.debug_output:

@@ -1,5 +1,7 @@
 """The storage reader."""
 
+import collections
+
 from plaso.containers import events
 from plaso.containers import sessions
 from plaso.storage import logger
@@ -71,6 +73,40 @@ class StorageReader:
             container_type, filter_expression=filter_expression
         )
 
+    def GetDataTypesCounter(self):
+        """Retrieves the data types counter.
+
+        Returns:
+          collections.Counter: Data types counter.
+        """
+        if not self.HasAttributeContainers("data_type_count"):
+            data_type_dict = {}
+        else:
+            data_type_dict = {
+                data_type_count.name: data_type_count
+                for data_type_count in self.GetAttributeContainers("data_type_count")
+            }
+
+        return collections.Counter(data_type_dict)
+
+    def GetEventLabelsCounter(self):
+        """Retrieves the event labels counter.
+
+        Returns:
+          collections.Counter: Data types counter.
+        """
+        if not self.HasAttributeContainers("event_label_count"):
+            event_labels_dict = {}
+        else:
+            event_labels_dict = {
+                event_label_count.label: event_label_count
+                for event_label_count in self.GetAttributeContainers(
+                    "event_label_count"
+                )
+            }
+
+        return collections.Counter(event_labels_dict)
+
     def GetEventTagByEventIdentifer(self, event_identifier):
         """Retrieves the event tag of a specific event.
 
@@ -89,7 +125,6 @@ class StorageReader:
                 filter_expression=f'_event_identifier == "{lookup_key:s}"',
             )
         )
-
         if not event_tags:
             return None
 
@@ -116,6 +151,22 @@ class StorageReader:
           int: the number of containers of a specified type.
         """
         return self._store.GetNumberOfAttributeContainers(container_type)
+
+    def GetParsersCounter(self):
+        """Retrieves the parsers counter.
+
+        Returns:
+          collections.Counter: Parsers counter.
+        """
+        if not self.HasAttributeContainers("parser_count"):
+            parser_dict = {}
+        else:
+            parser_dict = {
+                parser_count.name: parser_count
+                for parser_count in self.GetAttributeContainers("parser_count")
+            }
+
+        return collections.Counter(parser_dict)
 
     def GetSerializationFormat(self):
         """Retrieves the serialization format of the underlying storage file.

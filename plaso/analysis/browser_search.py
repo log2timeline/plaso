@@ -183,10 +183,12 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
         """
         if "p=" not in url:
             return None
+
         _, _, line = url.partition("p=")
         before_and, _, _ = line.partition("&")
         if not before_and:
             return None
+
         yahoo_search_url = before_and.split()[0]
 
         return yahoo_search_url.replace("+", " ")
@@ -204,10 +206,12 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
         """
         if "text=" not in url:
             return None
+
         _, _, line = url.partition("text=")
         before_and, _, _ = line.partition("&")
         if not before_and:
             return None
+
         yandex_search_url = before_and.split()[0]
 
         return yandex_search_url.replace("+", " ")

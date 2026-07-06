@@ -166,6 +166,7 @@ def Main():
         [
             "body",
             "computer_name",
+            "corrupted",
             "desc",
             "displayname",
             "event",
@@ -176,6 +177,7 @@ def Main():
             "host",
             "host_name",
             "log_line",
+            "recovered",
             "user",
             "user_name",
         ]
