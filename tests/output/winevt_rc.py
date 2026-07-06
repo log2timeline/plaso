@@ -21,17 +21,17 @@ class WinevtResourcesHelperTest(shared_test_lib.BaseTestCase):
         test_helper = winevt_rc.WinevtResourcesHelper(
             None, shared_test_lib.TEST_DATA_PATH, 0x00000409
         )
-        expected_message_string = (
-            "Your computer has detected that the IP address {0:s} for the Network "
-            "Card with network address {2:s} is already in use on the network. "
-            "Your computer will automatically attempt to obtain a different "
-            "address."
-        )
         message_string = test_helper._GetWinevtRcDatabaseMessageString(
             "{15a7a4f8-0072-4eab-abad-f98a4d666aed}",
             "Microsoft-Windows-Dhcp-Client",
             0xB00003ED,
             None,
+        )
+        expected_message_string = (
+            "Your computer has detected that the IP address {0:s} for the Network "
+            "Card with network address {2:s} is already in use on the network. "
+            "Your computer will automatically attempt to obtain a different "
+            "address."
         )
         self.assertEqual(message_string, expected_message_string)
 
@@ -43,13 +43,12 @@ class WinevtResourcesHelperTest(shared_test_lib.BaseTestCase):
         test_helper = winevt_rc.WinevtResourcesHelper(
             None, shared_test_lib.TEST_DATA_PATH, 0x00000409
         )
-        expected_message_string = "The remote endpoint was not reachable."
         message_string = test_helper._GetWinevtRcDatabaseParameterMessageString(
             "{15a7a4f8-0072-4eab-abad-f98a4d666aed}",
             "Microsoft-Windows-Dhcp-Client",
-            0x803D0010,
+            0x00001712,
         )
-        self.assertEqual(message_string, expected_message_string)
+        self.assertEqual(message_string, "No network adapters are available.")
 
 
 if __name__ == "__main__":

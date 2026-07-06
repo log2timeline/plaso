@@ -12,12 +12,47 @@ class WindowsEventLogMessageFormatterHelper(interface.CustomEventFormatterHelper
 
     IDENTIFIER = "windows_eventlog_message"
 
-    _PARAMETER_REGEX = re.compile(r"^%%[1-9][0-9]*$")
+    # Specifiers that expand to a paramter place holder (e.g. %%1053)
+    _PARAMETER_REGEX = re.compile(r"(%%[1-9][0-9]*)")
 
     def __init__(self):
         """Initialized a indows EventLog message formatter helper."""
         super().__init__()
         self._winevt_resources_helper = None
+
+    def _FormatStringValue(self, provider_identifier, source_name, string_value):
+        """Formats a (insertion) string value.
+
+        Args:
+          provider_identifier (str): EventLog provider identifier.
+          source_name (str): EventLog source, such as "Application Error".
+          string_value (str): string value.
+
+        Returns:
+          str: formatted string value.
+        """
+        if string_value is None:
+            return ""
+
+        formatted_string_parts = []
+        for string_part in self._PARAMETER_REGEX.split(string_value):
+            if string_part.startswith("%%"):
+                try:
+                    parameter_identifier = int(string_part[2:], 10)
+                    parameter_string = self._winevt_resources_helper.GetParameterString(
+                        provider_identifier,
+                        source_name,
+                        parameter_identifier,
+                    )
+                    if parameter_string:
+                        string_part = parameter_string
+
+                except ValueError:
+                    pass
+
+            formatted_string_parts.append(string_part)
+
+        return "".join(formatted_string_parts)
 
     def FormatEventValues(self, output_mediator, event_values):
         """Formats event values using the helper.
@@ -41,25 +76,9 @@ class WindowsEventLogMessageFormatterHelper(interface.CustomEventFormatterHelper
             if message_string_template:
                 string_values = []
                 for string_value in event_values.get("strings", []):
-                    if string_value is None:
-                        string_value = ""
-
-                    elif self._PARAMETER_REGEX.match(string_value):
-                        try:
-                            parameter_identifier = int(string_value[2:], 10)
-                            parameter_string = (
-                                self._winevt_resources_helper.GetParameterString(
-                                    provider_identifier,
-                                    source_name,
-                                    parameter_identifier,
-                                )
-                            )
-                            if parameter_string:
-                                string_value = parameter_string
-
-                        except ValueError:
-                            pass
-
+                    string_value = self._FormatStringValue(
+                        provider_identifier, source_name, string_value
+                    )
                     string_values.append(string_value)
 
                 try:
@@ -68,12 +87,10 @@ class WindowsEventLogMessageFormatterHelper(interface.CustomEventFormatterHelper
                     provider_identifier = provider_identifier or ""
                     strings = ", ".join(string_values)
                     logger.error(
-                        (
-                            f"Unable to format message: 0x{message_identifier:08x} of "
-                            f"provider: {provider_identifier:s} template: "
-                            f'"{message_string_template:s}" and strings: "{strings:s}" '
-                            f"with error: {exception!s}"
-                        )
+                        f"Unable to format message: 0x{message_identifier:08x} of "
+                        f"provider: {provider_identifier:s} template: "
+                        f'"{message_string_template:s}" and strings: "{strings:s}" '
+                        f"with error: {exception!s}"
                     )
                     # Unable to create the message string.
                     # TODO: consider returning the unformatted message string.
