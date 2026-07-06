@@ -28,15 +28,11 @@ class WindowsResourceFileHelperTest(shared_test_lib.BaseTestCase):
         )
         self.assertEqual(message_string, expected_message_string)
 
-        original_message_string = (
-            "User %1 logged in from host %2%0 at %3."
-        )
+        original_message_string = "User %1 logged in from host %2%0 at %3."
         message_string = test_helper.FormatMessageStringInPEP3101(
             original_message_string
         )
-        expected_message_string = (
-            "User {0:s} logged in from host {1:s}"
-        )
+        expected_message_string = "User {0:s} logged in from host {1:s}"
         self.assertEqual(message_string, expected_message_string)
 
 
