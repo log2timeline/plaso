@@ -283,15 +283,18 @@ class WinevtResourcesAttributeContainerStore(
         super().__init__()
         self.string_format = string_format
 
-        self._containers_manager.RegisterAttributeContainers(
-            [
-                WinevtResourcesEventLogProvider,
-                WinevtResourcesMessageFile,
-                WinevtResourcesMessageString,
-                WinevtResourcesMessageStringMapping,
-                WinevtResourcesMessageTable,
-            ]
-        )
+        try:
+            self._containers_manager.RegisterAttributeContainers(
+                [
+                    WinevtResourcesEventLogProvider,
+                    WinevtResourcesMessageFile,
+                    WinevtResourcesMessageString,
+                    WinevtResourcesMessageStringMapping,
+                    WinevtResourcesMessageTable,
+                ]
+            )
+        except KeyError:
+            pass
 
     def _ReadAndCheckStorageMetadata(self, check_readable_only=False):
         """Reads storage metadata and checks that the values are valid.
@@ -526,7 +529,6 @@ class WinevtResourcesHelper:
             f"language_identifier == {self._lcid:d} and "
             f"message_identifier == {message_identifier:d}"
         )
-
         for message_string in storage_reader.GetAttributeContainers(
             "windows_eventlog_message_string", filter_expression=filter_expression
         ):
@@ -672,7 +674,6 @@ class WinevtResourcesHelper:
         message_identifier = self._GetMappedMessageIdentifier(
             database_reader, provider_identifier, message_identifier, event_version
         )
-
         message_file_identifiers = self._GetEventMessageFileIdentifiers(
             provider.event_message_files
         )
@@ -691,6 +692,74 @@ class WinevtResourcesHelper:
             logger.warning(
                 f"No message string for identifier: 0x{message_identifier:08x} "
                 f"(original: 0x{original_message_identifier:08x}) "
+                f"of provider: {provider_lookup_key:s}"
+            )
+            return None
+
+        message_string = message_strings[0].text
+        if database_reader.string_format == "wrc":
+            message_string = self._resouce_file_helper.FormatMessageStringInPEP3101(
+                message_string
+            )
+
+        return message_string
+
+    def _GetWinevtRcDatabaseParameterMessageString(
+        self, provider_identifier, log_source, message_identifier,
+    ):
+        """Retrieves a specific Windows EventLog resource database parameter string.
+
+        Args:
+          provider_identifier (str): EventLog provider identifier.
+          log_source (str): EventLog source, such as "Application Error".
+          message_identifier (int): message identifier.
+
+        Returns:
+          str: parameter message string or None if not available.
+        """
+        database_reader = self._GetWinevtRcDatabaseReader()
+        if not database_reader:
+            return None
+
+        if self._windows_eventlog_providers is None:
+            self._ReadWindowsEventLogProviders(
+                database_reader, container_type="winevtrc_eventlog_provider"
+            )
+
+        if self._windows_eventlog_message_files is None:
+            self._ReadWindowsEventLogMessageFiles(
+                database_reader,
+                container_type="winevtrc_message_file",
+                path_attribute="windows_path",
+            )
+
+        provider, provider_lookup_key = self._GetWindowsEventLogProvider(
+            provider_identifier, log_source
+        )
+        if not provider:
+            return None
+
+        message_files = provider.parameter_message_files
+        if not message_files:
+            # If no parameter message files are defined fallback to the event message
+            # files and default parameter message files.
+            message_files = list(provider.event_message_files)
+            message_files.extend(self._DEFAULT_PARAMETER_MESSAGE_FILES)
+
+        message_file_identifiers = self._GetEventMessageFileIdentifiers(message_files)
+        if not message_file_identifiers:
+            logger.warning(
+                f"No parameter message file for identifier: "
+                f"0x{message_identifier:08x} of provider: {provider_lookup_key:s}"
+            )
+            return None
+
+        message_strings = self._GetMessageStringsWithMessageTable(
+            database_reader, message_file_identifiers, message_identifier
+        )
+        if not message_strings:
+            logger.warning(
+                f"No parameter string for identifier: 0x{message_identifier:08x} "
                 f"of provider: {provider_lookup_key:s}"
             )
             return None
@@ -758,7 +827,6 @@ class WinevtResourcesHelper:
         message_identifier = self._GetMappedMessageIdentifier(
             storage_reader, provider_identifier, message_identifier, event_version
         )
-
         message_file_identifiers = self._GetEventMessageFileIdentifiers(
             provider.event_message_files
         )
@@ -817,8 +885,8 @@ class WinevtResourcesHelper:
 
         message_files = provider.parameter_message_files
         if not message_files:
-            # If no parameter message files are defined fallback to the event
-            # message files and default parameter message files.
+            # If no parameter message files are defined fallback to the event message
+            # files and default parameter message files.
             message_files = list(provider.event_message_files)
             message_files.extend(self._DEFAULT_PARAMETER_MESSAGE_FILES)
 
@@ -952,7 +1020,10 @@ class WinevtResourcesHelper:
                     log_source,
                     message_identifier,
                 )
-            # TODO: add winevt-rc.db support
+            else:
+                message_string = self._GetWinevtRcDatabaseParameterMessageString(
+                    provider_identifier, log_source, message_identifier,
+                )
 
             if message_string:
                 self._CacheMessageString(
