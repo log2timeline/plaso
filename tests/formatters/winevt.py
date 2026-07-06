@@ -54,7 +54,7 @@ class WindowsEventLogMessageFormatterHelperTest(test_lib.EventFormatterTestCase)
             "message_identifier": 0xB00003ED,
             "provider_identifier": "{15a7a4f8-0072-4eab-abad-f98a4d666aed}",
             "source_name": "Microsoft-Windows-Dhcp-Client",
-            "strings": ["192.168.1.15", "", "00-1A-2B-3C-4D-5E"]
+            "strings": ["192.168.1.15", "", "00-1A-2B-3C-4D-5E"],
         }
         formatter_helper.FormatEventValues(output_mediator, event_values)
         expected_string = (
