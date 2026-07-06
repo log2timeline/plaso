@@ -6,6 +6,9 @@ import re
 class WindowsResourceFileHelper:
     """Windows PE/COFF resource file helper."""
 
+    # Message string specifiers that mark end-of-string.
+    _MESSAGE_STRING_END_OF_STRING_SPECIFIER_RE = re.compile(r"%0(?!\d)")
+
     # Message string specifiers that are considered white space.
     _MESSAGE_STRING_WHITE_SPACE_SPECIFIER_RE = re.compile(r"(%[0b]|[\r\n])")
 
@@ -56,6 +59,9 @@ class WindowsResourceFileHelper:
         if not message_string:
             return None
 
+        message_string = cls._MESSAGE_STRING_END_OF_STRING_SPECIFIER_RE.split(
+            message_string, maxsplit=1
+        )[0]
         message_string = message_string.rstrip("\0")
         message_string = cls._MESSAGE_STRING_WHITE_SPACE_SPECIFIER_RE.sub(
             r"", message_string
