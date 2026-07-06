@@ -15,15 +15,6 @@ class WindowsEventLogMessageFormatterHelper(interface.CustomEventFormatterHelper
     # Specifiers that expand to a paramter place holder (e.g. %%1053)
     _PARAMETER_REGEX = re.compile(r"(%%[1-9][0-9]*)")
 
-    # Specifiers that mark end-of-string ("%0").
-    _END_OF_STRING_SPECIFIER_RE = re.compile(r"%0(?!\d)")
-
-    # Specifiers that are considered white space ("%b", "\r" and "\n").
-    _WHITE_SPACE_SPECIFIER_RE = re.compile(r"(%[0b]|[\r\n])")
-
-    # Specifiers that expand to text ("% ", "%.", "%!", "%n", "%r", "%t").
-    _TEXT_SPECIFIER_RE = re.compile(r"%([ .!%nrt])")
-
     def __init__(self):
         """Initialized a indows EventLog message formatter helper."""
         super().__init__()
