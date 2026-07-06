@@ -448,7 +448,6 @@ class WinevtResourcesHelper:
             path, filename = path_helper.PathHelper.GetWindowsSystemPath(
                 windows_path, self._environment_variables
             )
-
             lookup_path = "\\".join([path, filename]).lower()
             message_file_identifier = self._windows_eventlog_message_files.get(
                 lookup_path, None
@@ -524,18 +523,24 @@ class WinevtResourcesHelper:
         """
         message_strings = []
 
-        # TODO: add message_file_identifiers to filter_expression
-        filter_expression = (
-            f"language_identifier == {self._lcid:d} and "
-            f"message_identifier == {message_identifier:d}"
-        )
-        for message_string in storage_reader.GetAttributeContainers(
-            "windows_eventlog_message_string", filter_expression=filter_expression
-        ):
-            identifier = message_string.GetMessageFileIdentifier()
-            identifier = identifier.CopyToString()
-            if identifier in message_file_identifiers:
-                message_strings.append(message_string)
+        for message_file_identifier in message_file_identifiers:
+            filter_expression = (
+                f"_message_file_identifier == '{message_file_identifier:s}' and "
+                f"language_identifier == {self._lcid:d}"
+            )
+            for message_table in storage_reader.GetAttributeContainers(
+                "windows_eventlog_message_table", filter_expression=filter_expression
+            ):
+                message_table_identifier = message_table.GetIdentifier()
+                filter_expression = (
+                    f"_message_table_identifier == '{message_table_identifier:s}' and "
+                    f"message_identifier == {message_identifier:d}"
+                )
+                for message_string in storage_reader.GetAttributeContainers(
+                    "windows_eventlog_message_string",
+                    filter_expression=filter_expression,
+                ):
+                    message_strings.append(message_string)
 
         return message_strings
 

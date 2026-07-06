@@ -154,7 +154,6 @@ class ParserMediator:
             self._FillEventLogMessageFileLookupTablesWithMessageFiles(
                 environment_variables, provider, provider.event_message_files
             )
-
             self._FillEventLogMessageFileLookupTablesWithMessageFiles(
                 environment_variables, provider, provider.parameter_message_files
             )
@@ -235,6 +234,15 @@ class ParserMediator:
               message string.
         """
         self._storage_writer.AddAttributeContainer(message_string)
+
+    def AddWindowsEventLogMessageTable(self, message_table):
+        """Adds a Windows EventLog message table.
+
+        Args:
+          message_table (WindowsEventLogMessageTabelArtifact): Windows EventLog
+              message table.
+        """
+        self._storage_writer.AddAttributeContainer(message_table)
 
     def AddWindowsWevtTemplateEvent(self, event_definition):
         """Adds a Windows WEVT_TEMPLATE event definition.
@@ -463,7 +471,6 @@ class ParserMediator:
             providers_per_filename = self._windows_event_log_providers_per_path.get(
                 lookup_path, {}
             )
-
             for filename, provider in providers_per_filename.items():
                 if lookup_filename in (filename, f"{filename:s}.mui"):
                     windows_path = "\\".join([lookup_path, filename])
