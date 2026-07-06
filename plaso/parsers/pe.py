@@ -28,8 +28,7 @@ class PEDLLImportEventData(events.EventData):
 
     Attributes:
       delayed_import (bool): True if the DLL is imported at run-time.
-      modification_time (dfdatetime.DateTimeValues): last modification date and
-          time.
+      modification_time (dfdatetime.DateTimeValues): last modification date and time.
       name (str): name of the imported DLL.
     """
 
@@ -49,14 +48,14 @@ class PEFileEventData(events.EventData):
     Attributes:
       creation_time (dfdatetime.DateTimeValues): creation date and time.
       export_dll_name (str): name of the exported DLL.
-      export_table_modification_time (dfdatetime.DateTimeValues): export table
-          last modification date and time.
+      export_table_modification_time (dfdatetime.DateTimeValues): export table last
+          modification date and time.
       imphash (str): "Import Hash" of the Portable Executable (PE) file.
-      load_configuration_table_modification_time (dfdatetime.DateTimeValues):
-          load configuration table last modification date and time.
+      load_configuration_table_modification_time (dfdatetime.DateTimeValues): load
+          configuration table last modification date and time.
       pe_type (str): type of Portable Executable (PE) file.
-      section_names (list[str]): names of the sections in the Portable Executable
-          (PE) file.
+      section_names (list[str]): names of the sections in the Portable Executable (PE)
+          file.
     """
 
     DATA_TYPE = "pe_coff:file"
@@ -78,8 +77,7 @@ class PEResourceEventData(events.EventData):
 
     Attributes:
       identifier (int): identifier of the resource.
-      modification_time (dfdatetime.DateTimeValues): last modification date and
-          time.
+      modification_time (dfdatetime.DateTimeValues): last modification date and time.
       name (str): name of the resource.
     """
 
@@ -174,8 +172,8 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         """Parses the delay import table.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           pefile_object (pefile.PE): pefile object.
         """
         delay_import_table = getattr(
@@ -212,8 +210,8 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         """Parses the export table.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           pefile_object (pefile.PE): pefile object.
           event_data (PEFileEventData): event data.
         """
@@ -242,8 +240,8 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         """Parses the import table.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           pefile_object (pefile.PE): pefile object.
         """
         import_table = getattr(pefile_object, "DIRECTORY_ENTRY_IMPORT", None)
@@ -278,8 +276,8 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         """Parses the resource section.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           pefile_object (pefile.PE): pefile object.
         """
         resources = getattr(pefile_object, "DIRECTORY_ENTRY_RESOURCE", None)
@@ -337,23 +335,20 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
                         winevt_template_resource,
                     )
 
-    def _ParseMessageTable(
-        self, parser_mediator, message_file, language_identifier, data
-    ):
+    def _ParseMessageTable(self, parser_mediator, message_table, data):
         """Parses a message table.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
-          message_file (WindowsEventLogMessageFileArtifact): Windows EventLog
-              message file.
-          language_identifier (int): language identifier (LCID).
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
+          message_table (WindowsEventLogMessageTableArtifact): Windows EventLog message
+              table.
           data (bytes): message table data.
 
         Raises:
           ParseError: when the message table cannot be parsed.
         """
-        message_file_identifier = message_file.GetIdentifier()
+        message_table_identifier = message_table.GetIdentifier()
 
         message_table_header_map = self._GetDataTypeMap("message_table_header")
         message_table_entry_map = self._GetDataTypeMap("message_table_entry")
@@ -429,11 +424,10 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
                 string = self._resource_file_helper.FormatMessageStringInPEP3101(string)
 
                 message_string = artifacts.WindowsEventLogMessageStringArtifact(
-                    language_identifier=language_identifier,
                     message_identifier=message_identifier,
                     string=string,
                 )
-                message_string.SetMessageFileIdentifier(message_file_identifier)
+                message_string.SetMessageTableIdentifier(message_table_identifier)
                 parser_mediator.AddWindowsEventLogMessageString(message_string)
 
                 message_identifier += 1
@@ -447,10 +441,9 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
           parser_mediator (ParserMediator): mediates interactions between parsers
               and other components, such as storage and dfVFS.
           pefile_object (pefile.PE): pefile object.
-          message_file (WindowsEventLogMessageFileArtifact): Windows EventLog
-              message file.
-          message_table_resource (pefile.ResourceDirEntryData): message table
-              resource.
+          message_file (WindowsEventLogMessageFileArtifact): Windows EventLog message
+              file.
+          message_table_resource (pefile.ResourceDirEntryData): message table resource.
         """
         if (
             not message_table_resource
@@ -459,6 +452,8 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
             or not message_table_resource.directory.entries[0].directory
         ):
             return
+
+        message_file_identifier = message_file.GetIdentifier()
 
         desired_language_tag = parser_mediator.GetLanguageTag().lower()
 
@@ -470,12 +465,18 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
             if not language_tag or language_tag.lower() != desired_language_tag:
                 continue
 
+            message_table = artifacts.WindowsEventLogMessageTableArtifact(
+                language_identifier=entry.id,
+            )
+            message_table.SetMessageFileIdentifier(message_file_identifier)
+            parser_mediator.AddWindowsEventLogMessageTable(message_table)
+
             # TODO: use file offset?
             offset = getattr(entry.data.struct, "OffsetToData", None)
             size = getattr(entry.data.struct, "Size", None)
             data = pefile_object.get_memory_mapped_image()[offset : offset + size]
 
-            self._ParseMessageTable(parser_mediator, message_file, entry.id, data)
+            self._ParseMessageTable(parser_mediator, message_table, data)
 
     def _ParseWevtTemplate(self, parser_mediator, message_file, data):
         """Parses a WEVT_TEMPLATE.
@@ -483,8 +484,8 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         Args:
           parser_mediator (ParserMediator): mediates interactions between parsers
               and other components, such as storage and dfVFS.
-          message_file (WindowsEventLogMessageFileArtifact): Windows EventLog
-              message file.
+          message_file (WindowsEventLogMessageFileArtifact): Windows EventLog message
+              file.
           data (bytes): message table data.
 
         Raises:
@@ -545,7 +546,6 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
                         event_definition.SetMessageFileIdentifier(
                             message_file_identifier
                         )
-
                         parser_mediator.AddWindowsWevtTemplateEvent(event_definition)
 
     def _ParseWevtTemplateResource(
@@ -557,10 +557,9 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
           parser_mediator (ParserMediator): mediates interactions between parsers
               and other components, such as storage and dfVFS.
           pefile_object (pefile.PE): pefile object.
-          message_file (WindowsEventLogMessageFileArtifact): Windows EventLog
-              message file.
-          wevt_template_resource (pefile.ResourceDirEntryData): WEVT_TEMPLATE
-              resource.
+          message_file (WindowsEventLogMessageFileArtifact): Windows EventLog message
+              file.
+          wevt_template_resource (pefile.ResourceDirEntryData): WEVT_TEMPLATE resource.
 
         Raises:
           ParseError: when the message table cannot be parsed.

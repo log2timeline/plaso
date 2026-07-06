@@ -48,7 +48,6 @@ class PECOFFTest(test_lib.ParserTestCase):
             "load_configuration_table_modification_time": None,
             "pe_type": "Executable (EXE)",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -58,7 +57,6 @@ class PECOFFTest(test_lib.ParserTestCase):
             "modification_time": "2015-04-21T14:53:55+00:00",
             "name": "KERNEL32.dll",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -68,7 +66,6 @@ class PECOFFTest(test_lib.ParserTestCase):
             "modification_time": "2015-04-21T14:53:54+00:00",
             "name": "USER32.dll",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 2)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -100,7 +97,6 @@ class PECOFFTest(test_lib.ParserTestCase):
             "load_configuration_table_modification_time": None,
             "pe_type": "Driver (SYS)",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -118,7 +114,6 @@ class PECOFFTest(test_lib.ParserTestCase):
                 "wrc-test-wevt_template.dll": test_event_provider
             }
         }
-
         storage_writer = self._CreateStorageWriter()
         parser_mediator.SetStorageWriter(storage_writer)
 
@@ -156,9 +151,18 @@ class PECOFFTest(test_lib.ParserTestCase):
             "load_configuration_table_modification_time": None,
             "pe_type": "Dynamic Link Library (DLL)",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
+
+        number_of_artifacts = storage_writer.GetNumberOfAttributeContainers(
+            "windows_eventlog_message_table"
+        )
+        self.assertEqual(number_of_artifacts, 1)
+
+        attribute_containers = list(
+            storage_writer.GetAttributeContainers("windows_eventlog_message_table")
+        )
+        self.assertEqual(attribute_containers[0].language_identifier, 1033)
 
         number_of_artifacts = storage_writer.GetNumberOfAttributeContainers(
             "windows_eventlog_message_string"
@@ -169,7 +173,6 @@ class PECOFFTest(test_lib.ParserTestCase):
             storage_writer.GetAttributeContainers("windows_eventlog_message_string")
         )
         self.assertEqual(attribute_containers[0].message_identifier, 0xB0010001)
-        self.assertEqual(attribute_containers[0].language_identifier, 1033)
         self.assertEqual(attribute_containers[0].string, "A test value")
 
         number_of_artifacts = storage_writer.GetNumberOfAttributeContainers(
