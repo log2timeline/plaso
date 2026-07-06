@@ -2,7 +2,6 @@
 
 import collections
 import os
-import sqlite3
 
 from acstore import sqlite_store
 from acstore.containers import interface as containers_interface
@@ -11,330 +10,6 @@ from plaso.engine import path_helper
 from plaso.helpers.windows import languages
 from plaso.helpers.windows import resource_files
 from plaso.output import logger
-
-
-class Sqlite3DatabaseFile:
-    """Class that defines a sqlite3 database file."""
-
-    _HAS_TABLE_QUERY = (
-        "SELECT name FROM sqlite_master WHERE type = 'table' AND name = '{0:s}'"
-    )
-
-    def __init__(self):
-        """Initializes the database file object."""
-        super().__init__()
-        self._connection = None
-        self._cursor = None
-        self.filename = None
-        self.read_only = None
-
-    def Close(self):
-        """Closes the database file.
-
-        Raises:
-          RuntimeError: if the database is not opened.
-        """
-        if not self._connection:
-            raise RuntimeError("Cannot close database not opened.")
-
-        # We need to run commit or not all data is stored in the database.
-        self._connection.commit()
-        self._connection.close()
-
-        self._connection = None
-        self._cursor = None
-        self.filename = None
-        self.read_only = None
-
-    def HasTable(self, table_name):
-        """Determines if a specific table exists.
-
-        Args:
-          table_name (str): table name.
-
-        Returns:
-          bool: True if the table exists.
-
-        Raises:
-          RuntimeError: if the database is not opened.
-        """
-        if not self._connection:
-            raise RuntimeError("Cannot determine if table exists database not opened.")
-
-        sql_query = self._HAS_TABLE_QUERY.format(table_name)
-
-        self._cursor.execute(sql_query)
-        if self._cursor.fetchone():
-            return True
-
-        return False
-
-    def GetValues(self, table_names, column_names, condition):
-        """Retrieves values from a table.
-
-        Args:
-          table_names (list[str]): table names.
-          column_names (list[str]): column names.
-          condition (str): query condition such as
-              "log_source == 'Application Error'".
-
-        Yields:
-          sqlite3.row: row.
-
-        Raises:
-          RuntimeError: if the database is not opened.
-        """
-        if not self._connection:
-            raise RuntimeError("Cannot retrieve values database not opened.")
-
-        if condition:
-            condition = f" WHERE {condition:s}"
-        else:
-            condition = ""
-
-        table_names_string = ", ".join(table_names)
-        column_names_string = ", ".join(column_names)
-        sql_query = (
-            f"SELECT {column_names_string:s} FROM {table_names_string:s}"
-            f"{condition:s}"
-        )
-        self._cursor.execute(sql_query)
-
-        # TODO: have a look at https://docs.python.org/2/library/
-        # sqlite3.html#sqlite3.Row.
-        for row in self._cursor:
-            yield {
-                column_name: row[column_index]
-                for column_index, column_name in enumerate(column_names)
-            }
-
-    def Open(self, filename, read_only=False):
-        """Opens the database file.
-
-        Args:
-          filename (str): filename of the database.
-          read_only (Optional[bool]): True if the database should be opened in
-              read-only mode. Since sqlite3 does not support a real read-only
-              mode we fake it by only permitting SELECT queries.
-
-        Returns:
-          bool: True if successful.
-
-        Raises:
-          RuntimeError: if the database is already opened.
-        """
-        if self._connection:
-            raise RuntimeError("Cannot open database already opened.")
-
-        self.filename = filename
-        self.read_only = read_only
-
-        try:
-            self._connection = sqlite3.connect(filename)
-        except sqlite3.OperationalError:
-            return False
-
-        if not self._connection:
-            return False
-
-        self._cursor = self._connection.cursor()
-        if not self._cursor:
-            return False
-
-        return True
-
-
-class WinevtResourcesSqlite3DatabaseReader:
-    """Windows EventLog resources SQLite database reader."""
-
-    def __init__(self):
-        """Initializes a Windows EventLog resources SQLite database reader."""
-        super().__init__()
-        self._database_file = Sqlite3DatabaseFile()
-        self._resouce_file_helper = resource_files.WindowsResourceFileHelper
-        self._string_format = "wrc"
-
-    def _GetEventLogProviderKey(self, log_source):
-        """Retrieves the EventLog provider key.
-
-        Args:
-          log_source (str): EventLog source.
-
-        Returns:
-          str: EventLog provider key or None if not available.
-
-        Raises:
-          RuntimeError: if more than one value is found in the database.
-        """
-        table_names = ["event_log_providers"]
-        column_names = ["event_log_provider_key"]
-        condition = f'log_source == "{log_source:s}"'
-
-        values_list = list(
-            self._database_file.GetValues(table_names, column_names, condition)
-        )
-        number_of_values = len(values_list)
-        if number_of_values == 0:
-            return None
-
-        if number_of_values == 1:
-            values = values_list[0]
-            return values["event_log_provider_key"]
-
-        raise RuntimeError("More than one value found in database.")
-
-    def _GetMessage(self, message_file_key, lcid, message_identifier):
-        """Retrieves a specific message from a specific message table.
-
-        Args:
-          message_file_key (int): message file key.
-          lcid (int): language code identifier (LCID).
-          message_identifier (int): message identifier.
-
-        Returns:
-          str: message string or None if not available.
-
-        Raises:
-          RuntimeError: if more than one value is found in the database.
-        """
-        table_name = f"message_table_{message_file_key:d}_0x{lcid:08x}"
-
-        has_table = self._database_file.HasTable(table_name)
-        if not has_table:
-            return None
-
-        column_names = ["message_string"]
-        condition = f'message_identifier == "0x{message_identifier:08x}"'
-
-        values = list(
-            self._database_file.GetValues([table_name], column_names, condition)
-        )
-        number_of_values = len(values)
-        if number_of_values == 0:
-            return None
-
-        if number_of_values == 1:
-            return values[0]["message_string"]
-
-        raise RuntimeError("More than one value found in database.")
-
-    def _GetMessageFileKeys(self, event_log_provider_key):
-        """Retrieves the message file keys.
-
-        Args:
-          event_log_provider_key (int): EventLog provider key.
-
-        Yields:
-          int: message file key.
-        """
-        table_names = ["message_file_per_event_log_provider"]
-        column_names = ["message_file_key"]
-        condition = f"event_log_provider_key == {event_log_provider_key:d}"
-
-        generator = self._database_file.GetValues(table_names, column_names, condition)
-        for values in generator:
-            yield values["message_file_key"]
-
-    def Close(self):
-        """Closes the database reader object."""
-        self._database_file.Close()
-
-    def GetMessage(self, log_source, lcid, message_identifier):
-        """Retrieves a specific message for a specific EventLog source.
-
-        Args:
-          log_source (str): EventLog source, such as "Application Error".
-          lcid (int): language code identifier (LCID).
-          message_identifier (int): message identifier.
-
-        Returns:
-          str: message string or None if not available.
-        """
-        event_log_provider_key = self._GetEventLogProviderKey(log_source)
-        if not event_log_provider_key:
-            return None
-
-        generator = self._GetMessageFileKeys(event_log_provider_key)
-        if not generator:
-            return None
-
-        message_string = None
-        for message_file_key in generator:
-            message_string = self._GetMessage(
-                message_file_key, lcid, message_identifier
-            )
-            if message_string:
-                break
-
-        if self._string_format == "wrc":
-            message_string = self._resouce_file_helper.FormatMessageStringInPEP3101(
-                message_string
-            )
-
-        return message_string
-
-    def GetMetadataAttribute(self, attribute_name):
-        """Retrieves the metadata attribute.
-
-        Args:
-          attribute_name (str): name of the metadata attribute.
-
-        Returns:
-          str: the metadata attribute or None.
-
-        Raises:
-          RuntimeError: if more than one value is found in the database.
-        """
-        table_name = "metadata"
-
-        has_table = self._database_file.HasTable(table_name)
-        if not has_table:
-            return None
-
-        column_names = ["value"]
-        condition = f'name == "{attribute_name:s}"'
-
-        values = list(
-            self._database_file.GetValues([table_name], column_names, condition)
-        )
-        number_of_values = len(values)
-        if number_of_values == 0:
-            return None
-
-        if number_of_values == 1:
-            return values[0]["value"]
-
-        raise RuntimeError("More than one value found in database.")
-
-    def Open(self, filename):
-        """Opens the database reader object.
-
-        Args:
-          filename (str): filename of the database.
-
-        Returns:
-          bool: True if successful.
-
-        Raises:
-          RuntimeError: if the version or string format of the database
-              is not supported.
-        """
-        if not self._database_file.Open(filename, read_only=True):
-            return False
-
-        version = self.GetMetadataAttribute("version")
-        if not version or version != "20150315":
-            raise RuntimeError(f"Unsupported version: {version:s}")
-
-        string_format = self.GetMetadataAttribute("string_format")
-        if not string_format:
-            string_format = "wrc"
-
-        if string_format not in ("pep3101", "wrc"):
-            raise RuntimeError(f"Unsupported string format: {string_format:s}")
-
-        self._string_format = string_format
-        return True
 
 
 class WinevtResourcesEventLogProvider(containers_interface.AttributeContainer):
@@ -933,8 +608,8 @@ class WinevtResourcesHelper:
         """Opens the Windows EventLog resource database reader.
 
         Returns:
-          WinevtResourcesSqlite3DatabaseReader: Windows EventLog resource
-              database reader or None.
+          WinevtResourcesAttributeContainerStore: Windows EventLog resource database
+              reader or None.
         """
         if not self._winevt_database_reader and self._data_location:
             logger.warning(
@@ -947,25 +622,14 @@ class WinevtResourcesHelper:
                 return None
 
             try:
-                self._winevt_database_reader = WinevtResourcesSqlite3DatabaseReader()
-                result = self._winevt_database_reader.Open(database_path)
-            except sqlite3.OperationalError:
-                result = False
-
-            if not result:
-                try:
-                    self._winevt_database_reader = (
-                        WinevtResourcesAttributeContainerStore()
-                    )
-                    # pylint: disable=no-value-for-parameter,unexpected-keyword-arg
-                    self._winevt_database_reader.Open(
-                        path=database_path, read_only=True
-                    )
-                    result = True
-                except OSError:
-                    result = False
-
-            if not result:
+                self._winevt_database_reader = (
+                    WinevtResourcesAttributeContainerStore()
+                )
+                # pylint: disable=no-value-for-parameter,unexpected-keyword-arg
+                self._winevt_database_reader.Open(
+                    path=database_path, read_only=True
+                )
+            except OSError:
                 self._winevt_database_reader = None
 
         return self._winevt_database_reader
@@ -987,11 +651,6 @@ class WinevtResourcesHelper:
         database_reader = self._GetWinevtRcDatabaseReader()
         if not database_reader:
             return None
-
-        if isinstance(database_reader, WinevtResourcesSqlite3DatabaseReader):
-            return database_reader.GetMessage(
-                log_source, self._lcid, message_identifier
-            )
 
         if self._windows_eventlog_providers is None:
             self._ReadWindowsEventLogProviders(
@@ -1297,6 +956,7 @@ class WinevtResourcesHelper:
                     log_source,
                     message_identifier,
                 )
+            # TODO: add winevt-rc.db support
 
             if message_string:
                 self._CacheMessageString(
