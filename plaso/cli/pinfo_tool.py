@@ -2,7 +2,6 @@
 
 import argparse
 import collections
-import json
 import os
 import uuid
 
@@ -705,8 +704,19 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
               a UUID.
         """
         if self._output_format == "json":
-            json_string = json.dumps(analysis_reports_counter)
-            self._output_writer.Write(f'"analysis_reports": {json_string:s}')
+            self._output_writer.Write('"analysis_reports": {')
+
+            write_comma = False
+            for key, count_container in sorted(analysis_reports_counter.items()):
+                if write_comma:
+                    self._output_writer.Write(", ")
+
+                self._output_writer.Write(
+                    f'"{key:s}": {count_container.number_of_events:d}'
+                )
+                write_comma = True
+
+            self._output_writer.Write("}")
 
         elif self._output_format in ("markdown", "text") and analysis_reports_counter:
             title = "Reports generated per plugin"
@@ -822,15 +832,25 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
         Args:
           data_types_counter (collections.Counter): number of events per data type.
-          session_identifier (Optional[str]): session identifier, formatted as
-              a UUID.
+          session_identifier (Optional[str]): session identifier, formatted as a UUID.
         """
         if self._output_format == "json":
             if session_identifier:
                 self._output_writer.Write(", ")
 
-            json_string = json.dumps(data_types_counter)
-            self._output_writer.Write(f'"data_types": {json_string:s}')
+            self._output_writer.Write('"data_types": {')
+
+            write_comma = False
+            for key, count_container in sorted(data_types_counter.items()):
+                if write_comma:
+                    self._output_writer.Write(", ")
+
+                self._output_writer.Write(
+                    f'"{key:s}": {count_container.number_of_events:d}'
+                )
+                write_comma = True
+
+            self._output_writer.Write("}")
 
         elif self._output_format in ("markdown", "text"):
             if self._output_format == "text" and not data_types_counter:
@@ -881,8 +901,19 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
               a UUID.
         """
         if self._output_format == "json":
-            json_string = json.dumps(event_labels_counter)
-            self._output_writer.Write(f'"event_labels": {json_string:s}')
+            self._output_writer.Write('"event_labels": {')
+
+            write_comma = False
+            for key, count_container in sorted(event_labels_counter.items()):
+                if write_comma:
+                    self._output_writer.Write(", ")
+
+                self._output_writer.Write(
+                    f'"{key:s}": {count_container.number_of_events:d}'
+                )
+                write_comma = True
+
+            self._output_writer.Write("}")
 
         elif self._output_format in ("markdown", "text"):
             if self._output_format == "text" and not event_labels_counter:
@@ -936,8 +967,19 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
             if session_identifier:
                 self._output_writer.Write(", ")
 
-            json_string = json.dumps(parsers_counter)
-            self._output_writer.Write(f'"parsers": {json_string:s}')
+            self._output_writer.Write('"parsers": {')
+
+            write_comma = False
+            for key, count_container in sorted(parsers_counter.items()):
+                if write_comma:
+                    self._output_writer.Write(", ")
+
+                self._output_writer.Write(
+                    f'"{key:s}": {count_container.number_of_events:d}'
+                )
+                write_comma = True
+
+            self._output_writer.Write("}")
 
         elif self._output_format in ("markdown", "text"):
             if self._output_format == "text" and not parsers_counter:
@@ -1458,11 +1500,33 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
           warnings_by_parser_chain (collections.Counter): number of warnings per
               parser chain.
         """
-        json_string = json.dumps(warnings_by_parser_chain)
-        self._output_writer.Write(f'"warnings_by_parser": {json_string:s}')
+        self._output_writer.Write('"warnings_by_parser": {')
 
-        json_string = json.dumps(warnings_by_path_spec)
-        self._output_writer.Write(f', "warnings_by_path_spec": {json_string:s}')
+        write_comma = False
+        for key, count_container in sorted(warnings_by_parser_chain.items()):
+            if write_comma:
+                self._output_writer.Write(", ")
+
+            self._output_writer.Write(
+                f'"{key:s}": {count_container.number_of_events:d}'
+            )
+            write_comma = True
+
+        self._output_writer.Write("}")
+
+        self._output_writer.Write(', "warnings_by_path_spec": {')
+
+        write_comma = False
+        for key, count_container in sorted(warnings_by_path_spec.items()):
+            if write_comma:
+                self._output_writer.Write(", ")
+
+            self._output_writer.Write(
+                f'"{key:s}": {count_container.number_of_events:d}'
+            )
+            write_comma = True
+
+        self._output_writer.Write("}")
 
     def _PrintWarningCountersTable(
         self, description, warnings_by_path_spec, warnings_by_parser_chain
