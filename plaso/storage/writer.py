@@ -3,6 +3,7 @@
 import abc
 import collections
 
+from plaso.containers import counts
 from plaso.containers import event_sources
 from plaso.containers import events
 from plaso.containers import reports
@@ -210,3 +211,61 @@ class StorageWriter(reader.StorageReader):
         self._RaiseIfNotWritable()
 
         self._store.UpdateAttributeContainer(container)
+
+    def UpdateDataTypesCounter(self, stored_data_types_counter, data_types_counter):
+        """Updates the data types counter.
+
+        Args:
+          stored_data_types_counter (collections.Counter): the stored data types
+              counter.
+          data_types_counter (collections.Counter): the data types counter with
+              additional values.
+        """
+        for key, value in data_types_counter.items():
+            data_type_count = stored_data_types_counter.get(key, None)
+            if data_type_count:
+                data_type_count.number_of_events += value
+                self.UpdateAttributeContainer(data_type_count)
+            else:
+                data_type_count = counts.DataTypeCount(name=key, number_of_events=value)
+                data_types_counter[key] = data_type_count
+                self.AddAttributeContainer(data_type_count)
+
+    def UpdateEventLabelsCounter(
+        self, stored_event_labels_counter, event_labels_counter
+    ):
+        """Updates the event labels counter.
+
+        Args:
+          stored_event_labels_counter (collections.Counter): the stored event labels
+              counter.
+          event_labels_counter (collections.Counter): the event labels counter with
+              additional values.
+        """
+        for key, value in event_labels_counter.items():
+            parser_count = stored_event_labels_counter.get(key)
+            if parser_count:
+                parser_count.number_of_events += value
+                self.UpdateAttributeContainer(parser_count)
+            else:
+                parser_count = counts.ParserCount(name=key, number_of_events=value)
+                event_labels_counter[key] = parser_count
+                self.AddAttributeContainer(parser_count)
+
+    def UpdateParsersCounter(self, stored_parsers_counter, parsers_counter):
+        """Updates the parsers counter.
+
+        Args:
+          stored_parsers_counter (collections.Counter): the stored parsers counter.
+          parsers_counter (collections.Counter): the parsers counter with additional
+              values.
+        """
+        for key, value in parsers_counter.items():
+            parser_count = stored_parsers_counter.get(key)
+            if parser_count:
+                parser_count.number_of_events += value
+                self.UpdateAttributeContainer(parser_count)
+            else:
+                parser_count = counts.ParserCount(name=key, number_of_events=value)
+                parsers_counter[key] = parser_count
+                self.AddAttributeContainer(parser_count)

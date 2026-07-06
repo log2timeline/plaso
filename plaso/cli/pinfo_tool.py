@@ -13,6 +13,7 @@ from plaso.cli import tool_options
 from plaso.cli import tools
 from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
+from plaso.containers import counts
 from plaso.containers import events
 from plaso.containers import event_sources
 from plaso.containers import reports
@@ -122,49 +123,6 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
         Returns:
           dict[str, collections.Counter]: storage counters.
         """
-        # TODO: determine analysis report counter from actual stored analysis
-        # reports or remove.
-        analysis_reports_counter = collections.Counter()
-        analysis_reports_counter_error = False
-
-        data_types_counter = {}
-        if storage_reader.HasAttributeContainers("data_type_count"):
-            data_types_counter = {
-                data_type_count.name: data_type_count.number_of_events
-                for data_type_count in storage_reader.GetAttributeContainers(
-                    "data_type_count"
-                )
-            }
-
-        data_types_counter = collections.Counter(data_types_counter)
-        data_types_counter_error = False
-
-        event_labels_counter = {}
-        if storage_reader.HasAttributeContainers("event_label_count"):
-            event_labels_counter = {
-                event_label_count.label: event_label_count.number_of_events
-                for event_label_count in storage_reader.GetAttributeContainers(
-                    "event_label_count"
-                )
-            }
-
-        event_labels_counter = collections.Counter(event_labels_counter)
-        event_labels_counter_error = False
-
-        parsers_counter = {}
-        if storage_reader.HasAttributeContainers("parser_count"):
-            parsers_counter = {
-                parser_count.name: parser_count.number_of_events
-                for parser_count in storage_reader.GetAttributeContainers(
-                    "parser_count"
-                )
-            }
-
-        parsers_counter = collections.Counter(parsers_counter)
-        parsers_counter_error = False
-
-        storage_counters = {}
-
         extraction_warnings_by_path_spec = collections.Counter()
         extraction_warnings_by_parser_chain = collections.Counter()
 
@@ -173,15 +131,22 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
         ):
             path_spec_string = self._GetPathSpecificationString(warning.path_spec)
 
-            extraction_warnings_by_path_spec[path_spec_string] += 1
-            extraction_warnings_by_parser_chain[warning.parser_chain] += 1
+            count_container = extraction_warnings_by_path_spec.get(path_spec_string)
+            if not count_container:
+                count_container = counts.WarningCount(number_of_events=0)
+                extraction_warnings_by_path_spec[path_spec_string] = count_container
+            count_container.number_of_events += 1
 
-        storage_counters["extraction_warnings_by_path_spec"] = (
-            extraction_warnings_by_path_spec
-        )
-        storage_counters["extraction_warnings_by_parser_chain"] = (
-            extraction_warnings_by_parser_chain
-        )
+            count_container = extraction_warnings_by_parser_chain.get(
+                warning.parser_chain
+            )
+            if not count_container:
+                count_container = counts.WarningCount(number_of_events=0)
+                extraction_warnings_by_parser_chain[warning.parser_chain] = (
+                    count_container
+                )
+            count_container.number_of_events += 1
+
         recovery_warnings_by_path_spec = collections.Counter()
         recovery_warnings_by_parser_chain = collections.Counter()
 
@@ -190,15 +155,22 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
         ):
             path_spec_string = self._GetPathSpecificationString(warning.path_spec)
 
-            recovery_warnings_by_path_spec[path_spec_string] += 1
-            recovery_warnings_by_parser_chain[warning.parser_chain] += 1
+            count_container = recovery_warnings_by_path_spec.get(path_spec_string)
+            if not count_container:
+                count_container = counts.WarningCount(number_of_events=0)
+                recovery_warnings_by_path_spec[path_spec_string] = count_container
+            count_container.number_of_events += 1
 
-        storage_counters["recovery_warnings_by_path_spec"] = (
-            recovery_warnings_by_path_spec
-        )
-        storage_counters["recovery_warnings_by_parser_chain"] = (
-            recovery_warnings_by_parser_chain
-        )
+            count_container = recovery_warnings_by_parser_chain.get(
+                warning.parser_chain
+            )
+            if not count_container:
+                count_container = counts.WarningCount(number_of_events=0)
+                recovery_warnings_by_parser_chain[warning.parser_chain] = (
+                    count_container
+                )
+            count_container.number_of_events += 1
+
         timelining_warnings_by_path_spec = collections.Counter()
         timelining_warnings_by_parser_chain = collections.Counter()
 
@@ -210,27 +182,50 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
             ):
                 path_spec_string = self._GetPathSpecificationString(warning.path_spec)
 
-                timelining_warnings_by_path_spec[path_spec_string] += 1
-                timelining_warnings_by_parser_chain[warning.parser_chain] += 1
+                count_container = timelining_warnings_by_path_spec.get(path_spec_string)
+                if not count_container:
+                    count_container = counts.WarningCount(number_of_events=0)
+                    timelining_warnings_by_path_spec[path_spec_string] = count_container
+                count_container.number_of_events += 1
 
+                count_container = timelining_warnings_by_parser_chain.get(
+                    warning.parser_chain
+                )
+                if not count_container:
+                    count_container = counts.WarningCount(number_of_events=0)
+                    timelining_warnings_by_parser_chain[warning.parser_chain] = (
+                        count_container
+                    )
+                count_container.number_of_events += 1
+
+        storage_counters = {}
+
+        # TODO: determine analysis report counter from actual stored analysis
+        # reports or remove.
+        storage_counters["analysis_reports"] = collections.Counter()
+
+        storage_counters["data_types"] = storage_reader.GetDataTypesCounter()
+        storage_counters["event_labels"] = storage_reader.GetEventLabelsCounter()
+        storage_counters["parsers"] = storage_reader.GetParsersCounter()
+
+        storage_counters["extraction_warnings_by_path_spec"] = (
+            extraction_warnings_by_path_spec
+        )
+        storage_counters["extraction_warnings_by_parser_chain"] = (
+            extraction_warnings_by_parser_chain
+        )
+        storage_counters["recovery_warnings_by_path_spec"] = (
+            recovery_warnings_by_path_spec
+        )
+        storage_counters["recovery_warnings_by_parser_chain"] = (
+            recovery_warnings_by_parser_chain
+        )
         storage_counters["timelining_warnings_by_path_spec"] = (
             timelining_warnings_by_path_spec
         )
         storage_counters["timelining_warnings_by_parser_chain"] = (
             timelining_warnings_by_parser_chain
         )
-        if not analysis_reports_counter_error:
-            storage_counters["analysis_reports"] = analysis_reports_counter
-
-        if not data_types_counter_error:
-            storage_counters["data_types"] = data_types_counter
-
-        if not event_labels_counter_error:
-            storage_counters["event_labels"] = event_labels_counter
-
-        if not parsers_counter_error:
-            storage_counters["parsers"] = parsers_counter
-
         return storage_counters
 
     def _CheckStorageFile(self, storage_file_path, warn_about_existing=False):
@@ -247,8 +242,8 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
         if os.path.exists(storage_file_path):
             if not os.path.isfile(storage_file_path):
                 raise errors.BadConfigOption(
-                    f"Storage file: {storage_file_path:s} already exists and is not "
-                    f"a file."
+                    f"Storage file: {storage_file_path:s} already exists and is not a "
+                    f"file."
                 )
 
             if warn_about_existing:
@@ -281,10 +276,13 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
         differences = {}
         for key in keys:
-            value = counter.get(key, 0)
-            compare_value = compare_counter.get(key, 0)
-            if value != compare_value:
-                differences[key] = (value, compare_value)
+            count_container = counter.get(key, 0)
+            compare_count_container = compare_counter.get(key, 0)
+            if (
+                count_container.number_of_events
+                != compare_count_container.number_of_events
+            ):
+                differences[key] = (count_container, compare_count_container)
 
         return differences
 
@@ -720,12 +718,12 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
                 column_names=["Plugin name", "Number of reports"],
                 title=title,
             )
-            for key, value in sorted(analysis_reports_counter.items()):
+            for key, count_container in sorted(analysis_reports_counter.items()):
                 if key != "total":
-                    table_view.AddRow([key, value])
+                    table_view.AddRow([key, count_container.number_of_events])
 
             try:
-                total = analysis_reports_counter["total"]
+                total = analysis_reports_counter["total"].number_of_events
             except KeyError:
                 total = "N/A"
 
@@ -770,8 +768,10 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
                     table_view.AddRow(["Text", analysis_report.text or ""])
                 else:
                     table_view.AddRow(["Results", ""])
-                    for key, value in sorted(analysis_report.analysis_counter.items()):
-                        table_view.AddRow([key, value])
+                    for key, count_container in sorted(
+                        analysis_report.analysis_counter.items()
+                    ):
+                        table_view.AddRow([key, count_container.number_of_events])
 
                 table_view.Write(self._output_writer)
 
@@ -804,8 +804,11 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
         table_view = views.ViewsFactory.GetTableView(
             self._views_format_type, column_names=column_names, title=title
         )
-        for key, value in sorted(differences.items()):
-            value_string = f"{value[0]:d} ({value[1]:d})"
+        for key, count_containers in sorted(differences.items()):
+            value_string = (
+                f"{count_containers[0].number_of_events:d} "
+                f"({count_containers[1].number_of_events:d})"
+            )
             if reverse:
                 table_view.AddRow([value_string, key])
             else:
@@ -855,11 +858,16 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
                         title=title,
                         title_level=title_level,
                     )
-                    for key, value in sorted(data_types_counter.items()):
+                    for key, count_container in sorted(data_types_counter.items()):
                         if key != "total":
-                            table_view.AddRow([key, value])
+                            table_view.AddRow([key, count_container.number_of_events])
 
-                    table_view.AddRow(["Total", data_types_counter["total"]])
+                    try:
+                        total = data_types_counter["total"].number_of_events
+                    except KeyError:
+                        total = "N/A"
+
+                    table_view.AddRow(["Total", total])
 
                     table_view.Write(self._output_writer)
 
@@ -902,12 +910,12 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
                         title=title,
                         title_level=title_level,
                     )
-                    for key, value in sorted(event_labels_counter.items()):
+                    for key, count_container in sorted(event_labels_counter.items()):
                         if key != "total":
-                            table_view.AddRow([key, value])
+                            table_view.AddRow([key, count_container.number_of_events])
 
                     try:
-                        total = event_labels_counter["total"]
+                        total = event_labels_counter["total"].number_of_events
                     except KeyError:
                         total = "N/A"
 
@@ -957,11 +965,16 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
                         title=title,
                         title_level=title_level,
                     )
-                    for key, value in sorted(parsers_counter.items()):
+                    for key, count_container in sorted(parsers_counter.items()):
                         if key != "total":
-                            table_view.AddRow([key, value])
+                            table_view.AddRow([key, count_container.number_of_events])
 
-                    table_view.AddRow(["Total", parsers_counter["total"]])
+                    try:
+                        total = parsers_counter["total"].number_of_events
+                    except KeyError:
+                        total = "N/A"
+
+                    table_view.AddRow(["Total", total])
 
                     table_view.Write(self._output_writer)
 

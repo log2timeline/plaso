@@ -152,7 +152,7 @@ class MSIECFParser(interface.FileObjectParser):
                 event_data.cache_directory_index
             ]
 
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data, recovered=recovered)
 
     def _ParseItems(self, parser_mediator, msiecf_file):
         """Parses a MSIE Cache File (MSIECF) items.
@@ -178,10 +178,11 @@ class MSIECFParser(interface.FileObjectParser):
             cache_directories.append(cache_directory_name)
 
         if decode_error:
-            parser_mediator.ProduceExtractionWarning(
+            warning_message = (
                 "unable to decode cache directory names as ASCII. Unsupported code "
                 "points are escaped."
             )
+            parser_mediator.ProduceWarning(warning_message)
 
         for item_index in range(0, msiecf_file.number_of_items):
             try:
@@ -198,9 +199,10 @@ class MSIECFParser(interface.FileObjectParser):
                     )
 
             except OSError as exception:
-                parser_mediator.ProduceExtractionWarning(
+                warning_message = (
                     f"Unable to parse item: {item_index:d} with error: {exception!s}"
                 )
+                parser_mediator.ProduceWarning(warning_message)
 
         for item_index in range(0, msiecf_file.number_of_recovered_items):
             try:
@@ -223,10 +225,11 @@ class MSIECFParser(interface.FileObjectParser):
                     )
 
             except OSError as exception:
-                parser_mediator.ProduceRecoveryWarning(
+                warning_message = (
                     f"Unable to parse recovered item: {item_index:d} with error: "
                     f"{exception!s}"
                 )
+                parser_mediator.ProduceWarning(warning_message, recovered=True)
 
     def _ParseRedirected(self, parser_mediator, msiecf_item, recovered=False):
         """Extract data from a MSIE Cache Files (MSIECF) redirected item.
@@ -244,7 +247,7 @@ class MSIECFParser(interface.FileObjectParser):
         event_data.recovered = recovered
         event_data.url = msiecf_item.location
 
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data, recovered=recovered)
 
     def _ParseUrl(
         self,
@@ -285,7 +288,6 @@ class MSIECFParser(interface.FileObjectParser):
             secondary_date_time = dfdatetime_filetime.Filetime(
                 timestamp=secondary_timestamp
             )
-
             if msiecf_item.type in ("history-daily", "history-weekly"):
                 secondary_date_time.is_local_time = True
 
@@ -304,11 +306,9 @@ class MSIECFParser(interface.FileObjectParser):
                             f"0x{msiecf_item.offset:08x} as ASCII. Unsupported code "
                             f"points are escaped."
                         )
-                        if recovered:
-                            parser_mediator.ProduceRecoveryWarning(warning_message)
-                        else:
-                            parser_mediator.ProduceExtractionWarning(warning_message)
-
+                        parser_mediator.ProduceWarning(
+                            warning_message, recovered=recovered
+                        )
                         http_headers = msiecf_item.data[:-1].decode(
                             "ascii", errors="backslashreplace"
                         )
@@ -379,7 +379,7 @@ class MSIECFParser(interface.FileObjectParser):
                 fat_date_time=last_checked_timestamp
             )
 
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data, recovered=recovered)
 
     @classmethod
     def GetFormatSpecification(cls):
@@ -410,9 +410,8 @@ class MSIECFParser(interface.FileObjectParser):
         try:
             msiecf_file.open_file_object(file_object)
         except OSError as exception:
-            parser_mediator.ProduceExtractionWarning(
-                f"unable to open file with error: {exception!s}"
-            )
+            warning_message = f"unable to open file with error: {exception!s}"
+            parser_mediator.ProduceWarning(warning_message)
             return
 
         try:

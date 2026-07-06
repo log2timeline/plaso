@@ -187,8 +187,8 @@ class DateLessLogHelper(interface.AttributeContainer):
 class EventData(interface.AttributeContainer):
     """Event data attribute container.
 
-    The event data attribute container represents the attributes of an entity,
-    such as a database record or log line.
+    The event data attribute container represents the attributes of an entity, such as
+    a database record or log line.
 
     Attributes:
       data_type (str): event data type indicator.
@@ -197,9 +197,11 @@ class EventData(interface.AttributeContainer):
     CONTAINER_TYPE = "event_data"
 
     SCHEMA = {
+        "_corrupted": "bool",
         "_event_data_stream_identifier": "AttributeContainerIdentifier",
         "_event_values_hash": "str",
         "_parser_chain": "str",
+        "_recovered": "bool",
         "data_type": "str",
     }
 
@@ -216,9 +218,11 @@ class EventData(interface.AttributeContainer):
           data_type (Optional[str]): event data type indicator.
         """
         super().__init__()
+        self._corrupted = False
         self._event_data_stream_identifier = None
         self._event_values_hash = None
         self._parser_chain = None
+        self._recovered = False
 
         self.data_type = data_type
 

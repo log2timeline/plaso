@@ -641,8 +641,8 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         self._user_accounts = list(
             storage_writer.GetAttributeContainers("user_account")
         )
-
         stored_event_labels_counter = {}
+
         if storage_writer.HasAttributeContainers("event_label_count"):
             stored_event_labels_counter = {
                 event_label_count.label: event_label_count
@@ -660,7 +660,6 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
                     "parser_count"
                 )
             }
-
             total_number_of_events = parsers_counter["total"]
 
         else:
@@ -685,7 +684,6 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
             self._AnalyzeEvents(
                 storage_writer, analysis_plugins, event_filter=event_filter
             )
-
             for key, value in self._event_labels_counter.items():
                 event_label_count = stored_event_labels_counter.get(key)
                 if event_label_count:

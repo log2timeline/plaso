@@ -25,7 +25,6 @@ class WinEvtxRecordEventData(events.EventData):
           from which the event data was extracted.
       provider_identifier (str): identifier of the EventLog provider.
       record_number (int): event record number.
-      recovered (bool): True if the record was recovered.
       source_name (str): name of the event source.
       strings (list[str]): event strings.
       user_sid (str): user security identifier (SID) stored in the event record.
@@ -48,7 +47,6 @@ class WinEvtxRecordEventData(events.EventData):
         self.offset = None
         self.provider_identifier = None
         self.record_number = None
-        self.recovered = None
         self.source_name = None
         self.strings = None
         self.user_sid = None
@@ -64,48 +62,39 @@ class WinEvtxParser(interface.FileObjectParser):
     NAME = "winevtx"
     DATA_FORMAT = "Windows XML EventLog (EVTX) file"
 
-    def _GetEventDataFromRecord(
-        self, parser_mediator, record_index, evtx_record, recovered=False
-    ):
+    def _ParseRecord(self, parser_mediator, record_index, evtx_record, recovered=False):
         """Extract data from a Windows XML EventLog (EVTX) record.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           record_index (int): event record index.
           evtx_record (pyevtx.record): event record.
           recovered (Optional[bool]): True if the record was recovered.
-
-        Return:
-          WinEvtxRecordEventData: event data.
         """
+        corrupted = False
         event_data = WinEvtxRecordEventData()
 
         try:
             event_data.record_number = evtx_record.identifier
         except OverflowError as exception:
             warning_message = (
-                f"unable to read record identifier from event record: "
-                f"{record_index:d} with error: {exception!s}"
+                f"unable to read record identifier from event record: {record_index:d} "
+                f"with error: {exception!s}"
             )
-            if recovered:
-                parser_mediator.ProduceRecoveryWarning(warning_message)
-            else:
-                parser_mediator.ProduceExtractionWarning(warning_message)
+            parser_mediator.ProduceWarning(warning_message, recovered=recovered)
+            corrupted = True
 
         try:
             event_identifier = evtx_record.event_identifier
         except OverflowError as exception:
             warning_message = (
-                f"unable to read event identifier from event record: "
-                f"{record_index:d} with error: {exception!s}"
+                f"unable to read event identifier from event record: {record_index:d} "
+                f"with error: {exception!s}"
             )
-            if recovered:
-                parser_mediator.ProduceRecoveryWarning(warning_message)
-            else:
-                parser_mediator.ProduceExtractionWarning(warning_message)
-
+            parser_mediator.ProduceWarning(warning_message, recovered=recovered)
             event_identifier = None
+            corrupted = True
 
         try:
             event_identifier_qualifiers = evtx_record.event_identifier_qualifiers
@@ -114,15 +103,11 @@ class WinEvtxParser(interface.FileObjectParser):
                 f"unable to read event identifier qualifiers from event record: "
                 f"{record_index:d} with error: {exception!s}"
             )
-            if recovered:
-                parser_mediator.ProduceRecoveryWarning(warning_message)
-            else:
-                parser_mediator.ProduceExtractionWarning(warning_message)
-
+            parser_mediator.ProduceWarning(warning_message, recovered=recovered)
             event_identifier_qualifiers = None
+            corrupted = True
 
         event_data.offset = evtx_record.offset
-        event_data.recovered = recovered
 
         if event_identifier is not None:
             event_data.event_identifier = event_identifier
@@ -147,68 +132,40 @@ class WinEvtxParser(interface.FileObjectParser):
 
         event_data.xml_string = evtx_record.xml_string
 
-        return event_data
-
-    def _ParseRecord(self, parser_mediator, record_index, evtx_record, recovered=False):
-        """Extract data from a Windows XML EventLog (EVTX) record.
-
-        Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
-          record_index (int): event record index.
-          evtx_record (pyevtx.record): event record.
-          recovered (Optional[bool]): True if the record was recovered.
-        """
-        event_data = self._GetEventDataFromRecord(
-            parser_mediator, record_index, evtx_record, recovered=recovered
-        )
-
         try:
-            creation_time = evtx_record.get_creation_time_as_integer()
+            timestamp = evtx_record.get_creation_time_as_integer()
+
+            event_data.creation_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
         except OverflowError as exception:
             warning_message = (
                 f"unable to read creation time from event record: {record_index:d} "
                 f"with error: {exception!s}"
             )
-            if recovered:
-                parser_mediator.ProduceRecoveryWarning(warning_message)
-            else:
-                parser_mediator.ProduceExtractionWarning(warning_message)
-
-            creation_time = None
-
-        if creation_time:
-            event_data.creation_time = dfdatetime_filetime.Filetime(
-                timestamp=creation_time
-            )
+            parser_mediator.ProduceWarning(warning_message, recovered=recovered)
+            corrupted = True
 
         try:
-            written_time = evtx_record.get_written_time_as_integer()
+            timestamp = evtx_record.get_written_time_as_integer()
+
+            event_data.written_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
         except OverflowError as exception:
             warning_message = (
                 f"unable to read written time from event record: {record_index:d} "
                 f"with error: {exception!s}"
             )
-            if recovered:
-                parser_mediator.ProduceRecoveryWarning(warning_message)
-            else:
-                parser_mediator.ProduceExtractionWarning(warning_message)
+            parser_mediator.ProduceWarning(warning_message, recovered=recovered)
+            corrupted = True
 
-            written_time = None
-
-        if written_time:
-            event_data.written_time = dfdatetime_filetime.Filetime(
-                timestamp=written_time
-            )
-
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(
+            event_data, corrupted=corrupted, recovered=recovered
+        )
 
     def _ParseRecords(self, parser_mediator, evtx_file):
         """Parses Windows XML EventLog (EVTX) records.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           evtx_file (pyevtx.file): Windows XML EventLog (EVTX) file.
         """
         # To handle errors when parsing a Windows XML EventLog (EVTX) file in the
@@ -225,10 +182,11 @@ class WinEvtxParser(interface.FileObjectParser):
                 self._ParseRecord(parser_mediator, record_index, evtx_record)
 
             except OSError as exception:
-                parser_mediator.ProduceExtractionWarning(
+                warning_message = (
                     f"unable to parse event record: {record_index:d} with error: "
                     f"{exception!s}"
                 )
+                parser_mediator.ProduceWarning(warning_message)
 
         for record_index in range(evtx_file.number_of_recovered_records):
             if parser_mediator.abort:
@@ -241,10 +199,11 @@ class WinEvtxParser(interface.FileObjectParser):
                 )
 
             except OSError as exception:
-                parser_mediator.ProduceRecoveryWarning(
+                warning_message = (
                     f"unable to parse recovered event record: {record_index:d} with "
                     f"error: {exception!s}"
                 )
+                parser_mediator.ProduceWarning(warning_message, recovered=True)
 
     @classmethod
     def GetFormatSpecification(cls):
@@ -261,8 +220,8 @@ class WinEvtxParser(interface.FileObjectParser):
         """Parses a Windows XML EventLog (EVTX) file-like object.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): a file-like object.
         """
         code_page = parser_mediator.GetCodePage()
@@ -273,9 +232,8 @@ class WinEvtxParser(interface.FileObjectParser):
         try:
             evtx_file.open_file_object(file_object)
         except OSError as exception:
-            parser_mediator.ProduceExtractionWarning(
-                f"unable to open file with error: {exception!s}"
-            )
+            warning_message = f"unable to open file with error: {exception!s}"
+            parser_mediator.ProduceWarning(warning_message)
             return
 
         try:

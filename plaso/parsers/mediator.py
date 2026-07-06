@@ -1,6 +1,5 @@
 """The parser mediator."""
 
-import collections
 import datetime
 import time
 
@@ -24,8 +23,6 @@ class ParserMediator:
           to indicate the last time the worker was known to be active. This
           information is then used by the foreman to detect workers that are
           not responding (stalled).
-      parsers_counter (collections.Counter): number of events per parser or
-          parser plugin.
       registry_find_specs (list[dfwinreg.FindSpec]): Windows Registry find
           specifications.
     """
@@ -84,7 +81,6 @@ class ParserMediator:
 
         self.registry_find_specs = registry_find_specs
         self.last_activity_timestamp = 0.0
-        self.parsers_counter = collections.Counter()
 
         self._CreateEnvironmentVariablesPerPathSpec(system_configurations)
 
@@ -483,11 +479,13 @@ class ParserMediator:
         self._cached_parser_chain = None
         self._parser_chain_components.pop()
 
-    def ProduceEventData(self, event_data):
+    def ProduceEventData(self, event_data, corrupted=False, recovered=False):
         """Produces event data.
 
         Args:
           event_data (EventData): event data.
+          corrupted (Optional[bool]): True if the item was corrupted.
+          recovered (Optional[bool]): True if the item was recovered.
 
         Raises:
           RuntimeError: when storage writer is not set.
@@ -495,8 +493,7 @@ class ParserMediator:
         if not self._storage_writer:
             raise RuntimeError("Storage writer not set.")
 
-        parser_chain = getattr(event_data, "_parser_chain", None)
-        if not parser_chain:
+        if not getattr(event_data, "_parser_chain"):
             parser_chain = self.GetParserChain()
             setattr(event_data, "_parser_chain", parser_chain)
 
@@ -506,7 +503,9 @@ class ParserMediator:
         event_values_hash = events.CalculateEventValuesHash(
             event_data, self._event_data_stream
         )
+        setattr(event_data, "_corrupted", corrupted)
         setattr(event_data, "_event_values_hash", event_values_hash)
+        setattr(event_data, "_recovered", recovered)
 
         self._storage_writer.AddAttributeContainer(event_data)
         self._number_of_event_data += 1
@@ -571,20 +570,7 @@ class ParserMediator:
         Raises:
           RuntimeError: when storage writer is not set.
         """
-        if not self._storage_writer:
-            raise RuntimeError("Storage writer not set.")
-
-        if not path_spec and self._file_entry:
-            path_spec = self._file_entry.path_spec
-
-        parser_chain = self.GetParserChain()
-        warning = warnings.ExtractionWarning(
-            message=message, parser_chain=parser_chain, path_spec=path_spec
-        )
-        self._storage_writer.AddAttributeContainer(warning)
-        self._number_of_extraction_warnings += 1
-
-        self.last_activity_timestamp = time.time()
+        self.ProduceWarning(message, path_spec=path_spec)
 
     def ProduceRecoveryWarning(self, message, path_spec=None):
         """Produces a recovery warning.
@@ -598,6 +584,21 @@ class ParserMediator:
         Raises:
           RuntimeError: when storage writer is not set.
         """
+        self.ProduceWarning(message, path_spec=path_spec, recovered=True)
+
+    def ProduceWarning(self, message, path_spec=None, recovered=False):
+        """Produces an extraction or recovery warning.
+
+        Args:
+          message (str): message of the warning.
+          path_spec (Optional[dfvfs.PathSpec]): path specification, where None
+              will use the path specification of current file entry set in
+              the mediator.
+          recovered (Optional[bool]): True if the item was recovered.
+
+        Raises:
+          RuntimeError: when storage writer is not set.
+        """
         if not self._storage_writer:
             raise RuntimeError("Storage writer not set.")
 
@@ -605,11 +606,22 @@ class ParserMediator:
             path_spec = self._file_entry.path_spec
 
         parser_chain = self.GetParserChain()
-        warning = warnings.RecoveryWarning(
-            message=message, parser_chain=parser_chain, path_spec=path_spec
-        )
+
+        if recovered:
+            warning = warnings.RecoveryWarning(
+                message=message, parser_chain=parser_chain, path_spec=path_spec
+            )
+        else:
+            warning = warnings.ExtractionWarning(
+                message=message, parser_chain=parser_chain, path_spec=path_spec
+            )
+
         self._storage_writer.AddAttributeContainer(warning)
-        self._number_of_recovery_warnings += 1
+
+        if recovered:
+            self._number_of_recovery_warnings += 1
+        else:
+            self._number_of_extraction_warnings += 1
 
         self.last_activity_timestamp = time.time()
 

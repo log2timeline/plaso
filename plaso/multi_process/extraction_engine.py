@@ -12,7 +12,6 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import context
 from dfvfs.resolver import resolver as path_spec_resolver
 
-from plaso.containers import counts
 from plaso.containers import event_sources
 from plaso.containers import events
 from plaso.containers import warnings
@@ -864,22 +863,9 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         self._number_of_produced_events = 0
         self._number_of_produced_sources = 0
 
-        stored_data_types_counter = collections.Counter(
-            {
-                data_type_count.name: data_type_count
-                for data_type_count in storage_writer.GetAttributeContainers(
-                    "data_type_count"
-                )
-            }
-        )
-        stored_parsers_counter = collections.Counter(
-            {
-                parser_count.name: parser_count
-                for parser_count in storage_writer.GetAttributeContainers(
-                    "parser_count"
-                )
-            }
-        )
+        stored_data_types_counter = storage_writer.GetDataTypesCounter()
+        stored_parsers_counter = storage_writer.GetParsersCounter()
+        stored_event_labels_counter = storage_writer.GetEventLabelsCounter()
 
         self._CollectInitialEventSources(storage_writer, file_system_path_specs)
 
@@ -891,29 +877,19 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         else:
             self._status = definitions.STATUS_INDICATOR_COMPLETED
 
-        for key, value in self._event_data_timeliner.data_types_counter.items():
-            data_type_count = stored_data_types_counter.get(key, None)
-            if data_type_count:
-                data_type_count.number_of_events += value
-                storage_writer.UpdateAttributeContainer(data_type_count)
-            else:
-                data_type_count = counts.DataTypeCount(name=key, number_of_events=value)
-                storage_writer.AddAttributeContainer(data_type_count)
-
-        for key, value in self._event_data_timeliner.parsers_counter.items():
-            parser_count = stored_parsers_counter.get(key)
-            if parser_count:
-                parser_count.number_of_events += value
-                storage_writer.UpdateAttributeContainer(parser_count)
-            else:
-                parser_count = counts.ParserCount(name=key, number_of_events=value)
-                storage_writer.AddAttributeContainer(parser_count)
-
+        storage_writer.UpdateDataTypesCounter(
+            stored_data_types_counter, self._event_data_timeliner.data_types_counter
+        )
+        storage_writer.UpdateParsersCounter(
+            stored_parsers_counter, self._event_data_timeliner.parsers_counter
+        )
+        storage_writer.UpdateEventLabelsCounter(
+            stored_event_labels_counter, self._event_data_timeliner.event_labels_counter
+        )
         if self._processing_profiler:
             self._processing_profiler.StopTiming("process_source")
 
-        # Update the foreman process and task status in case we are using
-        # a filter file.
+        # Update the foreman process and task status in case we are using a filter file.
         self._UpdateForemanProcessStatus()
 
         tasks_status = self._task_manager.GetStatusInformation()

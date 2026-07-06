@@ -56,11 +56,59 @@ class EventDataTimeliner:
         self._time_zone_per_path_spec = None
 
         self.data_types_counter = collections.Counter()
+        self.event_labels_counter = collections.Counter()
+        self.number_of_produced_event_tags = 0
         self.number_of_produced_events = 0
         self.parsers_counter = collections.Counter()
 
         self._CreateTimeZonePerPathSpec(system_configurations)
         self._ReadConfigurationFile()
+
+    def _AddEvent(
+        self,
+        storage_writer,
+        parser_name,
+        event_data,
+        event,
+        labels,
+    ):
+        """Adds an event to the storage.
+
+        Args:
+          storage_writer (StorageWriter): storage writer.
+          parser_name (str): name of the parser that extracted the event data related
+              to the event.
+          event_data (EventData): event data.
+          event (EventObject): event.
+          labels (list[str]): event tag labels.
+        """
+        storage_writer.AddAttributeContainer(event)
+
+        data_type = getattr(event_data, "data_type", None)
+        if data_type:
+            self.data_types_counter[data_type] += 1
+        self.data_types_counter["total"] += 1
+
+        if parser_name:
+            self.parsers_counter[parser_name] += 1
+        self.parsers_counter["total"] += 1
+
+        self.number_of_produced_events += 1
+
+        if labels:
+            event_identifier = event.GetIdentifier()
+
+            event_tag = events.EventTag()
+            event_tag.SetEventIdentifier(event_identifier)
+            event_tag.AddLabels(labels)
+
+            storage_writer.AddOrUpdateEventTag(event_tag)
+
+            for label in event_tag.labels:
+                self.event_labels_counter[label] += 1
+                self.event_labels_counter["total"] += 1
+
+            self.number_of_produced_event_tags += 1
 
     def _CreateTimeZonePerPathSpec(self, system_configurations):
         """Creates the time zone per path specification lookup table.
@@ -70,6 +118,7 @@ class EventDataTimeliner:
               configurations.
         """
         self._time_zone_per_path_spec = {}
+
         for system_configuration in system_configurations or []:
             if system_configuration.time_zone:
                 for path_spec in system_configuration.path_specs:
@@ -108,6 +157,7 @@ class EventDataTimeliner:
             return base_date
 
         filter_expression = f'_event_data_stream_identifier == "{lookup_key:s}"'
+
         date_less_log_helpers = list(
             storage_writer.GetAttributeContainers(
                 events.DateLessLogHelper.CONTAINER_TYPE,
@@ -246,6 +296,7 @@ class EventDataTimeliner:
           EventObject: event.
         """
         timestamp = None
+
         if date_time.is_delta:
             base_date = self._GetBaseDate(storage_writer, event_data)
 
@@ -445,12 +496,16 @@ class EventDataTimeliner:
         ):
             return
 
-        data_type_name = getattr(event_data, "data_type", None)
-
         parser_name = None
         parser_chain = getattr(event_data, "_parser_chain", None)
         if parser_chain:
             parser_name = parser_chain.rsplit("/", maxsplit=1)[-1]
+
+        labels = []
+        if getattr(event_data, "_corrupted"):
+            labels.append("corrupted")
+        if getattr(event_data, "_recovered"):
+            labels.append("recovered")
 
         number_of_events = 0
         for attribute_name, time_description in attribute_mappings.items():
@@ -460,8 +515,12 @@ class EventDataTimeliner:
 
             for attribute_value in attribute_values:
                 if not isinstance(attribute_value, dfdatetime_interface.DateTimeValues):
-                    message = f"unsupported date time attribute: {attribute_name:s}"
-                    self._ProduceTimeliningWarning(storage_writer, event_data, message)
+                    warning_message = (
+                        f"unsupported date time attribute: {attribute_name:s}"
+                    )
+                    self._ProduceTimeliningWarning(
+                        storage_writer, event_data, warning_message
+                    )
                     continue
 
                 event = self._GetEvent(
@@ -472,23 +531,15 @@ class EventDataTimeliner:
                     time_description,
                 )
                 try:
-                    storage_writer.AddAttributeContainer(event)
+                    self._AddEvent(
+                        storage_writer, parser_name, event_data, event, labels
+                    )
+                    number_of_events += 1
                 except OverflowError as exception:
-                    message = f"unable to add event with error: {exception!s}"
-                    self._ProduceTimeliningWarning(storage_writer, event_data, message)
-                    continue
-
-                number_of_events += 1
-
-                if data_type_name:
-                    self.data_types_counter[data_type_name] += 1
-                self.data_types_counter["total"] += 1
-
-                if parser_name:
-                    self.parsers_counter[parser_name] += 1
-                self.parsers_counter["total"] += 1
-
-                self.number_of_produced_events += 1
+                    warning_message = f"unable to add event with error: {exception!s}"
+                    self._ProduceTimeliningWarning(
+                        storage_writer, event_data, warning_message
+                    )
 
         # Create a place holder event for event_data without date and time values to
         # map.
@@ -501,17 +552,13 @@ class EventDataTimeliner:
                 date_time,
                 definitions.TIME_DESCRIPTION_NOT_A_TIME,
             )
-            storage_writer.AddAttributeContainer(event)
-
-            if data_type_name:
-                self.data_types_counter[data_type_name] += 1
-            self.data_types_counter["total"] += 1
-
-            if parser_name:
-                self.parsers_counter[parser_name] += 1
-            self.parsers_counter["total"] += 1
-
-            self.number_of_produced_events += 1
+            try:
+                self._AddEvent(storage_writer, parser_name, event_data, event, labels)
+            except OverflowError as exception:
+                warning_message = f"unable to add event with error: {exception!s}"
+                self._ProduceTimeliningWarning(
+                    storage_writer, event_data, warning_message
+                )
 
     def SetPreferredTimeZone(self, time_zone_string):
         """Sets the preferred time zone for zone-less date and time values.
