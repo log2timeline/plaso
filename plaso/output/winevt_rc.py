@@ -622,13 +622,9 @@ class WinevtResourcesHelper:
                 return None
 
             try:
-                self._winevt_database_reader = (
-                    WinevtResourcesAttributeContainerStore()
-                )
+                self._winevt_database_reader = WinevtResourcesAttributeContainerStore()
                 # pylint: disable=no-value-for-parameter,unexpected-keyword-arg
-                self._winevt_database_reader.Open(
-                    path=database_path, read_only=True
-                )
+                self._winevt_database_reader.Open(path=database_path, read_only=True)
             except OSError:
                 self._winevt_database_reader = None
 
