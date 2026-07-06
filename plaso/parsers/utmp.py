@@ -214,8 +214,8 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         number_of_entries = min(
             self._MAXIMUM_VALIDATION_RECORDS, file_size // entry_size
         )
+        number_of_valid_entries = 0
 
-        count = 0
         for entry_index in range(number_of_entries):
             file_offset = entry_index * entry_size
             try:
@@ -226,9 +226,9 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
                 continue
 
             if entry.login_type != 0 and self._IsValidEntry(entry):
-                count += 1
+                number_of_valid_entries += 1
 
-        return count
+        return number_of_valid_entries
 
     def _GetEntryFormat(self, file_object, file_size):
         """Determines the record layout of a utmp file.
