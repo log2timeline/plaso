@@ -611,14 +611,6 @@ attribute_mappings:
   description: 'Start Time'
 place_holder_event: true
 ---
-data_type: 'ios:health:all_watch_sleep_ios17'
-attribute_mappings:
-- name: 'end_time'
-  description: 'Start Time'
-- name: 'start_time'
-  description: 'Start Time'
-place_holder_event: true
----
 data_type: 'ios:health:headphone_audio_levels'
 attribute_mappings:
 - name: 'end_time'
@@ -659,36 +651,12 @@ attribute_mappings:
   description: 'Added Time'
 place_holder_event: true
 ---
-data_type: 'ios:health:source_devices_latest'
-attribute_mappings:
-- name: 'date_time'
-  description: 'Latest Device Source Added Time'
-place_holder_event: true
----
 data_type: 'ios:health:steps'
 attribute_mappings:
 - name: 'end_time'
   description: 'End Time'
 - name: 'start_time'
   description: 'Start Time'
-place_holder_event: true
----
-data_type: 'ios:health:watch_by_sleep_period_latest'
-attribute_mappings:
-- name: 'date_time'
-  description: 'Latest Sleep Period Start'
-place_holder_event: true
----
-data_type: 'ios:health:all_watch_by_sleep_period'
-attribute_mappings:
-- name: 'date_time'
-  description: 'Sleep Period Start'
-place_holder_event: true
----
-data_type: 'ios:health:watch_worn'
-attribute_mappings:
-- name: 'date_time'
-  description: 'Watch Worn Start'
 place_holder_event: true
 ---
 data_type: 'ios:health:weight'
@@ -701,12 +669,6 @@ data_type: 'ios:health:workouts'
 attribute_mappings:
 - name: 'date_time'
   description: 'Workout Start Time'
-place_holder_event: true
----
-data_type: 'ios:health:workouts_ios16'
-attribute_mappings:
-- name: 'date_time'
-  description: 'Workouts Latest Start'
 place_holder_event: true
 ---
 data_type: 'ios:health:wrist_temperature'

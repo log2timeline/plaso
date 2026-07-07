@@ -90,7 +90,7 @@ class TeamViewerApplicationLogTextPlugin(interface.TextPluginWithLineContinuatio
     """Text parser plugin for TeamViewer application log files."""
 
     NAME = "teamviewer_application_log"
-    DATA_FORMAT = "TeamViewer application log file parser."
+    DATA_FORMAT = "TeamViewer application log file parser"
 
     _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
         lambda tokens: int(tokens[0], 10)

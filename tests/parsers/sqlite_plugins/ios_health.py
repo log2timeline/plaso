@@ -61,30 +61,6 @@ class IOSHealthTest(test_lib.SQLitePluginTestCase):
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
-        # TODO: remove after refactoring, determines the first index of a specific
-        # event data type.
-        indexes = {
-            "ios:health:all_watch_sleep": None,
-            "ios:health:headphone_audio_levels": None,
-            "ios:health:heart_rate": None,
-            "ios:health:height": None,
-            "ios:health:resting_heart_rate": None,
-            "ios:health:steps": None,
-            "ios:health:source_devices": None,
-            "ios:health:weight": None,
-            "ios:health:workouts": None,
-            "ios:health:wrist_temperature": None,
-        }
-        for index in range(0, number_of_event_data):
-            event_data = storage_writer.GetAttributeContainerByIndex(
-                "event_data", index
-            )
-            for key, value in indexes.items():
-                if not value and event_data.data_type == key:
-                    indexes[key] = index
-
-        print(indexes)
-
         # Check all watch sleep (sample) event data.
         expected_event_values = {
             "data_type": "ios:health:all_watch_sleep",

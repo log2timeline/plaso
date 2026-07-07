@@ -37,6 +37,7 @@ class IOSHealthAllWatchSleepEventData(events.EventData):
     """iOS Health all watch sleep event data.
 
     Attributes:
+      duration (float): duration in seconds.
       end_time (dfdatetime.DateTimeValues): date and time the sleep ended.
       sleep_state_code (int): sleep state code.
       start_time (dfdatetime.DateTimeValues): date and time the sleep started.
@@ -47,6 +48,7 @@ class IOSHealthAllWatchSleepEventData(events.EventData):
     def __init__(self):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
+        self.duration = None
         self.end_time = None
         self.sleep_state_code = None
         self.start_time = None
@@ -919,6 +921,16 @@ class IOSHealthPlugin(interface.SQLitePlugin):
         event_data.sleep_state_code = self._GetRowValue(
             query_hash, row, "category_value"
         )
+        if (
+            event_data.end_time
+            and event_data.start_time
+            and event_data.end_time.timestamp is not None
+            and event_data.start_time.timestamp is not None
+        ):
+            event_data.duration = (
+                event_data.end_time.timestamp - event_data.start_time.timestamp
+            )
+
         parser_mediator.ProduceEventData(event_data)
 
     def _ParseHeadphoneAudioLevelSample(
@@ -1159,7 +1171,6 @@ class IOSHealthPlugin(interface.SQLitePlugin):
         event_data.start_time = self._GetCocoaTimeRowValue(
             query_hash, row, "start_date"
         )
-
         if (
             event_data.end_time
             and event_data.start_time

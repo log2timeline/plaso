@@ -37,7 +37,7 @@ class IOSDatausagePlugin(interface.SQLitePlugin):
     """SQLite parser plugin for iOS DataUsage database."""
 
     NAME = "ios_datausage"
-    DATA_FORMAT = "iOS data usage SQLite databse (DataUsage.sqlite) file."
+    DATA_FORMAT = "iOS data usage SQLite database (DataUsage.sqlite) file"
 
     REQUIRED_STRUCTURE = {
         "ZLIVEUSAGE": frozenset(
