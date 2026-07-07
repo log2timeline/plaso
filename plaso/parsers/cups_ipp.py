@@ -43,10 +43,10 @@ class CupsIppEventData(events.EventData):
       copies (int): number of copies.
       creation_time (dfdatetime.DateTimeValues): date and time the print job was
           created (added).
-      doc_type (str): type of document.
+      document_type (str): type of document.
       end_time (dfdatetime.DateTimeValues): date and time the print job was stopped.
       hostname (str): hostname.
-      job_id (str): job identifier.
+      job_identifier (str): job identifier.
       job_name (str): job name.
       owner (str): real name of the user.
       printer_id (str): identification name of the print.
@@ -63,10 +63,10 @@ class CupsIppEventData(events.EventData):
         self.application = None
         self.copies = None
         self.creation_time = None
-        self.doc_type = None
+        self.document_type = None
         self.end_time = None
         self.hostname = None
-        self.job_id = None
+        self.job_identifier = None
         self.job_name = None
         self.owner = None
         self.printer_id = None
@@ -140,11 +140,11 @@ class CupsIppParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         "com.apple.print.JobInfo.PMApplicationName": "application",
         "com.apple.print.JobInfo.PMJobOwner": "owner",
         "DestinationPrinterID": "printer_id",
-        "document-format": "doc_type",
+        "document-format": "document_type",
         "job-name": "job_name",
         "job-originating-host-name": "hostname",
         "job-originating-user-name": "username",
-        "job-uuid": "job_id",
+        "job-uuid": "job_identifier",
         "printer-uri": "uri",
     }
 
@@ -417,19 +417,25 @@ class CupsIppParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
                 is_first_attribute_group = False
 
         except (ValueError, errors.ParseError) as exception:
-            error_message = f"unable to parse attribute group with error: {exception!s}"
+            warning_message = (
+                f"unable to parse attribute group with error: {exception!s}"
+            )
             if is_first_attribute_group:
-                raise errors.WrongParser(error_message)
+                raise errors.WrongParser(warning_message)
 
-            parser_mediator.ProduceExtractionWarning(error_message)
+            parser_mediator.ProduceWarning(warning_message)
             return
 
         event_data = CupsIppEventData()
         event_data.application = self._GetStringValue(cupp_ipp_values, "application")
         event_data.hostname = self._GetStringValue(cupp_ipp_values, "hostname")
         event_data.copies = cupp_ipp_values.get("copies", [0])[0]
-        event_data.doc_type = self._GetStringValue(cupp_ipp_values, "doc_type")
-        event_data.job_id = self._GetStringValue(cupp_ipp_values, "job_id")
+        event_data.document_type = self._GetStringValue(
+            cupp_ipp_values, "document_type"
+        )
+        event_data.job_identifier = self._GetStringValue(
+            cupp_ipp_values, "job_identifier"
+        )
         event_data.job_name = self._GetStringValue(cupp_ipp_values, "job_name")
         event_data.username = self._GetStringValue(cupp_ipp_values, "username")
         event_data.owner = self._GetStringValue(cupp_ipp_values, "owner")

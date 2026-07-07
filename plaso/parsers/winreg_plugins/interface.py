@@ -303,7 +303,7 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
                         value_string = f"({value_data_size:d} bytes)"
 
                 except dfwinreg_errors.WinRegistryValueError as exception:
-                    parser_mediator.ProduceRecoveryWarning(
+                    parser_mediator.ProduceWarning(
                         f"Unable to retrieve value data of type: {data_type_string:s} "
                         f"as object from value: {value_name:s} in key: "
                         f"{registry_key.path:s} with error: {exception!s}"

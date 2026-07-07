@@ -579,20 +579,6 @@ class ParserMediator:
         """
         self.ProduceWarning(message, path_spec=path_spec)
 
-    def ProduceRecoveryWarning(self, message, path_spec=None):
-        """Produces a recovery warning.
-
-        Args:
-          message (str): message of the warning.
-          path_spec (Optional[dfvfs.PathSpec]): path specification, where None
-              will use the path specification of current file entry set in
-              the mediator.
-
-        Raises:
-          RuntimeError: when storage writer is not set.
-        """
-        self.ProduceWarning(message, path_spec=path_spec, recovered=True)
-
     def ProduceWarning(self, message, path_spec=None, recovered=False):
         """Produces an extraction or recovery warning.
 

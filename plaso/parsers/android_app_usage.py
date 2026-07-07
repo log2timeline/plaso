@@ -17,8 +17,8 @@ class AndroidAppUsageEventData(events.EventData):
 
     Attributes:
       component (str): name of the individual component of the application.
-      last_resume_time (dfdatetime.DateTimeValues): date and time the application
-          was last resumed.
+      last_resume_time (dfdatetime.DateTimeValues): date and time the application was
+          last resumed.
       package (str): name of the Android application.
     """
 
@@ -44,8 +44,8 @@ class AndroidAppUsageParser(interface.FileObjectParser):
         """Parses an Android usage-history file-like object.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): file-like object.
 
         Raises:
@@ -75,20 +75,23 @@ class AndroidAppUsageParser(interface.FileObjectParser):
                 if part_node.tag != "comp":
                     continue
 
+                warning_message = None
+
                 last_resume_time = part_node.get("lrt")
                 if last_resume_time is None:
-                    parser_mediator.ProduceExtractionWarning(
-                        "missing last resume time."
-                    )
-                    continue
+                    warning_message = "missing last resume time."
+                else:
+                    try:
+                        last_resume_time = int(last_resume_time, 10)
+                    except ValueError:
+                        warning_message = (
+                            f"unsupported last resume time: {last_resume_time:s}."
+                        )
 
-                try:
-                    last_resume_time = int(last_resume_time, 10)
-                except ValueError:
-                    parser_mediator.ProduceExtractionWarning(
-                        f"unsupported last resume time: {last_resume_time:s}."
-                    )
-                    continue
+                corrupted = False
+                if warning_message:
+                    parser_mediator.ProduceWarning(warning_message)
+                    corrupted = True
 
                 event_data = AndroidAppUsageEventData()
                 event_data.component = part_node.get("name")
@@ -97,7 +100,7 @@ class AndroidAppUsageParser(interface.FileObjectParser):
                 )
                 event_data.package = package_name
 
-                parser_mediator.ProduceEventData(event_data)
+                parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
 
 manager.ParsersManager.RegisterParser(AndroidAppUsageParser)

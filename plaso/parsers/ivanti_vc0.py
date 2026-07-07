@@ -241,20 +241,23 @@ class IvantiVC0Parser(interface.FileObjectParser):
           record_offset (int): offset of the record data relative to the start of the
               file.
         """
+        corrupted = False
+
         try:
             record = record_data.decode("utf-8")
         except UnicodeDecodeError:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unable to decode record at offset: 0x{record_offset:08x} as UTF-8. "
                 f"Unsupported code points are escaped."
             )
             record = record_data.decode("utf-8", errors="backslashreplace")
+            corrupted = True
 
         fields = record.split("\t")
 
         number_of_fields = len(fields)
         if number_of_fields < 3:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"Invalid record at offset: 0x{record_offset:08x} - unsupported number "
                 f"of fields: {number_of_fields:d}"
             )
@@ -262,7 +265,7 @@ class IvantiVC0Parser(interface.FileObjectParser):
 
         record_identifier = fields[0]
         if "." not in record_identifier:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"Invalid record at offset: 0x{record_offset:08x} - record identifier: "
                 f"{record_identifier:s} missing '.'"
             )
@@ -271,14 +274,14 @@ class IvantiVC0Parser(interface.FileObjectParser):
         timestamp_string, _, line_number_string = record_identifier.partition(".")
 
         if not timestamp_string:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"Invalid record at offset: 0x{record_offset:08x} - record identifier: "
                 f"{record_identifier:s} missing timestamp"
             )
             return
 
         if not line_number_string:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"Invalid record at offset: 0x{record_offset:08x} - record identifier: "
                 f"{record_identifier:s} missing line number"
             )
@@ -287,7 +290,7 @@ class IvantiVC0Parser(interface.FileObjectParser):
         try:
             timestamp = int(timestamp_string, 16)
         except ValueError:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"Invalid record at offset: 0x{record_offset:08x} - record identifier: "
                 f"{record_identifier:s} unsupported timestamp"
             )
@@ -296,7 +299,7 @@ class IvantiVC0Parser(interface.FileObjectParser):
         try:
             line_number = int(line_number_string, 16)
         except ValueError:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"Invalid record at offset: 0x{record_offset:08x} - record identifier: "
                 f"{record_identifier:s} unsupported line number"
             )
@@ -304,10 +307,11 @@ class IvantiVC0Parser(interface.FileObjectParser):
 
         message_code = self._ExtractMessageCode(fields)
         if not message_code:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"Invalid record at offset: 0x{record_offset:08x} - unable to extract "
                 f"message code"
             )
+            corrupted = True
 
         event_data = IvantiVC0EventData()
         event_data.hostname = fields[1] or None
@@ -332,18 +336,18 @@ class IvantiVC0Parser(interface.FileObjectParser):
                 event_data.username,
             )
 
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def ParseFileObject(self, parser_mediator, file_object):
         """Parses an Ivanti Connect Secure (.vc0) log file-like object.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): a file-like object.
 
         Raises:
-          WrongParser: when the file cannot be parsed.
+          WrongParser: when the file is not an Ivanti Connect Secure (.vc0) log file.
         """
         file_size = file_object.get_size()
         if not self._CheckHeader(file_object, file_size):

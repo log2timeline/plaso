@@ -46,7 +46,6 @@ class BodyfileTest(test_lib.ParserTestCase):
             "modification_time": "2012-05-25T15:59:44",
             "owner_identifier": "151107",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 2)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -63,12 +62,12 @@ class BodyfileTest(test_lib.ParserTestCase):
         number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
             "extraction_warning"
         )
-        self.assertEqual(number_of_warnings, 0)
+        self.assertEqual(number_of_warnings, 1)
 
         number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
             "recovery_warning"
         )
-        self.assertEqual(number_of_warnings, 1)
+        self.assertEqual(number_of_warnings, 0)
 
         # Event data extracted from line with unescaped \r character.
         expected_event_values = {
@@ -80,7 +79,6 @@ class BodyfileTest(test_lib.ParserTestCase):
             "inode": 15,
             "modification_time": "2012-05-25T16:00:53",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -94,7 +92,6 @@ class BodyfileTest(test_lib.ParserTestCase):
             "inode": 75520,
             "modification_time": "2021-01-12T12:26:01",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 2)
         self.CheckEventData(event_data, expected_event_values)
 

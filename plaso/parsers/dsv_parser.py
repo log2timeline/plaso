@@ -14,34 +14,32 @@ from plaso.parsers import interface
 class DSVParser(interface.FileObjectParser):
     """Delimiter separated values (DSV) parser interface."""
 
-    # A list that contains the names of all the fields in the log file. This
-    # needs to be defined by each DSV parser.
+    # A list that contains the names of all the fields in the log file. This needs to
+    # be defined by each DSV parser.
     COLUMNS = []
 
-    # The default delimiter is a comma, but a tab, pipe or other character are
-    # known to be used. Note the delimiter must be a byte string otherwise csv
-    # module can raise a TypeError indicating that "delimiter" must be a single
-    # character string.
+    # The default delimiter is a comma, but a tab, pipe or other character are known to
+    # be used. Note the delimiter must be a byte string otherwise csv module can raise
+    # a TypeError indicating that "delimiter" must be a single character string.
     DELIMITER = ","
 
-    # If there is a header before the lines start it can be defined here, and
-    # the number of header lines that need to be skipped before the parsing
-    # starts.
+    # If there is a header before the lines start it can be defined here, and the number
+    # of header lines that need to be skipped before the parsing starts.
     NUMBER_OF_HEADER_LINES = 0
 
-    # If there is a special escape character used inside the structured text
-    # it can be defined here.
+    # If there is a special escape character used inside the structured text it can be
+    # defined here.
     ESCAPE_CHARACTER = ""
 
-    # If there is a special quote character used inside the structured text
-    # it can be defined here.
+    # If there is a special quote character used inside the structured text it can be
+    # defined here.
     QUOTE_CHAR = '"'
 
     # The maximum size of a single field in the parser
     FIELD_SIZE_LIMIT = csv.field_size_limit()
 
-    # Value that should not appear inside the file, made to test the actual
-    # file to see if it confirms to standards.
+    # Value that should not appear inside the file, made to test the actual file to see
+    # if it confirms to standards.
     _MAGIC_TEST_STRING = "RegnThvotturMeistarans"
 
     _ENCODING = None
@@ -112,13 +110,11 @@ class DSVParser(interface.FileObjectParser):
         line_reader = text_file.TextFile(
             file_object, encoding=encoding, end_of_line=self._end_of_line
         )
-
         # pylint: disable=protected-access
         maximum_read_buffer_size = line_reader._MAXIMUM_READ_BUFFER_SIZE
 
-        # Line length is one less than the maximum read buffer size so that we
-        # tell if there's a line that doesn't end at the end before the end of
-        # the file.
+        # Line length is one less than the maximum read buffer size so that we tell if
+        # there's a line that doesn't end at the end before the end of the file.
         if self._maximum_line_length > maximum_read_buffer_size:
             self._maximum_line_length = maximum_read_buffer_size - 1
 
@@ -130,14 +126,14 @@ class DSVParser(interface.FileObjectParser):
     def _HasExpectedLineLength(self, file_object, encoding=None):
         """Determines if a file begins with lines of the expected length.
 
-        As we know the maximum length of valid lines in the DSV file, the presence
-        of lines longer than this indicates that the file will not be parsed
-        successfully, without reading excessive data from a large file.
+        As we know the maximum length of valid lines in the DSV file, the presence of
+        lines longer than this indicates that the file will not be parsed successfully,
+        without reading excessive data from a large file.
 
         Args:
           file_object (dfvfs.FileIO): file-like object.
-          encoding (Optional[str]): encoding used in the DSV file, where None
-              indicates the code page of the parser mediator should be used.
+          encoding (Optional[str]): encoding used in the DSV file, where None indicates
+              the code page of the parser mediator should be used.
 
         Returns:
           bool: True if the file has lines of the expected length.
@@ -145,8 +141,8 @@ class DSVParser(interface.FileObjectParser):
         original_file_position = file_object.tell()
         result = True
 
-        # Attempt to read a line that is longer than any line that should be in
-        # the file.
+        # Attempt to read a line that is longer than any line that should be in the
+        # file.
         line_reader = self._CreateLineReader(file_object, encoding=encoding)
 
         for _ in range(0, 20):
@@ -219,8 +215,8 @@ class DSVParser(interface.FileObjectParser):
         """Parses a DSV text file-like object.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): file-like object.
 
         Raises:
@@ -231,8 +227,8 @@ class DSVParser(interface.FileObjectParser):
         if encoding and self._encoding and encoding != self._encoding:
             display_name = parser_mediator.GetDisplayName()
             raise errors.WrongParser(
-                f"[{self.NAME:s}] Unable to parse DSV file: {display_name:s} "
-                f"encoding does not match the one required by the parser."
+                f"[{self.NAME:s}] Unable to parse DSV file: {display_name:s} encoding "
+                f"does not match the one required by the parser."
             )
 
         encoding = self._encoding
@@ -302,8 +298,8 @@ class DSVParser(interface.FileObjectParser):
             if parser_mediator.abort:
                 break
 
-            # next() is used here to be able to handle lines that the Python csv
-            # module fails to parse.
+            # next() is used here to be able to handle lines that the Python csv module
+            # fails to parse.
             try:
                 row = next(reader)
 
@@ -314,7 +310,7 @@ class DSVParser(interface.FileObjectParser):
                 break
 
             except csv.Error as exception:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"unable to parse line: {line_number:d} with error: {exception!s}"
                 )
                 break
@@ -324,8 +320,8 @@ class DSVParser(interface.FileObjectParser):
         """Parses a line of the log file and produces events.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           row_offset (int): offset of the line from which the row was extracted.
           row (dict[str, str]): fields of a single row, as specified in COLUMNS.
         """
@@ -336,8 +332,8 @@ class DSVParser(interface.FileObjectParser):
         """Verifies if a line of the file is in the expected format.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           row (dict[str, str]): fields of a single row, as specified in COLUMNS.
 
         Returns:
