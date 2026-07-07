@@ -53,7 +53,7 @@ class IOSHealthTest(test_lib.SQLitePluginTestCase):
             "creator_device": 1,
             "data_type": "ios:health:achievement",
             "earned_date": "2020-03-23",
-            "sync_provenance": 1,
+            "synchronization_provenance": 1,
             "template_unique_name": "NewMoveGoalAchieved",
             "value_canonical_unit": "kcal",
             "value_in_canonical_unit": 480.0,
@@ -137,7 +137,7 @@ class IOSHealthTest(test_lib.SQLitePluginTestCase):
             "manufacturer": "Apple Inc.",
             "model": "iPhone",
             "software": "13.3.1",
-            "sync_provenance": 0,
+            "synchronization_provenance": 0,
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 11747)
         self.CheckEventData(event_data, expected_event_values)

@@ -83,7 +83,7 @@ message:
 - 'Earned Date: {earned_date}'
 - 'Value: {value_in_canonical_unit} {value_canonical_unit}'
 - 'Creator Device ID: {creator_device}'
-- 'Sync Provenance: {sync_provenance}'
+- 'Synchronization Provenance: {synchronization_provenance}'
 short_message:
 - 'Achievement: {template_unique_name}'
 - 'Value: {value_in_canonical_unit}'
@@ -175,8 +175,7 @@ message:
 - 'Hardware Version: {hardware}'
 - 'Software/Firmware: {software} / {firmware}'
 - 'Local Identifier: {device_local_identifier}'
-- 'Sync Provenance: {sync_provenance}'
-- 'Creation Date: {creation_date_str}'
+- 'Synchronization Provenance: {synchronization_provenance}'
 short_message:
 - 'Source Device: {device_name} ({model})'
 short_source: 'SQLITE'

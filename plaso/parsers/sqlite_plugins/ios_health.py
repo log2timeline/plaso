@@ -13,7 +13,7 @@ class IOSHealthAchievementsEventData(events.EventData):
           achievement.
       creator_device (int): identifier of the device that created the achievement.
       earned_date (str): Date the achievement was earned.
-      sync_provenance (int): Identifier for the sync provenance.
+      synchronization_provenance (int): synchronization provenance.
       template_unique_name (str): Unique name of the achievement template.
       value_canonical_unit (str): Unit of the value (e.g., "count").
       value_in_canonical_unit (float): Value of the achievement in canonical units.
@@ -27,7 +27,7 @@ class IOSHealthAchievementsEventData(events.EventData):
         self.creation_time = None
         self.creator_device = None
         self.earned_date = None
-        self.sync_provenance = None
+        self.synchronization_provenance = None
         self.template_unique_name = None
         self.value_canonical_unit = None
         self.value_in_canonical_unit = None
@@ -182,7 +182,8 @@ class IOSHealthSourceDevicesEventData(events.EventData):
       manufacturer (str): manufacturer of the device.
       model (str): model of the device.
       software (str): software version of the device.
-      sync_provenance (int): sync provenance information.
+      synchronization_identity (int): synchronization identifier.
+      synchronization_provenance (int): synchronization provenance.
     """
 
     DATA_TYPE = "ios:health:source_devices"
@@ -198,7 +199,8 @@ class IOSHealthSourceDevicesEventData(events.EventData):
         self.manufacturer = None
         self.model = None
         self.software = None
-        self.sync_provenance = None
+        self.synchronization_identity = None
+        self.synchronization_provenance = None
 
 
 class IOSHealthStepsEventData(events.EventData):
@@ -898,7 +900,7 @@ class IOSHealthPlugin(interface.SQLitePlugin):
             query_hash, row, "value_canonical_unit"
         )
         event_data.creator_device = self._GetRowValue(query_hash, row, "creator_device")
-        event_data.sync_provenance = self._GetRowValue(
+        event_data.synchronization_provenance = self._GetRowValue(
             query_hash, row, "sync_provenance"
         )
         parser_mediator.ProduceEventData(event_data)
@@ -1145,7 +1147,7 @@ class IOSHealthPlugin(interface.SQLitePlugin):
         event_data.manufacturer = self._GetRowValue(query_hash, row, "manufacturer")
         event_data.model = self._GetRowValue(query_hash, row, "model")
         event_data.software = self._GetRowValue(query_hash, row, "software")
-        event_data.sync_provenance = self._GetRowValue(
+        event_data.synchronization_provenance = self._GetRowValue(
             query_hash, row, "sync_provenance"
         )
         parser_mediator.ProduceEventData(event_data)
