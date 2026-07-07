@@ -1,7 +1,5 @@
 """SQLite parser plugin for MacOS LS quarantine events database files."""
 
-from dfdatetime import cocoa_time as dfdatetime_cocoa_time
-
 from plaso.containers import events
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
@@ -14,8 +12,8 @@ class MacOSLSQuarantineEventData(events.EventData):
     Attributes:
       agent (str): user agent that was used to download the file.
       data (bytes): data.
-      downloaded_time (dfdatetime.DateTimeValues): date and time the file
-          was downloaded.
+      downloaded_time (dfdatetime.DateTimeValues): date and time the file was
+          downloaded.
       query (str): SQL query that was used to obtain the event data.
       url (str): original URL of the file.
     """
@@ -81,24 +79,6 @@ class MacOSLSQuarantinePlugin(interface.SQLitePlugin):
         }
     ]
 
-    def _GetDateTimeRowValue(self, query_hash, row, value_name):
-        """Retrieves a date and time value from the row.
-
-        Args:
-          query_hash (int): hash of the query, that uniquely identifies the query
-              that produced the row.
-          row (sqlite3.Row): row.
-          value_name (str): name of the value.
-
-        Returns:
-          dfdatetime.CocoaTime: date and time value or None if not available.
-        """
-        timestamp = self._GetRowValue(query_hash, row, value_name)
-        if timestamp is None:
-            return None
-
-        return dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
-
     def _ParseLSQuarantineRow(self, parser_mediator, query, row, **unused_kwargs):
         """Parses a launch services quarantine event row.
 
@@ -113,7 +93,7 @@ class MacOSLSQuarantinePlugin(interface.SQLitePlugin):
         event_data = MacOSLSQuarantineEventData()
         event_data.agent = self._GetRowValue(query_hash, row, "Agent")
         event_data.data = self._GetRowValue(query_hash, row, "Data")
-        event_data.downloaded_time = self._GetDateTimeRowValue(query_hash, row, "Time")
+        event_data.downloaded_time = self._GetCocoaTimeRowValue(query_hash, row, "Time")
         event_data.query = query
         event_data.url = self._GetRowValue(query_hash, row, "URL")
 

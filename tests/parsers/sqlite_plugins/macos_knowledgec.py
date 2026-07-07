@@ -17,7 +17,6 @@ class MacOSKnowledgecTest(test_lib.SQLitePluginTestCase):
         storage_writer = self._ParseDatabaseFileWithPlugin(
             ["mac_knowledgec-10.13.db"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -41,7 +40,6 @@ class MacOSKnowledgecTest(test_lib.SQLitePluginTestCase):
             "end_time": "2019-02-10T16:59:58.000000+00:00",
             "start_time": "2019-02-10T16:59:57.000000+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -51,7 +49,6 @@ class MacOSKnowledgecTest(test_lib.SQLitePluginTestCase):
         storage_writer = self._ParseDatabaseFileWithPlugin(
             ["mac_knowledgec-10.14.db"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -75,7 +72,6 @@ class MacOSKnowledgecTest(test_lib.SQLitePluginTestCase):
             "end_time": "2019-05-08T13:57:30.000000+00:00",
             "start_time": "2019-05-08T13:40:09.000000+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 75)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -88,7 +84,6 @@ class MacOSKnowledgecTest(test_lib.SQLitePluginTestCase):
             "title": "Instagram",
             "url": "https://www.instagram.com/",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 70)
         self.CheckEventData(event_data, expected_event_values)
 

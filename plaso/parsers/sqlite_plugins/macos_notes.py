@@ -2,8 +2,6 @@
 
 import html.parser as HTMLParser
 
-from dfdatetime import cocoa_time as dfdatetime_cocoa_time
-
 from plaso.containers import events
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
@@ -161,24 +159,6 @@ class MacOSNotesPlugin(interface.SQLitePlugin):
         }
     ]
 
-    def _GetDateTimeRowValue(self, query_hash, row, value_name):
-        """Retrieves a date and time value from the row.
-
-        Args:
-          query_hash (int): hash of the query, that uniquely identifies the query
-              that produced the row.
-          row (sqlite3.Row): row.
-          value_name (str): name of the value.
-
-        Returns:
-          dfdatetime.CocoaTime: date and time value or None if not available.
-        """
-        timestamp = self._GetRowValue(query_hash, row, value_name)
-        if timestamp is None:
-            return None
-
-        return dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
-
     def ParseZHTMLSTRINGRow(self, parser_mediator, query, row, **unused_kwargs):
         """Parses a row from the database.
 
@@ -198,10 +178,10 @@ class MacOSNotesPlugin(interface.SQLitePlugin):
         text = text_extractor.ExtractText(zhtmlstring)
 
         event_data = MacOSNotesEventData()
-        event_data.creation_time = self._GetDateTimeRowValue(
+        event_data.creation_time = self._GetCocoaTimeRowValue(
             query_hash, row, "timestamp"
         )
-        event_data.modification_time = self._GetDateTimeRowValue(
+        event_data.modification_time = self._GetCocoaTimeRowValue(
             query_hash, row, "last_modified_time"
         )
         event_data.text = text

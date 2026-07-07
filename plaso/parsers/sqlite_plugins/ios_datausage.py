@@ -1,7 +1,5 @@
 """SQLite parser plugin for iOS datausage.sqlite database files."""
 
-from dfdatetime import cocoa_time as dfdatetime_cocoa_time
-
 from plaso.containers import events
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
@@ -99,24 +97,6 @@ class IOSDatausagePlugin(interface.SQLitePlugin):
 
     REQUIRES_SCHEMA_MATCH = False
 
-    def _GetTimeRowValue(self, query_hash, row, value_name):
-        """Retrieves a date and time value from the row.
-
-        Args:
-          query_hash (int): hash of the query, that uniquely identifies the query
-              that produced the row.
-          row (sqlite3.Row): row.
-          value_name (str): name of the value.
-
-        Returns:
-          dfdatetime.CocoaTime: date and time value or None if not available.
-        """
-        timestamp = self._GetRowValue(query_hash, row, value_name)
-        if timestamp is None:
-            return None
-
-        return dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
-
     # pylint: disable=unused-argument
     def ParseDatausageEventRow(self, parser_mediator, query, row, **unused_kwargs):
         """Parses a row from the Datausage sqlite file.
@@ -132,7 +112,7 @@ class IOSDatausagePlugin(interface.SQLitePlugin):
         event_data = IOSDatausageEventData()
         event_data.bundle_identifier = self._GetRowValue(query_hash, row, "ZBUNDLENAME")
         event_data.process_name = self._GetRowValue(self, row, "ZPROCNAME")
-        event_data.start_time = self._GetTimeRowValue(self, row, "ZTIMESTAMP")
+        event_data.start_time = self._GetCocoaTimeRowValue(self, row, "ZTIMESTAMP")
         event_data.wifi_in = int(self._GetRowValue(self, row, "ZWIFIIN"))
         event_data.wifi_out = int(self._GetRowValue(self, row, "ZWIFIOUT"))
         event_data.wireless_wan_in = int(self._GetRowValue(self, row, "ZWWANIN"))
