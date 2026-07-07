@@ -77,6 +77,252 @@ short_source: 'Discord iOS'
 source: 'Discord iOS Messages'
 ---
 type: 'conditional'
+data_type: 'ios:health:achievement'
+message:
+- 'Template Name: {template_unique_name}'
+- 'Earned Date: {earned_date}'
+- 'Value: {value_in_canonical_unit} {value_canonical_unit}'
+- 'Creator Device ID: {creator_device}'
+- 'Sync Provenance: {sync_provenance}'
+short_message:
+- 'Achievement: {template_unique_name}'
+- 'Value: {value_in_canonical_unit}'
+short_source: 'SQLITE'
+source: 'iOS Health database'
+---
+type: 'conditional'
+data_type: 'ios:health:all_watch_sleep'
+enumeration_helpers:
+- input_attribute: 'sleep_state_code'
+  output_attribute: 'sleep_state_string'
+  default_value: 'UNKNOWN'
+  values:
+    0: 'In Bed'
+    1: 'Asleep'
+message:
+- 'Sleep Status: {sleep_state_string}'
+short_message:
+- 'Sleep Status: {sleep_state_string}'
+short_source: 'SQLITE'
+source: 'iOS Health database'
+---
+type: 'conditional'
+data_type: 'ios:health:headphone_audio_levels'
+message:
+- 'Sound Level: {decibels} dB'
+- 'Duration: {total_time_duration}'
+- 'Bundle identifier: {bundle_identifier}'
+- 'Device: {device_name} ({device_model})'
+- 'Manufacturer: {device_manufacturer}'
+short_message:
+- '{decibels} dB via {device_name} for {total_time_duration}'
+short_source: 'SQLITE'
+source: 'iOS Health database'
+---
+type: 'conditional'
+data_type: 'ios:health:heart_rate'
+enumeration_helpers:
+- input_attribute: 'context'
+  output_attribute: 'context_string'
+  default_value: 'UNKNOWN'
+  values:
+    1.0: 'Background'
+    2.0: 'Streaming'
+    3.0: 'Sedentary'
+    4.0: 'Walking'
+    5.0: 'Breathe'
+    6.0: 'Workout'
+    8.0: 'Background'
+    9.0: 'ECG'
+    10.0: 'Blood Oxygen Saturation'
+message:
+- 'Heart Rate: {bpm} BPM'
+- 'Context: {context_string}'
+- 'Device: {device_name} ({hardware})'
+- 'Source: {source_name} (v{software_version})'
+- 'Time Zone: {time_zone}'
+short_message:
+- '{bpm} BPM ({context})'
+short_source: 'SQLITE'
+source: 'iOS Health database'
+---
+type: 'conditional'
+data_type: 'ios:health:height'
+message:
+- 'Height: {height_m} meters'
+short_message:
+- 'Height: {height} m'
+short_source: 'SQLITE'
+source: 'iOS Health database'
+---
+type: 'conditional'
+data_type: 'ios:health:resting_heart_rate'
+message:
+- 'Resting Heart Rate: {resting_heart_rate} BPM'
+- 'Source: {source}'
+- 'Hardware: {hardware}'
+short_message:
+- 'Resting HR: {resting_heart_rate} BPM'
+short_source: 'SQLITE'
+source: 'iOS Health database'
+---
+type: 'conditional'
+data_type: 'ios:health:source_devices'
+message:
+- 'Device Name: {device_name}'
+- 'Manufacturer: {manufacturer}'
+- 'Model: {model}'
+- 'Hardware Version: {hardware}'
+- 'Software/Firmware: {software} / {firmware}'
+- 'Local Identifier: {device_local_identifier}'
+- 'Sync Provenance: {sync_provenance}'
+- 'Creation Date: {creation_date_str}'
+short_message:
+- 'Source Device: {device_name} ({model})'
+short_source: 'SQLITE'
+source: 'iOS Health database'
+---
+type: 'conditional'
+data_type: 'ios:health:steps'
+message:
+- 'Steps: {number_of_steps}'
+- 'Device: {device}'
+- 'Duration: {duration} seconds'
+short_message:
+- '{number_of_steps} steps via {device}'
+short_source: 'SQLITE'
+source: 'iOS Health database'
+---
+type: 'conditional'
+data_type: 'ios:health:weight'
+message:
+- 'Weight: {weight:.2f} kg'
+short_message:
+- 'Weight: {weight:.2f} kg'
+short_source: 'SQLITE'
+source: 'iOS Health database'
+---
+type: 'conditional'
+data_type: 'ios:health:workouts'
+enumeration_helpers:
+- input_attribute: 'activity_type'
+  output_attribute: 'activity_label'
+  default_value: 'OTHER'
+  values:
+    1: "AMERICAN FOOTBALL"
+    2: "ARCHERY"
+    3: "AUSTRALIAN FOOTBALL"
+    4: "BADMINTON"
+    5: "BASEBALL"
+    6: "BASKETBALL"
+    7: "BOWLING"
+    8: "BOXING"
+    9: "CLIMBING"
+    10: "CRICKET"
+    11: "CROSS TRAINING"
+    12: "CURLING"
+    13: "CYCLING"
+    16: "ELLIPTICAL"
+    17: "EQUESTRIAN SPORTS"
+    18: "FENCING"
+    19: "FISHING"
+    20: "FUNCTION STRENGTH TRAINING"
+    21: "GOLF"
+    22: "GYMNASTICS"
+    23: "HANDBALL"
+    24: "HIKING"
+    25: "HOCKEY"
+    26: "HUNTING"
+    27: "LACROSS"
+    28: "MARTIAL ARTS"
+    29: "MIND AND BODY"
+    31: "PADDLE SPORTS"
+    32: "PLAY"
+    33: "PREPARATION AND RECOVERY"
+    34: "RACQUETBALL"
+    35: "ROWING"
+    36: "RUGBY"
+    37: "RUNNING"
+    38: "SAILING"
+    39: "SKATING SPORTS"
+    40: "SNOW SPORTS"
+    41: "SOCCER"
+    42: "SOFTBALL"
+    43: "SQUASH"
+    44: "STAIRSTEPPER"
+    45: "SURFING SPORTS"
+    46: "SWIMMING"
+    47: "TABLE TENNIS"
+    48: "TENNIS"
+    49: "TRACK AND FIELD"
+    50: "TRADITIONAL STRENGTH TRAINING"
+    51: "VOLLEYBALL"
+    52: "WALKING"
+    53: "WATER FITNESS"
+    54: "WATER POLO"
+    55: "WATER SPORTS"
+    56: "WRESTLING"
+    57: "YOGA"
+    58: "BARRE"
+    59: "CORE TRAINING"
+    60: "CROSS COUNTRY SKIING"
+    61: "DOWNHILL SKIING"
+    62: "FLEXIBILITY"
+    63: "HIGH INTENSITY INTERVAL TRAINING (HIIT)"
+    64: "JUMP ROPE"
+    65: "KICKBOXING"
+    66: "PILATES"
+    67: "SNOWBOARDING"
+    68: "STAIRS"
+    69: "STEP TRAINING"
+    70: "WHEELCHAIR WALK PACE"
+    71: "WHEELCHAIR RUN PACE"
+    72: "TAI CHI"
+    73: "MIXED CARDIO"
+    74: "HAND CYCLING"
+    75: "DISC SPORTS"
+    76: "FITNESS GAMING"
+    77: "DANCE"
+    78: "SOCIAL DANCE"
+    79: "PICKLEBALL"
+    80: "COOLDOWN"
+    3000: "OTHER"
+- input_attribute: 'goal_type'
+  output_attribute: 'goal_label'
+  default_value: 'Unknown'
+  values:
+    0: "Open"
+    1: "Distance in meters"
+    2: "Time in seconds"
+    3: "Kilocalories"
+message:
+- 'Activity: {activity_label}'
+- 'Duration: {workout_duration}'
+- 'Distance: {total_distance} km'
+- 'Energy: {total_energy_burned} kcal Active / {total_basal_energy_burned} kcal Basal'
+- 'Steps: {total_w_steps}'
+- 'Flights Climbed: {total_flights_climbed}'
+- 'Goal: {goal_label} ({goal})'
+short_message:
+- '{activity_label}: {total_distance} km in {workout_duration}'
+short_source: 'SQLITE'
+source: 'iOS Health database'
+---
+type: 'conditional'
+data_type: 'ios:health:wrist_temperature'
+message:
+- 'Wrist temperature: {wrist_temperature} °C'
+- 'Surface temperature: {surface_temperature} °C'
+- 'Device: {device_name} ({device_model})'
+- 'Hardware/Software: {device_hardware} / {software_version}'
+- 'Algorithm Version: {algorithm_version}'
+- 'Source: {source}'
+short_message:
+- 'Wrist temperature: {wrist_temperature} °C via {device_model}'
+short_source: 'SQLITE'
+source: 'iOS Health database'
+---
+type: 'conditional'
 data_type: 'ios:idstatuscache:lookup'
 message:
 - 'Process Name: {process_name}'
