@@ -1,7 +1,5 @@
 """SQLite parser plugin for iOS accounts (Accounts3.db) database files."""
 
-from dfdatetime import cocoa_time as dfdatetime_cocoa_time
-
 from plaso.containers import events
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
@@ -140,24 +138,6 @@ class IOSAccountsPlugin(interface.SQLitePlugin):
 
     REQUIRES_SCHEMA_MATCH = False
 
-    def _GetTimeRowValue(self, query_hash, row, value_name):
-        """Retrieves a date and time value from the row.
-
-        Args:
-          query_hash (int): hash of the query, that uniquely
-              identifies the query that produced the row.
-          row (sqlite3.Row): row.
-          value_name (str): name of the value.
-
-        Returns:
-          dfdatetime.CocoaTime: date and time value or None if not available.
-        """
-        timestamp = self._GetRowValue(query_hash, row, value_name)
-        if timestamp is None:
-            return None
-
-        return dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
-
     # pylint: disable=unused-argument
     def ParseAccountRow(self, parser_mediator, query, row, **unused_kwargs):
         """Parses an account row.
@@ -174,7 +154,7 @@ class IOSAccountsPlugin(interface.SQLitePlugin):
         event_data.account_type = self._GetRowValue(
             query_hash, row, "ZACCOUNTTYPEDESCRIPTION"
         )
-        event_data.creation_time = self._GetTimeRowValue(query_hash, row, "ZDATE")
+        event_data.creation_time = self._GetCocoaTimeRowValue(query_hash, row, "ZDATE")
         event_data.identifier = self._GetRowValue(query_hash, row, "ZIDENTIFIER")
         event_data.owning_bundle_identifier = self._GetRowValue(
             query_hash, row, "ZOWNINGBUNDLEID"

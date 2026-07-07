@@ -2,8 +2,6 @@
 
 import plistlib
 
-from dfdatetime import cocoa_time as dfdatetime_cocoa_time
-
 from plaso.containers import events
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
@@ -98,24 +96,6 @@ class MacOSNotificationCenterPlugin(interface.SQLitePlugin):
         }
     ]
 
-    def _GetDateTimeRowValue(self, query_hash, row, value_name):
-        """Retrieves a date and time value from the row.
-
-        Args:
-          query_hash (int): hash of the query, that uniquely identifies the query
-              that produced the row.
-          row (sqlite3.Row): row.
-          value_name (str): name of the value.
-
-        Returns:
-          dfdatetime.CocoaTime: date and time value or None if not available.
-        """
-        timestamp = self._GetRowValue(query_hash, row, value_name)
-        if timestamp is None:
-            return None
-
-        return dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
-
     def ParseNotificationcenterRow(self, parser_mediator, query, row, **unused_kwargs):
         """Parses a message row.
 
@@ -143,7 +123,7 @@ class MacOSNotificationCenterPlugin(interface.SQLitePlugin):
 
         event_data = MacOSNotificationCenterEventData()
         event_data.bundle_name = self._GetRowValue(query_hash, row, "bundle_name")
-        event_data.creation_time = self._GetDateTimeRowValue(
+        event_data.creation_time = self._GetCocoaTimeRowValue(
             query_hash, row, "timestamp"
         )
         event_data.message_body = req_property.get("body")

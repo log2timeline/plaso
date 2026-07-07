@@ -2,6 +2,7 @@
 
 import sqlite3
 
+from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import java_time as dfdatetime_java_time
 from dfdatetime import posix_time as dfdatetime_posix_time
@@ -64,6 +65,26 @@ class SQLitePlugin(plugins.BasePlugin):
         date_time = dfdatetime_time_elements.TimeElements()
         date_time.CopyFromDateTimeString(date_time_string)
         return date_time
+
+    def _GetCocoaTimeRowValue(self, query_hash, row, value_name):
+        """Retrieves a Cocoa date and time value from the row.
+
+        Args:
+          query_hash (int): hash of the query, that uniquely
+              identifies the query that produced the row.
+          row (sqlite3.Row): row.
+          value_name (str): name of the value.
+
+        Returns:
+          dfdatetime.CocoaTime: date and time value or None if not available.
+        """
+        timestamp = self._GetRowValue(query_hash, row, value_name)
+        # Note that pysqlite3 can return an empty string for a NULL value.
+        # Also see: https://github.com/log2timeline/plaso/issues/4961
+        if timestamp in (None, ""):
+            return None
+
+        return dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
 
     def _GeFiletimeRowValue(self, query_hash, row, value_name):
         """Retrieves a FILETIME date and time value from the row.

@@ -12,8 +12,8 @@ class MacOSKnowledgeCApplicationEventData(events.EventData):
 
     Attributes:
       bundle_identifier (str): bundle identifier of the application.
-      creation_time (dfdatetime.DateTimeValues): creation date and time of
-          the KnowledgeC record.
+      creation_time (dfdatetime.DateTimeValues): creation date and time of the
+          KnowledgeC record.
       duration (int): duration of the activity.
       end_time (dfdatetime.DateTimeValues): date and time the activity ended.
       start_time (dfdatetime.DateTimeValues): date and time the activity started.
@@ -36,8 +36,8 @@ class MacOSKnowledgeCSafariEventData(events.EventData):
 
     Attributes:
       bundle_identifier (str): bundle identifier of the application.
-      creation_time (dfdatetime.DateTimeValues): creation date and time of
-          the KnowledgeC record.
+      creation_time (dfdatetime.DateTimeValues): creation date and time of the
+          KnowledgeC record.
       duration (int): duration of the activity.
       end_time (dfdatetime.DateTimeValues): date and time the activity ended.
       start_time (dfdatetime.DateTimeValues): date and time the activity started.
@@ -554,24 +554,6 @@ class MacOSKnowledgeCPlugin(interface.SQLitePlugin):
         ]
     )
 
-    def _GetDateTimeRowValue(self, query_hash, row, value_name):
-        """Retrieves a date and time value from the row.
-
-        Args:
-          query_hash (int): hash of the query, that uniquely identifies the query
-              that produced the row.
-          row (sqlite3.Row): row.
-          value_name (str): name of the value.
-
-        Returns:
-          dfdatetime.CocoaTime: date and time value or None if not available.
-        """
-        timestamp = self._GetRowValue(query_hash, row, value_name)
-        if timestamp is None:
-            return None
-
-        return dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
-
     def KnowledgeCRow(self, parser_mediator, query, row, **unused_kwargs):
         """Parses KnowledgeC application activity.
 
@@ -604,18 +586,16 @@ class MacOSKnowledgeCPlugin(interface.SQLitePlugin):
                 )
             return
 
-        event_data.creation_time = self._GetDateTimeRowValue(
+        event_data.creation_time = self._GetCocoaTimeRowValue(
             query_hash, row, "entry_creation"
         )
-
         activity_starts = self._GetRowValue(query_hash, row, "start")
-        activity_ends = self._GetRowValue(query_hash, row, "end")
-
         if activity_starts:
             event_data.start_time = dfdatetime_cocoa_time.CocoaTime(
                 timestamp=activity_starts
             )
 
+        activity_ends = self._GetRowValue(query_hash, row, "end")
         if activity_ends:
             event_data.end_time = dfdatetime_cocoa_time.CocoaTime(
                 timestamp=activity_ends

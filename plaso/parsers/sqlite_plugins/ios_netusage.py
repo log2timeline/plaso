@@ -1,7 +1,5 @@
 """SQLite parser plugin for iOS netusage.sqlite database files."""
 
-from dfdatetime import cocoa_time as dfdatetime_cocoa_time
-
 from plaso.containers import events
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
@@ -12,8 +10,8 @@ class IOSNetusageProcessEventData(events.EventData):
 
     Attributes:
       process_name (str): name of the process.
-      start_time (dfdatetime.DateTimeValues): date and time the start of
-          the network connection was established.
+      start_time (dfdatetime.DateTimeValues): date and time the start of the network
+          connection was established.
       wifi_in (int): bytes received via wifi.
       wifi_out (int): bytes sent via wifi.
       wired_in (int): bytes received via wired connection.
@@ -46,8 +44,8 @@ class IOSNetusageRouteEventData(events.EventData):
       network_identifier (str): name of network.
       network_signature (str): signature of network.
       network_type (int): integer indicating network type.
-      start_time (dfdatetime.DateTimeValues): date and time the start of
-          the network connection was established.
+      start_time (dfdatetime.DateTimeValues): date and time the start of the network
+          connection was established.
     """
 
     DATA_TYPE = "ios:netusage:route"
@@ -161,24 +159,6 @@ class IOSNetusagePlugin(interface.SQLitePlugin):
 
     REQUIRES_SCHEMA_MATCH = False
 
-    def _GetDateTimeRowValue(self, query_hash, row, value_name):
-        """Retrieves a date and time value from the row.
-
-        Args:
-          query_hash (int): hash of the query, that uniquely identifies the query
-              that produced the row.
-          row (sqlite3.Row): row.
-          value_name (str): name of the value.
-
-        Returns:
-          dfdatetime.CocoaTime: date and time value or None if not available.
-        """
-        timestamp = self._GetRowValue(query_hash, row, value_name)
-        if timestamp is None:
-            return None
-
-        return dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
-
     # pylint: disable=unused-argument
     def ParseNetusageRouteRow(self, parser_mediator, query, row, **unused_kwargs):
         """Parses a Netusage route row.
@@ -201,7 +181,9 @@ class IOSNetusagePlugin(interface.SQLitePlugin):
             query_hash, row, "ZNETSIGNATURE"
         )
         event_data.network_type = self._GetRowValue(query_hash, row, "ZKIND")
-        event_data.start_time = self._GetDateTimeRowValue(query_hash, row, "ZTIMESTAMP")
+        event_data.start_time = self._GetCocoaTimeRowValue(
+            query_hash, row, "ZTIMESTAMP"
+        )
 
         parser_mediator.ProduceEventData(event_data)
 
@@ -219,7 +201,9 @@ class IOSNetusagePlugin(interface.SQLitePlugin):
 
         event_data = IOSNetusageProcessEventData()
         event_data.process_name = self._GetRowValue(query_hash, row, "ZPROCNAME")
-        event_data.start_time = self._GetDateTimeRowValue(query_hash, row, "ZTIMESTAMP")
+        event_data.start_time = self._GetCocoaTimeRowValue(
+            query_hash, row, "ZTIMESTAMP"
+        )
         event_data.wifi_in = int(self._GetRowValue(query_hash, row, "ZWIFIIN"))
         event_data.wifi_out = int(self._GetRowValue(query_hash, row, "ZWIFIOUT"))
         event_data.wired_in = int(self._GetRowValue(query_hash, row, "ZWIREDIN"))

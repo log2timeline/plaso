@@ -1,7 +1,5 @@
 """SQLite parser plugin for iOS Kik messenger database files."""
 
-from dfdatetime import cocoa_time as dfdatetime_cocoa_time
-
 from plaso.containers import events
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
@@ -13,14 +11,12 @@ class IOSKikMessageEventData(events.EventData):
     Attributes:
       application_display_name (str): application display name.
       message_body (str): message body.
-      message_status (str): message status, such as:
-          read, unread, not sent, delivered, etc.
+      message_status (str): message status, such as: read, unread, not sent,
+          delivered.
       message_type (str): message type, either Sent or Received.
-      offset (str): identifier of the row, from which the event data was
-          extracted.
+      offset (str): identifier of the row, from which the event data was extracted.
       query (str): SQL query that was used to obtain the event data.
-      received_time (dfdatetime.DateTimeValues): date and time the message was
-          received.
+      received_time (dfdatetime.DateTimeValues): date and time the message was received.
       username (str): unique username of the sender or receiver.
     """
 
@@ -142,24 +138,6 @@ class IOSKikPlugin(interface.SQLitePlugin):
         }
     ]
 
-    def _GetDateTimeRowValue(self, query_hash, row, value_name):
-        """Retrieves a date and time value from the row.
-
-        Args:
-          query_hash (int): hash of the query, that uniquely identifies the query
-              that produced the row.
-          row (sqlite3.Row): row.
-          value_name (str): name of the value.
-
-        Returns:
-          dfdatetime.CocoaTime: date and time value or None if not available.
-        """
-        timestamp = self._GetRowValue(query_hash, row, value_name)
-        if timestamp is None:
-            return None
-
-        return dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
-
     def ParseMessageRow(self, parser_mediator, query, row, **unused_kwargs):
         """Parses a message row.
 
@@ -180,7 +158,7 @@ class IOSKikPlugin(interface.SQLitePlugin):
         event_data.message_type = self._GetRowValue(query_hash, row, "ZTYPE")
         event_data.offset = self._GetRowValue(query_hash, row, "id")
         event_data.query = query
-        event_data.received_time = self._GetDateTimeRowValue(
+        event_data.received_time = self._GetCocoaTimeRowValue(
             query_hash, row, "ZRECEIVEDTIMESTAMP"
         )
         event_data.username = self._GetRowValue(query_hash, row, "ZUSERNAME")
