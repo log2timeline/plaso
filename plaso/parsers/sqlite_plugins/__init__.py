@@ -29,6 +29,12 @@ from plaso.parsers.sqlite_plugins import imessage
 from plaso.parsers.sqlite_plugins import ios_accounts
 from plaso.parsers.sqlite_plugins import ios_datausage
 from plaso.parsers.sqlite_plugins import ios_health
+from plaso.parsers.sqlite_plugins import ios_health_all_watch_sleep_latest
+from plaso.parsers.sqlite_plugins import ios_health_source_devices_latest
+from plaso.parsers.sqlite_plugins import ios_health_watch_by_sleep_period
+from plaso.parsers.sqlite_plugins import ios_health_watch_by_sleep_period_latest
+from plaso.parsers.sqlite_plugins import ios_health_watch_worn_data
+from plaso.parsers.sqlite_plugins import ios_health_workouts_latest
 from plaso.parsers.sqlite_plugins import ios_imohdchat
 from plaso.parsers.sqlite_plugins import ios_instagram
 from plaso.parsers.sqlite_plugins import ios_kik
