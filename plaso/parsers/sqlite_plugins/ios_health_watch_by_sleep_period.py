@@ -12,7 +12,6 @@ class IOSHealthWatchBySleepPeriodEventData(events.EventData):
 
     Attributes:
       asleep_percent (float): percentage of time spent asleep.
-      data_type_id (int): internal iOS data type identifier.
       device_name (str): name of the recording device.
       end_time (dfdatetime.DateTimeValues): date and time the sleep ended.
       in_bed_duration (float): time spent in bed.
@@ -27,7 +26,6 @@ class IOSHealthWatchBySleepPeriodEventData(events.EventData):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
         self.asleep_percent = None
-        self.data_type_id = None
         self.device_name = None
         self.end_time = None
         self.in_bed_duration = None
@@ -79,8 +77,8 @@ class IOSHealthWatchBySleepPeriodPlugin(interface.SQLitePlugin):
                 "in_bed_percent, CASE WHEN SUM(duration_minutes) > 0 THEN "
                 "ROUND(SUM(CASE WHEN sleep_value = 'ASLEEP' THEN duration_minutes "
                 "ELSE 0 END) * 100.0 / SUM(duration_minutes), 2) ELSE 0 END AS "
-                "asleep_percent FROM grouped_samples GROUP BY group_number ORDER BY "
-                "MIN(start_date) ASC"
+                "asleep_percent FROM grouped_samples "
+                "GROUP BY group_number ORDER BY MIN(start_date) ASC"
             ),
             "ParseSleepRowInBed",
         )
@@ -134,7 +132,6 @@ class IOSHealthWatchBySleepPeriodPlugin(interface.SQLitePlugin):
 
         event_data = IOSHealthWatchBySleepPeriodEventData()
         event_data.asleep_percent = self._GetRowValue(query_hash, row, "asleep_percent")
-        event_data.data_type_id = self._GetRowValue(query_hash, row, "data_type_id")
         event_data.device_name = self._GetRowValue(query_hash, row, "device_name")
         event_data.end_time = self._GetDateTimeRowValue(query_hash, row, "end_date")
         event_data.in_bed_duration = self._GetRowValue(

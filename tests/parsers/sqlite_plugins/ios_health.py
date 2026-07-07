@@ -53,7 +53,7 @@ class IOSHealthTest(test_lib.SQLitePluginTestCase):
             "creator_device": 1,
             "data_type": "ios:health:achievement",
             "earned_date": "2020-03-23",
-            "sync_provenance": 1,
+            "synchronization_provenance": 1,
             "template_unique_name": "NewMoveGoalAchieved",
             "value_canonical_unit": "kcal",
             "value_in_canonical_unit": 480.0,
@@ -88,6 +88,7 @@ class IOSHealthTest(test_lib.SQLitePluginTestCase):
         # Check all watch sleep (sample) event data.
         expected_event_values = {
             "data_type": "ios:health:all_watch_sleep",
+            "duration": 29220.0,
             "end_time": "2020-04-04T10:37:00.000000+00:00",
             "sleep_state_code": 0,
             "start_time": "2020-04-04T02:30:00.000000+00:00",
@@ -161,7 +162,7 @@ class IOSHealthTest(test_lib.SQLitePluginTestCase):
             "manufacturer": "Apple Inc.",
             "model": "iPhone",
             "software": "13.3.1",
-            "sync_provenance": 0,
+            "synchronization_provenance": 0,
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 11747)
         self.CheckEventData(event_data, expected_event_values)

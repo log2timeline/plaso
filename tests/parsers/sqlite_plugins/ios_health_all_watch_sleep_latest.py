@@ -37,9 +37,9 @@ class IOSHealthAllWatchSleepLatestPluginGoldenTest(test_lib.SQLitePluginTestCase
         # Check watch sleep (sample) event data.
         expected_event_values = {
             "data_type": "ios:health:all_watch_sleep_ios17",
+            "duration": 1140.0,
             "end_time": "2024-07-23T03:44:36.786187+00:00",
             "sleep_state_code": 3,
-            "sleep_state_hms": "00:19:00",
             "start_time": "2024-07-23T03:25:36.786187+00:00",
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)

@@ -83,7 +83,7 @@ message:
 - 'Earned Date: {earned_date}'
 - 'Value: {value_in_canonical_unit} {value_canonical_unit}'
 - 'Creator Device ID: {creator_device}'
-- 'Sync Provenance: {sync_provenance}'
+- 'Synchronization Provenance: {synchronization_provenance}'
 short_message:
 - 'Achievement: {template_unique_name}'
 - 'Value: {value_in_canonical_unit}'
@@ -195,9 +195,8 @@ message:
 - 'Hardware Version: {hardware}'
 - 'Software/Firmware: {software} / {firmware}'
 - 'Local Identifier: {device_local_identifier}'
-- 'Sync Provenance: {sync_provenance}'
-- 'Sync Identity: {sync_identity}'
-- 'Creation Date: {creation_date_str}'
+- 'Synchronization Provenance: {synchronization_provenance}'
+- 'Synchronization Identity: {synchronization_identity}'
 short_message:
 - 'Source Device: {device_name} ({model})'
 short_source: 'SQLITE'
@@ -212,8 +211,7 @@ message:
 - 'Hardware Version: {hardware}'
 - 'Software/Firmware: {software} / {firmware}'
 - 'Local Identifier: {device_local_identifier}'
-- 'Sync Provenance: {sync_provenance}'
-- 'Creation Date: {creation_date_str}'
+- 'Synchronization Provenance: {synchronization_provenance}'
 short_message:
 - 'Source Device: {device_name} ({model})'
 short_source: 'SQLITE'
@@ -238,8 +236,6 @@ message:
 - 'REM Sleep: {rem_duration_hms} ({rem_percent}%)'
 - 'Core Sleep: {core_duration_hms} ({core_percent}%)'
 - 'Awake: {awake_duration_hms} ({awake_percent}%)'
-- 'Start Time: {start_date_str}'
-- 'End Time: {end_date_str}'
 short_message:
 - 'Sleep Period: {total_duration} min (Deep: {deep_percent}%, REM: {rem_percent}%)'
 short_source: 'SQLITE'
@@ -252,9 +248,6 @@ message:
 - 'Actual Sleep Percent: {asleep_percent}%'
 - 'In Bed Duration: {in_bed_duration_hms} ({in_bed_percent}%)'
 - 'Device: {device_name}'
-- 'Start: {start_date_str}'
-- 'End: {end_date_str}'
-- 'Data Type ID: {data_type_id}'
 short_message:
 - 'Sleep Period: {time_in_bed_hms} (Asleep: {asleep_percent}%)'
 short_source: 'SQLITE'

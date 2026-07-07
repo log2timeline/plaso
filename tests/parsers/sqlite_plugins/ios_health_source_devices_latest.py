@@ -35,17 +35,17 @@ class IOSHealthSourceDevicesLatestTest(test_lib.SQLitePluginTestCase):
         self.assertEqual(number_of_recovery_warnings, 0)
 
         expected_event_values = {
-            "creation_date_str": "2020-03-21 20:28:48.950322",
+            "added_time": "2023-05-19T16:03:01.287088+00:00",
             "data_type": "ios:health:source_devices_latest",
-            "device_name": "Apple Watch",
+            "device_name": "This Is’s AirPods",
             "firmware": None,
-            "hardware": "Watch4,3",
-            "local_identifier": None,
+            "hardware": None,
+            "local_identifier": "08:65:18:75:5E:75-tacl",
             "manufacturer": "Apple Inc.",
-            "model": "Watch",
-            "software": "6.1.3",
+            "model": "0x2013",
+            "software": None,
             "sync_identity": 1,
-            "sync_provenance": 47,
+            "sync_provenance": 53,
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
