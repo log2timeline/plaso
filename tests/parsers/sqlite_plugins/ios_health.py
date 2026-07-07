@@ -24,7 +24,7 @@ class IOSHealthTest(test_lib.SQLitePluginTestCase):
         # 1 height (sample) event data
         # 18 resting heart rate (sample) event data
         # 6060 steps (sample) event data
-        # 6 source device event data
+        # 8 source device event data
         # 1109 weight (sample) event data
         # 6 workouts (sample) event data
         # 266 wrist temperature (sample) event data
@@ -33,7 +33,7 @@ class IOSHealthTest(test_lib.SQLitePluginTestCase):
             "event_data"
         )
         expected_number_of_event_data = (
-            8 + 16 + 8 + 4261 + 1 + 18 + 6060 + 6 + 1109 + 6 + 266
+            8 + 16 + 8 + 4261 + 1 + 18 + 6060 + 8 + 1109 + 6 + 266
         )
         self.assertEqual(number_of_event_data, expected_number_of_event_data)
 
@@ -53,37 +53,13 @@ class IOSHealthTest(test_lib.SQLitePluginTestCase):
             "creator_device": 1,
             "data_type": "ios:health:achievement",
             "earned_date": "2020-03-23",
-            "sync_provenance": 1,
+            "synchronization_provenance": 1,
             "template_unique_name": "NewMoveGoalAchieved",
             "value_canonical_unit": "kcal",
             "value_in_canonical_unit": 480.0,
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
-
-        # TODO: remove after refactoring, determines the first index of a specific
-        # event data type.
-        indexes = {
-            "ios:health:all_watch_sleep": None,
-            "ios:health:headphone_audio_levels": None,
-            "ios:health:heart_rate": None,
-            "ios:health:height": None,
-            "ios:health:resting_heart_rate": None,
-            "ios:health:steps": None,
-            "ios:health:source_devices": None,
-            "ios:health:weight": None,
-            "ios:health:workouts": None,
-            "ios:health:wrist_temperature": None,
-        }
-        for index in range(0, number_of_event_data):
-            event_data = storage_writer.GetAttributeContainerByIndex(
-                "event_data", index
-            )
-            for key, value in indexes.items():
-                if not value and event_data.data_type == key:
-                    indexes[key] = index
-
-        print(indexes)
 
         # Check all watch sleep (sample) event data.
         expected_event_values = {
@@ -161,7 +137,7 @@ class IOSHealthTest(test_lib.SQLitePluginTestCase):
             "manufacturer": "Apple Inc.",
             "model": "iPhone",
             "software": "13.3.1",
-            "sync_provenance": 0,
+            "synchronization_provenance": 0,
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 11747)
         self.CheckEventData(event_data, expected_event_values)
@@ -202,7 +178,7 @@ class IOSHealthTest(test_lib.SQLitePluginTestCase):
             "total_flights_climbed": None,
             "total_weekly_steps": None,
         }
-        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 11753)
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 11755)
         self.CheckEventData(event_data, expected_event_values)
 
         # Check wrist temperature (sample) event data.

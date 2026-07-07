@@ -170,7 +170,8 @@ hangouts_messages | Parser for Google Hangouts conversations SQLite database (ba
 imessage | Parser for MacOS and iOS iMessage database (chat.db, sms.db) files.
 instagram_ios | Parser for iOS Instagram threads SQLite database (9368974384.db) files.
 ios_accounts | Parser for iOS accounts SQLite database (Accounts3.db) files.
-ios_datausage | Parser for iOS data usage SQLite databse (DataUsage.sqlite) file..
+ios_datausage | Parser for iOS data usage SQLite database (DataUsage.sqlite) files.
+ios_health | Parser for iOS Health SQLite database (healthdb_secure.sqlite) files.
 ios_imohdchat_message | Parser for IMO HD chat message SQLite database (IMODb2.sqlite) files.
 ios_netusage | Parser for iOS network usage SQLite database (netusage.sqlite) files.
 ios_notes | Parser for iOS Notes SQLite database files.
@@ -236,7 +237,7 @@ snort_fastlog | Parser for Snort3/Suricata fast-log alert log (fast.log) files.
 sophos_av | Parser for Sophos anti-virus log file (SAV.txt) files.
 syslog | Parser for System log (syslog) files.
 syslog_traditional | Parser for Traditional system log (syslog) files.
-teamviewer_application_log | Parser for TeamViewer application log file parser..
+teamviewer_application_log | Parser for TeamViewer application log file parser.
 teamviewer_connections_incoming | Parser for TeamViewer connections_incoming.txt log files.
 teamviewer_connections_outgoing | Parser for TeamViewer connections.txt log files.
 viminfo | Parser for Viminfo files.

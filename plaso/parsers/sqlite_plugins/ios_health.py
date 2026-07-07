@@ -13,7 +13,7 @@ class IOSHealthAchievementsEventData(events.EventData):
           achievement.
       creator_device (int): identifier of the device that created the achievement.
       earned_date (str): Date the achievement was earned.
-      sync_provenance (int): Identifier for the sync provenance.
+      synchronization_provenance (int): synchronization provenance.
       template_unique_name (str): Unique name of the achievement template.
       value_canonical_unit (str): Unit of the value (e.g., "count").
       value_in_canonical_unit (float): Value of the achievement in canonical units.
@@ -27,7 +27,7 @@ class IOSHealthAchievementsEventData(events.EventData):
         self.creation_time = None
         self.creator_device = None
         self.earned_date = None
-        self.sync_provenance = None
+        self.synchronization_provenance = None
         self.template_unique_name = None
         self.value_canonical_unit = None
         self.value_in_canonical_unit = None
@@ -37,6 +37,7 @@ class IOSHealthAllWatchSleepEventData(events.EventData):
     """iOS Health all watch sleep event data.
 
     Attributes:
+      duration (float): duration in seconds.
       end_time (dfdatetime.DateTimeValues): date and time the sleep ended.
       sleep_state_code (int): sleep state code.
       start_time (dfdatetime.DateTimeValues): date and time the sleep started.
@@ -47,6 +48,7 @@ class IOSHealthAllWatchSleepEventData(events.EventData):
     def __init__(self):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
+        self.duration = None
         self.end_time = None
         self.sleep_state_code = None
         self.start_time = None
@@ -180,7 +182,8 @@ class IOSHealthSourceDevicesEventData(events.EventData):
       manufacturer (str): manufacturer of the device.
       model (str): model of the device.
       software (str): software version of the device.
-      sync_provenance (int): sync provenance information.
+      synchronization_identity (int): synchronization identifier.
+      synchronization_provenance (int): synchronization provenance.
     """
 
     DATA_TYPE = "ios:health:source_devices"
@@ -196,7 +199,8 @@ class IOSHealthSourceDevicesEventData(events.EventData):
         self.manufacturer = None
         self.model = None
         self.software = None
-        self.sync_provenance = None
+        self.synchronization_identity = None
+        self.synchronization_provenance = None
 
 
 class IOSHealthStepsEventData(events.EventData):
@@ -426,12 +430,10 @@ class IOSHealthPlugin(interface.SQLitePlugin):
             "_ParseSamplesRow",
         ),
         (
-            # TODO: remove filter on __NONE__ handle this in _ParseSourceDevicesRow
             (
                 "SELECT creation_date, firmware, hardware, localIdentifier, "
                 "manufacturer, model, name, software, sync_provenance "
-                "FROM source_devices WHERE name NOT LIKE '__NONE__' AND "
-                "localIdentifier NOT LIKE '__NONE__'"
+                "FROM source_devices"
             ),
             "_ParseSourceDevicesRow",
         ),
@@ -896,7 +898,7 @@ class IOSHealthPlugin(interface.SQLitePlugin):
             query_hash, row, "value_canonical_unit"
         )
         event_data.creator_device = self._GetRowValue(query_hash, row, "creator_device")
-        event_data.sync_provenance = self._GetRowValue(
+        event_data.synchronization_provenance = self._GetRowValue(
             query_hash, row, "sync_provenance"
         )
         parser_mediator.ProduceEventData(event_data)
@@ -919,6 +921,16 @@ class IOSHealthPlugin(interface.SQLitePlugin):
         event_data.sleep_state_code = self._GetRowValue(
             query_hash, row, "category_value"
         )
+        if (
+            event_data.end_time
+            and event_data.start_time
+            and event_data.end_time.timestamp is not None
+            and event_data.start_time.timestamp is not None
+        ):
+            event_data.duration = (
+                event_data.end_time.timestamp - event_data.start_time.timestamp
+            )
+
         parser_mediator.ProduceEventData(event_data)
 
     def _ParseHeadphoneAudioLevelSample(
@@ -967,14 +979,17 @@ class IOSHealthPlugin(interface.SQLitePlugin):
         """
         quantity = self._GetRowValue(query_hash, row, "quantity")
 
+        device_name = self._GetRowValue(query_hash, row, "device_name")
+        if device_name == "__NONE__":
+            device_name = None
+
         event_data = IOSHealthHeartRateEventData()
         event_data.added_time = self._GetCocoaTimeRowValue(
             query_hash, row, "creation_date"
         )
         event_data.bpm = int((quantity or 0.0) * 60.0)
         event_data.context = object_values.get("_HKPrivateHeartRateContext")
-        # TODO: remove device name of "__NONE__"
-        event_data.device_name = self._GetRowValue(query_hash, row, "device_name")
+        event_data.device_name = device_name or None
         event_data.end_time = self._GetCocoaTimeRowValue(query_hash, row, "end_date")
         event_data.hardware = self._GetRowValue(query_hash, row, "device_hardware")
         event_data.manufacturer = self._GetRowValue(
@@ -1119,21 +1134,29 @@ class IOSHealthPlugin(interface.SQLitePlugin):
         """
         query_hash = hash(query)
 
+        device_name = self._GetRowValue(query_hash, row, "name")
         firmware = self._GetRowValue(query_hash, row, "firmware")
+        hardware = self._GetRowValue(query_hash, row, "hardware")
         local_identifier = self._GetRowValue(query_hash, row, "localIdentifier")
+        software = self._GetRowValue(query_hash, row, "software")
+
+        if device_name == "__NONE__":
+            device_name = None
+        if local_identifier == "__NONE__":
+            local_identifier = None
 
         event_data = IOSHealthSourceDevicesEventData()
         event_data.added_time = self._GetCocoaTimeRowValue(
             query_hash, row, "creation_date"
         )
-        event_data.device_name = self._GetRowValue(query_hash, row, "name")
+        event_data.device_name = device_name or None
         event_data.firmware = firmware or None
-        event_data.hardware = self._GetRowValue(query_hash, row, "hardware")
+        event_data.hardware = hardware or None
         event_data.local_identifier = local_identifier or None
         event_data.manufacturer = self._GetRowValue(query_hash, row, "manufacturer")
         event_data.model = self._GetRowValue(query_hash, row, "model")
-        event_data.software = self._GetRowValue(query_hash, row, "software")
-        event_data.sync_provenance = self._GetRowValue(
+        event_data.software = software or None
+        event_data.synchronization_provenance = self._GetRowValue(
             query_hash, row, "sync_provenance"
         )
         parser_mediator.ProduceEventData(event_data)
@@ -1159,7 +1182,6 @@ class IOSHealthPlugin(interface.SQLitePlugin):
         event_data.start_time = self._GetCocoaTimeRowValue(
             query_hash, row, "start_date"
         )
-
         if (
             event_data.end_time
             and event_data.start_time
