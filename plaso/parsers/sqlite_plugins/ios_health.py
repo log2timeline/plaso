@@ -980,7 +980,7 @@ class IOSHealthPlugin(interface.SQLitePlugin):
         quantity = self._GetRowValue(query_hash, row, "quantity")
 
         device_name = self._GetRowValue(query_hash, row, "device_name")
-        if device_name == '__NONE__':
+        if device_name == "__NONE__":
             device_name = None
 
         event_data = IOSHealthHeartRateEventData()
@@ -1136,11 +1136,13 @@ class IOSHealthPlugin(interface.SQLitePlugin):
 
         device_name = self._GetRowValue(query_hash, row, "name")
         firmware = self._GetRowValue(query_hash, row, "firmware")
+        hardware = self._GetRowValue(query_hash, row, "hardware")
         local_identifier = self._GetRowValue(query_hash, row, "localIdentifier")
+        software = self._GetRowValue(query_hash, row, "software")
 
-        if device_name == '__NONE__':
+        if device_name == "__NONE__":
             device_name = None
-        if local_identifier == '__NONE__':
+        if local_identifier == "__NONE__":
             local_identifier = None
 
         event_data = IOSHealthSourceDevicesEventData()
@@ -1149,11 +1151,11 @@ class IOSHealthPlugin(interface.SQLitePlugin):
         )
         event_data.device_name = device_name or None
         event_data.firmware = firmware or None
-        event_data.hardware = self._GetRowValue(query_hash, row, "hardware")
+        event_data.hardware = hardware or None
         event_data.local_identifier = local_identifier or None
         event_data.manufacturer = self._GetRowValue(query_hash, row, "manufacturer")
         event_data.model = self._GetRowValue(query_hash, row, "model")
-        event_data.software = self._GetRowValue(query_hash, row, "software")
+        event_data.software = software or None
         event_data.synchronization_provenance = self._GetRowValue(
             query_hash, row, "sync_provenance"
         )
