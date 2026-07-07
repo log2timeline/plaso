@@ -1547,9 +1547,11 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
                 column_names=["Parser (plugin) name", "Number of warnings"],
                 title=f"{title:s} warnings generated per parser",
             )
-            for parser_chain, count in warnings_by_parser_chain.items():
+            for parser_chain, count_container in warnings_by_parser_chain.items():
                 parser_chain = parser_chain or "<No parser>"
-                table_view.AddRow([parser_chain, f"{count:d}"])
+                table_view.AddRow(
+                    [parser_chain, f"{count_container.number_of_events:d}"]
+                )
             table_view.Write(self._output_writer)
 
         if warnings_by_path_spec:
@@ -1558,13 +1560,15 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
                 column_names=["Number of warnings", "Pathspec"],
                 title=f"Path specifications with most {description:s} warnings",
             )
-            for path_spec, count in warnings_by_path_spec.most_common(10):
+            for path_spec, count_container in warnings_by_path_spec.most_common(10):
                 for path_index, line in enumerate(path_spec.split("\n")):
                     if not line:
                         continue
 
                     if path_index == 0:
-                        table_view.AddRow([f"{count:d}", line])
+                        table_view.AddRow(
+                            [f"{count_container.number_of_events:d}", line]
+                        )
                     else:
                         table_view.AddRow(["", line])
 
