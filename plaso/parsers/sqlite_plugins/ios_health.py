@@ -430,12 +430,10 @@ class IOSHealthPlugin(interface.SQLitePlugin):
             "_ParseSamplesRow",
         ),
         (
-            # TODO: remove filter on __NONE__ handle this in _ParseSourceDevicesRow
             (
                 "SELECT creation_date, firmware, hardware, localIdentifier, "
                 "manufacturer, model, name, software, sync_provenance "
-                "FROM source_devices WHERE name NOT LIKE '__NONE__' AND "
-                "localIdentifier NOT LIKE '__NONE__'"
+                "FROM source_devices"
             ),
             "_ParseSourceDevicesRow",
         ),
@@ -981,14 +979,17 @@ class IOSHealthPlugin(interface.SQLitePlugin):
         """
         quantity = self._GetRowValue(query_hash, row, "quantity")
 
+        device_name = self._GetRowValue(query_hash, row, "device_name")
+        if device_name == '__NONE__':
+            device_name = None
+
         event_data = IOSHealthHeartRateEventData()
         event_data.added_time = self._GetCocoaTimeRowValue(
             query_hash, row, "creation_date"
         )
         event_data.bpm = int((quantity or 0.0) * 60.0)
         event_data.context = object_values.get("_HKPrivateHeartRateContext")
-        # TODO: remove device name of "__NONE__"
-        event_data.device_name = self._GetRowValue(query_hash, row, "device_name")
+        event_data.device_name = device_name or None
         event_data.end_time = self._GetCocoaTimeRowValue(query_hash, row, "end_date")
         event_data.hardware = self._GetRowValue(query_hash, row, "device_hardware")
         event_data.manufacturer = self._GetRowValue(
@@ -1133,14 +1134,20 @@ class IOSHealthPlugin(interface.SQLitePlugin):
         """
         query_hash = hash(query)
 
+        device_name = self._GetRowValue(query_hash, row, "name")
         firmware = self._GetRowValue(query_hash, row, "firmware")
         local_identifier = self._GetRowValue(query_hash, row, "localIdentifier")
+
+        if device_name == '__NONE__':
+            device_name = None
+        if local_identifier == '__NONE__':
+            local_identifier = None
 
         event_data = IOSHealthSourceDevicesEventData()
         event_data.added_time = self._GetCocoaTimeRowValue(
             query_hash, row, "creation_date"
         )
-        event_data.device_name = self._GetRowValue(query_hash, row, "name")
+        event_data.device_name = device_name or None
         event_data.firmware = firmware or None
         event_data.hardware = self._GetRowValue(query_hash, row, "hardware")
         event_data.local_identifier = local_identifier or None

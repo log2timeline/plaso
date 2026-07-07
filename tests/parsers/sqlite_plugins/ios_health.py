@@ -24,7 +24,7 @@ class IOSHealthTest(test_lib.SQLitePluginTestCase):
         # 1 height (sample) event data
         # 18 resting heart rate (sample) event data
         # 6060 steps (sample) event data
-        # 6 source device event data
+        # 8 source device event data
         # 1109 weight (sample) event data
         # 6 workouts (sample) event data
         # 266 wrist temperature (sample) event data
@@ -33,7 +33,7 @@ class IOSHealthTest(test_lib.SQLitePluginTestCase):
             "event_data"
         )
         expected_number_of_event_data = (
-            8 + 16 + 8 + 4261 + 1 + 18 + 6060 + 6 + 1109 + 6 + 266
+            8 + 16 + 8 + 4261 + 1 + 18 + 6060 + 8 + 1109 + 6 + 266
         )
         self.assertEqual(number_of_event_data, expected_number_of_event_data)
 
@@ -178,7 +178,7 @@ class IOSHealthTest(test_lib.SQLitePluginTestCase):
             "total_flights_climbed": None,
             "total_weekly_steps": None,
         }
-        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 11753)
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 11755)
         self.CheckEventData(event_data, expected_event_values)
 
         # Check wrist temperature (sample) event data.
