@@ -221,8 +221,8 @@ class ESEDBPlugin(plugins.BasePlugin, dtfabric_helper.DtFabricHelper):
         """Retrieves the values from the record.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           table_name (str): name of the table.
           record_index (int): ESE record index.
           record (pyesedb.record): ESE record.
@@ -240,7 +240,7 @@ class ESEDBPlugin(plugins.BasePlugin, dtfabric_helper.DtFabricHelper):
 
             column_name = record.get_column_name(value_entry)
             if column_name in record_values:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"[{self.NAME:s}] duplicate column: {column_name:s} in table: "
                     f"{table_name:s}"
                 )
@@ -266,7 +266,7 @@ class ESEDBPlugin(plugins.BasePlugin, dtfabric_helper.DtFabricHelper):
                 except Exception as exception:  # pylint: disable=broad-except
                     logger.error(exception)
                     value = None
-                    parser_mediator.ProduceExtractionWarning(
+                    parser_mediator.ProduceWarning(
                         f"unable to parse value: {column_name:s} in record: "
                         f"{record_index:d} with callback: {value_callback_method:s} in "
                         f"table: {table_name:s} with error: {exception!s}"
@@ -277,8 +277,8 @@ class ESEDBPlugin(plugins.BasePlugin, dtfabric_helper.DtFabricHelper):
                     value = self._GetRecordValue(record, value_entry)
                 except ValueError as exception:
                     value = None
-                    parser_mediator.ProduceExtractionWarning(
-                        f"unable to parse value: {column_name:s}  in record: "
+                    parser_mediator.ProduceWarning(
+                        f"unable to parse value: {column_name:s} in record: "
                         f"{record_index:d} in table: {table_name:s} with error: "
                         f"{exception!s}"
                     )
@@ -291,8 +291,8 @@ class ESEDBPlugin(plugins.BasePlugin, dtfabric_helper.DtFabricHelper):
         """Extracts event objects from the database.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           cache (Optional[ESEDBCache]): cache.
           database (Optional[ESEDatabase]): ESE database.
 
@@ -358,8 +358,8 @@ class ESEDBPlugin(plugins.BasePlugin, dtfabric_helper.DtFabricHelper):
         """Extracts events from an ESE database.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           cache (Optional[ESEDBCache]): cache.
           database (Optional[ESEDatabase]): ESE database.
 

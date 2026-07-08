@@ -131,7 +131,8 @@ class GoogleAnalyticsUtmaPlugin(interface.BaseCookiePlugin):
         """Extracts events from cookie data.
 
         Args:
-          parser_mediator (ParserMediator): parser mediator.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           cookie_data (str): cookie data.
           url (str): URL or path where the cookie got set.
         """
@@ -139,7 +140,7 @@ class GoogleAnalyticsUtmaPlugin(interface.BaseCookiePlugin):
         number_of_fields = len(fields)
 
         if number_of_fields not in (1, 6):
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unsupported number of fields: {number_of_fields:d} in cookie: "
                 f"{self.COOKIE_NAME:s}"
             )
@@ -218,7 +219,8 @@ class GoogleAnalyticsUtmbPlugin(interface.BaseCookiePlugin):
         """Extracts events from cookie data.
 
         Args:
-          parser_mediator (ParserMediator): parser mediator.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           cookie_data (bytes): cookie data.
           url (str): URL or path where the cookie got set.
         """
@@ -226,7 +228,7 @@ class GoogleAnalyticsUtmbPlugin(interface.BaseCookiePlugin):
         number_of_fields = len(fields)
 
         if number_of_fields not in (1, 4):
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unsupported number of fields: {number_of_fields:d} in cookie: "
                 f"{self.COOKIE_NAME:s}"
             )
@@ -282,7 +284,8 @@ class GoogleAnalyticsUtmtPlugin(interface.BaseCookiePlugin):
         """Extracts events from cookie data.
 
         Args:
-          parser_mediator (ParserMediator): parser mediator.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           cookie_data (bytes): cookie data.
           url (str): URL or path where the cookie got set.
         """
@@ -290,7 +293,7 @@ class GoogleAnalyticsUtmtPlugin(interface.BaseCookiePlugin):
         number_of_fields = len(fields)
 
         if number_of_fields != 1:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unsupported number of fields: {number_of_fields:d} in cookie: "
                 f"{self.COOKIE_NAME:s}"
             )
@@ -330,7 +333,8 @@ class GoogleAnalyticsUtmzPlugin(interface.BaseCookiePlugin):
         """Extracts events from cookie data.
 
         Args:
-          parser_mediator (ParserMediator): parser mediator.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           cookie_data (str): cookie data.
           url (str): URL or path where the cookie got set.
         """
@@ -344,7 +348,7 @@ class GoogleAnalyticsUtmzPlugin(interface.BaseCookiePlugin):
             number_of_fields = len(fields)
 
         if number_of_fields not in (1, 5):
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unsupported number of fields: {number_of_fields:d} in cookie: "
                 f"{self.COOKIE_NAME:s}"
             )

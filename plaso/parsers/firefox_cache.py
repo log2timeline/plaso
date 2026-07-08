@@ -77,8 +77,8 @@ class BaseFirefoxCacheParser(interface.FileObjectParser):
         """Extract relevant information from HTTP header.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           http_headers_data (bytes): HTTP headers data.
           offset (int): offset of the cache record, relative to the start of
               the Firefox cache file.
@@ -233,8 +233,8 @@ class FirefoxCacheParser(BaseFirefoxCacheParser, dtfabric_helper.DtFabricHelper)
         """Parses a cache entry.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): a file-like object.
           display_name (str): display name.
           block_size (int): block size.
@@ -358,8 +358,8 @@ class FirefoxCacheParser(BaseFirefoxCacheParser, dtfabric_helper.DtFabricHelper)
         """Parses a Firefox cache file-like object.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): a file-like object.
 
         Raises:
@@ -476,8 +476,8 @@ class FirefoxCache2Parser(BaseFirefoxCacheParser, dtfabric_helper.DtFabricHelper
         """Parses a Firefox cache file-like object.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): a file-like object.
 
         Raises:
