@@ -15,15 +15,81 @@ from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
 
+# Syslog severity and facility label tables, mirroring the ones in
+# plaso/parsers/text_plugins/syslog.py. In the journal the PRIORITY and
+# SYSLOG_FACILITY fields are stored as plain decimal strings (0-7 and 0-23
+# respectively per systemd.journal-fields(7)) that index directly into these
+# tables; the RFC 3164 priority-byte decomposition used for text syslog does not
+# apply here. These are unvalidated "user" fields, so their values are
+# bounds-checked before use.
+_SYSLOG_SEVERITY = [
+    "EMERG",
+    "ALERT",
+    "CRIT",
+    "ERR",
+    "WARNING",
+    "NOTICE",
+    "INFO",
+    "DEBUG",
+]
+
+_SYSLOG_FACILITY = [
+    "kernel message",
+    "user-level message",
+    "mail system",
+    "system daemons",
+    "security/authorization messages",
+    "messages generated internally by syslogd",
+    "line printer subsystem",
+    "network news subsystem",
+    "UUCP subsystem",
+    "clock daemon",
+    "security/authorization messages",
+    "FTP daemon",
+    "NTP subsystem",
+    "log audit",
+    "log alert",
+    "clock daemon",
+    "local use 0",
+    "local use 1",
+    "local use 2",
+    "local use 3",
+    "local use 4",
+    "local use 5",
+    "local use 6",
+    "local use 7",
+]
+
 
 class SystemdJournalEventData(events.EventData):
     """Systemd journal event data.
 
     Attributes:
+      audit_login_identifier (str): login user identifier (audit loginuid) of
+          the process that logged the entry.
+      boot_identifier (str): identifier of the boot the entry was logged in.
+      command_line (str): command line of the process that logged the entry.
+      executable (str): path of the executable of the process that logged the
+          entry.
+      facility (str): syslog facility.
+      group_identifier (str): group identifier (GID) of the process that logged
+          the entry.
       hostname (str): hostname.
+      machine_identifier (str): identifier of the machine the entry was logged
+          on.
       message_body (str): message body.
-      pid (int): process identifier (PID).
+      pid (str): process identifier (PID).
+      process_name (str): name of the process that logged the entry.
+      recorded_time (dfdatetime.DateTimeValues): date and time the log entry
+          was recorded (received) by journald on the originating host.
       reporter (str): reporter.
+      selinux_context (str): SELinux security context of the process that logged
+          the entry.
+      severity (str): syslog severity.
+      systemd_unit (str): systemd unit of the process that logged the entry.
+      transport (str): how the entry was received by the journal.
+      user_identifier (str): user identifier (UID) of the process that logged
+          the entry.
       written_time (dfdatetime.DateTimeValues): date and time the log entry
           was written.
     """
@@ -33,10 +99,24 @@ class SystemdJournalEventData(events.EventData):
     def __init__(self):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
+        self.audit_login_identifier = None
+        self.boot_identifier = None
+        self.command_line = None
+        self.executable = None
+        self.facility = None
+        self.group_identifier = None
         self.hostname = None
+        self.machine_identifier = None
         self.message_body = None
         self.pid = None
+        self.process_name = None
+        self.recorded_time = None
         self.reporter = None
+        self.selinux_context = None
+        self.severity = None
+        self.systemd_unit = None
+        self.transport = None
+        self.user_identifier = None
         self.written_time = None
 
 
@@ -286,6 +366,32 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
 
         return entry_object_offsets
 
+    def _GetSyslogLabel(self, value, labels):
+        """Retrieves a syslog label for a numeric journal field value.
+
+        The journal PRIORITY and SYSLOG_FACILITY fields are client-supplied and
+        not validated by journald, so they can be absent, out of range, or
+        non-numeric (for example applications that store a textual facility). In
+        those cases no label is returned rather than raising or guessing.
+
+        Args:
+          value (str): decimal journal field value, or None.
+          labels (list[str]): label table indexed by the numeric field value.
+
+        Returns:
+          str: label, or None if the value is missing, non-numeric or out of
+              range.
+        """
+        try:
+            index = int(value)
+        except (TypeError, ValueError):
+            return None
+
+        if 0 <= index < len(labels):
+            return labels[index]
+
+        return None
+
     def _ParseKeyValuePair(self, parser_mediator, field_data):
         """Parses a key value pair.
 
@@ -448,10 +554,49 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
             )
             event_data = SystemdJournalEventData()
 
+            event_data.audit_login_identifier = fields.get("_AUDIT_LOGINUID")
+            event_data.boot_identifier = fields.get("_BOOT_ID")
+            event_data.command_line = fields.get("_CMDLINE")
+            event_data.executable = fields.get("_EXE")
+            event_data.facility = self._GetSyslogLabel(
+                fields.get("SYSLOG_FACILITY"), _SYSLOG_FACILITY
+            )
+            event_data.group_identifier = fields.get("_GID")
             event_data.hostname = fields.get("_HOSTNAME")
+            event_data.machine_identifier = fields.get("_MACHINE_ID")
             event_data.message_body = fields.get("MESSAGE")
-            event_data.reporter = fields.get("SYSLOG_IDENTIFIER")
+            event_data.process_name = fields.get("_COMM")
+            # Fall back to the trusted _COMM when SYSLOG_IDENTIFIER is absent.
+            event_data.reporter = fields.get("SYSLOG_IDENTIFIER") or fields.get("_COMM")
+            event_data.selinux_context = fields.get("_SELINUX_CONTEXT")
+            event_data.severity = self._GetSyslogLabel(
+                fields.get("PRIORITY"), _SYSLOG_SEVERITY
+            )
+            event_data.systemd_unit = fields.get("_SYSTEMD_UNIT")
+            event_data.transport = fields.get("_TRANSPORT")
+            event_data.user_identifier = fields.get("_UID")
             event_data.written_time = date_time
+
+            # _SOURCE_REALTIME_TIMESTAMP is the earliest trusted (event) time of
+            # the message on the originating host, whereas written_time
+            # (__REALTIME_TIMESTAMP) is journald's reception time; for journals
+            # relayed via systemd-journal-remote the latter is the collection
+            # time on the central host, so the two diverge. It is a trusted
+            # field and should be numeric microseconds, so a malformed value is
+            # surfaced rather than dropped.
+            source_realtime = fields.get("_SOURCE_REALTIME_TIMESTAMP")
+            if source_realtime:
+                try:
+                    event_data.recorded_time = (
+                        dfdatetime_posix_time.PosixTimeInMicroseconds(
+                            timestamp=int(source_realtime)
+                        )
+                    )
+                except ValueError:
+                    parser_mediator.ProduceExtractionWarning(
+                        f"Unable to parse source realtime timestamp: "
+                        f"{source_realtime:s}"
+                    )
 
             if event_data.reporter and event_data.reporter != "kernel":
                 event_data.pid = fields.get("_PID", fields.get("SYSLOG_PID"))

@@ -1524,6 +1524,8 @@ data_type: 'systemd:journal'
 attribute_mappings:
 - name: 'written_time'
   description: 'Content Modification Time'
+- name: 'recorded_time'
+  description: 'Recorded Time'
 place_holder_event: true
 ---
 # TODO: prefix data_type with 'windows:registry:'.
