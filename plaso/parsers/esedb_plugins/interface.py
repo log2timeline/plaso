@@ -230,8 +230,12 @@ class ESEDBPlugin(plugins.BasePlugin, dtfabric_helper.DtFabricHelper):
               the column name to a callback method.
 
         Returns:
-          dict[str,object]: values per column name.
+          tuple: containing:
+
+              dict[str,object]: values per column name.
+              bool: value to indicate the record values were corrupted.
         """
+        corrupted = False
         record_values = {}
 
         for value_entry in range(0, record.number_of_values):
@@ -285,7 +289,7 @@ class ESEDBPlugin(plugins.BasePlugin, dtfabric_helper.DtFabricHelper):
 
             record_values[column_name] = value
 
-        return record_values
+        return record_values, corrupted
 
     def _ParseESEDatabase(self, parser_mediator, cache=None, database=None, **kwargs):
         """Extracts event objects from the database.

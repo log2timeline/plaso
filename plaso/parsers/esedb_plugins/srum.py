@@ -332,7 +332,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
             if parser_mediator.abort:
                 break
 
-            record_values = self._GetRecordValues(
+            record_values, corrupted = self._GetRecordValues(
                 parser_mediator,
                 esedb_table.name,
                 record_index,
@@ -360,7 +360,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
                     record_values, "ConnectStartTime"
                 )
 
-            parser_mediator.ProduceEventData(event_data)
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def _ParseIdentifierMappingRecord(
         self, parser_mediator, table_name, record_index, esedb_record
@@ -378,11 +378,13 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
           tuple[int, str]: numeric identifier and its string representation or
               None, None if no identifier mapping can be retrieved from the record.
         """
-        record_values = self._GetRecordValues(
+        record_values, _ = self._GetRecordValues(
             parser_mediator, table_name, record_index, esedb_record
         )
+        # TODO: make corrupted record values transparent to the user.
 
         identifier = record_values.get("IdIndex")
+
         if identifier is None:
             parser_mediator.ProduceExtractionWarning(
                 "IdIndex value missing from table: SruDbIdMapTable"
@@ -390,6 +392,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
             return None, None
 
         identifier_type = record_values.get("IdType")
+
         if identifier_type not in self._SUPPORTED_IDENTIFIER_TYPES:
             parser_mediator.ProduceExtractionWarning(
                 f"unsupported IdType value: {identifier_type!s} in table: "
@@ -398,6 +401,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
             return None, None
 
         mapped_value = record_values.get("IdBlob")
+
         if mapped_value is None:
             parser_mediator.ProduceExtractionWarning(
                 "IdBlob value missing from table: SruDbIdMapTable"

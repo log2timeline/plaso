@@ -215,8 +215,8 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
         """Parses a CLIENTS table.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           database (Optional[ESEDatabase]): ESE database.
           table (Optional[pyesedb.table]): table.
 
@@ -243,7 +243,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
                 break
 
             try:
-                record_values = self._GetRecordValues(
+                record_values, corrupted = self._GetRecordValues(
                     parser_mediator,
                     table.name,
                     record_index,
@@ -276,7 +276,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
             event_data.tenant_identifier = record_values.get("TenantId")
             event_data.total_accesses = record_values.get("TotalAccesses")
 
-            parser_mediator.ProduceEventData(event_data)
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def ParseRoleAccessTable(
         self, parser_mediator, database=None, table=None, **unused_kwargs
@@ -284,8 +284,8 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
         """Parses a ROLE_ACCESS table.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           database (Optional[ESEDatabase]): ESE database.
           table (Optional[pyesedb.table]): table.
 
@@ -312,7 +312,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
                 break
 
             try:
-                record_values = self._GetRecordValues(
+                record_values, corrupted = self._GetRecordValues(
                     parser_mediator,
                     table.name,
                     record_index,
@@ -337,7 +337,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
             event_data.role_name = self._role_mappings.get(
                 event_data.role_identifier, "Unknown"
             )
-            parser_mediator.ProduceEventData(event_data)
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def ParseDNSTable(
         self, parser_mediator, database=None, table=None, **unused_kwargs
@@ -345,8 +345,8 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
         """Parses a DNS table.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           database (Optional[ESEDatabase]): ESE database.
           table (Optional[pyesedb.table]): table.
 
@@ -364,7 +364,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
                 break
 
             try:
-                record_values = self._GetRecordValues(
+                record_values, corrupted = self._GetRecordValues(
                     parser_mediator,
                     table.name,
                     record_index,
@@ -384,7 +384,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
             event_data.last_seen_time = self._GetFiletimeRecordValue(
                 record_values, "LastSeen"
             )
-            parser_mediator.ProduceEventData(event_data)
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def ParseVirtualMachinesTable(
         self, parser_mediator, database=None, table=None, **unused_kwargs
@@ -392,8 +392,8 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
         """Parses a VIRTUALMACHINES table.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           database (Optional[ESEDatabase]): ESE database.
           table (Optional[pyesedb.table]): table.
 
@@ -411,7 +411,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
                 break
 
             try:
-                record_values = self._GetRecordValues(
+                record_values, corrupted = self._GetRecordValues(
                     parser_mediator,
                     table.name,
                     record_index,
@@ -436,14 +436,14 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
             event_data.serial_number = record_values.get("SerialNumber")
             event_data.vm_identifier = record_values.get("VMGuid")
 
-            parser_mediator.ProduceEventData(event_data)
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def _GetSystemIdentityDatabase(self, parser_mediator):
         """Locate SystemIdentity.mdb.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
 
         Returns:
           dfvfs.FileEntry: a file entry or None if the database cannot be located.
@@ -479,8 +479,8 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
         """Process SystemIdentity.mdb and extract Role GUID -> Role name mappings.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_entry (dfvfs.FileEntry): a file entry
         """
         file_object = file_entry.GetFileObject()
@@ -522,8 +522,8 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
         """Parses a SystemIdentity.mdb ROLE_IDS table.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           database (Optional[ESEDatabase]): ESE database.
           table (Optional[pyesedb.table]): table.
 
@@ -540,7 +540,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
             if parser_mediator.abort:
                 break
             try:
-                record_values = self._GetRecordValues(
+                record_values, _ = self._GetRecordValues(
                     parser_mediator,
                     table.name,
                     record_index,
@@ -554,6 +554,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
                 )
                 continue
 
+            # TODO: make corrupted record values transparent to the user.
             role_identifier = record_values.get("RoleGuid")
             role_name = record_values.get("RoleName")
             if role_identifier and role_name:
@@ -565,8 +566,8 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
         """Parses a SystemIdentity.mdb SYSTEM_IDENTITY table.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           database (Optional[ESEDatabase]): ESE database.
           table (Optional[pyesedb.table]): table.
 
@@ -583,7 +584,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
             if parser_mediator.abort:
                 break
             try:
-                record_values = self._GetRecordValues(
+                record_values, corrupted = self._GetRecordValues(
                     parser_mediator, table.name, record_index, esedb_record
                 )
             except (UnicodeDecodeError, ValueError):
@@ -603,7 +604,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
             )
             event_data.system_domain_name = record_values.get("SystemDomainName", None)
 
-            parser_mediator.ProduceEventData(event_data)
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
 
 esedb.ESEDBParser.RegisterPlugin(UserAccessLoggingESEDBPlugin)
