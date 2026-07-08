@@ -312,7 +312,7 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
             "request_method": "GET",
             "response_code": "HTTP/1.1 200 OK",
             "url": (
-                "HTTP:https://www.google-analytics.com/plugins/ga/" "inpage_linkid.js"
+                "HTTP:https://www.google-analytics.com/plugins/ga/inpage_linkid.js"
             ),
             "version": "1.11",
         }

@@ -33,7 +33,7 @@ class SessionizeAnalysisArgumentsHelper(interface.ArgumentsHelper):
             metavar="MINUTES",
             default=10,
             help=(
-                "Specify the maximum delay in minutes between events in the " "session."
+                "Specify the maximum delay in minutes between events in the session."
             ),
         )
 

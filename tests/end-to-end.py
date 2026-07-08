@@ -2171,7 +2171,7 @@ def Main():
         dest="references_directory",
         type=str,
         default=None,
-        help=("The location of the directory where the test references are " "stored."),
+        help=("The location of the directory where the test references are stored."),
     )
     argument_parser.add_argument(
         "--results-directory",
