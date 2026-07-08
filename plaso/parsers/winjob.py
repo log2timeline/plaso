@@ -133,8 +133,8 @@ class WinJobParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
             systemtime_struct.seconds,
             systemtime_struct.milliseconds,
         )
-
         date_time = None
+
         if system_time_tuple != self._EMPTY_SYSTEM_TIME_TUPLE:
             try:
                 date_time = dfdatetime_systemtime.Systemtime(
@@ -186,15 +186,14 @@ class WinJobParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
             0,
             0,
         )
-
         date_time = None
+
         if time_elements_tuple != (0, 0, 0, 0, 0, 0):
             try:
                 date_time = dfdatetime_time_elements.TimeElements(
                     precision=dfdatetime_definitions.PRECISION_1_DAY,
                     time_elements_tuple=time_elements_tuple,
                 )
-
                 date_time.is_local_time = True
 
             except ValueError:
@@ -224,15 +223,14 @@ class WinJobParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
             trigger.start_time.minutes,
             0,
         )
-
         date_time = None
+
         if time_elements_tuple != (0, 0, 0, 0, 0, 0):
             try:
                 date_time = dfdatetime_time_elements.TimeElements(
                     precision=dfdatetime_definitions.PRECISION_1_MINUTE,
                     time_elements_tuple=time_elements_tuple,
                 )
-
                 date_time.is_local_time = True
 
             except ValueError:
@@ -280,7 +278,6 @@ class WinJobParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         variable_section_data_map = self._GetDataTypeMap(
             "job_variable_length_data_section"
         )
-
         try:
             variable_length_section, data_size = self._ReadStructureFromFileObject(
                 file_object, file_offset, variable_section_data_map
@@ -297,7 +294,6 @@ class WinJobParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         event_data.last_run_time = self._ParseLastRunTime(
             parser_mediator, fixed_length_section
         )
-
         parser_mediator.ProduceEventData(event_data)
 
         trigger_data_map = self._GetDataTypeMap("job_trigger")
@@ -308,9 +304,9 @@ class WinJobParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
                     file_object, file_offset, trigger_data_map
                 )
             except (ValueError, errors.ParseError) as exception:
-                parser_mediator.ProduceExtractionWarning(
-                    f"unable to parse trigger: {trigger_index:d} with "
-                    f"error: {exception!s}"
+                parser_mediator.ProduceWarning(
+                    f"unable to parse trigger: {trigger_index:d} with error: "
+                    f"{exception!s}"
                 )
                 break
 

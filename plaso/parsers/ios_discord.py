@@ -57,35 +57,58 @@ class IOSDiscordParser(interface.FileObjectParser):
     _ENCODING = "utf-8"
     _MAXIMUM_FILE_SIZE = 16 * 1024 * 1024
 
-    def _GetDateTimeValue(self, parser_mediator, timestamp):
-        """Retrieves a date and time value.
+    def _ParseMessage(self, parser_mediator, message):
+        """Parses a iOS discord message.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
-          timestamp (Optional[str]): timestamp value.
-
-        Returns:
-          dfdatetime.TimeElementsInMicroseconds: date and time value or None if
-              not available.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
+          message (dict[str, object]): message.
         """
+        corrupted = False
+
+        attachments = message.get("attachments") or [{}]
+        author = message.get("author", {})
+        timestamp = message.get("timestamp")
+
         if timestamp is None:
-            return None
-
-        try:
-            date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
-            date_time.CopyFromStringISO8601(timestamp)
-        except ValueError as exception:
-            parser_mediator.ProduceExtractionWarning(
-                f"Unable to parse timestamp value: {timestamp:s} with error: "
-                f"{exception!s}"
-            )
             date_time = None
+        else:
+            try:
+                date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+                date_time.CopyFromStringISO8601(timestamp)
+            except ValueError as exception:
+                parser_mediator.ProduceWarning(
+                    f"Unable to parse timestamp value: {timestamp:s} with error: "
+                    f"{exception!s}"
+                )
+                date_time = None
+                corrupted = True
 
-        return date_time
+        event_data = IOSDiscordMessageEventData()
+        event_data.attachment_name = attachments[0].get("filename") or None
+        event_data.attachment_proxy_url = attachments[0].get("proxy_url") or None
+        event_data.attachment_size = attachments[0].get("size") or None
+        event_data.attachment_type = attachments[0].get("content_type") or None
+        event_data.channel_identifier = message.get("channel_id") or None
+        event_data.content = message.get("content") or None
+        event_data.sent_time = date_time
+        event_data.user_identifier = author.get("id") or None
+        event_data.username = author.get("username") or None
+
+        parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def ParseFileObject(self, parser_mediator, file_object):
-        """Parses a iOS discord message file."""
+        """Parses a iOS discord message file-like object.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
+          file_object (dfvfs.FileIO): file-like object.
+
+        Raises:
+          WrongParser: when the file cannot be parsed.
+        """
         # First check for initial 2 characters being open brace and open list.
         if file_object.read(2) != b"[{":
             display_name = parser_mediator.GetDisplayName()
@@ -133,21 +156,7 @@ class IOSDiscordParser(interface.FileObjectParser):
             raise errors.WrongParser("File does not contain Discord messages data")
 
         for message in messages:
-            attachments = message.get("attachments") or [{}]
-            timestamp = message.get("timestamp")
-
-            event_data = IOSDiscordMessageEventData()
-            event_data.attachment_name = attachments[0].get("filename") or None
-            event_data.attachment_proxy_url = attachments[0].get("proxy_url") or None
-            event_data.attachment_size = attachments[0].get("size") or None
-            event_data.attachment_type = attachments[0].get("content_type") or None
-            event_data.channel_identifier = message.get("channel_id") or None
-            event_data.content = message.get("content") or None
-            event_data.sent_time = self._GetDateTimeValue(parser_mediator, timestamp)
-            event_data.user_identifier = message.get("author", {}).get("id") or None
-            event_data.username = message.get("author", {}).get("username") or None
-
-            parser_mediator.ProduceEventData(event_data)
+            self._ParseMessage(parser_mediator, message)
 
 
 manager.ParsersManager.RegisterParser(IOSDiscordParser)

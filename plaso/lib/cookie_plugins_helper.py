@@ -17,8 +17,8 @@ class CookiePluginsHelper:
         """Parses a cookie.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           cookie_name (str): the name of the cookie value.
           cookie_data (bytes): the cookie data, as a byte sequence.
           url (str): the full URL or path where the cookie was set.
@@ -35,9 +35,8 @@ class CookiePluginsHelper:
                         cookie_name=cookie_name,
                         url=url,
                     )
-
                 except Exception as exception:  # pylint: disable=broad-except
-                    parser_mediator.ProduceExtractionWarning(
+                    parser_mediator.ProduceWarning(
                         f"plugin: {cookie_plugin.NAME:s} unable to parse cookie with "
                         f"error: {exception!s}"
                     )

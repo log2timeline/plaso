@@ -1073,7 +1073,7 @@ enumeration_helpers:
     6: 'INFO'
     7: 'DEBUG'
 message:
-- '{severity}'
+- '{severity_string}'
 - '{hostname} '
 - '['
 - '{reporter}'
@@ -1081,7 +1081,7 @@ message:
 - '] {message_body}'
 separator: ''
 short_message:
-- '{severity}'
+- '{severity_string}'
 - '{hostname} '
 - '['
 - '{reporter}'

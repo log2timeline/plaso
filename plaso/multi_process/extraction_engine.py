@@ -37,8 +37,7 @@ class _EventSourceHeap:
         """Initializes an event source heap.
 
         Args:
-          maximum_number_of_items (Optional[int]): maximum number of items
-              in the heap.
+          maximum_number_of_items (Optional[int]): maximum number of items in the heap.
         """
         super().__init__()
         self._heap = []
@@ -154,10 +153,8 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
             except NotImplementedError:
                 logger.error(
-                    (
-                        f"Unable to determine number of CPUs defaulting to "
-                        f"{self._WORKER_PROCESSES_MINIMUM:d} worker processes."
-                    )
+                    f"Unable to determine number of CPUs defaulting to "
+                    f"{self._WORKER_PROCESSES_MINIMUM:d} worker processes."
                 )
                 cpu_count = self._WORKER_PROCESSES_MINIMUM
 
@@ -258,7 +255,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
                 file_system = path_spec_resolver.Resolver.OpenFileSystem(
                     file_system_path_spec, resolver_context=self._resolver_context
                 )
-
                 path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
                     file_system_path_spec,
                     find_specs=included_find_specs,
@@ -302,12 +298,12 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
             # All exceptions need to be caught here to prevent the foreman
             # from being killed by an uncaught exception.
             except Exception as exception:  # pylint: disable=broad-except
+                warning_message = (
+                    f"unable to process path specification with error: {exception!s}"
+                )
                 self._ProduceExtractionWarning(
                     storage_writer,
-                    (
-                        f"unable to process path specification with error: "
-                        f"{exception!s}"
-                    ),
+                    warning_message,
                     file_system_path_spec,
                 )
 
@@ -431,7 +427,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
                 event_data_stream_lookup_key = (
                     event_data_stream_identifier.CopyToString()
                 )
-
                 event_data_stream_identifier = (
                     merge_helper.GetAttributeContainerIdentifier(
                         event_data_stream_lookup_key
@@ -444,15 +439,12 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
                 identifier = container.GetIdentifier()
                 identifier_string = identifier.CopyToString()
 
-                # TODO: store this as a merge warning so this is preserved
-                # in the storage file.
+                # TODO: store this as a merge warning so this is preserved in the
+                # storage file.
                 logger.error(
-                    (
-                        f"Unable to merge {container.CONTAINER_TYPE:s} attribute "
-                        f"container: {identifier_string:s} since corresponding event "
-                        f"data stream: {event_data_stream_lookup_key:s} could not be "
-                        f"found."
-                    )
+                    f"Unable to merge {container.CONTAINER_TYPE:s} attribute "
+                    f"container: {identifier_string:s} since corresponding event data "
+                    f"stream: {event_data_stream_lookup_key:s} could not be found."
                 )
                 return
 
@@ -466,7 +458,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
             message_file_identifier = merge_helper.GetAttributeContainerIdentifier(
                 message_file_lookup_key
             )
-
             if message_file_identifier:
                 container.SetMessageFileIdentifier(message_file_identifier)
             else:
@@ -481,11 +472,9 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
                     description = "WEVT_TEMPLATE event definition"
 
                 logger.error(
-                    (
-                        f"Unable to merge {description:s} attribute container: "
-                        f"{identifier_string:s} since corresponding Windows EventLog "
-                        f"message file: {message_file_lookup_key:s} could not be found."
-                    )
+                    f"Unable to merge {description:s} attribute container: "
+                    f"{identifier_string:s} since corresponding Windows EventLog "
+                    f"message file: {message_file_lookup_key:s} could not be found."
                 )
                 return
 
@@ -526,7 +515,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
             self._event_data_timeliner.ProcessEventData(
                 storage_writer, container, event_data_stream
             )
-
             self._number_of_consumed_event_data += 1
             self._number_of_produced_events += (
                 self._event_data_timeliner.number_of_produced_events
@@ -587,7 +575,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         task_identifiers = self._GetProcessedTaskIdentifiers(
             self._task_storage_format, session_identifier
         )
-
         for task_identifier in task_identifiers:
             try:
                 task = self._task_manager.GetProcessedTaskByIdentifier(task_identifier)
@@ -754,7 +741,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         self._FillEventSourceHeap(
             storage_writer, event_source_heap, start_with_first=True
         )
-
         event_source = event_source_heap.PopEventSource()
 
         task = None
@@ -817,13 +803,12 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
             # from being killed by an uncaught exception.
             except Exception as exception:  # pylint: disable=broad-except
                 path_spec = getattr(event_source, "path_spec", None) or "N/A"
-                message = (
-                    f"unable to process path specification with error: "
-                    f"{exception!s}"
+                warning_message = (
+                    f"unable to process path specification with error: {exception!s}"
                 )
                 self._ProduceExtractionWarning(
                     storage_writer,
-                    message,
+                    warning_message,
                     path_spec,
                 )
                 event_source = None
@@ -945,7 +930,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
             port=self._task_queue_port,
             timeout_seconds=self._TASK_QUEUE_TIMEOUT_SECONDS,
         )
-
         process = extraction_process.ExtractionWorkerProcess(
             task_queue,
             self._processing_configuration,
@@ -955,7 +939,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
             enable_sigsegv_handler=self._enable_sigsegv_handler,
             name=process_name,
         )
-
         # Remove all possible log handlers to prevent a child process from logging
         # to the main process log file and garbling the log. The log handlers are
         # recreated after the worker process has been started.
@@ -971,7 +954,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
             mode="a",
             quiet_mode=self._quiet_mode,
         )
-
         try:
             self._StartMonitoringProcess(process)
 
@@ -1223,7 +1205,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
             preferred_year=processing_configuration.preferred_year,
             system_configurations=system_configurations,
         )
-
         try:
             self._event_data_timeliner.SetPreferredTimeZone(
                 processing_configuration.preferred_time_zone
@@ -1242,7 +1223,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         self._windows_event_log_providers = list(
             storage_writer.GetAttributeContainers("windows_eventlog_provider")
         )
-
         # Set up the task queue.
         task_outbound_queue = zeromq_queue.ZeroMQBufferedReplyBindQueue(
             delay_open=True,
@@ -1272,7 +1252,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         self._task_manager.StartProfiling(
             self._processing_configuration.profiling, self._name
         )
-
         if self._serializers_profiler:
             storage_writer.SetSerializersProfiler(self._serializers_profiler)
 
@@ -1285,7 +1264,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
             self._ProcessSource(
                 storage_writer, session_identifier, file_system_path_specs
             )
-
         finally:
             # Stop the status update thread after close of the storage writer
             # so we include the storage sync to disk in the status updates.
@@ -1306,12 +1284,12 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         except KeyboardInterrupt:
             self._AbortKill()
 
-            # The abort can leave the main process unresponsive
-            # due to incorrectly finalized IPC.
+            # The abort can leave the main process unresponsive due to incorrectly
+            # finalized IPC.
             self._KillProcess(os.getpid())
 
-        # The task queue should be closed by _StopExtractionProcesses, this
-        # close is a failsafe.
+        # The task queue should be closed by _StopExtractionProcesses, this close is a
+        # failsafe.
         self._task_queue.Close(abort=True)
 
         if self._processing_status.error_path_specs:

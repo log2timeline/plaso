@@ -19,31 +19,26 @@ class WinLnkLinkEventData(events.EventData):
     """Windows Shortcut (LNK) link event data.
 
     Attributes:
-      access_time (dfdatetime.DateTimeValues): file entry last access date
-          and time.
-      birth_droid_file_identifier (str): distributed link tracking birth droid
-          file identifier.
-      birth_droid_volume_identifier (str): distributed link tracking birth droid
-          volume identifier.
+      access_time (dfdatetime.DateTimeValues): file entry last access date and time.
+      birth_droid_file_identifier (str): distributed link tracking birth droid file
+          identifier.
+      birth_droid_volume_identifier (str): distributed link tracking birth droid volume
+          identifier.
       command_line_arguments (str): command line arguments.
-      creation_time (dfdatetime.DateTimeValues): file entry creation date
-          and time.
+      creation_time (dfdatetime.DateTimeValues): file entry creation date and time.
       description (str): description of the linked item.
-      drive_serial_number (int): drive serial number where the linked item
-          resides.
+      drive_serial_number (int): drive serial number where the linked item resides.
       drive_type (str): drive type where the linked item resided.
-      droid_file_identifier (str): distributed link tracking droid file
-          identifier.
-      droid_volume_identifier (str): distributed link tracking droid volume
-          identifier.
+      droid_file_identifier (str): distributed link tracking droid file identifier.
+      droid_volume_identifier (str): distributed link tracking droid volume identifier.
       env_var_location (str): environment variables location.
       file_attribute_flags (int): file attribute flags of the linked item.
       file_size (int): size of the linked item.
       icon_location (str): icon location.
       link_target (str): shell item list of the link target.
       local_path (str): local path of the linked item.
-      modification_time (dfdatetime.DateTimeValues): file entry last modification
-          date and time.
+      modification_time (dfdatetime.DateTimeValues): file entry last modification date
+          and time.
       network_path (str): local path of the linked item.
       relative_path (str): relative path.
       volume_label (str): volume label where the linked item resided.
@@ -140,8 +135,8 @@ class WinLnkParser(interface.FileObjectParser):
         """Extracts data from a Distributed Tracking identifier.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           uuid_string (str): UUID string of the Distributed Tracking identifier.
           origin (str): origin of the event (event source).
         """
@@ -157,8 +152,8 @@ class WinLnkParser(interface.FileObjectParser):
         """Parses a Windows Shortcut (LNK) file-like object.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): file-like object.
         """
         display_name = parser_mediator.GetDisplayName()
@@ -168,8 +163,8 @@ class WinLnkParser(interface.FileObjectParser):
         """Parses a Windows Shortcut (LNK) file-like object.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): file-like object.
           display_name (str): display name.
         """
@@ -181,7 +176,7 @@ class WinLnkParser(interface.FileObjectParser):
         try:
             lnk_file.open_file_object(file_object)
         except OSError as exception:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unable to open file with error: {exception!s}"
             )
             return
@@ -197,7 +192,6 @@ class WinLnkParser(interface.FileObjectParser):
                 lnk_file.link_target_identifier_data,
                 codepage=code_page,
             )
-
             link_target = shell_items_parser.CopyToPath()
 
         access_time = lnk_file.get_file_access_time_as_integer()
@@ -234,7 +228,6 @@ class WinLnkParser(interface.FileObjectParser):
         event_data.working_directory = self._GetSanitizedPathString(
             lnk_file.working_directory
         )
-
         parser_mediator.ProduceEventData(event_data)
 
         if lnk_file.droid_file_identifier:  # pylint: disable=using-constant-test
@@ -243,7 +236,7 @@ class WinLnkParser(interface.FileObjectParser):
                     parser_mediator, lnk_file.droid_file_identifier, display_name
                 )
             except (TypeError, ValueError) as exception:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"unable to read droid file identifier with error: {exception!s}."
                 )
 
@@ -256,7 +249,7 @@ class WinLnkParser(interface.FileObjectParser):
                     parser_mediator, lnk_file.birth_droid_file_identifier, display_name
                 )
             except (TypeError, ValueError) as exception:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"unable to read birth droid file identifier with error: "
                     f"{exception!s}."
                 )
