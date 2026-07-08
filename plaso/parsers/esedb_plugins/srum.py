@@ -263,7 +263,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
         if not identifier_mappings:
             esedb_table = database.GetTableByName("SruDbIdMapTable")
             if not esedb_table:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     "unable to retrieve table: SruDbIdMapTable"
                 )
             else:
@@ -386,7 +386,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
         identifier = record_values.get("IdIndex")
 
         if identifier is None:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 "IdIndex value missing from table: SruDbIdMapTable"
             )
             return None, None
@@ -394,7 +394,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
         identifier_type = record_values.get("IdType")
 
         if identifier_type not in self._SUPPORTED_IDENTIFIER_TYPES:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unsupported IdType value: {identifier_type!s} in table: "
                 f"SruDbIdMapTable"
             )
@@ -403,7 +403,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
         mapped_value = record_values.get("IdBlob")
 
         if mapped_value is None:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 "IdBlob value missing from table: SruDbIdMapTable"
             )
             return None, None
@@ -414,7 +414,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
                 fwnt_identifier.copy_from_byte_stream(mapped_value)
                 mapped_value = fwnt_identifier.get_string()
             except OSError:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     "unable to decode IdBlob value as Windows NT security identifier"
                 )
                 return None, None
@@ -423,7 +423,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
             try:
                 mapped_value = mapped_value.decode("utf-16le").rstrip("\0")
             except UnicodeDecodeError:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     "unable to decode IdBlob value as UTF-16 little-endian string"
                 )
                 return None, None
@@ -455,7 +455,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
                 continue
 
             if identifier in identifier_mappings:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"identifier: {identifier:d} already exists in mappings."
                 )
                 continue
