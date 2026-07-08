@@ -20,8 +20,8 @@ class OperaGlobalHistoryEventData(events.EventData):
 
     Attributes:
       description (str): description.
-      last_visited_time (dfdatetime.DateTimeValues): date and time the URL was
-          last visited.
+      last_visited_time (dfdatetime.DateTimeValues): date and time the URL was last
+          visited.
       popularity_index (int): popularity index.
       title (str): title.
       url (str):  URL.
@@ -43,12 +43,11 @@ class OperaTypedHistoryEventData(events.EventData):
     """Opera typed history entry data.
 
     Attributes:
-      entry_selection (str): information about whether the URL was directly
-          typed in or the result of the user choosing from the auto complete.
-      entry_type (str): information about whether the URL was directly typed in
-          or the result of the user choosing from the auto complete.
-      last_typed_time (dfdatetime.DateTimeValues): date and time the URL was
-          last typed.
+      entry_selection (str): information about whether the URL was directly typed in or
+          the result of the user choosing from the auto complete.
+      entry_type (str): information about whether the URL was directly typed in or the
+          result of the user choosing from the auto complete.
+      last_typed_time (dfdatetime.DateTimeValues): date and time the URL was last typed.
       url (str): typed URL or hostname.
     """
 
@@ -75,8 +74,8 @@ class OperaTypedHistoryParser(interface.FileObjectParser):
         """Parses an Opera typed history file-like object.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): file-like object.
 
         Raises:
@@ -92,28 +91,31 @@ class OperaTypedHistoryParser(interface.FileObjectParser):
                 "Not an Opera typed history file [wrong XML root key]"
             )
 
-        # For ElementTree to work we need to work on a file object seeked
-        # to the beginning.
+        # For ElementTree to work we need to work on a file object seeked to the
+        # beginning.
         file_object.seek(0, os.SEEK_SET)
 
         xml = ElementTree.parse(file_object)
 
         for history_item in xml.iterfind("typed_history_item"):
+            corrupted = False
+
             last_typed_time = history_item.get("last_typed")
             if last_typed_time is None:
-                parser_mediator.ProduceExtractionWarning("missing last typed time.")
-                continue
-
-            date_time = dfdatetime_time_elements.TimeElements()
-
-            try:
-                date_time.CopyFromStringISO8601(last_typed_time)
-            except ValueError as exception:
-                parser_mediator.ProduceExtractionWarning(
-                    f"unsupported last typed time: {last_typed_time!s} "
-                    f"with error: {exception!s}."
-                )
-                continue
+                parser_mediator.ProduceWarning("missing last typed time.")
+                date_time = None
+                corrupted = True
+            else:
+                date_time = dfdatetime_time_elements.TimeElements()
+                try:
+                    date_time.CopyFromStringISO8601(last_typed_time)
+                except ValueError as exception:
+                    parser_mediator.ProduceWarning(
+                        f"unable to converts last typed time: '{last_typed_time!s}' "
+                        f"with error: {exception!s}."
+                    )
+                    date_time = None
+                    corrupted = True
 
             event_data = OperaTypedHistoryEventData()
             event_data.entry_type = history_item.get("type")
@@ -125,7 +127,7 @@ class OperaTypedHistoryParser(interface.FileObjectParser):
             elif event_data.entry_type == "text":
                 event_data.entry_selection = "Manually typed."
 
-            parser_mediator.ProduceEventData(event_data)
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
 
 class OperaGlobalHistoryParser(interface.FileObjectParser):
@@ -153,8 +155,8 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
         """Parses an Opera global history record.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           text_file_object (dfvfs.TextFile): text file.
 
         Returns:
@@ -163,7 +165,7 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
         try:
             title = text_file_object.readline()
         except UnicodeDecodeError:
-            parser_mediator.ProduceExtractionWarning("unable to read and decode title")
+            parser_mediator.ProduceWarning("unable to read and decode title")
             return False
 
         if not title:
@@ -172,44 +174,42 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
         try:
             url = text_file_object.readline()
         except UnicodeDecodeError:
-            parser_mediator.ProduceExtractionWarning("unable to read and decode url")
+            parser_mediator.ProduceWarning("unable to read and decode url")
             return False
 
         try:
             timestamp = text_file_object.readline()
         except UnicodeDecodeError:
-            parser_mediator.ProduceExtractionWarning(
-                "unable to read and decode timestamp"
-            )
+            parser_mediator.ProduceWarning("unable to read and decode timestamp")
             return False
 
         try:
             popularity_index = text_file_object.readline()
         except UnicodeDecodeError:
-            parser_mediator.ProduceExtractionWarning(
-                "unable to read and decode popularity index"
-            )
+            parser_mediator.ProduceWarning("unable to read and decode popularity index")
             return False
 
-        title = title.strip()
+        corrupted = False
 
         timestamp = timestamp.strip()
         try:
             timestamp = int(timestamp, 10)
         except ValueError:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unable to convert timestamp: {timestamp!s}"
             )
             timestamp = None
+            corrupted = True
 
         popularity_index = popularity_index.strip()
         try:
             popularity_index = int(popularity_index, 10)
         except ValueError:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unable to convert popularity index: {popularity_index!s}"
             )
             popularity_index = None
+            corrupted = True
 
         event_data = OperaGlobalHistoryEventData()
         event_data.popularity_index = popularity_index
@@ -220,6 +220,7 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
                 timestamp=timestamp
             )
 
+        title = title.strip()
         if title != event_data.url:
             event_data.title = title
 
@@ -228,7 +229,7 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
         else:
             event_data.description = "Last Visit"
 
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
         return True
 
@@ -236,8 +237,8 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
         """Parses and validates an Opera global history record.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           text_file_object (dfvfs.TextFile): text file.
 
         Returns:
@@ -310,8 +311,8 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
         """Parses an Opera global history file-like object.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): file-like object.
 
         Raises:

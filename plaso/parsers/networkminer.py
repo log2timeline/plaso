@@ -81,21 +81,27 @@ class NetworkMinerParser(dsv_parser.DSVParser):
         """Parses a line of the log file and produces events.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           row_offset (int): line number of the row.
           row (dict[str, str]): fields of a single row, as specified in COLUMNS.
         """
         timestamp = row.get("timestamp")
+        # Ignore the header row.
         if timestamp == "Timestamp":
             return
+
+        corrupted = False
 
         try:
             date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
             date_time.CopyFromStringISO8601(timestamp)
         except (TypeError, ValueError):
-            parser_mediator.ProduceExtractionWarning("invalid date time value")
+            parser_mediator.ProduceWarning(
+                f"unsupported timestamp value: '{timestamp!s}' in row: {row_offset:d}"
+            )
             date_time = None
+            corrupted = True
 
         event_data = NetworkMinerEventData()
         event_data.written_time = date_time
@@ -103,7 +109,7 @@ class NetworkMinerParser(dsv_parser.DSVParser):
         for attribute_name in self._ATTRIBUTE_NAMES:
             setattr(event_data, attribute_name, row[attribute_name])
 
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def VerifyRow(self, parser_mediator, row):
         """Verifies if a line of the file is in the expected format.

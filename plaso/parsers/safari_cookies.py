@@ -21,10 +21,8 @@ class SafariBinaryCookieEventData(events.EventData):
     Attributes:
       cookie_name (str): cookie name.
       cookie_value (str): cookie value.
-      creation_time (dfdatetime.DateTimeValues): date and time the cookie
-          was created.
-      expiration_time (dfdatetime.DateTimeValues): date and time the cookie
-          expires.
+      creation_time (dfdatetime.DateTimeValues): date and time the cookie was created.
+      expiration_time (dfdatetime.DateTimeValues): date and time the cookie expires.
       flags (int): cookie flags.
       path (str): path of the cookie.
       url (str): URL where this cookie is valid.
@@ -61,8 +59,7 @@ class BinaryCookieParser(
 
         Args:
           page_data (bytes): page data.
-          string_offset (int): offset of the string relative to the start
-              of the page.
+          string_offset (int): offset of the string relative to the start of the page.
 
         Returns:
           str: string.
@@ -78,8 +75,8 @@ class BinaryCookieParser(
             )
         except (ValueError, errors.ParseError) as exception:
             raise errors.ParseError(
-                f"Unable to map string data at offset: 0x{string_offset:08x} "
-                f"with error: {exception!s}"
+                f"Unable to map string data at offset: 0x{string_offset:08x} with "
+                f"error: {exception!s}"
             )
 
         return value_string.rstrip("\x00")
@@ -88,9 +85,10 @@ class BinaryCookieParser(
         """Parses a page.
 
         Args:
-          parser_mediator (ParserMediator): parser mediator.
-          file_offset (int): offset of the data relative from the start of
-              the file-like object.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
+          file_offset (int): offset of the data relative from the start of the
+              file-like object.
           page_data (bytes): page data.
 
         Raises:
@@ -104,8 +102,8 @@ class BinaryCookieParser(
             )
         except (ValueError, errors.ParseError) as exception:
             raise errors.ParseError(
-                f"Unable to map page header data at offset: 0x{file_offset:08x} "
-                f"with error: {exception!s}"
+                f"Unable to map page header data at offset: 0x{file_offset:08x} with "
+                f"error: {exception!s}"
             )
 
         for record_offset in page_header.offsets:
@@ -118,10 +116,10 @@ class BinaryCookieParser(
         """Parses a record from the page data.
 
         Args:
-          parser_mediator (ParserMediator): parser mediator.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           page_data (bytes): page data.
-          record_offset (int): offset of the record relative to the start
-              of the page.
+          record_offset (int): offset of the record relative to the start of the page.
 
         Raises:
           ParseError: when the record cannot be parsed.
@@ -190,7 +188,8 @@ class BinaryCookieParser(
         """Parses a Safari binary cookie file-like object.
 
         Args:
-          parser_mediator (ParserMediator): parser mediator.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): file-like object to be parsed.
 
         Raises:
@@ -220,7 +219,6 @@ class BinaryCookieParser(
         context = dtfabric_data_maps.DataTypeMapContext(
             values={"binarycookies_file_header": file_header}
         )
-
         page_sizes_map = self._GetDataTypeMap("binarycookies_page_sizes")
 
         try:
@@ -241,9 +239,7 @@ class BinaryCookieParser(
 
             page_data = file_object.read(page_size)
             if len(page_data) != page_size:
-                parser_mediator.ProduceExtractionWarning(
-                    f"unable to read page: {page_number:d}"
-                )
+                parser_mediator.ProduceWarning(f"unable to read page: {page_number:d}")
                 break
 
             self._ParsePage(parser_mediator, file_offset, page_data)

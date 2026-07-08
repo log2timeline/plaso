@@ -27,8 +27,8 @@ class JSONLParser(interface.FileObjectParser):
         """Parses a line-based JSON (JSON-L) log file-like object.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): a file-like object.
 
         Raises:
@@ -38,9 +38,9 @@ class JSONLParser(interface.FileObjectParser):
         if not encoding:
             encoding = parser_mediator.GetCodePage()
 
-        # Use strict encoding error handling in the verification step so that
-        # a JSON-L parser does not generate extraction warning for encoding errors
-        # of unsupported files.
+        # Use strict encoding error handling in the verification step so that a JSON-L
+        # parser does not generate extraction warning for encoding errors of unsupported
+        # files.
         text_file_object = text_file.TextFile(file_object, encoding=encoding)
 
         try:
@@ -87,11 +87,10 @@ class JSONLParser(interface.FileObjectParser):
                 plugin.UpdateChainAndProcess(parser_mediator, file_object=file_object)
 
             except Exception as exception:  # pylint: disable=broad-except
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"plugin: {plugin_name:s} unable to parse JSON-L file with error: "
                     f"{exception!s}"
                 )
-
             finally:
                 parser_mediator.SampleStopTiming(profiling_name)
 

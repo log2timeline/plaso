@@ -31,10 +31,9 @@ class OneDriveLogEvent(events.EventData):
       code_filename (str): code filename.
       code_function_name (str): code function name.
       decoded_parameters (str): decoded (and decrypted) parameters.
-      raw_parameters (str): the raw parameters encoded as a hexadecimal
-          formatted string.
-      recorded_time (dfdatetime.DateTimeValues): date and time the entry was
-          recorded.
+      raw_parameters (str): the raw parameters encoded as a hexadecimal formatted
+          string.
+      recorded_time (dfdatetime.DateTimeValues): date and time the entry was recorded.
     """
 
     DATA_TYPE = "windows:onedrive:log"
@@ -118,8 +117,8 @@ class OneDriveLogFileParser(interface.FileEntryParser, dtfabric_helper.DtFabricH
 
         Args:
           file_entry (dfvfs.FileEntry): the file entry of the general.keystore file.
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
 
         Returns:
           Optional[bytes]: the parsed and base64-decoded AES key or None if the
@@ -133,14 +132,14 @@ class OneDriveLogFileParser(interface.FileEntryParser, dtfabric_helper.DtFabricH
 
         json_data = json.loads(general_keystore_data)
         if not json_data or not isinstance(json_data, list):
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"Unable to parse OneDrive keystore file: {file_entry.name!s}"
             )
             return None
 
         key = json_data[0].get("Key")
         if not key:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"OneDrive keystore file: {file_entry.name!s} does not contain a key "
                 f"value."
             )
@@ -149,7 +148,7 @@ class OneDriveLogFileParser(interface.FileEntryParser, dtfabric_helper.DtFabricH
         decoded_key = base64.b64decode(key)
 
         if len(decoded_key) != self._AES_KEY_LENGTH:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"OneDrive keystore file: {file_entry.name!s} does not contain a key "
                 f"value of size: 32."
             )
@@ -218,8 +217,8 @@ class OneDriveLogFileParser(interface.FileEntryParser, dtfabric_helper.DtFabricH
         * encoded in UTF-16 little-endian
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           aes_key (bytes): the AES key.
           extracted_strings (list[str]): strings extracted from OneDrive log files.
 
@@ -268,7 +267,7 @@ class OneDriveLogFileParser(interface.FileEntryParser, dtfabric_helper.DtFabricH
                 try:
                     data = self._RemovePKCS7Padding(plaintext, block_size=128)
                 except ValueError as exception:
-                    parser_mediator.ProduceExtractionWarning(
+                    parser_mediator.ProduceWarning(
                         f"unable to remove PKCS#7 padding with error: {exception!s}"
                     )
                     output_string_parts.append(token)
@@ -277,7 +276,7 @@ class OneDriveLogFileParser(interface.FileEntryParser, dtfabric_helper.DtFabricH
                 try:
                     decoded_string = data.decode("utf-16-le")
                 except UnicodeError as exception:
-                    parser_mediator.ProduceExtractionWarning(
+                    parser_mediator.ProduceWarning(
                         f"unable to decode string with error: {exception!s}"
                     )
                     output_string_parts.append(token)
@@ -323,8 +322,8 @@ class OneDriveLogFileParser(interface.FileEntryParser, dtfabric_helper.DtFabricH
         """Processes (extracts and decrypts/deobfuscates) the raw parameters.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           raw_parameters_data (bytes): the raw parameters data from a log entry.
           aes_key (bytes): the AES key used to decrypt strings, or None if there
               is no parsed AES key.
@@ -385,8 +384,8 @@ class OneDriveLogFileParser(interface.FileEntryParser, dtfabric_helper.DtFabricH
         """Parses a OneDrive Log file-like object.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_entry (dfvfs.FileEntry): file entry.
 
         Raises:
@@ -469,7 +468,7 @@ class OneDriveLogFileParser(interface.FileEntryParser, dtfabric_helper.DtFabricH
                     )
                 )
             except (ValueError, errors.ParseError) as exception:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"unable to parse data block header at stream offset: "
                     f"0x{stream_offset:08x} with error: {exception!s}"
                 )
@@ -482,7 +481,7 @@ class OneDriveLogFileParser(interface.FileEntryParser, dtfabric_helper.DtFabricH
                     data_block_stream, stream_offset, odl_data_block_map
                 )
             except (ValueError, errors.ParseError) as exception:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"unable to parse data block at stream offset: "
                     f"0x{stream_offset:08x} with error: {exception!s}"
                 )

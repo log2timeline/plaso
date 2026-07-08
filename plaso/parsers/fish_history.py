@@ -20,8 +20,7 @@ class FishHistoryEventData(events.EventData):
 
     Attributes:
       command (str): command that was executed.
-      written_time (dfdatetime.DateTimeValues): date and time the entry was
-          written.
+      written_time (dfdatetime.DateTimeValues): date and time the entry was written.
     """
 
     DATA_TYPE = "fish:history:entry"
@@ -53,8 +52,8 @@ class FishHistoryParser(interface.FileObjectParser):
         """Parses a fish history file from a file-like object.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): a file-like object.
 
         Raises:
@@ -76,7 +75,7 @@ class FishHistoryParser(interface.FileObjectParser):
 
         file_size = file_object.get_size()
         if file_size > self._MAXIMUM_FISH_HISTORY_FILE_SIZE:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"Fish history file size: {file_size:d} exceeds maxmimum"
             )
             return
@@ -86,38 +85,44 @@ class FishHistoryParser(interface.FileObjectParser):
         try:
             fish_history = yaml.safe_load(file_object)
         except yaml.YAMLError as exception:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"Error reading YAML with error: {exception:s}"
             )
             return
 
         for entry_index, history_entry in enumerate(fish_history):
-            command = history_entry.get("cmd")
+            date_time = None
+            corrupted = True
+
             timestamp = history_entry.get("when")
-
-            if None in (command, timestamp):
-                parser_mediator.ProduceExtractionWarning(
-                    f"Unsupported history entry: {entry_index:d}"
+            if timestamp is None:
+                parser_mediator.ProduceWarning(
+                    f"Missing 'when' value in entry: {entry_index:d}"
                 )
-                continue
-
-            if not isinstance(timestamp, int):
+                corrupted = True
+            else:
                 try:
-                    timestamp = int(timestamp, 10)
+                    timestamp = int(timestamp)
+                    date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
                 except (TypeError, ValueError):
-                    parser_mediator.ProduceExtractionWarning(
-                        f"Unsupported timestamp: {timestamp!s} in "
-                        f"history entry: {entry_index:s}"
+                    parser_mediator.ProduceWarning(
+                        f"Unsupported timestamp: {timestamp!s} in entry: "
+                        f"{entry_index:s}"
                     )
-                    continue
+                    corrupted = True
+
+            command = history_entry.get("cmd")
+            if command is None:
+                parser_mediator.ProduceWarning(
+                    f"Missing 'cmd' value in entry: {entry_index:d}"
+                )
+                corrupted = True
 
             event_data = FishHistoryEventData()
             event_data.command = command
-            event_data.written_time = dfdatetime_posix_time.PosixTime(
-                timestamp=timestamp
-            )
+            event_data.written_time = date_time
 
-            parser_mediator.ProduceEventData(event_data)
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
 
 manager.ParsersManager.RegisterParser(FishHistoryParser)

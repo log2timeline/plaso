@@ -120,7 +120,6 @@ class WinDefenderHistoryParser(
         values_data_size = self._ReadStructureFromByteStream(
             threat_tracking_data, 0, data_type_map
         )
-
         if values_data_size != 1:
             values_data_offset = 4
             values_data_end_offset = values_data_size
@@ -181,7 +180,6 @@ class WinDefenderHistoryParser(
         threat_tracking_value = self._ReadStructureFromByteStream(
             threat_tracking_data, file_offset, data_type_map, context=context
         )
-
         return threat_tracking_value, context.byte_size
 
     def _ReadValue(self, file_object, file_offset, parser_mediator):
@@ -190,8 +188,8 @@ class WinDefenderHistoryParser(
         Args:
           file_object (file): file-like object.
           file_offset (int): offset of the value relative to the start of the file.
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
 
         Returns:
           object: value.
@@ -205,8 +203,8 @@ class WinDefenderHistoryParser(
         value, _ = self._ReadStructureFromFileObject(
             file_object, file_offset, data_type_map
         )
-
         value_object = None
+
         if value.data_type in self._VALUE_DATA_TYPES_INTEGER:
             value_object = value.value_integer
         elif value.data_type == self._VALUE_DATA_TYPE_FILETIME:
@@ -218,7 +216,7 @@ class WinDefenderHistoryParser(
         elif value.data_type == self._VALUE_DATA_TYPE_BINARY_DATA:
             value_object = value.data
         else:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unknown value data type: {value.data_type!s}"
             )
             value_object = value.data
@@ -229,8 +227,8 @@ class WinDefenderHistoryParser(
         """Parses a Windows Defender History file-like object.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between
-                parsers and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): file-like object.
 
         Raises:
@@ -261,12 +259,10 @@ class WinDefenderHistoryParser(
                 threat_attributes.update(
                     self._ReadThreatTrackingData(value_object, file_offset + 8)
                 )
-
             else:
                 description = self._VALUE_DESCRIPTIONS[value_index_set].get(
                     value_index, f"UNKNOWN_{value_index_set:d}_{value_index:d}"
                 )
-
                 value_string = f"{value_object!s}"
 
                 if description == "Resource type":
@@ -288,7 +284,6 @@ class WinDefenderHistoryParser(
             for threat_attribute in threat_attributes["Resources"]
             if threat_attribute["Type"] == "file"
         ]
-
         if not filenames:
             filename = threat_attributes.get("CONTEXT_DATA_FILENAME")
             process_ppid = threat_attributes.get("CONTEXT_DATA_PROCESS_PPID")
@@ -300,19 +295,16 @@ class WinDefenderHistoryParser(
             for threat_attribute in threat_attributes["Resources"]
             if threat_attribute["Type"] == "webfile"
         ]
-
         container_files = [
             threat_attribute["Location"]
             for threat_attribute in threat_attributes["Resources"]
             if threat_attribute["Type"] == "containerfile"
         ]
-
         additional_filenames = [
             threat_attribute["Location"]
             for threat_attribute in threat_attributes["Resources"]
             if "file" not in threat_attribute["Type"]
         ]
-
         timestamp = threat_attributes.get("ThreatTrackingStartTime", 0)
 
         event_data = WindowsDefenderHistoryEventData()
