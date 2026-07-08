@@ -15,83 +15,34 @@ from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
 
-# Syslog severity and facility label tables, mirroring the ones in
-# plaso/parsers/text_plugins/syslog.py. In the journal the PRIORITY and
-# SYSLOG_FACILITY fields are stored as plain decimal strings (0-7 and 0-23
-# respectively per systemd.journal-fields(7)) that index directly into these
-# tables; the RFC 3164 priority-byte decomposition used for text syslog does not
-# apply here. These are unvalidated "user" fields, so their values are
-# bounds-checked before use.
-_SYSLOG_SEVERITY = [
-    "EMERG",
-    "ALERT",
-    "CRIT",
-    "ERR",
-    "WARNING",
-    "NOTICE",
-    "INFO",
-    "DEBUG",
-]
-
-_SYSLOG_FACILITY = [
-    "kernel message",
-    "user-level message",
-    "mail system",
-    "system daemons",
-    "security/authorization messages",
-    "messages generated internally by syslogd",
-    "line printer subsystem",
-    "network news subsystem",
-    "UUCP subsystem",
-    "clock daemon",
-    "security/authorization messages",
-    "FTP daemon",
-    "NTP subsystem",
-    "log audit",
-    "log alert",
-    "clock daemon",
-    "local use 0",
-    "local use 1",
-    "local use 2",
-    "local use 3",
-    "local use 4",
-    "local use 5",
-    "local use 6",
-    "local use 7",
-]
-
 
 class SystemdJournalEventData(events.EventData):
     """Systemd journal event data.
 
     Attributes:
-      audit_login_identifier (str): login user identifier (audit loginuid) of
-          the process that logged the entry.
+      audit_login_identifier (str): login user identifier (audit loginuid) of the
+          process that logged the entry.
       boot_identifier (str): identifier of the boot the entry was logged in.
       command_line (str): command line of the process that logged the entry.
-      executable (str): path of the executable of the process that logged the
-          entry.
+      executable (str): path of the executable of the process that logged the entry.
       facility (str): syslog facility.
-      group_identifier (str): group identifier (GID) of the process that logged
-          the entry.
+      group_identifier (int): group identifier (GID) of the process that logged the
+          entry.
       hostname (str): hostname.
-      machine_identifier (str): identifier of the machine the entry was logged
-          on.
+      machine_identifier (str): identifier of the machine the entry was logged on.
       message_body (str): message body.
-      pid (str): process identifier (PID).
+      pid (int): process identifier (PID).
       process_name (str): name of the process that logged the entry.
-      recorded_time (dfdatetime.DateTimeValues): date and time the log entry
-          was recorded (received) by journald on the originating host.
+      recorded_time (dfdatetime.DateTimeValues): date and time the log entry was
+          recorded (received) by journald on the originating host.
       reporter (str): reporter.
-      selinux_context (str): SELinux security context of the process that logged
-          the entry.
-      severity (str): syslog severity.
+      selinux_context (str): SELinux security context of the process that logged the
+          entry.
+      severity (int): syslog severity.
       systemd_unit (str): systemd unit of the process that logged the entry.
       transport (str): how the entry was received by the journal.
-      user_identifier (str): user identifier (UID) of the process that logged
-          the entry.
-      written_time (dfdatetime.DateTimeValues): date and time the log entry
-          was written.
+      user_identifier (int): user identifier (UID) of the process that logged the entry.
+      written_time (dfdatetime.DateTimeValues): date and time the log entry was written.
     """
 
     DATA_TYPE = "systemd:journal"
@@ -160,6 +111,42 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
     )
 
     _HEADER_INCOMPATIBLE_COMPACT = 16
+
+    _INTEGER_FIELDS = (
+        "_GID",
+        "_PID",
+        "_SOURCE_REALTIME_TIMESTAMP",
+        "_UID",
+        "PRIORITY",
+        "SYSLOG_PID",
+    )
+
+    _SYSLOG_FACILITIES = {
+        0: "kernel message",
+        1: "user-level message",
+        2: "mail system",
+        3: "system daemons",
+        4: "security/authorization messages",
+        5: "messages generated internally by syslogd",
+        6: "line printer subsystem",
+        7: "network news subsystem",
+        8: "UUCP subsystem",
+        9: "clock daemon",
+        10: "security/authorization messages",
+        11: "FTP daemon",
+        12: "NTP subsystem",
+        13: "log audit",
+        14: "log alert",
+        15: "clock daemon",
+        16: "local use 0",
+        17: "local use 1",
+        18: "local use 2",
+        19: "local use 3",
+        20: "local use 4",
+        21: "local use 5",
+        22: "local use 6",
+        23: "local use 7",
+    }
 
     def __init__(self):
         """Initializes a parser."""
@@ -366,32 +353,6 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
 
         return entry_object_offsets
 
-    def _GetSyslogLabel(self, value, labels):
-        """Retrieves a syslog label for a numeric journal field value.
-
-        The journal PRIORITY and SYSLOG_FACILITY fields are client-supplied and
-        not validated by journald, so they can be absent, out of range, or
-        non-numeric (for example applications that store a textual facility). In
-        those cases no label is returned rather than raising or guessing.
-
-        Args:
-          value (str): decimal journal field value, or None.
-          labels (list[str]): label table indexed by the numeric field value.
-
-        Returns:
-          str: label, or None if the value is missing, non-numeric or out of
-              range.
-        """
-        try:
-            index = int(value)
-        except (TypeError, ValueError):
-            return None
-
-        if 0 <= index < len(labels):
-            return labels[index]
-
-        return None
-
     def _ParseKeyValuePair(self, parser_mediator, field_data):
         """Parses a key value pair.
 
@@ -401,30 +362,46 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
               value can contain arbitrary binary (non-UTF-8) data.
 
         Returns:
-          tuple[str, str]: key and value decoded as UTF-8, with invalid bytes
-              replaced rather than raising.
+          tuple[str, object, bool]: key and value decoded as UTF-8, invalid code points
+              are escaped, and boolean value to indicate the key value pair was
+              corrupted.
         """
         key_data, _, value_data = field_data.partition(b"=")
+        corrupted = False
 
         try:
             key = key_data.decode("utf-8")
         except UnicodeDecodeError:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 "Unable to decode journal field key as UTF-8. Unsupported code points "
                 "are escaped."
             )
             key = key_data.decode("utf-8", errors="backslashreplace")
+            corrupted = True
 
-        try:
-            value = value_data.decode("utf-8")
-        except UnicodeDecodeError:
-            parser_mediator.ProduceExtractionWarning(
-                f"Unable to decode journal field with key: {key:s} value as UTF-8. "
-                f"Unsupported code points are escaped."
-            )
-            value = value_data.decode("utf-8", errors="backslashreplace")
+        if not value_data:
+            value = None
+        else:
+            try:
+                value = value_data.decode("utf-8")
+            except UnicodeDecodeError:
+                parser_mediator.ProduceWarning(
+                    f"Unable to decode journal field with key: {key:s} value as UTF-8. "
+                    f"Unsupported code points are escaped."
+                )
+                value = value_data.decode("utf-8", errors="backslashreplace")
+                corrupted = True
 
-        return key, value
+        if value is not None and not corrupted and key in self._INTEGER_FIELDS:
+            try:
+                value = int(value, 10)
+            except ValueError:
+                parser_mediator.ProduceWarning(
+                    f"Unsupported {key:s} integer value: '{value:s}'"
+                )
+                corrupted = True
+
+        return key, value, corrupted
 
     def _ParseJournalEntry(self, parser_mediator, file_object, file_offset):
         """Parses a journal entry.
@@ -438,7 +415,10 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
               of the file-like object.
 
         Returns:
-          dict[str, objects]: entry items per key.
+          tuple: containing:
+
+              dict[str, objects]: fields in the journal entry.
+              bool: True if the journal entry was corrupted.
 
         Raises:
           ParseError: when an object offset is out of bounds.
@@ -455,6 +435,7 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
         data_end_offset = file_offset + entry_object.data_size - 64
 
         fields = {"real_time": entry_object.real_time}
+        corrupted = False
 
         while file_offset < data_end_offset:
             try:
@@ -477,10 +458,15 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
                 )
 
             field_data = self._ParseDataObject(file_object, entry_item.object_offset)
-            key, value = self._ParseKeyValuePair(parser_mediator, field_data)
+            key, value, key_value_corrupted = self._ParseKeyValuePair(
+                parser_mediator, field_data
+            )
             fields[key] = value
 
-        return fields
+            if key_value_corrupted:
+                corrupted = True
+
+        return fields, corrupted
 
     @classmethod
     def GetFormatSpecification(cls):
@@ -539,11 +525,11 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
                 continue
 
             try:
-                fields = self._ParseJournalEntry(
+                fields, corrupted = self._ParseJournalEntry(
                     parser_mediator, file_object, entry_object_offset
                 )
             except errors.ParseError as exception:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"Unable to parse journal entry at offset: "
                     f"0x{entry_object_offset:08x} with error: {exception!s}"
                 )
@@ -554,24 +540,30 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
             )
             event_data = SystemdJournalEventData()
 
+            # The SYSLOG_FACILITY values can contain either a string e.g. "DHCP4" or an
+            # integer that maps to a predefined facility.
+            facility = fields.get("SYSLOG_FACILITY")
+            if facility is not None:
+                try:
+                    facility_numeric = int(facility, 10)
+                    facility = self._SYSLOG_FACILITIES.get(facility_numeric, facility)
+                except ValueError:
+                    pass
+
             event_data.audit_login_identifier = fields.get("_AUDIT_LOGINUID")
             event_data.boot_identifier = fields.get("_BOOT_ID")
             event_data.command_line = fields.get("_CMDLINE")
             event_data.executable = fields.get("_EXE")
-            event_data.facility = self._GetSyslogLabel(
-                fields.get("SYSLOG_FACILITY"), _SYSLOG_FACILITY
-            )
+            event_data.facility = facility
             event_data.group_identifier = fields.get("_GID")
             event_data.hostname = fields.get("_HOSTNAME")
             event_data.machine_identifier = fields.get("_MACHINE_ID")
             event_data.message_body = fields.get("MESSAGE")
             event_data.process_name = fields.get("_COMM")
-            # Fall back to the trusted _COMM when SYSLOG_IDENTIFIER is absent.
+            # Fall back to the _COMM when SYSLOG_IDENTIFIER is absent.
             event_data.reporter = fields.get("SYSLOG_IDENTIFIER") or fields.get("_COMM")
             event_data.selinux_context = fields.get("_SELINUX_CONTEXT")
-            event_data.severity = self._GetSyslogLabel(
-                fields.get("PRIORITY"), _SYSLOG_SEVERITY
-            )
+            event_data.severity = fields.get("PRIORITY")
             event_data.systemd_unit = fields.get("_SYSTEMD_UNIT")
             event_data.transport = fields.get("_TRANSPORT")
             event_data.user_identifier = fields.get("_UID")
@@ -585,23 +577,17 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
             # field and should be numeric microseconds, so a malformed value is
             # surfaced rather than dropped.
             source_realtime = fields.get("_SOURCE_REALTIME_TIMESTAMP")
-            if source_realtime:
-                try:
-                    event_data.recorded_time = (
-                        dfdatetime_posix_time.PosixTimeInMicroseconds(
-                            timestamp=int(source_realtime)
-                        )
+            if source_realtime is not None:
+                event_data.recorded_time = (
+                    dfdatetime_posix_time.PosixTimeInMicroseconds(
+                        timestamp=source_realtime
                     )
-                except ValueError:
-                    parser_mediator.ProduceExtractionWarning(
-                        f"Unable to parse source realtime timestamp: "
-                        f"{source_realtime:s}"
-                    )
+                )
 
             if event_data.reporter and event_data.reporter != "kernel":
                 event_data.pid = fields.get("_PID", fields.get("SYSLOG_PID"))
 
-            parser_mediator.ProduceEventData(event_data)
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
 
 manager.ParsersManager.RegisterParser(SystemdJournalParser)

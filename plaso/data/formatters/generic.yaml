@@ -1059,7 +1059,21 @@ source: 'SSH Log'
 # entries that have no _MACHINE_ID field.
 type: 'conditional'
 data_type: 'systemd:journal'
+enumeration_helpers:
+- input_attribute: 'severity'
+  output_attribute: 'severity_string'
+  default_value: 'Unknown'
+  values:
+    0: 'EMERG'
+    1: 'ALERT'
+    2: 'CRIT'
+    3: 'ERR'
+    4: 'WARNING'
+    5: 'NOTICE'
+    6: 'INFO'
+    7: 'DEBUG'
 message:
+- '{severity}'
 - '{hostname} '
 - '['
 - '{reporter}'
@@ -1067,6 +1081,7 @@ message:
 - '] {message_body}'
 separator: ''
 short_message:
+- '{severity}'
 - '{hostname} '
 - '['
 - '{reporter}'

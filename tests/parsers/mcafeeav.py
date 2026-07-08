@@ -46,7 +46,7 @@ class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
             "data_type": "av:mcafee:accessprotectionlog",
             "filename": "C:\\Windows\\System32\\procexp64.exe",
             "rule": (
-                "Common Standard Protection:Prevent termination of McAfee " "processes"
+                "Common Standard Protection:Prevent termination of McAfee processes"
             ),
             "status": "Blocked by Access Protection rule",
             "trigger_location": (

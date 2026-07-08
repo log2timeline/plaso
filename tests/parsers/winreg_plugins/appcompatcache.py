@@ -1164,12 +1164,12 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_LOCAL_MACHINE\\System",
-            ("CurrentControlSet\\Control\\Session Manager\\AppCompatibility"),
+            "CurrentControlSet\\Control\\Session Manager\\AppCompatibility",
         )
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_LOCAL_MACHINE\\System",
-            ("CurrentControlSet\\Control\\Session Manager\\AppCompatCache"),
+            "CurrentControlSet\\Control\\Session Manager\\AppCompatCache",
         )
         self._AssertFiltersOnKeyPath(
             plugin,
@@ -1536,7 +1536,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
             "last_update_time": None,
             "registry_last_written_time": "2015-06-15T11:53:37.0430610+00:00",
             "path": (
-                "C:\\Program Files (x86)\\NVIDIA Corporation\\3D Vision\\" "nvstreg.exe"
+                "C:\\Program Files (x86)\\NVIDIA Corporation\\3D Vision\\nvstreg.exe"
             ),
             "insertion_flags": None,
         }

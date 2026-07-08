@@ -153,7 +153,7 @@ class GCPLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
             "dcsa_emails": None,
             "dcsa_scopes": None,
             "delegation_chain": (
-                "service-1234567890@compute-system.iam." "gserviceaccount.com"
+                "service-1234567890@compute-system.iam.gserviceaccount.com"
             ),
             "event_subtype": "google.iam.admin.v1.CreateServiceAccount",
             "event_type": None,
@@ -162,9 +162,7 @@ class GCPLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
             "firewall_source_ranges": None,
             "gcloud_command_identifier": None,
             "gcloud_command_pattern": None,
-            "log_name": (
-                "projects/ketchup/logs/cloudaudit.googleapis.com%2F" "activity"
-            ),
+            "log_name": ("projects/ketchup/logs/cloudaudit.googleapis.com%2Factivity"),
             "message_body": (
                 'Permission "iam.serviceAccounts.create" denied on resource (or it may '
                 "not exist)."
@@ -172,11 +170,9 @@ class GCPLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
             "method_name": "google.iam.admin.v1.CreateServiceAccount",
             "permissions": ["iam.serviceAccounts.create"],
             "policy_deltas": None,
-            "principal_email": (
-                "dvwa-service-account@ketchup.iam." "gserviceaccount.com"
-            ),
+            "principal_email": ("dvwa-service-account@ketchup.iam.gserviceaccount.com"),
             "principal_subject": (
-                "serviceAccount:dvwa-service-account@ketchup." "iam.gserviceaccount.com"
+                "serviceAccount:dvwa-service-account@ketchup.iam.gserviceaccount.com"
             ),
             "recorded_time": "2024-12-03T17:58:44.882119+00:00",
             "request_account_identifier": "theattacker",
