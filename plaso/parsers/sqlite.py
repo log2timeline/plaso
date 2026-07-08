@@ -251,7 +251,6 @@ class SQLiteDatabase:
             self.schema = {
                 table_name: " ".join(query.split()) for table_name, query in sql_results
             }
-
             for table_name in self.schema.keys():
                 self.columns_per_table.setdefault(table_name, [])
 
@@ -273,8 +272,8 @@ class SQLiteDatabase:
                 self._temp_wal_file_path = ""
 
             logger.debug(
-                f"Unable to parse SQLite database: "
-                f"{self._filename} with error: {exception!s}"
+                f"Unable to parse SQLite database: {self._filename} with error: "
+                f"{exception!s}"
             )
             raise
 
@@ -330,7 +329,6 @@ class SQLiteParser(interface.FileEntryParser):
         wal_path_spec = path_spec_factory.Factory.NewPathSpec(
             file_system.type_indicator, parent=path_spec.parent, location=location_wal
         )
-
         wal_file_entry = file_system.GetFileEntryByPathSpec(wal_path_spec)
         if not wal_file_entry:
             return None, None
@@ -342,12 +340,11 @@ class SQLiteParser(interface.FileEntryParser):
         database_wal = SQLiteDatabase(
             filename, temporary_directory=parser_mediator.temporary_directory
         )
-
         try:
             database_wal.Open(database_file_object, wal_file_object=wal_file_object)
 
         except (OSError, ValueError, sqlite3.DatabaseError) as exception:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unable to open SQLite database and WAL with error: {exception!s}"
             )
             return None, None
@@ -388,9 +385,9 @@ class SQLiteParser(interface.FileEntryParser):
         try:
             schema_match = plugin.CheckSchema(database)
             if plugin.REQUIRES_SCHEMA_MATCH and not schema_match:
-                parser_mediator.ProduceExtractionWarning(
-                    f"plugin: {plugin.NAME} found required tables "
-                    f"but not a matching schema"
+                parser_mediator.ProduceWarning(
+                    f"plugin: {plugin.NAME} found required tables but not a matching "
+                    f"schema"
                 )
             else:
                 plugin.UpdateChainAndProcess(
@@ -398,11 +395,10 @@ class SQLiteParser(interface.FileEntryParser):
                 )
 
         except Exception as exception:  # pylint: disable=broad-except
-            parser_mediator.ProduceExtractionWarning(
-                f"plugin: {plugin.NAME} unable to parse "
-                f"SQLite database with error: {exception!s}"
+            parser_mediator.ProduceWarning(
+                f"plugin: {plugin.NAME} unable to parse SQLite database with error: "
+                f"{exception!s}"
             )
-
         finally:
             parser_mediator.SampleStopTiming(profiling_name)
 
@@ -434,7 +430,7 @@ class SQLiteParser(interface.FileEntryParser):
             database.Open(file_object)
 
         except (OSError, ValueError, sqlite3.DatabaseError) as exception:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unable to open SQLite database with error: {exception!s}"
             )
             return
@@ -455,7 +451,6 @@ class SQLiteParser(interface.FileEntryParser):
         database_wal, wal_file_entry = self._OpenDatabaseWithWAL(
             parser_mediator, file_entry, file_object, filename
         )
-
         if not database_wal:
             return
 

@@ -80,11 +80,10 @@ class CompoundZIPParser(interface.FileObjectParser):
                 plugin.UpdateChainAndProcess(parser_mediator, zip_file=zip_file)
 
             except Exception as exception:  # pylint: disable=broad-except
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"plugin: {plugin_name:s} unable to parse ZIP file: "
                     f"{display_name:s} with error: {exception!s}"
                 )
-
             finally:
                 parser_mediator.SampleStopTiming(profiling_name)
 

@@ -147,7 +147,7 @@ class WinRegistryParser(interface.FileObjectParser):
         try:
             plugin.UpdateChainAndProcess(parser_mediator, registry_key, **kwargs)
         except (OSError, dfwinreg_errors.WinRegistryValueError) as exception:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"in key: {registry_key.path:s} error: {exception!s}"
             )
 
@@ -232,7 +232,7 @@ class WinRegistryParser(interface.FileObjectParser):
                 self._ParseRecurseKeys(parser_mediator, win_registry, subkey)
 
             except OSError as exception:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"in key: {registry_key.path:s} error: {exception!s}"
                 )
 
@@ -266,7 +266,7 @@ class WinRegistryParser(interface.FileObjectParser):
         try:
             registry_file.Open(file_object)
         except OSError as exception:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unable to open Windows Registry file with error: {exception!s}"
             )
             return
@@ -304,7 +304,7 @@ class WinRegistryParser(interface.FileObjectParser):
                     )
 
         except OSError as exception:
-            parser_mediator.ProduceExtractionWarning(f"{exception!s}")
+            parser_mediator.ProduceWarning(f"{exception!s}")
 
         finally:
             if registry_file:

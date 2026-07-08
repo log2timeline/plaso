@@ -538,8 +538,8 @@ class SpotlightStoreDatabaseParser(
         """Parses an Apple Spotlight store metadata item.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           metadata_item (SpotlightStoreMetadataItem): a metadata item.
         """
         event_data = SpotlightStoreMetadataItemEventData()
@@ -620,8 +620,8 @@ class SpotlightStoreDatabaseParser(
         """Parses a record for its metadata item.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           page_data (bytes): page data.
           page_data_offset (int): offset of the page value relative to the start
               of the page data.
@@ -673,8 +673,8 @@ class SpotlightStoreDatabaseParser(
         """Parses the record page values.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           page_data (bytes): page data.
 
         Raises:
@@ -1617,8 +1617,8 @@ class SpotlightStoreDatabaseParser(
         """Parses an Apple Spotlight store database file entry.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_entry (dfvfs.FileEntry): a file entry to parse.
 
         Raises:
@@ -1693,7 +1693,7 @@ class SpotlightStoreDatabaseParser(
                 )
 
         except errors.ParseError as exception:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unable to read store database with error: {exception!s}"
             )
             return
@@ -1707,9 +1707,9 @@ class SpotlightStoreDatabaseParser(
                 self._ParseRecordPageValues(parser_mediator, page_data)
 
             except errors.ParseError as exception:
-                parser_mediator.ProduceExtractionWarning(
-                    f"unable to read record page at offset: 0x{file_offset:08x} "
-                    f"with error: {exception!s}"
+                parser_mediator.ProduceWarning(
+                    f"unable to read record page at offset: 0x{file_offset:08x} with "
+                    f"error: {exception!s}"
                 )
                 continue
 

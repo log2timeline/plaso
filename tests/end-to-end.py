@@ -2171,7 +2171,7 @@ def Main():
         dest="references_directory",
         type=str,
         default=None,
-        help=("The location of the directory where the test references are stored."),
+        help="The location of the directory where the test references are stored.",
     )
     argument_parser.add_argument(
         "--results-directory",
@@ -2181,7 +2181,7 @@ def Main():
         dest="results_directory",
         type=str,
         default=None,
-        help=("The location of the directory where to store the test results."),
+        help="The location of the directory where to store the test results.",
     )
     argument_parser.add_argument(
         "--sources-directory",
@@ -2191,7 +2191,7 @@ def Main():
         dest="sources_directory",
         type=str,
         default=None,
-        help=("The location of the directory where the test sources are stored."),
+        help="The location of the directory where the test sources are stored.",
     )
     argument_parser.add_argument(
         "--scripts-directory",

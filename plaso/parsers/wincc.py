@@ -113,20 +113,23 @@ class SIMATICLogParser(interface.FileObjectParser):
                 )
 
         event_data = SIMATICS7EventData()
+        corrupted = False
+
         try:
             date_time = dfdatetime_time_elements.TimeElements()
             date_time.CopyFromDateTimeString(values[0])
             event_data.creation_time = date_time
         except (TypeError, ValueError) as exception:
-            message = (
-                f"Unable to parse date time value with error: "
-                f"{exception!s} on line {line_number:d} {values!s}"
+            warning_message = (
+                f"Unable to parse date time value with error: {exception!s} on line "
+                f"{line_number:d} {values!s}"
             )
-            parser_mediator.ProduceExtractionWarning(message)
+            parser_mediator.ProduceWarning(warning_message)
+            corrupted = True
 
         event_data.message_body = ",".join(values[1:]).strip()
 
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def ParseFileObject(self, parser_mediator, file_object):
         """Parses a SIMATIC Log file-like object.
@@ -159,7 +162,7 @@ class SIMATICLogParser(interface.FileObjectParser):
                 line_number += 1
                 line = line_reader.readline()
             except UnicodeDecodeError as exception:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"unable to read line: {line_number:d} with error: {exception!s}"
                 )
                 break
@@ -194,16 +197,16 @@ class WinCCSysLogParser(interface.FileObjectParser):
         """
         number_of_values = len(values)
         if len(values) < 10:
-            message = (
+            warning_message = (
                 f"invalid number of values: {number_of_values:d} in line: "
                 f"{line_number:d}"
             )
             # On other lines, we might encounter times where the split() operation
             # produces more values.
             if first_line:
-                raise errors.WrongParser(message)
+                raise errors.WrongParser(warning_message)
 
-            parser_mediator.ProduceExtractionWarning(message)
+            parser_mediator.ProduceWarning(warning_message)
 
         event_data = WinCCSysLogEventData()
 
@@ -213,14 +216,14 @@ class WinCCSysLogParser(interface.FileObjectParser):
             log_identifier = int(identifier_value, 10)
             event_data.log_identifier = log_identifier
         except ValueError as exception:
-            message = (
-                f"Type of first value ({identifier_value!s}) should be an int in "
+            warning_message = (
+                f"Type of first value ({identifier_value!s}) should be an integer in "
                 f"line: {line_number:d} with error: {exception!s}"
             )
             if first_line:
-                raise errors.WrongParser(message)
+                raise errors.WrongParser(warning_message)
 
-            parser_mediator.ProduceExtractionWarning(message)
+            parser_mediator.ProduceWarning(warning_message)
 
         date_value = values[1]
         time_value = values[2]
@@ -250,29 +253,29 @@ class WinCCSysLogParser(interface.FileObjectParser):
             event_data.creation_time = date_time
 
         except (TypeError, ValueError) as exception:
-            message = (
+            warning_message = (
                 f"Unable to parse time elements with error: {exception!s} on line "
                 f"{line_number:d} [{date_value!s}, {time_value!s}] with error: "
                 f"{exception!s}"
             )
             if first_line:
-                raise errors.WrongParser(message)
+                raise errors.WrongParser(warning_message)
 
-            parser_mediator.ProduceExtractionWarning(message)
+            parser_mediator.ProduceWarning(warning_message)
 
         event_number_value = values[3]
 
         try:
             event_data.event_number = int(event_number_value, 10)
         except ValueError as exception:
-            message = (
+            warning_message = (
                 f"Type of event_number value ({event_number_value!s}) should be a "
                 f"decimal in line: {line_number:d} with error: {exception!s}"
             )
             if first_line:
-                raise errors.WrongParser(message)
+                raise errors.WrongParser(warning_message)
 
-            parser_mediator.ProduceExtractionWarning(message)
+            parser_mediator.ProduceWarning(warning_message)
 
         # Column 4 and 5 contain unknown values, we are not parsing them.
 
@@ -285,25 +288,25 @@ class WinCCSysLogParser(interface.FileObjectParser):
 
         if first_line:
             if not hostname or len(hostname) > 16:
-                message = (
-                    f'Unsupported hostname: "{hostname!s}" on line: '
-                    f"{line_number:d} with error: {exception!s}"
+                warning_message = (
+                    f'Unsupported hostname: "{hostname!s}" on line: {line_number:d} '
+                    f"with error: {exception!s}"
                 )
                 if first_line:
-                    raise errors.WrongParser(message)
+                    raise errors.WrongParser(warning_message)
 
-                parser_mediator.ProduceExtractionWarning(message)
+                parser_mediator.ProduceWarning(warning_message)
 
             for character in self._DISALLOWED_HOSTNAME_CHARS:
                 if character in hostname:
-                    message = (
+                    warning_message = (
                         f'Unsupported hostname: "{hostname!s}" on line: '
                         f"{line_number:d} with error: {exception!s}"
                     )
                     if first_line:
-                        raise errors.WrongParser(message)
+                        raise errors.WrongParser(warning_message)
 
-                    parser_mediator.ProduceExtractionWarning(message)
+                    parser_mediator.ProduceWarning(warning_message)
 
         event_data.log_hostname = hostname
 
@@ -350,8 +353,8 @@ class WinCCSysLogParser(interface.FileObjectParser):
         while line:
             if line.startswith(self._END_OF_LOG_FILE_STRING):
                 # It seems that sometimes WinCC logs will end with a line starting like
-                # this, with the name of the next log file.
-                # But this is not always the case though.
+                # this, with the name of the next log file, but this is not always the
+                # case though.
                 line = line_reader.readline().strip()
                 continue
 
@@ -363,7 +366,7 @@ class WinCCSysLogParser(interface.FileObjectParser):
                 first_line = False
                 line = line_reader.readline().strip()
             except UnicodeDecodeError as exception:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"unable to read line: {line_number:d} with error: {exception!s}"
                 )
                 break

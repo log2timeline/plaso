@@ -551,9 +551,7 @@ class EventExtractionWorker:
                 f"analyzer failed to determine compressed stream type indicators "
                 f"with error: {exception!s}"
             )
-            parser_mediator.ProduceExtractionWarning(
-                warning_message, path_spec=path_spec
-            )
+            parser_mediator.ProduceWarning(warning_message, path_spec=path_spec)
 
         return type_indicators
 
@@ -581,9 +579,7 @@ class EventExtractionWorker:
                 f"analyzer failed to determine storage media image type indicators "
                 f"with error: {exception!s}"
             )
-            parser_mediator.ProduceExtractionWarning(
-                warning_message, path_spec=path_spec
-            )
+            parser_mediator.ProduceWarning(warning_message, path_spec=path_spec)
 
         return type_indicators
 
@@ -644,7 +640,7 @@ class EventExtractionWorker:
             warning_message = (
                 f"unable to process archive file with error: {exception!s}"
             )
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 warning_message, path_spec=generated_path_spec
             )
 
@@ -693,7 +689,7 @@ class EventExtractionWorker:
             warning_message = (
                 f"unable to process storage media image with error: {exception!s}"
             )
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 warning_message, path_spec=storage_media_image_path_spec
             )
 
@@ -746,9 +742,7 @@ class EventExtractionWorker:
                     f"unsupported compressed stream format type indicator: "
                     f"{type_indicator:s}"
                 )
-                parser_mediator.ProduceExtractionWarning(
-                    warning_message, path_spec=path_spec
-                )
+                parser_mediator.ProduceWarning(warning_message, path_spec=path_spec)
 
             if compressed_stream_path_spec:
                 event_source = event_sources.FileEntryEventSource(
@@ -785,7 +779,7 @@ class EventExtractionWorker:
                     f"unable to process directory entry: {sub_file_entry.name:s} with "
                     f"error: {exception!s}"
                 )
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     warning_message, path_spec=file_entry.path_spec
                 )
                 continue
