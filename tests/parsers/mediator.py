@@ -199,8 +199,8 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
         )
         self.assertEqual(number_of_warnings, 0)
 
-    def testProduceRecoveryWarning(self):
-        """Tests the ProduceRecoveryWarning method."""
+    def testProduceWarning(self):
+        """Tests the ProduceWarning method."""
         parser_mediator = mediator.ParserMediator()
 
         storage_writer = fake_writer.FakeStorageWriter()
@@ -208,17 +208,42 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
 
         storage_writer.Open()
 
-        parser_mediator.ProduceRecoveryWarning("test")
+        try:
+            parser_mediator.ProduceWarning("test")
 
-        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-            "extraction_warning"
-        )
-        self.assertEqual(number_of_warnings, 0)
+            number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+                "extraction_warning"
+            )
+            self.assertEqual(number_of_warnings, 1)
 
-        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-            "recovery_warning"
-        )
-        self.assertEqual(number_of_warnings, 1)
+            number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+                "recovery_warning"
+            )
+            self.assertEqual(number_of_warnings, 0)
+
+        finally:
+            storage_writer.Close()
+
+        storage_writer = fake_writer.FakeStorageWriter()
+        parser_mediator.SetStorageWriter(storage_writer)
+
+        storage_writer.Open()
+
+        try:
+            parser_mediator.ProduceWarning("test", recovered=True)
+
+            number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+                "extraction_warning"
+            )
+            self.assertEqual(number_of_warnings, 0)
+
+            number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+                "recovery_warning"
+            )
+            self.assertEqual(number_of_warnings, 1)
+
+        finally:
+            storage_writer.Close()
 
     def testResetFileEntry(self):
         """Tests the ResetFileEntry function."""

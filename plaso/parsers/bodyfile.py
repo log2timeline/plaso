@@ -25,23 +25,20 @@ class BodyfileEventData(events.EventData):
     """Bodyfile event data.
 
     Attributes:
-      access_time (dfdatetime.DateTimeValues): file entry last access date
-          and time.
-      change_time (dfdatetime.DateTimeValues): file entry inode change
-          (or metadata last modification) date and time.
-      creation_time (dfdatetime.DateTimeValues): file entry creation date
-          and time.
+      access_time (dfdatetime.DateTimeValues): file entry last access date and time.
+      change_time (dfdatetime.DateTimeValues): file entry inode change (or metadata
+          last modification) date and time.
+      creation_time (dfdatetime.DateTimeValues): file entry creation date and time.
       filename (str): name of the file.
       group_identifier (int): group identifier (GID), equivalent to st_gid.
-      inode (int): "inode" of the file. Note that inode is an overloaded term
-          in the context of a bodyfile and used for MFT entry index values as
-          well.
+      inode (int): "inode" of the file. Note that inode is an overloaded term in the
+          context of a bodyfile and used for MFT entry index values as well.
       md5 (str): MD5 hash of the file content, formatted as a hexadecimal string.
       mode_as_string (str): protection mode.
-      modification_time (dfdatetime.DateTimeValues): file entry last modification
-          date and time.
-      offset (int): number of the corresponding line, from which the event data
-          was extracted.
+      modification_time (dfdatetime.DateTimeValues): file entry last modification date
+          and time.
+      offset (int): number of the corresponding line, from which the event data was
+          extracted.
       owner_identifier (str): user identifier (UID or SID) of the owner.
       size (int): size of the file content.
       symbolic_link_target (str): path of the symbolic link target.
@@ -129,19 +126,20 @@ class BodyfileParser(interface.FileObjectParser):
           int: integer value or None if not available or invalid.
 
         Raises:
-          WrongParser: when an invalid integer value is found on
-              the first line.
+          WrongParser: when an invalid integer value is found on the first line.
         """
         integer_value = values.pop(-1) or None
         if integer_value is not None:
             try:
                 integer_value = int(integer_value, 10)
             except ValueError:
-                error_string = f"invalid {description:s} value in line: {line_number:d}"
+                warning_message = (
+                    f"invalid {description:s} value in line: {line_number:d}"
+                )
                 if first_line:
-                    raise errors.WrongParser(error_string)
+                    raise errors.WrongParser(warning_message)
 
-                parser_mediator.ProduceRecoveryWarning(error_string)
+                parser_mediator.ProduceWarning(warning_message)
                 integer_value = None
 
         return integer_value
@@ -164,19 +162,20 @@ class BodyfileParser(interface.FileObjectParser):
           float: floating-point value or None if not available or invalid.
 
         Raises:
-          WrongParser: when an invalid floating-point value is found on
-              the first line.
+          WrongParser: when an invalid floating-point value is found on the first line.
         """
         float_value = values.pop(-1) or None
         if float_value is not None:
             try:
                 float_value = float(float_value)
             except ValueError:
-                error_string = f"invalid {description:s} value in line: {line_number:d}"
+                warning_message = (
+                    f"invalid {description:s} value in line: {line_number:d}"
+                )
                 if first_line:
-                    raise errors.WrongParser(error_string)
+                    raise errors.WrongParser(warning_message)
 
-                parser_mediator.ProduceRecoveryWarning(error_string)
+                parser_mediator.ProduceWarning(warning_message)
                 float_value = None
 
         return float_value
@@ -201,14 +200,14 @@ class BodyfileParser(interface.FileObjectParser):
         """
         number_of_values = len(values)
         if number_of_values < 11:
-            error_string = (
+            warning_message = (
                 f"invalid number of values: {number_of_values:d} in line: "
                 f"{line_number:d}"
             )
             if first_line:
-                raise errors.WrongParser(error_string)
+                raise errors.WrongParser(warning_message)
 
-            parser_mediator.ProduceExtractionWarning(error_string)
+            parser_mediator.ProduceExtractionWarning(warning_message)
 
             return
 
@@ -216,11 +215,13 @@ class BodyfileParser(interface.FileObjectParser):
         if md5_value == "0":
             md5_value = None
         elif md5_value and not self._MD5_RE.match(md5_value):
-            error_string = f"invalid MD5 value: {md5_value:s} in line: {line_number:d}"
+            warning_message = (
+                f"invalid MD5 value: {md5_value:s} in line: {line_number:d}"
+            )
             if first_line:
-                raise errors.WrongParser(error_string)
+                raise errors.WrongParser(warning_message)
 
-            parser_mediator.ProduceRecoveryWarning(error_string)
+            parser_mediator.ProduceWarning(warning_message)
 
         crtime_value = self._GetLastValueAsFloatingPoint(
             parser_mediator, values, "creation time", line_number, first_line
@@ -244,7 +245,6 @@ class BodyfileParser(interface.FileObjectParser):
         uid_value = self._GetLastValueAsBase10Integer(
             parser_mediator, values, "user identifier (UID)", line_number, first_line
         )
-
         if uid_value is not None:
             # Note that the owner_identifier attribute of BodyfileEventData
             # is expected to be a string or None.
@@ -260,7 +260,7 @@ class BodyfileParser(interface.FileObjectParser):
             inode_value = int(inode_value, 10)
         except (TypeError, ValueError):
             inode_value = None
-            parser_mediator.ProduceRecoveryWarning(
+            parser_mediator.ProduceWarning(
                 f"invalid inode value: {inode_value!s} in line: {line_number:d}"
             )
 
@@ -274,7 +274,7 @@ class BodyfileParser(interface.FileObjectParser):
         filename = "|".join(values)
         escaped_filename = filename.translate(self._ESCAPE_CHARACTERS)
         if filename != escaped_filename:
-            parser_mediator.ProduceRecoveryWarning(
+            parser_mediator.ProduceWarning(
                 f"filename in line: {line_number:d} contains unescaped control "
                 f"characters"
             )

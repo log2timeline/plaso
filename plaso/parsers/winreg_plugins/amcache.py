@@ -17,32 +17,28 @@ class AMCacheFileEventData(events.EventData):
     """AMCache file event data.
 
     Attributes:
-      application_key_last_written_time (dfdatetime.DateTimeValues): last written
-          date and time of the application key.
+      application_key_last_written_time (dfdatetime.DateTimeValues): last written date
+          and time of the application key.
       company_name (str): company name that created product file belongs to.
-      file_creation_time (dfdatetime.DateTimeValues): file entry creation date
-          and time.
+      file_creation_time (dfdatetime.DateTimeValues): file entry creation date and time.
       file_description (str): description of file.
-      file_identifier (str): identifier of file (SHA-1 of the first 30 MiB
-          (31457280 bytes) of file, preceded by "0000").
-      file_modification_time (dfdatetime.DateTimeValues): file entry last
-          modification date and time.
-      file_reference (str): file system file reference, for example 9-1 (MFT
-          entry - sequence number).
+      file_identifier (str): identifier of file (SHA-1 of the first 30 MiB (31457280
+          bytes) of file, preceded by "0000").
+      file_modification_time (dfdatetime.DateTimeValues): file entry last modification
+          date and time.
+      file_reference (str): file system file reference, for example 9-1 (MFT entry -
+          sequence number).
       file_size (int): size of file in bytes.
       file_version (str): version of file.
       filename (str): name of the file.
       full_path (str): full path of file.
       installation_time (dfdatetime.DateTimeValues): installation date and time.
       language_code (int): language code of file.
-      last_written_time (dfdatetime.DateTimeValues): entry last written date and
-          time.
+      last_written_time (dfdatetime.DateTimeValues): entry last written date and time.
       link_time (dfdatetime.DateTimeValues): link date and time.
-      msi_installation_time (dfdatetime.DateTimeValues): MSI installation date
-          and time.
+      msi_installation_time (dfdatetime.DateTimeValues): MSI installation date and time.
       product_name (str): product name file belongs to.
-      program_identifier (str): GUID of entry under Root/Program key file belongs
-          to.
+      program_identifier (str): GUID of entry under Root/Program key file belongs to.
       sha1 (str): SHA-1.
     """
 
@@ -206,12 +202,10 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
                 value_object = registry_value.data
 
         except dfwinreg_errors.WinRegistryValueError as exception:
-            parser_mediator.ProduceRecoveryWarning(
-                (
-                    f"Unable to retrieve value data of type: "
-                    f"{registry_value.data_type_string,:s} as object from value: "
-                    f"{value_name:s} in key: {key_path:s} with error: {exception!s}"
-                )
+            parser_mediator.ProduceWarning(
+                f"Unable to retrieve value data of type: "
+                f"{registry_value.data_type_string,:s} as object from value: "
+                f"{value_name:s} in key: {key_path:s} with error: {exception!s}"
             )
             value_object = None
 
@@ -234,7 +228,6 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
                 value_data = self._GetValueDataAsObject(
                     parser_mediator, application_sub_key.path, value_name, value
                 )
-
                 setattr(event_data, attribute_name, value_data)
 
         install_date_value = application_sub_key.GetValueByName("InstallDate")
@@ -276,10 +269,8 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
         """
         if not registry_value.DataIsString():
             parser_mediator.ProduceExtractionWarning(
-                (
-                    f"unsupported {registry_value.name:s} with value data type: "
-                    f"{registry_value.data_type_string:s} in key: {key_path:s}"
-                )
+                f"unsupported {registry_value.name:s} with value data type: "
+                f"{registry_value.data_type_string:s} in key: {key_path:s}"
             )
             return None
 
@@ -293,10 +284,8 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
         re_match = self._LINK_DATE_TIME_RE.match(date_time_string)
         if not re_match:
             parser_mediator.ProduceExtractionWarning(
-                (
-                    f"unsupported {registry_value.name:s} value data: "
-                    f"{date_time_string!s} in key: {key_path:s}"
-                )
+                f"unsupported {registry_value.name:s} value data: "
+                f"{date_time_string!s} in key: {key_path:s}"
             )
             return None
 
@@ -311,10 +300,8 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
             seconds = int(seconds, 10)
         except (TypeError, ValueError):
             parser_mediator.ProduceExtractionWarning(
-                (
-                    f"invalid {registry_value.name:s} date time value: "
-                    f"{date_time_string!s} in key: {key_path:s}"
-                )
+                f"invalid {registry_value.name:s} date time value: "
+                f"{date_time_string!s} in key: {key_path:s}"
             )
             return None
 
@@ -326,10 +313,8 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
             )
         except ValueError:
             parser_mediator.ProduceExtractionWarning(
-                (
-                    f"invalid {registry_value.name:s} date time value: "
-                    f"{time_elements_tuple!s} in key: {key_path:s}"
-                )
+                f"invalid {registry_value.name:s} date time value: "
+                f"{time_elements_tuple!s} in key: {key_path:s}"
             )
             return None
 
@@ -383,7 +368,6 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
             value_data = self._GetValueDataAsObject(
                 parser_mediator, file_reference_key.path, value_name, value
             )
-
             if attribute_name == "sha1" and value_data.startswith("0000"):
                 # Strip off the 4 leading zero's from the sha1 hash.
                 value_data = value_data[4:]
@@ -454,7 +438,6 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
                 value_data = self._GetValueDataAsObject(
                     parser_mediator, program_key.path, value_name, value
                 )
-
                 setattr(event_data, attribute_name, value_data)
 
         installation_time_value = program_key.GetValueByName(

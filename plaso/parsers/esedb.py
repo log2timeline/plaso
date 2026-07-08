@@ -99,7 +99,7 @@ class ESEDBParser(interface.FileObjectParser):
         try:
             database.Open(file_object)
         except (OSError, ValueError) as exception:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unable to open file with error: {exception!s}"
             )
             return
@@ -124,30 +124,24 @@ class ESEDBParser(interface.FileObjectParser):
 
                 if not result:
                     logger.debug(
-                        (
-                            f"Skipped parsing file: {display_name:s} with plugin: "
-                            f"{plugin_name:s}"
-                        )
+                        f"Skipped parsing file: {display_name:s} with plugin: "
+                        f"{plugin_name:s}"
                     )
                     continue
 
                 logger.debug(
                     f"Parsing file: {display_name:s} with plugin: {plugin_name:s}"
                 )
-
                 parser_mediator.SampleStartTiming(profiling_name)
 
                 try:
                     plugin.UpdateChainAndProcess(
                         parser_mediator, cache=cache, database=database
                     )
-
                 except Exception as exception:  # pylint: disable=broad-except
-                    parser_mediator.ProduceExtractionWarning(
-                        (
-                            f"plugin: {plugin_name:s} unable to parse ESE database "
-                            f"with error: {exception!s}"
-                        )
+                    parser_mediator.ProduceWarning(
+                        f"plugin: {plugin_name:s} unable to parse ESE database with "
+                        f"error: {exception!s}"
                     )
 
                 finally:

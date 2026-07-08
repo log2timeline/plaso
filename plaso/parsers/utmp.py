@@ -20,8 +20,8 @@ class UtmpEventData(events.EventData):
       hostname (str): hostname or IP address.
       ip_address (str): IP address from the connection.
       login_type (int): login type.
-      offset (int): offset of the utmp record relative to the start of the file,
-          from which the event data was extracted.
+      offset (int): offset of the utmp record relative to the start of the file, from
+           which the event data was extracted.
       pid (int): process identifier (PID).
       terminal_identifier (int): inittab identifier.
       terminal (str): type of terminal.
@@ -58,33 +58,33 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
     _SUPPORTED_TYPES = frozenset(range(0, 10))
 
-    # A libc6 utmp record is a fixed-size structure. It is 384 bytes on 32-bit
-    # platforms and on 64-bit platforms with 32-bit time compatibility (e.g.
-    # x86-64), and 400 bytes on 64-bit platforms without it (e.g. aarch64),
-    # where the session and timeval fields are 64-bit.
+    # A libc6 utmp record is a fixed-size structure. It is 384 bytes on 32-bit platforms
+    # and on 64-bit platforms with 32-bit time compatibility (e.g. x86-64), and 400
+    # bytes on 64-bit platforms without it (e.g. aarch64), where the session and timeval
+    # fields are 64-bit.
     _ENTRY_SIZE_32BIT = 384
     _ENTRY_SIZE_64BIT = 400
 
-    # The maximum number of records read to determine the record layout and
-    # whether a file is a utmp file at all.
+    # The maximum number of records read to determine the record layout and whether a
+    # file is a utmp file at all.
     _MAXIMUM_VALIDATION_RECORDS = 16
 
     # The minimum number of valid non-empty records required to accept a file.
     _MINIMUM_VALIDATION_RECORDS = 2
 
-    # The largest ut_type value used when validating a record. ACCOUNTING (9)
-    # is defined but not written in practice.
+    # The largest ut_type value used when validating a record. ACCOUNTING (9) is
+    # defined but not written in practice.
     _MAXIMUM_VALIDATION_TYPE = 8
 
     def _ReadEntry(self, parser_mediator, file_object, file_offset, entry_map):
         """Reads an utmp entry.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): a file-like object.
-          file_offset (int): offset of the data relative to the start of
-              the file-like object.
+          file_offset (int): offset of the data relative to the start of the file-like
+              object.
           entry_map (dtfabric.DataTypeMap): data type map of the utmp record.
 
         Returns:
@@ -256,18 +256,18 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         best_count = 0
 
         for entry_size, definition_name in (
-            (self._ENTRY_SIZE_32BIT, "linux_libc6_utmp_entry"),
-            (self._ENTRY_SIZE_64BIT, "linux_libc6_utmp_entry_64bit"),
-            (self._ENTRY_SIZE_64BIT, "linux_libc6_utmp_entry_64bit_bigendian"),
+            (self._ENTRY_SIZE_32BIT, "linux_libc6_utmp_entry_32bit_little_endian"),
+            (self._ENTRY_SIZE_64BIT, "linux_libc6_utmp_entry_64bit_big_endian"),
+            (self._ENTRY_SIZE_64BIT, "linux_libc6_utmp_entry_64bit_little_endian"),
         ):
             if file_size < entry_size:
                 continue
 
             entry_map = self._GetDataTypeMap(definition_name)
 
-            # The first record must itself be a valid utmp record. Files that
-            # are not utmp files, such as executables, typically start with data
-            # that is not, which keeps the parser from claiming them.
+            # The first record must itself be a valid utmp record. Files that are not
+            # utmp files, such as executables, typically start with data that is not,
+            # which keeps the parser from claiming them.
             try:
                 first_entry, _ = self._ReadStructureFromFileObject(
                     file_object, 0, entry_map
@@ -328,7 +328,7 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
                 if file_size - file_offset < entry_size:
                     break
 
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"Unable to parse utmp entry at offset: 0x{file_offset:08x}, "
                     f"skipping record"
                 )
@@ -336,10 +336,13 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
                 file_object.seek(file_offset)
                 continue
 
-            parser_mediator.ProduceEventData(event_data)
+            corrupted = False
+            if warning_strings:
+                for warning_string in warning_strings:
+                    parser_mediator.ProduceWarning(warning_string)
+                corrupted = True
 
-            for warning_string in warning_strings:
-                parser_mediator.ProduceExtractionWarning(warning_string)
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
             file_offset = file_object.tell()
 

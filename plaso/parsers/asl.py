@@ -321,8 +321,9 @@ class ASLParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
             if last_log_entry_offset != file_header.last_log_entry_offset:
                 is_dirty = True
-                parser_mediator.ProduceRecoveryWarning(
-                    "last log entry offset does not match value in file header."
+                parser_mediator.ProduceWarning(
+                    "last log entry offset does not match value in file header.",
+                    recovered=True,
                 )
 
         event_data = ASLFileEventData()

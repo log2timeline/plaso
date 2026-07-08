@@ -40,7 +40,7 @@ attributes:
   size: 8
   units: bytes
 ---
-name: linux_libc6_utmp_entry
+name: linux_libc6_utmp_entry_32bit_little_endian
 type: structure
 attributes:
   byte_order: little-endian
@@ -82,13 +82,15 @@ members:
   element_data_type: byte
   number_of_elements: 20
 ---
-name: linux_libc6_utmp_entry_64bit
+name: linux_libc6_utmp_entry_64bit_big_endian
 type: structure
 attributes:
-  byte_order: little-endian
+  byte_order: big-endian
 members:
 - name: login_type
-  data_type: int32
+  data_type: int16
+- name: unknown0
+  data_type: int16
 - name: pid
   data_type: uint32
 - name: terminal
@@ -124,15 +126,13 @@ members:
   element_data_type: byte
   number_of_elements: 24
 ---
-name: linux_libc6_utmp_entry_64bit_bigendian
+name: linux_libc6_utmp_entry_64bit_little_endian
 type: structure
 attributes:
-  byte_order: big-endian
+  byte_order: little-endian
 members:
 - name: login_type
-  data_type: int16
-- name: unknown0
-  data_type: int16
+  data_type: int32
 - name: pid
   data_type: uint32
 - name: terminal

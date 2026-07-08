@@ -89,8 +89,8 @@ class WinRecycleBinParser(interface.FileObjectParser, dtfabric_helper.DtFabricHe
         """Parses a Windows Recycle.Bin metadata ($I) file-like object.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): file-like object.
 
         Raises:
@@ -120,6 +120,8 @@ class WinRecycleBinParser(interface.FileObjectParser, dtfabric_helper.DtFabricHe
                 f"Unsupported format version: {file_header.format_version:d}."
             )
 
+        corrupted = False
+
         event_data = WinRecycleBinEventData()
         event_data.file_size = file_header.original_file_size
 
@@ -128,16 +130,17 @@ class WinRecycleBinParser(interface.FileObjectParser, dtfabric_helper.DtFabricHe
                 file_object, file_header.format_version
             )
         except (ValueError, errors.ParseError) as exception:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unable to parse original filename with error: {exception!s}."
             )
+            corrupted = True
 
         if file_header.deletion_time:
             event_data.deletion_time = dfdatetime_filetime.Filetime(
                 timestamp=file_header.deletion_time
             )
 
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
 
 class WinRecyclerInfo2Parser(
@@ -178,9 +181,11 @@ class WinRecyclerInfo2Parser(
             )
         except (ValueError, errors.ParseError) as exception:
             raise errors.ParseError(
-                f"Unable to map record data at offset: 0x{record_offset:08x} "
-                f"with error: {exception!s}"
+                f"Unable to map record data at offset: 0x{record_offset:08x} with "
+                f"error: {exception!s}"
             )
+
+        corrupted = False
 
         code_page = parser_mediator.GetCodePage()
 
@@ -191,11 +196,12 @@ class WinRecyclerInfo2Parser(
         try:
             ascii_filename = ascii_filename.decode(code_page)
         except UnicodeDecodeError:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unable to decode original filename with code page: '{code_page:s}'. "
                 f"Unsupported code points are escaped."
             )
             ascii_filename = ascii_filename.decode(code_page, errors="backslashreplace")
+            corrupted = True
 
         unicode_filename = None
         if record_size > 280:
@@ -220,7 +226,7 @@ class WinRecyclerInfo2Parser(
         event_data.offset = record_offset
         event_data.record_index = record.index
 
-        if ascii_filename != unicode_filename:
+        if unicode_filename and unicode_filename != ascii_filename:
             event_data.short_filename = ascii_filename
 
         if record.deletion_time:
@@ -228,7 +234,7 @@ class WinRecyclerInfo2Parser(
                 timestamp=record.deletion_time
             )
 
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def ParseFileObject(self, parser_mediator, file_object):
         """Parses a Windows Recycler INFO2 file-like object.
@@ -262,12 +268,12 @@ class WinRecyclerInfo2Parser(
             )
 
         if file_header.unknown1 != 5:
-            parser_mediator.ProduceExtractionWarning("unsupported format signature.")
+            parser_mediator.ProduceWarning("unsupported format signature.")
             return
 
         file_entry_size = file_header.file_entry_size
         if file_entry_size not in (280, 800):
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unsupported file entry size: {file_entry_size:d}"
             )
             return
