@@ -48,8 +48,8 @@ class RestorePointLogParser(interface.FileObjectParser, dtfabric_helper.DtFabric
         """Parses a Windows Restore Point (rp.log) log file-like object.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): file-like object.
 
         Raises:
@@ -77,15 +77,15 @@ class RestorePointLogParser(interface.FileObjectParser, dtfabric_helper.DtFabric
                 file_object, file_footer_offset, file_footer_map
             )
         except (ValueError, errors.ParseError) as exception:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unable to parse file footer with error: {exception!s}"
             )
             return
 
         event_data = RestorePointEventData()
 
-        # The description in the file header includes the end-of-string character
-        # that we need to strip off.
+        # The description in the file header includes the end-of-string character that
+        # is removed.
         event_data.description = file_header.description.rstrip("\0")
         event_data.restore_point_event_type = file_header.event_type
         event_data.restore_point_type = file_header.restore_point_type

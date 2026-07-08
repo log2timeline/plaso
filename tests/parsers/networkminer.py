@@ -44,7 +44,6 @@ class NetworkMinerUnitTest(test_lib.ParserTestCase):
             "source_port": "TCP 80",
             "written_time": "2007-12-17T04:32:30.399052+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

@@ -84,24 +84,29 @@ class ShutdownWindowsRegistryPlugin(
         """Extracts events from a ShutdownTime Windows Registry value.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
         """
         shutdown_value = registry_key.GetValueByName("ShutdownTime")
         if shutdown_value:
-            event_data = ShutdownWindowsRegistryEventData()
-            event_data.key_path = registry_key.path
-            event_data.value_name = shutdown_value.name
+            corrupted = False
+            date_time = None
 
             try:
-                event_data.last_shutdown_time = self._ParseFiletime(shutdown_value.data)
+                date_time = self._ParseFiletime(shutdown_value.data)
             except errors.ParseError as exception:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"unable to determine shutdown timestamp with error: {exception!s}"
                 )
+                corrupted = True
 
-            parser_mediator.ProduceEventData(event_data)
+            event_data = ShutdownWindowsRegistryEventData()
+            event_data.key_path = registry_key.path
+            event_data.last_shutdown_time = date_time
+            event_data.value_name = shutdown_value.name
+
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
         self._ProduceDefaultWindowsRegistryEvent(
             parser_mediator, registry_key, names_to_skip=["ShutdownTime"]

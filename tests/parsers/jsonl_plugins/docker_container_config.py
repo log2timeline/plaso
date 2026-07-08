@@ -43,7 +43,6 @@ class DockerContainerLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
             "data_type": "docker:container:configuration",
             "start_time": "2016-01-07T16:49:08.674873+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

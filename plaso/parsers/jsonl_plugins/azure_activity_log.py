@@ -61,10 +61,11 @@ class AzureActivityLogJSONLPlugin(interface.JSONLPlugin):
         """Parses an Azure activity log record.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           json_dict (dict): JSON dictionary of the log record.
         """
+        corrupted = False
         date_time = None
 
         event_timestamp = self._GetJSONValue(json_dict, "event_timestamp")
@@ -73,11 +74,12 @@ class AzureActivityLogJSONLPlugin(interface.JSONLPlugin):
                 date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
                 date_time.CopyFromStringISO8601(event_timestamp)
             except ValueError as exception:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"Unable to parse time string: {event_timestamp:s} with error: "
                     f"{exception!s}"
                 )
                 date_time = None
+                corrupted = True
 
         event_name_json = self._GetJSONValue(json_dict, "event_name", default_value={})
         http_request_json = self._GetJSONValue(
@@ -92,7 +94,6 @@ class AzureActivityLogJSONLPlugin(interface.JSONLPlugin):
         operation_name_json = self._GetJSONValue(
             json_dict, "operation_name", default_value={}
         )
-
         event_data = AzureActivityLogEventData()
         event_data.caller = self._GetJSONValue(json_dict, "caller")
         event_data.client_ip = self._GetJSONValue(
@@ -120,7 +121,7 @@ class AzureActivityLogJSONLPlugin(interface.JSONLPlugin):
         )
         event_data.tenant_identifier = self._GetJSONValue(json_dict, "tenant_id")
 
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def CheckRequiredFormat(self, json_dict):
         """Check if the log record has the minimal structure required by the plugin.

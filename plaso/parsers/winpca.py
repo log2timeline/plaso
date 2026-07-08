@@ -77,8 +77,8 @@ class WindowsPCABaseParser(dsv_parser.DSVParser):
         """Verifies if a line of the file is in the expected format.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           row (dict[str, str]): fields of a single row, as specified in COLUMNS.
 
         Returns:
@@ -120,18 +120,22 @@ class WindowsPCADB0Parser(WindowsPCABaseParser):
         """Parses a line of the log file and produces events.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           row_offset (int): offset of the line from which the row was extracted.
           row (dict[str, str]): fields of a single row, as specified in COLUMNS.
         """
+        corrupted = False
+
         datetime_value = row["datetime"]
         try:
             last_execution_time = self._ParseDateTime(datetime_value)
         except errors.ParseError:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"Unsupported date and time string: {datetime_value!s}"
             )
+            last_execution_time = None
+            corrupted = True
 
         event_data = WindowsPCAEventData()
         event_data.description = row["description"]
@@ -143,7 +147,7 @@ class WindowsPCADB0Parser(WindowsPCABaseParser):
         event_data.vendor = row["vendor"]
         event_data.version = row["version"]
 
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
 
 class WindowsPCADicParser(WindowsPCABaseParser):
@@ -160,24 +164,28 @@ class WindowsPCADicParser(WindowsPCABaseParser):
         """Parses a line of the log file and produces events.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           row_offset (int): offset of the line from which the row was extracted.
           row (dict[str, str]): fields of a single row, as specified in COLUMNS.
         """
+        corrupted = False
+
         datetime_value = row["datetime"]
         try:
             last_execution_time = self._ParseDateTime(datetime_value)
         except errors.ParseError:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"Unsupported date and time string: {datetime_value!s}"
             )
+            last_execution_time = None
+            corrupted = True
 
         event_data = WindowsPCAEventData()
         event_data.executable = row["program"]
         event_data.last_execution_time = last_execution_time
 
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
 
 manager.ParsersManager.RegisterParsers([WindowsPCADicParser, WindowsPCADB0Parser])

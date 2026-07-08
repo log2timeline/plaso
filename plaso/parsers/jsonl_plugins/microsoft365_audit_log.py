@@ -18,8 +18,8 @@ class Microsoft365AuditLogEventData(events.EventData):
       operation_name (str): operation name.
       organization_identifier (str): organization identifier.
       record_type (int): record type.
-      recorded_time (dfdatetime.DateTimeValues): date and time the log entry
-          was recorded.
+      recorded_time (dfdatetime.DateTimeValues): date and time the log entry was
+          recorded.
       result_status (str): result status
       scope (str): scope.
       user_identifier (str): user identifier
@@ -59,10 +59,11 @@ class Microsoft365AuditLogJSONLPlugin(interface.JSONLPlugin):
         """Parses a Microsoft (Office) 365 audit log record.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           json_dict (dict): JSON dictionary of the log record.
         """
+        corrupted = False
         date_time = None
 
         creation_time = self._GetJSONValue(json_dict, "CreationTime")
@@ -71,11 +72,12 @@ class Microsoft365AuditLogJSONLPlugin(interface.JSONLPlugin):
                 date_time = dfdatetime_time_elements.TimeElements()
                 date_time.CopyFromStringISO8601(creation_time)
             except ValueError as exception:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"Unable to parse event time: {creation_time:s} with error: "
                     f"{exception!s}"
                 )
                 date_time = None
+                corrupted = True
 
         event_data = Microsoft365AuditLogEventData()
 
@@ -98,7 +100,7 @@ class Microsoft365AuditLogJSONLPlugin(interface.JSONLPlugin):
         event_data.user_type = self._GetJSONValue(json_dict, "UserType")
         event_data.workload = self._GetJSONValue(json_dict, "Workload")
 
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def CheckRequiredFormat(self, json_dict):
         """Check if the log record has the minimal structure required by the plugin.

@@ -21,21 +21,19 @@ class OpenXMLEventData(events.EventData):
       application (str): name of application that created document.
       application_version (str): version of application that created document.
       author (str): name of author.
-      creation_time (dfdatetime.DateTimeValues): creation date and time of
-          the document.
+      creation_time (dfdatetime.DateTimeValues): creation date and time of the document.
       digital_signature (str): digital signature.
       edit_duration (int): total editing time.
       hyperlinks_changed (bool): True if hyperlinks have changed.
-      last_printed_time (dfdatetime.DateTimeValues): date and time the document
-          was last printed.
+      last_printed_time (dfdatetime.DateTimeValues): date and time the document was last
+          printed.
       last_saved_by (str): name of user that last saved the document.
       links_up_to_date (bool): True if the links are up to date.
-      modification_time (dfdatetime.DateTimeValues): modification date and time
-          of the document.
-      number_of_characters (int): number of characters without spaces in
+      modification_time (dfdatetime.DateTimeValues): modification date and time of the
+          document.
+      number_of_characters (int): number of characters without spaces in the document.
+      number_of_characters_with_spaces (int): number of characters including spaces in
           the document.
-      number_of_characters_with_spaces (int): number of characters including
-          spaces in the document.
       number_of_clips (int): number of multi-media clips in the document.
       number_of_hidden_slides (int): number of hidden slides in the document.
       number_of_lines (int): number of lines in the document.
@@ -44,8 +42,8 @@ class OpenXMLEventData(events.EventData):
       number_of_slides (int): number of slides in the document.
       number_of_words (int): number of words in the document.
       revision_number (int): revision number.
-      scale (bool): True if scaling of the thumbnail is desired or false if
-          cropping is desired.
+      scale (bool): True if scaling of the thumbnail is desired or false if cropping is
+          desired.
       security_flags (int): security flags.
       shared_doc (bool): True if document is shared.
       template (str): name of the template used to created the document.
@@ -112,8 +110,8 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
         """Retrieves a property value.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           properties (dict[str, object]): properties.
           name (str): name of the property.
 
@@ -187,8 +185,8 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
         """Parses an ISO8601 date and time string.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           properties (dict[str, object]): properties.
           name (str): name of the property.
 
@@ -210,10 +208,8 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
             date_time.CopyFromStringISO8601(iso8601_string)
         except ValueError as exception:
             parser_mediator.ProduceExtractionWarning(
-                (
-                    f"Unable to parse value: {name:s} ISO8601 string: "
-                    f"{iso8601_string:s} with error: {exception!s}"
-                )
+                f"Unable to parse value: {name:s} ISO8601 string: "
+                f"{iso8601_string:s} with error: {exception!s}"
             )
             return None
 
@@ -282,8 +278,8 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
         """Parses an OXML file-like object.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           zip_file (zipfile.ZipFile): the zip file containing OXML content. It is
               not be closed in this method, but will be closed by the parser logic
                in czip.py.
@@ -303,10 +299,8 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
             zipfile.BadZipfile,
         ) as exception:
             parser_mediator.ProduceExtractionWarning(
-                (
-                    f"Unable to parse relationships XML file: _rels/.rels with error: "
-                    f"{exception!s}"
-                )
+                f"Unable to parse relationships XML file: _rels/.rels with error: "
+                f"{exception!s}"
             )
             return
 
@@ -328,10 +322,8 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
                 zipfile.BadZipfile,
             ) as exception:
                 parser_mediator.ProduceExtractionWarning(
-                    (
-                        f"Unable to parse properties XML file: {path:s} with error: "
-                        f"{exception!s}"
-                    )
+                    f"Unable to parse properties XML file: {path:s} with error: "
+                    f"{exception!s}"
                 )
                 continue
 
@@ -403,7 +395,6 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
         event_data.template = self._GetPropertyValue(
             parser_mediator, metadata, "template"
         )
-
         parser_mediator.ProduceEventData(event_data)
 
 

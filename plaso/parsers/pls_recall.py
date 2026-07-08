@@ -179,7 +179,7 @@ class PlsRecallParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper
                 if file_offset == 0:
                     raise errors.WrongParser("Unable to parse first record.")
 
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"unable to parse record at offset: 0x{file_offset:08x} with "
                     f"error: {exception!s}"
                 )
@@ -190,24 +190,27 @@ class PlsRecallParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper
             ):
                 raise errors.WrongParser("Verification of first record failed.")
 
+            corrupted = False
+
+            try:
+                date_time = self._ParseTDateTimeValue(pls_record.last_written_time)
+            except errors.ParseError:
+                parser_mediator.ProduceWarning(
+                    f"unable to parse TDateTime value of record at offset: "
+                    f"0x{file_offset:08x} with error: {exception!s}"
+                )
+                date_time = None
+                corrupted = True
+
             event_data = PlsRecallEventData()
             event_data.database_name = pls_record.database_name
             event_data.sequence_number = pls_record.sequence_number
             event_data.offset = file_offset
             event_data.query = pls_record.query
             event_data.username = pls_record.username
+            event_data.written_time = date_time
 
-            try:
-                event_data.written_time = self._ParseTDateTimeValue(
-                    pls_record.last_written_time
-                )
-            except errors.ParseError:
-                parser_mediator.ProduceExtractionWarning(
-                    f"unable to parse TDateTime value of record at offset: "
-                    f"0x{file_offset:08x} with error: {exception!s}"
-                )
-
-            parser_mediator.ProduceEventData(event_data)
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
             file_offset += record_data_size
 

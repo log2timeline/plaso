@@ -77,8 +77,8 @@ class BaseFirefoxCacheParser(interface.FileObjectParser):
         """Extract relevant information from HTTP header.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           http_headers_data (bytes): HTTP headers data.
           offset (int): offset of the cache record, relative to the start of
               the Firefox cache file.
@@ -89,7 +89,10 @@ class BaseFirefoxCacheParser(interface.FileObjectParser):
 
             str: HTTP request method or None if the value cannot be extracted.
             str: HTTP response code or None if the value cannot be extracted.
+            bool: value to indicate the HTTP header was corrupted.
         """
+        corrupted = False
+
         try:
             header_string = http_headers_data.decode("ascii")
         except UnicodeDecodeError:
@@ -98,12 +101,13 @@ class BaseFirefoxCacheParser(interface.FileObjectParser):
                 "escaped."
             )
             header_string = http_headers_data.decode("ascii", errors="backslashreplace")
+            corrupted = True
 
         try:
             http_header_start = header_string.index("request-method")
         except ValueError:
             logger.debug(f'No request method in header: "{header_string:s}"')
-            return None, None
+            return None, None, corrupted
 
         # HTTP request and response headers.
         http_headers = header_string[http_header_start::]
@@ -123,7 +127,7 @@ class BaseFirefoxCacheParser(interface.FileObjectParser):
             response_head_start = http_headers.index("response-head")
         except ValueError:
             logger.debug(f'No response head in header: "{header_string:s}"')
-            return request_method, None
+            return request_method, None, corrupted
 
         # HTTP response headers.
         response_head = http_headers[response_head_start::]
@@ -146,7 +150,7 @@ class BaseFirefoxCacheParser(interface.FileObjectParser):
                 f'HTTP response code. Response headers: "{header_string:s}".'
             )
 
-        return request_method, response_code
+        return request_method, response_code, corrupted
 
 
 class FirefoxCacheParser(BaseFirefoxCacheParser, dtfabric_helper.DtFabricHelper):
@@ -229,8 +233,8 @@ class FirefoxCacheParser(BaseFirefoxCacheParser, dtfabric_helper.DtFabricHelper)
         """Parses a cache entry.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): a file-like object.
           display_name (str): display name.
           block_size (int): block size.
@@ -290,7 +294,7 @@ class FirefoxCacheParser(BaseFirefoxCacheParser, dtfabric_helper.DtFabricHelper)
 
         file_offset += cache_entry_header.request_size
 
-        request_method, response_code = self._ParseHTTPHeaders(
+        request_method, response_code, corrupted = self._ParseHTTPHeaders(
             parser_mediator, cache_entry_body.information, file_offset, display_name
         )
 
@@ -329,7 +333,7 @@ class FirefoxCacheParser(BaseFirefoxCacheParser, dtfabric_helper.DtFabricHelper)
                     timestamp=cache_entry_header.expiration_time
                 )
 
-            parser_mediator.ProduceEventData(event_data)
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
         return cache_entry_header
 
@@ -354,8 +358,8 @@ class FirefoxCacheParser(BaseFirefoxCacheParser, dtfabric_helper.DtFabricHelper)
         """Parses a Firefox cache file-like object.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): a file-like object.
 
         Raises:
@@ -472,8 +476,8 @@ class FirefoxCache2Parser(BaseFirefoxCacheParser, dtfabric_helper.DtFabricHelper
         """Parses a Firefox cache file-like object.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): a file-like object.
 
         Raises:
@@ -505,21 +509,21 @@ class FirefoxCache2Parser(BaseFirefoxCacheParser, dtfabric_helper.DtFabricHelper
 
         url = file_object.read(file_metadata_header.key_size)
 
-        try:
-            url = url.decode("ascii")
-        except UnicodeDecodeError:
-            parser_mediator.ProduceExtractionWarning(
-                "unable to decode URL as ASCII. Unsupported code points are escaped."
-            )
-            url = url.decode("ascii", errors="backslashreplace")
-
         # Note that _MAXIMUM_FILE_SIZE prevents this read to become too large.
         http_headers_data = file_object.read()
 
         display_name = parser_mediator.GetDisplayName()
-        request_method, response_code = self._ParseHTTPHeaders(
+        request_method, response_code, corrupted = self._ParseHTTPHeaders(
             parser_mediator, http_headers_data[:-4], file_offset, display_name
         )
+        try:
+            url = url.decode("ascii")
+        except UnicodeDecodeError:
+            parser_mediator.ProduceWarning(
+                "unable to decode URL as ASCII. Unsupported code points are escaped."
+            )
+            url = url.decode("ascii", errors="backslashreplace")
+            corrupted = True
 
         event_data = FirefoxCacheEventData()
         event_data.fetch_count = file_metadata_header.fetch_count
@@ -543,7 +547,7 @@ class FirefoxCache2Parser(BaseFirefoxCacheParser, dtfabric_helper.DtFabricHelper
                 timestamp=file_metadata_header.expiration_time
             )
 
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
 
 manager.ParsersManager.RegisterParsers([FirefoxCacheParser, FirefoxCache2Parser])

@@ -38,8 +38,7 @@ class PlistParser(interface.FileObjectParser):
         Returns:
           tuple: containing:
 
-            int: size of the byte-order-mark or 0 if no byte-order-mark was
-                detected.
+            int: size of the byte-order-mark or 0 if no byte-order-mark was detected.
             str: encoding or ascii if no byte-order-mark was detected.
         """
         if plist_data.startswith(self._UTF32BE_BYTE_ORDER_MARK):
@@ -74,8 +73,8 @@ class PlistParser(interface.FileObjectParser):
         """Parses a plist file-like object.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): a file-like object.
 
         Raises:
@@ -131,7 +130,7 @@ class PlistParser(interface.FileObjectParser):
             # that contains an unsupported encoding.
             # ValueError will be raised in cases where the plist is an XML file
             # that contains an unsupported date and time value.
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unable to parse XML plist with error: {exception!s}"
             )
             return
@@ -140,18 +139,14 @@ class PlistParser(interface.FileObjectParser):
             # Do not produce an extraction warning for a binary plist without a top
             # level object or an XML plist with an empty top level object.
             if top_level_object is None and not is_binary_plist:
-                parser_mediator.ProduceExtractionWarning(
-                    (
-                        "unable to parse XML plist file with error: missing top level "
-                        "object"
-                    )
+                parser_mediator.ProduceWarning(
+                    "unable to parse XML plist file with error: missing top level "
+                    "object"
                 )
             return
 
         if has_leading_whitespace:
-            parser_mediator.ProduceExtractionWarning(
-                "XML plist file with leading whitespace"
-            )
+            parser_mediator.ProduceWarning("XML plist file with leading whitespace")
 
         display_name = parser_mediator.GetDisplayName()
         filename_lower_case = filename.lower()
@@ -177,7 +172,7 @@ class PlistParser(interface.FileObjectParser):
                 try:
                     required_format = plugin.CheckRequiredFormat(top_level_object)
                 except Exception as exception:  # pylint: disable=broad-except
-                    parser_mediator.ProduceExtractionWarning(
+                    parser_mediator.ProduceWarning(
                         f"plugin: {plugin_name:s} unable to parse plist file with "
                         f"error: {exception!s}"
                     )
@@ -187,8 +182,8 @@ class PlistParser(interface.FileObjectParser):
 
             if not path_filter_match or not required_format:
                 logger.debug(
-                    f"Skipped parsing file: {display_name:s} "
-                    f"with plugin: {plugin_name:s}"
+                    f"Skipped parsing file: {display_name:s} with plugin: "
+                    f"{plugin_name:s}"
                 )
                 continue
 
@@ -203,7 +198,7 @@ class PlistParser(interface.FileObjectParser):
                 found_matching_plugin = True
 
             except Exception as exception:  # pylint: disable=broad-except
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"plugin: {plugin_name:s} unable to parse plist file with error: "
                     f"{exception!s}"
                 )

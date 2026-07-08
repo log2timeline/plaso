@@ -9,13 +9,12 @@ class WindowsPushNotificationEventData(events.EventData):
     """Windows push notification event data.
 
     Attributes:
-      arrival_time (dfdatetime.DateTimeValues): date and time the push
-          notification was received.
+      arrival_time (dfdatetime.DateTimeValues): date and time the push notification was
+          received.
       boot_time (dfdatetime.DateTimeValues): date and time the of the last boot.
-      expiration_time (dfdatetime.DateTimeValues): date and time the push
-          notification expires.
-      handler_identifier (str): identifier of the corresponding notification
-          handler.
+      expiration_time (dfdatetime.DateTimeValues): date and time the push notification
+          expires.
+      handler_identifier (str): identifier of the corresponding notification handler.
       notification_type (str): notification type.
       payload (dfdatetime.DateTimeValues): payload.
     """
@@ -37,14 +36,13 @@ class WindowsPushNotificationHandlerEventData(events.EventData):
     """Windows push notification handler event data.
 
     Attributes:
-      creation_time (dfdatetime.DateTimeValues): date and time the push
-          notification handler was created.
+      creation_time (dfdatetime.DateTimeValues): date and time the push notification
+          handler was created.
       handler_type (str): handler type.
       identifier (str): identifier.
-      modification_time (dfdatetime.DateTimeValues): date and time the push
-          notification handler was last modified.
-      service_identifier (str): Windows Push Notification Service (WNS)
-          identifier.
+      modification_time (dfdatetime.DateTimeValues): date and time the push notification
+          handler was last modified.
+      service_identifier (str): Windows Push Notification Service (WNS) identifier.
     """
 
     DATA_TYPE = "windows:push_notification:notification_handler"
@@ -199,8 +197,8 @@ class WindowsPushNotificationPlugin(interface.SQLitePlugin):
         """Parses a row of the NotificationHandler table.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           query (str): query that created the row.
           row (sqlite3.Row): row.
         """
@@ -225,24 +223,36 @@ class WindowsPushNotificationPlugin(interface.SQLitePlugin):
         """Parses a row of the Notification table.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           query (str): query that created the row.
           row (sqlite3.Row): row.
         """
         query_hash = hash(query)
 
+        corrupted = True
+
         payload = None
         payload_type = self._GetRowValue(query_hash, row, "PayloadType")
 
-        if payload_type.lower() == "xml":
-            payload = self._GetRowValue(query_hash, row, "Payload")
-            payload = payload.decode("utf-8")
-            # TODO: parse payload
-        else:
-            parser_mediator.ProduceExtractionWarning(
+        if payload_type.lower() != "xml":
+            parser_mediator.ProduceWarning(
                 f"unsupported payload type: {payload_type:s}"
             )
+        else:
+            payload = self._GetRowValue(query_hash, row, "Payload")
+
+            try:
+                payload = payload.decode("utf-8")
+            except UnicodeDecodeError:
+                parser_mediator.ProduceWarning(
+                    "unable to decode payload as UTF-8. Unsupported code points are "
+                    "escaped."
+                )
+                payload = payload.decode("utf-8", errors="backslashreplace")
+                corrupted = True
+
+            # TODO: parse payload
 
         event_data = WindowsPushNotificationEventData()
         event_data.arrival_time = self._GeFiletimeRowValue(
@@ -256,7 +266,7 @@ class WindowsPushNotificationPlugin(interface.SQLitePlugin):
         event_data.notification_type = self._GetRowValue(query_hash, row, "Type")
         event_data.payload = payload
 
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
 
 sqlite.SQLiteParser.RegisterPlugin(WindowsPushNotificationPlugin)

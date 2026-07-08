@@ -181,7 +181,7 @@ class FseventsdParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper
                         file_object, file_offset
                     )
                 except errors.ParseError as exception:
-                    parser_mediator.ProduceExtractionWarning(
+                    parser_mediator.ProduceWarning(
                         f"Unable to parse page header with error: {exception!s}"
                     )
                     break
@@ -201,7 +201,7 @@ class FseventsdParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper
                 )
                 file_offset += record_length
             except (ValueError, errors.ParseError) as exception:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"Unable to parse page record with error: {exception!s}"
                 )
                 break

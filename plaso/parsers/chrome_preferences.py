@@ -109,41 +109,46 @@ class ChromePreferencesParser(interface.FileObjectParser):
           parser_mediator (ParserMediator): mediates interactions between parsers
               and other components, such as storage and dfVFS.
         """
-        for extension_id, extension in sorted(settings_dict.items()):
+        for extension_identifier, extension in sorted(settings_dict.items()):
+            corrupted = False
+            date_time = None
+
             install_time = extension.get("install_time")
             if not install_time:
-                parser_mediator.ProduceExtractionWarning(
-                    f"installation time missing for extension ID {extension_id!s}"
+                parser_mediator.ProduceWarning(
+                    f"missing installation time for extension identifier: "
+                    f"'{extension_identifier!s}'"
                 )
-                continue
-
-            try:
-                install_time = int(install_time, 10)
-            except ValueError:
-                parser_mediator.ProduceExtractionWarning(
-                    (
-                        f"unable to convert installation time for extension ID "
-                        f"{extension_id!s}"
+                corrupted = True
+            else:
+                try:
+                    install_time = int(install_time, 10)
+                    date_time = dfdatetime_webkit_time.WebKitTime(
+                        timestamp=install_time
                     )
-                )
-                continue
+                except ValueError:
+                    parser_mediator.ProduceWarning(
+                        f"unsupported to installation time: '{install_time!s}' for "
+                        f"extension identifier: '{extension_identifier!s}'"
+                    )
+                    corrupted = True
 
             manifest = extension.get("manifest")
             if not manifest:
-                parser_mediator.ProduceExtractionWarning(
-                    f"manifest missing for extension ID {extension_id!s}"
+                parser_mediator.ProduceWarning(
+                    f"manifest missing for extension identifier: "
+                    f"'{extension_identifier!s}'"
                 )
-                continue
+                manifest = {}
+                corrupted = True
 
             event_data = ChromeExtensionInstallationEventData()
-            event_data.extension_identifier = extension_id
+            event_data.extension_identifier = extension_identifier
             event_data.extension_name = manifest.get("name")
-            event_data.installation_time = dfdatetime_webkit_time.WebKitTime(
-                timestamp=install_time
-            )
+            event_data.installation_time = date_time
             event_data.path = extension.get("path")
 
-            parser_mediator.ProduceEventData(event_data)
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def _ExtractContentSettingsExceptions(self, exceptions_dict, parser_mediator):
         """Extracts site specific events.

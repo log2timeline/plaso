@@ -23,11 +23,10 @@ class UserAccessLoggingClientsEventsData(events.EventData):
 
     Attributes:
       access_time (dfdatetime.DateTimeValues): last access date and time.
-      authenticated_username (str): domain/user account name
-          performing the access.
+      authenticated_username (str): domain/user account name performing the access.
       client_name (str): client name, use unknown.
-      insert_time (dfdatetime.DateTimeValues): date and time the entry was
-          first inserted into the table.
+      insert_time (dfdatetime.DateTimeValues): date and time the entry was first
+          inserted into the table.
       role_identifier (str): identifier of the service accessed.
       role_name (str): Name of the service accessed.
       source_ip_address (str): source IP address.
@@ -216,8 +215,8 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
         """Parses a CLIENTS table.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           database (Optional[ESEDatabase]): ESE database.
           table (Optional[pyesedb.table]): table.
 
@@ -244,7 +243,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
                 break
 
             try:
-                record_values = self._GetRecordValues(
+                record_values, corrupted = self._GetRecordValues(
                     parser_mediator,
                     table.name,
                     record_index,
@@ -252,7 +251,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
                     value_mappings=self._CLIENTS_TABLE_VALUE_MAPPINGS,
                 )
             except (UnicodeDecodeError, ValueError):
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"Unable to retrieve record values from record: {record_index:d} "
                     f"in table: {table.name:s}"
                 )
@@ -277,7 +276,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
             event_data.tenant_identifier = record_values.get("TenantId")
             event_data.total_accesses = record_values.get("TotalAccesses")
 
-            parser_mediator.ProduceEventData(event_data)
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def ParseRoleAccessTable(
         self, parser_mediator, database=None, table=None, **unused_kwargs
@@ -285,8 +284,8 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
         """Parses a ROLE_ACCESS table.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           database (Optional[ESEDatabase]): ESE database.
           table (Optional[pyesedb.table]): table.
 
@@ -313,7 +312,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
                 break
 
             try:
-                record_values = self._GetRecordValues(
+                record_values, corrupted = self._GetRecordValues(
                     parser_mediator,
                     table.name,
                     record_index,
@@ -321,7 +320,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
                     value_mappings=self._ROLE_ACCESS_TABLE_VALUE_MAPPINGS,
                 )
             except (UnicodeDecodeError, ValueError):
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"Unable to retrieve record values from record: {record_index:d} "
                     f"in table: {table.name:s}"
                 )
@@ -338,8 +337,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
             event_data.role_name = self._role_mappings.get(
                 event_data.role_identifier, "Unknown"
             )
-
-            parser_mediator.ProduceEventData(event_data)
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def ParseDNSTable(
         self, parser_mediator, database=None, table=None, **unused_kwargs
@@ -347,8 +345,8 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
         """Parses a DNS table.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           database (Optional[ESEDatabase]): ESE database.
           table (Optional[pyesedb.table]): table.
 
@@ -366,7 +364,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
                 break
 
             try:
-                record_values = self._GetRecordValues(
+                record_values, corrupted = self._GetRecordValues(
                     parser_mediator,
                     table.name,
                     record_index,
@@ -374,7 +372,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
                     value_mappings=self._DNS_TABLE_VALUE_MAPPINGS,
                 )
             except (UnicodeDecodeError, ValueError):
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"Unable to retrieve record values from record: {record_index:d} "
                     f"in table: {table.name:s}"
                 )
@@ -386,7 +384,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
             event_data.last_seen_time = self._GetFiletimeRecordValue(
                 record_values, "LastSeen"
             )
-            parser_mediator.ProduceEventData(event_data)
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def ParseVirtualMachinesTable(
         self, parser_mediator, database=None, table=None, **unused_kwargs
@@ -394,8 +392,8 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
         """Parses a VIRTUALMACHINES table.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           database (Optional[ESEDatabase]): ESE database.
           table (Optional[pyesedb.table]): table.
 
@@ -413,7 +411,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
                 break
 
             try:
-                record_values = self._GetRecordValues(
+                record_values, corrupted = self._GetRecordValues(
                     parser_mediator,
                     table.name,
                     record_index,
@@ -421,7 +419,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
                     value_mappings=self._VIRTUALMACHINES_TABLE_VALUE_MAPPINGS,
                 )
             except (UnicodeDecodeError, ValueError):
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"Unable to retrieve record values from record: {record_index:d} "
                     f"in table: {table.name:s}"
                 )
@@ -438,14 +436,14 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
             event_data.serial_number = record_values.get("SerialNumber")
             event_data.vm_identifier = record_values.get("VMGuid")
 
-            parser_mediator.ProduceEventData(event_data)
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def _GetSystemIdentityDatabase(self, parser_mediator):
         """Locate SystemIdentity.mdb.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
 
         Returns:
           dfvfs.FileEntry: a file entry or None if the database cannot be located.
@@ -464,27 +462,25 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
         system_identity_file_path_spec = path_spec_factory.Factory.NewPathSpec(
             file_entry.path_spec.TYPE_INDICATOR, **kwargs
         )
-
-        system_identity_file_entry = None
         try:
-            system_identity_file_entry = path_spec_resolver.Resolver.OpenFileEntry(
+            return path_spec_resolver.Resolver.OpenFileEntry(
                 system_identity_file_path_spec
             )
         except RuntimeError as exception:
-            message = (
+            warning_message = (
                 f'Unable to open SystemIdentity.mdb file: {kwargs["location"]:s} '
                 f"with error: {exception!s}"
             )
-            parser_mediator.ProduceExtractionWarning(message)
+            parser_mediator.ProduceWarning(warning_message)
 
-        return system_identity_file_entry
+        return None
 
     def _ProcessSystemInformationDatabase(self, parser_mediator, file_entry):
         """Process SystemIdentity.mdb and extract Role GUID -> Role name mappings.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_entry (dfvfs.FileEntry): a file entry
         """
         file_object = file_entry.GetFileObject()
@@ -493,14 +489,14 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
         try:
             database.Open(file_object)
         except (OSError, ValueError) as exception:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unable to open SystemInformation.mdb with error: {exception!s}"
             )
             return
 
         role_ids_table = database.GetTableByName("ROLE_IDS")
         if not role_ids_table:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 "unable to get ROLE_IDS table in SystemInformation.mdb"
             )
         else:
@@ -510,7 +506,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
 
         system_identity_table = database.GetTableByName("SYSTEM_IDENTITY")
         if not system_identity_table:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 "unable to get SYSTEM_IDENTITY table in SystemInformation.mdb"
             )
         else:
@@ -526,8 +522,8 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
         """Parses a SystemIdentity.mdb ROLE_IDS table.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           database (Optional[ESEDatabase]): ESE database.
           table (Optional[pyesedb.table]): table.
 
@@ -544,7 +540,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
             if parser_mediator.abort:
                 break
             try:
-                record_values = self._GetRecordValues(
+                record_values, _ = self._GetRecordValues(
                     parser_mediator,
                     table.name,
                     record_index,
@@ -552,12 +548,13 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
                     value_mappings=self._ROLE_IDS_TABLE_VALUE_MAPPINGS,
                 )
             except (UnicodeDecodeError, ValueError):
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"Unable to retrieve record values from record: {record_index:d} "
                     f"in table: {table.name:s}"
                 )
                 continue
 
+            # TODO: make corrupted record values transparent to the user.
             role_identifier = record_values.get("RoleGuid")
             role_name = record_values.get("RoleName")
             if role_identifier and role_name:
@@ -569,8 +566,8 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
         """Parses a SystemIdentity.mdb SYSTEM_IDENTITY table.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           database (Optional[ESEDatabase]): ESE database.
           table (Optional[pyesedb.table]): table.
 
@@ -587,11 +584,11 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
             if parser_mediator.abort:
                 break
             try:
-                record_values = self._GetRecordValues(
+                record_values, corrupted = self._GetRecordValues(
                     parser_mediator, table.name, record_index, esedb_record
                 )
             except (UnicodeDecodeError, ValueError):
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"Unable to retrieve record values from record: {record_index:d} "
                     f"in table: {table.name:s}"
                 )
@@ -607,7 +604,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
             )
             event_data.system_domain_name = record_values.get("SystemDomainName", None)
 
-            parser_mediator.ProduceEventData(event_data)
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
 
 esedb.ESEDBParser.RegisterPlugin(UserAccessLoggingESEDBPlugin)

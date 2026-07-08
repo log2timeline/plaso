@@ -14,12 +14,10 @@ class DockerContainerConfigurationEventData(events.EventData):
       action (str): whether the container was created, started, or finished.
       container_identifier (str): identifier of the container (SHA256).
       container_name (str): name of the container.
-      creation_time (dfdatetime.DateTimeValues): date and time the container
-          was created (added).
-      end_time (dfdatetime.DateTimeValues): date and time the container
-          was stopped.
-      start_time (dfdatetime.DateTimeValues): date and time the container
-          was started.
+      creation_time (dfdatetime.DateTimeValues): date and time the container was created
+          (added).
+      end_time (dfdatetime.DateTimeValues): date and time the container was stopped.
+      start_time (dfdatetime.DateTimeValues): date and time the container was started.
     """
 
     DATA_TYPE = "docker:container:configuration"
@@ -49,46 +47,49 @@ class DockerContainerConfigurationJSONLPlugin(interface.JSONLPlugin):
         """Parses an ISO8601 date and time string.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           json_dict (dict): JSON dictionary.
           name (str): name of the value to retrieve.
 
         Returns:
-          dfdatetime.TimeElementsInMicroseconds: date and time value or None if
-              not available.
+          tuple: containing:
+
+              dfdatetime.TimeElementsInMicroseconds: date and time value or None if
+                  not available.
+              bool: value to indicate the date and time string was corrupted.
         """
         iso8601_string = self._GetJSONValue(json_dict, name)
         if not iso8601_string:
-            return None
+            return None, False
 
         # A FinishedAt date and time value of 0001-01-01T00:00:00Z represents
         # that the container is still running.
         if name == "FinishedAt" and iso8601_string == "0001-01-01T00:00:00Z":
-            return None
+            return None, False
 
         try:
             date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
             date_time.CopyFromStringISO8601(iso8601_string)
         except ValueError as exception:
             parser_mediator.ProduceExtractionWarning(
-                (
-                    f"Unable to parse value: {name:s} ISO8601 string: "
-                    f"{iso8601_string:s} with error: {exception!s}"
-                )
+                f"Unable to parse value: {name:s} ISO8601 string: "
+                f"{iso8601_string:s} with error: {exception!s}"
             )
-            return None
+            return None, True
 
-        return date_time
+        return date_time, False
 
     def _ParseRecord(self, parser_mediator, json_dict):
         """Parses a Docker container configuration record.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           json_dict (dict): JSON dictionary of the configuration record.
         """
+        corrupted = True
+
         json_state = self._GetJSONValue(json_dict, "State", default_value={})
         configuration = self._GetJSONValue(json_dict, "Config", default_value={})
 
@@ -97,17 +98,25 @@ class DockerContainerConfigurationJSONLPlugin(interface.JSONLPlugin):
         event_data.container_name = self._GetJSONValue(
             configuration, "Hostname", default_value="Unknown container name"
         )
-        event_data.creation_time = self._ParseISO8601DateTimeString(
+        event_data.creation_time, value_corrupted = self._ParseISO8601DateTimeString(
             parser_mediator, json_dict, "Created"
         )
-        event_data.end_time = self._ParseISO8601DateTimeString(
+        if value_corrupted:
+            corrupted = True
+
+        event_data.end_time, value_corrupted = self._ParseISO8601DateTimeString(
             parser_mediator, json_state, "FinishedAt"
         )
-        event_data.start_time = self._ParseISO8601DateTimeString(
+        if value_corrupted:
+            corrupted = True
+
+        event_data.start_time, value_corrupted = self._ParseISO8601DateTimeString(
             parser_mediator, json_state, "StartedAt"
         )
+        if value_corrupted:
+            corrupted = True
 
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def CheckRequiredFormat(self, json_dict):
         """Check if the record has the minimal structure required by the plugin.

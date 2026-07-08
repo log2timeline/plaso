@@ -110,10 +110,9 @@ class FileHistoryESEDBPlugin(interface.ESEDBPlugin):
             if parser_mediator.abort:
                 break
 
-            record_values = self._GetRecordValues(
+            record_values, corrupted = self._GetRecordValues(
                 parser_mediator, table.name, record_index, esedb_record
             )
-
             event_data = FileHistoryNamespaceEventData()
             event_data.creation_time = self._GetFiletimeRecordValue(
                 record_values, "fileCreated"
@@ -127,7 +126,7 @@ class FileHistoryESEDBPlugin(interface.ESEDBPlugin):
             event_data.parent_identifier = record_values.get("parentId")
             event_data.usn_number = record_values.get("usn")
 
-            parser_mediator.ProduceEventData(event_data)
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
 
 esedb.ESEDBParser.RegisterPlugin(FileHistoryESEDBPlugin)

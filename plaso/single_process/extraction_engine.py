@@ -118,7 +118,6 @@ class SingleProcessEngine(engine.BaseEngine):
                 file_system = path_spec_resolver.Resolver.OpenFileSystem(
                     file_system_path_spec, resolver_context=self._resolver_context
                 )
-
                 path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
                     file_system_path_spec,
                     find_specs=included_find_specs,
@@ -153,13 +152,10 @@ class SingleProcessEngine(engine.BaseEngine):
             # All exceptions need to be caught here to prevent the process
             # from being killed by an uncaught exception.
             except Exception as exception:  # pylint: disable=broad-except
-                parser_mediator.ProduceExtractionWarning(
-                    (
-                        f"unable to process path specification with error: "
-                        f"{exception!s}"
-                    ),
-                    file_system_path_spec,
+                warning_message = (
+                    f"unable to process path specification with error: {exception!s}"
                 )
+                parser_mediator.ProduceWarning(warning_message, file_system_path_spec)
 
     def _ProcessEventData(self):
         """Generate events from event data."""
@@ -193,19 +189,16 @@ class SingleProcessEngine(engine.BaseEngine):
                         event_data_stream_identifier,
                     )
                 )
-
                 if self._processing_profiler:
                     self._processing_profiler.StopTiming("get_event_data_stream")
 
             self._event_data_timeliner.ProcessEventData(
                 self._storage_writer, event_data, event_data_stream
             )
-
             self._number_of_consumed_event_data += 1
             self._number_of_produced_events += (
                 self._event_data_timeliner.number_of_produced_events
             )
-
             # TODO: track number of consumed event data containers?
 
             if self._processing_profiler:
@@ -270,7 +263,6 @@ class SingleProcessEngine(engine.BaseEngine):
             self._current_display_name = parser_mediator.GetDisplayNameForPathSpec(
                 path_spec
             )
-
             file_entry = path_spec_resolver.Resolver.OpenFileEntry(
                 path_spec, resolver_context=parser_mediator.resolver_context
             )
@@ -307,7 +299,7 @@ class SingleProcessEngine(engine.BaseEngine):
         # All exceptions need to be caught here to prevent the process
         # from being killed by an uncaught exception.
         except Exception as exception:  # pylint: disable=broad-except
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unable to process path specification with error: {exception!s}",
                 path_spec=path_spec,
             )
@@ -418,12 +410,11 @@ class SingleProcessEngine(engine.BaseEngine):
         Args:
           storage_writer (StorageWriter): storage writer for a session storage.
           resolver_context (dfvfs.Context): resolver context.
-          processing_configuration (ProcessingConfiguration): processing
-              configuration.
+          processing_configuration (ProcessingConfiguration): processing configuration.
           system_configurations (list[SystemConfigurationArtifact]): system
               configurations.
-          windows_event_log_providers (list[WindowsEventLogProviderArtifact]):
-              Windows EventLog providers.
+          windows_event_log_providers (list[WindowsEventLogProviderArtifact]): Windows
+              EventLog providers.
 
         Returns:
           ParserMediator: parser mediator.
