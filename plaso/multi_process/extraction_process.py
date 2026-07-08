@@ -35,12 +35,11 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
 
         Args:
           task_queue (PlasoQueue): task queue.
-          processing_configuration (ProcessingConfiguration): processing
-              configuration.
+          processing_configuration (ProcessingConfiguration): processing configuration.
           system_configurations (list[SystemConfigurationArtifact]): system
               configurations.
-          windows_event_log_providers (list[WindowsEventLogProviderArtifact]):
-              Windows EventLog providers.
+          windows_event_log_providers (list[WindowsEventLogProviderArtifact]): Windows
+              EventLog providers.
           registry_find_specs (list[dfwinreg.FindSpec]): Windows Registry find
               specifications.
           kwargs: keyword arguments to pass to multiprocessing.Process.
@@ -64,9 +63,9 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
     def _CacheFileSystem(self, file_system):
         """Caches a dfVFS file system object.
 
-        Keeping and additional reference to a dfVFS file system object causes the
-        object to remain cached in the resolver context. This minimizes the number
-        times the file system is re-opened.
+        Keeping and additional reference to a dfVFS file system object causes the object
+        to remain cached in the resolver context. This minimizes the number times the
+        file system is re-opened.
 
         Args:
           file_system (dfvfs.FileSystem): file system.
@@ -93,12 +92,11 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
 
         Args:
           resolver_context (dfvfs.Context): resolver context.
-          processing_configuration (ProcessingConfiguration): processing
-              configuration.
+          processing_configuration (ProcessingConfiguration): processing configuration.
           system_configurations (list[SystemConfigurationArtifact]): system
               configurations.
-          windows_event_log_providers (list[WindowsEventLogProviderArtifact]):
-              Windows EventLog providers.
+          windows_event_log_providers (list[WindowsEventLogProviderArtifact]): Windows
+              EventLog providers.
 
         Returns:
           ParserMediator: parser mediator.
@@ -108,7 +106,6 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
             resolver_context=resolver_context,
             system_configurations=system_configurations,
         )
-
         parser_mediator.SetExtractWinEvtResources(
             processing_configuration.extraction.extract_winevt_resources
         )
@@ -124,7 +121,6 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
         parser_mediator.SetTemporaryDirectory(
             processing_configuration.temporary_directory
         )
-
         parser_mediator.SetWindowsEventLogProviders(windows_event_log_providers)
 
         return parser_mediator
@@ -166,8 +162,7 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
         if self._memory_profiler:
             self._memory_profiler.Sample("main", used_memory)
 
-        # XML RPC does not support integer values > 2 GiB so we format them
-        # as a string.
+        # XML RPC does not support integer values > 2 GiB so we format them as a string.
         used_memory = f"{used_memory:d}"
 
         status = {
@@ -186,13 +181,12 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
             "task_identifier": task_identifier,
             "used_memory": used_memory,
         }
-
         return status
 
     def _Main(self):
         """The main loop."""
-        # We need a resolver context per process to prevent multi processing
-        # issues with file objects stored in images.
+        # We need a resolver context per process to prevent multi processing issues with
+        # file objects stored in images.
         self._resolver_context = context.Context()
 
         for credential_configuration in self._processing_configuration.credentials:
@@ -208,7 +202,6 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
             self._system_configurations,
             self._windows_event_log_providers,
         )
-
         # We need to initialize the parser and hasher objects after the process
         # has forked otherwise on Windows the "fork" will fail with
         # a PickleError for Python modules that cannot be pickled.
@@ -217,11 +210,9 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
                 self._processing_configuration.parser_filter_expression
             )
         )
-
         self._extraction_worker.SetExtractionConfiguration(
             self._processing_configuration.extraction
         )
-
         self._parser_mediator.StartProfiling(
             self._processing_configuration.profiling,
             self._name,
@@ -243,7 +234,6 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
             logger.debug(
                 f"{self._name!s} (PID: {self._pid:d}) started monitoring task queue."
             )
-
             while not self._abort:
                 try:
                     task = self._task_queue.PopItem()
@@ -268,10 +258,7 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
         # from being killed by an uncaught exception.
         except Exception as exception:  # pylint: disable=broad-except
             logger.warning(
-                (
-                    f"Unhandled exception in process: {self._name!s} "
-                    f"(PID: {self._pid:d})."
-                )
+                f"Unhandled exception in process: {self._name!s} (PID: {self._pid:d})."
             )
             logger.exception(exception)
 
@@ -308,7 +295,8 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
 
         Args:
           extraction_worker (worker.ExtractionWorker): extraction worker.
-          parser_mediator (ParserMediator): parser mediator.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           path_spec (dfvfs.PathSpec): path specification.
         """
         self._current_display_name = parser_mediator.GetDisplayNameForPathSpec(
@@ -335,7 +323,7 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
             extraction_worker.ProcessFileEntry(parser_mediator, file_entry)
 
         except Exception as exception:  # pylint: disable=broad-except
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unable to process path specification with error: {exception!s}",
                 path_spec=path_spec,
             )
@@ -364,7 +352,6 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
         task_storage_writer = self._storage_factory.CreateTaskStorageWriter(
             self._processing_configuration.task_storage_format
         )
-
         if self._serializers_profiler:
             task_storage_writer.SetSerializersProfiler(self._serializers_profiler)
 
@@ -381,7 +368,6 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
             session_identifier=task.session_identifier,
             task_identifier=task.identifier,
         )
-
         try:
             task_storage_writer.AddAttributeContainer(task)
 

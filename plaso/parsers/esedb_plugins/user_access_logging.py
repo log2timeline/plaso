@@ -23,11 +23,10 @@ class UserAccessLoggingClientsEventsData(events.EventData):
 
     Attributes:
       access_time (dfdatetime.DateTimeValues): last access date and time.
-      authenticated_username (str): domain/user account name
-          performing the access.
+      authenticated_username (str): domain/user account name performing the access.
       client_name (str): client name, use unknown.
-      insert_time (dfdatetime.DateTimeValues): date and time the entry was
-          first inserted into the table.
+      insert_time (dfdatetime.DateTimeValues): date and time the entry was first
+          inserted into the table.
       role_identifier (str): identifier of the service accessed.
       role_name (str): Name of the service accessed.
       source_ip_address (str): source IP address.
@@ -252,7 +251,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
                     value_mappings=self._CLIENTS_TABLE_VALUE_MAPPINGS,
                 )
             except (UnicodeDecodeError, ValueError):
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"Unable to retrieve record values from record: {record_index:d} "
                     f"in table: {table.name:s}"
                 )
@@ -321,7 +320,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
                     value_mappings=self._ROLE_ACCESS_TABLE_VALUE_MAPPINGS,
                 )
             except (UnicodeDecodeError, ValueError):
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"Unable to retrieve record values from record: {record_index:d} "
                     f"in table: {table.name:s}"
                 )
@@ -338,7 +337,6 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
             event_data.role_name = self._role_mappings.get(
                 event_data.role_identifier, "Unknown"
             )
-
             parser_mediator.ProduceEventData(event_data)
 
     def ParseDNSTable(
@@ -374,7 +372,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
                     value_mappings=self._DNS_TABLE_VALUE_MAPPINGS,
                 )
             except (UnicodeDecodeError, ValueError):
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"Unable to retrieve record values from record: {record_index:d} "
                     f"in table: {table.name:s}"
                 )
@@ -421,7 +419,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
                     value_mappings=self._VIRTUALMACHINES_TABLE_VALUE_MAPPINGS,
                 )
             except (UnicodeDecodeError, ValueError):
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"Unable to retrieve record values from record: {record_index:d} "
                     f"in table: {table.name:s}"
                 )
@@ -464,20 +462,18 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
         system_identity_file_path_spec = path_spec_factory.Factory.NewPathSpec(
             file_entry.path_spec.TYPE_INDICATOR, **kwargs
         )
-
-        system_identity_file_entry = None
         try:
-            system_identity_file_entry = path_spec_resolver.Resolver.OpenFileEntry(
+            return path_spec_resolver.Resolver.OpenFileEntry(
                 system_identity_file_path_spec
             )
         except RuntimeError as exception:
-            message = (
+            warning_message = (
                 f'Unable to open SystemIdentity.mdb file: {kwargs["location"]:s} '
                 f"with error: {exception!s}"
             )
-            parser_mediator.ProduceExtractionWarning(message)
+            parser_mediator.ProduceWarning(warning_message)
 
-        return system_identity_file_entry
+        return None
 
     def _ProcessSystemInformationDatabase(self, parser_mediator, file_entry):
         """Process SystemIdentity.mdb and extract Role GUID -> Role name mappings.
@@ -493,14 +489,14 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
         try:
             database.Open(file_object)
         except (OSError, ValueError) as exception:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unable to open SystemInformation.mdb with error: {exception!s}"
             )
             return
 
         role_ids_table = database.GetTableByName("ROLE_IDS")
         if not role_ids_table:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 "unable to get ROLE_IDS table in SystemInformation.mdb"
             )
         else:
@@ -510,7 +506,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
 
         system_identity_table = database.GetTableByName("SYSTEM_IDENTITY")
         if not system_identity_table:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 "unable to get SYSTEM_IDENTITY table in SystemInformation.mdb"
             )
         else:
@@ -552,7 +548,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
                     value_mappings=self._ROLE_IDS_TABLE_VALUE_MAPPINGS,
                 )
             except (UnicodeDecodeError, ValueError):
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"Unable to retrieve record values from record: {record_index:d} "
                     f"in table: {table.name:s}"
                 )
@@ -591,7 +587,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
                     parser_mediator, table.name, record_index, esedb_record
                 )
             except (UnicodeDecodeError, ValueError):
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"Unable to retrieve record values from record: {record_index:d} "
                     f"in table: {table.name:s}"
                 )

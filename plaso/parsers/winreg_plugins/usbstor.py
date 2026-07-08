@@ -20,18 +20,17 @@ class USBStorDeviceInstanceEventData(events.EventData):
 
     Attributes:
       device_display_name (str): display name of the USB device.
-      device_last_arrival_time (dfdatetime.DateTimeValues): date and time of
-          the device insertion.
-      device_last_removal_time (dfdatetime.DateTimeValues): date and time of
-          the removal insertion.
+      device_last_arrival_time (dfdatetime.DateTimeValues): date and time of the device
+          insertion.
+      device_last_removal_time (dfdatetime.DateTimeValues): date and time of the removal
+          insertion.
       device_type (str): type of USB device.
       key_path (str): Windows Registry key path.
-      driver_first_installation_time (dfdatetime.DateTimeValues): date and time of
-          when the device instance was first installed in the system
-      driver_last_installation_time (dfdatetime.DateTimeValues): date and time of
-          when the current device instance was installed in the system.
-      firmware_time (dfdatetime.DateTimeValues): date and time of
-          the firmware.
+      driver_first_installation_time (dfdatetime.DateTimeValues): date and time of when
+          the device instance was first installed in the system
+      driver_last_installation_time (dfdatetime.DateTimeValues): date and time of when
+          the current device instance was installed in the system.
+      firmware_time (dfdatetime.DateTimeValues): date and time of the firmware.
       product (str): product of the USB device.
       revision (str): revision number of the USB device.
       vendor (str): vendor of the USB device.
@@ -75,8 +74,8 @@ class USBStorPlugin(interface.WindowsRegistryPlugin, dtfabric_helper.DtFabricHel
         """Retrieves a property value data.
 
         Args:
-          property_value_key (dfwinreg.WinRegistryKey): property value Windows
-              Registry key.
+          property_value_key (dfwinreg.WinRegistryKey): property value Windows Registry
+              key.
           value_type (int): value type.
 
         Returns:
@@ -131,15 +130,15 @@ class USBStorPlugin(interface.WindowsRegistryPlugin, dtfabric_helper.DtFabricHel
             return self._ReadStructureFromByteStream(binary_data, 0, data_type_map)
         except (ValueError, errors.ParseError) as exception:
             raise errors.ParseError(
-                f"Unable to parse value: Type with error: {exception!s}"
+                f"Unable to parse value: 'Type' with error: {exception!s}"
             )
 
     def _ParseDeviceKey(self, parser_mediator, device_key):
         """Parses an USB storage device key.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           device_key (dfwinreg.WinRegistryKey): USB storage device Windows Registry
               key.
 
@@ -210,15 +209,15 @@ class USBStorPlugin(interface.WindowsRegistryPlugin, dtfabric_helper.DtFabricHel
         """Extracts events from a Windows Registry key.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
         """
         for device_key in registry_key.GetSubkeys():
             try:
                 self._ParseDeviceKey(parser_mediator, device_key)
             except (ValueError, errors.ParseError) as exception:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"unable to parse device key with error: {exception!s}"
                 )
                 continue
