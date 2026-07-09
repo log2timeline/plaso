@@ -109,12 +109,15 @@ class AzureApplicationGatewayAccessLogJSONLPlugin(interface.JSONLPlugin):
         """Parses an Azure application gateway access log record.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           json_dict (dict): JSON dictionary of the log record.
         """
         properties_json_dict = self._GetJSONValue(
             json_dict, "properties", default_value={}
+        )
+        date_time, corrupted = self._ParseISO8601DateTimeString(
+            parser_mediator, json_dict, "timeStamp"
         )
         event_data = AzureApplicationGatewayAccessEventData()
         event_data.client_ip = self._GetJSONValue(properties_json_dict, "clientIP")
@@ -140,9 +143,7 @@ class AzureApplicationGatewayAccessLogJSONLPlugin(interface.JSONLPlugin):
         event_data.received_bytes = self._GetJSONValue(
             properties_json_dict, "receivedBytes"
         )
-        event_data.recorded_time = self._ParseISO8601DateTimeString(
-            parser_mediator, json_dict, "timeStamp"
-        )
+        event_data.recorded_time = date_time
         event_data.request_query = self._GetJSONValue(
             properties_json_dict, "requestQuery"
         )
@@ -181,7 +182,7 @@ class AzureApplicationGatewayAccessLogJSONLPlugin(interface.JSONLPlugin):
         )
         event_data.waf_mode = self._GetJSONValue(properties_json_dict, "WAFMode")
 
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def CheckRequiredFormat(self, json_dict):
         """Check if the log record has the minimal structure required by the plugin.

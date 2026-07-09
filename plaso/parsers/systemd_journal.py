@@ -357,7 +357,8 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
         """Parses a key value pair.
 
         Args:
-          parser_mediator (ParserMediator): parser mediator.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           field_data (bytes): journal field data, which is "key=value" where the
               value can contain arbitrary binary (non-UTF-8) data.
 
@@ -409,7 +410,8 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
         This method will generate an event per ENTRY object.
 
         Args:
-          parser_mediator (ParserMediator): parser mediator.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): a file-like object.
           file_offset (int): offset of the entry object relative to the start
               of the file-like object.
@@ -458,13 +460,11 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
                 )
 
             field_data = self._ParseDataObject(file_object, entry_item.object_offset)
-            key, value, key_value_corrupted = self._ParseKeyValuePair(
+            key, value, value_corrupted = self._ParseKeyValuePair(
                 parser_mediator, field_data
             )
             fields[key] = value
-
-            if key_value_corrupted:
-                corrupted = True
+            corrupted = corrupted or value_corrupted
 
         return fields, corrupted
 
@@ -483,7 +483,8 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
         """Parses a Systemd journal file-like object.
 
         Args:
-          parser_mediator (ParserMediator): parser mediator.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): a file-like object.
 
         Raises:

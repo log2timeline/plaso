@@ -73,8 +73,8 @@ class DockerContainerConfigurationJSONLPlugin(interface.JSONLPlugin):
             date_time.CopyFromStringISO8601(iso8601_string)
         except ValueError as exception:
             parser_mediator.ProduceExtractionWarning(
-                f"Unable to parse value: {name:s} ISO8601 string: "
-                f"{iso8601_string:s} with error: {exception!s}"
+                f"Unable to parse value: {name:s} ISO8601 string: {iso8601_string:s} "
+                f"with error: {exception!s}"
             )
             return None, True
 
@@ -101,20 +101,17 @@ class DockerContainerConfigurationJSONLPlugin(interface.JSONLPlugin):
         event_data.creation_time, value_corrupted = self._ParseISO8601DateTimeString(
             parser_mediator, json_dict, "Created"
         )
-        if value_corrupted:
-            corrupted = True
+        corrupted = corrupted or value_corrupted
 
         event_data.end_time, value_corrupted = self._ParseISO8601DateTimeString(
             parser_mediator, json_state, "FinishedAt"
         )
-        if value_corrupted:
-            corrupted = True
+        corrupted = corrupted or value_corrupted
 
         event_data.start_time, value_corrupted = self._ParseISO8601DateTimeString(
             parser_mediator, json_state, "StartedAt"
         )
-        if value_corrupted:
-            corrupted = True
+        corrupted = corrupted or value_corrupted
 
         parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 

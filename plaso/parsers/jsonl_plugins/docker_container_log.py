@@ -48,8 +48,8 @@ class DockerContainerLogJSONLPlugin(interface.JSONLPlugin):
         """Extracts a container identifier from a path.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
 
         Returns:
           str: container identifier.
@@ -65,8 +65,8 @@ class DockerContainerLogJSONLPlugin(interface.JSONLPlugin):
         """Parses a Docker container log record.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           json_dict (dict): JSON dictionary of the log record.
         """
         if not self._container_identifier:
@@ -77,14 +77,16 @@ class DockerContainerLogJSONLPlugin(interface.JSONLPlugin):
         # TODO: escape special characters in the message body.
         message_body = self._GetJSONValue(json_dict, "log", default_value="")
 
+        date_time, corrupted = self._ParseISO8601DateTimeString(
+            parser_mediator, json_dict, "time"
+        )
         event_data = DockerContainerLogEventData()
         event_data.container_identifier = self._container_identifier
         event_data.message_body = message_body or None
         event_data.log_source = self._GetJSONValue(json_dict, "stream")
-        event_data.written_time = self._ParseISO8601DateTimeString(
-            parser_mediator, json_dict, "time"
-        )
-        parser_mediator.ProduceEventData(event_data)
+        event_data.written_time = date_time
+
+        parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def CheckRequiredFormat(self, json_dict):
         """Check if the log record has the minimal structure required by the plugin.
