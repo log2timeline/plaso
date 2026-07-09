@@ -65,34 +65,16 @@ class AzureActivityLogJSONLPlugin(interface.JSONLPlugin):
               other components, such as storage and dfVFS.
           json_dict (dict): JSON dictionary of the log record.
         """
-        corrupted = False
-        date_time = None
+        event_name_json = self._GetJSONValue(json_dict, "event_name") or {}
+        http_request_json = self._GetJSONValue(json_dict, "http_request") or {}
+        resource_provider_name_json = (
+            self._GetJSONValue(json_dict, "resource_provider_name") or {}
+        )
+        resource_type_json = self._GetJSONValue(json_dict, "resource_type") or {}
+        operation_name_json = self._GetJSONValue(json_dict, "operation_name") or {}
 
-        event_timestamp = self._GetJSONValue(json_dict, "event_timestamp")
-        if event_timestamp:
-            try:
-                date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
-                date_time.CopyFromStringISO8601(event_timestamp)
-            except ValueError as exception:
-                parser_mediator.ProduceWarning(
-                    f"Unable to parse time string: {event_timestamp:s} with error: "
-                    f"{exception!s}"
-                )
-                date_time = None
-                corrupted = True
-
-        event_name_json = self._GetJSONValue(json_dict, "event_name", default_value={})
-        http_request_json = self._GetJSONValue(
-            json_dict, "http_request", default_value={}
-        )
-        resource_provider_name_json = self._GetJSONValue(
-            json_dict, "resource_provider_name", default_value={}
-        )
-        resource_type_json = self._GetJSONValue(
-            json_dict, "resource_type", default_value={}
-        )
-        operation_name_json = self._GetJSONValue(
-            json_dict, "operation_name", default_value={}
+        date_time, corrupted = self._ParseISO8601DateTimeString(
+            parser_mediator, json_dict, "event_timestamp"
         )
         event_data = AzureActivityLogEventData()
         event_data.caller = self._GetJSONValue(json_dict, "caller")

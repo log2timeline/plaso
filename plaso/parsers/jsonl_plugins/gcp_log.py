@@ -61,6 +61,7 @@ class GCPLogEventData(events.EventData):
       status_reasons (list[str]): reasons for operation failure.
       text_payload (str): text payload for logs not using a JSON or proto payload.
       user_agent (str): user agent used in the request.
+      username (str): username.
     """
 
     DATA_TYPE = "gcp:log:entry"
@@ -109,6 +110,7 @@ class GCPLogEventData(events.EventData):
         self.status_reasons = None
         self.text_payload = None
         self.user_agent = None
+        self.username = None
 
 
 class GCPLogJSONLPlugin(interface.JSONLPlugin):
@@ -120,27 +122,6 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
     _USER_AGENT_COMMAND_RE = re.compile(r"command/([^\s]+)")
 
     _USER_AGENT_INVOCATION_ID_RE = re.compile(r"invocation-id/([^\s]+)")
-
-    def _ParseJSONPayload(self, json_dict, event_data):
-        """Extracts information from a jsonPayload value.
-
-        Args:
-          json_dict (dict): JSON dictionary of the log record.
-          event_data (GCPLogEventData): event data.
-        """
-        json_payload = self._GetJSONValue(json_dict, "jsonPayload")
-        if not json_payload:
-            return
-
-        event_data.container = self._GetJSONValue(json_payload, "container")
-        event_data.event_subtype = self._GetJSONValue(json_payload, "event_subtype")
-        event_data.event_type = self._GetJSONValue(json_payload, "event_type")
-        event_data.filename = self._GetJSONValue(json_payload, "filename")
-        event_data.message_body = self._GetJSONValue(json_payload, "message")
-
-        actor_json = self._GetJSONValue(json_payload, "actor")
-        if actor_json:
-            event_data.user = self._GetJSONValue(actor_json, "user")
 
     def _ParseAuthenticationInfo(self, proto_payload, event_data):
         """Extracts information from `protoPayload.authenticationInfo`.
@@ -331,35 +312,6 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
         if request_type == "type.googleapis.com/compute.instances.insert":
             self._ParseComputeInsertRequest(request, event_data)
 
-    def _ParseProtoPayload(self, json_dict, event_data):
-        """Extracts information from a protoPayload value.
-
-        Args:
-          json_dict (dict): JSON dictionary of the log record.
-          event_data (GCPLogEventData): event data.
-        """
-        proto_payload = self._GetJSONValue(json_dict, "protoPayload")
-        if not proto_payload:
-            return
-
-        event_data.service_name = self._GetJSONValue(proto_payload, "serviceName")
-        event_data.resource_name = self._GetJSONValue(proto_payload, "resourceName")
-
-        method_name = self._GetJSONValue(proto_payload, "methodName")
-        if method_name and not event_data.event_subtype:
-            event_data.event_subtype = method_name
-            event_data.method_name = method_name
-
-        self._ParseAuthenticationInfo(proto_payload, event_data)
-        self._ParseAuthorizationInfo(proto_payload, event_data)
-        self._ParseRequestMetadata(proto_payload, event_data)
-        self._ParseProtoPayloadStatus(proto_payload, event_data)
-        self._ParseProtoPayloadRequest(proto_payload, event_data)
-        self._ParseProtoPayloadServiceData(proto_payload, event_data)
-
-        if event_data.service_name == "compute.googleapis.com":
-            self._ParseComputeProtoPayload(proto_payload, event_data)
-
     def _ParseProtoPayloadRequest(self, proto_payload, event_data):
         """Extracts information from the request field of a protoPayload field.
 
@@ -387,15 +339,13 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
 
         firewall_rules = []
 
-        alloweds = self._GetJSONValue(request, "alloweds", default_value=[])
-        for allowed in alloweds:
+        for allowed in self._GetJSONValue(request, "alloweds") or []:
             ip_protocol = self._GetJSONValue(allowed, "IPProtocol")
             ports = self._GetJSONValue(allowed, "ports", default_value="all")
 
             firewall_rules.append(f"ALLOW: {ip_protocol:s} {ports!s}")
 
-        denieds = self._GetJSONValue(request, "denieds", default_value=[])
-        for denied in denieds:
+        for denied in self._GetJSONValue(request, "denieds") or []:
             ip_protocol = self._GetJSONValue(denied, "IPProtocol")
             ports = self._GetJSONValue(denied, "ports", default_value="all")
 
@@ -417,20 +367,14 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
           proto_payload (dict): JSON dictionary of the `protoPayload` value.
           event_data (GCPLogEventData): event data.
         """
-        service_data = self._GetJSONValue(proto_payload, "serviceData")
-        if not service_data:
-            return
-
-        policy_delta = self._GetJSONValue(service_data, "policyDelta")
-        if not policy_delta:
-            return
+        service_data = self._GetJSONValue(proto_payload, "serviceData") or {}
+        policy_delta = self._GetJSONValue(service_data, "policyDelta") or {}
 
         policy_deltas = []
 
-        binding_deltas = self._GetJSONValue(
-            policy_delta, "bindingDeltas", default_value=[]
-        )
-        for binding_delta_value in binding_deltas:
+        for binding_delta_value in (
+            self._GetJSONValue(policy_delta, "bindingDeltas") or []
+        ):
             action = self._GetJSONValue(binding_delta_value, "action") or "N/A"
             member = self._GetJSONValue(binding_delta_value, "member") or "N/A"
             role = self._GetJSONValue(binding_delta_value, "role") or "N/A"
@@ -443,28 +387,52 @@ class GCPLogJSONLPlugin(interface.JSONLPlugin):
         """Parses a Google Cloud (GCP) log record.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           json_dict (dict): JSON dictionary of the log record.
         """
-        resource = self._GetJSONValue(json_dict, "resource", default_value={})
-        labels = self._GetJSONValue(resource, "labels", default_value={})
+        resource = self._GetJSONValue(json_dict, "resource") or {}
+        labels = self._GetJSONValue(resource, "labels") or {}
+        json_payload = self._GetJSONValue(json_dict, "jsonPayload") or {}
+        proto_payload = self._GetJSONValue(json_dict, "protoPayload") or {}
+        actor = self._GetJSONValue(json_payload, "actor") or {}
 
         resource_labels = [f"{name:s}: {value!s}" for name, value in labels.items()]
 
-        event_data = GCPLogEventData()
-        event_data.log_name = self._GetJSONValue(json_dict, "logName")
-        event_data.recorded_time = self._ParseISO8601DateTimeString(
+        date_time, corrupted = self._ParseISO8601DateTimeString(
             parser_mediator, json_dict, "timestamp"
         )
+        event_data = GCPLogEventData()
+        event_data.container = self._GetJSONValue(json_payload, "container")
+        event_data.event_subtype = self._GetJSONValue(json_payload, "event_subtype")
+        event_data.event_type = self._GetJSONValue(json_payload, "event_type")
+        event_data.filename = self._GetJSONValue(json_payload, "filename")
+        event_data.log_name = self._GetJSONValue(json_dict, "logName")
+        event_data.message_body = self._GetJSONValue(json_payload, "message")
+        event_data.recorded_time = date_time
         event_data.resource_labels = resource_labels or None
+        event_data.resource_name = self._GetJSONValue(proto_payload, "resourceName")
+        event_data.service_name = self._GetJSONValue(proto_payload, "serviceName")
         event_data.severity = self._GetJSONValue(json_dict, "severity")
         event_data.text_payload = self._GetJSONValue(json_dict, "textPayload")
+        event_data.username = self._GetJSONValue(actor, "user")
 
-        self._ParseJSONPayload(json_dict, event_data)
-        self._ParseProtoPayload(json_dict, event_data)
+        method_name = self._GetJSONValue(proto_payload, "methodName")
+        if method_name and not event_data.event_subtype:
+            event_data.event_subtype = method_name
+            event_data.method_name = method_name
 
-        parser_mediator.ProduceEventData(event_data)
+        self._ParseAuthenticationInfo(proto_payload, event_data)
+        self._ParseAuthorizationInfo(proto_payload, event_data)
+        self._ParseRequestMetadata(proto_payload, event_data)
+        self._ParseProtoPayloadStatus(proto_payload, event_data)
+        self._ParseProtoPayloadRequest(proto_payload, event_data)
+        self._ParseProtoPayloadServiceData(proto_payload, event_data)
+
+        if event_data.service_name == "compute.googleapis.com":
+            self._ParseComputeProtoPayload(proto_payload, event_data)
+
+        parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def CheckRequiredFormat(self, json_dict):
         """Check if the log record has the minimal structure required by the plugin.

@@ -20,8 +20,8 @@ class AWSCloudTrailEventData(events.EventData):
       cloud_trail_event (str): CloudTrail event.
       event_name (str): event name.
       event_source (str): AWS service.
-      recorded_time (dfdatetime.DateTimeValues): date and time the log entry
-          was recorded.
+      recorded_time (dfdatetime.DateTimeValues): date and time the log entry was
+          recorded.
       resources (str): resources.
       source_ip (str): source IP address.
       user_identity_arn (str): AWS ARN of the user.
@@ -51,6 +51,38 @@ class AWSCloudTrailLogJSONLPlugin(interface.JSONLPlugin):
     NAME = "aws_cloudtrail_log"
     DATA_FORMAT = "AWS CloudTrail Log"
 
+    def _ParseDateTimeString(self, parser_mediator, json_dict, name):
+        """Parses a date and time string.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
+          json_dict (dict): JSON dictionary.
+          name (str): name of the value to retrieve.
+
+        Returns:
+          tuple: containing:
+
+              dfdatetime.TimeElementsInMicroseconds: date and time value or None if
+                  not available.
+              bool: value to indicate the date and time string was corrupted.
+        """
+        date_time_string = self._GetJSONValue(json_dict, name)
+        if not date_time_string:
+            return None, False
+
+        try:
+            date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+            date_time.CopyFromDateTimeString(date_time_string)
+        except ValueError as exception:
+            parser_mediator.ProduceWarning(
+                f"Unable to parse value: {name:s} date time string: "
+                f"{date_time_string:s} with error: {exception!s}"
+            )
+            return None, True
+
+        return date_time, False
+
     def _ParseRecord(self, parser_mediator, json_dict):
         """Parses an AWS CloudTrail log record.
 
@@ -59,19 +91,9 @@ class AWSCloudTrailLogJSONLPlugin(interface.JSONLPlugin):
               and other components, such as storage and dfVFS.
           json_dict (dict): JSON dictionary of the log record.
         """
-        date_time = None
-
-        event_time = self._GetJSONValue(json_dict, "EventTime")
-        if event_time:
-            try:
-                date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
-                date_time.CopyFromDateTimeString(event_time)
-            except ValueError as exception:
-                parser_mediator.ProduceExtractionWarning(
-                    f"Unable to parse EventTime value: {event_time:s} with error: "
-                    f"{exception!s}"
-                )
-                date_time = None
+        date_time, corrupted = self._ParseDateTimeString(
+            parser_mediator, json_dict, "EventTime"
+        )
 
         resource_list = self._GetJSONValue(json_dict, "Resources", default_value=[])
         # Flatten multiple resources into a string of resource names.
@@ -83,10 +105,11 @@ class AWSCloudTrailLogJSONLPlugin(interface.JSONLPlugin):
         try:
             cloud_trail_event_json = json.loads(cloud_trail_event)
         except json_decoder.JSONDecodeError as exception:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"Unable to decode CloudTrail event with error: {exception!s}"
             )
             cloud_trail_event_json = {}
+            corrupted = True
 
         user_identity_json = self._GetJSONValue(cloud_trail_event_json, "userIdentity")
 
@@ -106,7 +129,7 @@ class AWSCloudTrailLogJSONLPlugin(interface.JSONLPlugin):
         event_data.user_identity_arn = self._GetJSONValue(user_identity_json, "arn")
         event_data.username = self._GetJSONValue(json_dict, "Username")
 
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def CheckRequiredFormat(self, json_dict):
         """Check if the log record has the minimal structure required by the plugin.

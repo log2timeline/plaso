@@ -41,32 +41,33 @@ class JSONLPlugin(plugins.BasePlugin):
         """Parses an ISO8601 date and time string.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           json_dict (dict): JSON dictionary.
           name (str): name of the value to retrieve.
 
         Returns:
-          dfdatetime.TimeElementsInMicroseconds: date and time value or None if
-              not available.
+          tuple: containing:
+
+              dfdatetime.TimeElementsInMicroseconds: date and time value or None if
+                  not available.
+              bool: value to indicate the date and time string was corrupted.
         """
         iso8601_string = self._GetJSONValue(json_dict, name)
         if not iso8601_string:
-            return None
+            return None, False
 
         try:
             date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
             date_time.CopyFromStringISO8601(iso8601_string)
         except ValueError as exception:
-            parser_mediator.ProduceExtractionWarning(
-                (
-                    f"Unable to parse value: {name:s} ISO8601 string: "
-                    f"{iso8601_string:s} with error: {exception!s}"
-                )
+            parser_mediator.ProduceWarning(
+                f"Unable to parse value: {name:s} ISO8601 string: {iso8601_string:s} "
+                f"with error: {exception!s}"
             )
-            return None
+            return None, True
 
-        return date_time
+        return date_time, False
 
     @abc.abstractmethod
     def _ParseRecord(self, parser_mediator, json_dict):
@@ -76,8 +77,8 @@ class JSONLPlugin(plugins.BasePlugin):
         events.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           json_dict (dict): JSON dictionary of the log record.
         """
 
@@ -97,8 +98,8 @@ class JSONLPlugin(plugins.BasePlugin):
         """Extracts events from a JSON-L log file.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (Optional[dfvfs.FileIO]): a file-like object.
         """
         # This will raise if unhandled keyword arguments are passed.

@@ -290,7 +290,6 @@ class PstealToolTest(test_lib.CLIToolTestCase):
                 "",
                 "",
             ]
-
             output = output_writer.ReadOutput()
             self._CheckOutput(output, expected_output)
 

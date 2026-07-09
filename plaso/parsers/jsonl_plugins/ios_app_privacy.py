@@ -7,7 +7,7 @@ from plaso.parsers import jsonl_parser
 from plaso.parsers.jsonl_plugins import interface
 
 
-class IOSAppPrivacyAccessEvent(events.EventData):
+class IOSAppPrivacyAccessEventData(events.EventData):
     """iOS application privacy report event of type access.
 
     Attributes:
@@ -31,7 +31,7 @@ class IOSAppPrivacyAccessEvent(events.EventData):
         self.resource_identifier = None
 
 
-class IOSAppPrivacyNetworkEvent(events.EventData):
+class IOSAppPrivacyNetworkEventData(events.EventData):
     """iOS application privacy report event of type network activity.
 
     Attributes:
@@ -57,89 +57,73 @@ class IOSAppPrivacPlugin(interface.JSONLPlugin):
     NAME = "ios_application_privacy"
     DATA_FORMAT = "iOS Application Privacy report"
 
+    def _GetAccessRecordEventData(self, json_dict):
+        """Retrieves event data from a record of type access.
+
+        Args:
+          json_dict (dict): JSON dictionary of the record.
+
+        Returns:
+          IOSAppPrivacyAccessEventData: event data.
+        """
+        event_accessor = self._GetJSONValue(json_dict, "accessor") or {}
+
+        event_data = IOSAppPrivacyAccessEventData()
+        event_data.accessor_identifier = self._GetJSONValue(
+            event_accessor, "identifier"
+        )
+        event_data.accessor_identifier_type = self._GetJSONValue(
+            event_accessor, "identifierType"
+        )
+        event_data.resource_category = self._GetJSONValue(json_dict, "category")
+        event_data.resource_identifier = self._GetJSONValue(json_dict, "identifier")
+
+        return event_data
+
+    def _GetNetwordRecordEventData(self, json_dict):
+        """Retrieves event data from a record of type network.
+
+        Args:
+          json_dict (dict): JSON dictionary of the record.
+
+        Returns:
+          IOSAppPrivacyNetworkEventData: event data.
+        """
+        event_data = IOSAppPrivacyNetworkEventData()
+
+        event_data.bundle_identifier = self._GetJSONValue(json_dict, "bundleID")
+        event_data.domain = self._GetJSONValue(json_dict, "domain")
+
+        return event_data
+
     def _ParseRecord(self, parser_mediator, json_dict):
         """Parses an iOS application privacy report record.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           json_dict (dict): JSON dictionary of the log record.
         """
         event_type = self._GetJSONValue(json_dict, "type")
         if not event_type:
-            parser_mediator.ProduceExtractionWarning("Missing event type.")
+            parser_mediator.ProduceWarning("Missing event type.")
             return
 
         if event_type not in ("access", "networkActivity"):
-            parser_mediator.ProduceExtractionWarning(
-                f"Unsupported event type: {event_type:s}."
-            )
+            parser_mediator.ProduceWarning(f"Unsupported event type: {event_type:s}.")
             return
 
-        date_time = None
-
-        event_timestamp = self._GetJSONValue(json_dict, "timeStamp")
-        if event_timestamp:
-            try:
-                date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
-                date_time.CopyFromStringISO8601(event_timestamp)
-            except ValueError as exception:
-                parser_mediator.ProduceExtractionWarning(
-                    f"Unable to parse time string: {event_timestamp:s} with error: "
-                    f"{exception!s}"
-                )
-                date_time = None
-
+        date_time, corrupted = self._ParseISO8601DateTimeString(
+            parser_mediator, json_dict, "timeStamp"
+        )
         if event_type == "access":
-            event_data = self._ParseRecordAccess(json_dict)
+            event_data = self._GetAccessRecordEventData(json_dict)
         else:
-            event_data = self._ParseRecordNetwork(json_dict)
+            event_data = self._GetNetwordRecordEventData(json_dict)
 
         event_data.recorded_time = date_time
 
-        parser_mediator.ProduceEventData(event_data)
-
-    def _ParseRecordAccess(self, json_dict):
-        """Parses an iOS application privacy report record of type access.
-
-        Args:
-          json_dict (dict): JSON dictionary of the log record.
-
-        Returns:
-          IOSAppPrivacyAccess: populated event.
-        """
-        event_data = IOSAppPrivacyAccessEvent()
-
-        event_accessor = self._GetJSONValue(json_dict, "accessor")
-        if event_accessor:
-            event_data.accessor_identifier = self._GetJSONValue(
-                event_accessor, "identifier"
-            )
-            event_data.accessor_identifier_type = self._GetJSONValue(
-                event_accessor, "identifierType"
-            )
-
-        event_data.resource_identifier = self._GetJSONValue(json_dict, "identifier")
-
-        event_data.resource_category = self._GetJSONValue(json_dict, "category")
-
-        return event_data
-
-    def _ParseRecordNetwork(self, json_dict):
-        """Parses an iOS application privacy report record of type network activity.
-
-        Args:
-          json_dict (dict): JSON dictionary of the log record.
-
-        Returns:
-          IOSAppPrivacyNetwork: populated event.
-        """
-        event_data = IOSAppPrivacyNetworkEvent()
-
-        event_data.domain = self._GetJSONValue(json_dict, "domain")
-        event_data.bundle_identifier = self._GetJSONValue(json_dict, "bundleID")
-
-        return event_data
+        parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def CheckRequiredFormat(self, json_dict):
         """Check if the log record has the minimal structure required by the plugin.
