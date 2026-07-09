@@ -19,8 +19,7 @@ class CCleanerConfigurationEventData(events.EventData):
     Attributes:
       configuration (str): CCleaner configuration.
       key_path (str): Windows Registry key path.
-      last_written_time (dfdatetime.DateTimeValues): entry last written date and
-          time.
+      last_written_time (dfdatetime.DateTimeValues): entry last written date and time.
     """
 
     DATA_TYPE = "ccleaner:configuration"
@@ -38,8 +37,8 @@ class CCleanerUpdateEventData(events.EventData):
 
     Attributes:
       key_path (str): Windows Registry key path.
-      update_time (dfdatetime.DateTimeValues): date and time CCleaner last
-          checked for an update.
+      update_time (dfdatetime.DateTimeValues): date and time CCleaner last checked for
+          an update.
     """
 
     DATA_TYPE = "ccleaner:update"
@@ -77,31 +76,29 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
         """Parses the UpdateKey value.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           registry_value (dfwinreg.WinRegistryValue): Windows Registry value.
 
         Returns:
-          dfdatetime_time_elements.TimeElements: date and time value or None
-              if not available.
+          dfdatetime_time_elements.TimeElements: date and time value or None if not
+              available.
         """
         if not registry_value.DataIsString():
-            parser_mediator.ProduceExtractionWarning(
-                (
-                    f"unsupported UpdateKey value data type: "
-                    f"{registry_value.data_type_string:s}"
-                )
+            parser_mediator.ProduceWarning(
+                f"unsupported UpdateKey value data type: "
+                f"{registry_value.data_type_string:s}"
             )
             return None
 
         date_time_string = registry_value.GetDataAsObject()
         if not date_time_string:
-            parser_mediator.ProduceExtractionWarning("missing UpdateKey value data")
+            parser_mediator.ProduceWarning("missing UpdateKey value data")
             return None
 
         re_match = self._UPDATE_DATE_TIME_RE.match(date_time_string)
         if not re_match:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unsupported UpdateKey value data: {date_time_string!s}"
             )
             return None
@@ -109,7 +106,6 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
         month, day_of_month, year, hours, minutes, seconds, part_of_day = (
             re_match.groups()
         )
-
         try:
             year = int(year, 10)
             month = int(month, 10)
@@ -118,7 +114,7 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
             minutes = int(minutes, 10)
             seconds = int(seconds, 10)
         except (TypeError, ValueError):
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"invalid UpdateKey date time value: {date_time_string!s}"
             )
             return None
@@ -134,7 +130,7 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
             )
             date_time.is_local_time = True
         except ValueError:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"invalid UpdateKey date time value: {time_elements_tuple!s}"
             )
             return None
@@ -145,8 +141,8 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
         """Extracts events from a Windows Registry key.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
         """
         configuration = []

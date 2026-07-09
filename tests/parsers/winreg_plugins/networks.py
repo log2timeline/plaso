@@ -213,9 +213,8 @@ class NetworksWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_LOCAL_MACHINE\\Software",
-            ("Microsoft\\Windows NT\\CurrentVersion\\NetworkList"),
+            "Microsoft\\Windows NT\\CurrentVersion\\NetworkList",
         )
-
         self._AssertNotFiltersOnKeyPath(plugin, "HKEY_LOCAL_MACHINE\\Software", "Bogus")
 
     def testProcess(self):
@@ -240,23 +239,20 @@ class NetworksWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         )
         self.assertEqual(number_of_warnings, 0)
 
-        expected_key_path = (
-            "HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion\\"
-            "Profiles\\{C1C57B58-BFE2-428B-818C-9D69A873AD3D}"
-        )
-
         expected_event_values = {
             "connection_type": 6,
             "creation_time": "2014-05-06T17:02:19.795+00:00",
             "data_type": "windows:registry:network",
-            "default_gateway_mac": "00:50:56:ea:6c:ec",
+            "default_gateway_mac_address": "00:50:56:ea:6c:ec",
             "description": "Network",
             "dns_suffix": "localdomain",
-            "key_path": expected_key_path,
+            "key_path": (
+                "HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion\\"
+                "Profiles\\{C1C57B58-BFE2-428B-818C-9D69A873AD3D}"
+            ),
             "last_connected_time": "2014-05-06T17:07:54.010+00:00",
             "ssid": "Network",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 

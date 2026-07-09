@@ -72,7 +72,7 @@ class DockerContainerConfigurationJSONLPlugin(interface.JSONLPlugin):
             date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
             date_time.CopyFromStringISO8601(iso8601_string)
         except ValueError as exception:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"Unable to parse value: {name:s} ISO8601 string: {iso8601_string:s} "
                 f"with error: {exception!s}"
             )

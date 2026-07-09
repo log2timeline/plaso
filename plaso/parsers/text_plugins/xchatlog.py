@@ -65,11 +65,9 @@ class XChatLogEventData(events.EventData):
     """XChat Log event data.
 
     Attributes:
-      added_time (dfdatetime.DateTimeValues): date and time the log entry
-          was added.
+      added_time (dfdatetime.DateTimeValues): date and time the log entry was added.
       nickname (str): nickname.
-      text (str): text sent by nickname or other text, such as 'server' or
-          'messages'.
+      text (str): text sent by nickname or other text, such as 'server' or 'messages'.
     """
 
     DATA_TYPE = "xchat:log:line"
@@ -190,10 +188,10 @@ class XChatLogTextPlugin(interface.TextPlugin, dateless_helper.DateLessLogFormat
         """Parses a log line.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
-          structure (pyparsing.ParseResults): structure of tokens derived from
-              a line of a text file.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
+          structure (pyparsing.ParseResults): structure of tokens derived from a line
+              of a text file.
         """
         if not self._year:
             return
@@ -201,8 +199,8 @@ class XChatLogTextPlugin(interface.TextPlugin, dateless_helper.DateLessLogFormat
         time_elements_structure = self._GetValueFromStructure(structure, "date_time")
 
         text = self._GetValueFromStructure(structure, "text")
-        # The text string contains multiple unnecessary whitespaces that need to
-        # be removed, thus the split and re-join.
+        # The text string contains multiple unnecessary whitespaces that need to be
+        # removed, thus the split and re-join.
         text = " ".join(text.split())
 
         event_data = XChatLogEventData()
@@ -216,8 +214,8 @@ class XChatLogTextPlugin(interface.TextPlugin, dateless_helper.DateLessLogFormat
         """Parses a pyparsing structure.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           key (str): name of the parsed structure.
           structure (pyparsing.ParseResults): tokens from a parsed log line.
 
@@ -234,20 +232,19 @@ class XChatLogTextPlugin(interface.TextPlugin, dateless_helper.DateLessLogFormat
         """Parses a section header line.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
-          structure (pyparsing.ParseResults): structure of tokens derived from
-              a line of a text file.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
+          structure (pyparsing.ParseResults): structure of tokens derived from a line
+              of a text file.
         """
         time_elements_structure = self._GetValueFromStructure(structure, "date_time")
 
         log_action = self._GetValueFromStructure(
             structure, "log_action", default_value=[]
         )
-
         if log_action[0] not in ("BEGIN", "END"):
             log_action_string = " ".join(log_action)
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unsupported log action: {log_action_string:s}"
             )
             self._year = None
@@ -268,22 +265,21 @@ class XChatLogTextPlugin(interface.TextPlugin, dateless_helper.DateLessLogFormat
         """Parses date and time elements of a log line.
 
         Args:
-          time_elements_structure (pyparsing.ParseResults): date and time elements
-              of a log line.
+          time_elements_structure (pyparsing.ParseResults): date and time elements of
+              a log line.
 
         Returns:
           dfdatetime.TimeElements: date and time value.
 
         Raises:
-          ParseError: if a valid date and time value cannot be derived from
-              the time elements.
+          ParseError: if a valid date and time value cannot be derived from the time
+              elements.
         """
         try:
             if len(time_elements_structure) == 5:
                 month_string, day_of_month, hours, minutes, seconds = (
                     time_elements_structure
                 )
-
                 month = self._GetMonthFromString(month_string)
 
                 # Use year-less helper to ensure a change in year is accounted for.
@@ -295,7 +291,6 @@ class XChatLogTextPlugin(interface.TextPlugin, dateless_helper.DateLessLogFormat
                 _, month_string, day_of_month, hours, minutes, seconds, year = (
                     time_elements_structure
                 )
-
                 month = self._GetMonthFromString(month_string)
 
                 self._SetMonthAndYear(month, year)
@@ -307,7 +302,6 @@ class XChatLogTextPlugin(interface.TextPlugin, dateless_helper.DateLessLogFormat
             date_time = dfdatetime_time_elements.TimeElements(
                 time_elements_tuple=time_elements_tuple
             )
-
             date_time.is_local_time = True
 
             return date_time
@@ -321,8 +315,8 @@ class XChatLogTextPlugin(interface.TextPlugin, dateless_helper.DateLessLogFormat
         """Check if the log record has the minimal structure required by the plugin.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           text_reader (EncodedTextReader): text reader.
 
         Returns:

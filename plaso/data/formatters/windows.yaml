@@ -611,15 +611,15 @@ enumeration_helpers:
 message:
 - 'SSID: {ssid}'
 - 'Description: {description}'
-- 'Connection Type: {connection_type}'
-- 'Default Gateway Mac: {default_gateway_mac}'
-- 'DNS Suffix: {dns_suffix}'
+- 'Connection type: {connection_type}'
+- 'Default gateway MAC address: {default_gateway_mac_address}'
+- 'DNS suffix: {dns_suffix}'
 short_message:
 - 'SSID: {ssid}'
 - 'Description: {description}'
-- 'Connection Type: {connection_type}'
-- 'Default Gateway Mac: {default_gateway_mac}'
-- 'DNS Suffix: {dns_suffix}'
+- 'Connection type: {connection_type}'
+- 'Default gateway MAC address: {default_gateway_mac_address}'
+- 'DNS suffix: {dns_suffix}'
 short_source: 'REG'
 source: 'Network Connection Registry Key'
 ---
