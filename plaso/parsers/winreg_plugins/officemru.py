@@ -14,8 +14,7 @@ class OfficeMRUWindowsRegistryEventData(events.EventData):
 
     Attributes:
       key_path (str): Windows Registry key path.
-      last_written_time (dfdatetime.DateTimeValues): entry last written date and
-          time.
+      last_written_time (dfdatetime.DateTimeValues): entry last written date and time.
       value_string (str): MRU value.
     """
 
@@ -35,8 +34,7 @@ class OfficeMRUListWindowsRegistryEventData(events.EventData):
     Attributes:
       entries (str): most recently used (MRU) entries.
       key_path (str): Windows Registry key path.
-      last_written_time (dfdatetime.DateTimeValues): entry last written date and
-          time.
+      last_written_time (dfdatetime.DateTimeValues): entry last written date and time.
     """
 
     DATA_TYPE = "windows:registry:office_mru_list"
@@ -105,8 +103,8 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
         """Extracts events from a Windows Registry key.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
         """
         # TODO: Test other Office versions to make sure this plugin is applicable.
@@ -129,14 +127,14 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
             if len(values) != 1 or len(values[0]) != 2:
                 continue
 
+            filetime_string, _ = values[0]
+
             try:
-                timestamp = int(values[0][0], 16)
+                timestamp = int(filetime_string, 16)
             except ValueError:
-                parser_mediator.ProduceExtractionWarning(
-                    (
-                        f"unable to convert filetime string to an integer for "
-                        f"value: {registry_value.name:s}."
-                    )
+                parser_mediator.ProduceWarning(
+                    f"unable to convert FILETIME string: '{filetime_string:s}' to an "
+                    f"integer for value: '{registry_value.name:s}'."
                 )
                 continue
 

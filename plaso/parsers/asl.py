@@ -91,11 +91,10 @@ class ASLParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         """Parses a record and produces events.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (file): file-like object.
-          record_offset (int): offset of the record relative to the start of
-              the file.
+          record_offset (int): offset of the record relative to the start of the file.
 
         Returns:
           int: next record offset.
@@ -278,8 +277,8 @@ class ASLParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         """Parses an ASL file-like object.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): file-like object.
 
         Raises:
@@ -311,7 +310,7 @@ class ASLParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
                         parser_mediator, file_object, file_offset
                     )
                 except errors.ParseError as exception:
-                    parser_mediator.ProduceExtractionWarning(
+                    parser_mediator.ProduceWarning(
                         f"unable to parse record with error: {exception!s}"
                     )
                     return

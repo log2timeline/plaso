@@ -22,13 +22,12 @@ class TrendMicroAVEventData(events.EventData):
     Attributes:
       action (str): action.
       filename (str): filename.
-      offset (int): offset of the line relative to the start of the file, from
-          which the event data was extracted.
+      offset (int): offset of the line relative to the start of the file, from which
+          the event data was extracted.
       path (str): path.
       scan_type (str): scan_type.
       threat (str): threat.
-      written_time (dfdatetime.DateTimeValues): date and time the log entry was
-          written.
+      written_time (dfdatetime.DateTimeValues): date and time the log entry was written.
     """
 
     DATA_TYPE = "av:trendmicro:scan"
@@ -56,8 +55,8 @@ class TrendMicroUrlEventData(events.EventData):
       group_code (str): group code.
       group_name (str): group name.
       ip (str): IP address.
-      offset (int): offset of the line relative to the start of the file, from
-          which the event data was extracted.
+      offset (int): offset of the line relative to the start of the file, from which
+          the event data was extracted.
       policy_identifier (int): policy identifier.
       threshold (int): threshold value.
       url (str): accessed URL.
@@ -130,45 +129,6 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
                 )
             yield dict(zip(self.COLUMNS, values))
 
-    def _ParseTimestamp(self, parser_mediator, row):
-        """Provides a timestamp for the given row.
-
-        If the Trend Micro log comes from a version that provides a POSIX timestamp,
-        use that directly; it provides the advantages of UTC and of second
-        precision. Otherwise fall back onto the local-timezone date and time.
-
-        Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
-          row (dict[str, str]): fields of a single row, as specified in COLUMNS.
-
-        Returns:
-          dfdatetime.interface.DateTimeValue: date and time value or None.
-        """
-        timestamp = row.get("timestamp")
-        if timestamp is not None:
-            try:
-                timestamp = int(timestamp, 10)
-            except (ValueError, TypeError):
-                parser_mediator.ProduceExtractionWarning(
-                    f"Unable to parse timestamp value: {timestamp!s}"
-                )
-            return dfdatetime_posix_time.PosixTime(timestamp=timestamp)
-
-        # The timestamp is not available; parse the local date and time instead.
-        date_value = row["date"]
-        time_value = row["time"]
-        try:
-            date_time = self._ConvertToTimestamp(date_value, time_value)
-        except ValueError as exception:
-            parser_mediator.ProduceExtractionWarning(
-                f'Unable to parse time string: "{date_value!s} {time_value!s}" with '
-                f"error: {exception!s}"
-            )
-            date_time = None
-
-        return date_time
-
     def _ConvertToTimestamp(self, date, time):
         """Converts date and time strings into a timestamp.
 
@@ -218,6 +178,51 @@ class TrendMicroBaseParser(dsv_parser.DSVParser):
 
         return date_time
 
+    def _ParseDateTimeValue(self, parser_mediator, row):
+        """Parses a date and time of a specific row.
+
+        If the Trend Micro log comes from a version that provides a POSIX timestamp, use
+        that directly; it provides the advantages of UTC and of second precision.
+        Otherwise fall back onto the local-timezone date and time.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
+          row (dict[str, str]): fields of a single row, as specified in COLUMNS.
+
+        Returns:
+          tuple: containing:
+
+              dfdatetime.interface.DateTimeValue: date and time value or None.
+              bool: value to indicate the date and time value was corrupted.
+        """
+        timestamp = row.get("timestamp")
+        if timestamp is not None:
+            try:
+                timestamp = int(timestamp, 10)
+            except (ValueError, TypeError):
+                parser_mediator.ProduceWarning(
+                    f"Unable to parse timestamp value: {timestamp!s}"
+                )
+                return None, True
+
+            return dfdatetime_posix_time.PosixTime(timestamp=timestamp), False
+
+        # The timestamp is not available; parse the local date and time instead.
+        date_value = row["date"]
+        time_value = row["time"]
+
+        try:
+            date_time = self._ConvertToTimestamp(date_value, time_value)
+        except ValueError as exception:
+            parser_mediator.ProduceWarning(
+                f'Unable to parse time string: "{date_value!s} {time_value!s}" with '
+                f"error: {exception!s}"
+            )
+            return None, True
+
+        return date_time, False
+
 
 class OfficeScanVirusDetectionParser(TrendMicroBaseParser):
     """Parses the Trend Micro Office Scan Virus Detection Log."""
@@ -250,24 +255,30 @@ class OfficeScanVirusDetectionParser(TrendMicroBaseParser):
         """Parses a line of the log file and produces events.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           row_offset (int): offset of the line from which the row was extracted.
           row (dict[str, str]): fields of a single row, as specified in COLUMNS.
         """
-        date_time = self._ParseTimestamp(parser_mediator, row)
-        if date_time is None:
-            return
+        date_time, corrupted = self._ParseDateTimeValue(parser_mediator, row)
 
+        action = row["action"]
         try:
-            action = int(row["action"], 10)
+            action = int(action, 10)
         except (ValueError, TypeError):
+            parser_mediator.ProduceWarning(f"Unable to parse action value: {action!s}")
             action = None
+            corrupted = True
 
+        scan_type = row["scan_type"]
         try:
-            scan_type = int(row["scan_type"], 10)
+            scan_type = int(scan_type, 10)
         except (ValueError, TypeError):
+            parser_mediator.ProduceWarning(
+                f"Unable to parse scan_type value: {scan_type!s}"
+            )
             scan_type = None
+            corrupted = True
 
         event_data = TrendMicroAVEventData()
         event_data.action = action
@@ -278,14 +289,14 @@ class OfficeScanVirusDetectionParser(TrendMicroBaseParser):
         event_data.threat = row["threat"]
         event_data.written_time = date_time
 
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def VerifyRow(self, parser_mediator, row):
         """Verifies if a line of the file is in the expected format.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           row (dict[str, str]): fields of a single row, as specified in COLUMNS.
 
         Returns:
@@ -344,45 +355,47 @@ class OfficeScanWebReputationParser(TrendMicroBaseParser):
         """Parses a line of the log file and produces events.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           row_offset (int): offset of the line from which the row was extracted.
           row (dict[str, str]): fields of a single row, as specified in COLUMNS.
         """
-        date_time = self._ParseTimestamp(parser_mediator, row)
-        if date_time is None:
-            return
+        date_time, corrupted = self._ParseDateTimeValue(parser_mediator, row)
 
         event_data = TrendMicroUrlEventData()
         event_data.offset = row_offset
         event_data.written_time = date_time
 
-        # Convert and store integer values.
         for field in (
+            "block_mode",
             "credibility_rating",
             "credibility_score",
             "policy_identifier",
             "threshold",
-            "block_mode",
         ):
+            value = row[field]
             try:
-                value = int(row[field], 10)
+                integer_value = int(value, 10)
             except (ValueError, TypeError):
-                value = None
-            setattr(event_data, field, value)
+                parser_mediator.ProduceWarning(
+                    f"Unable to parse {field:s} value: {value!s}"
+                )
+                integer_value = None
+                corrupted = True
 
-        # Store string values.
-        for field in ("url", "group_name", "group_code", "application_name", "ip"):
+            setattr(event_data, field, integer_value)
+
+        for field in ("application_name", "group_code", "group_name", "ip", "url"):
             setattr(event_data, field, row[field])
 
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def VerifyRow(self, parser_mediator, row):
         """Verifies if a line of the file is in the expected format.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           row (dict[str, str]): fields of a single row, as specified in COLUMNS.
 
         Returns:

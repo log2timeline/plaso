@@ -16,8 +16,8 @@ class MacOSBackgroundItemEventData(events.EventData):
 
     Attributes:
       name (str): name.
-      target_creation_time (dfdatetime.DateTimeValues): date and time the target
-          was created.
+      target_creation_time (dfdatetime.DateTimeValues): date and time the target was
+          created.
       target_path (str): path of the target.
       volume_creation_time (dfdatetime.DateTimeValues): date and time the (target)
           volume was created.
@@ -218,12 +218,12 @@ class MacOSBackgroundItemsPlistPlugin(
         """Extracts background item information from the plist.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           top_level (Optional[dict[str, object]]): plist top-level item.
         """
         if not self._decoder.IsEncoded(top_level):
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 "unsupported background items plist - unsupported encoding."
             )
             return
@@ -237,32 +237,35 @@ class MacOSBackgroundItemsPlistPlugin(
         store = decoded_plist.get("store")
 
         if not background_items and not store:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 "unsupported background items plist - missing items."
             )
             return
 
         if background_items:
             for container in background_items.get("allContainers") or []:
-                event_data = MacOSBackgroundItemEventData()
-
                 bookmark = container.get("bookmark") or {}
                 bookmark_data = bookmark.get("data")
                 if bookmark_data:
+                    corrupted = False
+                    event_data = MacOSBackgroundItemEventData()
+
                     try:
                         self._ParseBookmarkData(bookmark_data, event_data)
                     except errors.ParseError as exception:
-                        parser_mediator.ProduceExtractionWarning(
+                        parser_mediator.ProduceWarning(
                             f"unable to parse bookmark data with error: {exception!s}"
                         )
+                        corrupted = True
 
                     # For now generate an additional event data container if container
                     # level bookmark data is present.
-                    parser_mediator.ProduceEventData(event_data)
-                    event_data = MacOSBackgroundItemEventData()
+                    parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
+
+                corrupted = False
+                event_data = MacOSBackgroundItemEventData()
 
                 internal_items = container.get("internalItems") or {}
-
                 bookmark = internal_items.get("bookmark") or {}
                 bookmark_data = bookmark.get("data")
                 if bookmark_data:
@@ -273,13 +276,15 @@ class MacOSBackgroundItemsPlistPlugin(
                             f"unable to parse internal items bookmark data with error: "
                             f"{exception!s}"
                         )
+                        corrupted = True
 
-                parser_mediator.ProduceEventData(event_data)
+                parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
         else:
             items_by_user_identifier = store.get("itemsByUserIdentifier") or {}
             for container in items_by_user_identifier.values():
                 for internal_item in container:
+                    corrupted = False
                     event_data = MacOSBackgroundItemEventData()
 
                     bookmark_data = internal_item.get("bookmark")
@@ -291,8 +296,9 @@ class MacOSBackgroundItemsPlistPlugin(
                                 f"unable to parse bookmark data with error: "
                                 f"{exception!s}"
                             )
+                            corrupted = True
 
-                    parser_mediator.ProduceEventData(event_data)
+                    parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
 
 plist.PlistParser.RegisterPlugin(MacOSBackgroundItemsPlistPlugin)

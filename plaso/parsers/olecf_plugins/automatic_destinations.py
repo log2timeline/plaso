@@ -24,10 +24,9 @@ class AutomaticDestinationsDestListEntryEventData(events.EventData):
       droid_volume_identifier (str): droid volume identifier.
       entry_number (int): DestList entry number.
       hostname (str): hostname.
-      modification_time (dfdatetime.DateTimeValues): last modification date and
-          time.
-      offset (int): offset of the DestList entry relative to the start of
-          the DestList stream, from which the event data was extracted.
+      modification_time (dfdatetime.DateTimeValues): last modification date and time.
+      offset (int): offset of the DestList entry relative to the start of the DestList
+          stream, from which the event data was extracted.
       path (str): path.
       pin_status (int): pin status.
     """
@@ -76,8 +75,8 @@ class AutomaticDestinationsOLECFPlugin(
         """Extracts data from a Distributed Tracking identifier.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           uuid_object (uuid.UUID): UUID of the Distributed Tracking identifier.
           origin (str): origin of the event (event source).
 
@@ -96,8 +95,8 @@ class AutomaticDestinationsOLECFPlugin(
         """Parses the DestList OLECF item.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           olecf_item (pyolecf.item): OLECF item.
 
         Raises:
@@ -123,7 +122,7 @@ class AutomaticDestinationsOLECFPlugin(
         elif header.format_version in (2, 3, 4):
             entry_map = self._GetDataTypeMap("dest_list_entry_v2")
         else:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unsupported format version: {header.format_version:d}."
             )
             return
@@ -138,29 +137,30 @@ class AutomaticDestinationsOLECFPlugin(
                     f"Unable to parse DestList entry with error: {exception!s}"
                 )
 
+            corrupted = False
             display_name = f"DestList entry at offset: 0x{entry_offset:08x}"
 
             try:
                 droid_volume_identifier = self._ParseDistributedTrackingIdentifier(
                     parser_mediator, entry.droid_volume_identifier, display_name
                 )
-
             except (TypeError, ValueError) as exception:
                 droid_volume_identifier = ""
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"unable to read droid volume identifier with error: {exception!s}"
                 )
+                corrupted = True
 
             try:
                 droid_file_identifier = self._ParseDistributedTrackingIdentifier(
                     parser_mediator, entry.droid_file_identifier, display_name
                 )
-
             except (TypeError, ValueError) as exception:
                 droid_file_identifier = ""
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"unable to read droid file identifier with error: {exception!s}"
                 )
+                corrupted = True
 
             try:
                 birth_droid_volume_identifier = (
@@ -170,29 +170,25 @@ class AutomaticDestinationsOLECFPlugin(
                         display_name,
                     )
                 )
-
             except (TypeError, ValueError) as exception:
                 birth_droid_volume_identifier = ""
-                parser_mediator.ProduceExtractionWarning(
-                    (
-                        f"unable to read birth droid volume identifier with error: "
-                        f"{exception!s}"
-                    )
+                parser_mediator.ProduceWarning(
+                    f"unable to read birth droid volume identifier with error: "
+                    f"{exception!s}"
                 )
+                corrupted = True
 
             try:
                 birth_droid_file_identifier = self._ParseDistributedTrackingIdentifier(
                     parser_mediator, entry.birth_droid_file_identifier, display_name
                 )
-
             except (TypeError, ValueError) as exception:
                 birth_droid_file_identifier = ""
-                parser_mediator.ProduceExtractionWarning(
-                    (
-                        f"unable to read birth droid file identifier with error: "
-                        f"{exception!s}"
-                    )
+                parser_mediator.ProduceWarning(
+                    f"unable to read birth droid file identifier with error: "
+                    f"{exception!s}"
                 )
+                corrupted = True
 
             event_data = AutomaticDestinationsDestListEntryEventData()
             event_data.birth_droid_file_identifier = birth_droid_file_identifier
@@ -210,7 +206,7 @@ class AutomaticDestinationsOLECFPlugin(
                     timestamp=entry.last_modification_time
                 )
 
-            parser_mediator.ProduceEventData(event_data)
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
             entry_offset += entry_data_size
 
@@ -218,8 +214,8 @@ class AutomaticDestinationsOLECFPlugin(
         """Extracts events from an OLECF file.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           root_item (Optional[pyolecf.item]): root item of the OLECF file.
 
         Raises:

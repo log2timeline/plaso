@@ -363,9 +363,11 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
               value can contain arbitrary binary (non-UTF-8) data.
 
         Returns:
-          tuple[str, object, bool]: key and value decoded as UTF-8, invalid code points
-              are escaped, and boolean value to indicate the key value pair was
-              corrupted.
+          tuple: containing:
+
+              str: key decoded as UTF-8.
+              object: value decoded as UTF-8.
+              bool: value to indicate the key value pair was corrupted.
         """
         key_data, _, value_data = field_data.partition(b"=")
         corrupted = False

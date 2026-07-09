@@ -21,15 +21,15 @@ class FirefoxCacheEventData(events.EventData):
 
     Attributes:
       data_size (int): size of the cached data.
-      expiration_time (dfdatetime.DateTimeValues): date and time the cache
-          entry expires.
+      expiration_time (dfdatetime.DateTimeValues): date and time the cache entry
+          expires.
       fetch_count (int): number of times the cache entry was fetched.
       frequency (int): TODO: add description.
       info_size (int): size of the metadata.
-      last_fetched_time (dfdatetime.DateTimeValues): date and time the cache
-          entry was last fetched.
-      last_modified_time (dfdatetime.DateTimeValues): date and time the cache
-          entry was last modified.
+      last_fetched_time (dfdatetime.DateTimeValues): date and time the cache entry was
+          last fetched.
+      last_modified_time (dfdatetime.DateTimeValues): date and time the cache entry was
+          last modified.
       location (str): TODO: add description.
       request_method (str): HTTP request method.
       request_size (int): HTTP request byte size.
@@ -96,7 +96,7 @@ class BaseFirefoxCacheParser(interface.FileObjectParser):
         try:
             header_string = http_headers_data.decode("ascii")
         except UnicodeDecodeError:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 "unable to decode HTTP headers as ASCII. Unsupported code points are "
                 "escaped."
             )
