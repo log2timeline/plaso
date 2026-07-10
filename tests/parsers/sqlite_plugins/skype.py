@@ -86,6 +86,8 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
             "start_time": "2013-10-24T21:49:32+00:00",
             "transfer_status": 2,
             "transferred_filename": "secret-project.pdf",
+            "transferred_file_path": "/Users/gberinger/Desktop/secret-project.pdf",
+            "transferred_file_size": 69986,
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 17)
         self.CheckEventData(event_data, expected_event_values)

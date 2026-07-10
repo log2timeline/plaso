@@ -20,11 +20,10 @@ class WinFirewallEventData(events.EventData):
       icmp_code (int): ICMP code.
       icmp_type (int): ICMP type.
       information (str): additional information.
-      last_written_time (dfdatetime.DateTimeValues): entry last written date and
-          time.
+      last_written_time (dfdatetime.DateTimeValues): entry last written date and time.
       packet_size (int): packet size.
-      path (str): direction of the communication, which can be: SEND, RECEIVE,
-          FORWARD, and UNKNOWN.
+      path (str): direction of the communication, which can be: SEND, RECEIVE, FORWARD,
+          and UNKNOWN.
       protocol (str): IP protocol.
       source_ip (str): source IP address.
       source_port (int): TCP or UDP source port.
@@ -193,8 +192,8 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
         """Parses the fields metadata and updates the log line definition to match.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           fields (str): field definitions.
         """
         log_line_structure = pyparsing.Empty()
@@ -205,11 +204,9 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
             field_structure = self._LOG_LINE_STRUCTURES.get(member)
             if not field_structure:
                 field_structure = self._WORD_OR_BLANK
-                parser_mediator.ProduceExtractionWarning(
-                    (
-                        f"missing definition for field: {member:s} defaulting to "
-                        f"WORD_OR_BLANK"
-                    )
+                parser_mediator.ProduceWarning(
+                    f"missing definition for field: {member:s} defaulting to "
+                    f"WORD_OR_BLANK"
                 )
 
             log_line_structure += field_structure
@@ -222,8 +219,8 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
         """Parses a text-log file header.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           text_reader (EncodedTextReader): text reader.
 
         Raises:
@@ -260,8 +257,8 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
         """Parse a single log line.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           structure (pyparsing.ParseResults): tokens from a parsed log line.
         """
         event_data = WinFirewallEventData()
@@ -289,15 +286,14 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
         event_data.tcp_window_size = self._GetValueFromStructure(
             structure, "tcp_window_size"
         )
-
         parser_mediator.ProduceEventData(event_data)
 
     def _ParseRecord(self, parser_mediator, key, structure):
         """Parses a pyparsing structure.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           key (str): name of the parsed structure.
           structure (pyparsing.ParseResults): tokens from a parsed log line.
 
@@ -350,8 +346,8 @@ class WinFirewallLogTextPlugin(interface.TextPlugin):
         """Check if the log record has the minimal structure required by the plugin.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           text_reader (EncodedTextReader): text reader.
 
         Returns:

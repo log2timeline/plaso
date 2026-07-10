@@ -231,7 +231,8 @@ class SQLitePlugin(plugins.BasePlugin):
         """Extracts events from a SQLite database.
 
         Args:
-          parser_mediator (ParserMediator): parser mediator.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           database (SQLiteDatabase): database.
           query (str): query.
           callback (function): function to invoke to parse an individual row.
@@ -243,7 +244,7 @@ class SQLitePlugin(plugins.BasePlugin):
             rows = database.Query(query)
 
         except sqlite3.DatabaseError as exception:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unable to run query: {query:s} on database with error: "
                 f"{exception!s}"
             )
@@ -261,7 +262,7 @@ class SQLitePlugin(plugins.BasePlugin):
                 callback(parser_mediator, query, row, cache=cache, database=database)
 
             except Exception as exception:  # pylint: disable=broad-except
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"unable to parse row: {index:d} with callback: "
                     f"{callback.__name__:s} on database with error: {exception!s}"
                 )
@@ -323,7 +324,8 @@ class SQLitePlugin(plugins.BasePlugin):
         """Extracts events from a SQLite database.
 
         Args:
-          parser_mediator (ParserMediator): parser mediator.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           cache (Optional[SQLiteCache]): cache.
           database (Optional[SQLiteDatabase]): database.
 

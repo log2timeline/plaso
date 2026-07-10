@@ -17,7 +17,6 @@ class AndroidTangoProfileTest(test_lib.SQLitePluginTestCase):
         storage_writer = self._ParseDatabaseFileWithPlugin(
             ["tango_android_profile.db"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -48,7 +47,6 @@ class AndroidTangoProfileTest(test_lib.SQLitePluginTestCase):
             "last_name": "Henry",
             "status": "Praying!",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 2)
         self.CheckEventData(event_data, expected_event_values)
 

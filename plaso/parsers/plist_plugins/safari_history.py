@@ -12,13 +12,13 @@ class SafariHistoryEventData(events.EventData):
 
     Attributes:
       display_title (str): display title of the webpage visited.
-      last_visited_time (dfdatetime.DateTimeValues): date and time the URL was
-          last visited.
+      last_visited_time (dfdatetime.DateTimeValues): date and time the URL was last
+          visited.
       title (str): title of the webpage visited.
       url (str): URL visited.
       visit_count (int): number of times the website was visited.
-      was_http_non_get (bool): True if the webpage was visited using a non-GET
-          HTTP request.
+      was_http_non_get (bool): True if the webpage was visited using a non-GET HTTP
+          request.
     """
 
     DATA_TYPE = "safari:history:visit"
@@ -50,43 +50,45 @@ class SafariHistoryPlugin(interface.PlistPlugin):
         """Retrieves a date and time value from a Cocoa timestamp.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           plist_key (object): plist key.
           plist_value_name (str): name of the value in the plist key.
 
         Returns:
-          dfdatetime.TimeElements: date and time or None if not available.
+          tuple: containing:
+
+              dfdatetime.TimeElements: date and time or None if not available.
+              bool: value to indicate the date and time value was corrupted.
         """
         timestamp_string = plist_key.get(plist_value_name)
         if not timestamp_string:
-            return None
+            return None, False
 
         try:
             timestamp = float(timestamp_string)
         except (TypeError, ValueError):
-            parser_mediator.ProduceExtractionWarning(
-                (
-                    f"unable to convert Cocoa timestamp: "
-                    f"{timestamp_string:s} to a floating-point value"
-                )
+            parser_mediator.ProduceWarning(
+                f"unable to convert Cocoa timestamp: {timestamp_string:s} to a "
+                f"floating-point value"
             )
-            return None
+            return None, True
 
-        return dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
+        date_time = dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
+        return date_time, False
 
     # pylint: disable=arguments-differ
     def _ParsePlist(self, parser_mediator, match=None, **unused_kwargs):
         """Extracts Safari history items.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
         """
         format_version = match.get("WebHistoryFileVersion")
         if format_version != 1:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unsupported Safari history version: {format_version!s}"
             )
             return
@@ -95,21 +97,19 @@ class SafariHistoryPlugin(interface.PlistPlugin):
             display_title = history_entry.get("displayTitle")
             title = history_entry.get("title")
 
-            event_data = SafariHistoryEventData()
-            event_data.last_visited_time = self._GetDateTimeValueFromTimestamp(
+            date_time, corrupted = self._GetDateTimeValueFromTimestamp(
                 parser_mediator, history_entry, "lastVisitedDate"
             )
+            event_data = SafariHistoryEventData()
+            event_data.last_visited_time = date_time
             event_data.title = title
             event_data.url = history_entry.get("")
             event_data.visit_count = history_entry.get("visitCount")
-            event_data.was_http_non_get = history_entry.get(
-                "lastVisitWasHTTPNonGet", None
-            )
-
+            event_data.was_http_non_get = history_entry.get("lastVisitWasHTTPNonGet")
             if display_title != title:
                 event_data.display_title = display_title
 
-            parser_mediator.ProduceEventData(event_data)
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
 
 plist.PlistParser.RegisterPlugin(SafariHistoryPlugin)

@@ -12,23 +12,22 @@ class SkypeAccountEventData(events.EventData):
 
     Attributes:
       account_display_name (str): display name of the account.
-      authentication_request_time (dfdatetime.DateTimeValues): date and time
-           the account was last requested to authenticate.
-      authentication_request_sent_time (dfdatetime.DateTimeValues): date and time
-           the last authentication request was sent.
+      authentication_request_time (dfdatetime.DateTimeValues): date and time the account
+          was last requested to authenticate.
+      authentication_request_sent_time (dfdatetime.DateTimeValues): date and time the
+          last authentication request was sent.
       country (str): home country of the account holder.
       email (str): registered email address of the account holder.
       fullname (str): full name of the account holder.
-      last_online_time (dfdatetime.DateTimeValues): date and time the account
-           was last online.
-      last_used_time (dfdatetime.DateTimeValues): date and time the account
-           was last used.
-      mood_change_time (dfdatetime.DateTimeValues): date and time the mood was
+      last_online_time (dfdatetime.DateTimeValues): date and time the account was last
+          online.
+      last_used_time (dfdatetime.DateTimeValues): date and time the account was last
+          used.
+      mood_change_time (dfdatetime.DateTimeValues): date and time the mood was last
+          changed.
+      offset (str): identifier of the row, from which the event data was extracted.
+      profile_change_time (dfdatetime.DateTimeValues): date and time the profile was
           last changed.
-      offset (str): identifier of the row, from which the event data was
-          extracted.
-      profile_change_time (dfdatetime.DateTimeValues): date and time the profile
-           was last changed.
       query (str): SQL query that was used to obtain the event data.
     """
 
@@ -55,14 +54,12 @@ class SkypeCallEventData(events.EventData):
     """Skype call event data.
 
     Attributes:
-      attempt_time (dfdatetime.DateTimeValues): date and time the call was
-          attempted.
+      attempt_time (dfdatetime.DateTimeValues): date and time the call was attempted.
       call_type (str): call type, such as: WAITING, STARTED, FINISHED.
       dst_call (str): account which received the call.
       duration (int): number of seconds the call lasted.
       end_time (dfdatetime.DateTimeValues): date and time the call was stopped.
-      offset (str): identifier of the row, from which the event data was
-          extracted.
+      offset (str): identifier of the row, from which the event data was extracted.
       query (str): SQL query that was used to obtain the event data.
       src_call (str): account which started the call.
       start_time (dfdatetime.DateTimeValues): date and time the call was started.
@@ -94,8 +91,7 @@ class SkypeChatEventData(events.EventData):
     Attributes:
       from_account (str): from display name and the author.
       query (str): SQL query that was used to obtain the event data.
-      recorded_time (dfdatetime.DateTimeValues): date and time the chat
-          was recorded.
+      recorded_time (dfdatetime.DateTimeValues): date and time the chat was recorded.
       text (str): body XML.
       title (str): title.
       to_account (str): accounts, excluding the author, of the conversation.
@@ -120,8 +116,7 @@ class SkypeSMSEventData(events.EventData):
     Attributes:
       number (str): phone number where the SMS was sent.
       query (str): SQL query that was used to obtain the event data.
-      recorded_time (dfdatetime.DateTimeValues): date and time the SMS
-          was recorded.
+      recorded_time (dfdatetime.DateTimeValues): date and time the SMS was recorded.
       text (str): text (SMS body) that was sent.
     """
 
@@ -142,10 +137,8 @@ class SkypeTransferFileEventData(events.EventData):
     Attributes:
       accept_time (dfdatetime.DateTimeValues): date and time the file transfer was
           accepted.
-      end_time (dfdatetime.DateTimeValues): date and time the file transfer was
-          stopped.
-      offset (str): identifier of the row, from which the event data was
-          extracted.
+      end_time (dfdatetime.DateTimeValues): date and time the file transfer was stopped.
+      offset (str): identifier of the row, from which the event data was extracted.
       query (str): SQL query that was used to obtain the event data.
       receiver (str): identifier of the account that received the file.
       receiver_display_name (str): display name of the account that received the file.
@@ -155,8 +148,8 @@ class SkypeTransferFileEventData(events.EventData):
           started.
       transfer_status (int): file transfer status.
       transferred_filename (str): name of the file transferred.
-      transferred_filepath (str): path of the file transferred.
-      transferred_filesize (int): size of the file transferred.
+      transferred_file_path (str): path of the file transferred.
+      transferred_file_size (int): size of the file transferred.
     """
 
     DATA_TYPE = "skype:event:transferfile"
@@ -175,8 +168,8 @@ class SkypeTransferFileEventData(events.EventData):
         self.start_time = None
         self.transfer_status = None
         self.transferred_filename = None
-        self.transferred_filepath = None
-        self.transferred_filesize = None
+        self.transferred_file_path = None
+        self.transferred_file_size = None
 
 
 class SkypePlugin(interface.SQLitePlugin):
@@ -604,8 +597,8 @@ class SkypePlugin(interface.SQLitePlugin):
         """Parses account information.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           query (str): query that created the row.
           row (sqlite3.Row): row with account information.
         """
@@ -645,8 +638,8 @@ class SkypePlugin(interface.SQLitePlugin):
         """Parses a call.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           query (str): query that created the row.
           row (sqlite3.Row): row resulting from query.
           query (Optional[str]): query.
@@ -714,8 +707,8 @@ class SkypePlugin(interface.SQLitePlugin):
         """Parses a chat message.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           query (str): query that created the row.
           row (sqlite3.Row): row resulting from query.
         """
@@ -759,8 +752,8 @@ class SkypePlugin(interface.SQLitePlugin):
         who accepts the file.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           query (str): query that created the row.
           row (sqlite3.Row): row resulting from query.
           cache (Optional[SQLiteCache]): cache.
@@ -809,16 +802,19 @@ class SkypePlugin(interface.SQLitePlugin):
                     pk_id, (None, None)
                 )
 
+        corrupted = False
+
         filename = self._GetRowValue(query_hash, row, "filename")
-        filesize = self._GetRowValue(query_hash, row, "filesize")
+        file_size = self._GetRowValue(query_hash, row, "filesize")
 
         try:
-            file_size = int(filesize, 10)
+            file_size = int(file_size, 10)
         except (ValueError, TypeError):
-            parser_mediator.ProduceExtractionWarning(
-                f"unable to convert file size: {filesize!s} of file: {filename:s}"
+            parser_mediator.ProduceWarning(
+                f"unable to convert file size: {file_size!s} of file: {filename:s}"
             )
-            file_size = 0
+            file_size = None
+            corrupted = True
 
         event_data = SkypeTransferFileEventData()
         event_data.accept_time = self._GetDateTimeRowValue(
@@ -834,17 +830,19 @@ class SkypePlugin(interface.SQLitePlugin):
         event_data.start_time = self._GetDateTimeRowValue(query_hash, row, "starttime")
         event_data.transfer_status = self._GetRowValue(query_hash, row, "status")
         event_data.transferred_filename = filename
-        event_data.transferred_filepath = self._GetRowValue(query_hash, row, "filepath")
-        event_data.transferred_filesize = file_size
+        event_data.transferred_file_path = self._GetRowValue(
+            query_hash, row, "filepath"
+        )
+        event_data.transferred_file_size = file_size
 
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def ParseSMS(self, parser_mediator, query, row, **unused_kwargs):
         """Parses a SMS.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           query (str): query that created the row.
           row (sqlite3.Row): row resulting from query.
         """

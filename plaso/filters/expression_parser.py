@@ -757,7 +757,7 @@ class EventFilterExpressionParser:
         hex_string = match.group(1)
         try:
             hex_string = binascii.unhexlify(hex_string)
-            hex_string = codecs.decode(hex_string, "utf-8")
+            hex_string = hex_string.decode("utf-8")
             self._string += hex_string
         except (TypeError, binascii.Error):
             raise errors.ParseError(f"Invalid hex escape {hex_string!s}.")

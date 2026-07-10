@@ -581,7 +581,7 @@ class MacOSKnowledgeCPlugin(interface.SQLitePlugin):
         # TODO: Add support for additional action types.
         else:
             if action not in self._KNOWN_ACTION_TYPES:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"unsupported action type: {action:s}"
                 )
             return
