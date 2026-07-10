@@ -16,12 +16,10 @@ class TaskCacheEventData(events.EventData):
 
     Attributes:
       key_path (str): Windows Registry key path.
-      last_registered_time (dfdatetime.DateTimeValues): date and time the task
-          was last registered.
-      last_written_time (dfdatetime.DateTimeValues): entry last written date and
-          time.
-      launch_time (dfdatetime.DateTimeValues): date and time the task was last
-          launched.
+      last_registered_time (dfdatetime.DateTimeValues): date and time the task was last
+          registered.
+      last_written_time (dfdatetime.DateTimeValues): entry last written date and time.
+      launch_time (dfdatetime.DateTimeValues): date and time the task was last launched.
       task_name (str): name of the task.
       task_identifier (str): identifier of the task.
       unknown_time (dfdatetime.DateTimeValues): unknown date and time.
@@ -69,8 +67,8 @@ class TaskCacheWindowsRegistryPlugin(
         Yields:
           tuple: containing:
 
-            dfwinreg.WinRegistryKey: Windows Registry key.
-            dfwinreg.WinRegistryValue: Windows Registry value.
+              dfwinreg.WinRegistryKey: Windows Registry key.
+              dfwinreg.WinRegistryValue: Windows Registry value.
         """
         id_value = registry_key.GetValueByName("Id")
         if id_value:
@@ -84,8 +82,8 @@ class TaskCacheWindowsRegistryPlugin(
         """Extracts events from a Windows Registry key.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
         """
         dynamic_info_size_error_reported = False
@@ -94,7 +92,7 @@ class TaskCacheWindowsRegistryPlugin(
         tree_key = registry_key.GetSubkeyByName("Tree")
 
         if not tasks_key or not tree_key:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 "Task Cache is missing a Tasks or Tree sub key."
             )
             return
@@ -107,7 +105,7 @@ class TaskCacheWindowsRegistryPlugin(
                 # string and should be 78 bytes in size.
                 id_value_data_size = len(id_value.data)
                 if id_value_data_size != 78:
-                    parser_mediator.ProduceExtractionWarning(
+                    parser_mediator.ProduceWarning(
                         f'unsupported "Id" value data size: {id_value_data_size:d}.'
                     )
                     continue
@@ -131,24 +129,26 @@ class TaskCacheWindowsRegistryPlugin(
                 dynamic_info_record_map = dynamic_info2_map
             else:
                 if not dynamic_info_size_error_reported:
-                    parser_mediator.ProduceExtractionWarning(
-                        (
-                            f'unsupported "DynamicInfo" value data size: '
-                            f"{dynamic_info_value_data_size:d}."
-                        )
+                    parser_mediator.ProduceWarning(
+                        f'unsupported "DynamicInfo" value data size: '
+                        f"{dynamic_info_value_data_size:d}."
                     )
                     dynamic_info_size_error_reported = True
+
                 continue
+
+            corrupted = False
 
             try:
                 dynamic_info_record = self._ReadStructureFromByteStream(
                     dynamic_info_value.data, 0, dynamic_info_record_map
                 )
             except (ValueError, errors.ParseError) as exception:
-                dynamic_info_record = None
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"unable to parse DynamicInfo record with error: {exception!s}."
                 )
+                dynamic_info_record = None
+                corrupted = True
 
             name = task_guids.get(sub_key.name, sub_key.name)
 
@@ -160,8 +160,8 @@ class TaskCacheWindowsRegistryPlugin(
 
             if dynamic_info_record:
                 if dynamic_info_record.last_registered_time:
-                    # Note this is likely either the last registered time or
-                    # the update time.
+                    # Note this is likely either the last registered time or the update
+                    # time.
                     event_data.last_registered_time = dfdatetime_filetime.Filetime(
                         timestamp=dynamic_info_record.last_registered_time
                     )
@@ -177,7 +177,7 @@ class TaskCacheWindowsRegistryPlugin(
                         timestamp=unknown_time
                     )
 
-            parser_mediator.ProduceEventData(event_data)
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
         # TODO: Add support for the Triggers value.
 

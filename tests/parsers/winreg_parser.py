@@ -12,7 +12,6 @@ from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.containers import events
 from plaso.engine import artifact_filters
-from plaso.parsers import mediator as parsers_mediator
 from plaso.parsers import winreg_parser
 
 # Register all plugins.
@@ -204,14 +203,11 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
         path_spec = path_spec_factory.Factory.NewPathSpec(
             dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
         )
-
         parser = winreg_parser.WinRegistryParser()
         parser.EnablePlugins(parser.ALL_PLUGINS)
 
-        parser_mediator = parsers_mediator.ParserMediator()
-
         storage_writer = self._CreateStorageWriter()
-        parser_mediator.SetStorageWriter(storage_writer)
+        parser_mediator = self._CreateParserMediator(storage_writer)
 
         file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
         parser_mediator.SetFileEntry(file_entry)

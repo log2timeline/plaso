@@ -176,8 +176,8 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
         """Retrieves the value data as an object from a Windows Registry value.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           key_path (str): key path.
           value_name (str): name of the value.
           registry_value (dfwinreg.WinRegistryValue): Windows Registry value.
@@ -215,11 +215,12 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
         """Parses a Root\\InventoryApplicationFile\\%NAME%|%IDENTIFIER% key.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           application_sub_key (dfwinreg.WinRegistryKey): application sub key of the
               InventoryApplicationFile Windows Registry key.
         """
+        corrupted = False
         event_data = AMCacheFileEventData()
 
         for value_name, attribute_name in self._APPLICATION_SUB_KEY_VALUES.items():
@@ -232,62 +233,69 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
 
         install_date_value = application_sub_key.GetValueByName("InstallDate")
         if install_date_value:
-            event_data.installation_time = self._ParseDateStringValue(
+            event_data.installation_time, value_corrupted = self._ParseDateStringValue(
                 parser_mediator, application_sub_key.path, install_date_value
             )
+            corrupted = corrupted or value_corrupted
 
         install_date_msi_value = application_sub_key.GetValueByName("InstallDateMsi")
         if install_date_msi_value:
-            event_data.msi_installation_time = self._ParseDateStringValue(
-                parser_mediator, application_sub_key.path, install_date_msi_value
+            event_data.msi_installation_time, value_corrupted = (
+                self._ParseDateStringValue(
+                    parser_mediator, application_sub_key.path, install_date_msi_value
+                )
             )
+            corrupted = corrupted or value_corrupted
 
         link_date_value = application_sub_key.GetValueByName("LinkDate")
         if link_date_value:
-            event_data.link_time = self._ParseDateStringValue(
+            event_data.link_time, value_corrupted = self._ParseDateStringValue(
                 parser_mediator, application_sub_key.path, link_date_value
             )
+            corrupted = corrupted or value_corrupted
 
         event_data.application_key_last_written_time = (
             application_sub_key.last_written_time
         )
-
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def _ParseDateStringValue(self, parser_mediator, key_path, registry_value):
         """Parses a date and time string value.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           key_path (str): key path.
           registry_value (dfwinreg.WinRegistryValue): Windows Registry value.
 
         Returns:
-          dfdatetime_time_elements.TimeElements: date and time value or None
-              if not available.
+          tuple: containing:
+
+              dfdatetime_time_elements.TimeElements: date and time value or None
+                  if not available.
+              bool: value to indicate the date and time string value was corrupted.
         """
         if not registry_value.DataIsString():
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unsupported {registry_value.name:s} with value data type: "
                 f"{registry_value.data_type_string:s} in key: {key_path:s}"
             )
-            return None
+            return None, False
 
         date_time_string = registry_value.GetDataAsObject()
         if not date_time_string:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"missing {registry_value.name:s} value data in key: {key_path:s}"
             )
-            return None
+            return None, False
 
         re_match = self._LINK_DATE_TIME_RE.match(date_time_string)
         if not re_match:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unsupported {registry_value.name:s} value data: "
                 f"{date_time_string!s} in key: {key_path:s}"
             )
-            return None
+            return None, False
 
         month, day_of_month, year, hours, minutes, seconds = re_match.groups()
 
@@ -299,11 +307,11 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
             minutes = int(minutes, 10)
             seconds = int(seconds, 10)
         except (TypeError, ValueError):
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"invalid {registry_value.name:s} date time value: "
                 f"{date_time_string!s} in key: {key_path:s}"
             )
-            return None
+            return None, True
 
         time_elements_tuple = (year, month, day_of_month, hours, minutes, seconds)
 
@@ -312,20 +320,20 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
                 time_elements_tuple=time_elements_tuple
             )
         except ValueError:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"invalid {registry_value.name:s} date time value: "
                 f"{time_elements_tuple!s} in key: {key_path:s}"
             )
-            return None
+            return None, True
 
-        return date_time
+        return date_time, False
 
     def _ParseFileKey(self, parser_mediator, file_key):
         """Parses a Root\\File key.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_key (dfwinreg.WinRegistryKey): the File Windows Registry key.
         """
         for volume_key in file_key.GetSubkeys():
@@ -336,8 +344,8 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
         """Parses a file reference key (sub key of Root\\File\\%VOLUME%) for events.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_reference_key (dfwinreg.WinRegistryKey): file reference Windows
               Registry key.
         """
@@ -414,8 +422,8 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
         """Parses a Root\\InventoryApplicationFile key.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           inventory_application_file_key (dfwinreg.WinRegistryKey): the
               InventoryApplicationFile Windows Registry key.
         """
@@ -426,8 +434,8 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
         """Parses a program key (a sub key of Root\\Programs) for events.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           program_key (dfwinreg.WinRegistryKey): program Windows Registry key.
         """
         event_data = AMCacheProgramEventData()
@@ -455,8 +463,8 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
         """Parses a Root\\Programs key.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           programs_key (dfwinreg.WinRegistryKey): the Programs Windows Registry key.
         """
         for program_key in programs_key.GetSubkeys():
@@ -466,8 +474,8 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
         """Parses a Root key.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           root_key (dfwinreg.WinRegistryKey): the Root Windows Registry key.
         """
         self._ProduceDefaultWindowsRegistryEvent(parser_mediator, root_key)
@@ -488,8 +496,8 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
         """Parses a sub key.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           registry_key (dfwinreg.WinRegistryKey): the Windows Registry key.
         """
         self._ProduceDefaultWindowsRegistryEvent(parser_mediator, registry_key)
@@ -501,8 +509,8 @@ class AMCachePlugin(interface.WindowsRegistryPlugin):
         """Extracts events from a Windows Registry key.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
         """
         self._ParseRootKey(parser_mediator, registry_key)

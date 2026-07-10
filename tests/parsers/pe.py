@@ -10,7 +10,6 @@ from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.containers import artifacts
 from plaso.parsers import pe
-from plaso.parsers import mediator as parsers_mediator
 
 from tests.parsers import test_lib
 
@@ -105,18 +104,16 @@ class PECOFFTest(test_lib.ParserTestCase):
         test_file_path = self._GetTestFilePath(["wrc-test-wevt_template.dll"])
         self._SkipIfPathNotExists(test_file_path)
 
-        parser_mediator = parsers_mediator.ParserMediator()
-
-        test_event_provider = artifacts.WindowsEventLogMessageFileArtifact()
+        storage_writer = self._CreateStorageWriter()
+        parser_mediator = self._CreateParserMediator(storage_writer)
         parser_mediator._extract_winevt_resources = True
         parser_mediator._windows_event_log_providers_per_path = {
             os.path.dirname(test_file_path).lower(): {
-                "wrc-test-wevt_template.dll": test_event_provider
+                "wrc-test-wevt_template.dll": (
+                    artifacts.WindowsEventLogMessageFileArtifact()
+                ),
             }
         }
-        storage_writer = self._CreateStorageWriter()
-        parser_mediator.SetStorageWriter(storage_writer)
-
         path_spec = path_spec_factory.Factory.NewPathSpec(
             dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
         )

@@ -10,8 +10,7 @@ class MSIEZoneSettingsEventData(events.EventData):
 
     Attributes:
       key_path (str): Windows Registry key path.
-      last_written_time (dfdatetime.DateTimeValues): entry last written date and
-          time.
+      last_written_time (dfdatetime.DateTimeValues): entry last written date and time.
       settings (list[tuple[str, object]]): MSIE zone settings.
     """
 
@@ -70,14 +69,14 @@ class MSIEZoneSettingsPlugin(interface.WindowsRegistryPlugin):
         """Extracts events from a Windows Registry key.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
         """
         self._ProduceDefaultWindowsRegistryEvent(parser_mediator, registry_key)
 
         if registry_key.number_of_subkeys == 0:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"Key: {registry_key.path:s} missing subkeys."
             )
             return
@@ -88,10 +87,11 @@ class MSIEZoneSettingsPlugin(interface.WindowsRegistryPlugin):
             # than 5.
             path = "\\".join([registry_key.path, self._ZONE_NAMES[zone_key.name]])
 
+            corrupted = False
             settings = []
 
-            # TODO: this plugin currently just dumps the values and does not
-            # distinguish between what is a feature control or not.
+            # TODO: this plugin currently just dumps the values and does not distinguish
+            # between what is a feature control or not.
             for value in zone_key.GetValues():
                 # TODO: add support to parse first and third party cookie values.
                 if not value.name or value.name in (
@@ -107,11 +107,12 @@ class MSIEZoneSettingsPlugin(interface.WindowsRegistryPlugin):
                     value_object = value.GetDataAsObject()
 
                 else:
-                    parser_mediator.ProduceExtractionWarning(
+                    parser_mediator.ProduceWarning(
                         f"unable to extract MSIE zone setting: '{value.name:s}' from: "
                         f"'{zone_key.path:s}' unsupported value data type: "
                         f"'{value.data_type_string:s}'"
                     )
+                    corrupted = True
                     continue
 
                 settings.append((value.name, value_object))
@@ -121,7 +122,7 @@ class MSIEZoneSettingsPlugin(interface.WindowsRegistryPlugin):
             event_data.last_written_time = zone_key.last_written_time
             event_data.settings = sorted(settings)
 
-            parser_mediator.ProduceEventData(event_data)
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
 
 winreg_parser.WinRegistryParser.RegisterPlugin(MSIEZoneSettingsPlugin)

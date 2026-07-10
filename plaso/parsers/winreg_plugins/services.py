@@ -13,16 +13,15 @@ class WindowsRegistryServiceEventData(events.EventData):
           executable.
       image_path (str): path of the Windows driver or service executable.
       key_path (str): Windows Registry key path.
-      last_written_time (dfdatetime.DateTimeValues): entry last written date and
-          time.
+      last_written_time (dfdatetime.DateTimeValues): entry last written date and time.
       name (str): name of the Windows driver or service.
       object_name (str): Windows service object name.
       service_dll (str): Windows service DLL.
       service_type (int): Windows driver or service type.
       start_type (int): Device or service start type.
       values (str): names and data of additional values in the key.
-      values (list[tuple[str, str, str]]): name, data type and data of the
-          additional values in the key.
+      values (list[tuple[str, str, str]]): name, data type and data of the additional
+          values in the key.
     """
 
     DATA_TYPE = "windows:registry:service"
@@ -76,15 +75,15 @@ class ServicesPlugin(interface.WindowsRegistryPlugin):
         """Extracts events from a Windows Registry key.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
         """
         service_type = self._GetValueFromKey(registry_key, "Type")
         start_type = self._GetValueFromKey(registry_key, "Start")
 
         if None in (service_type, start_type):
-            parser_mediator.ProduceExtractionWarning("missing values: Start and Type.")
+            parser_mediator.ProduceWarning("missing values: Start and Type.")
             return
 
         # Create a specific service event, so that we can recognize and expand
@@ -104,7 +103,6 @@ class ServicesPlugin(interface.WindowsRegistryPlugin):
             registry_key,
             names_to_skip=["ErrorControl", "ImagePath", "ObjectName", "Start", "Type"],
         )
-
         parser_mediator.ProduceEventData(event_data)
 
 

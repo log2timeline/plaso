@@ -18,16 +18,16 @@ class AppCompatCacheEventData(events.EventData):
 
     Attributes:
       entry_index (int): cache entry index number for the record.
-      file_entry_modification_time (dfdatetime.DateTimeValues): last modification
-          date and time of the corresponding file entry.
+      file_entry_modification_time (dfdatetime.DateTimeValues): last modification date
+          and time of the corresponding file entry.
       key_path (str): Windows Registry key path.
-      last_update_time (dfdatetime.DateTimeValues): last update date and time of
-          the Application Compatibility Cache entry.
-      offset (int): offset of the Application Compatibility Cache entry relative
-          to the start of the Windows Registry value data, from which the event
-          data was extracted.
-      registry_last_written_time (dfdatetime.DateTimeValues): key last written
-          date and time.
+      last_update_time (dfdatetime.DateTimeValues): last update date and time of the
+          Application Compatibility Cache entry.
+      offset (int): offset of the Application Compatibility Cache entry relative to the
+          start of the Windows Registry value data, from which the event data was
+          extracted.
+      registry_last_written_time (dfdatetime.DateTimeValues): key last written date and
+          time.
       path (str): full path to the executable.
       insertion_flags (int): Execution flag.
       control_set (int): Control set number of AppCompatCache registry key.
@@ -217,9 +217,8 @@ class AppCompatCacheWindowsRegistryPlugin(
             cached_entry = self._ParseCommon2003CachedEntry(
                 value_data, cached_entry_offset
             )
-
-            # Assume the entry is 64-bit if the 32-bit path offset is 0 and
-            # the 64-bit path offset is set.
+            # Assume the entry is 64-bit if the 32-bit path offset is 0 and the 64-bit
+            # path offset is set.
             if (
                 cached_entry.path_offset_32bit == 0
                 and cached_entry.path_offset_64bit != 0
@@ -667,15 +666,14 @@ class AppCompatCacheWindowsRegistryPlugin(
         cache_header.number_of_cached_entries = getattr(
             header, "number_of_cached_entries", 0
         )
-
         return cache_header
 
     def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
         """Extracts events from a Windows Registry key.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
 
         Raises:
@@ -690,7 +688,7 @@ class AppCompatCacheWindowsRegistryPlugin(
 
         format_type = self._CheckSignature(value_data)
         if not format_type:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"Unsupported signature in AppCompatCache key: {registry_key.path:s}"
             )
             return
@@ -731,7 +729,6 @@ class AppCompatCacheWindowsRegistryPlugin(
             cached_entry_object = parse_cached_entry_function(
                 value_data, cached_entry_offset
             )
-
             event_data = AppCompatCacheEventData()
             event_data.entry_index = cached_entry_index + 1
             event_data.key_path = registry_key.path
@@ -780,6 +777,7 @@ class AppCompatCacheWindowsRegistryPlugin(
                     return int(part[10:], 10)
                 except ValueError:
                     pass
+
         return None
 
 

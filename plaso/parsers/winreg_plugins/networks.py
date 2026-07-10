@@ -21,8 +21,7 @@ class WindowsRegistryNetworkListEventData(events.EventData):
       description (str): description of the wireless connection.
       dns_suffix (str): DNS suffix.
       key_path (str): Windows Registry key path.
-      last_connected_time (dfdatetime.DateTimeValues): last connected date and
-          time.
+      last_connected_time (dfdatetime.DateTimeValues): last connected date and time.
       ssid (str): SSID of the connection.
     """
 
@@ -125,7 +124,7 @@ class NetworksWindowsRegistryPlugin(
                 registry_value.data, 0, systemtime_map
             )
         except (ValueError, errors.ParseError) as exception:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"Unable to parse SYSTEMTIME in value: {value_name:s} with error: "
                 f"{exception!s}"
             )
@@ -150,7 +149,7 @@ class NetworksWindowsRegistryPlugin(
             )
 
         except ValueError:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"Invalid SYSTEMTIME value: {system_time_tuple!s} in value: "
                 f"{value_name:s}"
             )
