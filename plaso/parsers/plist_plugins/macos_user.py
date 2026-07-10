@@ -35,12 +35,11 @@ class MacOSUserEventData(events.EventData):
     Attributes:
       fullname (str): full name.
       home_directory (str): path of the home directory.
-      last_login_attempt_time (dfdatetime.DateTimeValues): date and time of
-         the last (failed) login attempt.
-      last_login_time (dfdatetime.DateTimeValues): date and time of the last
-         login.
-      last_password_set_time (dfdatetime.DateTimeValues): date and time of the
-          last password set.
+      last_login_attempt_time (dfdatetime.DateTimeValues): date and time of the last
+          (failed) login attempt.
+      last_login_time (dfdatetime.DateTimeValues): date and time of the last login.
+      last_password_set_time (dfdatetime.DateTimeValues): date and time of the last
+          password set.
       number_of_failed_login_attempts (str): number of failed login attempts.
       password_hash (str): password hash.
       user_identifier (str): user identifier.
@@ -72,7 +71,7 @@ class MacOSUserPlistPlugin(interface.PlistPlugin):
     # The PLIST_PATH is dynamic, "user".plist is the name of the
     # MacOS user.
     PLIST_KEYS = frozenset(
-        ["name", "uid", "home", "passwordpolicyoptions", "ShadowHashData"]
+        ["home", "name", "passwordpolicyoptions", "ShadowHashData", "uid"]
     )
 
     _ROOT = "/"
@@ -83,37 +82,40 @@ class MacOSUserPlistPlugin(interface.PlistPlugin):
         """Retrieves a date and time value from a time string value.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           policy_values (dict[str, object]): policy values.
           value_name (str): name of the value.
 
         Returns:
-          dfdatetime.TimeElements: date and time or None if not available.
+          tuple: containing:
+
+              dfdatetime.TimeElements: date and time or None if not available.
+              bool: value to indicate the date and time value was corrupted.
         """
         time_string = policy_values.get(value_name)
         if not time_string or time_string == "2001-01-01T00:00:00Z":
-            return None
+            return None, False
 
         date_time = dfdatetime_time_elements.TimeElements()
 
         try:
             date_time.CopyFromStringISO8601(time_string)
         except (TypeError, ValueError):
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unable to parse value: {value_name:s} time string: {time_string!s}"
             )
-            return None
+            return None, True
 
-        return date_time
+        return date_time, False
 
     # pylint: disable=arguments-differ
     def _ParsePlist(self, parser_mediator, match=None, top_level=None, **unused_kwargs):
         """Extracts relevant user timestamp entries.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
           top_level (Optional[dict[str, object]]): plist top-level item.
         """
@@ -126,12 +128,12 @@ class MacOSUserPlistPlugin(interface.PlistPlugin):
 
         shadow_hash_data = match.get("ShadowHashData")
         if isinstance(shadow_hash_data, (list, tuple)):
-            # Extract the hash password information, which is stored in
-            # the attribute ShadowHashData which is a binary plist data.
+            # Extract the hash password information, which is stored in the attribute
+            # ShadowHashData which is a binary plist data.
             try:
                 property_list = plistlib.loads(shadow_hash_data[0])
             except plistlib.InvalidFileException as exception:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"unable to parse ShadowHashData with error: {exception!s}"
                 )
                 property_list = {}
@@ -165,26 +167,40 @@ class MacOSUserPlistPlugin(interface.PlistPlugin):
                 # as the key and the other one as the value.
                 policy_dict = dict(zip(key_values[0::2], key_values[1::2]))
 
+            corrupted = False
+
             event_data = MacOSUserEventData()
             event_data.fullname = top_level.get("realname", [None])[0]
             event_data.home_directory = top_level.get("home", [None])[0]
-            event_data.last_login_attempt_time = self._GetDateTimeValueFromTimeString(
-                parser_mediator, policy_dict, "failedLoginTimestamp"
+            event_data.last_login_attempt_time, value_corrupted = (
+                self._GetDateTimeValueFromTimeString(
+                    parser_mediator, policy_dict, "failedLoginTimestamp"
+                )
             )
-            event_data.last_login_time = self._GetDateTimeValueFromTimeString(
-                parser_mediator, policy_dict, "lastLoginTimestamp"
+            corrupted = corrupted or value_corrupted
+
+            event_data.last_login_time, value_corrupted = (
+                self._GetDateTimeValueFromTimeString(
+                    parser_mediator, policy_dict, "lastLoginTimestamp"
+                )
             )
-            event_data.last_password_set_time = self._GetDateTimeValueFromTimeString(
-                parser_mediator, policy_dict, "passwordLastSetTime"
+            corrupted = corrupted or value_corrupted
+
+            event_data.last_password_set_time, value_corrupted = (
+                self._GetDateTimeValueFromTimeString(
+                    parser_mediator, policy_dict, "passwordLastSetTime"
+                )
             )
+            corrupted = corrupted or value_corrupted
+
             event_data.number_of_failed_login_attempts = policy_dict.get(
-                "failedLoginCount", None
+                "failedLoginCount"
             )
             event_data.password_hash = password_hash
             event_data.user_identifier = user_identifier
             event_data.username = username
 
-            parser_mediator.ProduceEventData(event_data)
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
 
 plist.PlistParser.RegisterPlugin(MacOSUserPlistPlugin)

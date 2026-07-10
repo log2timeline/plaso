@@ -70,11 +70,11 @@ class MacOSTimeMachinePlistPlugin(
         """Extracts relevant MacOS TimeMachine entries.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
         """
-        for destination in match.get("Destinations", []):
+        for destination in match.get("Destinations") or []:
             backup_alias_string = None
             snapshot_times = []
 
@@ -87,13 +87,12 @@ class MacOSTimeMachinePlistPlugin(
                     backup_alias_string = backup_alias.string
 
                 except (ValueError, TypeError, errors.ParseError) as exception:
-                    parser_mediator.ProduceExtractionWarning(
+                    parser_mediator.ProduceWarning(
                         f"unable to parse backup alias value with error: {exception!s}"
                     )
 
             for datetime_value in destination.get("SnapshotDates", []):
-                # dfDateTime relies on the time zone but since plistlib does not set
-                # one.
+                # dfDateTime relies on the time zone but plistlib does not set one.
                 datetime_value = datetime_value.replace(tzinfo=pytz.UTC)
 
                 date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()

@@ -1,6 +1,5 @@
 """SQLite parser plugin for MacOS MacKeeper cache database files."""
 
-import codecs
 import json
 
 from dfdatetime import java_time as dfdatetime_java_time
@@ -151,34 +150,36 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
         """Retrieves a date and time value from the row.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           query_hash (int): hash of the query, that uniquely identifies the query
               that produced the row.
           row (sqlite3.Row): row.
           value_name (str): name of the value.
 
         Returns:
-          dfdatetime.JavaTime: date and time value or None if not available.
+          tuple: containing:
+
+              dfdatetime.DateTimeValues: date and time value or None if not available.
+              bool: value to indicate the date and time value was corrupted.
         """
-        time_value = self._GetRowValue(query_hash, row, value_name)
-        if time_value is None:
-            return None
+        value = self._GetRowValue(query_hash, row, value_name)
+        if value is None:
+            return None, False
 
-        if isinstance(time_value, int):
-            return dfdatetime_java_time.JavaTime(timestamp=time_value)
-
-        try:
+        if isinstance(value, int):
+            date_time = dfdatetime_java_time.JavaTime(timestamp=value)
+        else:
             date_time = dfdatetime_time_elements.TimeElements()
-            date_time.CopyFromDateTimeString(time_value)
-        except ValueError as exception:
-            parser_mediator.ProduceExtractionWarning(
-                f"Unable to parse time string: {time_value:s} with error: "
-                f"{exception!s}"
-            )
-            return None
+            try:
+                date_time.CopyFromDateTimeString(value)
+            except ValueError as exception:
+                parser_mediator.ProduceWarning(
+                    f"Unable to parse time string: {value:s} with error: {exception!s}"
+                )
+                return None, True
 
-        return date_time
+        return date_time, False
 
     def _ParseChatData(self, data):
         """Parses chat comment data.
@@ -223,31 +224,29 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
         """Parses a single row from the receiver and cache response table.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           query (str): query that created the row.
           row (sqlite3.Row): row.
         """
         query_hash = hash(query)
 
-        data = {}
+        corrupted = False
+
         key_url = self._GetRowValue(query_hash, row, "request_key")
 
-        data_dict = {}
+        data = {}
         description = "MacKeeper Entry"
-        # Check the URL, since that contains vital information about the type of
-        # event we are dealing with.
+
+        # Check the URL, since that contains information about the type of event.
         if key_url.endswith("plist"):
             description = "Configuration Definition"
             data["text"] = "Plist content added to cache."
 
         elif key_url.startswith("http://event.zeobit.com"):
             description = "MacKeeper Event"
-            try:
-                _, _, part = key_url.partition("?")
-                data["text"] = part.replace("&", " ")
-            except UnicodeDecodeError:
-                data["text"] = "N/A"
+            _, _, part = key_url.partition("?")
+            data["text"] = part.replace("&", " ")
 
         elif key_url.startswith("http://account.zeobit.com"):
             description = "Account Activity"
@@ -258,15 +257,20 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
                 data["text"] = "Unknown activity."
 
         elif key_url.startswith("http://support.") and "chat" in key_url:
-            description = "Chat "
+            jquery = self._GetRowValue(query_hash, row, "data")
             try:
-                jquery = self._GetRowValue(query_hash, row, "data")
-                jquery = codecs.decode(jquery, "utf-8")
+                jquery = jquery.decode("utf-8")
             except UnicodeDecodeError:
-                jquery = ""
+                parser_mediator.ProduceWarning(
+                    "Unable to decode jquery data as UTF-8. Unsupported code points "
+                    "are escaped."
+                )
+                jquery = jquery.decode("utf-8", errors="backslashreplace")
+                corrupted = True
 
             data_dict = self._ExtractJQuery(jquery)
             data = self._ParseChatData(data_dict)
+            description = "Chat "
 
             data["entry_type"] = data_dict.get("type", "")
             if data["entry_type"] == "comment":
@@ -283,9 +287,11 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
                     data["text"] = "No additional data."
 
         event_data = MacKeeperCacheEventData()
-        event_data.added_time = self._GetDateTimeRowValue(
+        event_data.added_time, value_corrupted = self._GetDateTimeRowValue(
             parser_mediator, query_hash, row, "time_string"
         )
+        corrupted = corrupted or value_corrupted
+
         event_data.description = description
         event_data.event_type = data.get("event_type")
         event_data.offset = self._GetRowValue(query_hash, row, "id")
@@ -297,7 +303,7 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
         event_data.user_sid = data.get("sid")
         event_data.username = data.get("user")
 
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
 
 sqlite.SQLiteParser.RegisterPlugin(MacKeeperCachePlugin)

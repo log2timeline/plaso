@@ -107,6 +107,8 @@ class MacOSNotificationCenterPlugin(interface.SQLitePlugin):
         """
         query_hash = hash(query)
 
+        corrupted = False
+
         data_blob = self._GetRowValue(query_hash, row, "dataBlob")
 
         try:
@@ -116,10 +118,11 @@ class MacOSNotificationCenterPlugin(interface.SQLitePlugin):
             req_property = property_list["req"]
 
         except (KeyError, plistlib.InvalidFileException) as exception:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unable to read plist from database with error: {exception!s}"
             )
             req_property = {}
+            corrupted = True
 
         event_data = MacOSNotificationCenterEventData()
         event_data.bundle_name = self._GetRowValue(query_hash, row, "bundle_name")
@@ -131,7 +134,7 @@ class MacOSNotificationCenterPlugin(interface.SQLitePlugin):
         event_data.subtitle = req_property.get("subt")
         event_data.title = req_property.get("titl")
 
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
 
 sqlite.SQLiteParser.RegisterPlugin(MacOSNotificationCenterPlugin)

@@ -63,7 +63,7 @@ class TextPlugin(plugins.BasePlugin):
         byte_value = exception.object[exception.start]
         if self._parser_mediator:
             offset = self._current_offset + exception.start
-            self._parser_mediator.ProduceExtractionWarning(
+            self._parser_mediator.ProduceWarning(
                 f"error decoding 0x{byte_value:02x} at offset: {offset:d}"
             )
 
@@ -129,8 +129,8 @@ class TextPlugin(plugins.BasePlugin):
         """Finalizes parsing.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
         """
         return
 
@@ -140,8 +140,8 @@ class TextPlugin(plugins.BasePlugin):
         """Parses a text-log file header.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           text_reader (EncodedTextReader): text reader.
 
         Raises:
@@ -153,8 +153,8 @@ class TextPlugin(plugins.BasePlugin):
         """Parses lines of text using a pyparsing definition.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           text_reader (EncodedTextReader): text reader.
         """
         consecutive_line_failures = 0
@@ -163,11 +163,9 @@ class TextPlugin(plugins.BasePlugin):
             text_reader.ReadLines()
             self._current_offset = text_reader.get_offset()
         except UnicodeDecodeError as exception:
-            parser_mediator.ProduceExtractionWarning(
-                (
-                    f"unable to read and decode log line at offset: "
-                    f"{self._current_offset:d} with error: {exception!s}"
-                )
+            parser_mediator.ProduceWarning(
+                f"unable to read and decode log line at offset: "
+                f"{self._current_offset:d} with error: {exception!s}"
             )
             return
 
@@ -176,11 +174,9 @@ class TextPlugin(plugins.BasePlugin):
                 break
 
             if consecutive_line_failures > self._MAXIMUM_CONSECUTIVE_LINE_FAILURES:
-                parser_mediator.ProduceExtractionWarning(
-                    (
-                        f"more than {self._MAXIMUM_CONSECUTIVE_LINE_FAILURES:d} "
-                        f"consecutive failures to parse lines."
-                    )
+                parser_mediator.ProduceWarning(
+                    f"more than {self._MAXIMUM_CONSECUTIVE_LINE_FAILURES:d} "
+                    f"consecutive failures to parse lines."
                 )
                 break
 
@@ -200,11 +196,10 @@ class TextPlugin(plugins.BasePlugin):
                     truncated_line = line[:77]
                     line = f"{truncated_line:s}..."
 
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"unable to parse log line: {text_reader.line_number:d} "
                     f'"{line:s}"'
                 )
-
                 consecutive_line_failures += 1
 
                 continue
@@ -216,7 +211,7 @@ class TextPlugin(plugins.BasePlugin):
                 self._ParseRecord(parser_mediator, key, structure)
 
             except errors.ParseError as exception:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"unable to parse record: {key:s} with error: {exception!s}"
                 )
 
@@ -226,11 +221,9 @@ class TextPlugin(plugins.BasePlugin):
                 text_reader.ReadLines()
                 self._current_offset = text_reader.get_offset()
             except UnicodeDecodeError as exception:
-                parser_mediator.ProduceExtractionWarning(
-                    (
-                        f"unable to read and decode log line at offset: "
-                        f"{self._current_offset:d} with error: {exception!s}"
-                    )
+                parser_mediator.ProduceWarning(
+                    f"unable to read and decode log line at offset: "
+                    f"{self._current_offset:d} with error: {exception!s}"
                 )
                 break
 
@@ -239,8 +232,8 @@ class TextPlugin(plugins.BasePlugin):
         """Parses a pyparsing structure.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           key (str): name of the parsed structure.
           structure (pyparsing.ParseResults): tokens from a parsed log line.
 
@@ -340,8 +333,8 @@ class TextPlugin(plugins.BasePlugin):
         """Check if the log record has the minimal structure required by the plugin.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           text_reader (EncodedTextReader): text reader.
 
         Returns:
@@ -353,8 +346,8 @@ class TextPlugin(plugins.BasePlugin):
         """Extracts events from a text log file.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (Optional[dfvfs.FileIO]): a file-like object.
         """
         # This will raise if unhandled keyword arguments are passed.
@@ -375,24 +368,21 @@ class TextPlugin(plugins.BasePlugin):
             text_reader = text_parser.EncodedTextReader(
                 file_object, encoding=encoding, encoding_errors="text_parser_handler"
             )
-
             try:
                 text_reader.ReadLines()
                 self._current_offset = text_reader.get_offset()
             except UnicodeDecodeError as exception:
-                parser_mediator.ProduceExtractionWarning(
-                    (
-                        f"unable to read and decode log line at offset: "
-                        f"{self._current_offset:d} with error: {exception!s}"
-                    )
+                parser_mediator.ProduceWarning(
+                    f"unable to read and decode log line at offset: "
+                    f"{self._current_offset:d} with error: {exception!s}"
                 )
                 return
 
             try:
                 self._ParseHeader(parser_mediator, text_reader)
             except UnicodeDecodeError as exception:
-                parser_mediator.ProduceExtractionWarning(
-                    (f"unable to parser header with error: {exception!s}")
+                parser_mediator.ProduceWarning(
+                    f"unable to parser header with error: {exception!s}"
                 )
                 return
 

@@ -22,14 +22,13 @@ class KeychainInternetRecordEventData(events.EventData):
     Attributes:
       account_name (str): name of the account.
       comments (str): comments added by the user.
-      creation_time (dfdatetime.DateTimeValues): creation date and time of
-          the keychain record.
+      creation_time (dfdatetime.DateTimeValues): creation date and time of the keychain
+          record.
       entry_name (str): name of the entry.
-      modification_time (dfdatetime.DateTimeValues): modification date and time
-          of the keychain record.
+      modification_time (dfdatetime.DateTimeValues): modification date and time of the
+          keychain record.
       protocol (str): internet protocol used, for example "https".
-      ssgp_hash (str): password/certificate hash formatted as a hexadecimal
-          string.
+      ssgp_hash (str): password/certificate hash formatted as a hexadecimal string.
       text_description (str): description.
       type_protocol (str): sub-protocol used, for example "form".
       where (str): domain name or IP where the password is used.
@@ -59,13 +58,12 @@ class KeychainApplicationRecordEventData(events.EventData):
     Attributes:
       account_name (str): name of the account.
       comments (str): comments added by the user.
-      creation_time (dfdatetime.DateTimeValues): creation date and time of
-          the keychain record.
+      creation_time (dfdatetime.DateTimeValues): creation date and time of the keychain
+          record.
       entry_name (str): name of the entry.
-      modification_time (dfdatetime.DateTimeValues): modification date and time
-          of the keychain record.
-      ssgp_hash (str): password/certificate hash formatted as a hexadecimal
-          string.
+      modification_time (dfdatetime.DateTimeValues): modification date and time of the
+          keychain record.
+      ssgp_hash (str): password/certificate hash formatted as a hexadecimal string.
       text_description (str): description.
     """
 
@@ -183,7 +181,6 @@ class KeychainParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper)
         file_offset = (
             record_offset + attribute_values_data_offset + attribute_value_offset
         )
-
         attribute_value_offset -= attribute_values_data_offset + 1
         attribute_value_data = attribute_values_data[attribute_value_offset:]
 
@@ -839,22 +836,41 @@ class KeychainParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper)
 
         return value, corrupted
 
-    def _ParseIntegerTagString(self, integer_value):
+    def _ParseIntegerTagString(self, parser_mediator, record, name):
         """Parses an integer value as a tag string.
 
         Args:
-          integer_value (int): integer value (CSSM_DB_ATTRIBUTE_FORMAT_SINT32,
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
+          record (dict[str, object]): database record.
+          name (str): name of the integer value (CSSM_DB_ATTRIBUTE_FORMAT_SINT32 or
               CSSM_DB_ATTRIBUTE_FORMAT_UINT32) that represents a tag string.
 
         Returns:
-          str: integer value formatted as a tag string or None if integer value is
-              None (NULL).
-        """
-        if not integer_value:
-            return None
+          tuple: containing:
 
+              str: integer value formatted as a tag string or None if integer value is
+                  None (NULL).
+              bool: value to indicate the tag string value was corrupted.
+        """
+        integer_value = record[name]
+        if not integer_value:
+            return None, False
+
+        corrupted = False
         tag_string = codecs.decode(f"{integer_value:08x}", "hex")
-        return codecs.decode(tag_string, "utf-8")
+
+        try:
+            tag_string = tag_string.decode("utf-8")
+        except UnicodeDecodeError:
+            parser_mediator.ProduceWarning(
+                f"Unable to decode tag string value: {name:s} as UTF-8. Unsupported "
+                f"code points are escaped."
+            )
+            tag_string = tag_string.decode("utf-8", errors="backslashreplace")
+            corrupted = True
+
+        return tag_string, corrupted
 
     def _ParseApplicationPasswordRecord(self, parser_mediator, record):
         """Extracts the information from an application password record.
@@ -874,8 +890,18 @@ class KeychainParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper)
                 'with: "ssgp".'
             )
 
-        ssgp_hash = codecs.encode(key[4:], "hex")
         corrupted = False
+
+        ssgp_hash = codecs.encode(key[4:], "hex")
+        try:
+            ssgp_hash = ssgp_hash.decode("utf-8")
+        except UnicodeDecodeError:
+            parser_mediator.ProduceWarning(
+                "Unable to decode ssgp hash as UTF-8. Unsupported code points are "
+                "escaped."
+            )
+            ssgp_hash = ssgp_hash.decode("utf-8", errors="backslashreplace")
+            corrupted = True
 
         event_data = KeychainApplicationRecordEventData()
         event_data.account_name, value_corrupted = self._ParseBinaryDataAsString(
@@ -883,7 +909,11 @@ class KeychainParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper)
             record,
             "acct",
         )
-        event_data.comments = self._ParseIntegerTagString(record["crtr"])
+        event_data.comments, value_corrupted = self._ParseIntegerTagString(
+            parser_mediator, record, "crtr"
+        )
+        corrupted = corrupted or value_corrupted
+
         event_data.creation_time, value_corrupted = self._ParseDateTimeValue(
             parser_mediator, record, "cdat"
         )
@@ -901,7 +931,7 @@ class KeychainParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper)
         )
         corrupted = corrupted or value_corrupted
 
-        event_data.ssgp_hash = codecs.decode(ssgp_hash, "utf-8")
+        event_data.ssgp_hash = ssgp_hash
         event_data.text_description, value_corrupted = self._ParseBinaryDataAsString(
             parser_mediator,
             record,
@@ -933,8 +963,9 @@ class KeychainParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper)
 
         protocol_value = record["ptcl"]
         protocol_string = codecs.decode(f"{protocol_value:08x}", "hex")
+
         try:
-            protocol_string = codecs.decode(protocol_string, "utf-8")
+            protocol_string = protocol_string.decode("utf-8")
         except UnicodeDecodeError:
             parser_mediator.ProduceWarning(
                 "Unable to decode ptcl as UTF-8. Unsupported code points are escaped."
@@ -944,7 +975,7 @@ class KeychainParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper)
 
         ssgp_hash = codecs.encode(key[4:], "hex")
         try:
-            ssgp_hash = codecs.decode(ssgp_hash, "utf-8")
+            ssgp_hash = ssgp_hash.decode("utf-8")
         except UnicodeDecodeError:
             parser_mediator.ProduceWarning(
                 "Unable to decode ssgp hash as UTF-8. Unsupported code points are "
@@ -959,7 +990,11 @@ class KeychainParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper)
         )
         corrupted = corrupted or value_corrupted
 
-        event_data.comments = self._ParseIntegerTagString(record["crtr"])
+        event_data.comments, value_corrupted = self._ParseIntegerTagString(
+            parser_mediator, record, "crtr"
+        )
+        corrupted = corrupted or value_corrupted
+
         event_data.creation_time, value_corrupted = self._ParseDateTimeValue(
             parser_mediator, record, "cdat"
         )

@@ -18,25 +18,22 @@ class IISEventData(events.EventData):
       cs_host (str): HTTP host header name.
       cs_referrer (str): Site that referred to the requested site.
       cs_uri_query (str): URI query that was requested.
-      cs_username (str): Username of the authenticated user that accessed
-          the server, where anonymous users are indicated by a hyphen.
+      cs_username (str): Username of the authenticated user that accessed the server,
+          where anonymous users are indicated by a hyphen.
       dest_ip (str): IP address of the server that generated the logged activity.
       dest_port (str): Server port number.
       http_method (str): HTTP request method, such as GET or POST.
       http_status (str): HTTP status code that was returned by the server.
-      last_written_time (dfdatetime.DateTimeValues): entry last written date and
-          time.
+      last_written_time (dfdatetime.DateTimeValues): entry last written date and time.
       protocol_version (str): HTTP protocol version that was used.
       received_bytes (str): Number of bytes received and processed by the server.
       requested_uri_stem (str): File requested, such as index.php or Default.htm
       s_computername (str): Name of the server that generated the logged activity.
-      sc_substatus (str):  HTTP substatus error code that was returned by the
-          server.
+      sc_substatus (str):  HTTP substatus error code that was returned by the server.
       sc_win32_status (str): Windows status code of the server.
       sent_bytes (str): Number of bytes sent by the server.
       source_ip (str): IP address of the client that made the request.
-      s_sitename (str): Service name and instance number that was running on the
-          client.
+      s_sitename (str): Service name and instance number that was running on the client.
       time_taken (str): Time taken, in milliseconds, to process the request.
       user_agent (str): User agent that was used.
     """
@@ -265,8 +262,8 @@ class WinIISTextPlugin(interface.TextPlugin):
         """Parses the fields metadata and updates the log line definition to match.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           fields (str): field definitions.
         """
         log_line_structure = pyparsing.Empty()
@@ -277,7 +274,7 @@ class WinIISTextPlugin(interface.TextPlugin):
             field_structure = self._LOG_LINE_STRUCTURES.get(member)
             if not field_structure:
                 field_structure = self._URI
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"missing definition for field: {member:s} defaulting to URI"
                 )
 
@@ -291,8 +288,8 @@ class WinIISTextPlugin(interface.TextPlugin):
         """Parses a text-log file header.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           text_reader (EncodedTextReader): text reader.
 
         Raises:
@@ -328,8 +325,8 @@ class WinIISTextPlugin(interface.TextPlugin):
         """Parse a single log line.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           structure (pyparsing.ParseResults): tokens from a parsed log line.
         """
         event_data = IISEventData()
@@ -371,8 +368,8 @@ class WinIISTextPlugin(interface.TextPlugin):
         """Parses a pyparsing structure.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           key (str): name of the parsed structure.
           structure (pyparsing.ParseResults): tokens from a parsed log line.
 
@@ -442,8 +439,8 @@ class WinIISTextPlugin(interface.TextPlugin):
         """Check if the log record has the minimal structure required by the plugin.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           text_reader (EncodedTextReader): text reader.
 
         Returns:

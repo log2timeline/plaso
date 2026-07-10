@@ -272,7 +272,7 @@ class MacOSBackgroundItemsPlistPlugin(
                     try:
                         self._ParseBookmarkData(bookmark_data, event_data)
                     except errors.ParseError as exception:
-                        parser_mediator.ProduceExtractionWarning(
+                        parser_mediator.ProduceWarning(
                             f"unable to parse internal items bookmark data with error: "
                             f"{exception!s}"
                         )
@@ -292,7 +292,7 @@ class MacOSBackgroundItemsPlistPlugin(
                         try:
                             self._ParseBookmarkData(bookmark_data, event_data)
                         except errors.ParseError as exception:
-                            parser_mediator.ProduceExtractionWarning(
+                            parser_mediator.ProduceWarning(
                                 f"unable to parse bookmark data with error: "
                                 f"{exception!s}"
                             )

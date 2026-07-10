@@ -1,8 +1,6 @@
 # -*- coding:utf-8 -*-
 """SQLite parser plugin for Tango on Android database files."""
 
-import codecs
-
 from base64 import b64decode as base64_decode
 
 from plaso.containers import events
@@ -14,20 +12,20 @@ class AndroidTangoContactEventData(events.EventData):
     """Tango on Android contact event data.
 
     Attributes:
-      access_time (dfdatetime.DateTimeValues): date and time the contact
-          was last accessed.
+      access_time (dfdatetime.DateTimeValues): date and time the contact was last
+          accessed.
       birthday (str): contact profile birthday.
       distance (int): contact profile distance.
       first_name (str): contact profile first name.
       friend_request_message (str): message sent on friend request.
-      friend_request_time (dfdatetime.DateTimeValues): date and time a friend
-          request was sent.
-      friend_request_type (str): flag indicating the type of friend request sent
-          for example outRequest for request sent or noRequest for no request.
+      friend_request_time (dfdatetime.DateTimeValues): date and time a friend request
+          was sent.
+      friend_request_type (str): flag indicating the type of friend request sent for
+          example outRequest for request sent or noRequest for no request.
       gender (str): contact profile gender.
       is_friend (bool): True if the contact is considered a friend.
-      last_active_time (dfdatetime.DateTimeValues): date and time the contact
-          was last active.
+      last_active_time (dfdatetime.DateTimeValues): date and time the contact was last
+          active.
       last_name (str): contact profile last name.
       status (str): contact status message.
     """
@@ -70,8 +68,7 @@ class AndroidTangoMessageEventData(events.EventData):
     """Tango on Android message event data.
 
     Attributes:
-      creation_time (dfdatetime.DateTimeValues): date and time the message
-          was created.
+      creation_time (dfdatetime.DateTimeValues): date and time the message was created.
       direction (int): flag indicating direction of the message.
       message_identifier (int): message identifier.
       sent_time (dfdatetime.DateTimeValues): date and time the message was sent.
@@ -177,38 +174,55 @@ class AndroidTangoProfilePlugin(interface.SQLitePlugin):
         """Retrieves a base64 encoded value from the row.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
-          query_hash (int): hash of the query, that uniquely identifies the query
-              that produced the row.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
+          query_hash (int): hash of the query, that uniquely identifies the query that
+              produced the row.
           row (sqlite3.Row): row.
           value_name (str): name of the value.
 
         Returns:
-          object: value or None if not available.
+          tuple: containing:
+
+              object: value or None if not available.
+              bool: value to indicate the base64 encoded value was corrupted.
         """
         encoded_value = self._GetRowValue(query_hash, row, value_name)
+
         try:
             value = base64_decode(encoded_value)
-            return codecs.decode(value, "utf-8")
-
         except ValueError as exception:
-            parser_mediator.ProduceExtractionWarning(
-                f"unable to decode: {value_name:s} with error: {exception!s}"
+            parser_mediator.ProduceWarning(
+                f"unable to base64 decode: {value_name:s} with error: {exception!s}"
             )
+            return None, True
 
-        return None
+        corrupted = False
+
+        try:
+            value = value.decode("utf-8")
+        except ValueError:
+            parser_mediator.ProduceWarning(
+                f"Unable to decode value: {value_name:s} as UTF-8. Unsupported code "
+                f"points are escaped."
+            )
+            value = value.decode("utf-8", errors="backslashreplace")
+            corrupted = True
+
+        return value, corrupted
 
     def ParseContactRow(self, parser_mediator, query, row, **unused_kwargs):
         """Parses a contact row from the database.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           query (str): query that created the row.
           row (sqlite3.Row): row resulting from query.
         """
         query_hash = hash(query)
+
+        corrupted = False
 
         is_friend = self._GetRowValue(query_hash, row, "friend")
 
@@ -218,12 +232,16 @@ class AndroidTangoProfilePlugin(interface.SQLitePlugin):
         )
         event_data.birthday = self._GetRowValue(query_hash, row, "birthday")
         event_data.distance = self._GetRowValue(query_hash, row, "distance")
-        event_data.first_name = self._GetBase64RowValue(
+        event_data.first_name, value_corrupted = self._GetBase64RowValue(
             parser_mediator, query_hash, row, "first_name"
         )
-        event_data.friend_request_message = self._GetBase64RowValue(
+        corrupted = corrupted or value_corrupted
+
+        event_data.friend_request_message, value_corrupted = self._GetBase64RowValue(
             parser_mediator, query_hash, row, "friend_request_message"
         )
+        corrupted = corrupted or value_corrupted
+
         event_data.friend_request_time = self._GetJavaTimeRowValue(
             query_hash, row, "friend_request_time"
         )
@@ -235,14 +253,17 @@ class AndroidTangoProfilePlugin(interface.SQLitePlugin):
         event_data.last_active_time = self._GetJavaTimeRowValue(
             query_hash, row, "last_active_time"
         )
-        event_data.last_name = self._GetBase64RowValue(
+        event_data.last_name, value_corrupted = self._GetBase64RowValue(
             parser_mediator, query_hash, row, "last_name"
         )
-        event_data.status = self._GetBase64RowValue(
+        corrupted = corrupted or value_corrupted
+
+        event_data.status, value_corrupted = self._GetBase64RowValue(
             parser_mediator, query_hash, row, "status"
         )
+        corrupted = corrupted or value_corrupted
 
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
 
 class AndroidTangoTCPlugin(interface.SQLitePlugin):
@@ -325,8 +346,8 @@ class AndroidTangoTCPlugin(interface.SQLitePlugin):
         """Parses a conversation row from the database.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           query (str): query that created the row.
           row (sqlite3.Row): row resulting from query.
         """
@@ -347,8 +368,8 @@ class AndroidTangoTCPlugin(interface.SQLitePlugin):
         """Parses a message row from the database.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           query (str): query that created the row.
           row (sqlite3.Row): row resulting from query.
         """
