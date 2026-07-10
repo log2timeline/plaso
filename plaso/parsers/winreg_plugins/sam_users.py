@@ -19,12 +19,10 @@ class SAMUsersWindowsRegistryEventData(events.EventData):
       comments (str): comments.
       fullname (str): full name.
       key_path (str): Windows Registry key path.
-      last_login_time (dfdatetime.DateTimeValues): date and time of the last
-         login.
-      last_password_set_time (dfdatetime.DateTimeValues): date and time of the
-          last password set.
-      last_written_time (dfdatetime.DateTimeValues): entry last written date and
-          time.
+      last_login_time (dfdatetime.DateTimeValues): date and time of the last login.
+      last_password_set_time (dfdatetime.DateTimeValues): date and time of the last
+          password set.
+      last_written_time (dfdatetime.DateTimeValues): entry last written date and time.
       login_count (int): login count.
       username (str): a string containing the username.
     """
@@ -97,14 +95,17 @@ class SAMUsersWindowsRegistryPlugin(
         """Parses a V value string.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           data (bytes): Windows Registry V value data.
           user_information_descriptor (user_information_descriptor): V value
               user information descriptor.
 
         Returns:
-          str: string value stored in the Windows Registry V value data.
+          tuple: containing:
+
+              str: string value stored in the Windows Registry V value data.
+              bool: value to indicate the V value string was corrupted.
         """
         data_start_offset = (
             user_information_descriptor.offset + self._V_VALUE_STRINGS_OFFSET
@@ -112,35 +113,37 @@ class SAMUsersWindowsRegistryPlugin(
         data_end_offset = data_start_offset + user_information_descriptor.size
         descriptor_data = data[data_start_offset:data_end_offset]
 
+        corrupted = False
+
         try:
             username = descriptor_data.decode("utf-16-le")
         except (UnicodeDecodeError, UnicodeEncodeError) as exception:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f'unable to decode "V" value string with error: {exception!s}. '
                 f"Unsupported code points are escaped."
             )
             username = descriptor_data.decode("utf-16-le", errors="backslashreplace")
+            corrupted = True
 
-        return username
+        return username, corrupted
 
     def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
         """Extracts events from a Windows Registry key.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
         """
         names_key = registry_key.GetSubkeyByName("Names")
         if not names_key:
-            parser_mediator.ProduceExtractionWarning("missing subkey: Names.")
+            parser_mediator.ProduceWarning("missing subkey: Names.")
             return
 
         last_written_time_per_username = {
             name_key.name: name_key.last_written_time
             for name_key in names_key.GetSubkeys()
         }
-
         for subkey in registry_key.GetSubkeys():
             if subkey.name == "Names":
                 continue
@@ -148,14 +151,14 @@ class SAMUsersWindowsRegistryPlugin(
             try:
                 f_value = self._ParseFValue(subkey)
             except errors.ParseError as exception:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f'unable to parse "F" value with error: {exception!s}'
                 )
                 continue
 
             registry_value = subkey.GetValueByName("V")
             if not registry_value:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f'missing Registry value: "V" in subkey: {subkey.name:s}.'
                 )
                 continue
@@ -167,29 +170,30 @@ class SAMUsersWindowsRegistryPlugin(
                     registry_value.data, 0, v_value_map
                 )
             except (ValueError, errors.ParseError) as exception:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f'unable to parse "V" value with error: {exception!s}'
                 )
                 continue
 
-            username = self._ParseVValueString(
+            username, corrupted = self._ParseVValueString(
                 parser_mediator, registry_value.data, v_value[1]
             )
-
             # TODO: check if subkey.name == f_value.rid
 
             event_data = SAMUsersWindowsRegistryEventData()
             event_data.account_rid = f_value.rid
-            event_data.comments = self._ParseVValueString(
+            event_data.comments, value_corrupted = self._ParseVValueString(
                 parser_mediator, registry_value.data, v_value[3]
             )
-            event_data.fullname = self._ParseVValueString(
+            corrupted = corrupted or value_corrupted
+
+            event_data.fullname, value_corrupted = self._ParseVValueString(
                 parser_mediator, registry_value.data, v_value[2]
             )
+            corrupted = corrupted or value_corrupted
+
             event_data.key_path = registry_key.path
-            event_data.last_written_time = last_written_time_per_username.get(
-                username, None
-            )
+            event_data.last_written_time = last_written_time_per_username.get(username)
             event_data.login_count = f_value.number_of_logons
             event_data.username = username
 
@@ -203,7 +207,7 @@ class SAMUsersWindowsRegistryPlugin(
                     timestamp=f_value.last_password_set_time
                 )
 
-            parser_mediator.ProduceEventData(event_data)
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
 
 winreg_parser.WinRegistryParser.RegisterPlugin(SAMUsersWindowsRegistryPlugin)

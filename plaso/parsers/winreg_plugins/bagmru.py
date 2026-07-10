@@ -18,8 +18,7 @@ class BagMRUEventData(events.EventData):
     Attributes:
       entries (str): most recently used (MRU) entries.
       key_path (str): Windows Registry key path.
-      last_written_time (dfdatetime.DateTimeValues): entry last written date and
-          time.
+      last_written_time (dfdatetime.DateTimeValues): entry last written date and time.
     """
 
     DATA_TYPE = "windows:registry:bagmru"
@@ -81,8 +80,8 @@ class BagMRUWindowsRegistryPlugin(
         """Parses the MRUListEx entry value.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           registry_key (dfwinreg.WinRegistryKey): Windows Registry key that contains
                the MRUListEx value.
           entry_number (int): entry number.
@@ -95,20 +94,16 @@ class BagMRUWindowsRegistryPlugin(
         """
         value = registry_key.GetValueByName(f"{entry_number:d}")
         if value is None:
-            parser_mediator.ProduceExtractionWarning(
-                (
-                    f"Missing MRUListEx entry value: {entry_number:d} in key: "
-                    f"{registry_key.path:s}"
-                )
+            parser_mediator.ProduceWarning(
+                f"Missing MRUListEx entry value: {entry_number:d} in key: "
+                f"{registry_key.path:s}"
             )
             return None, None
 
         if not value.DataIsBinaryData():
-            parser_mediator.ProduceExtractionWarning(
-                (
-                    f"Non-binary MRUListEx entry value: {entry_number:d} in key: "
-                    f"{registry_key.path:s}"
-                )
+            parser_mediator.ProduceWarning(
+                f"Non-binary MRUListEx entry value: {entry_number:d} in key: "
+                f"{registry_key.path:s}"
             )
             return None, None
 
@@ -123,7 +118,6 @@ class BagMRUWindowsRegistryPlugin(
                 parent_path_segments=parent_path_segments,
                 codepage=codepage,
             )
-
             path = shell_items_parser.CopyToPath()
             upper_path_segment = shell_items_parser.GetUpperPathSegment()
 
@@ -150,7 +144,6 @@ class BagMRUWindowsRegistryPlugin(
         context = dtfabric_data_maps.DataTypeMapContext(
             values={"data_size": len(mrulistex_value.data)}
         )
-
         return self._ReadStructureFromByteStream(
             mrulistex_value.data, 0, mrulistex_entries_map, context=context
         )
@@ -161,8 +154,8 @@ class BagMRUWindowsRegistryPlugin(
         """Extract event objects from a MRUListEx Registry key.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
           parent_path_segments (list[str]): parent shell item path segments.
           codepage (Optional[str]): extended ASCII string codepage.
@@ -170,7 +163,7 @@ class BagMRUWindowsRegistryPlugin(
         try:
             mrulistex = self._ParseMRUListExValue(registry_key)
         except (ValueError, errors.ParseError) as exception:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unable to parse MRUListEx value with error: {exception!s}"
             )
             return
@@ -188,13 +181,10 @@ class BagMRUWindowsRegistryPlugin(
                 continue
 
             if found_terminator:
-                parser_mediator.ProduceExtractionWarning(
-                    (
-                        f"found additional MRUListEx entries after terminator in key: "
-                        f"{registry_key.path:s}"
-                    )
+                parser_mediator.ProduceWarning(
+                    f"found additional MRUListEx entries after terminator in key: "
+                    f"{registry_key.path:s}"
                 )
-
                 # Only create one parser error per terminator.
                 found_terminator = False
 
@@ -205,16 +195,13 @@ class BagMRUWindowsRegistryPlugin(
                 parent_path_segments,
                 codepage=codepage,
             )
-
             entry_numbers[entry_number] = upper_path_segment
 
             display_entry_index = entry_index + 1
             display_path = path or "N/A"
             entries.append(
-                (
-                    f"Index: {display_entry_index:d} [MRU Value {entry_number:d}]: "
-                    f"Shell item path: {display_path:s}"
-                )
+                f"Index: {display_entry_index:d} [MRU Value {entry_number:d}]: "
+                f"Shell item path: {display_path:s}"
             )
 
         event_data = BagMRUEventData()
@@ -227,11 +214,9 @@ class BagMRUWindowsRegistryPlugin(
         for entry_number, path_segment in entry_numbers.items():
             sub_key = registry_key.GetSubkeyByName(f"{entry_number:d}")
             if not sub_key:
-                parser_mediator.ProduceExtractionWarning(
-                    (
-                        f"Missing BagMRU sub key: {entry_number:d} in key: "
-                        f"{registry_key.path:s}"
-                    )
+                parser_mediator.ProduceWarning(
+                    f"Missing BagMRU sub key: {entry_number:d} in key: "
+                    f"{registry_key.path:s}"
                 )
                 continue
 
@@ -246,8 +231,8 @@ class BagMRUWindowsRegistryPlugin(
         """Extracts events from a Windows Registry key.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
           codepage (Optional[str]): extended ASCII string codepage.
         """

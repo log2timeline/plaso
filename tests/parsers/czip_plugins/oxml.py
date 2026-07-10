@@ -75,16 +75,41 @@ class OXMLTest(test_lib.CompoundZIPPluginTestCase):
         """Tests the _ParsePropertiesXMLFile function."""
         plugin = oxml.OpenXMLPlugin()
 
-        expected_properties = {
-            "author": "Nides",
-            "created": "2012-11-07T23:29:00.1234567Z",
-            "last_saved_by": "Nides",
-            "modified": "2013-08-25T22:18:00Z",
-            "revision_number": "3",
-        }
+        storage_writer = self._CreateStorageWriter()
+        parser_mediator = self._CreateParserMediator(storage_writer)
 
-        properties = plugin._ParsePropertiesXMLFile(self._PROPERTIES_XML_DATA)
-        self.assertEqual(properties, expected_properties)
+        properties, corrupted = plugin._ParsePropertiesXMLFile(
+            parser_mediator, self._PROPERTIES_XML_DATA
+        )
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 0)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "recovery_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        self.assertEqual(properties["author"], "Nides")
+        self.assertEqual(
+            properties["created"].CopyToDateTimeStringISO8601(),
+            "2012-11-07T23:29:00.123456+00:00",
+        )
+        self.assertEqual(properties["last_saved_by"], "Nides")
+        self.assertEqual(
+            properties["modified"].CopyToDateTimeStringISO8601(),
+            "2013-08-25T22:18:00.000000+00:00",
+        )
+        self.assertEqual(properties["last_saved_by"], "Nides")
+        self.assertEqual(properties["revision_number"], 3)
+        self.assertFalse(corrupted)
 
     def testParseRelationshipsXMLFile(self):
         """Tests the _ParseRelationshipsXMLFile function."""
