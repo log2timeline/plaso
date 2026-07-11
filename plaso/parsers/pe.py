@@ -187,15 +187,18 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
             if not timestamp:
                 continue
 
+            corrupted = False
+
             dll_name = getattr(table_entry, "dll", "")
             try:
                 dll_name = dll_name.decode("ascii")
             except UnicodeDecodeError:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     "unable to decode delay import table DLL name as ASCII. "
                     "Unsupported code points are escaped."
                 )
                 dll_name = dll_name.decode("ascii", errors="backslashreplace")
+                corrupted = True
 
             event_data = PEDLLImportEventData()
             event_data.delayed_import = True
@@ -204,7 +207,7 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
             date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
             event_data.modification_time = date_time
 
-            parser_mediator.ProduceEventData(event_data)
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def _ParseExportTable(self, parser_mediator, pefile_object, event_data):
         """Parses the export table.
@@ -214,20 +217,26 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
               other components, such as storage and dfVFS.
           pefile_object (pefile.PE): pefile object.
           event_data (PEFileEventData): event data.
+
+        Returns:
+          bool: value to indicate the export table was corrupted.
         """
         export_table = getattr(pefile_object, "DIRECTORY_ENTRY_EXPORT", None)
         if not export_table:
-            return
+            return False
+
+        corrupted = False
 
         dll_name = getattr(export_table, "name", "")
         try:
             dll_name = dll_name.decode("ascii")
         except UnicodeDecodeError:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 "unable to decode export table DLL name as ASCII. Unsupported code "
                 "points are escaped."
             )
             dll_name = dll_name.decode("ascii", errors="backslashreplace")
+            corrupted = True
 
         event_data.export_dll_name = dll_name or None
 
@@ -235,6 +244,8 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         if timestamp:
             date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
             event_data.export_table_modification_time = date_time
+
+        return corrupted
 
     def _ParseImportTable(self, parser_mediator, pefile_object):
         """Parses the import table.
@@ -253,15 +264,18 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
             if not timestamp:
                 continue
 
+            corrupted = False
+
             dll_name = getattr(table_entry, "dll", "")
             try:
                 dll_name = dll_name.decode("ascii")
             except UnicodeDecodeError:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     "unable to decode import table DLL name as ASCII. Unsupported code "
                     "points are escaped."
                 )
                 dll_name = dll_name.decode("ascii", errors="backslashreplace")
+                corrupted = True
 
             event_data = PEDLLImportEventData()
             event_data.delayed_import = False
@@ -270,7 +284,7 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
             date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
             event_data.modification_time = date_time
 
-            parser_mediator.ProduceEventData(event_data)
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def _ParseResourceSection(self, parser_mediator, pefile_object):
         """Parses the resource section.
@@ -629,11 +643,11 @@ class PEParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
                 timestamp=timestamp
             )
 
-        self._ParseExportTable(parser_mediator, pefile_object, event_data)
+        corrupted = self._ParseExportTable(parser_mediator, pefile_object, event_data)
 
         self._ParseLoadConfigurationTable(pefile_object, event_data)
 
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
         self._ParseImportTable(parser_mediator, pefile_object)
 

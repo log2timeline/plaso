@@ -662,7 +662,7 @@ class SpotlightStoreDatabaseParser(
             self._ParseMetadataItem(parser_mediator, metadata_item)
 
         except errors.ParseError as exception:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unable to read metadata item: 0x{metadata_item.identifier:2x} "
                 f"with error: {exception!s}"
             )

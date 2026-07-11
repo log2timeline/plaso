@@ -21,8 +21,8 @@ class UserAssistWindowsRegistryEventData(events.EventData):
       application_focus_duration (int): application focus duration.
       entry_index (int): entry index.
       key_path (str): Windows Registry key path.
-      last_execution_time (dfdatetime.DateTimeValues): date and time
-          the application was last executed (or run).
+      last_execution_time (dfdatetime.DateTimeValues): date and time the application was
+          last executed (or run).
       number_of_executions (int): number of executions.
       value_name (str): name of the Windows Registry value.
     """
@@ -120,24 +120,22 @@ class UserAssistPlugin(interface.WindowsRegistryPlugin, dtfabric_helper.DtFabric
         count_subkey = registry_key.GetSubkeyByName("Count")
 
         if not version_value:
-            parser_mediator.ProduceExtractionWarning("missing version value")
+            parser_mediator.ProduceWarning("missing version value")
             return
 
         if not version_value.DataIsInteger():
-            parser_mediator.ProduceExtractionWarning(
-                "unsupported version value data type"
-            )
+            parser_mediator.ProduceWarning("unsupported version value data type")
             return
 
         format_version = version_value.GetDataAsObject()
         if format_version not in (3, 5):
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unsupported format version: {format_version:d}"
             )
             return
 
         if not count_subkey:
-            parser_mediator.ProduceExtractionWarning("missing count subkey")
+            parser_mediator.ProduceWarning("missing count subkey")
             return
 
         userassist_entry_index = 0
@@ -168,20 +166,20 @@ class UserAssistPlugin(interface.WindowsRegistryPlugin, dtfabric_helper.DtFabric
                 entry_map = self._GetDataTypeMap("user_assist_entry_v5")
                 entry_data_size = 72
             else:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"unsupported format version: {format_version:d}"
                 )
                 continue
 
             if not registry_value.DataIsBinaryData():
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"unsupported value data type: {registry_value.data_type_string:s}"
                 )
                 continue
 
             value_data_size = len(registry_value.data)
             if entry_data_size != value_data_size:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"unsupported value data size: {value_data_size:d}"
                 )
                 continue
@@ -191,7 +189,7 @@ class UserAssistPlugin(interface.WindowsRegistryPlugin, dtfabric_helper.DtFabric
                     registry_value.data, 0, entry_map
                 )
             except (ValueError, errors.ParseError) as exception:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"unable to parse UserAssist entry value with error: {exception!s}"
                 )
                 continue

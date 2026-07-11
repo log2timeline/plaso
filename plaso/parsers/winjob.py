@@ -159,8 +159,10 @@ class WinJobParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
           trigger (job_trigger): a trigger.
 
         Returns:
-          dfdatetime.DateTimeValues: last run date and time or None if not
-              available.
+          tuple: containing:
+
+              dfdatetime.DateTimeValues: end date and time None if not available.
+              bool: value to indicate the end time was corrupted.
         """
         time_elements_tuple = (
             trigger.end_date.year,
@@ -170,22 +172,23 @@ class WinJobParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
             0,
             0,
         )
-        date_time = None
+        if time_elements_tuple == (0, 0, 0, 0, 0, 0):
+            return None, False
 
-        if time_elements_tuple != (0, 0, 0, 0, 0, 0):
-            try:
-                date_time = dfdatetime_time_elements.TimeElements(
-                    precision=dfdatetime_definitions.PRECISION_1_DAY,
-                    time_elements_tuple=time_elements_tuple,
-                )
-                date_time.is_local_time = True
+        try:
+            date_time = dfdatetime_time_elements.TimeElements(
+                precision=dfdatetime_definitions.PRECISION_1_DAY,
+                time_elements_tuple=time_elements_tuple,
+            )
+            date_time.is_local_time = True
 
-            except ValueError:
-                parser_mediator.ProduceExtractionWarning(
-                    f"invalid trigger end time: {time_elements_tuple!s}"
-                )
+        except ValueError:
+            parser_mediator.ProduceWarning(
+                f"invalid trigger end time: {time_elements_tuple!s}"
+            )
+            return None, True
 
-        return date_time
+        return date_time, False
 
     def _ParseTriggerStartTime(self, parser_mediator, trigger):
         """Parses the start time from a trigger.
@@ -196,8 +199,10 @@ class WinJobParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
           trigger (job_trigger): a trigger.
 
         Returns:
-          dfdatetime.DateTimeValues: last run date and time or None if not
-              available.
+          tuple: containing:
+
+              dfdatetime.DateTimeValues: start date and time or None if not available.
+              bool: value to indicate the start time was corrupted.
         """
         time_elements_tuple = (
             trigger.start_date.year,
@@ -207,22 +212,23 @@ class WinJobParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
             trigger.start_time.minutes,
             0,
         )
-        date_time = None
+        if time_elements_tuple == (0, 0, 0, 0, 0, 0):
+            return None, False
 
-        if time_elements_tuple != (0, 0, 0, 0, 0, 0):
-            try:
-                date_time = dfdatetime_time_elements.TimeElements(
-                    precision=dfdatetime_definitions.PRECISION_1_MINUTE,
-                    time_elements_tuple=time_elements_tuple,
-                )
-                date_time.is_local_time = True
+        try:
+            date_time = dfdatetime_time_elements.TimeElements(
+                precision=dfdatetime_definitions.PRECISION_1_MINUTE,
+                time_elements_tuple=time_elements_tuple,
+            )
+            date_time.is_local_time = True
 
-            except ValueError:
-                parser_mediator.ProduceExtractionWarning(
-                    f"invalid trigger start time: {time_elements_tuple!s}"
-                )
+        except ValueError:
+            parser_mediator.ProduceWarning(
+                f"invalid trigger start time: {time_elements_tuple!s}"
+            )
+            return None, True
 
-        return date_time
+        return date_time, False
 
     def ParseFileObject(self, parser_mediator, file_object):
         """Parses a Windows job file-like object.
@@ -303,14 +309,22 @@ class WinJobParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
             file_offset += data_size
 
+            corrupted = False
+
             event_data = self._ParseTriggerEventData(variable_length_section)
-            event_data.end_time = self._ParseTriggerEndTime(parser_mediator, trigger)
-            event_data.start_time = self._ParseTriggerStartTime(
+            event_data.end_time, value_corrupted = self._ParseTriggerEndTime(
                 parser_mediator, trigger
             )
+            corrupted = corrupted or value_corrupted
+
+            event_data.start_time, value_corrupted = self._ParseTriggerStartTime(
+                parser_mediator, trigger
+            )
+            corrupted = corrupted or value_corrupted
+
             event_data.trigger_type = trigger.trigger_type
 
-            parser_mediator.ProduceEventData(event_data)
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
 
 manager.ParsersManager.RegisterParser(WinJobParser)

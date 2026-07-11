@@ -178,27 +178,6 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     # TODO: add tests for ProduceEventDataStream.
     # TODO: add tests for ProduceEventSource.
 
-    def testProduceExtractionWarning(self):
-        """Tests the ProduceExtractionWarning method."""
-        parser_mediator = mediator.ParserMediator()
-
-        storage_writer = fake_writer.FakeStorageWriter()
-        parser_mediator.SetStorageWriter(storage_writer)
-
-        storage_writer.Open()
-
-        parser_mediator.ProduceExtractionWarning("test")
-
-        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-            "extraction_warning"
-        )
-        self.assertEqual(number_of_warnings, 1)
-
-        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-            "recovery_warning"
-        )
-        self.assertEqual(number_of_warnings, 0)
-
     def testProduceWarning(self):
         """Tests the ProduceWarning method."""
         parser_mediator = mediator.ParserMediator()

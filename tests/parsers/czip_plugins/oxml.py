@@ -81,7 +81,6 @@ class OXMLTest(test_lib.CompoundZIPPluginTestCase):
         properties, corrupted = plugin._ParsePropertiesXMLFile(
             parser_mediator, self._PROPERTIES_XML_DATA
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
