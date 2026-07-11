@@ -26,8 +26,8 @@ class BodyfileEventData(events.EventData):
 
     Attributes:
       access_time (dfdatetime.DateTimeValues): file entry last access date and time.
-      change_time (dfdatetime.DateTimeValues): file entry inode change (or metadata
-          last modification) date and time.
+      change_time (dfdatetime.DateTimeValues): file entry inode change (or metadata last
+          modification) date and time.
       creation_time (dfdatetime.DateTimeValues): file entry creation date and time.
       filename (str): name of the file.
       group_identifier (int): group identifier (GID), equivalent to st_gid.
@@ -114,8 +114,8 @@ class BodyfileParser(interface.FileObjectParser):
         """Retrieves the last value as a base 10 integer.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           values (list[str]): values extracted from the line.
           description (str): human readable description of the value.
           line_number (int): number of the line the values were extracted from.
@@ -150,8 +150,8 @@ class BodyfileParser(interface.FileObjectParser):
         """Retrieves the last value as floating-point.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           values (list[str]): values extracted from the line.
           description (str): human readable description of the value.
           line_number (int): number of the line the values were extracted from.
@@ -186,8 +186,8 @@ class BodyfileParser(interface.FileObjectParser):
         """Parses bodyfile values.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_offset (int): offset of the line the values were extracted from,
               relative from the start of the file.
           line_number (int): number of the line the values were extracted from.
@@ -207,7 +207,7 @@ class BodyfileParser(interface.FileObjectParser):
             if first_line:
                 raise errors.WrongParser(warning_message)
 
-            parser_mediator.ProduceExtractionWarning(warning_message)
+            parser_mediator.ProduceWarning(warning_message)
 
             return
 
@@ -235,7 +235,6 @@ class BodyfileParser(interface.FileObjectParser):
         atime_value = self._GetLastValueAsFloatingPoint(
             parser_mediator, values, "access time", line_number, first_line
         )
-
         size_value = self._GetLastValueAsBase10Integer(
             parser_mediator, values, "size", line_number, first_line
         )
@@ -246,8 +245,8 @@ class BodyfileParser(interface.FileObjectParser):
             parser_mediator, values, "user identifier (UID)", line_number, first_line
         )
         if uid_value is not None:
-            # Note that the owner_identifier attribute of BodyfileEventData
-            # is expected to be a string or None.
+            # Note that the owner_identifier attribute of BodyfileEventData is expected
+            # to be a string or None.
             uid_value = f"{uid_value:d}"
 
         mode_as_string_value = values.pop(-1) or None
@@ -264,8 +263,7 @@ class BodyfileParser(interface.FileObjectParser):
                 f"invalid inode value: {inode_value!s} in line: {line_number:d}"
             )
 
-        # Determine if the inode value is actually a 64-bit NTFS file
-        # reference.
+        # Determine if the inode value is actually a 64-bit NTFS file reference.
         if inode_value > self._UINT48_MAX:
             mft_entry = inode_value & 0xFFFFFFFFFFFF
             if mft_entry <= self._UINT32_MAX:
@@ -278,7 +276,6 @@ class BodyfileParser(interface.FileObjectParser):
                 f"filename in line: {line_number:d} contains unescaped control "
                 f"characters"
             )
-
         else:
             for character in self._NON_PRINTABLE_CHARACTERS:
                 escaped_character = f"\\x{character:02x}"
@@ -316,19 +313,18 @@ class BodyfileParser(interface.FileObjectParser):
         """Parses a bodyfile file-like object.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): file-like object.
 
         Raises:
           WrongParser: when the file cannot be parsed.
         """
         # Note that we cannot use the DSVParser here since the bodyfile format is
-        # not strict and clean file format.
+        # not a strict and clean file format.
         line_reader = text_file.TextFile(
             file_object, encoding="UTF-8", end_of_line="\n"
         )
-
         first_line = True
         file_offset = 0
         line_number = 0
@@ -356,7 +352,6 @@ class BodyfileParser(interface.FileObjectParser):
                 self._ParseValues(
                     parser_mediator, file_offset, line_number, values, first_line
                 )
-
                 first_line = False
 
             file_offset = file_object.tell()
@@ -365,7 +360,7 @@ class BodyfileParser(interface.FileObjectParser):
             try:
                 line = line_reader.readline()
             except UnicodeDecodeError as exception:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"unable to read line: {line_number:d} with error: {exception!s}"
                 )
                 break
