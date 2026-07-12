@@ -30,11 +30,11 @@ class PsortTool(analysis_tool.AnalysisTool, tool_options.OutputModuleOptions):
     """Psort CLI tool.
 
     Attributes:
-      list_analysis_plugins (bool): True if information about the analysis
-          plugins should be shown.
-      list_language_tags (bool): True if the language tags should be listed.
-      list_output_modules (bool): True if information about the output modules
+      list_analysis_plugins (bool): True if information about the analysis plugins
           should be shown.
+      list_language_tags (bool): True if the language tags should be listed.
+      list_output_modules (bool): True if information about the output modules should
+          be shown.
       list_profilers (bool): True if the profilers should be listed.
     """
 
@@ -49,10 +49,10 @@ class PsortTool(analysis_tool.AnalysisTool, tool_options.OutputModuleOptions):
         """Initializes the CLI tool object.
 
         Args:
-          input_reader (Optional[InputReader]): input reader, where None indicates
-              that the stdin input reader should be used.
-          output_writer (Optional[OutputWriter]): output writer, where None
-              indicates that the stdout output writer should be used.
+          input_reader (Optional[InputReader]): input reader, where None indicates that
+              the stdin input reader should be used.
+          output_writer (Optional[OutputWriter]): output writer, where None indicates
+              that the stdout output writer should be used.
         """
         super().__init__(input_reader=input_reader, output_writer=output_writer)
         self._deduplicate_events = True
@@ -73,9 +73,9 @@ class PsortTool(analysis_tool.AnalysisTool, tool_options.OutputModuleOptions):
 
         Args:
           storage_file_path (str): path of the storage file.
-          check_readable_only (Optional[bool]): whether the storage file should
-              only be checked to see if it can be read. If False, the store will
-              be checked to see if it can be read and written to.
+          check_readable_only (Optional[bool]): whether the storage file should only be
+              checked to see if it can be read. If False, the store will be checked to
+              see if it can be read and written to.
 
         Raises:
           BadConfigOption: if the storage file is invalid.
@@ -143,8 +143,8 @@ class PsortTool(analysis_tool.AnalysisTool, tool_options.OutputModuleOptions):
         """Retrieves analysis plugins.
 
         Args:
-          analysis_plugins_string (str): comma separated names of analysis plugins
-              to enable.
+          analysis_plugins_string (str): comma separated names of analysis plugins to
+              enable.
 
         Returns:
           list[AnalysisPlugin]: analysis plugins.
@@ -155,7 +155,6 @@ class PsortTool(analysis_tool.AnalysisTool, tool_options.OutputModuleOptions):
         analysis_plugins_list = [
             name.strip() for name in analysis_plugins_string.split(",")
         ]
-
         analysis_plugins = self._analysis_manager.GetPluginObjects(
             analysis_plugins_list
         )
@@ -183,7 +182,6 @@ class PsortTool(analysis_tool.AnalysisTool, tool_options.OutputModuleOptions):
         requested_plugin_names = {
             name.strip().lower() for name in analysis_plugins.split(",")
         }
-
         # Check to see if we are trying to load plugins that do not exist.
         difference = requested_plugin_names.difference(analysis_plugin_names)
         if difference:
@@ -227,7 +225,6 @@ class PsortTool(analysis_tool.AnalysisTool, tool_options.OutputModuleOptions):
         helpers_manager.ArgumentHelperManager.ParseOptions(
             options, self, names=argument_helper_names
         )
-
         worker_memory_limit = getattr(options, "worker_memory_limit", None)
 
         if worker_memory_limit and worker_memory_limit < 0:
@@ -259,7 +256,6 @@ class PsortTool(analysis_tool.AnalysisTool, tool_options.OutputModuleOptions):
         helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
             argument_group, names=argument_helper_names
         )
-
         argument_group.add_argument(
             "--worker_memory_limit",
             "--worker-memory-limit",
@@ -275,7 +271,6 @@ class PsortTool(analysis_tool.AnalysisTool, tool_options.OutputModuleOptions):
                 "(foreman) process."
             ),
         )
-
         argument_group.add_argument(
             "--worker_timeout",
             "--worker-timeout",
@@ -319,7 +314,6 @@ class PsortTool(analysis_tool.AnalysisTool, tool_options.OutputModuleOptions):
             conflict_handler="resolve",
             formatter_class=argparse.RawDescriptionHelpFormatter,
         )
-
         self.AddBasicOptions(argument_parser)
         self.AddStorageOptions(argument_parser)
 
@@ -328,7 +322,6 @@ class PsortTool(analysis_tool.AnalysisTool, tool_options.OutputModuleOptions):
         helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
             analysis_group, names=["analysis_plugins"]
         )
-
         processing_group = argument_parser.add_argument_group("Processing")
         self.AddProcessingOptions(processing_group)
 
@@ -337,22 +330,30 @@ class PsortTool(analysis_tool.AnalysisTool, tool_options.OutputModuleOptions):
         self.AddLogFileOptions(info_group)
         self.AddInformationalOptions(info_group)
 
+        info_group.add_argument(
+            "--use_markdown",
+            "--use-markdown",
+            dest="use_markdown",
+            action="store_true",
+            default=False,
+            help=(
+                "Output lists in Markdown format use in combination with "
+                '"--output-format list"'
+            ),
+        )
         helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
             info_group, names=["status_view"]
         )
-
         filter_group = argument_parser.add_argument_group("Filter Arguments")
 
         helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
             filter_group, names=["event_filters"]
         )
-
         input_group = argument_parser.add_argument_group("Input Arguments")
 
         helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
             input_group, names=["data_location"]
         )
-
         output_group = argument_parser.add_argument_group("Output Arguments")
 
         output_group.add_argument(
@@ -363,32 +364,26 @@ class PsortTool(analysis_tool.AnalysisTool, tool_options.OutputModuleOptions):
             dest="dedup",
             default=True,
             help=(
-                "By default the psort removes duplicate entries from the "
-                "output. This parameter changes that behavior so all events "
-                "are included."
+                "By default the psort removes duplicate entries from the output. This "
+                "parameter changes that behavior so all events are included."
             ),
         )
-
         helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
             output_group, names=["language"]
         )
-
         self.AddOutputOptions(output_group)
 
         output_format_group = argument_parser.add_argument_group(
             "Output Format Arguments"
         )
-
         helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
             output_format_group, names=["output_modules"]
         )
-
         profiling_group = argument_parser.add_argument_group("profiling arguments")
 
         helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
             profiling_group, names=["profiling"]
         )
-
         try:
             # TODO: refactor how arguments is used in a more argparse way.
             options = argument_parser.parse_args(arguments)
@@ -402,11 +397,9 @@ class PsortTool(analysis_tool.AnalysisTool, tool_options.OutputModuleOptions):
         # Properly prepare the attributes according to local encoding.
         if self.preferred_encoding == "ascii":
             self._PrintUserWarning(
-                (
-                    "the preferred encoding of your system is ASCII, which is not "
-                    "optimal for the typically non-ASCII characters that need to be "
-                    "parsed and processed. This will most likely result in an error."
-                )
+                "the preferred encoding of your system is ASCII, which is not "
+                "optimal for the typically non-ASCII characters that need to be "
+                "parsed and processed. This will most likely result in an error."
             )
 
         try:
@@ -425,7 +418,6 @@ class PsortTool(analysis_tool.AnalysisTool, tool_options.OutputModuleOptions):
             filename=self._log_file,
             quiet_mode=self._quiet_mode,
         )
-
         return True
 
     def ParseOptions(self, options):
@@ -450,6 +442,9 @@ class PsortTool(analysis_tool.AnalysisTool, tool_options.OutputModuleOptions):
 
         self.show_troubleshooting = getattr(options, "show_troubleshooting", False)
 
+        if getattr(options, "use_markdown", False):
+            self._views_format_type = views.ViewsFactory.FORMAT_TYPE_MARKDOWN
+
         if (
             self.list_analysis_plugins
             or self.list_language_tags
@@ -464,7 +459,6 @@ class PsortTool(analysis_tool.AnalysisTool, tool_options.OutputModuleOptions):
         helpers_manager.ArgumentHelperManager.ParseOptions(
             options, self, names=["output_modules"]
         )
-
         self.list_output_modules = self._output_format == "list"
         if self.list_output_modules:
             return
@@ -474,7 +468,6 @@ class PsortTool(analysis_tool.AnalysisTool, tool_options.OutputModuleOptions):
         helpers_manager.ArgumentHelperManager.ParseOptions(
             options, self, names=["data_location"]
         )
-
         self._ParseLogFileOptions(options)
 
         self._ParseProcessingOptions(options)
@@ -482,7 +475,6 @@ class PsortTool(analysis_tool.AnalysisTool, tool_options.OutputModuleOptions):
         helpers_manager.ArgumentHelperManager.ParseOptions(
             options, self, names=["event_filters"]
         )
-
         self._deduplicate_events = getattr(options, "dedup", True)
 
         if self._data_location:
@@ -551,7 +543,6 @@ class PsortTool(analysis_tool.AnalysisTool, tool_options.OutputModuleOptions):
             storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
                 self._storage_file_path
             )
-
             # TODO: add single process output and formatting engine support.
             output_engine = multi_output_engine.OutputAndFormattingMultiProcessEngine()
 
@@ -567,7 +558,6 @@ class PsortTool(analysis_tool.AnalysisTool, tool_options.OutputModuleOptions):
                 time_slice=self._time_slice,
                 use_time_slicer=self._use_time_slicer,
             )
-
             self._output_module.Close()
             self._output_module = None
 
