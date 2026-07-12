@@ -18,37 +18,37 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_CURRENT_USER",
-            ("Software\\Microsoft\\Windows\\CurrentVersion\\Run"),
+            "Software\\Microsoft\\Windows\\CurrentVersion\\Run",
         )
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_CURRENT_USER",
-            ("Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce"),
+            "Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce",
         )
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_LOCAL_MACHINE\\Software",
-            ("Microsoft\\Windows\\CurrentVersion\\Run"),
+            "Microsoft\\Windows\\CurrentVersion\\Run",
         )
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_LOCAL_MACHINE\\Software",
-            ("Microsoft\\Windows\\CurrentVersion\\RunOnce"),
+            "Microsoft\\Windows\\CurrentVersion\\RunOnce",
         )
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_LOCAL_MACHINE\\Software",
-            ("Microsoft\\Windows\\CurrentVersion\\RunOnce\\Setup"),
+            "Microsoft\\Windows\\CurrentVersion\\RunOnce\\Setup",
         )
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_LOCAL_MACHINE\\Software",
-            ("Microsoft\\Windows\\CurrentVersion\\RunServices"),
+            "Microsoft\\Windows\\CurrentVersion\\RunServices",
         )
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_LOCAL_MACHINE\\Software",
-            ("Microsoft\\Windows\\CurrentVersion\\RunServicesOnce"),
+            "Microsoft\\Windows\\CurrentVersion\\RunServicesOnce",
         )
         self._AssertNotFiltersOnKeyPath(plugin, "HKEY_CURRENT_USER", "Bogus")
 

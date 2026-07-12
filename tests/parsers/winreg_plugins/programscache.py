@@ -18,12 +18,12 @@ class ExplorerProgramCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestC
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_CURRENT_USER",
-            ("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StartPage"),
+            "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StartPage",
         )
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_CURRENT_USER",
-            ("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StartPage2"),
+            "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StartPage2",
         )
         self._AssertNotFiltersOnKeyPath(plugin, "HKEY_CURRENT_USER", "Bogus")
 

@@ -40,9 +40,8 @@ class WinIISTextPluginTest(test_lib.TextPluginTestCase):
             "last_written_time": "2013-07-30T00:00:00+00:00",
             "requested_uri_stem": "/some/image/path/something.jpg",
             "source_ip": "10.10.10.100",
-            "user_agent": ("Mozilla/4.0+(compatible;+Win32;+WinHttp.WinHttpRequest.5)"),
+            "user_agent": "Mozilla/4.0+(compatible;+Win32;+WinHttp.WinHttpRequest.5)",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -80,7 +79,6 @@ class WinIISTextPluginTest(test_lib.TextPluginTestCase):
                 "537.36+(KHTML,+like+Gecko)+Chrome/34.0.1847.131+Safari/537.36"
             ),
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -118,7 +116,6 @@ class WinIISTextPluginTest(test_lib.TextPluginTestCase):
                 "(KHTML,+like+Gecko)+Chrome/39.0.2171.95+Safari/537.36"
             ),
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -147,7 +144,6 @@ class WinIISTextPluginTest(test_lib.TextPluginTestCase):
             "last_written_time": "2013-07-30T00:00:03+00:00",
             "protocol_version": "HTTP/1.1",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -186,7 +182,6 @@ class WinIISTextPluginTest(test_lib.TextPluginTestCase):
                 "+Chrome/35.0.2309.372+Safari/537.36"
             ),
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

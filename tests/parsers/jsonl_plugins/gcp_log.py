@@ -14,7 +14,9 @@ class GCPLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
     def testProcess(self):
         """Tests the Process function."""
         plugin = gcp_log.GCPLogJSONLPlugin()
-        storage_writer = self._ParseJSONLFileWithPlugin(["gcp_logging.jsonl"], plugin)
+        storage_writer = self._ParseJSONLFileWithPlugin(
+            ["jsonl", "gcp_logging.jsonl"], plugin
+        )
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
@@ -66,12 +68,7 @@ class GCPLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
-    def testComputeInstancesInsert(self):
-        """Tests for the JSON-L parser plugin parsing request type
-        compute.instances.insert."""
-        plugin = gcp_log.GCPLogJSONLPlugin()
-        storage_writer = self._ParseJSONLFileWithPlugin(["gcp_logging.jsonl"], plugin)
-
+        # Test event data with compute.instances.insert.
         expected_event_values = {
             "caller_ip": "1.1.1.1",
             "container": None,
@@ -142,11 +139,7 @@ class GCPLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 9)
         self.CheckEventData(event_data, expected_event_values)
 
-    def testServiceAccountCreateFailure(self):
-        """Tests service account creation failure log."""
-        plugin = gcp_log.GCPLogJSONLPlugin()
-        storage_writer = self._ParseJSONLFileWithPlugin(["gcp_logging.jsonl"], plugin)
-
+        # Test service account creation failure event data.
         expected_event_values = {
             "caller_ip": "34.72.217.225",
             "container": None,
@@ -162,7 +155,7 @@ class GCPLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
             "firewall_source_ranges": None,
             "gcloud_command_identifier": None,
             "gcloud_command_pattern": None,
-            "log_name": ("projects/ketchup/logs/cloudaudit.googleapis.com%2Factivity"),
+            "log_name": "projects/ketchup/logs/cloudaudit.googleapis.com%2Factivity",
             "message_body": (
                 'Permission "iam.serviceAccounts.create" denied on resource (or it may '
                 "not exist)."
@@ -170,7 +163,7 @@ class GCPLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
             "method_name": "google.iam.admin.v1.CreateServiceAccount",
             "permissions": ["iam.serviceAccounts.create"],
             "policy_deltas": None,
-            "principal_email": ("dvwa-service-account@ketchup.iam.gserviceaccount.com"),
+            "principal_email": "dvwa-service-account@ketchup.iam.gserviceaccount.com",
             "principal_subject": (
                 "serviceAccount:dvwa-service-account@ketchup.iam.gserviceaccount.com"
             ),

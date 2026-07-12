@@ -110,7 +110,7 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_LOCAL_MACHINE\\Software",
-            ("Microsoft\\Windows NT\\CurrentVersion"),
+            "Microsoft\\Windows NT\\CurrentVersion",
         )
         self._AssertNotFiltersOnKeyPath(plugin, "HKEY_LOCAL_MACHINE\\Software", "Bogus")
 

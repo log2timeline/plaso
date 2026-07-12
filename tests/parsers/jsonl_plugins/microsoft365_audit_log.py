@@ -15,9 +15,8 @@ class Microsoft365AuditLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
         """Tests the Process function."""
         plugin = microsoft365_audit_log.Microsoft365AuditLogJSONLPlugin()
         storage_writer = self._ParseJSONLFileWithPlugin(
-            ["microsoft_audit_log.jsonl"], plugin
+            ["jsonl", "microsoft_audit_log.jsonl"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -50,7 +49,6 @@ class Microsoft365AuditLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
                 "NT AUTHORITY\\SYSTEM (Microsoft.Exchange.Servicehost)"
             ),
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

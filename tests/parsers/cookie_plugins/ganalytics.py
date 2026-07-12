@@ -19,7 +19,6 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
         storage_writer = self._ParseDatabaseFileWithPlugin(
             ["firefox_cookies", "firefox_2_cookies.sqlite"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -44,11 +43,10 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
             "sources": 1,
             "url": "http://ads.aha.is/",
             "utmccn": "(referral)",
-            "utmcct": ("/frettir/erlent/2013/10/30/maelt_med_kerfisbundnum_hydingum/"),
+            "utmcct": "/frettir/erlent/2013/10/30/maelt_med_kerfisbundnum_hydingum/",
             "utmcmd": "referral",
             "utmcsr": "mbl.is",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 48)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -86,7 +84,6 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
             "utmcmd": "organic",
             "utmcsr": "google",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 287)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -104,7 +101,6 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
             ],
             "visitor_identifier": "1827102436",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 329)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -117,7 +113,6 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
             "pages_viewed": 1,
             "url": "http://upressonline.com/",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 180)
         self.CheckEventData(event_data, expected_event_values)
 

@@ -15,7 +15,7 @@ class AWSCloudTrailLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
         """Tests the Process function."""
         plugin = aws_cloudtrail_log.AWSCloudTrailLogJSONLPlugin()
         storage_writer = self._ParseJSONLFileWithPlugin(
-            ["aws_cloudtrail.jsonl"], plugin
+            ["jsonl", "aws_cloudtrail.jsonl"], plugin
         )
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"

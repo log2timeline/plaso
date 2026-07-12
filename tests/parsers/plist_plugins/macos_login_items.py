@@ -39,7 +39,7 @@ class MacOSLoginItemsPlistPluginTest(test_lib.PlistPluginTestCase):
             "name": "iTunesHelper",
             "hidden": True,
             "target_creation_time": "2018-03-26T04:33:05+00:00",
-            "target_path": ("/Applications/iTunes.app/Contents/MacOS/iTunesHelper.app"),
+            "target_path": "/Applications/iTunes.app/Contents/MacOS/iTunesHelper.app",
             "volume_creation_time": "2016-10-08T17:34:06+00:00",
             "volume_flags": 0x920,
             "volume_mount_point": "/",

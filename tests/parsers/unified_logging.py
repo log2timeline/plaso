@@ -85,21 +85,18 @@ class FormatStringOperatorTest(shared_test_lib.BaseTestCase):
         format_string_operator = unified_logging.FormatStringOperator(
             precision=".", specifier="f"
         )
-
         format_string = format_string_operator.GetPythonFormatString()
         self.assertEqual(format_string, "{0:.0f}")
 
         format_string_operator = unified_logging.FormatStringOperator(
             precision=".2", specifier="f"
         )
-
         format_string = format_string_operator.GetPythonFormatString()
         self.assertEqual(format_string, "{0:.2f}")
 
         format_string_operator = unified_logging.FormatStringOperator(
             precision=".*", specifier="f"
         )
-
         format_string = format_string_operator.GetPythonFormatString()
         self.assertEqual(format_string, "{0:f}")
 
@@ -146,7 +143,6 @@ class FormatStringOperatorTest(shared_test_lib.BaseTestCase):
         format_string_operator = unified_logging.FormatStringOperator(
             precision=".16", specifier="P"
         )
-
         format_string = format_string_operator.GetPythonFormatString()
         self.assertEqual(format_string, "{0:s}")
 
@@ -158,49 +154,42 @@ class FormatStringOperatorTest(shared_test_lib.BaseTestCase):
         format_string_operator = unified_logging.FormatStringOperator(
             specifier="s", width="6"
         )
-
         format_string = format_string_operator.GetPythonFormatString()
         self.assertEqual(format_string, "{0:>6s}")
 
         format_string_operator = unified_logging.FormatStringOperator(
             flags="-", specifier="s", width="6"
         )
-
         format_string = format_string_operator.GetPythonFormatString()
         self.assertEqual(format_string, "{0:<6s}")
 
         format_string_operator = unified_logging.FormatStringOperator(
             specifier="s", width="6"
         )
-
         format_string = format_string_operator.GetPythonFormatString()
         self.assertEqual(format_string, "{0:>6s}")
 
         format_string_operator = unified_logging.FormatStringOperator(
             precision=".", specifier="s"
         )
-
         format_string = format_string_operator.GetPythonFormatString()
         self.assertEqual(format_string, "{0:s}")
 
         format_string_operator = unified_logging.FormatStringOperator(
             precision=".0", specifier="s"
         )
-
         format_string = format_string_operator.GetPythonFormatString()
         self.assertEqual(format_string, "{0:s}")
 
         format_string_operator = unified_logging.FormatStringOperator(
             precision=".16", specifier="s"
         )
-
         format_string = format_string_operator.GetPythonFormatString()
         self.assertEqual(format_string, "{0:.16s}")
 
         format_string_operator = unified_logging.FormatStringOperator(
             precision=".*", specifier="s"
         )
-
         format_string = format_string_operator.GetPythonFormatString()
         self.assertEqual(format_string, "{0:s}")
 
@@ -227,21 +216,18 @@ class FormatStringOperatorTest(shared_test_lib.BaseTestCase):
         format_string_operator = unified_logging.FormatStringOperator(
             flags="#", specifier="x"
         )
-
         format_string = format_string_operator.GetPythonFormatString()
         self.assertEqual(format_string, "{0:#x}")
 
         format_string_operator = unified_logging.FormatStringOperator(
             flags="0", specifier="x", width="2"
         )
-
         format_string = format_string_operator.GetPythonFormatString()
         self.assertEqual(format_string, "{0:02x}")
 
         format_string_operator = unified_logging.FormatStringOperator(
             precision=".2", specifier="x", width="2"
         )
-
         format_string = format_string_operator.GetPythonFormatString()
         self.assertEqual(format_string, "{0:2x}")
 
@@ -301,10 +287,8 @@ class StringFormatterTest(shared_test_lib.BaseTestCase):
         self.assertEqual(len(test_formatter._operators), 1)
 
         test_formatter.ParseFormatString(
-            (
-                "%{public,signpost.telemetry:number1,"
-                "name=SOSSignpostNameSOSCCEnsurePeerRegistration}d"
-            )
+            "%{public,signpost.telemetry:number1,"
+            "name=SOSSignpostNameSOSCCEnsurePeerRegistration}d"
         )
         self.assertEqual(test_formatter._decoders, [["signpost.telemetry:number1"]])
         self.assertEqual(test_formatter._format_string, "{0:s}")
@@ -496,10 +480,8 @@ class StringFormatterTest(shared_test_lib.BaseTestCase):
         self.assertEqual(len(test_formatter._operators), 1)
 
         test_formatter.ParseFormatString(
-            (
-                "Transform Manager cache hits: %d / %ld (%.2f%%). Size = %zu entries "
-                "(events), %zu transforms, %zu bytes"
-            )
+            "Transform Manager cache hits: %d / %ld (%.2f%%). Size = %zu entries "
+            "(events), %zu transforms, %zu bytes"
         )
         self.assertEqual(
             test_formatter._decoders,
@@ -512,20 +494,17 @@ class StringFormatterTest(shared_test_lib.BaseTestCase):
                 ["internal:u"],
             ],
         )
-        self.assertEqual(
-            test_formatter._format_string,
-            (
-                "Transform Manager cache hits: {0:s} / {1:s} ({2:s}%). Size = {3:s} "
-                "entries (events), {4:s} transforms, {5:s} bytes"
-            ),
+        expected_format_string = (
+            "Transform Manager cache hits: {0:s} / {1:s} ({2:s}%). Size = {3:s} "
+            "entries (events), {4:s} transforms, {5:s} bytes"
         )
+        self.assertEqual(test_formatter._format_string, expected_format_string)
+
         self.assertEqual(len(test_formatter._operators), 6)
 
         test_formatter.ParseFormatString(
-            (
-                "#%08x [%s] resolveDNSRecords -> public addresses: [%ld]%{private}@, "
-                "favored servers: [%ld]%@, validityInterval %.f"
-            )
+            "#%08x [%s] resolveDNSRecords -> public addresses: [%ld]%{private}@, "
+            "favored servers: [%ld]%@, validityInterval %.f"
         )
         self.assertEqual(
             test_formatter._decoders,
@@ -539,13 +518,12 @@ class StringFormatterTest(shared_test_lib.BaseTestCase):
                 ["internal:f"],
             ],
         )
-        self.assertEqual(
-            test_formatter._format_string,
-            (
-                "#{0:s} [{1:s}] resolveDNSRecords -> public addresses: [{2:s}]{3:s}, "
-                "favored servers: [{4:s}]{5:s}, validityInterval {6:s}"
-            ),
+        expected_format_string = (
+            "#{0:s} [{1:s}] resolveDNSRecords -> public addresses: [{2:s}]{3:s}, "
+            "favored servers: [{4:s}]{5:s}, validityInterval {6:s}"
         )
+        self.assertEqual(test_formatter._format_string, expected_format_string)
+
         self.assertEqual(len(test_formatter._operators), 7)
 
 
@@ -644,28 +622,7 @@ class IPv4FormatStringDecoderTest(shared_test_lib.BaseTestCase):
 class IPv6FormatStringDecoderTest(shared_test_lib.BaseTestCase):
     """IPv6 value format string decoder tests."""
 
-    _VALUE_DATA = bytes(
-        bytearray(
-            [
-                0x20,
-                0x01,
-                0x0D,
-                0xB8,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0xFF,
-                0x00,
-                0x00,
-                0x42,
-                0x83,
-                0x29,
-            ]
-        )
-    )
+    _VALUE_DATA = bytes.fromhex("20010db8000000000000ff0000428329")
 
     def testFormatValue(self):
         """Tests the FormatValue function."""
@@ -693,7 +650,7 @@ class LocationClientAuthorizationStatusFormatStringDecoder(
 class LocationClientManagerStateFormatStringDecoderTest(shared_test_lib.BaseTestCase):
     """Location client manager state value format string decoder tests."""
 
-    _VALUE_DATA = bytes(bytearray([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]))
+    _VALUE_DATA = bytes.fromhex("0000000000000000")
 
     def testFormatValue(self):
         """Tests the FormatValue function."""
@@ -702,161 +659,21 @@ class LocationClientManagerStateFormatStringDecoderTest(shared_test_lib.BaseTest
         formatted_value = test_decoder.FormatValue(self._VALUE_DATA)
         self.assertEqual(
             formatted_value,
-            ('{"locationRestricted":false,"locationServicesEnabledStatus":0}'),
+            '{"locationRestricted":false,"locationServicesEnabledStatus":0}',
         )
 
 
 class LocationLocationManagerStateFormatStringDecoderTest(shared_test_lib.BaseTestCase):
     """Location location manager state value format string decoder tests."""
 
-    _VALUE_DATA_V1 = bytes(
-        bytearray(
-            [
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0xF0,
-                0xBF,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x59,
-                0x40,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0xF0,
-                0x3F,
-                0x01,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x01,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x01,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-            ]
-        )
+    _VALUE_DATA_V1 = bytes.fromhex(
+        "000000000000f0bf00000000000059400000000000000000000000000000f03f010000000000"
+        "0000000000000000000001000000000000010000000000000000"
     )
 
-    _VALUE_DATA_V2 = bytes(
-        bytearray(
-            [
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0xF0,
-                0xBF,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x59,
-                0x40,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0xF0,
-                0x3F,
-                0x01,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x01,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x01,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-            ]
-        )
+    _VALUE_DATA_V2 = bytes.fromhex(
+        "000000000000f0bf00000000000059400000000000000000000000000000f03f010000000000"
+        "00000000000000000000000000000000000001000000000000010000000000000000"
     )
 
     def testFormatValue(self):
@@ -864,45 +681,41 @@ class LocationLocationManagerStateFormatStringDecoderTest(shared_test_lib.BaseTe
         test_decoder = unified_logging.LocationLocationManagerStateFormatStringDecoder()
 
         formatted_value = test_decoder.FormatValue(self._VALUE_DATA_V1)
-        self.assertEqual(
-            formatted_value,
-            (
-                '{"previousAuthorizationStatusValid":false,"paused":false,'
-                '"requestingLocation":false,"desiredAccuracy":100,'
-                '"allowsBackgroundLocationUpdates":false,'
-                '"dynamicAccuracyReductionEnabled":false,"distanceFilter":-1,'
-                '"allowsLocationPrompts":true,"activityType":72057594037927937,'
-                '"pausesLocationUpdatesAutomatially":0,'
-                '"showsBackgroundLocationIndicator":false,"updatingLocation":false,'
-                '"requestingRanging":false,"updatingHeading":false,'
-                '"previousAuthorizationStatus":0,"allowsMapCorrection":false,'
-                '"allowsAlteredAccessoryLoctions":false,"updatingRanging":false,'
-                '"limitsPrecision":false,"headingFilter":1}'
-            ),
+        expected_formatted_value = (
+            '{"previousAuthorizationStatusValid":false,"paused":false,'
+            '"requestingLocation":false,"desiredAccuracy":100,'
+            '"allowsBackgroundLocationUpdates":false,'
+            '"dynamicAccuracyReductionEnabled":false,"distanceFilter":-1,'
+            '"allowsLocationPrompts":true,"activityType":72057594037927937,'
+            '"pausesLocationUpdatesAutomatially":0,'
+            '"showsBackgroundLocationIndicator":false,"updatingLocation":false,'
+            '"requestingRanging":false,"updatingHeading":false,'
+            '"previousAuthorizationStatus":0,"allowsMapCorrection":false,'
+            '"allowsAlteredAccessoryLoctions":false,"updatingRanging":false,'
+            '"limitsPrecision":false,"headingFilter":1}'
         )
+        self.assertEqual(formatted_value, expected_formatted_value)
 
         test_decoder = unified_logging.LocationLocationManagerStateFormatStringDecoder()
 
         formatted_value = test_decoder.FormatValue(self._VALUE_DATA_V2)
-        self.assertEqual(
-            formatted_value,
-            (
-                '{"previousAuthorizationStatusValid":false,"paused":false,'
-                '"requestingLocation":false,"updatingVehicleSpeed":false,'
-                '"desiredAccuracy":100,"allowsBackgroundLocationUpdates":false,'
-                '"dynamicAccuracyReductionEnabled":false,"distanceFilter":-1,'
-                '"allowsLocationPrompts":true,"activityType":0,'
-                '"groundAltitudeEnabled":false,"pausesLocationUpdatesAutomatially":1,'
-                '"fusionInfoEnabled":false,"isAuthorizedForWidgetUpdates":false,'
-                '"updatingVehicleHeading":false,"batchingLocation":false,'
-                '"showsBackgroundLocationIndicator":false,"updatingLocation":false,'
-                '"requestingRanging":false,"updatingHeading":false,'
-                '"previousAuthorizationStatus":0,"allowsMapCorrection":true,'
-                '"matchInfoEnabled":false,"allowsAlteredAccessoryLoctions":false,'
-                '"updatingRanging":false,"limitsPrecision":false,'
-                '"courtesyPromptNeeded":false,"headingFilter":1}'
-            ),
+        expected_formatted_value = (
+            '{"previousAuthorizationStatusValid":false,"paused":false,'
+            '"requestingLocation":false,"updatingVehicleSpeed":false,'
+            '"desiredAccuracy":100,"allowsBackgroundLocationUpdates":false,'
+            '"dynamicAccuracyReductionEnabled":false,"distanceFilter":-1,'
+            '"allowsLocationPrompts":true,"activityType":0,'
+            '"groundAltitudeEnabled":false,"pausesLocationUpdatesAutomatially":1,'
+            '"fusionInfoEnabled":false,"isAuthorizedForWidgetUpdates":false,'
+            '"updatingVehicleHeading":false,"batchingLocation":false,'
+            '"showsBackgroundLocationIndicator":false,"updatingLocation":false,'
+            '"requestingRanging":false,"updatingHeading":false,'
+            '"previousAuthorizationStatus":0,"allowsMapCorrection":true,'
+            '"matchInfoEnabled":false,"allowsAlteredAccessoryLoctions":false,'
+            '"updatingRanging":false,"limitsPrecision":false,'
+            '"courtesyPromptNeeded":false,"headingFilter":1}'
         )
+        self.assertEqual(formatted_value, expected_formatted_value)
 
 
 class LocationEscapeOnlyFormatStringDecoderTest(shared_test_lib.BaseTestCase):
@@ -920,7 +733,7 @@ class LocationEscapeOnlyFormatStringDecoderTest(shared_test_lib.BaseTestCase):
         )
         self.assertEqual(
             formatted_value,
-            ('"NSBundle <\\/System\\/Library\\/LocationBundles\\/TimeZone.bundle>"'),
+            '"NSBundle <\\/System\\/Library\\/LocationBundles\\/TimeZone.bundle>"',
         )
 
 
@@ -945,7 +758,7 @@ class MaskHashFormatStringDecoderTest(shared_test_lib.BaseTestCase):
         formatted_value = test_decoder.FormatValue(
             b"\x1d\x1f\xd3\xfb\xe9\xa6Fj\xb72\x7f\xb6\x98a\x02\xb2"
         )
-        self.assertEqual(formatted_value, ("<mask.hash: 'HR/T++mmRmq3Mn+2mGECsg=='>"))
+        self.assertEqual(formatted_value, "<mask.hash: 'HR/T++mmRmq3Mn+2mGECsg=='>")
 
         formatted_value = test_decoder.FormatValue(b"")
         self.assertEqual(formatted_value, "<mask.hash: (null)>")
@@ -954,7 +767,7 @@ class MaskHashFormatStringDecoderTest(shared_test_lib.BaseTestCase):
 class MDNSDNSCountersFormatStringDecoderTest(shared_test_lib.BaseTestCase):
     """mDNS DNS counters format string decoder tests."""
 
-    _VALUE_DATA = bytes(bytearray([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00]))
+    _VALUE_DATA = bytes.fromhex("0000000000000100")
 
     def testFormatValue(self):
         """Tests the FormatValue function."""
@@ -967,11 +780,7 @@ class MDNSDNSCountersFormatStringDecoderTest(shared_test_lib.BaseTestCase):
 class MDNSDNSHeaderFormatStringDecoderTest(shared_test_lib.BaseTestCase):
     """mDNS DNS header format string decoder tests."""
 
-    _VALUE_DATA = bytes(
-        bytearray(
-            [0x00, 0x00, 0x81, 0x80, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
-        )
-    )
+    _VALUE_DATA = bytes.fromhex("000081800001000000000000")
 
     def testFormatValue(self):
         """Tests the FormatValue function."""
@@ -980,17 +789,14 @@ class MDNSDNSHeaderFormatStringDecoderTest(shared_test_lib.BaseTestCase):
         formatted_value = test_decoder.FormatValue(self._VALUE_DATA)
         self.assertEqual(
             formatted_value,
-            (
-                "id: 0x0000 (0), flags: 0x8180 (R/Query, RD, RA, NoError), "
-                "counts: 1/0/0/0"
-            ),
+            "id: 0x0000 (0), flags: 0x8180 (R/Query, RD, RA, NoError), counts: 1/0/0/0",
         )
 
 
 class MDNSDNSIdentifierAndFlagsFormatStringDecoder(shared_test_lib.BaseTestCase):
     """mDNS DNS header format string decoder tests."""
 
-    _VALUE_DATA = bytes(bytearray([0x00, 0x01, 0xE9, 0x62, 0x00, 0x00, 0x00, 0x00]))
+    _VALUE_DATA = bytes.fromhex("0001e96200000000")
 
     def testFormatValue(self):
         """Tests the FormatValue function."""
@@ -999,7 +805,7 @@ class MDNSDNSIdentifierAndFlagsFormatStringDecoder(shared_test_lib.BaseTestCase)
         formatted_value = test_decoder.FormatValue(self._VALUE_DATA)
         self.assertEqual(
             formatted_value,
-            ("id: 0x62E9 (25321), flags: 0x0100 (Q/Query, RD, NoError)"),
+            "id: 0x62E9 (25321), flags: 0x0100 (Q/Query, RD, NoError)",
         )
 
 
@@ -1052,68 +858,15 @@ class OpenDirectoryMembershipDetailsFormatStringDecoderTest(
 ):
     """Open Directory membership details format string decoder tests."""
 
-    _VALUE_DATA1 = bytes(
-        bytearray(
-            [
-                0x23,
-                0x58,
-                0x00,
-                0x00,
-                0x00,
-                0x2F,
-                0x4C,
-                0x6F,
-                0x63,
-                0x61,
-                0x6C,
-                0x2F,
-                0x44,
-                0x65,
-                0x66,
-                0x61,
-                0x75,
-                0x6C,
-                0x74,
-                0x00,
-            ]
-        )
-    )
+    _VALUE_DATA1 = bytes.fromhex("23580000002f4c6f63616c2f44656661756c7400")
 
-    _VALUE_DATA2 = bytes(
-        bytearray(
-            [
-                0x44,
-                0x77,
-                0x68,
-                0x65,
-                0x65,
-                0x6C,
-                0x00,
-                0x2F,
-                0x4C,
-                0x6F,
-                0x63,
-                0x61,
-                0x6C,
-                0x2F,
-                0x44,
-                0x65,
-                0x66,
-                0x61,
-                0x75,
-                0x6C,
-                0x74,
-                0x00,
-            ]
-        )
-    )
+    _VALUE_DATA2 = bytes.fromhex("44776865656c002f4c6f63616c2f44656661756c7400")
 
     def testFormatValue(self):
         """Tests the FormatValue function."""
         test_decoder = (
             unified_logging.OpenDirectoryMembershipDetailsFormatStringDecoder()
         )
-
         formatted_value = test_decoder.FormatValue(self._VALUE_DATA1)
         self.assertEqual(formatted_value, "user: 88@/Local/Default")
 
@@ -1176,17 +929,15 @@ class SignpostDescriptionAttributeFormatStringDecoderTest(shared_test_lib.BaseTe
             b"", format_string_operator=format_string_operator
         )
         self.assertEqual(
-            formatted_value, ("__##__signpost.description#____#attribute#_##_###__##")
+            formatted_value, "__##__signpost.description#____#attribute#_##_###__##"
         )
-
         formatted_value = test_decoder.FormatValue(
             b"efilogin-helper", format_string_operator=format_string_operator
         )
         self.assertEqual(
             formatted_value,
-            ("__##__signpost.description#____#attribute#_##_#efilogin-helper##__##"),
+            "__##__signpost.description#____#attribute#_##_#efilogin-helper##__##",
         )
-
         format_string_operator = unified_logging.FormatStringOperator(specifier="d")
 
         formatted_value = test_decoder.FormatValue(
@@ -1194,9 +945,8 @@ class SignpostDescriptionAttributeFormatStringDecoderTest(shared_test_lib.BaseTe
         )
         self.assertEqual(
             formatted_value,
-            ("__##__signpost.description#____#attribute#_##_#50717##__##"),
+            "__##__signpost.description#____#attribute#_##_#50717##__##",
         )
-
         format_string_operator = unified_logging.FormatStringOperator(specifier="f")
 
         formatted_value = test_decoder.FormatValue(
@@ -1205,10 +955,7 @@ class SignpostDescriptionAttributeFormatStringDecoderTest(shared_test_lib.BaseTe
         )
         self.assertEqual(
             formatted_value,
-            (
-                "__##__signpost.description#____#attribute#_##_#"
-                "0.1015559434890747##__##"
-            ),
+            "__##__signpost.description#____#attribute#_##_#0.1015559434890747##__##",
         )
 
 
@@ -1220,21 +967,20 @@ class SignpostDescriptionTimeFormatStringDecoderTest(shared_test_lib.BaseTestCas
         test_decoder = unified_logging.SignpostDescriptionTimeFormatStringDecoder(
             time="begin"
         )
-
         formatted_value = test_decoder.FormatValue(b"\x9f\x3b\xa6\x1e\xea\x00\x00\x00")
+
         self.assertEqual(
             formatted_value,
-            ("__##__signpost.description#____#begin_time#_##_#1005536557983##__##"),
+            "__##__signpost.description#____#begin_time#_##_#1005536557983##__##",
         )
-
         test_decoder = unified_logging.SignpostDescriptionTimeFormatStringDecoder(
             time="end"
         )
-
         formatted_value = test_decoder.FormatValue(b"\x4f\x2f\xc4\x2b\xea\x00\x00\x00")
+
         self.assertEqual(
             formatted_value,
-            ("__##__signpost.description#____#end_time#_##_#1005756624719##__##"),
+            "__##__signpost.description#____#end_time#_##_#1005756624719##__##",
         )
 
 
@@ -1251,9 +997,8 @@ class SignpostTelemetryNumberFormatStringDecoderTest(shared_test_lib.BaseTestCas
             b"\x09\x00\x00\x00", format_string_operator=format_string_operator
         )
         self.assertEqual(
-            formatted_value, ("__##__signpost.telemetry#____#number1#_##_#9##__##")
+            formatted_value, "__##__signpost.telemetry#____#number1#_##_#9##__##"
         )
-
         format_string_operator = unified_logging.FormatStringOperator(specifier="f")
 
         formatted_value = test_decoder.FormatValue(
@@ -1261,28 +1006,24 @@ class SignpostTelemetryNumberFormatStringDecoderTest(shared_test_lib.BaseTestCas
         )
         self.assertEqual(
             formatted_value,
-            ("__##__signpost.telemetry#____#number1#_##_#5.88671875##__##"),
+            "__##__signpost.telemetry#____#number1#_##_#5.88671875##__##",
         )
-
         formatted_value = test_decoder.FormatValue(
             b"\x00\x80\xbb\x40", format_string_operator=format_string_operator
         )
         self.assertEqual(
-            formatted_value,
-            ("__##__signpost.telemetry#____#number1#_##_#5.859375##__##"),
+            formatted_value, "__##__signpost.telemetry#____#number1#_##_#5.859375##__##"
         )
-
         test_decoder = unified_logging.SignpostTelemetryNumberFormatStringDecoder(
             number=2
         )
-
         format_string_operator = unified_logging.FormatStringOperator(specifier="d")
 
         formatted_value = test_decoder.FormatValue(
             b"\x09\x00\x00\x00", format_string_operator=format_string_operator
         )
         self.assertEqual(
-            formatted_value, ("__##__signpost.telemetry#____#number2#_##_#9##__##")
+            formatted_value, "__##__signpost.telemetry#____#number2#_##_#9##__##"
         )
 
 
@@ -1296,79 +1037,25 @@ class SignpostTelemetryStringFormatStringDecoderTest(shared_test_lib.BaseTestCas
         formatted_value = test_decoder.FormatValue(b"executeQueryBegin")
         self.assertEqual(
             formatted_value,
-            ("__##__signpost.telemetry#____#string1#_##_#executeQueryBegin##__##"),
+            "__##__signpost.telemetry#____#string1#_##_#executeQueryBegin##__##",
         )
-
         test_decoder = unified_logging.SignpostTelemetryStringFormatStringDecoder(
             number=2
         )
-
         formatted_value = test_decoder.FormatValue(b"executeQueryBegin")
         self.assertEqual(
             formatted_value,
-            ("__##__signpost.telemetry#____#string2#_##_#executeQueryBegin##__##"),
+            "__##__signpost.telemetry#____#string2#_##_#executeQueryBegin##__##",
         )
 
 
 class SocketAddressFormatStringDecoderTest(shared_test_lib.BaseTestCase):
     """Socket address value format string decoder tests."""
 
-    _VALUE_DATA1 = bytes(
-        bytearray(
-            [
-                0x10,
-                0x02,
-                0x00,
-                0x00,
-                0x17,
-                0x32,
-                0x62,
-                0x82,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-            ]
-        )
-    )
+    _VALUE_DATA1 = bytes.fromhex("10020000173262820000000000000000")
 
-    _VALUE_DATA2 = bytes(
-        bytearray(
-            [
-                0x1C,
-                0x1E,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-            ]
-        )
+    _VALUE_DATA2 = bytes.fromhex(
+        "1c1e0000000000000000000000000000000000000000000000000000"
     )
 
     def testFormatValue(self):
@@ -1466,39 +1153,8 @@ class UUIDFormatStringDecoderTest(shared_test_lib.BaseTestCase):
 class WindowsNTSecurityIdentifierFormatStringDecoderTest(shared_test_lib.BaseTestCase):
     """Open Directory membership details format string decoder tests."""
 
-    _VALUE_DATA = bytes(
-        bytearray(
-            [
-                0x01,
-                0x05,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x05,
-                0x15,
-                0x00,
-                0x00,
-                0x00,
-                0x16,
-                0x00,
-                0x00,
-                0x00,
-                0x17,
-                0x00,
-                0x00,
-                0x00,
-                0x18,
-                0x00,
-                0x00,
-                0x00,
-                0x19,
-                0x00,
-                0x00,
-                0x00,
-            ]
-        )
+    _VALUE_DATA = bytes.fromhex(
+        "01050000000000051500000016000000170000001800000019000000"
     )
 
     def testFormatValue(self):
@@ -1537,12 +1193,12 @@ class DSCFileTest(shared_test_lib.BaseTestCase):
     def testReadFileHeader(self):
         """Tests the _ReadFileHeader function."""
         test_file_path = "/private/var/db/uuidtext/dsc/BE7FE6AD45603AE2883E432F78B45062"
+
         test_path_spec = path_spec_factory.Factory.NewPathSpec(
             dfvfs_definitions.TYPE_INDICATOR_APFS,
             location=test_file_path,
             parent=self._parent_path_spec,
         )
-
         file_entry = path_spec_resolver.Resolver.OpenFileEntry(test_path_spec)
         file_object = file_entry.GetFileObject()
 
@@ -1558,12 +1214,12 @@ class DSCFileTest(shared_test_lib.BaseTestCase):
     def testReadImagePath(self):
         """Tests the _ReadImagePath function."""
         test_file_path = "/private/var/db/uuidtext/dsc/BE7FE6AD45603AE2883E432F78B45062"
+
         test_path_spec = path_spec_factory.Factory.NewPathSpec(
             dfvfs_definitions.TYPE_INDICATOR_APFS,
             location=test_file_path,
             parent=self._parent_path_spec,
         )
-
         file_entry = path_spec_resolver.Resolver.OpenFileEntry(test_path_spec)
         file_object = file_entry.GetFileObject()
 
@@ -1575,12 +1231,12 @@ class DSCFileTest(shared_test_lib.BaseTestCase):
     def testReadRangeDescriptors(self):
         """Test the _ReadRangeDescriptors function."""
         test_file_path = "/private/var/db/uuidtext/dsc/BE7FE6AD45603AE2883E432F78B45062"
+
         test_path_spec = path_spec_factory.Factory.NewPathSpec(
             dfvfs_definitions.TYPE_INDICATOR_APFS,
             location=test_file_path,
             parent=self._parent_path_spec,
         )
-
         file_entry = path_spec_resolver.Resolver.OpenFileEntry(test_path_spec)
         file_object = file_entry.GetFileObject()
 
@@ -1597,12 +1253,12 @@ class DSCFileTest(shared_test_lib.BaseTestCase):
     def testReadUUIDDescriptors(self):
         """Test the _ReadUUIDDescriptors function."""
         test_file_path = "/private/var/db/uuidtext/dsc/BE7FE6AD45603AE2883E432F78B45062"
+
         test_path_spec = path_spec_factory.Factory.NewPathSpec(
             dfvfs_definitions.TYPE_INDICATOR_APFS,
             location=test_file_path,
             parent=self._parent_path_spec,
         )
-
         file_entry = path_spec_resolver.Resolver.OpenFileEntry(test_path_spec)
         file_object = file_entry.GetFileObject()
 
@@ -1619,12 +1275,12 @@ class DSCFileTest(shared_test_lib.BaseTestCase):
     def testReadFileObject(self):
         """Tests the ReadFileObject function."""
         test_file_path = "/private/var/db/uuidtext/dsc/BE7FE6AD45603AE2883E432F78B45062"
+
         test_path_spec = path_spec_factory.Factory.NewPathSpec(
             dfvfs_definitions.TYPE_INDICATOR_APFS,
             location=test_file_path,
             parent=self._parent_path_spec,
         )
-
         file_entry = path_spec_resolver.Resolver.OpenFileEntry(test_path_spec)
 
         test_file = unified_logging.DSCFile()
@@ -1667,7 +1323,6 @@ class TimesyncDatabaseFileTest(shared_test_lib.BaseTestCase):
             location=test_file_path,
             parent=self._parent_path_spec,
         )
-
         file_entry = path_spec_resolver.Resolver.OpenFileEntry(test_path_spec)
 
         test_file = unified_logging.TimesyncDatabaseFile()
@@ -1704,7 +1359,6 @@ class TimesyncDatabaseFileTest(shared_test_lib.BaseTestCase):
             location=test_file_path,
             parent=self._parent_path_spec,
         )
-
         file_entry = path_spec_resolver.Resolver.OpenFileEntry(test_path_spec)
 
         test_file = unified_logging.TimesyncDatabaseFile()
@@ -4060,11 +3714,9 @@ class TraceV3FileTest(shared_test_lib.BaseTestCase):
         tracepoint_data_object_tuple = collections.namedtuple(
             "tracepoint_data_object", ["large_offset_data", "large_shared_cache_data"]
         )
-
         tracepoint_data_object = tracepoint_data_object_tuple(
             large_offset_data=0, large_shared_cache_data=0
         )
-
         string_reference, is_dynamic = test_file._CalculateFormatStringReference(
             tracepoint_data_object, 0x00964B95
         )
@@ -4080,7 +3732,6 @@ class TraceV3FileTest(shared_test_lib.BaseTestCase):
         tracepoint_data_object = tracepoint_data_object_tuple(
             large_offset_data=0xFF4B, large_shared_cache_data=0
         )
-
         string_reference, is_dynamic = test_file._CalculateFormatStringReference(
             tracepoint_data_object, 0x28DD2B31
         )
@@ -4090,7 +3741,6 @@ class TraceV3FileTest(shared_test_lib.BaseTestCase):
         tracepoint_data_object = tracepoint_data_object_tuple(
             large_offset_data=0x0001, large_shared_cache_data=0x0002
         )
-
         string_reference, is_dynamic = test_file._CalculateFormatStringReference(
             tracepoint_data_object, 0x15A557C5
         )
@@ -4100,7 +3750,6 @@ class TraceV3FileTest(shared_test_lib.BaseTestCase):
         tracepoint_data_object = tracepoint_data_object_tuple(
             large_offset_data=0x0001, large_shared_cache_data=0x0011
         )
-
         string_reference, is_dynamic = test_file._CalculateFormatStringReference(
             tracepoint_data_object, 0x6C8FBBD0
         )
@@ -4110,7 +3759,6 @@ class TraceV3FileTest(shared_test_lib.BaseTestCase):
         tracepoint_data_object = tracepoint_data_object_tuple(
             large_offset_data=0x8008, large_shared_cache_data=0x0002
         )
-
         string_reference, is_dynamic = test_file._CalculateFormatStringReference(
             tracepoint_data_object, 0x117A0720
         )
@@ -4125,11 +3773,9 @@ class TraceV3FileTest(shared_test_lib.BaseTestCase):
             "tracepoint_data_object",
             ["name_string_reference_lower", "name_string_reference_upper"],
         )
-
         tracepoint_data_object = tracepoint_data_object_tuple(
             name_string_reference_lower=0x05F327B0, name_string_reference_upper=0x0002
         )
-
         string_reference, is_dynamic = test_file._CalculateNameStringReference(
             tracepoint_data_object
         )
@@ -4151,7 +3797,6 @@ class TraceV3FileTest(shared_test_lib.BaseTestCase):
                 "load_address_upper",
             ],
         )
-
         # TODO: improve tests
 
         tracepoint_data_object = tracepoint_data_object_tuple(
@@ -4160,7 +3805,6 @@ class TraceV3FileTest(shared_test_lib.BaseTestCase):
             load_address_lower=0x05DFEBDB,
             load_address_upper=0,
         )
-
         program_counter = test_file._CalculateProgramCounter(
             tracepoint_data_object, 0x105DE1000
         )
@@ -4172,7 +3816,6 @@ class TraceV3FileTest(shared_test_lib.BaseTestCase):
             load_address_lower=0xECF707E9,
             load_address_upper=0,
         )
-
         program_counter = test_file._CalculateProgramCounter(tracepoint_data_object, 0)
         self.assertEqual(program_counter, 0x8008ECF707E9)
 
@@ -4188,7 +3831,6 @@ class TraceV3FileTest(shared_test_lib.BaseTestCase):
             location=test_file_path,
             parent=self._parent_path_spec,
         )
-
         file_entry = path_spec_resolver.Resolver.OpenFileEntry(test_path_spec)
 
         file_object = file_entry.GetFileObject()
@@ -4207,7 +3849,6 @@ class TraceV3FileTest(shared_test_lib.BaseTestCase):
             location=test_file_path,
             parent=self._parent_path_spec,
         )
-
         file_entry = path_spec_resolver.Resolver.OpenFileEntry(test_path_spec)
 
         file_object = file_entry.GetFileObject()
@@ -4226,7 +3867,6 @@ class TraceV3FileTest(shared_test_lib.BaseTestCase):
             location=test_file_path,
             parent=self._parent_path_spec,
         )
-
         file_entry = path_spec_resolver.Resolver.OpenFileEntry(test_path_spec)
 
         file_object = file_entry.GetFileObject()
@@ -4243,7 +3883,6 @@ class TraceV3FileTest(shared_test_lib.BaseTestCase):
         backtrace_frames = test_file._ReadBacktraceData(
             0x1000, self._FIREHOSE_TRACEPOINT_BACKTRACE_DATA, 0
         )
-
         self.assertEqual(len(backtrace_frames), 15)
 
         self.assertEqual(
@@ -4265,7 +3904,6 @@ class TraceV3FileTest(shared_test_lib.BaseTestCase):
         activity, _ = test_file._ReadFirehoseTracepointActivityData(
             0x01, 0x0213, self._FIREHOSE_TRACEPOINT_ACTIVITY_DATA, 0
         )
-
         self.assertIsNotNone(activity)
         self.assertEqual(activity.current_activity_identifier, 0x80000000000000E0)
         self.assertEqual(activity.process_identifier, 59)
@@ -4285,7 +3923,6 @@ class TraceV3FileTest(shared_test_lib.BaseTestCase):
         log, _ = test_file._ReadFirehoseTracepointLogData(
             0x0602, self._FIREHOSE_TRACEPOINT_LOG_DATA, 0
         )
-
         self.assertIsNotNone(log)
         self.assertEqual(log.load_address_lower, 0x0003866C)
         self.assertEqual(log.sub_system_identifier, 6)
@@ -4305,7 +3942,6 @@ class TraceV3FileTest(shared_test_lib.BaseTestCase):
         loss, _ = test_file._ReadFirehoseTracepointLossData(
             0x0000, self._FIREHOSE_TRACEPOINT_LOSS_DATA, 0
         )
-
         self.assertIsNotNone(loss)
         self.assertEqual(loss.start_time, 120691406)
         self.assertEqual(loss.end_time, 1458547349)
@@ -4323,7 +3959,6 @@ class TraceV3FileTest(shared_test_lib.BaseTestCase):
         trace, _ = test_file._ReadFirehoseTracepointTraceData(
             0x0000, self._FIREHOSE_TRACEPOINT_TRACE_DATA1, 0
         )
-
         self.assertIsNotNone(trace)
         self.assertEqual(trace.load_address_lower, 0x0003F42B)
         self.assertEqual(trace.number_of_values, 0)
@@ -4336,7 +3971,6 @@ class TraceV3FileTest(shared_test_lib.BaseTestCase):
         trace, _ = test_file._ReadFirehoseTracepointTraceData(
             0x0000, self._FIREHOSE_TRACEPOINT_TRACE_DATA2, 0
         )
-
         self.assertIsNotNone(trace)
         self.assertEqual(trace.load_address_lower, 0x000121F6)
         self.assertEqual(trace.number_of_values, 2)
@@ -4348,7 +3982,6 @@ class TraceV3FileTest(shared_test_lib.BaseTestCase):
         trace, _ = test_file._ReadFirehoseTracepointTraceData(
             0x0000, self._FIREHOSE_TRACEPOINT_TRACE_DATA2, 0
         )
-
         self.assertIsNotNone(trace)
 
         string_formatter = unified_logging.StringFormatter()
@@ -4357,7 +3990,6 @@ class TraceV3FileTest(shared_test_lib.BaseTestCase):
         values = test_file._ReadFirehoseTracepointTraceValuesData(
             trace, self._FIREHOSE_TRACEPOINT_TRACE_DATA2[4:], string_formatter
         )
-
         self.assertEqual(len(values), 2)
         self.assertEqual(values, ["0x7ffb4be160b0", "200"])
 
@@ -4384,10 +4016,9 @@ class TraceV3FileTest(shared_test_lib.BaseTestCase):
             header_chunk.generation.boot_identifier,
             uuid.UUID("a6ebc8e3-0a1c-40e8-93b9-da3a7f671d19"),
         )
-
         self.assertEqual(header_chunk.time_zone.sub_chunk_tag, 0x6103)
         self.assertEqual(
-            header_chunk.time_zone.path, ("/var/db/timezone/zoneinfo/America/Toronto")
+            header_chunk.time_zone.path, "/var/db/timezone/zoneinfo/America/Toronto"
         )
 
     def testReadOversizeChunkData(self):
@@ -4447,7 +4078,6 @@ class UUIDTextFileTest(shared_test_lib.BaseTestCase):
             location=test_file_path,
             parent=self._parent_path_spec,
         )
-
         file_entry = path_spec_resolver.Resolver.OpenFileEntry(test_path_spec)
 
         file_object = file_entry.GetFileObject()
@@ -4471,7 +4101,6 @@ class UUIDTextFileTest(shared_test_lib.BaseTestCase):
             location=test_file_path,
             parent=self._parent_path_spec,
         )
-
         file_entry = path_spec_resolver.Resolver.OpenFileEntry(test_path_spec)
 
         file_object = file_entry.GetFileObject()
@@ -4492,7 +4121,6 @@ class UUIDTextFileTest(shared_test_lib.BaseTestCase):
             location=test_file_path,
             parent=self._parent_path_spec,
         )
-
         file_entry = path_spec_resolver.Resolver.OpenFileEntry(test_path_spec)
 
         test_file = unified_logging.UUIDTextFile()
@@ -4513,7 +4141,6 @@ class UUIDTextFileTest(shared_test_lib.BaseTestCase):
             location=test_file_path,
             parent=self._parent_path_spec,
         )
-
         file_entry = path_spec_resolver.Resolver.OpenFileEntry(test_path_spec)
 
         test_file = unified_logging.UUIDTextFile()
@@ -4538,7 +4165,6 @@ class UUIDTextFileTest(shared_test_lib.BaseTestCase):
             location=test_file_path,
             parent=self._parent_path_spec,
         )
-
         file_entry = path_spec_resolver.Resolver.OpenFileEntry(test_path_spec)
 
         test_file = unified_logging.UUIDTextFile()
@@ -4559,7 +4185,6 @@ class UUIDTextFileTest(shared_test_lib.BaseTestCase):
             location=test_file_path,
             parent=self._parent_path_spec,
         )
-
         file_entry = path_spec_resolver.Resolver.OpenFileEntry(test_path_spec)
 
         test_file = unified_logging.UUIDTextFile()
@@ -4633,7 +4258,6 @@ class UnifiedLoggingParserTest(test_lib.ParserTestCase):
             "sender_image_path": "/kernel",
             "thread_identifier": 0,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 27)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -4645,7 +4269,6 @@ class UnifiedLoggingParserTest(test_lib.ParserTestCase):
             location=test_file_path,
             parent=self._parent_path_spec,
         )
-
         parser = unified_logging.UnifiedLoggingParser()
         storage_writer = self._ParseFileByPathSpec(test_path_spec, parser)
 
@@ -4685,7 +4308,6 @@ class UnifiedLoggingParserTest(test_lib.ParserTestCase):
             "signpost_name": "validateExtFilesystem(into:)",
             "thread_identifier": 0x7CB,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 7)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -4697,7 +4319,6 @@ class UnifiedLoggingParserTest(test_lib.ParserTestCase):
             location=test_file_path,
             parent=self._parent_path_spec,
         )
-
         parser = unified_logging.UnifiedLoggingParser()
         storage_writer = self._ParseFileByPathSpec(test_path_spec, parser)
 
@@ -4736,7 +4357,6 @@ class UnifiedLoggingParserTest(test_lib.ParserTestCase):
             "subsystem": "com.apple.SkyLight",
             "thread_identifier": 0x7D1,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 8)
         self.CheckEventData(event_data, expected_event_values)
 
