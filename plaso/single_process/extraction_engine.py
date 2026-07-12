@@ -135,11 +135,7 @@ class SingleProcessEngine(engine.BaseEngine):
                         logger.debug(f"Excluded from extraction: {display_name:s}.")
                         continue
 
-                    # TODO: determine if event sources should be DataStream or FileEntry
-                    # or both.
-                    event_source = event_sources.FileEntryEventSource(
-                        path_spec=path_spec
-                    )
+                    event_source = event_sources.EventSource(path_spec=path_spec)
                     parser_mediator.ProduceEventSource(event_source)
 
             except KeyboardInterrupt:
