@@ -14,7 +14,9 @@ class WindowsPushNotificationPluginTest(test_lib.SQLitePluginTestCase):
     def testProcess(self):
         """Tests the Process function."""
         plugin = windows_push_notification.WindowsPushNotificationPlugin()
-        storage_writer = self._ParseDatabaseFileWithPlugin(["wpndatabase.db"], plugin)
+        storage_writer = self._ParseDatabaseFileWithPlugin(
+            ["windows", "wpndatabase.db"], plugin
+        )
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
@@ -39,7 +41,6 @@ class WindowsPushNotificationPluginTest(test_lib.SQLitePluginTestCase):
             "modification_time": "2020-12-11T19:09:13+00:00",
             "service_identifier": "windows.familysafety_cw5n1h2txyewy",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -61,7 +62,6 @@ class WindowsPushNotificationPluginTest(test_lib.SQLitePluginTestCase):
                 "</binding></visual></toast>"
             ),
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 68)
         self.CheckEventData(event_data, expected_event_values)
 

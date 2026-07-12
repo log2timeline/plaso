@@ -15,7 +15,7 @@ class AndroidTangoProfileTest(test_lib.SQLitePluginTestCase):
         """Test the Process function on a Tango Android file."""
         plugin = android_tango.AndroidTangoProfilePlugin()
         storage_writer = self._ParseDatabaseFileWithPlugin(
-            ["tango_android_profile.db"], plugin
+            ["android", "tango_profile.db"], plugin
         )
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"

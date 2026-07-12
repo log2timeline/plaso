@@ -14,7 +14,9 @@ class MacOSTCCPluginTest(test_lib.SQLitePluginTestCase):
     def testProcess(self):
         """Tests the Process function on a MacOS TCC file."""
         plugin = macos_tcc.MacOSTCCPlugin()
-        storage_writer = self._ParseDatabaseFileWithPlugin(["TCC-test.db"], plugin)
+        storage_writer = self._ParseDatabaseFileWithPlugin(
+            ["macos", "TCC-test.db"], plugin
+        )
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
@@ -39,7 +41,6 @@ class MacOSTCCPluginTest(test_lib.SQLitePluginTestCase):
             "prompt_count": 1,
             "service": "kTCCServiceUbiquity",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

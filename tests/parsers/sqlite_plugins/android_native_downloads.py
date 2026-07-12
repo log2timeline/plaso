@@ -14,7 +14,9 @@ class AndroidNativeDownloadsTest(test_lib.SQLitePluginTestCase):
     def testProcess(self):
         """Test the Process function on an Android downloads.db file."""
         plugin = android_native_downloads.AndroidNativeDownloadsPlugin()
-        storage_writer = self._ParseDatabaseFileWithPlugin(["downloads.db"], plugin)
+        storage_writer = self._ParseDatabaseFileWithPlugin(
+            ["android", "downloads.db"], plugin
+        )
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
@@ -53,8 +55,8 @@ class AndroidNativeDownloadsTest(test_lib.SQLitePluginTestCase):
             "total_bytes": 2149749,
             "ui_visibility": 1,
             "uri": (
-                "https://cdn.discordapp.com/attachments/"
-                "622810296226152474/1041012392089370735/IMG_1953.jpg"
+                "https://cdn.discordapp.com/attachments/622810296226152474/"
+                "1041012392089370735/IMG_1953.jpg"
             ),
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)

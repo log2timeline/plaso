@@ -14,7 +14,9 @@ class KodiVideosTest(test_lib.SQLitePluginTestCase):
     def testProcess(self):
         """Test the Process function on a Kodi Videos database."""
         plugin = kodi.KodiMyVideosPlugin()
-        storage_writer = self._ParseDatabaseFileWithPlugin(["MyVideos107.db"], plugin)
+        storage_writer = self._ParseDatabaseFileWithPlugin(
+            ["sqlite", "MyVideos107.db"], plugin
+        )
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
@@ -37,7 +39,6 @@ class KodiVideosTest(test_lib.SQLitePluginTestCase):
             "last_played_time": "2017-07-16T04:54:54+00:00",
             "play_count": 1,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 

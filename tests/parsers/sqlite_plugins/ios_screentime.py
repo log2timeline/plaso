@@ -17,7 +17,6 @@ class IOSScreenTimePluginTest(test_lib.SQLitePluginTestCase):
         storage_writer = self._ParseDatabaseFileWithPlugin(
             ["ios", "RMAdminStore-Local.sqlite"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -43,7 +42,6 @@ class IOSScreenTimePluginTest(test_lib.SQLitePluginTestCase):
             "user_family_name": "DFIR",
             "user_given_name": "This Is",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

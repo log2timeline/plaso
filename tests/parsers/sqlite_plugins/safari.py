@@ -14,7 +14,9 @@ class SafariHistoryPluginTest(test_lib.SQLitePluginTestCase):
     def testProcess(self):
         """Tests the process function on a Safari History.db database file."""
         plugin = safari.SafariHistoryPluginSqlite()
-        storage_writer = self._ParseDatabaseFileWithPlugin(["History.db"], plugin)
+        storage_writer = self._ParseDatabaseFileWithPlugin(
+            ["safari", "History.db"], plugin
+        )
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"

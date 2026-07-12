@@ -13,7 +13,9 @@ class AndroidViberCallSQLitePluginTest(test_lib.SQLitePluginTestCase):
     def testProcess(self):
         """Test the Process function on an Android viber_data file."""
         plugin = android_viber_call.AndroidViberCallPlugin()
-        storage_writer = self._ParseDatabaseFileWithPlugin(["viber_data"], plugin)
+        storage_writer = self._ParseDatabaseFileWithPlugin(
+            ["android", "viber_data"], plugin
+        )
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
@@ -39,7 +41,6 @@ class AndroidViberCallSQLitePluginTest(test_lib.SQLitePluginTestCase):
             "start_time": "2022-11-25T20:43:08.267+00:00",
             "viber_call_type": 4,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 3)
         self.CheckEventData(event_data, expected_event_values)
 

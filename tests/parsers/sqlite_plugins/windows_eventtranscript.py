@@ -15,9 +15,8 @@ class EventTranscriptPluginTest(test_lib.SQLitePluginTestCase):
         """Tests the Process function."""
         plugin = windows_eventtranscript.EventTranscriptPlugin()
         storage_writer = self._ParseDatabaseFileWithPlugin(
-            ["EventTranscript.db"], plugin
+            ["windows", "EventTranscript.db"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -54,7 +53,6 @@ class EventTranscriptPluginTest(test_lib.SQLitePluginTestCase):
             "user_identifier": None,
             "version": "4.0",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

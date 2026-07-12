@@ -14,7 +14,9 @@ class AndroidSMSTest(test_lib.SQLitePluginTestCase):
     def testProcess(self):
         """Test the Process function on an Android SMS mmssms.db file."""
         plugin = android_sms.AndroidSMSPlugin()
-        storage_writer = self._ParseDatabaseFileWithPlugin(["mmssms.db"], plugin)
+        storage_writer = self._ParseDatabaseFileWithPlugin(
+            ["android", "mmssms.db"], plugin
+        )
 
         # The SMS database file contains 9 events (5 SENT, 4 RECEIVED messages).
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(

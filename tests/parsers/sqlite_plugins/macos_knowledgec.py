@@ -15,7 +15,7 @@ class MacOSKnowledgecTest(test_lib.SQLitePluginTestCase):
         """Tests the Process function on a MacOS 10.13 database."""
         plugin = macos_knowledgec.MacOSKnowledgeCPlugin()
         storage_writer = self._ParseDatabaseFileWithPlugin(
-            ["mac_knowledgec-10.13.db"], plugin
+            ["macos", "knowledgec-10.13.db"], plugin
         )
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
@@ -47,7 +47,7 @@ class MacOSKnowledgecTest(test_lib.SQLitePluginTestCase):
         """Tests the Process function on a MacOS 10.14 database."""
         plugin = macos_knowledgec.MacOSKnowledgeCPlugin()
         storage_writer = self._ParseDatabaseFileWithPlugin(
-            ["mac_knowledgec-10.14.db"], plugin
+            ["macos", "knowledgec-10.14.db"], plugin
         )
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"

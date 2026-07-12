@@ -14,7 +14,9 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
     def testProcess(self):
         """Tests the Process function on a Google Drive database file."""
         plugin = gdrive.GoogleDrivePlugin()
-        storage_writer = self._ParseDatabaseFileWithPlugin(["snapshot.db"], plugin)
+        storage_writer = self._ParseDatabaseFileWithPlugin(
+            ["sqlite", "snapshot.db"], plugin
+        )
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
@@ -41,7 +43,6 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
             ),
             "size": 184,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 15)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -58,7 +59,6 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
                 "z4GmY-njMf-Z0/edit?usp=docslist_api"
             ),
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 8)
         self.CheckEventData(event_data, expected_event_values)
 

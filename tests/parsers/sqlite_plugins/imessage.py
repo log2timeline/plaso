@@ -14,7 +14,9 @@ class IMessageTest(test_lib.SQLitePluginTestCase):
     def testProcess(self):
         """Test the Process function on a iMessage chat.db file."""
         plugin = imessage.IMessagePlugin()
-        storage_writer = self._ParseDatabaseFileWithPlugin(["imessage_chat.db"], plugin)
+        storage_writer = self._ParseDatabaseFileWithPlugin(
+            ["sqlite", "imessage_chat.db"], plugin
+        )
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
@@ -40,7 +42,6 @@ class IMessageTest(test_lib.SQLitePluginTestCase):
             "service": "iMessage",
             "text": "Did you try to send me a message?",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 7)
         self.CheckEventData(event_data, expected_event_values)
 
