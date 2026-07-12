@@ -3,8 +3,8 @@
 # Script that makes changes in preparation of a new release, such as updating
 # the version and documentation.
 
-EXIT_FAILURE=1;
-EXIT_SUCCESS=0;
+EXIT_FAILURE=1
+EXIT_SUCCESS=0
 
 VERSION=$(date -u +"%Y%m%d")
 
@@ -34,6 +34,9 @@ EOT
 # Regenerate the parser and plugins documentation.
 PYTHONPATH=. ./plaso/scripts/log2timeline.py --parsers list --use-markdown > docs/sources/user/Parsers-and-plugins.md
 
+# Regenerate the output modules documentation.
+# PYTHONPATH=. ./plaso/scripts/psort.py --output-format list --use-markdown > docs/sources/user/Output-and-formatting.md
+
 # Regenerate the supported formats documentation.
 # TODO: generate supported formats.
 # PYTHONPATH=. ./utils/export_supported_formats.py > docs/sources/Supported-formats.md
@@ -47,5 +50,4 @@ tox -edocs
 # Check for unused entries in plaso/data/timeliner.yaml
 ./utils/check_unused_timeliner_entries.sh
 
-exit ${EXIT_SUCCESS};
-
+exit ${EXIT_SUCCESS}

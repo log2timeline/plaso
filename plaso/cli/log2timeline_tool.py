@@ -23,15 +23,14 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """Log2timeline CLI tool.
 
     Attributes:
-      dependencies_check (bool): True if the availability and versions of
-          dependencies should be checked.
+      dependencies_check (bool): True if the availability and versions of dependencies
+          should be checked.
       list_archive_types (bool): True if the archive types should be listed.
       list_hashers (bool): True if the hashers should be listed.
-      list_parsers_and_plugins (bool): True if the parsers and plugins should
-          be listed.
+      list_parsers_and_plugins (bool): True if the parsers and plugins should be listed.
       list_profilers (bool): True if the profilers should be listed.
-      show_info (bool): True if information about hashers, parsers, plugins,
-          etc. should be shown.
+      show_info (bool): True if information about hashers, parsers, plugins, etc. should
+          be shown.
     """
 
     NAME = "log2timeline"
@@ -39,10 +38,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         "\n".join(
             [
                 "",
-                (
-                    "log2timeline is a command line tool to extract events from "
-                    "individual "
-                ),
+                "log2timeline is a command line tool to extract events from individual "
                 "files, recursing a directory (e.g. mount point) or storage media ",
                 "image or device.",
                 "",
@@ -77,10 +73,10 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         """Initializes a log2timeline CLI tool.
 
         Args:
-          input_reader (Optional[InputReader]): input reader, where None indicates
-              that the stdin input reader should be used.
-          output_writer (Optional[OutputWriter]): output writer, where None
-              indicates that the stdout output writer should be used.
+          input_reader (Optional[InputReader]): input reader, where None indicates that
+              the stdin input reader should be used.
+          output_writer (Optional[OutputWriter]): output writer, where None indicates
+              that the stdout output writer should be used.
         """
         super().__init__(input_reader=input_reader, output_writer=output_writer)
         self._storage_serializer_format = definitions.SERIALIZER_FORMAT_JSON
@@ -104,7 +100,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
             ("plaso engine", plaso.__version__),
             ("python", sys.version),
         ]
-
         hashers_information = hashers_manager.HashersManager.GetHashersInformation()
         parsers_information = parsers_manager.ParsersManager.GetParsersInformation()
         plugins_information = (
@@ -155,18 +150,15 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
             add_help=False,
             formatter_class=argparse.RawDescriptionHelpFormatter,
         )
-
         self.AddBasicOptions(argument_parser)
 
         data_location_group = argument_parser.add_argument_group(
             "data location arguments"
         )
-
         argument_helper_names = ["artifact_definitions", "data_location"]
         helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
             data_location_group, names=argument_helper_names
         )
-
         extraction_group = argument_parser.add_argument_group("extraction arguments")
 
         argument_helper_names = [
@@ -181,7 +173,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
             extraction_group, names=argument_helper_names
         )
-
         self.AddStorageMediaImageOptions(extraction_group)
         self.AddExtractionOptions(extraction_group)
         self.AddVSSProcessingOptions(extraction_group)
@@ -198,7 +189,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
             default=False,
             help="Print out information about supported plugins and parsers.",
         )
-
         info_group.add_argument(
             "--use_markdown",
             "--use-markdown",
@@ -210,7 +200,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
                 '"--hashers list", "--parsers list" or "--timezone list"'
             ),
         )
-
         info_group.add_argument(
             "--no_dependencies_check",
             "--no-dependencies-check",
@@ -219,13 +208,11 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
             default=True,
             help="Disable the dependencies check.",
         )
-
         self.AddLogFileOptions(info_group)
 
         helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
             info_group, names=["status_view"]
         )
-
         processing_group = argument_parser.add_argument_group("processing arguments")
 
         self.AddPerformanceOptions(processing_group)
@@ -239,18 +226,16 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
             default=False,
             help=(
                 "Enables the SIGSEGV handler. WARNING this functionality is "
-                "experimental and will a deadlock worker process if a real "
-                "segfault is caught, but not signal SIGSEGV. This functionality "
-                "is therefore primarily intended for debugging purposes"
+                "experimental and will a deadlock worker process if a real segfault "
+                "is caught, but not signal SIGSEGV. This functionality is therefore "
+                "primarily intended for debugging purposes"
             ),
         )
-
         profiling_group = argument_parser.add_argument_group("profiling arguments")
 
         helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
             profiling_group, names=["profiling"]
         )
-
         storage_group = argument_parser.add_argument_group("storage arguments")
 
         self.AddStorageOptions(storage_group)
@@ -258,7 +243,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
             storage_group, names=["storage_format"]
         )
-
         argument_parser.add_argument(
             self._SOURCE_OPTION,
             action="store",
@@ -267,12 +251,11 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
             default=None,
             type=str,
             help=(
-                "Path to a source device, file or directory. If the source is "
-                "a supported storage media device or image file, archive file "
-                "or a directory, the files within are processed recursively."
+                "Path to a source device, file or directory. If the source is a "
+                "supported storage media device or image file, archive file or a "
+                "directory, the files within are processed recursively."
             ),
         )
-
         try:
             options = argument_parser.parse_args(arguments)
         except UnicodeEncodeError:
@@ -285,11 +268,9 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         # Properly prepare the attributes according to local encoding.
         if self.preferred_encoding == "ascii":
             self._PrintUserWarning(
-                (
-                    "the preferred encoding of your system is ASCII, which is not "
-                    "optimal for the typically non-ASCII characters that need to be "
-                    "parsed and processed. This will most likely result in an error."
-                )
+                "the preferred encoding of your system is ASCII, which is not "
+                "optimal for the typically non-ASCII characters that need to be "
+                "parsed and processed. This will most likely result in an error."
             )
 
         try:
@@ -309,7 +290,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
             filename=self._log_file,
             quiet_mode=self._quiet_mode,
         )
-
         return True
 
     def ParseOptions(self, options):
@@ -325,7 +305,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         helpers_manager.ArgumentHelperManager.ParseOptions(
             options, self, names=["data_location"]
         )
-
         self._ReadParserPresetsFromFile()
 
         # Check the list options first otherwise required options will raise.
@@ -333,7 +312,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         helpers_manager.ArgumentHelperManager.ParseOptions(
             options, self, names=argument_helper_names
         )
-
         self._ParseExtractionOptions(options)
 
         self.list_archive_types = self._archive_types_string == "list"
@@ -375,7 +353,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         helpers_manager.ArgumentHelperManager.ParseOptions(
             options, self, names=argument_helper_names
         )
-
         self._ParseLogFileOptions(options)
 
         self._ParseStorageMediaOptions(options)
@@ -402,7 +379,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         helpers_manager.ArgumentHelperManager.ParseOptions(
             options, self, names=["status_view"]
         )
-
         self._enable_sigsegv_handler = getattr(options, "sigsegv_handler", False)
 
         self._EnforceProcessMemoryLimit(self._process_memory_limit)

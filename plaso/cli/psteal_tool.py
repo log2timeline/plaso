@@ -9,6 +9,7 @@ from plaso import output  # pylint: disable=unused-import
 
 from plaso.cli import extraction_tool
 from plaso.cli import tool_options
+from plaso.cli import views
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.containers import reports
 from plaso.engine import configurations
@@ -35,14 +36,13 @@ class PstealTool(
     flags.
 
     Attributes:
-      dependencies_check (bool): True if the availability and versions of
-          dependencies should be checked.
+      dependencies_check (bool): True if the availability and versions of dependencies
+          should be checked.
       list_archive_types (bool): True if the archive types should be listed.
       list_hashers (bool): True if the hashers should be listed.
-      list_output_modules (bool): True if information about the output modules
-          should be shown.
-      list_parsers_and_plugins (bool): True if the parsers and plugins should
-          be listed.
+      list_output_modules (bool): True if information about the output modules should
+          be shown.
+      list_parsers_and_plugins (bool): True if the parsers and plugins should be listed.
     """
 
     NAME = "psteal"
@@ -87,10 +87,10 @@ class PstealTool(
         """Initializes the CLI tool object.
 
         Args:
-          input_reader (Optional[InputReader]): input reader, where None indicates
-              that the stdin input reader should be used.
-          output_writer (Optional[OutputWriter]): output writer, where None
-              indicates that the stdout output writer should be used.
+          input_reader (Optional[InputReader]): input reader, where None indicates that
+              the stdin input reader should be used.
+          output_writer (Optional[OutputWriter]): output writer, where None indicates
+              that the stdout output writer should be used.
         """
         super().__init__(input_reader=input_reader, output_writer=output_writer)
         self._artifacts_registry = None
@@ -166,25 +166,21 @@ class PstealTool(
             add_help=False,
             formatter_class=argparse.RawDescriptionHelpFormatter,
         )
-
         self.AddBasicOptions(argument_parser)
 
         data_location_group = argument_parser.add_argument_group(
             "data location arguments"
         )
-
         argument_helper_names = ["artifact_definitions", "data_location"]
         helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
             data_location_group, names=argument_helper_names
         )
-
         extraction_group = argument_parser.add_argument_group("extraction arguments")
 
         argument_helper_names = ["archives", "extraction", "hashers", "parsers"]
         helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
             extraction_group, names=argument_helper_names
         )
-
         self.AddStorageOptions(extraction_group)
         self.AddStorageMediaImageOptions(extraction_group)
         self.AddExtractionOptions(extraction_group)
@@ -196,6 +192,17 @@ class PstealTool(
         self.AddInformationalOptions(info_group)
 
         info_group.add_argument(
+            "--use_markdown",
+            "--use-markdown",
+            dest="use_markdown",
+            action="store_true",
+            default=False,
+            help=(
+                "Output lists in Markdown format use in combination with "
+                '"--output-format list"'
+            ),
+        )
+        info_group.add_argument(
             "--no_dependencies_check",
             "--no-dependencies-check",
             dest="dependencies_check",
@@ -203,11 +210,9 @@ class PstealTool(
             default=True,
             help="Disable the dependencies check.",
         )
-
         helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
             info_group, names=["status_view"]
         )
-
         input_group = argument_parser.add_argument_group("input arguments")
         input_group.add_argument(
             "--source",
@@ -216,7 +221,6 @@ class PstealTool(
             type=str,
             help="The source to process",
         )
-
         output_group = argument_parser.add_argument_group("output arguments")
 
         self.AddOutputOptions(output_group)
@@ -224,11 +228,9 @@ class PstealTool(
         output_format_group = argument_parser.add_argument_group(
             "output format arguments"
         )
-
         helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
             output_format_group, names=["output_modules"]
         )
-
         processing_group = argument_parser.add_argument_group("processing arguments")
 
         self.AddPerformanceOptions(processing_group)
@@ -246,11 +248,9 @@ class PstealTool(
         # Properly prepare the attributes according to local encoding.
         if self.preferred_encoding == "ascii":
             self._PrintUserWarning(
-                (
-                    "the preferred encoding of your system is ASCII, which is not "
-                    "optimal for the typically non-ASCII characters that need to be "
-                    "parsed and processed. This will most likely result in an error."
-                )
+                "the preferred encoding of your system is ASCII, which is not "
+                "optimal for the typically non-ASCII characters that need to be "
+                "parsed and processed. This will most likely result in an error."
             )
 
         try:
@@ -268,7 +268,6 @@ class PstealTool(
             filename=self._log_file,
             quiet_mode=self._quiet_mode,
         )
-
         return True
 
     def ParseOptions(self, options):
@@ -284,7 +283,6 @@ class PstealTool(
         helpers_manager.ArgumentHelperManager.ParseOptions(
             options, self, names=["data_location"]
         )
-
         self._ReadParserPresetsFromFile()
 
         # The output modules options are dependent on the preferred_language
@@ -295,7 +293,6 @@ class PstealTool(
         helpers_manager.ArgumentHelperManager.ParseOptions(
             options, self, names=argument_helper_names
         )
-
         self._ParseExtractionOptions(options)
 
         self.list_archive_types = self._archive_types_string == "list"
@@ -303,6 +300,9 @@ class PstealTool(
         self.list_parsers_and_plugins = self._parser_filter_expression == "list"
 
         self.show_troubleshooting = getattr(options, "show_troubleshooting", False)
+
+        if getattr(options, "use_markdown", False):
+            self._views_format_type = views.ViewsFactory.FORMAT_TYPE_MARKDOWN
 
         self.dependencies_check = getattr(options, "dependencies_check", True)
 
@@ -322,7 +322,6 @@ class PstealTool(
         helpers_manager.ArgumentHelperManager.ParseOptions(
             options, self, names=["output_modules"]
         )
-
         self.list_output_modules = self._output_format == "list"
         if self.list_output_modules:
             return
@@ -333,7 +332,6 @@ class PstealTool(
         helpers_manager.ArgumentHelperManager.ParseOptions(
             options, self, names=argument_helper_names
         )
-
         self._ParseLogFileOptions(options)
 
         self._ParseStorageMediaOptions(options)
@@ -349,10 +347,8 @@ class PstealTool(
 
         if not self._output_filename:
             raise errors.BadConfigOption(
-                (
-                    f"Output format: {self._output_format:s} requires an output file "
-                    f"(-w OUTPUT_FILE)"
-                )
+                f"Output format: {self._output_format:s} requires an output file "
+                f"(-w OUTPUT_FILE)"
             )
 
         if os.path.exists(self._output_filename):
@@ -392,7 +388,6 @@ class PstealTool(
                     self._CONTAINER_TYPE_ANALYSIS_REPORT
                 )
             )
-
         finally:
             storage_reader.Close()
 
@@ -408,7 +403,6 @@ class PstealTool(
             storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
                 self._storage_file_path
             )
-
             # TODO: add single process output and formatting engine support.
             output_engine = multi_output_engine.OutputAndFormattingMultiProcessEngine()
 
