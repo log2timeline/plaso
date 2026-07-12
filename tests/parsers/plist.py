@@ -36,12 +36,12 @@ class PlistParserTest(test_lib.ParserTestCase):
     def testParse(self):
         """Tests the Parse function."""
         parser = plist.PlistParser()
-        storage_writer = self._ParseFile(["plist_binary"], parser)
+        storage_writer = self._ParseFile(["plist", "com.apple.bluetooth.plist"], parser)
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
-        self.assertEqual(number_of_event_data, 12)
+        self.assertEqual(number_of_event_data, 6)
 
         number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
             "extraction_warning"
@@ -58,12 +58,12 @@ class PlistParserTest(test_lib.ParserTestCase):
         parser = plist.PlistParser()
 
         with self.assertRaises(errors.WrongParser):
-            self._ParseFile(["truncated.plist"], parser)
+            self._ParseFile(["plist", "truncated.plist"], parser)
 
     def testParseWithXMLFileLeadingWhitespace(self):
         """Tests the Parse function on an XML file with leading whitespace."""
         parser = plist.PlistParser()
-        storage_writer = self._ParseFile(["leading_whitespace.plist"], parser)
+        storage_writer = self._ParseFile(["plist", "leading_whitespace.plist"], parser)
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
@@ -83,7 +83,9 @@ class PlistParserTest(test_lib.ParserTestCase):
     def testParseWithXMLFileInvalidDate(self):
         """Tests the Parse function on an XML file with an invalid date and time."""
         parser = plist.PlistParser()
-        storage_writer = self._ParseFile(["com.apple.security.KCN.plist"], parser)
+        storage_writer = self._ParseFile(
+            ["plist", "com.apple.security.KCN.plist"], parser
+        )
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
@@ -144,9 +146,8 @@ class PlistParserTest(test_lib.ParserTestCase):
         """Tests the Parse function on an empty binary plist file."""
         parser = plist.PlistParser()
         storage_writer = self._ParseFile(
-            ["com.apple.networkextension.uuidcache.plist"], parser
+            ["plist", "com.apple.networkextension.uuidcache.plist"], parser
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -165,7 +166,7 @@ class PlistParserTest(test_lib.ParserTestCase):
     def testParseWithXMLPlistFileNoTopLevel(self):
         """Tests the Parse function on an XML plist file without top level."""
         parser = plist.PlistParser()
-        storage_writer = self._ParseFile(["empty.plist"], parser)
+        storage_writer = self._ParseFile(["plist", "empty.plist"], parser)
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
@@ -185,7 +186,7 @@ class PlistParserTest(test_lib.ParserTestCase):
     def testParseWithXMLPlistFileEmptyTopLevel(self):
         """Tests the Parse function on an XML plist file with an empty top level."""
         parser = plist.PlistParser()
-        storage_writer = self._ParseFile(["org.cups.printers.plist"], parser)
+        storage_writer = self._ParseFile(["plist", "org.cups.printers.plist"], parser)
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"

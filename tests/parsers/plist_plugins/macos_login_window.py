@@ -17,9 +17,8 @@ class MacOSLoginWindowPlistPluginTest(test_lib.PlistPluginTestCase):
 
         plugin = macos_login_window.MacOSLoginWindowPlugin()
         storage_writer = self._ParsePlistFileWithPlugin(
-            plugin, [plist_name], plist_name
+            plugin, ["plist", plist_name], plist_name
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -40,7 +39,6 @@ class MacOSLoginWindowPlistPluginTest(test_lib.PlistPluginTestCase):
             "is_hidden": True,
             "path": "/Applications/SafeConnect.app",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -49,7 +47,6 @@ class MacOSLoginWindowPlistPluginTest(test_lib.PlistPluginTestCase):
             "login_hook": "/Users/matthew/login.sh",
             "logout_hook": "/Users/matthew/logout.sh",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 
