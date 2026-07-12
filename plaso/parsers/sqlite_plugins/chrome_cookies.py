@@ -12,22 +12,19 @@ class ChromeCookieEventData(events.EventData):
     """Chrome Cookie event data.
 
     Attributes:
-      access_time (dfdatetime.DateTimeValues): date and time the cookie
-          was last accessed.
+      access_time (dfdatetime.DateTimeValues): date and time the cookie was last
+          accessed.
       cookie_name (str): name of the cookie.
-      creation_time (dfdatetime.DateTimeValues): date and time the cookie
-          was created.
+      creation_time (dfdatetime.DateTimeValues): date and time the cookie was created.
       data (str): value of the cookie.
-      expiration_time (dfdatetime.DateTimeValues): date and time the cookie
-          expires.
-      httponly (bool): True if the cookie cannot be accessed through client
-          side script.
+      expiration_time (dfdatetime.DateTimeValues): date and time the cookie expires.
+      httponly (bool): True if the cookie cannot be accessed through client side script.
       hostname (str): name of the host or domain the cookie is tied to.
       path (str): path where the cookie got set.
       persistent (bool): True if the cookie is persistent.
       query (str): SQL query that was used to obtain the event data.
-      secure (bool): True if the cookie should only be transmitted over a
-          secure channel.
+      secure (bool): True if the cookie should only be transmitted over a secure
+          channel.
       url (str): URL or path where the cookie got set.
     """
 
@@ -53,7 +50,7 @@ class ChromeCookieEventData(events.EventData):
 class BaseChromeCookiePlugin(
     interface.SQLitePlugin, cookie_plugins_helper.CookiePluginsHelper
 ):
-    """SQLite parser plugin for Google Chrome cookies database files."""
+    """Shared functionality for a Google Chrome cookies SQLite parser plugin."""
 
     # Google Analytics __utmz variable translation.
     GA_UTMZ_TRANSLATION = {
@@ -68,8 +65,8 @@ class BaseChromeCookiePlugin(
         """Retrieves a date and time value from the row.
 
         Args:
-          query_hash (int): hash of the query, that uniquely identifies the query
-              that produced the row.
+          query_hash (int): hash of the query, that uniquely identifies the query that
+              produced the row.
           row (sqlite3.Row): row.
           value_name (str): name of the value.
 
@@ -86,7 +83,8 @@ class BaseChromeCookiePlugin(
         """Parses a cookie row.
 
         Args:
-          parser_mediator (ParserMediator): parser mediator.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           query (str): query that created the row.
           row (sqlite3.Row): row resulting from the query.
         """

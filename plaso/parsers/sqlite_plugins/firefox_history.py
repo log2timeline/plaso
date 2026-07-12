@@ -335,7 +335,8 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
 
         Args:
           url_id (str): identifier of the visited URL.
-          cache (SQLiteCache): cache.
+          cache (SQLiteCache): cache which contains cached results from querying the
+              moz_historyvisits table.
           database (SQLiteDatabase): database.
 
         Returns:
@@ -470,7 +471,8 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
               and other components, such as storage and dfVFS.
           query (str): query that created the row.
           row (sqlite3.Row): row.
-          cache (Optional[SQLiteCache]): cache.
+          cache (Optional[SQLiteCache]): cache which contains cached results from
+              querying the moz_historyvisits table.
           database (Optional[SQLiteDatabase]): database.
         """
         query_hash = hash(query)

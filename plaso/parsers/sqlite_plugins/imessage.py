@@ -88,7 +88,8 @@ class IMessagePlugin(interface.SQLitePlugin):
         """Retrieves the client version.
 
         Args:
-          cache (SQLiteCache): cache.
+          cache (SQLiteCache): cache which contains cached results from querying
+              the _SqliteDatabaseProperties table.
           database (SQLiteDatabase): database.
 
         Returns:
@@ -148,12 +149,12 @@ class IMessagePlugin(interface.SQLitePlugin):
         """Parses a message row.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           query (str): query that created the row.
           row (sqlite3.Row): row.
-          cache (SQLiteCache): cache which contains cached results from querying
-              the visits and urls tables.
+          cache (Optional[SQLiteCache]): cache which contains cached results from
+              querying the _SqliteDatabaseProperties table.
           database (Optional[SQLiteDatabase]): database.
         """
         query_hash = hash(query)

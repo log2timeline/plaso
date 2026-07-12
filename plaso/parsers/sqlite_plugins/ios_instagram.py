@@ -114,7 +114,7 @@ class IOSInstagramPlugin(interface.SQLitePlugin):
               other components, such as storage and dfVFS.
           query (str): query that created the row.
           row (sqlite3.Row): row.
-          cache (Optional[SQLiteCache]): cache.
+          cache (Optional[SQLiteCache): cache which contains cached user information.
         """
         query_hash = hash(query)
 
@@ -194,7 +194,7 @@ class IOSInstagramPlugin(interface.SQLitePlugin):
               other components, such as storage and dfVFS.
           query (str): query that created the row.
           row (sqlite3.Row): row.
-          cache (Optional[SQLiteCache]): cache.
+          cache (Optional[SQLiteCache): cache which contains cached user information.
         """
         query_hash = hash(query)
 
