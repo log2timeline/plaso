@@ -17,9 +17,8 @@ class MacOSInstallHistoryPlistPluginTest(test_lib.PlistPluginTestCase):
 
         plugin = install_history.MacOSInstallHistoryPlistPlugin()
         storage_writer = self._ParsePlistFileWithPlugin(
-            plugin, [plist_name], plist_name
+            plugin, ["plist", plist_name], plist_name
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -58,7 +57,6 @@ class MacOSInstallHistoryPlistPluginTest(test_lib.PlistPluginTestCase):
             "version": "10.9 (13A603)",
             "written_time": "2013-11-12T02:59:35.000000+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

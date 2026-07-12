@@ -19,7 +19,7 @@ class MockPlugin(interface.PlistPlugin):
     NAME = "mock_plist_plugin"
     DATA_FORMAT = "Test plist file"
 
-    PLIST_PATH = "plist_binary"
+    PLIST_PATH = "mock_plist"
     PLIST_KEYS = frozenset(["DeviceCache", "PairedDevices"])
 
     # pylint: disable=arguments-differ
@@ -36,7 +36,6 @@ class MockPlugin(interface.PlistPlugin):
         event_data.written_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
             timestamp=1351827808261762
         )
-
         parser_mediator.ProduceEventData(event_data)
 
 
@@ -60,7 +59,7 @@ class NSKeyedArchiverDecoderTest(shared_test_lib.BaseTestCase):
 
     def testDecode(self):
         """Tests the Decode function."""
-        test_file_path = self._GetTestFilePath(["NSKeyedArchiver.plist"])
+        test_file_path = self._GetTestFilePath(["plist", "NSKeyedArchiver.plist"])
         self._SkipIfPathNotExists(test_file_path)
 
         test_decoder = interface.NSKeyedArchiverDecoder()
@@ -130,7 +129,7 @@ class TestPlistPlugin(test_lib.PlistPluginTestCase):
 
         # Test correct filename and keys.
         top_level = {"DeviceCache": 1, "PairedDevices": 1}
-        storage_writer = self._ParsePlistWithPlugin(plugin, "plist_binary", top_level)
+        storage_writer = self._ParsePlistWithPlugin(plugin, "mock_plist", top_level)
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"

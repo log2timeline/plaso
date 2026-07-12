@@ -13,11 +13,12 @@ class MacOSBluetoothPlistPluginTest(test_lib.PlistPluginTestCase):
 
     def testProcess(self):
         """Tests the Process function."""
+        plist_name = "com.apple.bluetooth.plist"
+
         plugin = bluetooth.MacOSBluetoothPlistPlugin()
         storage_writer = self._ParsePlistFileWithPlugin(
-            plugin, ["plist_binary"], "com.apple.bluetooth.plist"
+            plugin, ["plist", plist_name], plist_name
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -42,7 +43,6 @@ class MacOSBluetoothPlistPluginTest(test_lib.PlistPluginTestCase):
             "name_update_time": "2012-11-02T01:21:38.997673+00:00",
             "services_update_time": "2012-11-02T01:13:23.000000+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 

@@ -3,7 +3,6 @@
 
 import unittest
 
-from plaso.containers import warnings
 from plaso.parsers import utmp
 
 from tests.parsers import test_lib
@@ -15,7 +14,7 @@ class UtmpParserTest(test_lib.ParserTestCase):
     def testParseUtmpFile(self):
         """Tests the Parse function on a utmp file."""
         parser = utmp.UtmpParser()
-        storage_writer = self._ParseFile(["utmp"], parser)
+        storage_writer = self._ParseFile(["utmp", "utmp"], parser)
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
@@ -50,7 +49,7 @@ class UtmpParserTest(test_lib.ParserTestCase):
     def testParseWtmpFile(self):
         """Tests the Parse function on a wtmp file."""
         parser = utmp.UtmpParser()
-        storage_writer = self._ParseFile(["wtmp.1"], parser)
+        storage_writer = self._ParseFile(["utmp", "wtmp.1"], parser)
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
@@ -89,7 +88,7 @@ class UtmpParserTest(test_lib.ParserTestCase):
         valid (bob), then a truncated trailing record.
         """
         parser = utmp.UtmpParser()
-        storage_writer = self._ParseFile(["utmp_corrupted"], parser)
+        storage_writer = self._ParseFile(["utmp", "utmp_corrupted"], parser)
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
@@ -115,33 +114,40 @@ class UtmpParserTest(test_lib.ParserTestCase):
             "username": "bob",
             "written_time": "2023-11-14T22:46:40.000000+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 
-        generator = storage_writer.GetAttributeContainers(
-            warnings.ExtractionWarning.CONTAINER_TYPE
+        extraction_warning = storage_writer.GetAttributeContainerByIndex(
+            "extraction_warning", 0
         )
-        test_warnings = list(generator)
         self.assertEqual(
-            test_warnings[0].message,
+            extraction_warning.message,
             "Unable to parse utmp entry at offset: 0x00000180, skipping record",
         )
+        extraction_warning = storage_writer.GetAttributeContainerByIndex(
+            "extraction_warning", 1
+        )
         self.assertEqual(
-            test_warnings[1].message,
+            extraction_warning.message,
             "Unable to parse utmp entry at offset: 0x00000300, skipping record",
         )
 
-    def testParse64bitUtmpFile(self):
+    def testParseWith64bitUtmpFile(self):
         """Tests the Parse function on a 64-bit little-endian (aarch64) file.
 
-        The libc6 utmp record is 400 bytes on 64-bit builds without 32-bit time
-        compatibility (e.g. aarch64), versus 384 bytes on x86-64. This is the
-        dtformats utmp-aarch64 specimen: an empty slot, a dead process, a system
-        boot, a run-level change, and old and new time records.
+        On 64-bit builds without 32-bit time compatibility (e.g. aarch64) the libc6
+        utmp record is 400 bytes in contrast to 384 bytes on x86-64.
+
+        The file "utmp_aarch64" contains:
+        * an empty record
+        * a dead process record
+        * a system boot record
+        * a run-level change record
+        * an old time record
+        * a new time record
         """
         parser = utmp.UtmpParser()
-        storage_writer = self._ParseFile(["utmp_aarch64"], parser)
+        storage_writer = self._ParseFile(["utmp", "utmp_aarch64"], parser)
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
@@ -191,7 +197,7 @@ class UtmpParserTest(test_lib.ParserTestCase):
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 2)
         self.CheckEventData(event_data, expected_event_values)
 
-        # Record 5: the last record, written five minutes later, at offset 2000.
+        # Record 5: the last record, dated five minutes later, at offset 2000.
         expected_event_values = {
             "data_type": "linux:utmp:event",
             "offset": 2000,
@@ -205,14 +211,14 @@ class UtmpParserTest(test_lib.ParserTestCase):
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 5)
         self.CheckEventData(event_data, expected_event_values)
 
-    def testParseX8664UtmpFile(self):
+    def testParseWith32bitUtmpFile(self):
         """Tests the Parse function on a 384-byte little-endian (x86-64) file.
 
-        This is the dtformats utmp-x86_64 specimen: the same records as the
-        aarch64 sample but in the 384-byte record layout.
+        The utmp-x86_64 file has similar records as utmp_aarch64 but uses a 384-byte
+        record.
         """
         parser = utmp.UtmpParser()
-        storage_writer = self._ParseFile(["utmp_x86_64"], parser)
+        storage_writer = self._ParseFile(["utmp", "utmp_x86_64"], parser)
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
@@ -239,15 +245,14 @@ class UtmpParserTest(test_lib.ParserTestCase):
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 
-    def testParseBigEndianUtmpFile(self):
-        """Tests the Parse function on a big-endian (s390x) utmp file.
+    def testParseWith64bitBigEndianUtmpFile(self):
+        """Tests the Parse function on a 64-bit big-endian (s390x) utmp file.
 
-        The libc6 utmp format is native-endian, so on a big-endian system such
-        as s390x the record integers are big-endian. This is the dtformats
-        utmp-s390 specimen; the parser detects the layout by validation.
+        The utmp-s390 file has similar records as utmp_aarch64 but uses a big-endian
+        byte order.
         """
         parser = utmp.UtmpParser()
-        storage_writer = self._ParseFile(["utmp_s390"], parser)
+        storage_writer = self._ParseFile(["utmp", "utmp_s390"], parser)
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"

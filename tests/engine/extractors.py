@@ -186,7 +186,7 @@ class PathSpecExtractorTest(test_lib.EngineTestCase):
         self._SkipIfPathNotExists(test_file_path)
         test_file_paths.append(test_file_path)
 
-        test_file_path = self._GetTestFilePath(["wtmp.1"])
+        test_file_path = self._GetTestFilePath(["utmp", "wtmp.1"])
         self._SkipIfPathNotExists(test_file_path)
         test_file_paths.append(test_file_path)
 
@@ -197,7 +197,6 @@ class PathSpecExtractorTest(test_lib.EngineTestCase):
             source_path_spec = path_spec_factory.Factory.NewPathSpec(
                 dfvfs_definitions.TYPE_INDICATOR_OS, location=temp_directory
             )
-
             resolver_context = context.Context()
             test_extractor = extractors.PathSpecExtractor()
             path_specs = list(
@@ -205,7 +204,6 @@ class PathSpecExtractorTest(test_lib.EngineTestCase):
                     source_path_spec, resolver_context=resolver_context
                 )
             )
-
             self.assertEqual(len(path_specs), 4)
 
     def testExtractPathSpecsFileSystemWithFindSpecs(self):
@@ -226,11 +224,9 @@ class PathSpecExtractorTest(test_lib.EngineTestCase):
             "/AUTHORS",
             "/does_not_exist/some_file_[0-9]+txt",
         ]
-
         source_path_spec = path_spec_factory.Factory.NewPathSpec(
             dfvfs_definitions.TYPE_INDICATOR_OS, location="."
         )
-
         resolver_context = context.Context()
         test_extractor = extractors.PathSpecExtractor()
 
@@ -242,10 +238,9 @@ class PathSpecExtractorTest(test_lib.EngineTestCase):
                 resolver_context=resolver_context,
             )
         )
-
         # Two files with test_data/testdir/filter_*.txt, AUTHORS,
-        # test_data/evtx/System.evtx and test_data/evtx/System2.evtx and
-        # a symbolic link test_data/link_to_System.evtx.
+        # test_data/evtx/System.evtx and test_data/evtx/System2.evtx and a symbolic link
+        # test_data/link_to_System.evtx.
         self.assertEqual(len(path_specs), 6)
 
         paths = self._GetFilePaths(path_specs)
@@ -299,7 +294,6 @@ class PathSpecExtractorTest(test_lib.EngineTestCase):
         source_path_spec = path_spec_factory.Factory.NewPathSpec(
             dfvfs_definitions.TYPE_INDICATOR_TSK, location="/", parent=volume_path_spec
         )
-
         resolver_context = context.Context()
         test_extractor = extractors.PathSpecExtractor()
         path_specs = list(
@@ -307,7 +301,6 @@ class PathSpecExtractorTest(test_lib.EngineTestCase):
                 source_path_spec, resolver_context=resolver_context
             )
         )
-
         self.assertEqual(len(path_specs), 3)
 
     def testExtractPathSpecsStorageMediaImageWithFilter(self):
@@ -317,7 +310,6 @@ class PathSpecExtractorTest(test_lib.EngineTestCase):
             "/a_directory/another.+",
             "/passwords.txt",
         ]
-
         test_file_path = self._GetTestFilePath(["ímynd.dd"])
         self._SkipIfPathNotExists(test_file_path)
 
@@ -327,7 +319,6 @@ class PathSpecExtractorTest(test_lib.EngineTestCase):
         source_path_spec = path_spec_factory.Factory.NewPathSpec(
             dfvfs_definitions.TYPE_INDICATOR_TSK, location="/", parent=volume_path_spec
         )
-
         resolver_context = context.Context()
         test_extractor = extractors.PathSpecExtractor()
 
@@ -339,7 +330,6 @@ class PathSpecExtractorTest(test_lib.EngineTestCase):
                 resolver_context=resolver_context,
             )
         )
-
         self.assertEqual(len(path_specs), 2)
 
         paths = self._GetFilePaths(path_specs)
@@ -370,7 +360,6 @@ class PathSpecExtractorTest(test_lib.EngineTestCase):
         image_path_spec = path_spec_factory.Factory.NewPathSpec(
             dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
         )
-
         p1_path_spec = path_spec_factory.Factory.NewPathSpec(
             dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION,
             location="/p1",
@@ -381,7 +370,6 @@ class PathSpecExtractorTest(test_lib.EngineTestCase):
         source_path_spec = path_spec_factory.Factory.NewPathSpec(
             dfvfs_definitions.TYPE_INDICATOR_TSK, location="/", parent=p1_path_spec
         )
-
         test_extractor = extractors.PathSpecExtractor()
 
         resolver_context = context.Context()
@@ -390,7 +378,6 @@ class PathSpecExtractorTest(test_lib.EngineTestCase):
                 source_path_spec, resolver_context=resolver_context
             )
         )
-
         expected_paths = [
             "/$AttrDef",
             "/$BadClus",
@@ -415,7 +402,6 @@ class PathSpecExtractorTest(test_lib.EngineTestCase):
             "/file1.txt",
             "/file2.txt",
         ]
-
         paths = self._GetFilePaths(path_specs)
 
         self.assertEqual(len(path_specs), len(expected_paths))
@@ -431,13 +417,11 @@ class PathSpecExtractorTest(test_lib.EngineTestCase):
         source_path_spec = path_spec_factory.Factory.NewPathSpec(
             dfvfs_definitions.TYPE_INDICATOR_TSK, location="/", parent=p2_path_spec
         )
-
         path_specs = list(
             test_extractor.ExtractPathSpecs(
                 source_path_spec, resolver_context=resolver_context
             )
         )
-
         expected_paths = [
             "/$AttrDef",
             "/$BadClus",
@@ -462,7 +446,6 @@ class PathSpecExtractorTest(test_lib.EngineTestCase):
             "/file1_on_part_2.txt",
             "/file2_on_part_2.txt",
         ]
-
         paths = self._GetFilePaths(path_specs)
 
         self.assertEqual(len(path_specs), len(expected_paths))

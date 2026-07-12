@@ -17,9 +17,8 @@ class MacOSAirportPlistPluginTest(test_lib.PlistPluginTestCase):
 
         plugin = airport.MacOSAirportPlistPlugin()
         storage_writer = self._ParsePlistFileWithPlugin(
-            plugin, [plist_name], plist_name
+            plugin, ["plist", plist_name], plist_name
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -41,7 +40,6 @@ class MacOSAirportPlistPluginTest(test_lib.PlistPluginTestCase):
             "security_type": "WPA/WPA2 Personal",
             "ssid": "europa",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

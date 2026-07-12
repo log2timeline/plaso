@@ -19,7 +19,6 @@ class IOSIdstatusachePlistPluginTest(test_lib.PlistPluginTestCase):
         storage_writer = self._ParsePlistFileWithPlugin(
             plugin, ["ios", plist_name], plist_name
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -36,7 +35,6 @@ class IOSIdstatusachePlistPluginTest(test_lib.PlistPluginTestCase):
             "lookup_time": "2021-02-20T01:00:30.799723+00:00",
             "process_name": "com.apple.private.alloy.tincan.audio",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 9)
         self.CheckEventData(event_data, expected_event_values)
 
