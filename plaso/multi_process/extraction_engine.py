@@ -272,9 +272,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
                         logger.debug(f"Excluded from extraction: {display_name:s}.")
                         continue
 
-                    event_source = event_sources.EventSource(
-                        path_spec=path_spec
-                    )
+                    event_source = event_sources.EventSource(path_spec=path_spec)
                     storage_writer.AddAttributeContainer(event_source)
 
                     self._number_of_produced_sources += 1

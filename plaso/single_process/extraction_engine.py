@@ -135,9 +135,7 @@ class SingleProcessEngine(engine.BaseEngine):
                         logger.debug(f"Excluded from extraction: {display_name:s}.")
                         continue
 
-                    event_source = event_sources.EventSource(
-                        path_spec=path_spec
-                    )
+                    event_source = event_sources.EventSource(path_spec=path_spec)
                     parser_mediator.ProduceEventSource(event_source)
 
             except KeyboardInterrupt:
