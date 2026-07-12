@@ -145,7 +145,8 @@ class BaseGoogleChromeHistoryPlugin(interface.SQLitePlugin):
 
         Args:
           url (str): URL.
-          cache (SQLiteCache): cache.
+          cache (SQLiteCache): cache which contains cached results from querying the
+              visits and urls tables.
           database (SQLiteDatabase): database.
 
         Returns:
@@ -206,8 +207,8 @@ class BaseGoogleChromeHistoryPlugin(interface.SQLitePlugin):
               other components, such as storage and dfVFS.
           query (str): query that created the row.
           row (sqlite3.Row): row.
-          cache (SQLiteCache): cache which contains cached results from querying the
-              visits and urls tables.
+          cache (Optional[SQLiteCache]): cache which contains cached results from
+              querying the visits and urls tables.
           database (Optional[SQLiteDatabase]): database.
         """
         query_hash = hash(query)

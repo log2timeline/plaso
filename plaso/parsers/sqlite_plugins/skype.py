@@ -756,7 +756,8 @@ class SkypePlugin(interface.SQLitePlugin):
               other components, such as storage and dfVFS.
           query (str): query that created the row.
           row (sqlite3.Row): row resulting from query.
-          cache (Optional[SQLiteCache]): cache.
+          cache (Optional[SQLiteCache]): cache which contains cached destination and
+              source information.
           database (Optional[SQLiteDatabase]): database.
         """
         query_hash = hash(query)

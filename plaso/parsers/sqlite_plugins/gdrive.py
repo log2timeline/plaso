@@ -191,7 +191,8 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
 
         Args:
           inode (int): inode number for the file.
-          cache (SQLiteCache): cache.
+          cache (SQLiteCache): cache which contains cached results from querying the
+              local_relations and local_entry tables.
           database (SQLiteDatabase): database.
 
         Returns:
@@ -237,7 +238,8 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
 
         Args:
           resource_id (str): resource identifier for the file.
-          cache (SQLiteCache): cache.
+          cache (SQLiteCache): cache which contains cached results from querying the
+              local_relations and local_entry tables.
           database (SQLiteDatabase): database.
 
         Returns:
@@ -282,7 +284,8 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
               and other components, such as storage and dfVFS.
           query (str): query that created the row.
           row (sqlite3.Row): row.
-          cache (SQLiteCache): cache.
+          cache (Optional[SQLiteCache]): cache which contains cached results from
+              querying the local_relations and local_entry tables.
           database (SQLiteDatabase): database.
         """
         query_hash = hash(query)
@@ -316,7 +319,8 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
               and other components, such as storage and dfVFS.
           query (str): query that created the row.
           row (sqlite3.Row): row.
-          cache (Optional[SQLiteCache]): cache.
+          cache (Optional[SQLiteCache]): cache which contains cached results from
+              querying the local_relations and local_entry tables.
           database (Optional[SQLiteDatabase]): database.
         """
         query_hash = hash(query)
