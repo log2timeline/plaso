@@ -49,34 +49,33 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
         self.assertEqual(number_of_warnings, 0)
 
         expected_event_values = {
-            "data_type": "ccleaner:update",
+            "data_type": "windows:registry:ccleaner:update",
             "key_path": key_path,
             "update_time": "2013-07-13T10:03:14",
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
-        expected_configuration = (
-            "(App)Cookies: True "
-            "(App)Delete Index.dat files: True "
-            "(App)History: True "
-            "(App)Last Download Location: True "
-            "(App)Other Explorer MRUs: True "
-            "(App)Recent Documents: True "
-            "(App)Recently Typed URLs: True "
-            "(App)Run (in Start Menu): True "
-            "(App)Temporary Internet Files: True "
-            "(App)Thumbnail Cache: True "
-            "CookiesToSave: *.piriform.com "
-            "WINDOW_HEIGHT: 524 "
-            "WINDOW_LEFT: 146 "
-            "WINDOW_MAX: 0 "
-            "WINDOW_TOP: 102 "
-            "WINDOW_WIDTH: 733"
-        )
         expected_event_values = {
-            "configuration": expected_configuration,
-            "data_type": "ccleaner:configuration",
+            "configuration": [
+                "(App)Cookies: True",
+                "(App)Delete Index.dat files: True",
+                "(App)History: True",
+                "(App)Last Download Location: True",
+                "(App)Other Explorer MRUs: True",
+                "(App)Recent Documents: True",
+                "(App)Recently Typed URLs: True",
+                "(App)Run (in Start Menu): True",
+                "(App)Temporary Internet Files: True",
+                "(App)Thumbnail Cache: True",
+                "CookiesToSave: *.piriform.com",
+                "WINDOW_HEIGHT: 524",
+                "WINDOW_LEFT: 146",
+                "WINDOW_MAX: 0",
+                "WINDOW_TOP: 102",
+                "WINDOW_WIDTH: 733",
+            ],
+            "data_type": "windows:registry:ccleaner:configuration",
             "key_path": key_path,
             "last_written_time": "2013-07-13T14:03:26.8616882+00:00",
         }

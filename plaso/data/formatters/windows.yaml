@@ -1,21 +1,5 @@
 # Plaso Windows related event formatters.
 ---
-type: 'basic'
-data_type: 'ccleaner:configuration'
-message: '[{key_path}] {configuration}'
-short_message: '[{key_path}] {configuration}'
-short_source: 'REG'
-source: 'CCleaner Registry key'
----
-type: 'conditional'
-data_type: 'ccleaner:update'
-message:
-- 'Origin: {key_path}'
-short_message:
-- 'Origin: {key_path}'
-short_source: 'REG'
-source: 'CCleaner Registry key'
----
 type: 'conditional'
 data_type: 'iis:log:line'
 message:
@@ -55,30 +39,6 @@ short_message:
 - '{text}'
 short_source: 'LOG'
 source: 'SCCM Log'
----
-type: 'conditional'
-data_type: 'setupapi:log:line'
-message:
-- '{entry_type}'
-- '{exit_status}'
-separator: ' - '
-# Reversing fields for short description to prevent truncating the status
-short_message:
-- '{exit_status}'
-- '{entry_type}'
-short_source: 'LOG'
-source: 'Setup API Log'
----
-type: 'conditional'
-data_type: 'task_scheduler:task_cache:entry'
-message:
-- '[{key_path}]'
-- 'Task: {task_name}'
-- '[Identifier: {task_identifier}]'
-short_message:
-- 'Task: {task_name}'
-short_source: 'REG'
-source: 'Task Cache Registry Key'
 ---
 type: 'conditional'
 data_type: 'wincc:simatic_s7:entry'
@@ -461,6 +421,22 @@ short_message: '[{key_path}] ImagePath: {image_path}'
 short_source: 'REG'
 source: 'Registry Key'
 ---
+type: 'basic'
+data_type: 'windows:registry:ccleaner:configuration'
+message: '[{key_path}] {configuration}'
+short_message: '[{key_path}] {configuration}'
+short_source: 'REG'
+source: 'CCleaner Registry key'
+---
+type: 'conditional'
+data_type: 'windows:registry:ccleaner:update'
+message:
+- 'Origin: {key_path}'
+short_message:
+- 'Origin: {key_path}'
+short_source: 'REG'
+source: 'CCleaner Registry key'
+---
 type: 'conditional'
 data_type: 'windows:registry:diagnosed_applications'
 message:
@@ -750,6 +726,17 @@ short_message:
 short_source: 'REG'
 source: 'Shutdown Registry Key'
 ---
+type: 'conditional'
+data_type: 'windows:registry:task_scheduler:task_cache:entry'
+message:
+- '[{key_path}]'
+- 'Task: {task_name}'
+- '[Identifier: {task_identifier}]'
+short_message:
+- 'Task: {task_name}'
+short_source: 'REG'
+source: 'Task Cache Registry Key'
+---
 type: 'basic'
 data_type: 'windows:registry:timezone'
 message: '[{key_path}] {configuration}'
@@ -847,6 +834,13 @@ short_message:
 short_source: 'REG'
 source: 'Winlogon Registry Key'
 ---
+type: 'basic'
+data_type: 'windows:registry:winrar:history'
+message: '[{key_path}] {entries}'
+short_message: '[{key_path}] {entries}'
+short_source: 'REG'
+source: 'WinRAR History Registry Key'
+---
 type: 'conditional'
 data_type: 'windows:restore_point:info'
 enumeration_helpers:
@@ -875,6 +869,19 @@ short_message:
 - '{description}'
 short_source: 'RP'
 source: 'Windows Restore Point'
+---
+type: 'conditional'
+data_type: 'windows:setupapi:log:line'
+message:
+- '{entry_type}'
+- '{exit_status}'
+separator: ' - '
+# Reversing fields for short description to prevent truncating the status
+short_message:
+- '{exit_status}'
+- '{entry_type}'
+short_source: 'LOG'
+source: 'Setup API Log'
 ---
 type: 'conditional'
 data_type: 'windows:shell_item:file_entry'
@@ -1064,10 +1071,3 @@ short_message:
 - 'Origin: {origin}'
 short_source: 'LOG'
 source: 'System'
----
-type: 'basic'
-data_type: 'winrar:history'
-message: '[{key_path}] {entries}'
-short_message: '[{key_path}] {entries}'
-short_source: 'REG'
-source: 'WinRAR History Registry Key'
