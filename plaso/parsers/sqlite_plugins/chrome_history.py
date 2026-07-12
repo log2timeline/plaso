@@ -12,20 +12,17 @@ class ChromeHistoryFileDownloadedEventData(events.EventData):
     """Chrome History file downloaded event data.
 
     Attributes:
-      danger_type (int): assessment by Safe Browsing of the danger of the
-          downloaded content.
-      end_time (dfdatetime.DateTimeValues): date and time the download was
-          finished.
+      danger_type (int): assessment by Safe Browsing of the danger of the downloaded
+          content.
+      end_time (dfdatetime.DateTimeValues): date and time the download was finished.
       full_path (str): full path where the file was downloaded to.
       interrupt_reason (int): indication why the download was interrupted.
-      offset (str): identifier of the row, from which the event data was
-          extracted.
-      opened (int): value to indicate if the downloaded file was opened from
-          the browser.
+      offset (str): identifier of the row, from which the event data was extracted.
+      opened (int): value to indicate if the downloaded file was opened from the
+          browser.
       query (str): SQL query that was used to obtain the event data.
       received_bytes (int): number of bytes received while downloading.
-      start_time (dfdatetime.DateTimeValues): date and time the download was
-          started.
+      start_time (dfdatetime.DateTimeValues): date and time the download was started.
       state (int): state of the download, such as finished or cancelled.
       total_bytes (int): total number of bytes to download.
       url (str): URL of the downloaded file.
@@ -55,15 +52,14 @@ class ChromeHistoryPageVisitedEventData(events.EventData):
 
     Attributes:
       from_visit (str): URL where the visit originated from.
-      last_visited_time (dfdatetime.DateTimeValues): date and time the URL was
-          last visited.
-      offset (str): identifier of the row, from which the event data was
-          extracted.
+      last_visited_time (dfdatetime.DateTimeValues): date and time the URL was last
+          visited.
+      offset (str): identifier of the row, from which the event data was extracted.
       page_transition_type (int): type of transitions between pages.
       query (str): SQL query that was used to obtain the event data.
       title (str): title of the visited page.
-      typed_count (int): number of times the user has navigated to
-          the page by typing in the address.
+      typed_count (int): number of times the user has navigated to the page by typing
+          in the address.
       url (str): URL of the visited page.
       url_hidden (bool): True if the URL is hidden.
       visit_count (int): number of times the user has navigated to this page.
@@ -89,13 +85,13 @@ class ChromeHistoryPageVisitedEventData(events.EventData):
 
 
 class BaseGoogleChromeHistoryPlugin(interface.SQLitePlugin):
-    """SQLite parser plugin for Google Chrome history database files.
+    """Shared functionality for a Google Chrome history SQLite parser plugin.
 
-    The Google Chrome history database file is typically stored in:
-    Archived History
-    History
+    The Google Chrome history SQLite database file is typically stored in:
+    * Archived History
+    * History
 
-    Note that the Archived History database does not contain the downloads table.
+    Note that the "Archived History" database does not contain the downloads table.
     """
 
     _SYNC_CACHE_QUERY = "SELECT id, source FROM visit_source"
@@ -112,8 +108,8 @@ class BaseGoogleChromeHistoryPlugin(interface.SQLitePlugin):
         """Retrieves a POSIX date and time value from the row.
 
         Args:
-          query_hash (int): hash of the query, that uniquely identifies the query
-              that produced the row.
+          query_hash (int): hash of the query, that uniquely identifies the query that
+              produced the row.
           row (sqlite3.Row): row.
           value_name (str): name of the value.
 
@@ -130,8 +126,8 @@ class BaseGoogleChromeHistoryPlugin(interface.SQLitePlugin):
         """Retrieves a WebKit date and time value from the row.
 
         Args:
-          query_hash (int): hash of the query, that uniquely identifies the query
-              that produced the row.
+          query_hash (int): hash of the query, that uniquely identifies the query that
+              produced the row.
           row (sqlite3.Row): row.
           value_name (str): name of the value.
 
@@ -176,15 +172,15 @@ class BaseGoogleChromeHistoryPlugin(interface.SQLitePlugin):
         """Retrieves a visit source type based on the identifier.
 
         Args:
-          visit_identifier (str): identifier from the visits table for the
-              particular record.
-          cache (SQLiteCache): cache which contains cached results from querying
-              the visit_source table.
+          visit_identifier (str): identifier from the visits table for the particular
+              record.
+          cache (SQLiteCache): cache which contains cached results from querying the
+              visit_source table.
           database (SQLiteDatabase): database.
 
         Returns:
-          int: visit source type or None if no visit source type was found for
-              the identifier.
+          int: visit source type or None if no visit source type was found for the
+              identifier.
         """
         sync_cache_results = cache.GetResults("sync")
         if not sync_cache_results:
@@ -206,12 +202,12 @@ class BaseGoogleChromeHistoryPlugin(interface.SQLitePlugin):
         """Parses a last visited row.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           query (str): query that created the row.
           row (sqlite3.Row): row.
-          cache (SQLiteCache): cache which contains cached results from querying
-              the visits and urls tables.
+          cache (SQLiteCache): cache which contains cached results from querying the
+              visits and urls tables.
           database (Optional[SQLiteDatabase]): database.
         """
         query_hash = hash(query)
@@ -238,7 +234,6 @@ class BaseGoogleChromeHistoryPlugin(interface.SQLitePlugin):
         event_data.visit_source = self._GetVisitSource(
             visit_identifier, cache, database
         )
-
         parser_mediator.ProduceEventData(event_data)
 
 
@@ -487,8 +482,8 @@ class GoogleChrome8HistoryPlugin(BaseGoogleChromeHistoryPlugin):
         """Parses a file downloaded row.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           query (str): query that created the row.
           row (sqlite3.Row): row.
         """
@@ -1263,8 +1258,8 @@ class GoogleChrome27HistoryPlugin(BaseGoogleChromeHistoryPlugin):
         """Parses a file downloaded row.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           query (str): query that created the row.
           row (sqlite3.Row): row.
         """

@@ -12,19 +12,15 @@ class FirefoxCookieEventData(events.EventData):
     """Firefox Cookie event data.
 
     Attributes:
-      access_time (dfdatetime.DateTimeValues): date and time the cookie
-          was last accessed.
+      access_time (dfdatetime.DateTimeValues): date and time the cookie was last
+          accessed.
       cookie_name (str): name field of the cookie.
-      creation_time (dfdatetime.DateTimeValues): date and time the cookie
-          was created.
+      creation_time (dfdatetime.DateTimeValues): date and time the cookie was created.
       data (str): cookie data.
-      expiration_time (dfdatetime.DateTimeValues): date and time the cookie
-          expires.
-      httponly (bool): True if the cookie cannot be accessed through client
-          side script.
+      expiration_time (dfdatetime.DateTimeValues): date and time the cookie expires.
+      httponly (bool): True if the cookie cannot be accessed through client side script.
       hostname (str): name of the host or domain the cookie is tied to.
-      offset (str): identifier of the row, from which the event data was
-          extracted.
+      offset (str): identifier of the row, from which the event data was extracted.
       path (str): URI of the page that set the cookie.
       query (str): SQL query that was used to obtain the event data.
       secure (bool): True if the cookie should only be transmitted over a secure
@@ -53,14 +49,14 @@ class FirefoxCookieEventData(events.EventData):
 class BaseFirefoxCookiePlugin(
     interface.SQLitePlugin, cookie_plugins_helper.CookiePluginsHelper
 ):
-    """Shared SQLite parser plugin for Mozilla Firefox cookies database files."""
+    """Shared functionality for a Mozilla Firefox cookies SQLite parser plugin."""
 
     def _GetPosixTimeDateTimeRowValue(self, query_hash, row, value_name):
         """Retrieves a POSIX time (in seconds) date and time value from the row.
 
         Args:
-          query_hash (int): hash of the query, that uniquely identifies the query
-              that produced the row.
+          query_hash (int): hash of the query, that uniquely identifies the query that
+              produced the row.
           row (sqlite3.Row): row.
           value_name (str): name of the value.
 
@@ -79,8 +75,8 @@ class BaseFirefoxCookiePlugin(
         """Parses a cookie row.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           query (str): query that created the row.
           row (sqlite3.Row): row.
         """
