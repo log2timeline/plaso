@@ -628,7 +628,7 @@ class EventExtractionWorker:
                 if self._abort:
                     break
 
-                event_source = event_sources.FileEntryEventSource(
+                event_source = event_sources.EventSource(
                     file_entry_type=dfvfs_definitions.FILE_ENTRY_TYPE_FILE,
                     path_spec=generated_path_spec,
                 )
@@ -677,7 +677,7 @@ class EventExtractionWorker:
                 if self._abort:
                     break
 
-                event_source = event_sources.FileEntryEventSource(
+                event_source = event_sources.EventSource(
                     file_entry_type=dfvfs_definitions.FILE_ENTRY_TYPE_FILE,
                     path_spec=base_path_spec,
                 )
@@ -745,7 +745,7 @@ class EventExtractionWorker:
                 parser_mediator.ProduceWarning(warning_message, path_spec=path_spec)
 
             if compressed_stream_path_spec:
-                event_source = event_sources.FileEntryEventSource(
+                event_source = event_sources.EventSource(
                     file_entry_type=dfvfs_definitions.FILE_ENTRY_TYPE_FILE,
                     path_spec=compressed_stream_path_spec,
                 )
@@ -790,7 +790,7 @@ class EventExtractionWorker:
                 if file_entry.IsRoot() and sub_file_entry.name == "$OrphanFiles":
                     continue
 
-            event_source = event_sources.FileEntryEventSource(
+            event_source = event_sources.EventSource(
                 file_entry_type=sub_file_entry.entry_type,
                 path_spec=sub_file_entry.path_spec,
             )

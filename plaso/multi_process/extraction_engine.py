@@ -272,9 +272,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
                         logger.debug(f"Excluded from extraction: {display_name:s}.")
                         continue
 
-                    # TODO: determine if event sources should be DataStream or FileEntry
-                    # or both.
-                    event_source = event_sources.FileEntryEventSource(
+                    event_source = event_sources.EventSource(
                         path_spec=path_spec
                     )
                     storage_writer.AddAttributeContainer(event_source)
