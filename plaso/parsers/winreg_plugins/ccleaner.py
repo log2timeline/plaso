@@ -17,12 +17,12 @@ class CCleanerConfigurationEventData(events.EventData):
     """CCleaner configuration event data.
 
     Attributes:
-      configuration (str): CCleaner configuration.
+      configuration (list[str]): CCleaner configuration.
       key_path (str): Windows Registry key path.
       last_written_time (dfdatetime.DateTimeValues): entry last written date and time.
     """
 
-    DATA_TYPE = "ccleaner:configuration"
+    DATA_TYPE = "windows:registry:ccleaner:configuration"
 
     def __init__(self):
         """Initializes event data."""
@@ -41,7 +41,7 @@ class CCleanerUpdateEventData(events.EventData):
           an update.
     """
 
-    DATA_TYPE = "ccleaner:update"
+    DATA_TYPE = "windows:registry:ccleaner:update"
 
     def __init__(self):
         """Initializes event data."""
@@ -166,7 +166,7 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
             parser_mediator.ProduceEventData(event_data)
 
         event_data = CCleanerConfigurationEventData()
-        event_data.configuration = " ".join(sorted(configuration)) or None
+        event_data.configuration = sorted(configuration) or None
         event_data.key_path = registry_key.path
         event_data.last_written_time = registry_key.last_written_time
 

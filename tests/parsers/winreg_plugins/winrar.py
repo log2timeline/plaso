@@ -30,7 +30,6 @@ class WinRARHistoryPluginTest(test_lib.RegistryPluginTestCase):
             offset=1456,
             relative_key_path="Software\\WinRAR\\ArcHistory",
         )
-
         value_data = "C:\\Downloads\\The Sleeping Dragon CD1.iso".encode("utf_16_le")
         registry_value = dfwinreg_fake.FakeWinRegistryValue(
             "0", data=value_data, data_type=dfwinreg_definitions.REG_SZ, offset=1892
@@ -52,7 +51,6 @@ class WinRARHistoryPluginTest(test_lib.RegistryPluginTestCase):
         self._AssertFiltersOnKeyPath(
             plugin, "HKEY_CURRENT_USER", "Software\\WinRAR\\ArcHistory"
         )
-
         self._AssertNotFiltersOnKeyPath(plugin, "HKEY_LOCAL_MACHINE", "Bogus")
 
     def testProcess(self):
@@ -78,7 +76,7 @@ class WinRARHistoryPluginTest(test_lib.RegistryPluginTestCase):
         self.assertEqual(number_of_warnings, 0)
 
         expected_event_values = {
-            "data_type": "winrar:history",
+            "data_type": "windows:registry:winrar:history",
             "entries": (
                 "0: C:\\Downloads\\The Sleeping Dragon CD1.iso "
                 "1: C:\\Downloads\\plaso-static.rar"
@@ -86,7 +84,6 @@ class WinRARHistoryPluginTest(test_lib.RegistryPluginTestCase):
             "key_path": "HKEY_CURRENT_USER\\Software\\WinRAR\\ArcHistory",
             "last_written_time": "2012-08-28T09:23:49.0020310+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

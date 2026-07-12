@@ -28,7 +28,7 @@ class MacOSTaggingFileTest(test_lib.TaggingFileTestCase):
 
     def testRuleApplicationExecution(self):
         """Tests the application_execution tagging rule."""
-        # Test: data_type is 'macosx:application_usage'
+        # Test: data_type is 'macos:application_usage'
         attribute_values_per_name = {}
         self._CheckTaggingRule(
             macos_appusage.MacOSApplicationUsageEventData,
@@ -90,7 +90,7 @@ class MacOSTaggingFileTest(test_lib.TaggingFileTestCase):
             ["file_download"],
         )
 
-        # Test: data_type is 'macosx:lsquarantine'
+        # Test: data_type is 'macos:lsquarantine'
         attribute_values_per_name = {}
         self._CheckTaggingRule(
             ls_quarantine.MacOSLSQuarantineEventData,

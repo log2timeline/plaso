@@ -26,8 +26,8 @@ class TaskCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         """Tests the Process function."""
         test_file_entry = self._GetTestFileEntry(["SOFTWARE-RunTests"])
         key_path = (
-            "HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\"
-            "CurrentVersion\\Schedule\\TaskCache"
+            "HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion\\"
+            "Schedule\\TaskCache"
         )
         plugin = task_scheduler.TaskCacheWindowsRegistryPlugin()
 
@@ -52,7 +52,7 @@ class TaskCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         self.assertEqual(number_of_warnings, 0)
 
         expected_event_values = {
-            "data_type": "task_scheduler:task_cache:entry",
+            "data_type": "windows:registry:task_scheduler:task_cache:entry",
             "key_path": key_path,
             "last_registered_time": "2009-07-14T05:08:50.8116269+00:00",
             "last_written_time": "2009-07-14T04:53:25.8116181+00:00",

@@ -18,17 +18,17 @@ class SetupAPILogEventData(events.EventData):
     """SetupAPI log event data.
 
     Attributes:
-      end_time (dfdatetime.DateTimeValues): date and time the end of the log
-          entry was added.
+      end_time (dfdatetime.DateTimeValues): date and time the end of the log entry was
+          added.
       entry_type (str): log entry type, for examaple "Device Install -
           PCI\\VEN_104C&DEV_8019&SUBSYS_8010104C&REV_00\\3&61aaa01&0&38" or
           "Sysprep Respecialize - {804b345a-ffd7-854c-a1b5-ca9598907846}".
       exit_status (str): the exit status of the logged operation.
-      start_time (dfdatetime.DateTimeValues): date and time the start of
-          the log entry was added.
+      start_time (dfdatetime.DateTimeValues): date and time the start of the log entry
+          was added.
     """
 
-    DATA_TYPE = "setupapi:log:line"
+    DATA_TYPE = "windows:setupapi:log:line"
 
     def __init__(self):
         """Initializes event data."""
@@ -162,8 +162,8 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
         """Parses a text-log file header.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           text_reader (EncodedTextReader): text reader.
 
         Raises:
@@ -190,8 +190,8 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
         """Parses a pyparsing structure.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           key (str): name of the parsed structure.
           structure (pyparsing.ParseResults): tokens from a parsed log line.
 
@@ -247,8 +247,8 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
         """Parses date and time elements of a log line.
 
         Args:
-          time_elements_structure (pyparsing.ParseResults): date and time elements
-              of a log line.
+          time_elements_structure (pyparsing.ParseResults): date and time elements of a
+              log line.
 
         Returns:
           dfdatetime.TimeElements: date and time value.
@@ -261,7 +261,6 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
             year, month, day_of_month, hours, minutes, seconds, milliseconds = (
                 time_elements_structure
             )
-
             # Ensure time_elements_tuple is not a pyparsing.ParseResults otherwise
             # copy.deepcopy() of the dfDateTime object will fail on Python 3.8 with:
             # "TypeError: 'str' object is not callable" due to pyparsing.ParseResults
@@ -276,11 +275,9 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
                 seconds,
                 milliseconds,
             )
-
             date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
                 time_elements_tuple=time_elements_tuple
             )
-
             # SetupAPI logs store date and time values in local time.
             date_time.is_local_time = True
 
@@ -299,8 +296,8 @@ class SetupAPILogTextPlugin(interface.TextPlugin):
         """Check if the log record has the minimal structure required by the plugin.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           text_reader (EncodedTextReader): text reader.
 
         Returns:

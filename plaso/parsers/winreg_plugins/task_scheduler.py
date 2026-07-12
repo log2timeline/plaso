@@ -25,7 +25,7 @@ class TaskCacheEventData(events.EventData):
       unknown_time (dfdatetime.DateTimeValues): unknown date and time.
     """
 
-    DATA_TYPE = "task_scheduler:task_cache:entry"
+    DATA_TYPE = "windows:registry:task_scheduler:task_cache:entry"
 
     def __init__(self):
         """Initializes event data."""
