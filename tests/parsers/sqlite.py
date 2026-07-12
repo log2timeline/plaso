@@ -68,7 +68,6 @@ class SQLiteDatabaseTest(test_lib.ParserTestCase):
             ("New Text 1", 12, None),
             ("New Text 2", 13, None),
         ]
-
         self.assertEqual(expected_results, row_results)
 
     def testQueryOnDatabaseWithoutWAL(self):
@@ -96,7 +95,6 @@ class SQLiteDatabaseTest(test_lib.ParserTestCase):
             ("Committed Text 7", 9, None),
             ("Unhashable Row 1", 10, b"Binary Text!\x01\x02\x03"),
         ]
-
         self.assertEqual(expected_results, row_results)
 
 

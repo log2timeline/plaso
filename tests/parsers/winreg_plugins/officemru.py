@@ -18,44 +18,43 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_CURRENT_USER",
-            ("Software\\Microsoft\\Office\\14.0\\Access\\File MRU"),
+            "Software\\Microsoft\\Office\\14.0\\Access\\File MRU",
         )
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_CURRENT_USER",
-            ("Software\\Microsoft\\Office\\14.0\\Access\\Place MRU"),
+            "Software\\Microsoft\\Office\\14.0\\Access\\Place MRU",
         )
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_CURRENT_USER",
-            ("Software\\Microsoft\\Office\\14.0\\Excel\\File MRU"),
+            "Software\\Microsoft\\Office\\14.0\\Excel\\File MRU",
         )
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_CURRENT_USER",
-            ("Software\\Microsoft\\Office\\14.0\\Excel\\Place MRU"),
+            "Software\\Microsoft\\Office\\14.0\\Excel\\Place MRU",
         )
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_CURRENT_USER",
-            ("Software\\Microsoft\\Office\\14.0\\PowerPoint\\File MRU"),
+            "Software\\Microsoft\\Office\\14.0\\PowerPoint\\File MRU",
         )
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_CURRENT_USER",
-            ("Software\\Microsoft\\Office\\14.0\\PowerPoint\\Place MRU"),
+            "Software\\Microsoft\\Office\\14.0\\PowerPoint\\Place MRU",
         )
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_CURRENT_USER",
-            ("Software\\Microsoft\\Office\\14.0\\Word\\File MRU"),
+            "Software\\Microsoft\\Office\\14.0\\Word\\File MRU",
         )
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_CURRENT_USER",
-            ("Software\\Microsoft\\Office\\14.0\\Word\\Place MRU"),
+            "Software\\Microsoft\\Office\\14.0\\Word\\Place MRU",
         )
-
         self._AssertNotFiltersOnKeyPath(plugin, "HKEY_CURRENT_USER", "Bogus")
 
     def testProcess(self):

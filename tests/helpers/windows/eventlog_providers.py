@@ -39,39 +39,33 @@ class WindowsEventLogProvidersHelperTest(shared_test_lib.BaseTestCase):
             "system32\\drivers\\WdFilter.sys"
         )
         self.assertEqual(
-            normalized_path, ("%SystemRoot%\\System32\\drivers\\WdFilter.sys")
+            normalized_path, "%SystemRoot%\\System32\\drivers\\WdFilter.sys"
         )
-
         normalized_path = test_helper._GetNormalizedPath(
             "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\84.0.522.52\\"
             "eventlog_provider.dll"
         )
-        self.assertEqual(
-            normalized_path,
-            (
-                "\\Program Files (x86)\\Microsoft\\Edge\\Application\\84.0.522.52\\"
-                "eventlog_provider.dll"
-            ),
+        expected_normalized_path = (
+            "\\Program Files (x86)\\Microsoft\\Edge\\Application\\84.0.522.52\\"
+            "eventlog_provider.dll"
         )
+        self.assertEqual(normalized_path, expected_normalized_path)
 
         normalized_path = test_helper._GetNormalizedPath(
             "%ProgramFiles%\\Windows Defender\\MpClient.dll"
         )
         self.assertEqual(
-            normalized_path, ("%ProgramFiles%\\Windows Defender\\MpClient.dll")
+            normalized_path, "%ProgramFiles%\\Windows Defender\\MpClient.dll"
         )
-
         normalized_path = test_helper._GetNormalizedPath(
             "%programdata%\\Microsoft\\Windows Defender\\Definition Updates\\"
             "Default\\MpEngine.dll"
         )
-        self.assertEqual(
-            normalized_path,
-            (
-                "%programdata%\\Microsoft\\Windows Defender\\Definition Updates\\"
-                "Default\\MpEngine.dll"
-            ),
+        expected_normalized_path = (
+            "%programdata%\\Microsoft\\Windows Defender\\Definition Updates\\"
+            "Default\\MpEngine.dll"
         )
+        self.assertEqual(normalized_path, expected_normalized_path)
 
         normalized_path = test_helper._GetNormalizedPath(
             "$(runtime.system32)\\WinML.dll"
@@ -82,9 +76,8 @@ class WindowsEventLogProvidersHelperTest(shared_test_lib.BaseTestCase):
             "$(runtime.windows)\\immersivecontrolpanel\\systemsettings.exe"
         )
         self.assertEqual(
-            normalized_path, ("%SystemRoot%\\immersivecontrolpanel\\systemsettings.exe")
+            normalized_path, "%SystemRoot%\\immersivecontrolpanel\\systemsettings.exe"
         )
-
         normalized_path = test_helper._GetNormalizedPath("\\eventlogmessages.dll")
         self.assertEqual(normalized_path, "\\eventlogmessages.dll")
 

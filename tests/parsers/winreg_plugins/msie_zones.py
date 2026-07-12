@@ -42,7 +42,7 @@ class MSIEZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_LOCAL_MACHINE\\Software",
-            ("Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Zones"),
+            "Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Zones",
         )
         self._AssertNotFiltersOnKeyPath(plugin, "HKEY_LOCAL_MACHINE\\Software", "Bogus")
 

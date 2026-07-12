@@ -39,7 +39,6 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
                 "C:\\Users\\nfury\\Documents\\Alloy Research\\StarFury.zip"
             ),
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -67,9 +66,8 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
             "data_type": "windows:metadata:deleted_item",
             "deletion_time": "2016-06-29T21:37:45.6180000+00:00",
             "file_size": 222255,
-            "original_filename": ("C:\\Users\\random\\Downloads\\bunnies.jpg"),
+            "original_filename": "C:\\Users\\random\\Downloads\\bunnies.jpg",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

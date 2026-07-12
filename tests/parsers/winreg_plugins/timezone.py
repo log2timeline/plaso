@@ -113,7 +113,7 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_LOCAL_MACHINE\\System",
-            ("ControlSet001\\Control\\TimeZoneInformation"),
+            "ControlSet001\\Control\\TimeZoneInformation",
         )
         self._AssertNotFiltersOnKeyPath(plugin, "HKEY_LOCAL_MACHINE\\System", "Bogus")
 

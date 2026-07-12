@@ -32,7 +32,7 @@ class JSONLParserTest(test_lib.ParserTestCase):
     def testParse(self):
         """Tests the Parse function."""
         parser = jsonl_parser.JSONLParser()
-        storage_writer = self._ParseFile(["gcp_logging.jsonl"], parser)
+        storage_writer = self._ParseFile(["jsonl", "gcp_logging.jsonl"], parser)
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"

@@ -30,7 +30,6 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
             offset=1456,
             relative_key_path=("Software\\Microsoft\\Office\\15.0\\Outlook\\Search"),
         )
-
         value_name = (
             "C:\\Users\\username\\AppData\\Local\\Microsoft\\Outlook\\"
             "username@example.com.ost"
@@ -53,15 +52,13 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_CURRENT_USER",
-            ("Software\\Microsoft\\Office\\14.0\\Outlook\\Search"),
+            "Software\\Microsoft\\Office\\14.0\\Outlook\\Search",
         )
-
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_CURRENT_USER",
-            ("Software\\Microsoft\\Office\\15.0\\Outlook\\Search"),
+            "Software\\Microsoft\\Office\\15.0\\Outlook\\Search",
         )
-
         self._AssertNotFiltersOnKeyPath(plugin, "HKEY_CURRENT_USER", "Bogus")
 
     def testProcess(self):
