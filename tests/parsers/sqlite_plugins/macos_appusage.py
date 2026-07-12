@@ -15,7 +15,7 @@ class MacOSApplicationUsagePluginTest(test_lib.SQLitePluginTestCase):
         """Tests the Process function."""
         plugin = macos_appusage.MacOSApplicationUsagePlugin()
         storage_writer = self._ParseDatabaseFileWithPlugin(
-            ["application_usage.sqlite"], plugin
+            ["macos", "application_usage.sqlite"], plugin
         )
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"

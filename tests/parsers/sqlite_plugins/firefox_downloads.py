@@ -14,7 +14,9 @@ class FirefoxDownloadsPluginTest(test_lib.SQLitePluginTestCase):
     def testProcessVersion25(self):
         """Tests the Process function on a Firefox Downloads database file."""
         plugin = firefox_downloads.FirefoxDownloadsPlugin()
-        storage_writer = self._ParseDatabaseFileWithPlugin(["downloads.sqlite"], plugin)
+        storage_writer = self._ParseDatabaseFileWithPlugin(
+            ["firefox", "downloads.sqlite"], plugin
+        )
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
@@ -49,7 +51,9 @@ class FirefoxDownloadsPluginTest(test_lib.SQLitePluginTestCase):
     def testProcessVersion118(self):
         """Tests the Process function on a Firefox Downloads database file."""
         plugin = firefox_downloads.Firefox118DownloadsPlugin()
-        storage_writer = self._ParseDatabaseFileWithPlugin(["places118.sqlite"], plugin)
+        storage_writer = self._ParseDatabaseFileWithPlugin(
+            ["firefox", "places118.sqlite"], plugin
+        )
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"

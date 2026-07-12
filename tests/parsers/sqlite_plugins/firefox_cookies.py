@@ -15,7 +15,7 @@ class Firefox2CookiesPluginTest(test_lib.SQLitePluginTestCase):
         """Tests the Process function."""
         plugin = firefox_cookies.FirefoxCookie2Plugin()
         storage_writer = self._ParseDatabaseFileWithPlugin(
-            ["firefox_cookies", "firefox_2_cookies.sqlite"], plugin
+            ["firefox", "firefox_2_cookies.sqlite"], plugin
         )
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
@@ -54,7 +54,7 @@ class Firefox10CookiesPluginTest(test_lib.SQLitePluginTestCase):
         """Tests the Process function."""
         plugin = firefox_cookies.FirefoxCookie10Plugin()
         storage_writer = self._ParseDatabaseFileWithPlugin(
-            ["firefox_cookies", "firefox_10_cookies.sqlite"], plugin
+            ["firefox", "firefox_10_cookies.sqlite"], plugin
         )
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"

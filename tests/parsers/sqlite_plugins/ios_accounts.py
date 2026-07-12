@@ -17,7 +17,6 @@ class IOSAccountsPluginTest(test_lib.SQLitePluginTestCase):
         storage_writer = self._ParseDatabaseFileWithPlugin(
             ["ios", "Accounts3.sqlite"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -35,7 +34,6 @@ class IOSAccountsPluginTest(test_lib.SQLitePluginTestCase):
             "owning_bundle_identifier": "com.apple.purplebuddy",
             "username": "thisisdfir@gmail.com",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 3)
         self.CheckEventData(event_data, expected_event_values)
 

@@ -14,7 +14,9 @@ class Chrome17CookiesPluginTest(test_lib.SQLitePluginTestCase):
     def testProcess(self):
         """Tests the Process function on a Chrome cookie database file."""
         plugin = chrome_cookies.Chrome17CookiePlugin()
-        storage_writer = self._ParseDatabaseFileWithPlugin(["cookies.db"], plugin)
+        storage_writer = self._ParseDatabaseFileWithPlugin(
+            ["chrome", "cookies.db"], plugin
+        )
 
         # 560 Chrome cookie and 43 cookie plugin.
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
@@ -58,7 +60,7 @@ class Chrome66CookiesPluginTest(test_lib.SQLitePluginTestCase):
         """Tests the Process function on a Chrome cookie database file."""
         plugin = chrome_cookies.Chrome66CookiePlugin()
         storage_writer = self._ParseDatabaseFileWithPlugin(
-            ["Cookies-68.0.3440.106"], plugin
+            ["chrome", "Cookies-68.0.3440.106"], plugin
         )
         # 5 Chrome cookie and 1 cookie plugin.
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(

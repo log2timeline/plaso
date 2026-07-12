@@ -14,7 +14,9 @@ class ZeitgeistActivityDatabasePluginTest(test_lib.SQLitePluginTestCase):
     def testProcess(self):
         """Tests the Process function."""
         plugin = zeitgeist.ZeitgeistActivityDatabasePlugin()
-        storage_writer = self._ParseDatabaseFileWithPlugin(["activity.sqlite"], plugin)
+        storage_writer = self._ParseDatabaseFileWithPlugin(
+            ["sqlite", "zeitgeist_activity.sqlite"], plugin
+        )
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
@@ -36,7 +38,6 @@ class ZeitgeistActivityDatabasePluginTest(test_lib.SQLitePluginTestCase):
             "recorded_time": "2013-10-22T08:53:19.477+00:00",
             "subject_uri": "application://rhythmbox.desktop",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

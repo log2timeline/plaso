@@ -15,9 +15,8 @@ class ChromeExtensionActivityPluginTest(test_lib.SQLitePluginTestCase):
         """Tests the Process function on a Chrome extension activity database."""
         plugin = chrome_extension_activity.ChromeExtensionActivityPlugin()
         storage_writer = self._ParseDatabaseFileWithPlugin(
-            ["Extension Activity"], plugin
+            ["chrome", "Extension Activity"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -41,7 +40,6 @@ class ChromeExtensionActivityPluginTest(test_lib.SQLitePluginTestCase):
             "extension_id": "knipolnnllmklapflnccelgolnpehhpl",
             "recorded_time": "2014-11-25T21:12:03.189013+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

@@ -15,7 +15,6 @@ and others involved with these projects:
 * libyaml
 * the SleuthKit
 * pytsk
-* Hachoir (not included in binary release)
 
 Thanks to contributors (alphabetically based on last name):
 * Brian Baskin
@@ -179,7 +178,8 @@ Copied with permission from [Digital Corpora](https://digitalcorpora.org/):
 * 23AAD8D4-D632-4F99-8E44-152AAB8FA9D6
 * android/attd_db
 * android/burners.sqlite
-* files_master_database
+* android/files_master_database
+* android/viber_data
 * ios/9368974384.db
 * ios/Accounts3.sqlite
 * ios/com.apple.commcenter.data.plist
@@ -187,4 +187,3 @@ Copied with permission from [Digital Corpora](https://digitalcorpora.org/):
 * ios/healthdb_secure_iOS_13_4_1.sqlite
 * ios/IMODb2.sqlite
 * ios/NoteStore.sqlite
-* viber_data

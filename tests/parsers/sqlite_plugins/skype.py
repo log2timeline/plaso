@@ -14,7 +14,9 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
     def testProcess(self):
         """Tests the Process function."""
         plugin = skype.SkypePlugin()
-        storage_writer = self._ParseDatabaseFileWithPlugin(["skype_main.db"], plugin)
+        storage_writer = self._ParseDatabaseFileWithPlugin(
+            ["sqlite", "skype_main.db"], plugin
+        )
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
@@ -67,8 +69,7 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
             "number": "+34123456789",
             "recorded_time": "2013-07-01T22:14:22+00:00",
             "text": (
-                "If you want I can copy some documents for you, if you can "
-                "pay it... ;)"
+                "If you want I can copy some documents for you, if you can pay it... ;)"
             ),
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 16)

@@ -14,8 +14,9 @@ class DropboxSyncHistoryPluginTest(test_lib.SQLitePluginTestCase):
     def testProcess(self):
         """Tests the Process function on a Dropbox sync_history database file."""
         plugin = dropbox.DropboxSyncDatabasePlugin()
-        storage_writer = self._ParseDatabaseFileWithPlugin(["sync_history.db"], plugin)
-
+        storage_writer = self._ParseDatabaseFileWithPlugin(
+            ["sqlite", "dropbox_sync_history.db"], plugin
+        )
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -40,7 +41,6 @@ class DropboxSyncHistoryPluginTest(test_lib.SQLitePluginTestCase):
             "local_path": "/home/useraa/Dropbox/loc1/create_local.txt",
             "recorded_time": "2022-02-17T10:57:18+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

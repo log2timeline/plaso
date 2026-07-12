@@ -14,7 +14,9 @@ class AndroidWebView(test_lib.SQLitePluginTestCase):
     def testProcess(self):
         """Test the Process function on a WebView SQLite file."""
         plugin = android_webview.AndroidWebViewPlugin()
-        storage_writer = self._ParseDatabaseFileWithPlugin(["webview.db"], plugin)
+        storage_writer = self._ParseDatabaseFileWithPlugin(
+            ["android", "webview.db"], plugin
+        )
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
