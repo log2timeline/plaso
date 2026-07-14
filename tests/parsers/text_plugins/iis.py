@@ -14,7 +14,7 @@ class WinIISTextPluginTest(test_lib.TextPluginTestCase):
     def testProcessWithIIS6Log(self):
         """Tests the Process function with an IIS 6 log file."""
         plugin = iis.WinIISTextPlugin()
-        storage_writer = self._ParseTextFileWithPlugin(["iis6.log"], plugin)
+        storage_writer = self._ParseTextFileWithPlugin(["iis", "iis6.log"], plugin)
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
@@ -48,7 +48,7 @@ class WinIISTextPluginTest(test_lib.TextPluginTestCase):
     def testProcessWithIIS7LogAndSQLI(self):
         """Tests the Process function with an IIS 7 log file with SQLI."""
         plugin = iis.WinIISTextPlugin()
-        storage_writer = self._ParseTextFileWithPlugin(["iis7_sqli.log"], plugin)
+        storage_writer = self._ParseTextFileWithPlugin(["iis", "iis7_sqli.log"], plugin)
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
@@ -85,7 +85,7 @@ class WinIISTextPluginTest(test_lib.TextPluginTestCase):
     def testProcessWithIIS7OWALog(self):
         """Tests the Process function with an IIS 7 OWA log file."""
         plugin = iis.WinIISTextPlugin()
-        storage_writer = self._ParseTextFileWithPlugin(["iis7_owa.log"], plugin)
+        storage_writer = self._ParseTextFileWithPlugin(["iis", "iis7_owa.log"], plugin)
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
@@ -122,7 +122,9 @@ class WinIISTextPluginTest(test_lib.TextPluginTestCase):
     def testProcessWithoutDate(self):
         """Tests the Process function with logs without a date column."""
         plugin = iis.WinIISTextPlugin()
-        storage_writer = self._ParseTextFileWithPlugin(["iis_without_date.log"], plugin)
+        storage_writer = self._ParseTextFileWithPlugin(
+            ["iis", "iis_without_date.log"], plugin
+        )
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
@@ -150,7 +152,7 @@ class WinIISTextPluginTest(test_lib.TextPluginTestCase):
     def testProcessWithIIS10Log(self):
         """Tests the Process function with an IIS 10 log file."""
         plugin = iis.WinIISTextPlugin()
-        storage_writer = self._ParseTextFileWithPlugin(["iis10.log"], plugin)
+        storage_writer = self._ParseTextFileWithPlugin(["iis", "iis10.log"], plugin)
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
@@ -186,7 +188,9 @@ class WinIISTextPluginTest(test_lib.TextPluginTestCase):
         self.CheckEventData(event_data, expected_event_values)
 
         plugin = iis.WinIISTextPlugin()
-        storage_writer = self._ParseTextFileWithPlugin(["iis10_edge_cases.log"], plugin)
+        storage_writer = self._ParseTextFileWithPlugin(
+            ["iis", "iis10_edge_cases.log"], plugin
+        )
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
@@ -206,7 +210,9 @@ class WinIISTextPluginTest(test_lib.TextPluginTestCase):
     def testProcessWithIIS10LogAndCookieField(self):
         """Tests the Process function with an IIS 10 log file and cs(Cookie)."""
         plugin = iis.WinIISTextPlugin()
-        storage_writer = self._ParseTextFileWithPlugin(["iis10_cookies.log"], plugin)
+        storage_writer = self._ParseTextFileWithPlugin(
+            ["iis", "iis10_cookies.log"], plugin
+        )
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
