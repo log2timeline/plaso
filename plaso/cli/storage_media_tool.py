@@ -131,7 +131,6 @@ class StorageMediaToolMediator(dfvfs_command_line.CLIVolumeScannerMediator):
                 "Volume Shadow Snapshots (VSS) were selected also process current\n"
                 "volume? [yes, no]\n"
             )
-
             process_current_volume = self._input_reader.Read()
             process_current_volume = process_current_volume.strip()
             process_current_volume = process_current_volume.lower()
@@ -238,7 +237,6 @@ class StorageMediaToolVolumeScanner(dfvfs_volume_scanner.VolumeScanner):
                 credential_type=credential_type,
                 path_spec=scan_node.path_spec,
             )
-
             self._credential_configurations.append(credential_configuration)
 
     def _ScanFileSystem(self, scan_node, base_path_specs):
@@ -301,13 +299,17 @@ class StorageMediaToolVolumeScanner(dfvfs_volume_scanner.VolumeScanner):
 
         elif scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_VSHADOW:
             volume_system = vshadow_volume_system.VShadowVolumeSystem()
-            volume_system.Open(scan_node.path_spec)
 
-            volume_identifiers = self._GetVolumeSnapshotIdentifiers(
-                volume_system, options
-            )
-            # Process VSS stores (snapshots) starting with the most recent one.
-            volume_identifiers.reverse()
+            try:
+                volume_system.Open(scan_node.path_spec)
+                volume_identifiers = self._GetVolumeSnapshotIdentifiers(
+                    volume_system, options
+                )
+                # Process VSS stores (snapshots) starting with the most recent one.
+                volume_identifiers.reverse()
+
+            except dfvfs_errors.BackEndError:
+                volume_identifiers = []
 
             # TODO: difference with dfVFS for current VSS volume support.
             if not options.snapshots_only and self._mediator and volume_identifiers:
@@ -568,7 +570,6 @@ class StorageMediaTool(tools.CLITool):
                 'partition is 1. All partitions can be specified with: "all".'
             ),
         )
-
         argument_group.add_argument(
             "--volumes",
             "--volume",
@@ -603,7 +604,6 @@ class StorageMediaTool(tools.CLITool):
                 "option is deprecated use --vss_stores=none instead."
             ),
         )
-
         argument_group.add_argument(
             "--vss_only",
             "--vss-only",
@@ -615,7 +615,6 @@ class StorageMediaTool(tools.CLITool):
                 "(VSS) have been selected."
             ),
         )
-
         argument_group.add_argument(
             "--vss_stores",
             "--vss-stores",
