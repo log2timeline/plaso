@@ -24,15 +24,15 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
 
     # The earliest format version, stored in-file, that this class
     # is able to append (write).
-    _APPEND_COMPATIBLE_FORMAT_VERSION = 20230327
+    _APPEND_COMPATIBLE_FORMAT_VERSION = 20260516
 
     # The earliest format version, stored in-file, that this class
     # is able to upgrade (write new format features).
-    _UPGRADE_COMPATIBLE_FORMAT_VERSION = 20230327
+    _UPGRADE_COMPATIBLE_FORMAT_VERSION = 20260516
 
     # The earliest format version, stored in-file, that this class
     # is able to read.
-    _READ_COMPATIBLE_FORMAT_VERSION = 20230327
+    _READ_COMPATIBLE_FORMAT_VERSION = 20260516
 
     _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE
     _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
@@ -51,9 +51,9 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
 
         Args:
           metadata_values (dict[str, str]): metadata values per key.
-          check_readable_only (Optional[bool]): whether the store should only be
-              checked to see if it can be read. If False, the store will be checked
-              to see if it can be read and written to.
+          check_readable_only (Optional[bool]): whether the store should only be checked
+              to see if it can be read. If False, the store will be checked to see if it
+              can be read and written to.
 
         Raises:
           OSError: if the format version or the serializer format is not supported.
@@ -110,8 +110,8 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
           container_type (str): attribute container type.
 
         Raises:
-          OSError: when there is an error querying the storage file or if
-              an unsupported attribute container is provided.
+          OSError: when there is an error querying the storage file or if an unsupported
+              attribute container is provided.
         """
         schema = self._GetAttributeContainerSchema(container_type)
         if schema and container_type != self._CONTAINER_TYPE_EVENT_DATA:
@@ -189,9 +189,9 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
         """Reads storage metadata and checks that the values are valid.
 
         Args:
-          check_readable_only (Optional[bool]): whether the store should only be
-              checked to see if it can be read. If False, the store will be checked
-              to see if it can be read and written to.
+          check_readable_only (Optional[bool]): whether the store should only be checked
+              to see if it can be read. If False, the store will be checked to see if it
+              can be read and written to.
 
         Raises:
           OSError: when there is an error querying the attribute container store.
@@ -334,8 +334,8 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
           AttributeContainer: attribute container or None if not available.
 
         Raises:
-          OSError: when the store is closed or when there is an error querying
-              the storage file.
+          OSError: when the store is closed or when there is an error querying the
+              storage file.
         """
         schema = self._GetAttributeContainerSchema(container_type)
         if schema and container_type != self._CONTAINER_TYPE_EVENT_DATA:
@@ -422,8 +422,8 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
         """Retrieves the events in increasing chronological order.
 
         Args:
-          time_range (Optional[TimeRange]): time range used to filter events
-              that fall in a specific period.
+          time_range (Optional[TimeRange]): time range used to filter events that fall
+              in a specific period.
 
         Returns:
           generator(EventObject): event generator.
