@@ -60,6 +60,7 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
 
         # Test case: normal entry.
         expected_event_values = {
+            "audit_serial": 94983,
             "audit_type": "LOGIN",
             "data_type": "selinux:line",
             "message_body": (
@@ -104,6 +105,64 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 3)
         self.CheckEventData(event_data, expected_event_values)
+
+        # Test case: SYSCALL record - Tier 1 structured fields.
+        expected_event_values = {
+            "audit_login_identifier": "0",
+            "audit_serial": 101,
+            "audit_session_identifier": "1",
+            "audit_type": "SYSCALL",
+            "data_type": "selinux:line",
+            "executable": "/bin/ls",
+            "exit_code": "0",
+            "group_identifier": "0",
+            "parent_process_identifier": "2671",
+            "pid": "2714",
+            "process_name": "ls",
+            "security_context": "system_u:object_r:unlabeled_t:s0",
+            "success": "yes",
+            "system_call": "197",
+            "user_identifier": "0",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 6)
+        self.CheckEventData(event_data, expected_event_values)
+
+    def testProcessEnriched(self):
+        """Tests the Process function on an ENRICHED (0x1d-suffixed) audit log."""
+        plugin = selinux.SELinuxTextPlugin()
+        storage_writer = self._ParseTextFileWithPlugin(["audit_enriched.log"], plugin)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 29)
+
+        # A SYSCALL execve record (serial 485): the raw "syscall=59" is surfaced as
+        # the ENRICHED "SYSCALL=execve" name, and the 0x1d suffix is split off.
+        expected_event_values = {
+            "audit_login_identifier": "0",
+            "audit_serial": 485,
+            "audit_session_identifier": "8",
+            "audit_type": "SYSCALL",
+            "data_type": "selinux:line",
+            "executable": "/usr/bin/id",
+            "exit_code": "0",
+            "group_identifier": "0",
+            "parent_process_identifier": "2176",
+            "pid": "2219",
+            "process_name": "id",
+            "security_context": (
+                "unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023"
+            ),
+            "success": "yes",
+            "system_call": "execve",
+            "user_identifier": "0",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 11)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # The ENRICHED suffix (after the 0x1d separator) is not retained.
+        self.assertNotIn("\x1d", event_data.message_body)
 
 
 if __name__ == "__main__":
