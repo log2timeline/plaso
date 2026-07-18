@@ -50,6 +50,7 @@ class EventExtractionWorkerVolumeScanner(dfvfs_volume_scanner.VolumeScanner):
             options = dfvfs_volume_scanner.VolumeScannerOptions()
             options.partitions = ["all"]
             options.scan_mode = options.SCAN_MODE_ALL
+            options.sector_size = None
             options.snapshots = ["none"]
             options.snapshots_only = False
             options.volumes = ["all"]
