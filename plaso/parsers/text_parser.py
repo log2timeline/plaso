@@ -53,7 +53,7 @@ class EncodedTextReader:
             self.ReadLines()
 
         line, _, self.lines = self.lines.partition("\n")
-        self.lines_size += len(line) + 1
+        self.lines_size -= len(line) + 1
         self.line_number += 1
 
         return line
