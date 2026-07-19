@@ -266,9 +266,12 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
                 "Processing started.",
                 "Processing completed.",
                 "",
+                "Number of warnings generated while extracting events: 1.",
+                "",
+                "Use pinfo to inspect warnings in more detail.",
+                "",
                 "",
             ]
-
             output = output_writer.ReadOutput()
             self._CheckOutput(output, expected_output)
 

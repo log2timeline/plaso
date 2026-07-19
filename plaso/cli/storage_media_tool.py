@@ -149,13 +149,14 @@ class StorageMediaToolMediator(dfvfs_command_line.CLIVolumeScannerMediator):
 class StorageMediaToolVolumeScanner(dfvfs_volume_scanner.VolumeScanner):
     """Volume scanner used by the storage media tool."""
 
-    def __init__(self, mediator=None):
+    def __init__(self, mediator=None, sector_size=None):
         """Initializes a volume scanner.
 
         Args:
           mediator (Optional[VolumeScannerMediator]): a volume scanner mediator.
+          sector_size (Optional[int]): number of bytes per sector.
         """
-        super().__init__(mediator=mediator)
+        super().__init__(mediator=mediator, sector_size=sector_size)
         self._credential_configurations = []
         self._snapshots_only = False
 
@@ -396,6 +397,7 @@ class StorageMediaTool(tools.CLITool):
             input_reader=input_reader, output_writer=output_writer
         )
         self._partitions = None
+        self._sector_size = None
         self._source_path = None
         self._source_type = None
         self._volumes = None
@@ -484,6 +486,7 @@ class StorageMediaTool(tools.CLITool):
             except ValueError:
                 raise errors.BadConfigOption("Unsupported partitions")
 
+        self._sector_size = getattr(options, "sector_size", None)
         self._volumes = getattr(options, "volumes", None)
         if self._volumes:
             try:
@@ -569,6 +572,16 @@ class StorageMediaTool(tools.CLITool):
                 'Ranges and lists can also be combined as: "1,3..5". The first '
                 'partition is 1. All partitions can be specified with: "all".'
             ),
+        )
+        argument_group.add_argument(
+            "--sector_size",
+            "--sector-size",
+            dest="sector_size",
+            action="store",
+            metavar="SIZE",
+            type=int,
+            default=None,
+            help="number of bytes per sector.",
         )
         argument_group.add_argument(
             "--volumes",
@@ -682,8 +695,9 @@ class StorageMediaTool(tools.CLITool):
         else:
             mediator = self._mediator
 
-        volume_scanner = StorageMediaToolVolumeScanner(mediator=mediator)
-
+        volume_scanner = StorageMediaToolVolumeScanner(
+            mediator=mediator, sector_size=self._sector_size
+        )
         try:
             base_path_specs = volume_scanner.GetBasePathSpecs(
                 source_path, options=options
