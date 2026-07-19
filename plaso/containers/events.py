@@ -60,7 +60,6 @@ def CalculateEventValuesHash(event_data, event_data_stream):
         for attribute_name, attribute_value in sorted(
             event_data_stream.GetAttributes()
         ):
-
             if attribute_name == "path_spec":
                 attribute_value = attribute_value.comparable
 
