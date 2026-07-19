@@ -28,10 +28,25 @@ class SELinuxLogEventData(events.EventData):
     """SELinux log event data.
 
     Attributes:
+      audit_login_identifier (str): audit login identifier (auid), the login
+          user identifier that is retained across su and sudo.
+      audit_serial (int): audit serial number, used to correlate the records
+          that belong to a single audited event.
+      audit_session_identifier (str): audit session identifier (ses).
       audit_type (str): audit type.
+      executable (str): path of the executable (exe).
+      exit_code (str): exit status of the system call (exit).
+      group_identifier (str): group identifier (gid) of the process.
       last_written_time (dfdatetime.DateTimeValues): entry last written date and time.
       message_body (str): message body.
-      pid (int): process identifier (PID) that created the SELinux log line.
+      parent_process_identifier (str): parent process identifier (ppid).
+      pid (str): process identifier (PID) that created the SELinux log line.
+      process_name (str): name of the process (comm).
+      security_context (str): security context (subj) of the process, such as a
+          SELinux or AppArmor label.
+      success (str): whether the system call succeeded (success).
+      system_call (str): system call (syscall).
+      user_identifier (str): user identifier (uid) of the process.
     """
 
     DATA_TYPE = "selinux:line"
@@ -39,10 +54,22 @@ class SELinuxLogEventData(events.EventData):
     def __init__(self):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
+        self.audit_login_identifier = None
+        self.audit_serial = None
+        self.audit_session_identifier = None
         self.audit_type = None
+        self.executable = None
+        self.exit_code = None
+        self.group_identifier = None
         self.last_written_time = None
         self.message_body = None
+        self.parent_process_identifier = None
         self.pid = None
+        self.process_name = None
+        self.security_context = None
+        self.success = None
+        self.system_call = None
+        self.user_identifier = None
 
 
 class SELinuxTextPlugin(interface.TextPlugin):
@@ -77,7 +104,7 @@ class SELinuxTextPlugin(interface.TextPlugin):
         + pyparsing.Suppress("msg=audit(")
         + _TIMESTAMP.set_results_name("timestamp")
         + pyparsing.Suppress(":")
-        + _INTEGER
+        + _INTEGER.set_results_name("serial")
         + pyparsing.Suppress("):")
         + pyparsing.restOfLine().set_results_name("message_body")
         + _END_OF_LINE
@@ -110,20 +137,69 @@ class SELinuxTextPlugin(interface.TextPlugin):
                 structure, "message_body", default_value=""
             ).strip()
 
-            try:
-                body_structure = self._KEY_VALUE_DICT.parse_string(message_body)
+            # ENRICHED audit logs (the modern default on both Fedora/RHEL and Ubuntu)
+            # append an interpreted suffix after a 0x1d (group separator) byte, for
+            # example "... key=(null)\x1dARCH=x86_64 SYSCALL=execve AUID=...". Split it
+            # off: the raw key=value body provides the fields and the raw numeric
+            # identifiers are kept for offline soundness; the resolved suffix is used
+            # only for the system call name, which is architecture and kernel specific
+            # and hard to resolve from an offline image. RAW logs have no suffix.
+            raw_body, _, enriched_body = message_body.partition("\x1d")
+            raw_body = raw_body.strip()
 
-                process_identifier = self._GetValueFromStructure(body_structure, "pid")
-            except pyparsing.ParseException:
-                process_identifier = None
+            body_structure = self._KEY_VALUE_DICT.parse_string(raw_body)
+            enriched_structure = self._KEY_VALUE_DICT.parse_string(enriched_body)
 
             event_data = SELinuxLogEventData()
+            event_data.audit_serial = self._GetValueFromStructure(structure, "serial")
             event_data.audit_type = self._GetValueFromStructure(structure, "type")
-            event_data.message_body = message_body or None
             event_data.last_written_time = self._ParseTimeElements(
                 time_elements_structure
             )
-            event_data.pid = process_identifier
+            event_data.message_body = raw_body or None
+
+            if body_structure:
+                event_data.audit_login_identifier = self._GetValueFromStructure(
+                    body_structure, "auid"
+                )
+                event_data.audit_session_identifier = self._GetValueFromStructure(
+                    body_structure, "ses"
+                )
+                event_data.executable = self._GetValueFromStructure(
+                    body_structure, "exe"
+                )
+                event_data.exit_code = self._GetValueFromStructure(
+                    body_structure, "exit"
+                )
+                event_data.group_identifier = self._GetValueFromStructure(
+                    body_structure, "gid"
+                )
+                event_data.parent_process_identifier = self._GetValueFromStructure(
+                    body_structure, "ppid"
+                )
+                event_data.pid = self._GetValueFromStructure(body_structure, "pid")
+                event_data.process_name = self._GetValueFromStructure(
+                    body_structure, "comm"
+                )
+                event_data.security_context = self._GetValueFromStructure(
+                    body_structure, "subj"
+                )
+                event_data.success = self._GetValueFromStructure(
+                    body_structure, "success"
+                )
+                event_data.system_call = self._GetValueFromStructure(
+                    body_structure, "syscall"
+                )
+                event_data.user_identifier = self._GetValueFromStructure(
+                    body_structure, "uid"
+                )
+
+            if enriched_structure:
+                enriched_system_call = self._GetValueFromStructure(
+                    enriched_structure, "SYSCALL"
+                )
+                if enriched_system_call:
+                    event_data.system_call = enriched_system_call
 
             parser_mediator.ProduceEventData(event_data)
 
