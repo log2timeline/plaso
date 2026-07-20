@@ -37,7 +37,7 @@ class OpenSearchTimesketchOutputArgumentsHelper(interface.ArgumentsHelper):
             default=cls._DEFAULT_TIMELINE_IDENTIFIER,
             action="store",
             metavar="IDENTIFIER",
-            help=("The identifier of the timeline in Timesketch."),
+            help="The identifier of the timeline in Timesketch.",
         )
 
     @classmethod
@@ -56,19 +56,17 @@ class OpenSearchTimesketchOutputArgumentsHelper(interface.ArgumentsHelper):
             output_module, opensearch_ts.OpenSearchTimesketchOutputModule
         ):
             raise errors.BadConfigObject(
-                "Output module is not an instance of OpenSearchsearchOutputModule"
+                "Output module is not an instance of OpenSearchTimesketchOutputModule"
             )
 
         opensearch_output.OpenSearchOutputArgumentsHelper.ParseOptions(
             options, output_module
         )
-
         timeline_identifier = cls._ParseNumericOption(
             options,
             "timeline_identifier",
             default_value=cls._DEFAULT_TIMELINE_IDENTIFIER,
         )
-
         if timeline_identifier:
             output_module.SetTimelineIdentifier(timeline_identifier)
 

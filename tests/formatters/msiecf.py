@@ -30,12 +30,12 @@ class MSIECFCachedPathFormatterHelperTest(test_lib.EventFormatterTestCase):
         self.assertNotIn("cached_file_path", event_values)
 
 
-class MSIECFHTTPHeadersventFormatterHelperTest(test_lib.EventFormatterTestCase):
+class MSIECFHTTPHeadersEventFormatterHelperTest(test_lib.EventFormatterTestCase):
     """Tests for the MSIE cache file HTTP headers formatter helper."""
 
     def testFormatEventValues(self):
         """Tests the FormatEventValues function."""
-        formatter_helper = msiecf.MSIECFHTTPHeadersventFormatterHelper()
+        formatter_helper = msiecf.MSIECFHTTPHeadersEventFormatterHelper()
 
         output_mediator = self._CreateOutputMediator()
 
