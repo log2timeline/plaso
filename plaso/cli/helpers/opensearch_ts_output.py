@@ -56,7 +56,7 @@ class OpenSearchTimesketchOutputArgumentsHelper(interface.ArgumentsHelper):
             output_module, opensearch_ts.OpenSearchTimesketchOutputModule
         ):
             raise errors.BadConfigObject(
-                "Output module is not an instance of OpenSearchsearchOutputModule"
+                "Output module is not an instance of OpenSearchTimesketchOutputModule"
             )
 
         opensearch_output.OpenSearchOutputArgumentsHelper.ParseOptions(
