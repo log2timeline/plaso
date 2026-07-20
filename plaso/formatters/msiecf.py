@@ -24,7 +24,7 @@ class MSIECFCachedPathFormatterHelper(interface.CustomEventFormatterHelper):
             event_values["cached_file_path"] = cached_file_path
 
 
-class MSIECFHTTPHeadersventFormatterHelper(interface.CustomEventFormatterHelper):
+class MSIECFHTTPHeadersEventFormatterHelper(interface.CustomEventFormatterHelper):
     """MSIE cache file HTTP headers formatter helper."""
 
     IDENTIFIER = "msiecf_http_headers"
@@ -42,5 +42,5 @@ class MSIECFHTTPHeadersventFormatterHelper(interface.CustomEventFormatterHelper)
 
 
 manager.FormattersManager.RegisterEventFormatterHelpers(
-    [MSIECFCachedPathFormatterHelper, MSIECFHTTPHeadersventFormatterHelper]
+    [MSIECFCachedPathFormatterHelper, MSIECFHTTPHeadersEventFormatterHelper]
 )
