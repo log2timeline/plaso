@@ -100,23 +100,44 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
             "data_type": "systemd:journal",
             "boot_identifier": "493676ee7ee04cff9afb308244ef893c",
             "command_line": "/sbin/init splash",
+            "control_group": "/init.scope",
+            "effective_capabilities": "3fffffffff",
             "executable": "/lib/systemd/systemd",
             "facility": "system daemons",
             "group_identifier": 0,
             "hostname": "test-VirtualBox",
             "machine_identifier": "a447b9eff9fe40a890e8e376e92a4ede",
             "message_body": "Started User Manager for UID 1000.",
+            "message_type_identifier": "39f53479d3a045ac8e11786248231fbf",
             "pid": 1,
             "process_name": "systemd",
             "recorded_time": "2017-01-27T09:40:55.855726+00:00",
             "reporter": "systemd",
             "severity": 6,
+            "systemd_slice": "-.slice",
             "systemd_unit": "init.scope",
             "transport": "journal",
             "user_identifier": 0,
             "written_time": "2017-01-27T09:40:55.913258+00:00",
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # Session-scoped entry: exercises the integer _AUDIT_SESSION and
+        # _SYSTEMD_OWNER_UID fields alongside the string _SYSTEMD_SESSION. All
+        # three carry the value 281 here, so this also pins down that the session
+        # identifier is preserved as a string while the audit session and owner
+        # user identifiers are stored as integers.
+        expected_event_values = {
+            "data_type": "systemd:journal",
+            "audit_session_identifier": 281,
+            "control_group": "/user.slice/user-1000.slice/session-281.scope",
+            "effective_capabilities": "3fffffffff",
+            "owner_user_identifier": 1000,
+            "systemd_session": "281",
+            "systemd_slice": "user-1000.slice",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1929)
         self.CheckEventData(event_data, expected_event_values)
 
         # Test a XZ compressed data log entry.
@@ -164,19 +185,26 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
         expected_event_values = {
             "data_type": "systemd:journal",
             "audit_login_identifier": "1000",
+            "audit_session_identifier": 1,
             "boot_identifier": "02e8c96371d240b7b3934b11b08a120e",
             "command_line": "/lib/systemd/systemd --user",
+            "control_group": "/user.slice/user-1000.slice/user@1000.service/init.scope",
+            "effective_capabilities": "0",
             "executable": "/lib/systemd/systemd",
             "facility": "system daemons",
             "group_identifier": 1000,
             "hostname": "testlol",
             "machine_identifier": "cf624987d3b145a79c35ae3874368fc7",
             "message_body": "Reached target Paths.",
+            "message_type_identifier": "39f53479d3a045ac8e11786248231fbf",
+            "owner_user_identifier": 1000,
             "pid": 822,
             "process_name": "systemd",
             "recorded_time": "2018-07-03T15:00:16.679635+00:00",
             "reporter": "systemd",
             "severity": 6,
+            "systemd_invocation_identifier": "11269c62e8cd4dab83bf0f7dad422778",
+            "systemd_slice": "user-1000.slice",
             "systemd_unit": "user@1000.service",
             "transport": "journal",
             "user_identifier": 1000,
