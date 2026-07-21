@@ -14,6 +14,21 @@ from tests.parsers.text_plugins import test_lib
 class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
     """Tests for the selinux log file text parser plugin."""
 
+    # pylint: disable=protected-access
+
+    def testDecodeHexValueOddLength(self):
+        """Tests that an odd-length hex value is preserved, not decoded."""
+        plugin = selinux.SELinuxTextPlugin()
+        parser_mediator = parsers_mediator.ParserMediator()
+
+        # An odd-length token is not valid hex-encoded data and must be
+        # returned as a literal rather than raising ValueError, which would
+        # crash extraction on a single malformed record.
+        self.assertEqual(plugin._DecodeHexValue(parser_mediator, "abc"), "abc")
+
+        # A well-formed even-length value still decodes byte-preservingly.
+        self.assertEqual(plugin._DecodeHexValue(parser_mediator, "6162"), "ab")
+
     def testCheckRequiredFormat(self):
         """Tests for the CheckRequiredFormat function."""
         plugin = selinux.SELinuxTextPlugin()
@@ -37,6 +52,15 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
         text_reader.ReadLines()
 
         self.assertFalse(plugin.CheckRequiredFormat(parser_mediator, text_reader))
+
+    def _FindEventDataByTypeAndSerial(self, storage_writer, audit_type, serial):
+        """Returns the first event data with the given audit type and serial."""
+        for event_data in storage_writer.GetAttributeContainers("event_data"):
+            if event_data.audit_type == audit_type and (
+                event_data.audit_serial == serial
+            ):
+                return event_data
+        self.fail(f"no {audit_type:s} event with serial {serial:d}")
 
     def testProcess(self):
         """Tests the Process function."""
@@ -163,6 +187,144 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
 
         # The ENRICHED suffix (after the 0x1d separator) is not retained.
         self.assertNotIn("\x1d", event_data.message_body)
+
+        # SYSCALL (serial 485): ENRICHED ARCH resolves the architecture name.
+        expected_event_values = {
+            "audit_type": "SYSCALL",
+            "architecture": "x86_64",
+            "system_call": "execve",
+            "audit_rule_key": "specimen_exec",
+        }
+        event_data = self._FindEventDataByTypeAndSerial(storage_writer, "SYSCALL", 485)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # EXECVE (serial 487): hex-encoded final argument decoded, space-joined.
+        expected_event_values = {
+            "audit_type": "EXECVE",
+            "arguments": "/bin/sh -c grep -c . /etc/hostname",
+        }
+        event_data = self._FindEventDataByTypeAndSerial(storage_writer, "EXECVE", 487)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # USER_AUTH (serial 441): a failed remote pubkey auth from addr.
+        expected_event_values = {
+            "audit_type": "USER_AUTH",
+            "operation": "pubkey",
+            "result": "failed",
+            "remote_address": "172.23.112.1",
+        }
+        event_data = self._FindEventDataByTypeAndSerial(
+            storage_writer, "USER_AUTH", 441
+        )
+        self.CheckEventData(event_data, expected_event_values)
+
+        # USER_ACCT (serial 444): a remote auth event with a resolved hostname,
+        # address and terminal (exercises remote_hostname with a real value).
+        expected_event_values = {
+            "audit_type": "USER_ACCT",
+            "account": "root",
+            "operation": "PAM:accounting",
+            "remote_address": "172.23.112.1",
+            "remote_hostname": "172.23.112.1",
+            "result": "success",
+            "terminal": "ssh",
+        }
+        event_data = self._FindEventDataByTypeAndSerial(
+            storage_writer, "USER_ACCT", 444
+        )
+        self.CheckEventData(event_data, expected_event_values)
+
+    def testProcessAudit(self):
+        """Tests the Process function on a RAW auditd audit.log."""
+        plugin = selinux.SELinuxTextPlugin()
+        storage_writer = self._ParseTextFileWithPlugin(["audit.log"], plugin)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 34)
+
+        # EXECVE with a hex-encoded argument (serial 505): a0="/bin/cat" is
+        # literal, a1 is hex-encoded and decoded byte-preserving, space-joined.
+        expected_event_values = {
+            "audit_serial": 505,
+            "audit_type": "EXECVE",
+            "arguments": "/bin/cat /tmp/my report.txt",
+        }
+        event_data = self._FindEventDataByTypeAndSerial(storage_writer, "EXECVE", 505)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # PROCTITLE hex blob (serial 522): NUL separators rendered as spaces.
+        expected_event_values = {
+            "audit_type": "PROCTITLE",
+            "proctitle": "/usr/sbin/unix_chkpwd specimenuser chkexpiry",
+        }
+        event_data = self._FindEventDataByTypeAndSerial(
+            storage_writer, "PROCTITLE", 522
+        )
+        self.CheckEventData(event_data, expected_event_values)
+
+        # PATH file_path (serial 522, item 0): a quoted name is literal.
+        expected_event_values = {
+            "audit_type": "PATH",
+            "file_path": "/etc/shadow",
+        }
+        event_data = self._FindEventDataByTypeAndSerial(storage_writer, "PATH", 522)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # SYSCALL (serial 500): raw arch retained (RAW log, no ENRICHED suffix),
+        # audit rule key surfaced, key=(null) would map to None.
+        expected_event_values = {
+            "audit_type": "SYSCALL",
+            "architecture": "c000003e",
+            "audit_rule_key": "specimen_exec",
+            "system_call": "59",
+        }
+        event_data = self._FindEventDataByTypeAndSerial(storage_writer, "SYSCALL", 500)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # CWD (serial 500): working directory.
+        expected_event_values = {
+            "audit_type": "CWD",
+            "working_directory": "/home/ubuntu",
+        }
+        event_data = self._FindEventDataByTypeAndSerial(storage_writer, "CWD", 500)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # PATH file metadata (serial 522, item 0 = /etc/shadow).
+        expected_event_values = {
+            "audit_type": "PATH",
+            "file_mode": "0100640",
+            "owner_user_identifier": "0",
+            "owner_group_identifier": "42",
+            "name_type": "NORMAL",
+        }
+        event_data = self._FindEventDataByTypeAndSerial(storage_writer, "PATH", 522)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # USER_AUTH (serial 520): nested msg='…' fields. terminal/addr/hostname
+        # are the "?" sentinel here and map to None.
+        expected_event_values = {
+            "audit_type": "USER_AUTH",
+            "account": "specimenuser",
+            "operation": "PAM:authentication",
+            "result": "success",
+            "terminal": None,
+            "remote_address": None,
+        }
+        event_data = self._FindEventDataByTypeAndSerial(
+            storage_writer, "USER_AUTH", 520
+        )
+        self.CheckEventData(event_data, expected_event_values)
+
+        # DEL_USER (serial 508): a failed operation.
+        expected_event_values = {
+            "audit_type": "DEL_USER",
+            "account": "specimenuser",
+            "result": "failed",
+        }
+        event_data = self._FindEventDataByTypeAndSerial(storage_writer, "DEL_USER", 508)
+        self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == "__main__":

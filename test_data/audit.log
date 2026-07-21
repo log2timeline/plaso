@@ -1,0 +1,34 @@
+type=SYSCALL msg=audit(1783478974.713:500): arch=c000003e syscall=59 success=yes exit=0 a0=5d54aa509640 a1=5d54aa5133c0 a2=5d54aa50fb30 a3=21 items=2 ppid=3867 pid=3917 auid=1000 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=(none) ses=17 comm="id" exe="/usr/lib/cargo/bin/coreutils/id" subj=unconfined key="specimen_exec"
+type=EXECVE msg=audit(1783478974.713:500): argc=1 a0="id"
+type=CWD msg=audit(1783478974.713:500): cwd="/home/ubuntu"
+type=PATH msg=audit(1783478974.713:500): item=0 name="/usr/bin/id" inode=393631 dev=08:02 mode=0100755 ouid=0 ogid=0 rdev=00:00 nametype=NORMAL cap_fp=0 cap_fi=0 cap_fe=0 cap_fver=0 cap_frootid=0
+type=PATH msg=audit(1783478974.713:500): item=1 name="/lib64/ld-linux-x86-64.so.2" inode=419731 dev=08:02 mode=0100755 ouid=0 ogid=0 rdev=00:00 nametype=NORMAL cap_fp=0 cap_fi=0 cap_fe=0 cap_fver=0 cap_frootid=0
+type=PROCTITLE msg=audit(1783478974.713:500): proctitle="id"
+type=SYSCALL msg=audit(1783478974.770:505): arch=c000003e syscall=59 success=yes exit=0 a0=5d54aa516580 a1=5d54aa50ff10 a2=5d54aa50fb30 a3=21 items=2 ppid=3867 pid=3922 auid=1000 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=(none) ses=17 comm="cat" exe="/usr/lib/cargo/bin/coreutils/cat" subj=unconfined key="specimen_exec"
+type=EXECVE msg=audit(1783478974.770:505): argc=2 a0="/bin/cat" a1=2F746D702F6D79207265706F72742E747874
+type=CWD msg=audit(1783478974.770:505): cwd="/home/ubuntu"
+type=PATH msg=audit(1783478974.770:505): item=0 name="/bin/cat" inode=393631 dev=08:02 mode=0100755 ouid=0 ogid=0 rdev=00:00 nametype=NORMAL cap_fp=0 cap_fi=0 cap_fe=0 cap_fver=0 cap_frootid=0
+type=PATH msg=audit(1783478974.770:505): item=1 name="/lib64/ld-linux-x86-64.so.2" inode=419731 dev=08:02 mode=0100755 ouid=0 ogid=0 rdev=00:00 nametype=NORMAL cap_fp=0 cap_fi=0 cap_fe=0 cap_fver=0 cap_frootid=0
+type=PROCTITLE msg=audit(1783478974.770:505): proctitle=2F62696E2F636174002F746D702F6D79207265706F72742E747874
+type=SYSCALL msg=audit(1783478974.785:506): arch=c000003e syscall=59 success=yes exit=0 a0=5d54aa509640 a1=5d54aa516dd0 a2=5d54aa50fb30 a3=21 items=2 ppid=3867 pid=3923 auid=1000 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=(none) ses=17 comm="echo" exe="/usr/lib/cargo/bin/coreutils/echo" subj=unconfined key="specimen_exec"
+type=EXECVE msg=audit(1783478974.785:506): argc=2 a0="/bin/echo" a1=68656C6C6F20776F726C642066726F6D2073706563696D656E
+type=CWD msg=audit(1783478974.785:506): cwd="/home/ubuntu"
+type=PATH msg=audit(1783478974.785:506): item=0 name="/bin/echo" inode=393631 dev=08:02 mode=0100755 ouid=0 ogid=0 rdev=00:00 nametype=NORMAL cap_fp=0 cap_fi=0 cap_fe=0 cap_fver=0 cap_frootid=0
+type=PATH msg=audit(1783478974.785:506): item=1 name="/lib64/ld-linux-x86-64.so.2" inode=419731 dev=08:02 mode=0100755 ouid=0 ogid=0 rdev=00:00 nametype=NORMAL cap_fp=0 cap_fi=0 cap_fe=0 cap_fver=0 cap_frootid=0
+type=PROCTITLE msg=audit(1783478974.785:506): proctitle=2F62696E2F6563686F0068656C6C6F20776F726C642066726F6D2073706563696D656E
+type=DEL_USER msg=audit(1783478974.807:508): pid=3924 uid=0 auid=1000 ses=17 subj=unconfined msg='op=deleting-user-not-found acct="specimenuser" exe="/usr/sbin/userdel" hostname=? addr=? terminal=? res=failed'
+type=ADD_USER msg=audit(1783478974.871:512): pid=3925 uid=0 auid=1000 ses=17 subj=unconfined msg='op=add-user acct="specimenuser" exe="/usr/sbin/useradd" hostname=? addr=? terminal=? res=success'
+type=SYSCALL msg=audit(1783478974.942:519): arch=c000003e syscall=59 success=yes exit=0 a0=5d54aa516930 a1=5d54aa5160e0 a2=5d54aa50fb30 a3=21 items=2 ppid=3867 pid=3930 auid=1000 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=(none) ses=17 comm="su" exe="/usr/bin/su" subj=unconfined key="specimen_exec"
+type=EXECVE msg=audit(1783478974.942:519): argc=5 a0="su" a1="-" a2="specimenuser" a3="-c" a4="id"
+type=CWD msg=audit(1783478974.942:519): cwd="/home/ubuntu"
+type=PATH msg=audit(1783478974.942:519): item=0 name="/usr/bin/su" inode=394249 dev=08:02 mode=0104755 ouid=0 ogid=0 rdev=00:00 nametype=NORMAL cap_fp=0 cap_fi=0 cap_fe=0 cap_fver=0 cap_frootid=0
+type=PATH msg=audit(1783478974.942:519): item=1 name="/lib64/ld-linux-x86-64.so.2" inode=419731 dev=08:02 mode=0100755 ouid=0 ogid=0 rdev=00:00 nametype=NORMAL cap_fp=0 cap_fi=0 cap_fe=0 cap_fver=0 cap_frootid=0
+type=PROCTITLE msg=audit(1783478974.942:519): proctitle=7375002D0073706563696D656E75736572002D63006964
+type=USER_AUTH msg=audit(1783478974.952:520): pid=3930 uid=0 auid=1000 ses=17 subj=unconfined msg='op=PAM:authentication grantors=pam_rootok acct="specimenuser" exe="/usr/bin/su" hostname=? addr=? terminal=? res=success'
+type=SYSCALL msg=audit(1783478974.961:522): arch=c000003e syscall=257 success=yes exit=3 a0=ffffff9c a1=76d1475df615 a2=80000 a3=0 items=1 ppid=3930 pid=3931 auid=1000 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=42 sgid=42 fsgid=42 tty=(none) ses=17 comm="unix_chkpwd" exe="/usr/sbin/unix_chkpwd" subj=unix-chkpwd key="specimen_watch"
+type=CWD msg=audit(1783478974.961:522): cwd="/home/ubuntu"
+type=PATH msg=audit(1783478974.961:522): item=0 name="/etc/shadow" inode=1050352 dev=08:02 mode=0100640 ouid=0 ogid=42 rdev=00:00 nametype=NORMAL cap_fp=0 cap_fi=0 cap_fe=0 cap_fver=0 cap_frootid=0
+type=PROCTITLE msg=audit(1783478974.961:522): proctitle=2F7573722F7362696E2F756E69785F63686B7077640073706563696D656E757365720063686B657870697279
+type=USER_ACCT msg=audit(1783478974.962:523): pid=3930 uid=0 auid=1000 ses=17 subj=unconfined msg='op=PAM:accounting grantors=pam_permit acct="specimenuser" exe="/usr/bin/su" hostname=? addr=? terminal=? res=success'
+type=CRED_ACQ msg=audit(1783478974.968:524): pid=3930 uid=0 auid=1000 ses=17 subj=unconfined msg='op=PAM:setcred grantors=pam_rootok acct="specimenuser" exe="/usr/bin/su" hostname=? addr=? terminal=? res=success'
+type=USER_START msg=audit(1783478974.973:526): pid=3930 uid=0 auid=1000 ses=17 subj=unconfined msg='op=PAM:session_open grantors=pam_keyinit,pam_env,pam_env,pam_mail,pam_limits,pam_permit,pam_umask,pam_unix,pam_systemd acct="specimenuser" exe="/usr/bin/su" hostname=? addr=? terminal=? res=success'
