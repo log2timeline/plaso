@@ -22,8 +22,14 @@ class SystemdJournalEventData(events.EventData):
     Attributes:
       audit_login_identifier (str): login user identifier (audit loginuid) of the
           process that logged the entry.
+      audit_session_identifier (int): audit session identifier of the process that
+          logged the entry.
       boot_identifier (str): identifier of the boot the entry was logged in.
       command_line (str): command line of the process that logged the entry.
+      control_group (str): systemd control group path of the process that logged
+          the entry.
+      effective_capabilities (str): effective capabilities (hexadecimal bitmask) of
+          the process that logged the entry.
       executable (str): path of the executable of the process that logged the entry.
       facility (str): syslog facility.
       group_identifier (int): group identifier (GID) of the process that logged the
@@ -31,6 +37,10 @@ class SystemdJournalEventData(events.EventData):
       hostname (str): hostname.
       machine_identifier (str): identifier of the machine the entry was logged on.
       message_body (str): message body.
+      message_type_identifier (str): message catalog identifier that classifies the
+          type of the message.
+      owner_user_identifier (int): user identifier (UID) of the owner of the systemd
+          session, user unit or slice.
       pid (int): process identifier (PID).
       process_name (str): name of the process that logged the entry.
       recorded_time (dfdatetime.DateTimeValues): date and time the log entry was
@@ -39,6 +49,11 @@ class SystemdJournalEventData(events.EventData):
       selinux_context (str): SELinux security context of the process that logged the
           entry.
       severity (int): syslog severity.
+      systemd_invocation_identifier (str): systemd invocation identifier for the
+          runtime cycle of the unit.
+      systemd_session (str): systemd (logind) session identifier of the process that
+          logged the entry.
+      systemd_slice (str): systemd slice unit of the process that logged the entry.
       systemd_unit (str): systemd unit of the process that logged the entry.
       transport (str): how the entry was received by the journal.
       user_identifier (int): user identifier (UID) of the process that logged the entry.
@@ -51,20 +66,28 @@ class SystemdJournalEventData(events.EventData):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
         self.audit_login_identifier = None
+        self.audit_session_identifier = None
         self.boot_identifier = None
         self.command_line = None
+        self.control_group = None
+        self.effective_capabilities = None
         self.executable = None
         self.facility = None
         self.group_identifier = None
         self.hostname = None
         self.machine_identifier = None
         self.message_body = None
+        self.message_type_identifier = None
+        self.owner_user_identifier = None
         self.pid = None
         self.process_name = None
         self.recorded_time = None
         self.reporter = None
         self.selinux_context = None
         self.severity = None
+        self.systemd_invocation_identifier = None
+        self.systemd_session = None
+        self.systemd_slice = None
         self.systemd_unit = None
         self.transport = None
         self.user_identifier = None
@@ -113,9 +136,11 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
     _HEADER_INCOMPATIBLE_COMPACT = 16
 
     _INTEGER_FIELDS = (
+        "_AUDIT_SESSION",
         "_GID",
         "_PID",
         "_SOURCE_REALTIME_TIMESTAMP",
+        "_SYSTEMD_OWNER_UID",
         "_UID",
         "PRIORITY",
         "SYSLOG_PID",
@@ -554,19 +579,29 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
                     pass
 
             event_data.audit_login_identifier = fields.get("_AUDIT_LOGINUID")
+            event_data.audit_session_identifier = fields.get("_AUDIT_SESSION")
             event_data.boot_identifier = fields.get("_BOOT_ID")
             event_data.command_line = fields.get("_CMDLINE")
+            event_data.control_group = fields.get("_SYSTEMD_CGROUP")
+            event_data.effective_capabilities = fields.get("_CAP_EFFECTIVE")
             event_data.executable = fields.get("_EXE")
             event_data.facility = facility
             event_data.group_identifier = fields.get("_GID")
             event_data.hostname = fields.get("_HOSTNAME")
             event_data.machine_identifier = fields.get("_MACHINE_ID")
             event_data.message_body = fields.get("MESSAGE")
+            event_data.message_type_identifier = fields.get("MESSAGE_ID")
+            event_data.owner_user_identifier = fields.get("_SYSTEMD_OWNER_UID")
             event_data.process_name = fields.get("_COMM")
             # Fall back to the _COMM when SYSLOG_IDENTIFIER is absent.
             event_data.reporter = fields.get("SYSLOG_IDENTIFIER") or fields.get("_COMM")
             event_data.selinux_context = fields.get("_SELINUX_CONTEXT")
             event_data.severity = fields.get("PRIORITY")
+            event_data.systemd_invocation_identifier = fields.get(
+                "_SYSTEMD_INVOCATION_ID"
+            )
+            event_data.systemd_session = fields.get("_SYSTEMD_SESSION")
+            event_data.systemd_slice = fields.get("_SYSTEMD_SLICE")
             event_data.systemd_unit = fields.get("_SYSTEMD_UNIT")
             event_data.transport = fields.get("_TRANSPORT")
             event_data.user_identifier = fields.get("_UID")
