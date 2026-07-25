@@ -1,0 +1,4 @@
+type=PROCTITLE msg=audit(1783478974.713:900): proctitle=2F62696E2F6361F
+type=EXECVE msg=audit(1783478974.713:901): argc=2 a0="/bin/cat" a1=FFFE
+type=PATH msg=audit(1783478974.713:902): item=0 name="/etc/shadow" mode=abc ouid=0
+type=EXECVE msg=audit(1783478974.713:903): argc=x a0="/bin/ls"

@@ -14,21 +14,6 @@ from tests.parsers.text_plugins import test_lib
 class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
     """Tests for the selinux log file text parser plugin."""
 
-    # pylint: disable=protected-access
-
-    def testDecodeHexValueOddLength(self):
-        """Tests that an odd-length hex value is preserved, not decoded."""
-        plugin = selinux.SELinuxTextPlugin()
-        parser_mediator = parsers_mediator.ParserMediator()
-
-        # An odd-length token is not valid hex-encoded data and must be
-        # returned as a literal rather than raising ValueError, which would
-        # crash extraction on a single malformed record.
-        self.assertEqual(plugin._DecodeHexValue(parser_mediator, "abc"), "abc")
-
-        # A well-formed even-length value still decodes byte-preservingly.
-        self.assertEqual(plugin._DecodeHexValue(parser_mediator, "6162"), "ab")
-
     def testCheckRequiredFormat(self):
         """Tests for the CheckRequiredFormat function."""
         plugin = selinux.SELinuxTextPlugin()
@@ -188,6 +173,16 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
         # The ENRICHED suffix (after the 0x1d separator) is not retained.
         self.assertNotIn("\x1d", event_data.message_body)
 
+        # LOGIN (serial 447): the result of a login record is stored at the top
+        # level of the message body instead of in a nested msg field, and is
+        # stored as a number instead of "success" or "failed".
+        expected_event_values = {
+            "audit_type": "LOGIN",
+            "operation_result": "1",
+        }
+        event_data = self._FindEventDataByTypeAndSerial(storage_writer, "LOGIN", 447)
+        self.CheckEventData(event_data, expected_event_values)
+
         # SYSCALL (serial 485): ENRICHED ARCH resolves the architecture name.
         expected_event_values = {
             "audit_type": "SYSCALL",
@@ -210,7 +205,7 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
         expected_event_values = {
             "audit_type": "USER_AUTH",
             "operation": "pubkey",
-            "result": "failed",
+            "operation_result": "failed",
             "remote_address": "172.23.112.1",
         }
         event_data = self._FindEventDataByTypeAndSerial(
@@ -226,7 +221,7 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
             "operation": "PAM:accounting",
             "remote_address": "172.23.112.1",
             "remote_hostname": "172.23.112.1",
-            "result": "success",
+            "operation_result": "success",
             "terminal": "ssh",
         }
         event_data = self._FindEventDataByTypeAndSerial(
@@ -257,7 +252,7 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
         # PROCTITLE hex blob (serial 522): NUL separators rendered as spaces.
         expected_event_values = {
             "audit_type": "PROCTITLE",
-            "proctitle": "/usr/sbin/unix_chkpwd specimenuser chkexpiry",
+            "process_title": "/usr/sbin/unix_chkpwd specimenuser chkexpiry",
         }
         event_data = self._FindEventDataByTypeAndSerial(
             storage_writer, "PROCTITLE", 522
@@ -294,7 +289,7 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
         # PATH file metadata (serial 522, item 0 = /etc/shadow).
         expected_event_values = {
             "audit_type": "PATH",
-            "file_mode": "0100640",
+            "file_mode": 0o100640,
             "owner_user_identifier": "0",
             "owner_group_identifier": "42",
             "name_type": "NORMAL",
@@ -308,7 +303,7 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
             "audit_type": "USER_AUTH",
             "account": "specimenuser",
             "operation": "PAM:authentication",
-            "result": "success",
+            "operation_result": "success",
             "terminal": None,
             "remote_address": None,
         }
@@ -321,9 +316,73 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
         expected_event_values = {
             "audit_type": "DEL_USER",
             "account": "specimenuser",
-            "result": "failed",
+            "operation_result": "failed",
         }
         event_data = self._FindEventDataByTypeAndSerial(storage_writer, "DEL_USER", 508)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # USER_AUTH (serial 520): the executable of a user record is stored inside
+        # the nested msg field instead of at the top level of the message body.
+        expected_event_values = {
+            "audit_type": "USER_AUTH",
+            "executable": "/usr/bin/su",
+        }
+        event_data = self._FindEventDataByTypeAndSerial(
+            storage_writer, "USER_AUTH", 520
+        )
+        self.CheckEventData(event_data, expected_event_values)
+
+    def testProcessCorrupted(self):
+        """Tests the Process function on records with corrupted values."""
+        plugin = selinux.SELinuxTextPlugin()
+        storage_writer = self._ParseTextFileWithPlugin(["audit_corrupted.log"], plugin)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 4)
+
+        # Each record has a single corrupted value.
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 4)
+
+        # PROCTITLE (serial 900): an odd number of hex digits is not validly
+        # hex-encoded, hence the value is preserved as is.
+        expected_event_values = {
+            "audit_type": "PROCTITLE",
+            "process_title": "2F62696E2F6361F",
+        }
+        event_data = self._FindEventDataByTypeAndSerial(
+            storage_writer, "PROCTITLE", 900
+        )
+        self.CheckEventData(event_data, expected_event_values)
+
+        # EXECVE (serial 901): bytes that are not valid UTF-8 are preserved as
+        # escaped byte values.
+        expected_event_values = {
+            "audit_type": "EXECVE",
+            "arguments": "/bin/cat \\xff\\xfe",
+        }
+        event_data = self._FindEventDataByTypeAndSerial(storage_writer, "EXECVE", 901)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # PATH (serial 902): an invalid file mode is not stored.
+        expected_event_values = {
+            "audit_type": "PATH",
+            "file_mode": None,
+            "file_path": "/etc/shadow",
+        }
+        event_data = self._FindEventDataByTypeAndSerial(storage_writer, "PATH", 902)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # EXECVE (serial 903): an invalid number of arguments is not stored.
+        expected_event_values = {
+            "audit_type": "EXECVE",
+            "arguments": None,
+        }
+        event_data = self._FindEventDataByTypeAndSerial(storage_writer, "EXECVE", 903)
         self.CheckEventData(event_data, expected_event_values)
 
 
