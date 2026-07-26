@@ -28,19 +28,17 @@ class SELinuxLogEventData(events.EventData):
     """SELinux log event data.
 
     Attributes:
-      account (str): name of the account (acct) that is the subject of a user,
-          authentication or account management event, such as the account being
-          authenticated or added. Note that this is the account the event acts on,
-          where user_identifier is the user identifier of the process that caused
-          the event.
+      account (str): name of the account (acct) that the event acts on, such as
+          "root" for an attempt to authenticate as root. Note that this is an
+          account name, where user_identifier is the numeric user identifier of
+          the process that caused the event, which is typically a different
+          user, such as the user running "su".
       architecture (str): CPU architecture (arch); the resolved name (e.g.
           "x86_64") when the record is ENRICHED, otherwise the raw value.
-      arguments (str): reconstructed command line of an executed program (the
-          EXECVE argc/a0..aN arguments), hex-decoded and space-joined.
       audit_login_identifier (str): audit login identifier (auid), the login
           user identifier that is retained across su and sudo.
-      audit_rule_key (str): audit rule key (key) identifying the rule that
-          triggered the record.
+      audit_rule_keys (list[str]): keys (key) of the audit rule that triggered
+          the record, where a rule can have multiple keys.
       audit_serial (int): audit serial number, used to correlate the records
           that belong to a single audited event.
       audit_session_identifier (str): audit session identifier (ses).
@@ -58,13 +56,15 @@ class SELinuxLogEventData(events.EventData):
           PARENT, CREATE or DELETE.
       operation (str): operation (op) that is audited, such as
           "PAM:authentication", "add_rule" or "LOAD".
-      operation_result (str): result (res) of the audited operation, either
-          "success" or "failed", or "1" or "0" on record types such as
-          CONFIG_CHANGE and LOGIN.
+      operation_result (bool): True if the audited operation was successful. The
+          log format represents this value as "success" or "failed", or as "1" or
+          "0" on record types such as CONFIG_CHANGE and LOGIN.
       owner_group_identifier (str): group identifier that owns the file (ogid).
       owner_user_identifier (str): user identifier that owns the file (ouid).
       parent_process_identifier (str): parent process identifier (ppid).
       pid (str): process identifier (PID) that created the SELinux log line.
+      process_arguments (str): arguments of an executed program (the EXECVE argc
+          and a0 .. aN fields), separated by spaces.
       process_name (str): name of the process (comm).
       process_title (str): process title (proctitle) of the process, which
           contains the command line with its arguments separated by spaces.
@@ -87,9 +87,8 @@ class SELinuxLogEventData(events.EventData):
         super().__init__(data_type=self.DATA_TYPE)
         self.account = None
         self.architecture = None
-        self.arguments = None
         self.audit_login_identifier = None
-        self.audit_rule_key = None
+        self.audit_rule_keys = None
         self.audit_serial = None
         self.audit_session_identifier = None
         self.audit_type = None
@@ -107,6 +106,7 @@ class SELinuxLogEventData(events.EventData):
         self.owner_user_identifier = None
         self.parent_process_identifier = None
         self.pid = None
+        self.process_arguments = None
         self.process_name = None
         self.process_title = None
         self.remote_address = None
@@ -172,6 +172,24 @@ class SELinuxTextPlugin(interface.TextPlugin):
 
     # auditd sentinels that stand in for an absent value.
     _SENTINEL_VALUES = frozenset(["?", "(null)", "(none)"])
+
+    # Value that auditd uses for an unset numeric value, which is (uint32_t) -1.
+    _UNSET_NUMERIC_VALUE = "4294967295"
+
+    # Values of a result field, as interpreted by libauparse, which represents a
+    # value that is not defined here as unset.
+    _RESULT_VALUES = {
+        "0": False,
+        "1": True,
+        "failed": False,
+        "no": False,
+        "success": True,
+        "yes": True,
+    }
+
+    # Separator of the audit rule keys of a rule with multiple keys, which is
+    # AUDIT_KEY_SEPARATOR.
+    _RULE_KEY_SEPARATOR = "\x01"
 
     def _DecodeHexValue(self, parser_mediator, hex_value):
         """Decodes a hex-encoded value, preserving the original bytes.
@@ -293,6 +311,51 @@ class SELinuxTextPlugin(interface.TextPlugin):
 
         return self._DecodeHexValue(parser_mediator, value)
 
+    def _GetResultValue(self, parser_mediator, values, name):
+        """Retrieves the value of a result field as a boolean.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          values (dict[str, str]): value per field name.
+          name (str): field name.
+
+        Returns:
+          tuple[bool, bool]: result, or None if the field has no usable value or
+              its value is unset, and value to indicate the value was corrupted.
+        """
+        value = self._GetStringValue(values, name)
+        if value is None or value == self._UNSET_NUMERIC_VALUE:
+            return None, False
+
+        result = self._RESULT_VALUES.get(value.lower(), None)
+        if result is None:
+            parser_mediator.ProduceWarning(f"unsupported result value: {value:s}")
+            return None, True
+
+        return result, False
+
+    def _GetRuleKeys(self, parser_mediator, values):
+        """Retrieves the audit rule keys of a record.
+
+        An audit rule can have multiple keys, which auditd stores in a single
+        field separated by AUDIT_KEY_SEPARATOR.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          values (dict[str, str]): value per field name.
+
+        Returns:
+          tuple[list[str], bool]: audit rule keys, or None if the record has no
+              audit rule key, and value to indicate a value was corrupted.
+        """
+        value, corrupted = self._GetEncodedStringValue(parser_mediator, values, "key")
+        if value is None:
+            return None, corrupted
+
+        return value.split(self._RULE_KEY_SEPARATOR), corrupted
+
     def _GetArguments(self, parser_mediator, values):
         """Retrieves the command line of an executed program.
 
@@ -388,6 +451,10 @@ class SELinuxTextPlugin(interface.TextPlugin):
             raw_body, _, enriched_body = message_body.partition("\x1d")
             raw_body = raw_body.strip()
 
+            # Fields such as "acct", "op" and "res" are stored either at the top
+            # level of the message body or inside a nested "msg" field, hence the
+            # values of a nested "msg" field are merged into the values.
+            top_level_values = self._KEY_VALUE_DICT.parse_string(raw_body).as_dict()
             values = self._GetValues(raw_body)
             enriched_values = self._GetValues(enriched_body)
 
@@ -402,50 +469,66 @@ class SELinuxTextPlugin(interface.TextPlugin):
             event_data.message_body = raw_body or None
 
             if values:
+                # Fields that are only stored at the top level of the message body.
+                event_data.audit_login_identifier = self._GetStringValue(
+                    top_level_values, "auid"
+                )
+                event_data.audit_session_identifier = self._GetStringValue(
+                    top_level_values, "ses"
+                )
+                event_data.executable = self._GetStringValue(top_level_values, "exe")
+                event_data.exit_code = self._GetStringValue(top_level_values, "exit")
+                event_data.group_identifier = self._GetStringValue(
+                    top_level_values, "gid"
+                )
+                event_data.parent_process_identifier = self._GetStringValue(
+                    top_level_values, "ppid"
+                )
+                event_data.pid = self._GetStringValue(top_level_values, "pid")
+                event_data.process_name = self._GetStringValue(top_level_values, "comm")
+                event_data.security_context = self._GetStringValue(
+                    top_level_values, "subj"
+                )
+                event_data.success = self._GetStringValue(top_level_values, "success")
+                event_data.system_call = self._GetStringValue(
+                    top_level_values, "syscall"
+                )
+                event_data.user_identifier = self._GetStringValue(
+                    top_level_values, "uid"
+                )
+
                 event_data.architecture = self._GetStringValue(values, "arch")
-                event_data.audit_login_identifier = self._GetStringValue(values, "auid")
-                event_data.audit_rule_key, value_corrupted = (
-                    self._GetEncodedStringValue(parser_mediator, values, "key")
+                event_data.name_type = self._GetStringValue(values, "nametype")
+                event_data.operation = self._GetStringValue(values, "op")
+                event_data.owner_group_identifier = self._GetStringValue(values, "ogid")
+                event_data.owner_user_identifier = self._GetStringValue(values, "ouid")
+                event_data.remote_address = self._GetStringValue(values, "addr")
+                event_data.remote_hostname = self._GetStringValue(values, "hostname")
+                event_data.terminal = self._GetStringValue(values, "terminal")
+
+                event_data.audit_rule_keys, value_corrupted = self._GetRuleKeys(
+                    parser_mediator, values
                 )
                 corrupted = corrupted or value_corrupted
 
-                event_data.audit_session_identifier = self._GetStringValue(
-                    values, "ses"
+                event_data.operation_result, value_corrupted = self._GetResultValue(
+                    parser_mediator, values, "res"
                 )
-                event_data.exit_code = self._GetStringValue(values, "exit")
-                event_data.group_identifier = self._GetStringValue(values, "gid")
-                event_data.name_type = self._GetStringValue(values, "nametype")
-                event_data.operation = self._GetStringValue(values, "op")
-                event_data.operation_result = self._GetStringValue(values, "res")
-                event_data.owner_group_identifier = self._GetStringValue(values, "ogid")
-                event_data.owner_user_identifier = self._GetStringValue(values, "ouid")
-                event_data.parent_process_identifier = self._GetStringValue(
-                    values, "ppid"
-                )
-                event_data.pid = self._GetStringValue(values, "pid")
-                event_data.remote_address = self._GetStringValue(values, "addr")
-                event_data.remote_hostname = self._GetStringValue(values, "hostname")
-                event_data.security_context = self._GetStringValue(values, "subj")
-                event_data.success = self._GetStringValue(values, "success")
-                event_data.system_call = self._GetStringValue(values, "syscall")
-                event_data.terminal = self._GetStringValue(values, "terminal")
-                event_data.user_identifier = self._GetStringValue(values, "uid")
+                corrupted = corrupted or value_corrupted
 
                 event_data.file_mode, value_corrupted = self._GetFileMode(
                     parser_mediator, values
                 )
                 corrupted = corrupted or value_corrupted
 
-                event_data.arguments, value_corrupted = self._GetArguments(
+                event_data.process_arguments, value_corrupted = self._GetArguments(
                     parser_mediator, values
                 )
                 corrupted = corrupted or value_corrupted
 
                 for attribute_name, field_name in (
                     ("account", "acct"),
-                    ("executable", "exe"),
                     ("file_path", "name"),
-                    ("process_name", "comm"),
                     ("working_directory", "cwd"),
                 ):
                     value, value_corrupted = self._GetEncodedStringValue(

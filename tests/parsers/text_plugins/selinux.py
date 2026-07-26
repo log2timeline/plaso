@@ -144,7 +144,7 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
-        self.assertEqual(number_of_event_data, 29)
+        self.assertEqual(number_of_event_data, 33)
 
         # A SYSCALL execve record (serial 485): the raw "syscall=59" is surfaced as
         # the ENRICHED "SYSCALL=execve" name, and the 0x1d suffix is split off.
@@ -178,7 +178,7 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
         # stored as a number instead of "success" or "failed".
         expected_event_values = {
             "audit_type": "LOGIN",
-            "operation_result": "1",
+            "operation_result": True,
         }
         event_data = self._FindEventDataByTypeAndSerial(storage_writer, "LOGIN", 447)
         self.CheckEventData(event_data, expected_event_values)
@@ -188,15 +188,36 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
             "audit_type": "SYSCALL",
             "architecture": "x86_64",
             "system_call": "execve",
-            "audit_rule_key": "specimen_exec",
+            "audit_rule_keys": ["specimen_exec"],
         }
         event_data = self._FindEventDataByTypeAndSerial(storage_writer, "SYSCALL", 485)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # SYSCALL (serial 371): an audit rule with multiple keys stores the keys
+        # in a single hex-encoded field, separated by AUDIT_KEY_SEPARATOR.
+        expected_event_values = {
+            "audit_type": "SYSCALL",
+            "audit_rule_keys": ["alpha", "beta"],
+            "file_mode": None,
+            "operation_result": None,
+        }
+        event_data = self._FindEventDataByTypeAndSerial(storage_writer, "SYSCALL", 371)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # PATH (serial 371): the file mode is stored as an integer.
+        expected_event_values = {
+            "audit_type": "PATH",
+            "file_mode": 0o100664,
+            "file_path": "/tmp/keytest",
+            "owner_user_identifier": "1000",
+        }
+        event_data = self._FindEventDataByTypeAndSerial(storage_writer, "PATH", 371)
         self.CheckEventData(event_data, expected_event_values)
 
         # EXECVE (serial 487): hex-encoded final argument decoded, space-joined.
         expected_event_values = {
             "audit_type": "EXECVE",
-            "arguments": "/bin/sh -c grep -c . /etc/hostname",
+            "process_arguments": "/bin/sh -c grep -c . /etc/hostname",
         }
         event_data = self._FindEventDataByTypeAndSerial(storage_writer, "EXECVE", 487)
         self.CheckEventData(event_data, expected_event_values)
@@ -205,7 +226,7 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
         expected_event_values = {
             "audit_type": "USER_AUTH",
             "operation": "pubkey",
-            "operation_result": "failed",
+            "operation_result": False,
             "remote_address": "172.23.112.1",
         }
         event_data = self._FindEventDataByTypeAndSerial(
@@ -221,7 +242,7 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
             "operation": "PAM:accounting",
             "remote_address": "172.23.112.1",
             "remote_hostname": "172.23.112.1",
-            "operation_result": "success",
+            "operation_result": True,
             "terminal": "ssh",
         }
         event_data = self._FindEventDataByTypeAndSerial(
@@ -244,7 +265,7 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
         expected_event_values = {
             "audit_serial": 505,
             "audit_type": "EXECVE",
-            "arguments": "/bin/cat /tmp/my report.txt",
+            "process_arguments": "/bin/cat /tmp/my report.txt",
         }
         event_data = self._FindEventDataByTypeAndSerial(storage_writer, "EXECVE", 505)
         self.CheckEventData(event_data, expected_event_values)
@@ -272,7 +293,7 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
         expected_event_values = {
             "audit_type": "SYSCALL",
             "architecture": "c000003e",
-            "audit_rule_key": "specimen_exec",
+            "audit_rule_keys": ["specimen_exec"],
             "system_call": "59",
         }
         event_data = self._FindEventDataByTypeAndSerial(storage_writer, "SYSCALL", 500)
@@ -303,7 +324,7 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
             "audit_type": "USER_AUTH",
             "account": "specimenuser",
             "operation": "PAM:authentication",
-            "operation_result": "success",
+            "operation_result": True,
             "terminal": None,
             "remote_address": None,
         }
@@ -316,20 +337,9 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
         expected_event_values = {
             "audit_type": "DEL_USER",
             "account": "specimenuser",
-            "operation_result": "failed",
+            "operation_result": False,
         }
         event_data = self._FindEventDataByTypeAndSerial(storage_writer, "DEL_USER", 508)
-        self.CheckEventData(event_data, expected_event_values)
-
-        # USER_AUTH (serial 520): the executable of a user record is stored inside
-        # the nested msg field instead of at the top level of the message body.
-        expected_event_values = {
-            "audit_type": "USER_AUTH",
-            "executable": "/usr/bin/su",
-        }
-        event_data = self._FindEventDataByTypeAndSerial(
-            storage_writer, "USER_AUTH", 520
-        )
         self.CheckEventData(event_data, expected_event_values)
 
     def testProcessCorrupted(self):
@@ -340,13 +350,13 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
-        self.assertEqual(number_of_event_data, 4)
+        self.assertEqual(number_of_event_data, 5)
 
         # Each record has a single corrupted value.
         number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
             "extraction_warning"
         )
-        self.assertEqual(number_of_warnings, 4)
+        self.assertEqual(number_of_warnings, 5)
 
         # PROCTITLE (serial 900): an odd number of hex digits is not validly
         # hex-encoded, hence the value is preserved as is.
@@ -363,7 +373,7 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
         # escaped byte values.
         expected_event_values = {
             "audit_type": "EXECVE",
-            "arguments": "/bin/cat \\xff\\xfe",
+            "process_arguments": "/bin/cat \\xff\\xfe",
         }
         event_data = self._FindEventDataByTypeAndSerial(storage_writer, "EXECVE", 901)
         self.CheckEventData(event_data, expected_event_values)
@@ -380,9 +390,22 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
         # EXECVE (serial 903): an invalid number of arguments is not stored.
         expected_event_values = {
             "audit_type": "EXECVE",
-            "arguments": None,
+            "process_arguments": None,
         }
         event_data = self._FindEventDataByTypeAndSerial(storage_writer, "EXECVE", 903)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # USER_AUTH (serial 904): a result value that is not supported is not
+        # stored, where the remaining values of the record still are.
+        expected_event_values = {
+            "audit_type": "USER_AUTH",
+            "account": "root",
+            "operation": "PAM:authentication",
+            "operation_result": None,
+        }
+        event_data = self._FindEventDataByTypeAndSerial(
+            storage_writer, "USER_AUTH", 904
+        )
         self.CheckEventData(event_data, expected_event_values)
 
 
