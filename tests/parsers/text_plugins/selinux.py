@@ -123,13 +123,13 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
             "audit_type": "SYSCALL",
             "data_type": "selinux:line",
             "executable": "/bin/ls",
-            "exit_code": "0",
+            "exit_code": 0,
             "group_identifier": "0",
             "parent_process_identifier": "2671",
             "pid": "2714",
             "process_name": "ls",
             "security_context": "system_u:object_r:unlabeled_t:s0",
-            "success": "yes",
+            "success": True,
             "system_call": "197",
             "user_identifier": "0",
         }
@@ -144,7 +144,7 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
-        self.assertEqual(number_of_event_data, 33)
+        self.assertEqual(number_of_event_data, 34)
 
         # A SYSCALL execve record (serial 485): the raw "syscall=59" is surfaced as
         # the ENRICHED "SYSCALL=execve" name, and the 0x1d suffix is split off.
@@ -155,7 +155,7 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
             "audit_type": "SYSCALL",
             "data_type": "selinux:line",
             "executable": "/usr/bin/id",
-            "exit_code": "0",
+            "exit_code": 0,
             "group_identifier": "0",
             "parent_process_identifier": "2176",
             "pid": "2219",
@@ -163,7 +163,7 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
             "security_context": (
                 "unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023"
             ),
-            "success": "yes",
+            "success": True,
             "system_call": "execve",
             "user_identifier": "0",
         }
@@ -191,6 +191,20 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
             "audit_rule_keys": ["specimen_exec"],
         }
         event_data = self._FindEventDataByTypeAndSerial(storage_writer, "SYSCALL", 485)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # SERVICE_START (serial 260): the executable and the process name of a
+        # service record are stored in the nested msg field instead of at the top
+        # level of the message body.
+        expected_event_values = {
+            "audit_type": "SERVICE_START",
+            "executable": "/usr/lib/systemd/systemd",
+            "process_name": "systemd",
+            "operation_result": True,
+        }
+        event_data = self._FindEventDataByTypeAndSerial(
+            storage_writer, "SERVICE_START", 260
+        )
         self.CheckEventData(event_data, expected_event_values)
 
         # SYSCALL (serial 371): an audit rule with multiple keys stores the keys
@@ -222,9 +236,12 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
         event_data = self._FindEventDataByTypeAndSerial(storage_writer, "EXECVE", 487)
         self.CheckEventData(event_data, expected_event_values)
 
-        # USER_AUTH (serial 441): a failed remote pubkey auth from addr.
+        # USER_AUTH (serial 441): a failed remote pubkey auth from addr. The
+        # audit login and session identifiers are unset on this record.
         expected_event_values = {
             "audit_type": "USER_AUTH",
+            "audit_login_identifier": None,
+            "audit_session_identifier": None,
             "operation": "pubkey",
             "operation_result": False,
             "remote_address": "172.23.112.1",
@@ -319,10 +336,12 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
         self.CheckEventData(event_data, expected_event_values)
 
         # USER_AUTH (serial 520): nested msg='…' fields. terminal/addr/hostname
-        # are the "?" sentinel here and map to None.
+        # are the "?" sentinel here and map to None. The executable of a user
+        # record is stored in the nested msg field instead of at the top level.
         expected_event_values = {
             "audit_type": "USER_AUTH",
             "account": "specimenuser",
+            "executable": "/usr/bin/su",
             "operation": "PAM:authentication",
             "operation_result": True,
             "terminal": None,

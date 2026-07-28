@@ -31,3 +31,4 @@ type=SYSCALL msg=audit(1785071063.938:371): arch=c000003e syscall=90 success=yes
 type=CWD msg=audit(1785071063.938:371): cwd="/home/ubuntu"
 type=PATH msg=audit(1785071063.938:371): item=0 name="/tmp/keytest" inode=23 dev=00:29 mode=0100664 ouid=1000 ogid=1000 rdev=00:00 nametype=NORMAL cap_fp=0 cap_fi=0 cap_fe=0 cap_fver=0 cap_frootid=0OUID="ubuntu" OGID="ubuntu"
 type=PROCTITLE msg=audit(1785071063.938:371): proctitle=63686D6F6400363434002F746D702F6B657974657374
+type=SERVICE_START msg=audit(1785232597.053:260): pid=1 uid=0 auid=4294967295 ses=4294967295 subj=unconfined msg='unit=ssh comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'UID="root" AUID="unset"
