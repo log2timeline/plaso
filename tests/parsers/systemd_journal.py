@@ -134,7 +134,7 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
             "control_group": "/user.slice/user-1000.slice/session-281.scope",
             "effective_capabilities": "3fffffffff",
             "owner_user_identifier": 1000,
-            "systemd_session": "281",
+            "systemd_session_identifier": "281",
             "systemd_slice": "user-1000.slice",
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1929)

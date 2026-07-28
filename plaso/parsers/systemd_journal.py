@@ -40,7 +40,7 @@ class SystemdJournalEventData(events.EventData):
       message_type_identifier (str): message catalog identifier that classifies the
           type of the message.
       owner_user_identifier (int): user identifier (UID) of the owner of the systemd
-          session, user unit or slice.
+          user unit or systemd session.
       pid (int): process identifier (PID).
       process_name (str): name of the process that logged the entry.
       recorded_time (dfdatetime.DateTimeValues): date and time the log entry was
@@ -51,8 +51,8 @@ class SystemdJournalEventData(events.EventData):
       severity (int): syslog severity.
       systemd_invocation_identifier (str): systemd invocation identifier for the
           runtime cycle of the unit.
-      systemd_session (str): systemd (logind) session identifier of the process that
-          logged the entry.
+      systemd_session_identifier (str): systemd (logind) session identifier of the
+          process that logged the entry.
       systemd_slice (str): systemd slice unit of the process that logged the entry.
       systemd_unit (str): systemd unit of the process that logged the entry.
       transport (str): how the entry was received by the journal.
@@ -86,7 +86,7 @@ class SystemdJournalEventData(events.EventData):
         self.selinux_context = None
         self.severity = None
         self.systemd_invocation_identifier = None
-        self.systemd_session = None
+        self.systemd_session_identifier = None
         self.systemd_slice = None
         self.systemd_unit = None
         self.transport = None
@@ -600,7 +600,7 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
             event_data.systemd_invocation_identifier = fields.get(
                 "_SYSTEMD_INVOCATION_ID"
             )
-            event_data.systemd_session = fields.get("_SYSTEMD_SESSION")
+            event_data.systemd_session_identifier = fields.get("_SYSTEMD_SESSION")
             event_data.systemd_slice = fields.get("_SYSTEMD_SLICE")
             event_data.systemd_unit = fields.get("_SYSTEMD_UNIT")
             event_data.transport = fields.get("_TRANSPORT")
