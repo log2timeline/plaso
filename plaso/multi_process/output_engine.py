@@ -557,7 +557,7 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
         self._output_mediator = self._CreateOutputMediator(
             storage_reader, processing_configuration
         )
-        output_module.WriteHeader(output_mediator)
+        output_module.WriteHeader(self._output_mediator)
 
         self._StartStatusUpdateThread()
 
