@@ -11,6 +11,26 @@ from tests.parsers.text_plugins import test_lib
 class WinIISTextPluginTest(test_lib.TextPluginTestCase):
     """Tests for the Windows IIS text parser plugin."""
 
+    # pylint: disable=protected-access
+
+    def testIPAddressWithZoneIndex(self):
+        """Tests the _IP_ADDRESS structure with a scoped IPv6 address."""
+        plugin = iis.WinIISTextPlugin()
+
+        structure = plugin._IP_ADDRESS.parse_string(
+            "fe80::1ff:fe23:4567:890a%3", parse_all=True
+        )
+        self.assertEqual(structure[0], "fe80::1ff:fe23:4567:890a%3")
+
+        structure = plugin._IP_ADDRESS.parse_string("fe80::1%eth0", parse_all=True)
+        self.assertEqual(structure[0], "fe80::1%eth0")
+
+        structure = plugin._IP_ADDRESS.parse_string("::1", parse_all=True)
+        self.assertEqual(structure[0], "::1")
+
+        structure = plugin._IP_ADDRESS.parse_string("10.10.10.100", parse_all=True)
+        self.assertEqual(structure[0], "10.10.10.100")
+
     def testProcessWithIIS6Log(self):
         """Tests the Process function with an IIS 6 log file."""
         plugin = iis.WinIISTextPlugin()

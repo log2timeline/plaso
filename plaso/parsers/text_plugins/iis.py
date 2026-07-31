@@ -95,9 +95,17 @@ class WinIISTextPlugin(interface.TextPlugin):
         lambda tokens: int(tokens[0], 10)
     )
 
+    # A scoped literal IPv6 address has a zone index suffix, such as "%3" or
+    # "%eth0", which pyparsing_common.ipv6_address does not support.
+    _ZONE_INDEX = pyparsing.Combine(
+        pyparsing.Literal("%") + pyparsing.Word(pyparsing.alphanums)
+    )
+
     _IP_ADDRESS = (
         pyparsing.pyparsing_common.ipv4_address
-        | pyparsing.pyparsing_common.ipv6_address
+        | pyparsing.Combine(
+            pyparsing.pyparsing_common.ipv6_address + pyparsing.Opt(_ZONE_INDEX)
+        )
         | _BLANK
     )
 
