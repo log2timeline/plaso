@@ -20,8 +20,12 @@ from tests import test_lib as shared_test_lib
 class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
     """Tests for the task-based multi-process extraction engine."""
 
-    def testProcessSource(self):
-        """Tests the PreprocessSource and ProcessSource functions."""
+    def _ProcessSource(self, source_path_spec):
+        """Tests the PreprocessSource and ProcessSource functions.
+
+        Args:
+          path_spec (dfvfs.PathSpec): path specification of the source.
+        """
         test_artifacts_path = shared_test_lib.GetTestFilePath(["artifacts"])
         self._SkipIfPathNotExists(test_artifacts_path)
 
@@ -29,16 +33,6 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
             maximum_number_of_tasks=100
         )
         test_engine.BuildArtifactsRegistry(test_artifacts_path, None)
-
-        test_file_path = self._GetTestFilePath(["ímynd.dd"])
-        self._SkipIfPathNotExists(test_file_path)
-
-        os_path_spec = path_spec_factory.Factory.NewPathSpec(
-            dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
-        )
-        source_path_spec = path_spec_factory.Factory.NewPathSpec(
-            dfvfs_definitions.TYPE_INDICATOR_TSK, location="/", parent=os_path_spec
-        )
 
         session = sessions.Session()
 
@@ -56,10 +50,8 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
                 system_configurations = test_engine.PreprocessSource(
                     [source_path_spec], storage_writer
                 )
-
-                # The method is named ProcessSourceMulti because pylint 2.6.0 and
-                # later gets confused about keyword arguments when ProcessSource
-                # is used.
+                # The method is named ProcessSourceMulti because pylint 2.6.0 and later
+                # gets confused about keyword arguments when ProcessSource is used.
                 processing_status = test_engine.ProcessSourceMulti(
                     storage_writer,
                     session.identifier,
@@ -68,7 +60,6 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
                     [source_path_spec],
                     storage_file_path=temp_directory,
                 )
-
                 number_of_events = storage_writer.GetNumberOfAttributeContainers(
                     "event"
                 )
@@ -78,7 +69,6 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
                 number_of_recovery_warnings = (
                     storage_writer.GetNumberOfAttributeContainers("recovery_warning")
                 )
-
                 parsers_counter = collections.Counter(
                     {
                         parser_count.name: parser_count.number_of_events
@@ -99,6 +89,33 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
         expected_parsers_counter = collections.Counter({"filestat": 15, "total": 15})
         self.assertEqual(parsers_counter, expected_parsers_counter)
+
+    def testProcessSource(self):
+        """Tests the PreprocessSource and ProcessSource functions."""
+        test_file_path = self._GetTestFilePath(["ímynd.dd"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        os_path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
+        )
+        source_path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_EXT, location="/", parent=os_path_spec
+        )
+        self._ProcessSource(source_path_spec)
+
+    def testProcessSourceWithTsk(self):
+        """Tests the PreprocessSource and ProcessSource functions."""
+        # Testing with TSK helps catch potential issues with TSKTime.
+        test_file_path = self._GetTestFilePath(["ímynd.dd"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        os_path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
+        )
+        source_path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_TSK, location="/", parent=os_path_spec
+        )
+        self._ProcessSource(source_path_spec)
 
 
 if __name__ == "__main__":

@@ -188,16 +188,15 @@ class OutputModuleOptions:
             output_module.SetAdditionalFields(self._output_additional_fields)
         elif self._output_additional_fields:
             self._PrintUserWarning(
-                f"output module: {self._output_format:s} does not support "
-                f"additional fields"
+                f"output module: {self._output_format:s} does not support additional "
+                f"fields"
             )
 
         if output_module.SUPPORTS_CUSTOM_FIELDS:
             output_module.SetCustomFields(self._output_custom_fields)
         elif self._output_custom_fields:
             self._PrintUserWarning(
-                f"output module: {self._output_format:s} does not support "
-                f"custom fields"
+                f"output module: {self._output_format:s} does not support custom fields"
             )
 
         return output_module
