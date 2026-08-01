@@ -16,9 +16,9 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import path_spec as dfvfs_path_spec
 from dfvfs.path import factory as dfvfs_path_spec_factory
 
-# The following import is needed to make sure TSKTime is registered with
-# the dfDateTime factory.
-from dfvfs.vfs import tsk_file_entry  # pylint: disable=unused-import
+# The following import is needed to make sure TSKTime is registered with the dfDateTime
+# factory.
+from dfvfs.lib import tsk_time  # pylint: disable=unused-import
 
 from plaso.storage import serializers
 
@@ -75,7 +75,6 @@ class JSONAttributeContainerSerializer(
             "__type__": "AttributeContainer",
             "__container_type__": attribute_container.CONTAINER_TYPE,
         }
-
         for attribute_name, attribute_value in attribute_container.GetAttributes():
             if isinstance(
                 attribute_value, containers_interface.AttributeContainerIdentifier
@@ -166,7 +165,6 @@ class JSONAttributeContainerSerializer(
         attribute_container = cls._CONTAINERS_MANAGER.CreateAttributeContainer(
             container_type
         )
-
         for attribute_name, attribute_value in json_dict.items():
             if isinstance(attribute_value, dict):
                 attribute_value = cls._ConvertJSONToValue(attribute_value)
@@ -176,18 +174,14 @@ class JSONAttributeContainerSerializer(
 
             if isinstance(attribute_value, bytes):
                 raise ValueError(
-                    (
-                        f"Event data attribute value: {attribute_name:s} of type bytes "
-                        f"is not supported."
-                    )
+                    f"Event data attribute value: {attribute_name:s} of type bytes "
+                    f"is not supported."
                 )
 
             if isinstance(attribute_value, dict):
                 raise ValueError(
-                    (
-                        f"Event data attribute value: {attribute_name:s} of type dict "
-                        f"is not supported."
-                    )
+                    f"Event data attribute value: {attribute_name:s} of type dict "
+                    f"is not supported."
                 )
 
             setattr(attribute_container, attribute_name, attribute_value)
@@ -352,7 +346,6 @@ class JSONAttributeContainerSerializer(
         path_spec = dfvfs_path_spec_factory.Factory.NewPathSpec(
             type_indicator, **json_dict
         )
-
         if type_indicator == dfvfs_definitions.TYPE_INDICATOR_OS:
             # dfvfs.OSPathSpec() will change the location to an absolute path
             # here we want to preserve the original location.
