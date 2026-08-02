@@ -622,6 +622,117 @@ class TraditionalSyslogTextPluginTest(test_lib.TextPluginTestCase):
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 4)
         self.CheckEventData(event_data, expected_event_values)
 
+        expected_event_values = {
+            "authentication_method": "password",
+            "data_type": "syslog:ssh:failed_connection",
+            "ip_address": "188.124.3.41",
+            "last_written_time": "0000-03-11T22:55:32",
+            "port": "32889",
+            "protocol": "ssh2",
+            "username": "root",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 5)
+        self.CheckEventData(event_data, expected_event_values)
+
+        expected_event_values = {
+            "authentication_method": "publickey",
+            "data_type": "syslog:ssh:login",
+            "fingerprint": ("RSA SHA256:5xyQ+PG1Z3CIiShclJ2iNya5TOdKDgE/HrOXr21IdOo"),
+            "ip_address": "192.0.2.60",
+            "last_written_time": "0000-03-11T22:55:35",
+            "port": "59915",
+            "username": "fred",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 8)
+        self.CheckEventData(event_data, expected_event_values)
+
+    def testProcessSshdSession(self):
+        """Tests the Process function with a sshd-session syslog file."""
+        plugin = syslog.TraditionalSyslogTextPlugin()
+        storage_writer = self._ParseTextFileWithPlugin(
+            ["syslog", "syslog_sshd_session.log"], plugin
+        )
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 8)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "recovery_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        expected_event_values = {
+            "authentication_method": "password",
+            "data_type": "syslog:ssh:failed_connection",
+            "ip_address": "192.168.1.62",
+            "last_written_time": "0000-08-02T11:41:04",
+            "port": "60203",
+            "protocol": "ssh2",
+            "reporter": "sshd-session",
+            "username": "svc-backup",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
+
+        expected_event_values = {
+            "data_type": "syslog:ssh:failed_connection",
+            "last_written_time": "0000-08-02T11:41:08",
+            "reporter": "sshd-session",
+            "username": "john.doe",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
+        self.CheckEventData(event_data, expected_event_values)
+
+        expected_event_values = {
+            "data_type": "syslog:ssh:login",
+            "last_written_time": "0000-08-02T11:42:13",
+            "reporter": "sshd-session",
+            "username": "svc-backup",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 2)
+        self.CheckEventData(event_data, expected_event_values)
+
+        expected_event_values = {
+            "data_type": "syslog:ssh:login",
+            "last_written_time": "0000-08-02T11:42:16",
+            "reporter": "sshd-session",
+            "username": "test_user",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 4)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # A message that the sshd structures do not define, which is retained as
+        # a syslog:line.
+        expected_event_values = {
+            "data_type": "syslog:line",
+            "last_written_time": "0000-08-02T11:42:18",
+            "reporter": "sshd-session",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 5)
+        self.CheckEventData(event_data, expected_event_values)
+
+        expected_event_values = {
+            "authentication_method": "publickey",
+            "data_type": "syslog:ssh:login",
+            "fingerprint": (
+                "ED25519 SHA256:a79QfkCiaM8pEpw/wmP0Qfkl3ttsHxPlSKgqilMv9K8"
+            ),
+            "ip_address": "192.168.1.62",
+            "last_written_time": "0000-08-02T11:42:48",
+            "port": "60220",
+            "protocol": "ssh2",
+            "reporter": "sshd-session",
+            "username": "root",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 7)
+        self.CheckEventData(event_data, expected_event_values)
+
 
 if __name__ == "__main__":
     unittest.main()

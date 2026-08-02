@@ -155,15 +155,35 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
 
     _CRON_MESSAGE = pyparsing.Group(_CRON_TASK_RUN).set_results_name("task_run")
 
+    # OpenSSH 9.8 split the server into a listener binary, sshd, and a per-session
+    # binary, sshd-session, which writes the authentication messages.
+    _SSHD_REPORTERS = frozenset(["sshd", "sshd-session"])
+
     _SSHD_AUTHENTICATION_METHOD = pyparsing.Keyword("password") | pyparsing.Keyword(
         "publickey"
     )
 
-    _SSHD_FINGER_PRINT = pyparsing.Combine(
-        pyparsing.Literal("RSA ") + pyparsing.Word(":" + pyparsing.hexnums)
+    # A key fingerprint consists of the key type followed by the digest, where the
+    # digest is either the hash name and a base64 value, such as
+    # "ED25519 SHA256:5xyQ+PG1Z3CIiShclJ2iNya5TOdKDgE/HrOXr21IdOo", or the older
+    # colon separated hexadecimal form, such as "RSA 00:aa:bb:cc". The default of
+    # the sshd_config FingerprintHash option is sha256.
+    # Note that the hexadecimal form is matched first, since the hash name and
+    # base64 pattern would otherwise match "00:aa" of "00:aa:bb:cc" and leave the
+    # remainder of the value unparsed.
+    _SSHD_FINGER_PRINT = pyparsing.Regex(
+        r"[A-Za-z0-9-]+ "
+        r"(?:[0-9a-fA-F]{2}(?::[0-9a-fA-F]{2})+|[A-Za-z0-9]+:[A-Za-z0-9+/=]+)"
     ).set_results_name("fingerprint")
 
-    _SSH_USERNAME = pyparsing.Word(pyparsing.alphanums).set_results_name("username")
+    # A user name is determined by the text that precedes " from " since sshd
+    # logs the user name as provided by the client, which is not limited to the
+    # characters that useradd would accept.
+    _SSH_USERNAME = (
+        pyparsing.SkipTo(pyparsing.Literal("from"))
+        .set_parse_action(lambda tokens: tokens[0].strip())
+        .set_results_name("username")
+    )
 
     _SSH_IP_ADDRESS = (
         pyparsing.pyparsing_common.ipv4_address
@@ -181,6 +201,7 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
         + _SSH_IP_ADDRESS.set_results_name("ip_address")
         + pyparsing.Literal("port")
         + _SSH_PORT
+        + pyparsing.Optional(pyparsing.Literal("ssh2").set_results_name("protocol"))
         + pyparsing.StringEnd()
     )
 
@@ -548,7 +569,7 @@ class SyslogTextPlugin(BaseSyslogTextPlugin):
         event_data = None
         if reporter == "CRON":
             event_data = self._ParseCronMessageBody(message_body)
-        elif reporter == "sshd":
+        elif reporter in self._SSHD_REPORTERS:
             event_data = self._ParseSshdMessageBody(message_body)
 
         if not event_data:
@@ -833,7 +854,7 @@ class TraditionalSyslogTextPlugin(
         event_data = None
         if reporter == "CRON":
             event_data = self._ParseCronMessageBody(message_body)
-        elif reporter == "sshd":
+        elif reporter in self._SSHD_REPORTERS:
             event_data = self._ParseSshdMessageBody(message_body)
 
         if not event_data:
