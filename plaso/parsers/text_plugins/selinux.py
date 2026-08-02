@@ -36,15 +36,17 @@ class SELinuxLogEventData(events.EventData):
       architecture (str): CPU architecture (arch); the resolved name (e.g.
           "x86_64") when the record is ENRICHED, otherwise the raw value.
       audit_login_identifier (str): audit login identifier (auid), the login
-          user identifier that is retained across su and sudo.
+          user identifier that is retained across su and sudo, or None if unset.
       audit_rule_keys (list[str]): keys (key) of the audit rule that triggered
           the record, where a rule can have multiple keys.
       audit_serial (int): audit serial number, used to correlate the records
           that belong to a single audited event.
-      audit_session_identifier (str): audit session identifier (ses).
+      audit_session_identifier (str): audit session identifier (ses), or None
+          if unset.
       audit_type (str): audit type.
       executable (str): path of the executable (exe).
-      exit_code (str): exit status of the system call (exit).
+      exit_code (int): exit status of the system call (exit), where a negative
+          value represents an errno value.
       file_mode (int): file mode (mode) of the file, which includes the file type
           and the permissions, such as 0o100640 for a regular file that is
           readable and writable by its owner and readable by its group.
@@ -72,7 +74,8 @@ class SELinuxLogEventData(events.EventData):
       remote_hostname (str): source hostname (hostname) of a remote event.
       security_context (str): security context (subj) of the process, such as a
           SELinux or AppArmor label.
-      success (str): whether the system call succeeded (success).
+      success (bool): True if the system call was successful. The log format
+          represents this value as "yes" or "no".
       system_call (str): system call (syscall).
       terminal (str): controlling terminal (terminal) of the event.
       user_identifier (str): user identifier (uid) of the process.
@@ -396,26 +399,45 @@ class SELinuxTextPlugin(interface.TextPlugin):
 
         return " ".join(arguments) or None, corrupted
 
-    def _GetFileMode(self, parser_mediator, values):
-        """Retrieves the file mode of a PATH record.
+    def _GetIdentifierValue(self, values, name):
+        """Retrieves the value of an identifier field.
+
+        Args:
+          values (dict[str, str]): value per field name.
+          name (str): field name.
+
+        Returns:
+          str: identifier, or None if the field has no usable value or the
+              identifier is unset.
+        """
+        value = self._GetStringValue(values, name)
+        if value == self._UNSET_NUMERIC_VALUE:
+            return None
+
+        return value
+
+    def _GetIntegerValue(self, parser_mediator, values, name, base):
+        """Retrieves the value of a field as an integer.
 
         Args:
           parser_mediator (ParserMediator): mediates interactions between parsers
               and other components, such as storage and dfVFS.
           values (dict[str, str]): value per field name.
+          name (str): field name.
+          base (int): base of the numeric value.
 
         Returns:
-          tuple[int, bool]: file mode, or None if the record has no file mode, and
+          tuple[int, bool]: value, or None if the field has no usable value, and
               value to indicate the value was corrupted.
         """
-        file_mode = self._GetStringValue(values, "mode")
-        if file_mode is None:
+        value = self._GetStringValue(values, name)
+        if value is None:
             return None, False
 
         try:
-            return int(file_mode, 8), False
+            return int(value, base), False
         except ValueError:
-            parser_mediator.ProduceWarning(f"invalid file mode: {file_mode:s}")
+            parser_mediator.ProduceWarning(f"unsupported {name:s} value: {value:s}")
             return None, True
 
     def _ParseRecord(self, parser_mediator, key, structure):
@@ -470,14 +492,6 @@ class SELinuxTextPlugin(interface.TextPlugin):
 
             if values:
                 # Fields that are only stored at the top level of the message body.
-                event_data.audit_login_identifier = self._GetStringValue(
-                    top_level_values, "auid"
-                )
-                event_data.audit_session_identifier = self._GetStringValue(
-                    top_level_values, "ses"
-                )
-                event_data.executable = self._GetStringValue(top_level_values, "exe")
-                event_data.exit_code = self._GetStringValue(top_level_values, "exit")
                 event_data.group_identifier = self._GetStringValue(
                     top_level_values, "gid"
                 )
@@ -485,11 +499,9 @@ class SELinuxTextPlugin(interface.TextPlugin):
                     top_level_values, "ppid"
                 )
                 event_data.pid = self._GetStringValue(top_level_values, "pid")
-                event_data.process_name = self._GetStringValue(top_level_values, "comm")
                 event_data.security_context = self._GetStringValue(
                     top_level_values, "subj"
                 )
-                event_data.success = self._GetStringValue(top_level_values, "success")
                 event_data.system_call = self._GetStringValue(
                     top_level_values, "syscall"
                 )
@@ -498,6 +510,12 @@ class SELinuxTextPlugin(interface.TextPlugin):
                 )
 
                 event_data.architecture = self._GetStringValue(values, "arch")
+                event_data.audit_login_identifier = self._GetIdentifierValue(
+                    values, "auid"
+                )
+                event_data.audit_session_identifier = self._GetIdentifierValue(
+                    values, "ses"
+                )
                 event_data.name_type = self._GetStringValue(values, "nametype")
                 event_data.operation = self._GetStringValue(values, "op")
                 event_data.owner_group_identifier = self._GetStringValue(values, "ogid")
@@ -516,8 +534,18 @@ class SELinuxTextPlugin(interface.TextPlugin):
                 )
                 corrupted = corrupted or value_corrupted
 
-                event_data.file_mode, value_corrupted = self._GetFileMode(
-                    parser_mediator, values
+                event_data.success, value_corrupted = self._GetResultValue(
+                    parser_mediator, values, "success"
+                )
+                corrupted = corrupted or value_corrupted
+
+                event_data.exit_code, value_corrupted = self._GetIntegerValue(
+                    parser_mediator, values, "exit", 10
+                )
+                corrupted = corrupted or value_corrupted
+
+                event_data.file_mode, value_corrupted = self._GetIntegerValue(
+                    parser_mediator, values, "mode", 8
                 )
                 corrupted = corrupted or value_corrupted
 
@@ -528,7 +556,9 @@ class SELinuxTextPlugin(interface.TextPlugin):
 
                 for attribute_name, field_name in (
                     ("account", "acct"),
+                    ("executable", "exe"),
                     ("file_path", "name"),
+                    ("process_name", "comm"),
                     ("working_directory", "cwd"),
                 ):
                     value, value_corrupted = self._GetEncodedStringValue(
