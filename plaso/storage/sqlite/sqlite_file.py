@@ -302,9 +302,10 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
 
             if self.compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
                 compressed_data = zlib.compress(serialized_data)
-                serialized_data = sqlite3.Binary(compressed_data)
+                column_value = sqlite3.Binary(compressed_data)
             else:
-                compressed_data = ""
+                compressed_data = b""
+                column_value = serialized_data
 
             if self._storage_profiler:
                 self._storage_profiler.Sample(
@@ -316,7 +317,7 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
                 )
 
             column_names = ["_data"]
-            values = [serialized_data]
+            values = [column_value]
 
             self._CacheAttributeContainerForWrite(
                 container.CONTAINER_TYPE, column_names, values

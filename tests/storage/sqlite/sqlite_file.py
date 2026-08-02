@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 """Tests for the SQLite-based storage."""
 
+import csv
+import gzip
 import os
 import unittest
 
 from plaso.containers import events
+from plaso.engine import configurations
+from plaso.engine import profilers
 from plaso.lib import definitions
 from plaso.storage.sqlite import sqlite_file
 
@@ -282,6 +286,43 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
             finally:
                 test_store.Close()
+
+    def testWriteNewAttributeContainerWithStorageProfiler(self):
+        """Tests the _WriteNewAttributeContainer function with a storage profiler."""
+        event_data = events.EventData()
+        event_data.data_type = "test:event_data"
+        event_data.body = "test" * 256
+
+        profiling_configuration = configurations.ProfilingConfiguration()
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            profiling_configuration.directory = temp_directory
+
+            test_profiler = profilers.StorageProfiler("test", profiling_configuration)
+            test_profiler.Start()
+
+            test_path = os.path.join(temp_directory, "plaso.sqlite")
+            test_store = sqlite_file.SQLiteStorageFile()
+            test_store.SetStorageProfiler(test_profiler)
+            test_store.Open(path=test_path, read_only=False)
+
+            try:
+                test_store._WriteNewAttributeContainer(event_data)
+            finally:
+                test_store.Close()
+                test_profiler.Stop()
+
+            sample_path = os.path.join(temp_directory, "storage-test.csv.gz")
+            with gzip.open(sample_path, "rt", encoding="utf-8") as file_object:
+                rows = list(csv.reader(file_object, delimiter="\t"))
+
+        write_rows = [row for row in rows if row[1] == "write_new"]
+        self.assertEqual(len(write_rows), 1)
+
+        data_size = int(write_rows[0][5])
+        compressed_data_size = int(write_rows[0][6])
+
+        self.assertGreater(data_size, compressed_data_size)
 
     def testAddAttributeContainer(self):
         """Tests the AddAttributeContainer function."""
