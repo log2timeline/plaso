@@ -132,7 +132,6 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
         self._number_of_consumed_events = 0
         self._output_mediator = None
         self._processing_configuration = None
-        self._resolve_event_tag_at_flush = True
         self._status = definitions.STATUS_INDICATOR_IDLE
         self._status_update_callback = None
 
@@ -189,6 +188,7 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
         event_data_stream,
         event_tag=None,
         deduplicate_events=True,
+        resolve_event_tag=True,
     ):
         """Exports an event using an output module.
 
@@ -202,13 +202,18 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
               should be resolved when the export buffer is flushed.
           deduplicate_events (Optional[bool]): True if events should be
               deduplicated.
+          resolve_event_tag (Optional[bool]): True if the event tag should be
+              resolved when the export buffer is flushed.
         """
         if (
             event.timestamp != self._export_event_timestamp
             or self._export_event_heap.number_of_events > self._HEAP_MAXIMUM_EVENTS
         ):
             self._FlushExportBuffer(
-                storage_reader, output_module, deduplicate_events=deduplicate_events
+                storage_reader,
+                output_module,
+                deduplicate_events=deduplicate_events,
+                resolve_event_tag=resolve_event_tag,
             )
             self._export_event_timestamp = event.timestamp
 
@@ -245,7 +250,7 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
         # the event tag needs to be resolved before the filter is applied.
         # Otherwise it is resolved when the export buffer is flushed, after
         # duplicate events have been discarded.
-        self._resolve_event_tag_at_flush = event_filter is None
+        resolve_event_tag = event_filter is None
 
         time_slice_buffer = None
         time_slice_range = None
@@ -280,7 +285,7 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
                 event_data_stream = None
 
             event_tag = None
-            if not self._resolve_event_tag_at_flush:
+            if not resolve_event_tag:
                 event_identifier = event.GetIdentifier()
                 event_tag = storage_reader.GetEventTagByEventIdentifer(event_identifier)
 
@@ -312,6 +317,7 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
                         event_data_stream,
                         event_tag=event_tag,
                         deduplicate_events=deduplicate_events,
+                        resolve_event_tag=resolve_event_tag,
                     )
                     self._number_of_consumed_events += 1
                     self._events_status.number_of_events_from_time_slice += 1
@@ -332,7 +338,7 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
                         event_data_in_buffer,
                     ) in time_slice_buffer.Flush():
                         event_tag_in_buffer = None
-                        if not self._resolve_event_tag_at_flush:
+                        if not resolve_event_tag:
                             event_identifier = event_in_buffer.GetIdentifier()
                             event_tag_in_buffer = (
                                 storage_reader.GetEventTagByEventIdentifer(
@@ -348,6 +354,7 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
                             event_data_stream,
                             event_tag=event_tag_in_buffer,
                             deduplicate_events=deduplicate_events,
+                            resolve_event_tag=resolve_event_tag,
                         )
                         self._number_of_consumed_events += 1
                         self._events_status.number_of_filtered_events += 1
@@ -363,6 +370,7 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
                     event_data_stream,
                     event_tag=event_tag,
                     deduplicate_events=deduplicate_events,
+                    resolve_event_tag=resolve_event_tag,
                 )
                 self._number_of_consumed_events += 1
 
@@ -374,10 +382,16 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
                 ):
                     break
 
-        self._FlushExportBuffer(storage_reader, output_module)
+        self._FlushExportBuffer(
+            storage_reader, output_module, resolve_event_tag=resolve_event_tag
+        )
 
     def _FlushExportBuffer(
-        self, storage_reader, output_module, deduplicate_events=True
+        self,
+        storage_reader,
+        output_module,
+        deduplicate_events=True,
+        resolve_event_tag=True,
     ):
         """Flushes buffered events and writes them to the output module.
 
@@ -386,6 +400,9 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
           output_module (OutputModule): output module.
           deduplicate_events (Optional[bool]): True if events should be
               deduplicated.
+          resolve_event_tag (Optional[bool]): True if the event tag should be
+              resolved, which is the case if it was not resolved before the
+              event filter was applied.
         """
         last_event_values_hash = None
         last_macb_group_identifier = None
@@ -409,7 +426,7 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
                 self._events_status.number_of_duplicate_events += 1
                 continue
 
-            if self._resolve_event_tag_at_flush:
+            if resolve_event_tag:
                 event_identifier = event.GetIdentifier()
                 event_tag = storage_reader.GetEventTagByEventIdentifer(event_identifier)
 
