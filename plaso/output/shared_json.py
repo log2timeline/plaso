@@ -220,6 +220,14 @@ class SharedJSONOutputModule(text_file.TextFileOutputModule):
         field_values["message"] = self._field_formatting_helper.GetFormattedField(
             output_mediator, "message", event, event_data, event_data_stream, event_tag
         )
+
+        # Resolve hostname and username through the output mediator, so JSON
+        # output is consistent with the dynamic output: events without their own
+        # hostname/username attribute (for example filesystem events) then carry
+        # the preprocessing-resolved value when --output_fallback_hostname is set.
+        field_values["hostname"] = output_mediator.GetHostname(event_data)
+        field_values["username"] = output_mediator.GetUsername(event_data)
+
         if event_tag:
             event_tag_values = {
                 "__container_type__": "event_tag",
