@@ -225,8 +225,16 @@ class SharedJSONOutputModule(text_file.TextFileOutputModule):
         # output is consistent with the dynamic output: events without their own
         # hostname/username attribute (for example filesystem events) then carry
         # the preprocessing-resolved value when --output_fallback_hostname is set.
-        field_values["hostname"] = output_mediator.GetHostname(event_data)
-        field_values["username"] = output_mediator.GetUsername(event_data)
+        # Only a resolved, non-placeholder value is added, so records are not
+        # bloated with "-" when nothing can be resolved, and a value the event
+        # already carries is never replaced by the placeholder.
+        hostname = output_mediator.GetHostname(event_data, default_hostname="")
+        if hostname:
+            field_values["hostname"] = hostname
+
+        username = output_mediator.GetUsername(event_data, default_username="")
+        if username:
+            field_values["username"] = username
 
         if event_tag:
             event_tag_values = {
