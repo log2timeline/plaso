@@ -347,6 +347,12 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: true
 ---
+data_type: 'vmware:esxi:log:entry'
+attribute_mappings:
+- name: 'written_time'
+  description: 'Entry Written Time'
+place_holder_event: true
+---
 data_type: 'cups:ipp:event'
 attribute_mappings:
 - name: 'creation_time'

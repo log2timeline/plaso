@@ -234,6 +234,21 @@ short_source: 'CRI'
 source: 'Container Runtime Interface Container Log'
 ---
 type: 'conditional'
+data_type: 'vmware:esxi:log:entry'
+message:
+- 'Component: {component}'
+- 'PID: {process_identifier}'
+- 'Severity: {severity}'
+- 'Hostname: {hostname}'
+- 'Priority: {syslog_priority}'
+- 'Message: {message_body}'
+short_message:
+- '{component}'
+- '{message_body}'
+short_source: 'ESXI'
+source: 'VMware ESXi Log'
+---
+type: 'conditional'
 data_type: 'cups:ipp:event'
 message:
 - 'Status: {status}'
