@@ -159,7 +159,7 @@ class CLITool:
         return "\n".join(
             [
                 line.translate(definitions.NON_PRINTABLE_CHARACTER_TRANSLATION_TABLE)
-                for line in path_spec.comparable.split("\n")
+                for line in path_spec.comparable.split("\n") if line
             ]
         )
 

@@ -1520,7 +1520,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
         for key, count_container in sorted(warnings_by_path_spec.items()):
             if write_comma:
                 self._output_writer.Write(", ")
-
+            key = key.replace('\n', '\\n')
             self._output_writer.Write(
                 f'"{key:s}": {count_container.number_of_events:d}'
             )
