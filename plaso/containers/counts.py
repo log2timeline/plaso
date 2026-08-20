@@ -1,4 +1,5 @@
 """Count related attribute container definitions."""
+
 from functools import total_ordering
 
 from acstore.containers import interface
