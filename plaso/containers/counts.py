@@ -79,6 +79,7 @@ class ParserCount(interface.AttributeContainer):
         super().__init__()
         self.name = name
         self.number_of_events = number_of_events
+
 @total_ordering
 class WarningCount(interface.AttributeContainer):
     """Warning count attribute container.
