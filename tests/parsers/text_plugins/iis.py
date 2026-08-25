@@ -195,12 +195,19 @@ class WinIISTextPluginTest(test_lib.TextPluginTestCase):
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
-        self.assertEqual(number_of_event_data, 15)
+        self.assertEqual(number_of_event_data, 16)
 
         number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
             "extraction_warning"
         )
         self.assertEqual(number_of_warnings, 0)
+
+        expected_event_values = {
+            "dest_ip": "fe80::1ff:fe23:4567:890a%3",
+            "source_ip": "::1",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 15)
+        self.CheckEventData(event_data, expected_event_values)
 
         number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
             "recovery_warning"

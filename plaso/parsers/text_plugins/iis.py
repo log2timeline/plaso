@@ -97,7 +97,10 @@ class WinIISTextPlugin(interface.TextPlugin):
 
     _IP_ADDRESS = (
         pyparsing.pyparsing_common.ipv4_address
-        | pyparsing.pyparsing_common.ipv6_address
+        | pyparsing.Combine(
+            pyparsing.pyparsing_common.ipv6_address
+            + pyparsing.Optional("%" + pyparsing.Word(pyparsing.alphanums + "_.-"))
+        )
         | _BLANK
     )
 
