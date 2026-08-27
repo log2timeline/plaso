@@ -709,7 +709,9 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         Raises:
           RuntimeError: when storage writer is not set.
         """
-        warning = warnings.ExtractionWarning(message=message, path_spec=path_spec)
+        warning = warnings.ExtractionWarning(
+            message=message, parser_chain="extraction_engine", path_spec=path_spec
+        )
         storage_writer.AddAttributeContainer(warning)
 
         if path_spec:

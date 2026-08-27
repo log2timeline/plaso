@@ -1,5 +1,7 @@
 """Count related attribute container definitions."""
 
+from functools import total_ordering
+
 from acstore.containers import interface
 from acstore.containers import manager
 
@@ -80,6 +82,7 @@ class ParserCount(interface.AttributeContainer):
         self.number_of_events = number_of_events
 
 
+@total_ordering
 class WarningCount(interface.AttributeContainer):
     """Warning count attribute container.
 
@@ -101,6 +104,19 @@ class WarningCount(interface.AttributeContainer):
         """
         super().__init__()
         self.number_of_events = number_of_events
+
+    def _is_valid_operand(self, other):
+        return hasattr(other, "number_of_events")
+
+    def __eq__(self, other):
+        if not self._is_valid_operand(other):
+            return NotImplemented
+        return self.number_of_events == other.number_of_events
+
+    def __lt__(self, other):
+        if not self._is_valid_operand(other):
+            return NotImplemented
+        return self.number_of_events < other.number_of_events
 
 
 manager.AttributeContainersManager.RegisterAttributeContainers(

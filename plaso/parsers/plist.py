@@ -176,6 +176,7 @@ class PlistParser(interface.FileObjectParser):
                         f"plugin: {plugin_name:s} unable to parse plist file with "
                         f"error: {exception!s}"
                     )
+                    required_format = None
 
             finally:
                 parser_mediator.SampleFormatCheckStopTiming(profiling_name)
