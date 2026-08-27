@@ -97,7 +97,6 @@ linkcheck_ignore = [
     "https://docs.github.com/.*",
     "https://github.com/libyal/libsigscan/wiki/Internals#",
     "https://github.com/log2timeline/dfvfs/wiki#",
-    "https://open-source-dfir.slack.com/.*",
     "https://groups.google.com/forum/#",
     "https://developers.virustotal.com/reference#",
 ]
