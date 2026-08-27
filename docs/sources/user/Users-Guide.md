@@ -67,7 +67,7 @@ To follow announcements from the Plaso team or send in generic inquiries or
 discuss the tool:
 
 * subscribe to the [log2timeline-discuss](https://groups.google.com/forum/#!forum/log2timeline-discuss) mailing list.
-* join the Plaso channel part of the [open-source-dfir Slack community](https://open-source-dfir.slack.com/), more information can be found [here](https://github.com/open-source-dfir/slack).
+* join the Plaso channel in the open-source-dfir Slack community. See the [community joining instructions](https://github.com/open-source-dfir/slack) for details.
 
 Please be mindful of people's time:
 
