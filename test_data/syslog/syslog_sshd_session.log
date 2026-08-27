@@ -1,0 +1,8 @@
+Aug  2 11:41:04 localhost sshd-session[2470]: Failed password for svc-backup from 192.168.1.62 port 60203 ssh2
+Aug  2 11:41:08 localhost sshd-session[2473]: Failed password for john.doe from 192.168.1.62 port 60204 ssh2
+Aug  2 11:42:13 localhost sshd-session[2600]: Accepted password for svc-backup from 192.168.1.62 port 60214 ssh2
+Aug  2 11:42:15 localhost sshd-session[2655]: Accepted password for john.doe from 192.168.1.62 port 60215 ssh2
+Aug  2 11:42:16 localhost sshd-session[2711]: Accepted password for test_user from 192.168.1.62 port 60217 ssh2
+Aug  2 11:42:18 localhost sshd-session[2789]: Received disconnect from 192.168.1.62 port 60218:11: disconnected by user
+Aug  2 11:42:18 localhost sshd-session[2789]: Disconnected from user root 192.168.1.62 port 60218
+Aug  2 11:42:48 localhost sshd-session[2842]: Accepted publickey for root from 192.168.1.62 port 60220 ssh2: ED25519 SHA256:a79QfkCiaM8pEpw/wmP0Qfkl3ttsHxPlSKgqilMv9K8
