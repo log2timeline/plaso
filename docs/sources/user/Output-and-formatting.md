@@ -81,12 +81,14 @@ Name | Description
 --- | ---
 display_name | Human readable representation of the path specification
 filename | The "filename" attribute if present in the event data. Will fallback to the filename derived from the event data stream path specification, if the option "--output-fallback-path" is enabled.
+hostname | The "hostname" attribute if present in the event data. Will fallback to the hostname derived by pre-processing, if the option "--output-fallback-hostname" is enabled. Omitted when no value can be resolved.
 inode | The "inode" attribute if present in the event data. Will fallback to the file system identifier (such as inode, MFT entry) derived from the event data stream path specification, if the option "--output-fallback-path" is enabled.
 message | The event message string as defined by the message formatter
 pathspec | JSON serialized path specification
 parser | Chain of parsers that generated the event.
 tag | The labels defined by event tags
 timestamp_desc | Indication of what the event time represents such as Creation Time or Program Execution Duration
+username | The "username" attribute if present in the event data. Will fallback to trying to resolve the username based on the "user_sid" attribute and user accounts derived by pre-processing. Omitted when no value can be resolved.
 
 ### Native (or "raw") Python runtime fields
 
