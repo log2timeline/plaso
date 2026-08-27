@@ -1503,10 +1503,16 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
         self._output_writer.Write('"warnings_by_parser": {')
 
         write_comma = False
-        for key, count_container in sorted(warnings_by_parser_chain.items()):
+
+        sorted_warnings = sorted(
+            warnings_by_parser_chain.items(),
+            key=lambda item: item[1].number_of_events,
+        )
+        for key, count_container in sorted_warnings:
             if write_comma:
                 self._output_writer.Write(", ")
 
+            key = key or "N/A"
             self._output_writer.Write(
                 f'"{key:s}": {count_container.number_of_events:d}'
             )
@@ -1517,10 +1523,17 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
         self._output_writer.Write(', "warnings_by_path_spec": {')
 
         write_comma = False
+
+        sorted_warnings = sorted(
+            warnings_by_path_spec.items(),
+            key=lambda item: item[1].number_of_events,
+        )
         for key, count_container in sorted(warnings_by_path_spec.items()):
             if write_comma:
                 self._output_writer.Write(", ")
 
+            key = key or "N/A"
+            key = key.replace("\n", "\\n")
             self._output_writer.Write(
                 f'"{key:s}": {count_container.number_of_events:d}'
             )
@@ -1560,7 +1573,12 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
                 column_names=["Number of warnings", "Pathspec"],
                 title=f"Path specifications with most {description:s} warnings",
             )
-            for path_spec, count_container in warnings_by_path_spec.most_common(10):
+            most_common = sorted(
+                warnings_by_path_spec.items(),
+                key=lambda item: item[1].number_of_events,
+                reverse=True,
+            )
+            for path_spec, count_container in most_common[:10]:
                 for path_index, line in enumerate(path_spec.split("\n")):
                     if not line:
                         continue
