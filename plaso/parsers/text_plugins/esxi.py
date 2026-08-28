@@ -1,9 +1,4 @@
-"""Text file parser plugin for VMware ESXi log files.
-
-Also see:
-  https://knowledge.broadcom.com/external/article/306962
-  https://github.com/strozfriedberg/qelp/blob/main/src/qelp/esxi_to_csv.py
-"""
+"""Text file parser plugin for VMware ESXi log files."""
 
 import re
 
