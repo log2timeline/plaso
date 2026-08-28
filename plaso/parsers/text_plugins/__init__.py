@@ -13,6 +13,7 @@ from plaso.parsers.text_plugins import bitbucket_audit
 from plaso.parsers.text_plugins import confluence_access
 from plaso.parsers.text_plugins import cri
 from plaso.parsers.text_plugins import dpkg
+from plaso.parsers.text_plugins import esxi
 from plaso.parsers.text_plugins import gdrive_synclog
 from plaso.parsers.text_plugins import google_logging
 from plaso.parsers.text_plugins import iis

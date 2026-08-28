@@ -214,6 +214,7 @@ bitbucket_audit | Parser for Atlassian Bitbucket audit log (atlassian-bitbucket-
 confluence_access | Parser for Confluence access log (access.log) files.
 cri_log | Parser for Container Runtime Interface log files.
 dpkg | Parser for Debian package manager log (dpkg.log) files.
+esxi_log | Parser for VMware ESXi log files.
 gdrive_synclog | Parser for Google Drive Sync log files.
 googlelog | Parser for Google-formatted log files.
 ios_lockdownd | Parser for iOS lockdown daemon log.
