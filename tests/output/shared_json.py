@@ -8,8 +8,11 @@ import unittest
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
+from plaso.containers import artifacts
 from plaso.lib import definitions
+from plaso.output import mediator
 from plaso.output import shared_json
+from plaso.storage.fake import writer as fake_writer
 
 from tests import test_lib as shared_test_lib
 from tests.containers import test_lib as containers_test_lib
@@ -108,6 +111,45 @@ class SharedJSONOutputModuleTest(test_lib.OutputModuleTestCase):
             output_mediator, event, event_data, event_data_stream, None
         )
         self.assertEqual(field_values, expected_field_values)
+
+    def testGetFieldValuesWithFallbackHostname(self):
+        """Tests the GetFieldValues function with a fallback hostname."""
+        system_configuration = artifacts.SystemConfigurationArtifact()
+        system_configuration.hostname = artifacts.HostnameArtifact(name="myhost")
+
+        storage_writer = fake_writer.FakeStorageWriter()
+        storage_writer.Open()
+
+        try:
+            storage_writer.AddAttributeContainer(system_configuration)
+
+            output_mediator = mediator.OutputMediator(
+                storage_writer, use_fallback_hostname=True
+            )
+            formatters_directory_path = self._GetTestFilePath(["formatters"])
+            output_mediator.ReadMessageFormattersFromDirectory(
+                formatters_directory_path
+            )
+            output_module = shared_json.SharedJSONOutputModule()
+
+            event, event_data, event_data_stream = (
+                containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0])
+            )
+            event_data.hostname = None
+            event_data.username = None
+
+            field_values = output_module.GetFieldValues(
+                output_mediator, event, event_data, event_data_stream, None
+            )
+            # The preprocessing resolved hostname is used as a fallback, and
+            # the username stays unresolved. It is omitted rather substituted
+            # with a placeholder.
+
+            self.assertEqual(field_values["hostname"], "myhost")
+            self.assertNotIn("username", field_values)
+
+        finally:
+            storage_writer.Close()
 
 
 if __name__ == "__main__":
