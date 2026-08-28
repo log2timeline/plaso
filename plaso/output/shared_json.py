@@ -223,7 +223,7 @@ class SharedJSONOutputModule(text_file.TextFileOutputModule):
         # Use the output mediator to resolve hostname and username fields, similar to
         # dynamic output. In contrast to dynamic output do not default to "-"
         # placeholder.
-        
+
         hostname = output_mediator.GetHostname(event_data, default_hostname="")
         if hostname:
             field_values["hostname"] = hostname
