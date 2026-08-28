@@ -126,31 +126,27 @@ class SharedJSONOutputModuleTest(test_lib.OutputModuleTestCase):
             output_mediator = mediator.OutputMediator(
                 storage_writer, use_fallback_hostname=True
             )
-
             formatters_directory_path = self._GetTestFilePath(["formatters"])
             output_mediator.ReadMessageFormattersFromDirectory(
                 formatters_directory_path
             )
-
             output_module = shared_json.SharedJSONOutputModule()
 
             event, event_data, event_data_stream = (
                 containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0])
             )
-
-            # An event without its own hostname or username: the preprocessing
-            # resolved hostname is used as a fallback, and the username stays
-            # unresolved and is therefore omitted rather than padded.
             event_data.hostname = None
             event_data.username = None
 
             field_values = output_module.GetFieldValues(
                 output_mediator, event, event_data, event_data_stream, None
             )
+            # The preprocessing resolved hostname is used as a fallback, and
+            # the username stays unresolved. It is omitted rather substituted
+            # with a placeholder.
+            
             self.assertEqual(field_values["hostname"], "myhost")
-            # The username cannot be resolved, so it is omitted rather than
-            # padded with the "-" placeholder.
-            self.assertNotEqual(field_values.get("username"), "-")
+            self.assertNotIn("username", field_values)
 
         finally:
             storage_writer.Close()
