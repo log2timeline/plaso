@@ -94,12 +94,18 @@ class WinIISTextPlugin(interface.TextPlugin):
     _FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).set_parse_action(
         lambda tokens: int(tokens[0], 10)
     )
-
+    
+    # An IPv6 address can have a zone index suffix (RFC 4007), such as "%3" or
+    # "%eth0".
+    _IPV6_ZONE_INDEX = pyparsing.Combine(
+        pyparsing.Literal("%") + pyparsing.Word(pyparsing.alphanums + ".-_")
+    )
+    
     _IP_ADDRESS = (
         pyparsing.pyparsing_common.ipv4_address
         | pyparsing.Combine(
             pyparsing.pyparsing_common.ipv6_address
-            + pyparsing.Optional("%" + pyparsing.Word(pyparsing.alphanums + "_.-"))
+            + pyparsing.Optional(_IPV6_ZONE_INDEX)
         )
         | _BLANK
     )
