@@ -144,7 +144,7 @@ class SharedJSONOutputModuleTest(test_lib.OutputModuleTestCase):
             # The preprocessing resolved hostname is used as a fallback, and
             # the username stays unresolved. It is omitted rather substituted
             # with a placeholder.
-            
+
             self.assertEqual(field_values["hostname"], "myhost")
             self.assertNotIn("username", field_values)
 
