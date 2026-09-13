@@ -470,6 +470,69 @@ class TraditionalSyslogTextPluginTest(test_lib.TextPluginTestCase):
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 
+    def testProcessCrond(self):
+        """Tests the Process function with a cronie cron log file."""
+        plugin = syslog.TraditionalSyslogTextPlugin()
+        storage_writer = self._ParseTextFileWithPlugin(
+            ["syslog", "syslog_crond.log"], plugin
+        )
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 42)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "recovery_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        # The daemon writes its own messages under the lower case reporter name.
+        expected_event_values = {
+            "data_type": "syslog:line",
+            "last_written_time": "0000-07-07T20:56:16",
+            "message_body": "(CRON) STARTUP (1.7.2)",
+            "pid": 1276,
+            "reporter": "crond",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
+
+        expected_event_values = {
+            "command": "run-parts /etc/cron.hourly",
+            "data_type": "syslog:cron:task_run",
+            "last_written_time": "0000-07-07T21:01:00",
+            "pid": 1396,
+            "reporter": "CROND",
+            "username": "root",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 4)
+        self.CheckEventData(event_data, expected_event_values)
+
+        expected_event_values = {
+            "data_type": "syslog:line",
+            "last_written_time": "0000-07-07T21:01:00",
+            "message_body": "(/etc/cron.hourly) starting 0anacron",
+            "reporter": "run-parts",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 5)
+        self.CheckEventData(event_data, expected_event_values)
+
+        expected_event_values = {
+            "command": "run-parts /etc/cron.hourly",
+            "data_type": "syslog:cron:task_end",
+            "last_written_time": "0000-07-07T21:01:00",
+            "pid": 1395,
+            "reporter": "CROND",
+            "username": "root",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 12)
+        self.CheckEventData(event_data, expected_event_values)
+
     def testProcessDarwin(self):
         """Tests the Process function with a Darwin syslog file."""
         plugin = syslog.TraditionalSyslogTextPlugin()

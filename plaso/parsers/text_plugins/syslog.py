@@ -68,8 +68,8 @@ class SyslogLineEventData(events.EventData):
         self.severity = None
 
 
-class SyslogCronTaskRunEventData(SyslogLineEventData):
-    """Syslog cron task run event data.
+class SyslogCronTaskEventData(SyslogLineEventData):
+    """Syslog cron task event data.
 
     Attributes:
       command (str): command executed.
@@ -77,14 +77,24 @@ class SyslogCronTaskRunEventData(SyslogLineEventData):
       username (str): name of user the command was executed.
     """
 
-    DATA_TYPE = "syslog:cron:task_run"
-
     def __init__(self):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
         self.command = None
         self.last_written_time = None
         self.username = None
+
+
+class SyslogCronTaskEndEventData(SyslogCronTaskEventData):
+    """Syslog cron task end event data."""
+
+    DATA_TYPE = "syslog:cron:task_end"
+
+
+class SyslogCronTaskRunEventData(SyslogCronTaskEventData):
+    """Syslog cron task run event data."""
+
+    DATA_TYPE = "syslog:cron:task_run"
 
 
 class SyslogSSHEventData(SyslogLineEventData):
@@ -145,15 +155,32 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
     _CRON_COMMAND_END = pyparsing.Literal(")") + pyparsing.StringEnd()
 
     _CRON_COMMAND = (
-        pyparsing.Literal("CMD")
-        + pyparsing.Literal("(")
+        pyparsing.Literal("(")
         + pyparsing.SkipTo(_CRON_COMMAND_END).set_results_name("command")
         + _CRON_COMMAND_END
     )
 
-    _CRON_TASK_RUN = _CRON_USERNAME + _CRON_COMMAND + pyparsing.StringEnd()
+    _CRON_TASK_END = (
+        _CRON_USERNAME
+        + pyparsing.Literal("CMDEND")
+        + _CRON_COMMAND
+        + pyparsing.StringEnd()
+    )
 
-    _CRON_MESSAGE = pyparsing.Group(_CRON_TASK_RUN).set_results_name("task_run")
+    _CRON_TASK_RUN = (
+        _CRON_USERNAME
+        + pyparsing.Literal("CMD")
+        + _CRON_COMMAND
+        + pyparsing.StringEnd()
+    )
+
+    _CRON_MESSAGE = pyparsing.Group(_CRON_TASK_END).set_results_name(
+        "task_end"
+    ) ^ pyparsing.Group(_CRON_TASK_RUN).set_results_name("task_run")
+
+    # cronie writes job records under the upper case reporter name, CROND, and
+    # the daemon's own messages under the lower case name, crond.
+    _CRON_REPORTERS = frozenset(["CRON", "CROND"])
 
     # OpenSSH 9.8 split the server into a listener binary, sshd, and a per-session
     # binary, sshd-session, which writes the authentication messages.
@@ -240,7 +267,7 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
           message_body (str): syslog message body.
 
         Returns:
-          SyslogCronTaskRunEventData: event data or None if not available.
+          SyslogCronTaskEventData: event data or None if not available.
         """
         try:
             structure = self._CRON_MESSAGE.parse_string(message_body)
@@ -255,16 +282,14 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
         key = keys[0]
         structure = structure[0]
 
-        if key != "task_run":
+        if key == "task_end":
+            event_data = SyslogCronTaskEndEventData()
+        elif key == "task_run":
+            event_data = SyslogCronTaskRunEventData()
+        else:
             return None
 
-        event_data = SyslogCronTaskRunEventData()
-        event_data.message_body = structure.get("message_body")
         event_data.command = structure.get("command")
-        event_data.hostname = structure.get("hostname")
-        event_data.pid = structure.get("pid")
-        event_data.reporter = structure.get("reporter")
-        event_data.severity = structure.get("severity")
         event_data.username = structure.get("username")
 
         return event_data
@@ -567,7 +592,7 @@ class SyslogTextPlugin(BaseSyslogTextPlugin):
             severity = self._GetValueFromStructure(structure, "severity")
 
         event_data = None
-        if reporter == "CRON":
+        if reporter in self._CRON_REPORTERS:
             event_data = self._ParseCronMessageBody(message_body)
         elif reporter in self._SSHD_REPORTERS:
             event_data = self._ParseSshdMessageBody(message_body)
@@ -852,7 +877,7 @@ class TraditionalSyslogTextPlugin(
         reporter = self._GetValueFromStructure(structure, "reporter")
 
         event_data = None
-        if reporter == "CRON":
+        if reporter in self._CRON_REPORTERS:
             event_data = self._ParseCronMessageBody(message_body)
         elif reporter in self._SSHD_REPORTERS:
             event_data = self._ParseSshdMessageBody(message_body)
