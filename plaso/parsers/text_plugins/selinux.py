@@ -28,6 +28,10 @@ class SELinuxLogEventData(events.EventData):
     """SELinux log event data.
 
     Attributes:
+      access_granted (bool): True if the access was granted by the security
+          policy. An AVC record represents this value as "granted" or "denied".
+      access_permissions (list[str]): permissions that were requested, such as
+          "getattr" or "read", as recorded by an AVC record.
       account (str): name of the account (acct) that the event acts on, such as
           "root" for an attempt to authenticate as root. Note that this is an
           account name, where user_identifier is the numeric user identifier of
@@ -50,7 +54,7 @@ class SELinuxLogEventData(events.EventData):
       file_mode (int): file mode (mode) of the file, which includes the file type
           and the permissions, such as 0o100640 for a regular file that is
           readable and writable by its owner and readable by its group.
-      file_path (str): file path (name) referenced by a PATH record.
+      file_path (str): path of the file referenced by the record (name or path).
       group_identifier (str): group identifier (gid) of the process.
       last_written_time (dfdatetime.DateTimeValues): entry last written date and time.
       message_body (str): message body.
@@ -64,6 +68,8 @@ class SELinuxLogEventData(events.EventData):
       owner_group_identifier (str): group identifier that owns the file (ogid).
       owner_user_identifier (str): user identifier that owns the file (ouid).
       parent_process_identifier (str): parent process identifier (ppid).
+      permissive_mode (bool): True if the security policy was in permissive mode,
+          in which case the access was allowed even though the policy denied it.
       pid (str): process identifier (PID) that created the SELinux log line.
       process_arguments (str): arguments of an executed program (the EXECVE argc
           and a0 .. aN fields), separated by spaces.
@@ -77,6 +83,10 @@ class SELinuxLogEventData(events.EventData):
       success (bool): True if the system call was successful. The log format
           represents this value as "yes" or "no".
       system_call (str): system call (syscall).
+      target_object_class (str): class of the object the access was requested on
+          (tclass), such as "file", "process" or "capability".
+      target_security_context (str): security context of the object the access
+          was requested on (tcontext).
       terminal (str): controlling terminal (terminal) of the event.
       user_identifier (str): user identifier (uid) of the process.
       working_directory (str): working directory (cwd) of the process at
@@ -88,6 +98,8 @@ class SELinuxLogEventData(events.EventData):
     def __init__(self):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
+        self.access_granted = None
+        self.access_permissions = None
         self.account = None
         self.architecture = None
         self.audit_login_identifier = None
@@ -108,6 +120,7 @@ class SELinuxLogEventData(events.EventData):
         self.owner_group_identifier = None
         self.owner_user_identifier = None
         self.parent_process_identifier = None
+        self.permissive_mode = None
         self.pid = None
         self.process_arguments = None
         self.process_name = None
@@ -117,6 +130,8 @@ class SELinuxLogEventData(events.EventData):
         self.security_context = None
         self.success = None
         self.system_call = None
+        self.target_object_class = None
+        self.target_security_context = None
         self.terminal = None
         self.user_identifier = None
         self.working_directory = None
@@ -146,6 +161,22 @@ class SELinuxTextPlugin(interface.TextPlugin):
     )
 
     _KEY_VALUE_DICT = pyparsing.Dict(pyparsing.ZeroOrMore(_KEY_VALUE_GROUP))
+
+    # The message body of an AVC record starts with an access vector decision,
+    # such as: avc:  denied  { getattr } for  pid=5962 comm="httpd" …
+    _ACCESS_VECTOR_DECISION = (
+        pyparsing.Suppress("avc:")
+        + (pyparsing.Keyword("denied") ^ pyparsing.Keyword("granted")).set_results_name(
+            "decision"
+        )
+        + pyparsing.Suppress("{")
+        + pyparsing.OneOrMore(
+            pyparsing.Word(pyparsing.alphanums + "_")
+        ).set_results_name("permissions")
+        + pyparsing.Suppress("}")
+        + pyparsing.Suppress("for")
+        + pyparsing.restOfLine().set_results_name("values")
+    )
 
     _HEX_DIGITS = frozenset("0123456789ABCDEFabcdef")
 
@@ -399,6 +430,29 @@ class SELinuxTextPlugin(interface.TextPlugin):
 
         return " ".join(arguments) or None, corrupted
 
+    def _GetAccessVectorDecision(self, body):
+        """Retrieves the access vector decision of an AVC record.
+
+        Args:
+          body (str): message body.
+
+        Returns:
+          tuple[pyparsing.ParseResults, str]: access vector decision, or None if
+              the message body does not start with one, and the remainder of the
+              message body, which contains the fields.
+        """
+        if not body.startswith("avc:"):
+            return None, body
+
+        try:
+            structure = self._ACCESS_VECTOR_DECISION.parse_string(body)
+        except pyparsing.ParseException:
+            return None, body
+
+        return structure, self._GetValueFromStructure(
+            structure, "values", default_value=""
+        )
+
     def _GetIdentifierValue(self, values, name):
         """Retrieves the value of an identifier field.
 
@@ -473,11 +527,17 @@ class SELinuxTextPlugin(interface.TextPlugin):
             raw_body, _, enriched_body = message_body.partition("\x1d")
             raw_body = raw_body.strip()
 
+            # The message body of an AVC record starts with an access vector
+            # decision instead of a field, which is parsed separately.
+            access_vector_structure, values_body = self._GetAccessVectorDecision(
+                raw_body
+            )
+
             # Fields such as "acct", "op" and "res" are stored either at the top
             # level of the message body or inside a nested "msg" field, hence the
             # values of a nested "msg" field are merged into the values.
-            top_level_values = self._KEY_VALUE_DICT.parse_string(raw_body).as_dict()
-            values = self._GetValues(raw_body)
+            top_level_values = self._KEY_VALUE_DICT.parse_string(values_body).as_dict()
+            values = self._GetValues(values_body)
             enriched_values = self._GetValues(enriched_body)
 
             corrupted = False
@@ -509,10 +569,26 @@ class SELinuxTextPlugin(interface.TextPlugin):
                     top_level_values, "uid"
                 )
 
+                # An AVC record stores the security context of the process in
+                # "scontext" instead of "subj".
+                if not event_data.security_context:
+                    event_data.security_context = self._GetStringValue(
+                        values, "scontext"
+                    )
+
                 event_data.architecture = self._GetStringValue(values, "arch")
                 event_data.audit_login_identifier = self._GetIdentifierValue(
                     values, "auid"
                 )
+                event_data.target_object_class = self._GetStringValue(values, "tclass")
+                event_data.target_security_context = self._GetStringValue(
+                    values, "tcontext"
+                )
+
+                event_data.permissive_mode, value_corrupted = self._GetResultValue(
+                    parser_mediator, values, "permissive"
+                )
+                corrupted = corrupted or value_corrupted
                 event_data.audit_session_identifier = self._GetIdentifierValue(
                     values, "ses"
                 )
@@ -567,6 +643,14 @@ class SELinuxTextPlugin(interface.TextPlugin):
                     setattr(event_data, attribute_name, value)
                     corrupted = corrupted or value_corrupted
 
+                # An AVC record identifies the file by "path", which contains the
+                # full path, or by "name", which contains the basename.
+                if not event_data.file_path:
+                    event_data.file_path, value_corrupted = self._GetEncodedStringValue(
+                        parser_mediator, values, "path"
+                    )
+                    corrupted = corrupted or value_corrupted
+
                 process_title, value_corrupted = self._GetEncodedStringValue(
                     parser_mediator, values, "proctitle"
                 )
@@ -576,6 +660,17 @@ class SELinuxTextPlugin(interface.TextPlugin):
                     # character.
                     process_title = process_title.replace("\x00", " ")
                 event_data.process_title = process_title
+
+            if access_vector_structure:
+                decision = self._GetValueFromStructure(
+                    access_vector_structure, "decision"
+                )
+                event_data.access_granted = decision == "granted"
+                event_data.access_permissions = list(
+                    self._GetValueFromStructure(
+                        access_vector_structure, "permissions", default_value=[]
+                    )
+                )
 
             if enriched_values:
                 enriched_system_call = self._GetStringValue(enriched_values, "SYSCALL")

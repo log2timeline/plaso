@@ -136,6 +136,23 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 6)
         self.CheckEventData(event_data, expected_event_values)
 
+        # AVC (serial 101): a record from a kernel that predates the permissive
+        # field, where the file is identified by the path field.
+        expected_event_values = {
+            "access_granted": False,
+            "access_permissions": ["getattr"],
+            "audit_type": "AVC",
+            "file_path": "/usr/lib/locale/locale-archive",
+            "permissive_mode": None,
+            "pid": "2714",
+            "process_name": "ls",
+            "security_context": "system_u:object_r:unlabeled_t:s0",
+            "target_object_class": "file",
+            "target_security_context": "system_u:object_r:locale_t:s0",
+        }
+        event_data = self._FindEventDataByTypeAndSerial(storage_writer, "AVC", 101)
+        self.CheckEventData(event_data, expected_event_values)
+
     def testProcessEnriched(self):
         """Tests the Process function on an ENRICHED (0x1d-suffixed) audit log."""
         plugin = selinux.SELinuxTextPlugin()
@@ -361,6 +378,61 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
         event_data = self._FindEventDataByTypeAndSerial(storage_writer, "DEL_USER", 508)
         self.CheckEventData(event_data, expected_event_values)
 
+    def testProcessAccessVectorCache(self):
+        """Tests the Process function on SELinux AVC records."""
+        plugin = selinux.SELinuxTextPlugin()
+        storage_writer = self._ParseTextFileWithPlugin(["audit_avc.log"], plugin)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 6)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        # A denied file access (serial 767) in enforcing mode, where the file is
+        # identified by the name field.
+        expected_event_values = {
+            "access_granted": False,
+            "access_permissions": ["write"],
+            "audit_type": "AVC",
+            "file_path": ".rpm.lock",
+            "permissive_mode": False,
+            "process_name": "rpm",
+            "pid": "2197",
+            "security_context": "system_u:system_r:setroubleshootd_t:s0",
+            "target_object_class": "file",
+            "target_security_context": "system_u:object_r:rpm_var_lib_t:s0",
+        }
+        event_data = self._FindEventDataByTypeAndSerial(storage_writer, "AVC", 767)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # A denial in permissive mode (serial 833), where the access was allowed
+        # even though the policy denied it.
+        expected_event_values = {
+            "access_granted": False,
+            "access_permissions": ["siginh"],
+            "audit_type": "AVC",
+            "permissive_mode": True,
+            "process_name": "bash",
+            "target_object_class": "process",
+        }
+        event_data = self._FindEventDataByTypeAndSerial(storage_writer, "AVC", 833)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # A denial (serial 476) where the file is identified by the path field.
+        expected_event_values = {
+            "access_permissions": ["entrypoint"],
+            "audit_type": "AVC",
+            "file_path": "/usr/bin/cat",
+            "target_object_class": "file",
+        }
+        event_data = self._FindEventDataByTypeAndSerial(storage_writer, "AVC", 476)
+        self.CheckEventData(event_data, expected_event_values)
+
     def testProcessCorrupted(self):
         """Tests the Process function on records with corrupted values."""
         plugin = selinux.SELinuxTextPlugin()
@@ -369,7 +441,7 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
-        self.assertEqual(number_of_event_data, 5)
+        self.assertEqual(number_of_event_data, 6)
 
         # Each record has a single corrupted value.
         number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
@@ -412,6 +484,16 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
             "process_arguments": None,
         }
         event_data = self._FindEventDataByTypeAndSerial(storage_writer, "EXECVE", 903)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # AVC (serial 905): a record that starts with an access vector decision
+        # that cannot be parsed is not stored as one, and does not raise.
+        expected_event_values = {
+            "access_granted": None,
+            "access_permissions": None,
+            "audit_type": "AVC",
+        }
+        event_data = self._FindEventDataByTypeAndSerial(storage_writer, "AVC", 905)
         self.CheckEventData(event_data, expected_event_values)
 
         # USER_AUTH (serial 904): a result value that is not supported is not
