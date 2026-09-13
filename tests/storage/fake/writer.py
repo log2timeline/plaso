@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Tests for the fake storage writer."""
 
+import collections
 import unittest
 
 from plaso.containers import events
@@ -148,6 +149,54 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
             storage_writer.Close()
 
         # TODO: add test with time range.
+
+    def testUpdateEventLabelsCounter(self):
+        """Tests the UpdateEventLabelsCounter function."""
+        storage_writer = fake_writer.FakeStorageWriter()
+        storage_writer.Open()
+
+        try:
+            stored_event_labels_counter = storage_writer.GetEventLabelsCounter()
+            self.assertEqual(len(stored_event_labels_counter), 0)
+
+            event_labels_counter = collections.Counter({"corrupted": 5, "total": 5})
+            storage_writer.UpdateEventLabelsCounter(
+                stored_event_labels_counter, event_labels_counter
+            )
+
+            number_of_containers = storage_writer.GetNumberOfAttributeContainers(
+                "event_label_count"
+            )
+            self.assertEqual(number_of_containers, 2)
+
+            number_of_containers = storage_writer.GetNumberOfAttributeContainers(
+                "parser_count"
+            )
+            self.assertEqual(number_of_containers, 0)
+
+            stored_event_labels_counter = storage_writer.GetEventLabelsCounter()
+            self.assertEqual(
+                stored_event_labels_counter["corrupted"].number_of_events, 5
+            )
+
+            event_labels_counter = collections.Counter({"corrupted": 3, "total": 3})
+            storage_writer.UpdateEventLabelsCounter(
+                stored_event_labels_counter, event_labels_counter
+            )
+
+            number_of_containers = storage_writer.GetNumberOfAttributeContainers(
+                "event_label_count"
+            )
+            self.assertEqual(number_of_containers, 2)
+
+            stored_event_labels_counter = storage_writer.GetEventLabelsCounter()
+            self.assertEqual(
+                stored_event_labels_counter["corrupted"].number_of_events, 8
+            )
+            self.assertEqual(stored_event_labels_counter["total"].number_of_events, 8)
+
+        finally:
+            storage_writer.Close()
 
     def testOpenClose(self):
         """Tests the Open and Close functions."""
