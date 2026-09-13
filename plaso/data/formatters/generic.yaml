@@ -1030,8 +1030,13 @@ source: 'Log File'
 ---
 type: 'conditional'
 data_type: 'syslog:ssh:failed_connection'
+boolean_helpers:
+- input_attribute: 'is_invalid_user'
+  output_attribute: 'invalid_user_string'
+  value_if_true: 'invalid user'
 message:
 - 'Unsuccessful connection of user: {username} '
+- '({invalid_user_string}) '
 - 'from {ip_address}:'
 - '{port} '
 - 'using authentication method: {authentication_method} '

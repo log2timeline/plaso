@@ -573,7 +573,7 @@ class TraditionalSyslogTextPluginTest(test_lib.TextPluginTestCase):
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
-        self.assertEqual(number_of_event_data, 9)
+        self.assertEqual(number_of_event_data, 10)
 
         number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
             "extraction_warning"
@@ -626,6 +626,7 @@ class TraditionalSyslogTextPluginTest(test_lib.TextPluginTestCase):
             "authentication_method": "password",
             "data_type": "syslog:ssh:failed_connection",
             "ip_address": "188.124.3.41",
+            "is_invalid_user": False,
             "last_written_time": "0000-03-11T22:55:32",
             "port": "32889",
             "protocol": "ssh2",
@@ -644,6 +645,21 @@ class TraditionalSyslogTextPluginTest(test_lib.TextPluginTestCase):
             "username": "fred",
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 8)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # Unsuccessful authentication for a user name that does not resolve to an
+        # account, which sshd writes with "invalid user" before the name.
+        expected_event_values = {
+            "authentication_method": "password",
+            "data_type": "syslog:ssh:failed_connection",
+            "ip_address": "192.168.1.92",
+            "is_invalid_user": True,
+            "last_written_time": "0000-07-28T22:16:48",
+            "port": "35932",
+            "protocol": "ssh2",
+            "username": "admin",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 9)
         self.CheckEventData(event_data, expected_event_values)
 
     def testProcessSshdSession(self):

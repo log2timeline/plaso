@@ -120,9 +120,20 @@ class SyslogSSHLoginEventData(SyslogSSHEventData):
 
 
 class SyslogSSHFailedConnectionEventData(SyslogSSHEventData):
-    """SSH failed connection event data."""
+    """SSH failed connection event data.
+
+    Attributes:
+      is_invalid_user (bool): True if sshd wrote the user name as an invalid user,
+          which is a name that does not resolve to an account that is allowed to
+          log in.
+    """
 
     DATA_TYPE = "syslog:ssh:failed_connection"
+
+    def __init__(self):
+        """Initializes event data."""
+        super().__init__()
+        self.is_invalid_user = None
 
 
 class SyslogSSHOpenedConnectionEventData(SyslogSSHEventData):
@@ -192,10 +203,16 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
 
     _SSH_PORT = pyparsing.Word(pyparsing.nums, max=5).set_results_name("port")
 
+    # sshd writes "invalid user" before the user name when the name does not
+    # resolve to an account that is allowed to log in, see auth_log in OpenSSH
+    # auth.c.
     _SSHD_FAILED_CONNECTION = (
         pyparsing.Literal("Failed")
         + _SSHD_AUTHENTICATION_METHOD.set_results_name("authentication_method")
         + pyparsing.Literal("for")
+        + pyparsing.Optional(
+            pyparsing.Literal("invalid user").set_results_name("invalid_user")
+        )
         + _SSH_USERNAME
         + pyparsing.Literal("from")
         + _SSH_IP_ADDRESS.set_results_name("ip_address")
@@ -293,6 +310,7 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
 
         if key == "failed_connection":
             event_data = SyslogSSHFailedConnectionEventData()
+            event_data.is_invalid_user = structure.get("invalid_user") is not None
         elif key == "login":
             event_data = SyslogSSHLoginEventData()
         elif key == "opened_connection":
