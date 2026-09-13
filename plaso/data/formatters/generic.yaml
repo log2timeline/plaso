@@ -1000,6 +1000,17 @@ short_source: 'LOG'
 source: 'Snort3/Suricata fast-log alert log'
 ---
 type: 'conditional'
+data_type: 'syslog:cron:task_end'
+message:
+- 'Cron finished: {command}'
+- 'for user: {username}'
+- 'pid: {pid}'
+short_message:
+- '{message_body}'
+short_source: 'LOG'
+source: 'Cron log'
+---
+type: 'conditional'
 data_type: 'syslog:cron:task_run'
 message:
 - 'Cron ran: {command}'
