@@ -653,6 +653,7 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
         self._event_labels_counter = collections.Counter()
 
+        total_number_of_events = 0
         if storage_writer.HasAttributeContainers("parser_count"):
             parsers_counter = {
                 parser_count.name: parser_count.number_of_events
@@ -661,11 +662,6 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
                 )
             }
             total_number_of_events = parsers_counter["total"]
-
-        else:
-            total_number_of_events = 0
-            for stored_session in storage_writer.GetSessions():
-                total_number_of_events += stored_session.parsers_counter["total"]
 
         self._events_status.total_number_of_events = total_number_of_events
 
