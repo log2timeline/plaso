@@ -47,7 +47,6 @@ class AnalysisEngineMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
             storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
                 definitions.DEFAULT_STORAGE_FORMAT
             )
-
             test_engine._processing_configuration = configuration
             test_engine._session = session
 
@@ -104,7 +103,6 @@ class AnalysisEngineMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
             storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
                 definitions.DEFAULT_STORAGE_FORMAT
             )
-
             storage_writer.Open(path=temp_file)
 
             try:
@@ -121,7 +119,6 @@ class AnalysisEngineMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
                     configuration,
                     storage_file_path=temp_directory,
                 )
-
                 number_of_reports = storage_writer.GetNumberOfAttributeContainers(
                     "analysis_report"
                 )
@@ -153,7 +150,6 @@ class AnalysisEngineMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
             storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
                 definitions.DEFAULT_STORAGE_FORMAT
             )
-
             storage_writer.Open(path=temp_file)
 
             try:
@@ -172,7 +168,6 @@ class AnalysisEngineMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
                     configuration,
                     storage_file_path=temp_directory,
                 )
-
                 self.assertEqual(test_engine._events_status.total_number_of_events, 0)
 
             finally:
@@ -206,7 +201,6 @@ class AnalysisEngineMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
             storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
                 definitions.DEFAULT_STORAGE_FORMAT
             )
-
             storage_writer.Open(path=temp_file)
 
             try:
@@ -224,7 +218,6 @@ class AnalysisEngineMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
                     event_filter=test_filter,
                     storage_file_path=temp_directory,
                 )
-
                 number_of_reports = storage_writer.GetNumberOfAttributeContainers(
                     "analysis_report"
                 )
