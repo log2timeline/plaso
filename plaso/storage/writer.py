@@ -243,14 +243,16 @@ class StorageWriter(reader.StorageReader):
               additional values.
         """
         for key, value in event_labels_counter.items():
-            parser_count = stored_event_labels_counter.get(key)
-            if parser_count:
-                parser_count.number_of_events += value
-                self.UpdateAttributeContainer(parser_count)
+            event_label_count = stored_event_labels_counter.get(key)
+            if event_label_count:
+                event_label_count.number_of_events += value
+                self.UpdateAttributeContainer(event_label_count)
             else:
-                parser_count = counts.ParserCount(name=key, number_of_events=value)
-                event_labels_counter[key] = parser_count
-                self.AddAttributeContainer(parser_count)
+                event_label_count = counts.EventLabelCount(
+                    label=key, number_of_events=value
+                )
+                event_labels_counter[key] = event_label_count
+                self.AddAttributeContainer(event_label_count)
 
     def UpdateParsersCounter(self, stored_parsers_counter, parsers_counter):
         """Updates the parsers counter.
