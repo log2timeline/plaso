@@ -14,7 +14,7 @@ login
   data_type is 'linux:utmp:event' AND login_type == 7
   data_type is 'selinux:line' AND audit_type is 'LOGIN'
   reporter is 'login' AND (message_body contains 'logged in' OR message_body contains 'ROOT LOGIN' OR message_body contains 'session opened')
-  reporter is 'sshd' AND (message_body contains 'session opened' OR message_body contains 'Starting session')
+  (reporter is 'sshd' OR reporter is 'sshd-session') AND (message_body contains 'session opened' OR message_body contains 'Starting session')
   reporter is 'dovecot' AND message_body contains 'imap-login: Login:'
   reporter is 'postfix/submission/smtpd' AND message_body contains 'sasl_'
 
@@ -23,8 +23,8 @@ login_failed
   data_type is 'selinux:line' AND audit_type is 'ANOM_LOGIN_FAILURES'
   data_type is 'selinux:line' AND audit_type is 'USER_LOGIN' AND message_body contains 'res=failed'
   data_type is 'syslog:line' AND message_body contains 'pam_tally2'
-  (reporter is 'sshd' OR reporter is 'login' OR reporter is 'postfix/submission/smtpd' OR reporter is 'sudo') AND message_body contains 'uthentication fail'
-  reporter is 'sshd' AND (message_body contains 'Access denied for user' OR message_body contains 'not allowed because')
+  (reporter is 'sshd' OR reporter is 'sshd-session' OR reporter is 'login' OR reporter is 'postfix/submission/smtpd' OR reporter is 'sudo') AND message_body contains 'uthentication fail'
+  (reporter is 'sshd' OR reporter is 'sshd-session') AND (message_body contains 'Access denied for user' OR message_body contains 'not allowed because')
   (reporter is 'xscreensaver' or reporter is 'login') AND message_body contains 'FAILED LOGIN'
   reporter is 'su' and message_body contains 'DENIED'
   reporter is 'nologin'
@@ -60,7 +60,7 @@ logout
   # This will also flag dead gettys that init kills during shutdown/reboot (at least with SysV init)
   data_type is 'linux:utmp:event' AND login_type == 8 AND terminal != '' AND pid != 0
   reporter is 'login' AND message_body contains 'session closed'
-  reporter is 'sshd' AND (message_body contains 'session closed' OR message_body contains 'Close session')
+  (reporter is 'sshd' OR reporter is 'sshd-session') AND (message_body contains 'session closed' OR message_body contains 'Close session')
   reporter is 'systemd-logind' AND message_body contains 'logged out'
   reporter is 'dovecot' AND message_body contains 'Logged out'
   data_type is 'selinux:line' AND audit_type is 'USER_LOGOUT'

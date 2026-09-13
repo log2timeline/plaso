@@ -122,11 +122,12 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
             syslog.SyslogLineEventData, attribute_values_per_name, ["login"]
         )
 
-        # Test: reporter is 'sshd' AND (message_body contains 'session opened' OR
+        # Test: (reporter is 'sshd' OR reporter is 'sshd-session') AND
+        #       (message_body contains 'session opened' OR
         #       message_body contains 'Starting session')
         attribute_values_per_name = {
             "message_body": ["session opened", "Starting session"],
-            "reporter": ["sshd"],
+            "reporter": ["sshd", "sshd-session"],
         }
         self._CheckTaggingRule(
             syslog.SyslogLineEventData, attribute_values_per_name, ["login"]
@@ -175,6 +176,7 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
         )
 
         # Test: (reporter is 'sshd' OR
+        #        reporter is 'sshd-session' OR
         #        reporter is 'login' OR
         #        reporter is 'postfix/submission/smtpd' OR
         #        reporter is 'sudo') AND
@@ -185,7 +187,24 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
                 "authentication failure",
                 "Authentication failure",
             ],
-            "reporter": ["login", "postfix/submission/smtpd", "sshd", "sudo"],
+            "reporter": [
+                "login",
+                "postfix/submission/smtpd",
+                "sshd",
+                "sshd-session",
+                "sudo",
+            ],
+        }
+        self._CheckTaggingRule(
+            syslog.SyslogLineEventData, attribute_values_per_name, ["login_failed"]
+        )
+
+        # Test: (reporter is 'sshd' OR reporter is 'sshd-session') AND
+        #       (message_body contains 'Access denied for user' OR
+        #       message_body contains 'not allowed because')
+        attribute_values_per_name = {
+            "message_body": ["Access denied for user", "not allowed because"],
+            "reporter": ["sshd", "sshd-session"],
         }
         self._CheckTaggingRule(
             syslog.SyslogLineEventData, attribute_values_per_name, ["login_failed"]
@@ -355,11 +374,12 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
             syslog.SyslogLineEventData, attribute_values_per_name, ["logout"]
         )
 
-        # Test: reporter is 'sshd' AND (message_body contains 'session closed' OR
+        # Test: (reporter is 'sshd' OR reporter is 'sshd-session') AND
+        #       (message_body contains 'session closed' OR
         #       message_body contains 'Close session')
         attribute_values_per_name = {
             "message_body": ["Close session", "session closed"],
-            "reporter": ["sshd"],
+            "reporter": ["sshd", "sshd-session"],
         }
         self._CheckTaggingRule(
             syslog.SyslogLineEventData, attribute_values_per_name, ["logout"]
