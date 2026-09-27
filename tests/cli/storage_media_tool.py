@@ -1142,7 +1142,7 @@ class StorageMediaToolVolumeScannerTest(test_lib.CLIToolTestCase):
 
         self._TestScanSourceLVMImage(source_path)
 
-    def testScanSourceNonExisitingFile(self):
+    def testScanSourceNonExistingFile(self):
         """Tests the ScanSource function on a non existing file."""
         with self.assertRaises(dfvfs_errors.ScannerError):
             source_path = self._GetTestFilePath(["nosuchfile.raw"])

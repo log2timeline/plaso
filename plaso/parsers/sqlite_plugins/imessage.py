@@ -133,7 +133,7 @@ class IMessagePlugin(interface.SQLitePlugin):
 
         # In current versions the timestamp is stored in nanoseconds.
         # Note that a Cocoa timestamp of 1000000000 is somewhere in 2032 and
-        # the timestamp apprears to have been changes around 2017.
+        # the timestamp appears to have been changes around 2017.
         if (
             timestamp < -definitions.NANOSECONDS_PER_SECOND
             or timestamp > definitions.NANOSECONDS_PER_SECOND

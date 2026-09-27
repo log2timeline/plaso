@@ -16,7 +16,7 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
 
     _TOP_LEVEL_DICT_SINGLE_KEY = {
         "DE-00-AD-00-BE-EF": {
-            "Name": "DBF Industries Slideshow Lazer",
+            "Name": "DBF Industries Slideshow Laser",
             "LastUsed": datetime.datetime(
                 2012, 11, 2, 1, 21, 38, 997672, tzinfo=pytz.UTC
             ),

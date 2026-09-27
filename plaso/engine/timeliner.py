@@ -424,9 +424,9 @@ class EventDataTimeliner:
             try:
                 time_zone = pytz.timezone(time_zone)
                 self._time_zone_per_path_spec[path_spec.parent] = time_zone
-            except pytz.UnknownTimeZoneError as exeception:
+            except pytz.UnknownTimeZoneError as exception:
                 self._time_zone_per_path_spec[path_spec.parent] = None
-                raise exeception
+                raise exception
 
         return time_zone
 

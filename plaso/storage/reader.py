@@ -107,7 +107,7 @@ class StorageReader:
 
         return collections.Counter(event_labels_dict)
 
-    def GetEventTagByEventIdentifer(self, event_identifier):
+    def GetEventTagByEventIdentifier(self, event_identifier):
         """Retrieves the event tag of a specific event.
 
         Args:

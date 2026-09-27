@@ -66,7 +66,7 @@ class JSONAttributeContainerSerializer(
         """
         if attribute_container.CONTAINER_TYPE not in (
             "event_data",
-            "event_tripple",
+            "event_triple",
             "system_configuration",
         ):
             return cls.ConvertAttributeContainerToJSON(attribute_container)
@@ -157,7 +157,7 @@ class JSONAttributeContainerSerializer(
 
         if container_type not in (
             "event_data",
-            "event_tripple",
+            "event_triple",
             "system_configuration",
         ):
             return cls.ConvertJSONToAttributeContainer(json_dict)

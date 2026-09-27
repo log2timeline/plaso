@@ -4,7 +4,7 @@ tuning.
 ## Profiling CPU usage
 
 The CPU usage of various parts of Plaso its procseeing can be profiled with the
-CPU ussage profiler.
+CPU usage profiler.
 
 To profile the CPU usage run log2timeline.py with the following options:
 

@@ -549,7 +549,7 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
             syslog.SyslogLineEventData, attribute_values_per_name, ["promiscuous"]
         )
 
-    def testRuleCrach(self):
+    def testRuleCrash(self):
         """Tests the crash tagging rule."""
         # Test: data_type is 'selinux:line' AND audit_type is 'ANOM_ABEND'
         attribute_values_per_name = {"audit_type": ["ANOM_ABEND"]}

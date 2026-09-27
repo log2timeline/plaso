@@ -38,7 +38,7 @@ class SnortFastAlertEventData(events.EventData):
       last_written_time (dfdatetime.DateTimeValues): entry last written date and
           time.
       message_body (str): message body.
-      priority (int): priorty, ranging from 1 (high) to 4 (very low).
+      priority (int): priority, ranging from 1 (high) to 4 (very low).
       rule_identifier (str): identifier of the Snort3/Suricata rule that generated
           the alert.
       source_ip (str): source IP-address.

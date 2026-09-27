@@ -65,7 +65,7 @@ class SpotlightStoreMetadataItemEventData(events.EventData):
       purchase_time  (dfdatetime.DateTimeValues): date and time the item was
           purchased in the AppStore (kMDItemAppStorePurchaseDate).
       snapshot_times (list[dfdatetime.DateTimeValues]): dates and times of
-          the creation of backup snaphots (_kTimeMachineOldestSnapshot and
+          the creation of backup snapshots (_kTimeMachineOldestSnapshot and
           _kTimeMachineNewestSnapshot).
       update_time (dfdatetime.DateTimeValues): date and time the item was last
           updated.
@@ -1109,7 +1109,7 @@ class SpotlightStoreDatabaseParser(
         return value, bytes_read
 
     def _ReadMetadataAttributePageValues(self, page_header, page_data, property_table):
-        """Reads the metadata atribute page values.
+        """Reads the metadata attribute page values.
 
         Args:
           page_header (spotlight_store_db_property_page_header): page header.

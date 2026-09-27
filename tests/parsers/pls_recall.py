@@ -31,6 +31,7 @@ class PlsRecallTest(test_lib.ParserTestCase):
         )
         self.assertEqual(number_of_warnings, 0)
 
+        # typos:disable
         # Note that the test file actually has 'test_databae' in the table name.
         expected_event_values = {
             "data_type": "pls_recall:entry",
@@ -40,6 +41,7 @@ class PlsRecallTest(test_lib.ParserTestCase):
             "username": "tsltmp",
             "written_time": "2013-06-18T19:50:00.550000+00:00",
         }
+        # typos:enable
 
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)

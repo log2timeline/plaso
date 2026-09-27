@@ -666,7 +666,7 @@ class BSMParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
           dict[str, str]: token values.
         """
         protocol = self._NETWORK_PROTOCOLS.get(token_data.socket_family, "UNKNOWN")
-        ip_address = self._FormatPackedIPv4Address(token_data.ip_addresss)
+        ip_address = self._FormatPackedIPv4Address(token_data.ip_address)
         return {
             "protocols": protocol,
             "family": token_data.socket_family,
@@ -684,7 +684,7 @@ class BSMParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
           dict[str, str]: token values.
         """
         protocol = self._NETWORK_PROTOCOLS.get(token_data.socket_family, "UNKNOWN")
-        ip_address = self._FormatPackedIPv6Address(token_data.ip_addresss)
+        ip_address = self._FormatPackedIPv6Address(token_data.ip_address)
         return {
             "protocols": protocol,
             "family": token_data.socket_family,

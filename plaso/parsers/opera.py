@@ -91,8 +91,8 @@ class OperaTypedHistoryParser(interface.FileObjectParser):
                 "Not an Opera typed history file [wrong XML root key]"
             )
 
-        # For ElementTree to work we need to work on a file object seeked to the
-        # beginning.
+        # For ElementTree to work we need to work on a file object with its current
+        # offset at the start.
         file_object.seek(0, os.SEEK_SET)
 
         xml = ElementTree.parse(file_object)

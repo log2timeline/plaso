@@ -407,7 +407,7 @@ source: 'Kik iOS messages'
 type: 'conditional'
 data_type: 'ios:lockdownd_log:entry'
 message:
-- 'Process identifer: {process_identifier}'
+- 'Process identifier: {process_identifier}'
 - 'Message: {message_body}'
 short_message:
 - 'Message: {message_body}'

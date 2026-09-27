@@ -239,7 +239,7 @@ class ParserMediator:
         """Adds a Windows EventLog message table.
 
         Args:
-          message_table (WindowsEventLogMessageTabelArtifact): Windows EventLog
+          message_table (WindowsEventLogMessageTableArtifact): Windows EventLog
               message table.
         """
         self._storage_writer.AddAttributeContainer(message_table)

@@ -287,7 +287,9 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
             event_tag = None
             if not resolve_event_tag:
                 event_identifier = event.GetIdentifier()
-                event_tag = storage_reader.GetEventTagByEventIdentifer(event_identifier)
+                event_tag = storage_reader.GetEventTagByEventIdentifier(
+                    event_identifier
+                )
 
             if time_slice_range and event.timestamp != time_slice.event_timestamp:
                 self._events_status.number_of_events_from_time_slice += 1
@@ -341,7 +343,7 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
                         if not resolve_event_tag:
                             event_identifier = event_in_buffer.GetIdentifier()
                             event_tag_in_buffer = (
-                                storage_reader.GetEventTagByEventIdentifer(
+                                storage_reader.GetEventTagByEventIdentifier(
                                     event_identifier
                                 )
                             )
@@ -428,7 +430,9 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
 
             if resolve_event_tag:
                 event_identifier = event.GetIdentifier()
-                event_tag = storage_reader.GetEventTagByEventIdentifer(event_identifier)
+                event_tag = storage_reader.GetEventTagByEventIdentifier(
+                    event_identifier
+                )
 
             if timestamp_desc in (
                 definitions.TIME_DESCRIPTION_LAST_ACCESS,

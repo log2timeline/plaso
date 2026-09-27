@@ -57,7 +57,7 @@ Figure out the name of the Docker image you want to run (see before)
 First start the extraction with log2timeline. Should your evidence files/images
 should be present on the host, and not in the container (which is the default
 scenario), you'll have to set up a bridge between the two.
-For example, if you store your current evidences to analyse in
+For example, if you store your current evidences to analyze in
 /data/evidences/, you could tell log2timeline to generate the Plaso storage
 file as /data/evidences.plaso this way:
 

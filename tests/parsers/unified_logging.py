@@ -679,8 +679,11 @@ class LocationLocationManagerStateFormatStringDecoderTest(shared_test_lib.BaseTe
     def testFormatValue(self):
         """Tests the FormatValue function."""
         test_decoder = unified_logging.LocationLocationManagerStateFormatStringDecoder()
-
         formatted_value = test_decoder.FormatValue(self._VALUE_DATA_V1)
+
+        # typos:disable
+        # Note that "pausesLocationUpdatesAutomatially" and
+        # "allowsAlteredAccessoryLoctions" are typos in the original value names.
         expected_formatted_value = (
             '{"previousAuthorizationStatusValid":false,"paused":false,'
             '"requestingLocation":false,"desiredAccuracy":100,'
@@ -694,11 +697,14 @@ class LocationLocationManagerStateFormatStringDecoderTest(shared_test_lib.BaseTe
             '"allowsAlteredAccessoryLoctions":false,"updatingRanging":false,'
             '"limitsPrecision":false,"headingFilter":1}'
         )
+        # typos:enable
+
         self.assertEqual(formatted_value, expected_formatted_value)
 
         test_decoder = unified_logging.LocationLocationManagerStateFormatStringDecoder()
-
         formatted_value = test_decoder.FormatValue(self._VALUE_DATA_V2)
+
+        # typos:disable
         expected_formatted_value = (
             '{"previousAuthorizationStatusValid":false,"paused":false,'
             '"requestingLocation":false,"updatingVehicleSpeed":false,'
@@ -715,6 +721,8 @@ class LocationLocationManagerStateFormatStringDecoderTest(shared_test_lib.BaseTe
             '"updatingRanging":false,"limitsPrecision":false,'
             '"courtesyPromptNeeded":false,"headingFilter":1}'
         )
+        # typos:enable
+
         self.assertEqual(formatted_value, expected_formatted_value)
 
 

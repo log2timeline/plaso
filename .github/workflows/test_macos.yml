@@ -1,6 +1,6 @@
 # Run tests on Mac OS.
 name: test_macos
-on: [push, pull_request]
+on: [pull_request, push]
 permissions: read-all
 jobs:
   test_macos:

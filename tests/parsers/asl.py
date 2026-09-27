@@ -233,6 +233,7 @@ class ASLParserTest(test_lib.ParserTestCase):
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 2)
         self.CheckEventData(event_data, expected_event_values)
 
+        # typos:disable
         # Note that "compatiblity" is spelt incorrectly in the actual message being
         # tested here.
         expected_event_values = {
@@ -260,10 +261,12 @@ class ASLParserTest(test_lib.ParserTestCase):
             "user_identifier": 205,
             "written_time": "2013-11-25T09:45:35.705481000+00:00",
         }
+        # typos:enable
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
         # Check a second event data to ensure record strings are parsed correctly.
+        # typos:disable
         expected_event_values = {
             "data_type": "macos:asl:entry",
             "extra_information": (
@@ -289,6 +292,7 @@ class ASLParserTest(test_lib.ParserTestCase):
             "user_identifier": 205,
             "written_time": "2013-11-25T17:12:43.571140000+00:00",
         }
+        # typos:enable
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 

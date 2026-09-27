@@ -143,7 +143,7 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
             all_parser_names = set(manager.ParsersManager._parser_classes.keys())
             self.assertTrue(all_parser_names.issubset(valid_elements))
 
-        # Degister parsers to ensure unrelated tests don't fail.
+        # Deregister parsers to ensure unrelated tests don't fail.
         finally:
             manager.ParsersManager.DeregisterParser(TestParser)
             manager.ParsersManager.DeregisterParser(TestParserWithPlugins)

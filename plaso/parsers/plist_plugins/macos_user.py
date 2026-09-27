@@ -9,7 +9,7 @@ Fields within the plist key:
       the situation, these timestamps are reset (0 value). It is translated
       by the library as a 2001-01-01 00:00:00 (Cocoa zero time representation).
   failedLoginTimestamp: last time the login attempt failed.
-  failedLoginCount: number of failed loging attempts.
+  failedLoginCount: number of failed logging attempts.
 """
 
 # TODO: Only plists from MacOS 10.8 and 10.9 were tested. Look at other

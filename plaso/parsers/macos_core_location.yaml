@@ -140,7 +140,7 @@ members:
   number_of_elements: 7
 - name: activity_type
   data_type: int64
-- name: pauses_location_updates_automatially
+- name: pauses_location_updates_automatically
   data_type: int32
 - name: paused
   data_type: bool8
@@ -195,7 +195,7 @@ members:
   number_of_elements: 7
 - name: activity_type
   data_type: int64
-- name: pauses_location_updates_automatially
+- name: pauses_location_updates_automatically
   data_type: int32
 - name: paused
   data_type: bool8

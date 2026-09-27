@@ -13,7 +13,7 @@ class DropboxSyncHistoryEventData(events.EventData):
     Attributes:
       event_type (str): the event type
       file_event_type (str): the file event type
-      direction (str): the source of the synchronisation event
+      direction (str): the source of the synchronization event
       file_identifier (str): the Dropbox identifier of the file.
       local_path (str): the local path of the file.
       recorded_time (dfdatetime.DateTimeValues): date and time the log entry

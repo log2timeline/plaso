@@ -144,7 +144,7 @@ class BinaryLineReader:
 
         Args:
           sizehint (Optional[int]): maximum byte size to read. If present, instead
-              of reading up to EOF, whole lines totalling sizehint bytes are read.
+              of reading up to EOF, whole lines totaling sizehint bytes are read.
 
         Returns:
           list[bytes]: lines of text.

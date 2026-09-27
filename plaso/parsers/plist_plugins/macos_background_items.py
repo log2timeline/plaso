@@ -78,6 +78,7 @@ class MacOSBackgroundItemsPlistPlugin(
 
         header = self._ReadStructureFromByteStream(bookmark_data, 0, data_type_map)
 
+        # typos:ignore
         if header.signature not in (b"alis", b"book"):
             raise errors.ParseError("Unsupported bookmark signature")
 

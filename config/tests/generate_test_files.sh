@@ -31,7 +31,7 @@ then
     exit ${EXIT_FAILURE}
 fi
 
-SDIST_PACKAGE=$(ls -1 dist/plaso-*.tar.gz | head -n1 | sed 's?^dist/??')
+SDIST_PACKAGE=$(find dist -maxdepth 1 -name "plaso-*.tar.gz" | head -n1 | sed 's?^dist/??')
 
 if [ ! -f "dist/${SDIST_PACKAGE}" ]
 then
@@ -40,13 +40,13 @@ then
     exit ${EXIT_FAILURE}
 fi
 
-mkdir ${TEST_DIRECTORY}
+mkdir "${TEST_DIRECTORY}"
 
-cp dist/${SDIST_PACKAGE} ${TEST_DIRECTORY}
+cp "dist/${SDIST_PACKAGE}" "${TEST_DIRECTORY}"
 
-OLD_PWD=${PWD}
+OLD_PWD="${PWD}"
 
-pushd ${TEST_DIRECTORY}
+pushd "${TEST_DIRECTORY}"
 
 if [ ! -f "${SDIST_PACKAGE}" ]
 then
@@ -55,9 +55,9 @@ then
     exit ${EXIT_FAILURE}
 fi
 
-tar xfv ${SDIST_PACKAGE}
+tar xfv "${SDIST_PACKAGE}"
 
-SOURCE_DIRECTORY=${SDIST_PACKAGE/.tar.gz/}
+SOURCE_DIRECTORY="${SDIST_PACKAGE/.tar.gz/}"
 
 if [ ! -d "./${SOURCE_DIRECTORY}" ]
 then
@@ -66,7 +66,7 @@ then
     exit ${EXIT_FAILURE}
 fi
 
-cp -rf ${SOURCE_DIRECTORY}/* .
+cp -rf "${SOURCE_DIRECTORY}"/* .
 
 TEST_FILE="psort_test.plaso"
 
@@ -122,28 +122,28 @@ PYTHONPATH=. python ./plaso/scripts/psort.py \
     --tagging-file=tagging.txt \
     ${TEST_FILE}
 
-cp ${TEST_FILE} ${OLD_PWD}/test_data/
+cp ${TEST_FILE} "${OLD_PWD}/test_data/"
 
 PYTHONPATH=. ./plaso/scripts/pinfo.py \
     --report file_hashes \
     --output-format json \
     ${TEST_FILE} > ${TEST_FILE}.file_hashes.json
 
-cp ${TEST_FILE}.file_hashes.json ${OLD_PWD}/test_data/
+cp ${TEST_FILE}.file_hashes.json "${OLD_PWD}/test_data/"
 
 PYTHONPATH=. ./plaso/scripts/pinfo.py \
     --report file_hashes \
     --output-format markdown \
     ${TEST_FILE} > ${TEST_FILE}.file_hashes.md
 
-cp ${TEST_FILE}.file_hashes.md ${OLD_PWD}/test_data/
+cp ${TEST_FILE}.file_hashes.md "${OLD_PWD}/test_data/"
 
 PYTHONPATH=. ./plaso/scripts/pinfo.py \
     --report file_hashes \
     --output-format text \
     ${TEST_FILE} > ${TEST_FILE}.file_hashes.txt
 
-cp ${TEST_FILE}.file_hashes.txt ${OLD_PWD}/test_data/
+cp ${TEST_FILE}.file_hashes.txt "${OLD_PWD}/test_data/"
 
 TEST_FILE="pinfo_test.plaso"
 
@@ -153,14 +153,14 @@ PYTHONPATH=. python ./plaso/scripts/log2timeline.py \
     --storage-file ${TEST_FILE} \
     test_data/tsk_volume_system.raw
 
-cp ${TEST_FILE} ${OLD_PWD}/test_data/
+cp ${TEST_FILE} "${OLD_PWD}/test_data/"
 
 PYTHONPATH=. ./plaso/scripts/pinfo.py \
     --sections events,reports,sessions,warnings \
     --output-format text \
     ${TEST_FILE} > ${TEST_FILE}.output.txt
 
-cp ${TEST_FILE}.output.txt ${OLD_PWD}/test_data/
+cp ${TEST_FILE}.output.txt "${OLD_PWD}/test_data/"
 
 popd
 
@@ -176,6 +176,6 @@ popd
 # test_data/end_to_end/rawpy.log
 # test_data/end_to_end/tln.log
 
-rm -rf ${TEST_DIRECTORY}
+rm -rf "${TEST_DIRECTORY}"
 
 exit ${EXIT_SUCCESS}

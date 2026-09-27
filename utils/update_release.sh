@@ -3,9 +3,6 @@
 # Script that makes changes in preparation of a new release, such as updating
 # the version and documentation.
 
-EXIT_FAILURE=1
-EXIT_SUCCESS=0
-
 VERSION=$(date -u +"%Y%m%d")
 
 # Update the Python module version.
@@ -49,5 +46,3 @@ tox -edocs
 
 # Check for unused entries in plaso/data/timeliner.yaml
 ./utils/check_unused_timeliner_entries.sh
-
-exit ${EXIT_SUCCESS}

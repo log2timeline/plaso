@@ -16,7 +16,7 @@ Plaso feature requests and bug reports are tracked on the [GitHub issue tracker]
 
 ### Labels
 
-Feature requests in GitHub are labelled with "enhancement" for Plaso we
+Feature requests in GitHub are labeled with "enhancement" for Plaso we
 additionally label them with one or more of the following "focus area" labels:
 
 * analysis; changes to analysis plug-ins

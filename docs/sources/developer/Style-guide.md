@@ -12,7 +12,7 @@ Every event data attribute container defines a data type (DATA_TYPE).
 
 Conventions for the data type names are:
 
-1) If the data type is operating system (or operating system convension such as
+1) If the data type is operating system (or operating system convention such as
 POSIX) specific start with the name of operating system or convention.
 Currently supported prefixes:
 

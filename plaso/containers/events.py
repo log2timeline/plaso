@@ -499,8 +499,8 @@ class EventTag(interface.AttributeContainer):
         self._event_identifier = event_identifier
 
 
-class EventTripple(interface.AttributeContainer):
-    """Event tripple.
+class EventTriple(interface.AttributeContainer):
+    """Event triple.
 
     Attributes:
       event (EventObject): event.
@@ -508,10 +508,10 @@ class EventTripple(interface.AttributeContainer):
       event_data_stream (EventDataStream): event data stream.
     """
 
-    CONTAINER_TYPE = "event_tripple"
+    CONTAINER_TYPE = "event_triple"
 
     def __init__(self):
-        """Initializes an event tripple."""
+        """Initializes an event triple."""
         super().__init__()
         self.event = None
         self.event_data = None
@@ -525,6 +525,6 @@ manager.AttributeContainersManager.RegisterAttributeContainers(
         EventDataStream,
         EventObject,
         EventTag,
-        EventTripple,
+        EventTriple,
     ]
 )

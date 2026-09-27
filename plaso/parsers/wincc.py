@@ -247,7 +247,7 @@ class WinCCSysLogParser(interface.FileObjectParser):
             date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
                 time_elements_tuple=time_elements_tuple
             )
-            # TODO: determine if format is dependant on the system's locale.
+            # TODO: determine if format is dependent on the system's locale.
             date_time.is_local_time = True
 
             event_data.creation_time = date_time

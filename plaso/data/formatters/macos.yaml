@@ -499,7 +499,7 @@ short_message:
 - '{service}:'
 - '{client}'
 short_source: 'MacOS TCC'
-source: 'MacOS Transparenty, Control and Consent logs'
+source: 'MacOS Transparency, Control and Consent logs'
 ---
 type: 'basic'
 data_type: 'macos:time_machine:backup'

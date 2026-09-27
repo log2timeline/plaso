@@ -69,6 +69,7 @@ class IOSInstagramThreadsTest(test_lib.SQLitePluginTestCase):
             "sender_identifier": "9368974384",
             "sent_time": "2020-03-25T01:49:04.901623+00:00",
             "shared_media_identifier": "251704772664178",
+            # typos:disable
             "shared_media_url": (
                 "https://scontent.cdninstagram.com/v/t51.2885-15/"
                 "90697930_220393875685423_3218385085483800637_n.jpg?"
@@ -78,6 +79,7 @@ class IOSInstagramThreadsTest(test_lib.SQLitePluginTestCase):
                 "oh=00_AfBhsQiBp9t6qiGma4pWTfN9zkcPJKUCYYlpBnY2BtOHoQ&oe=64505EFD&"
                 "ig_cache_key=MjI3MjMxMzg3OTg1ODMxNTUzMg%3D%3D.2-ccb7-5"
             ),
+            # typos:enable
             "username": "ThisIsDFIR",
             "video_chat_call_identifier": None,
             "video_chat_title": None,

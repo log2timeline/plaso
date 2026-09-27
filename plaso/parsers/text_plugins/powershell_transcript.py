@@ -92,7 +92,7 @@ class PowerShellTranscriptLogTextPlugin(interface.TextPlugin):
 
     _SEPARATOR_LINE = _SEPARATOR + _END_OF_LINE
 
-    _TRANSSCRIPT_START_LINE = pyparsing.Regex(r".*Windows PowerShell.*\n")
+    _TRANSCRIPT_START_LINE = pyparsing.Regex(r".*Windows PowerShell.*\n")
 
     # A Metadata key always start with an uppercase character.
     _METADATA_KEY = pyparsing.Word(pyparsing.alphas.upper(), pyparsing.alphas + "- ")
@@ -112,7 +112,7 @@ class PowerShellTranscriptLogTextPlugin(interface.TextPlugin):
 
     _HEADER_GRAMMAR = (
         _SEPARATOR_LINE
-        + _TRANSSCRIPT_START_LINE
+        + _TRANSCRIPT_START_LINE
         + _METADATA_LINE.set_results_name("date_time")
         + _METADATA_LINE.set_results_name("username")
         + _METADATA_LINE.set_results_name("runas_user")
@@ -133,7 +133,7 @@ class PowerShellTranscriptLogTextPlugin(interface.TextPlugin):
 
     _LINE_STRUCTURES = [("log_line", _LOG_LINE), ("separator_line", _SEPARATOR_LINE)]
 
-    VERIFICATION_GRAMMAR = _SEPARATOR_LINE + _TRANSSCRIPT_START_LINE
+    VERIFICATION_GRAMMAR = _SEPARATOR_LINE + _TRANSCRIPT_START_LINE
 
     VERIFICATION_LITERALS = ["Windows PowerShell"]
 

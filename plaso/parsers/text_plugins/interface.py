@@ -24,7 +24,7 @@ class TextPlugin(plugins.BasePlugin):
     # the supported grammar.
     _LINE_STRUCTURES = []
 
-    # PyParsing grammer used to verify the text-log file format. Note that since
+    # PyParsing grammar used to verify the text-log file format. Note that since
     # this is called often it should optimize on failing fast.
     VERIFICATION_GRAMMAR = None
     VERIFICATION_LITERALS = None
