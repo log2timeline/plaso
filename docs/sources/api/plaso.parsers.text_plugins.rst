@@ -108,6 +108,14 @@ plaso.parsers.text\_plugins.dpkg module
    :show-inheritance:
    :undoc-members:
 
+plaso.parsers.text\_plugins.esxi module
+---------------------------------------
+
+.. automodule:: plaso.parsers.text_plugins.esxi
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 plaso.parsers.text\_plugins.gdrive\_synclog module
 --------------------------------------------------
 
