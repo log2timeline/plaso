@@ -163,7 +163,6 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
             storage_writer.UpdateEventLabelsCounter(
                 stored_event_labels_counter, event_labels_counter
             )
-
             number_of_containers = storage_writer.GetNumberOfAttributeContainers(
                 "event_label_count"
             )
@@ -178,12 +177,11 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
             self.assertEqual(
                 stored_event_labels_counter["corrupted"].number_of_events, 5
             )
-
             event_labels_counter = collections.Counter({"corrupted": 3, "total": 3})
+
             storage_writer.UpdateEventLabelsCounter(
                 stored_event_labels_counter, event_labels_counter
             )
-
             number_of_containers = storage_writer.GetNumberOfAttributeContainers(
                 "event_label_count"
             )
