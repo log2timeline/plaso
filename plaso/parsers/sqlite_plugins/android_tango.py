@@ -131,6 +131,8 @@ class AndroidTangoProfilePlugin(interface.SQLitePlugin):
             "profiles": (
                 "CREATE TABLE `profiles` (`key` TEXT PRIMARY KEY, `value` TEXT)"
             ),
+            # typos:disable
+            # Note that "itemRefereneCount" is from the original schema.
             "profiletable": (
                 "CREATE TABLE `profiletable` (`itemUserId` TEXT PRIMARY KEY, "
                 "`itemFirstName` TEXT NOT NULL, `itemLastName` TEXT NOT NULL, "
@@ -167,6 +169,7 @@ class AndroidTangoProfilePlugin(interface.SQLitePlugin):
                 "`itemCanSeeMyPost` INTEGER NOT NULL, `itemCanShareMyPost` INTEGER "
                 "NOT NULL, `itemCanContactMe` INTEGER NOT NULL)"
             ),
+            # typos:enable
         }
     ]
 

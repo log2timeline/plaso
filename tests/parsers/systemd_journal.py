@@ -235,7 +235,7 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
         self.CheckEventData(event_data, expected_event_values)
 
         # Test a LZ4 compressed data log entry.
-        # The text used in the test message was trippled to make it long enough to
+        # The text used in the test message was tripled to make it long enough to
         # trigger the LZ4 compression. Also see:
         # https://github.com/systemd/systemd/issues/6237
         expected_message_body_parts = [" textual user names."]

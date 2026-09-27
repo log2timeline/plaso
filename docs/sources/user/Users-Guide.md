@@ -7,7 +7,7 @@ some of the steps we recommend taking.
 
 ### I just want to run Plaso or log2timeline
 
-If you just want to run Plaso we stronly recommend to use a packaged release
+If you just want to run Plaso we strongly recommend to use a packaged release
 unless you are the adventurous type that is familiar with troubleshooting
 installation issues.
 

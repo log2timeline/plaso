@@ -33,7 +33,7 @@ class AzureApplicationGatewayAccessEventData(events.EventData):
           the back-end servers. SERVER-STATUS: HTTP response code that application
           gateway received from the back-end.
       request_uri (str): URI of the received request.
-      request_host (str): IP address or name fo the requested host as listed in the
+      request_host (str): IP address or name of the requested host as listed in the
           x-original-host header, which could have been changed by a reverse proxy.
       sent_bytes (int): Size of packet sent, in bytes.
       server_response_latency (str): Latency of the response (in seconds) from

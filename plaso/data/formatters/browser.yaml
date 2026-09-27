@@ -373,7 +373,7 @@ data_type: 'firefox:places:bookmark'
 enumeration_helpers:
 - input_attribute: 'bookmark_type'
   output_attribute: 'bookmark_type_string'
-  default_value: 'UNKOWN'
+  default_value: 'UNKNOWN'
   values:
     1: 'URL'
     2: 'Folder'
@@ -418,7 +418,7 @@ custom_helpers:
 enumeration_helpers:
 - input_attribute: 'visit_type'
   output_attribute: 'transition_string'
-  default_value: 'UNKOWN'
+  default_value: 'UNKNOWN'
   # Also see: src/toolkit/components/places/nsINavHistoryService.idl
   values:
     1: 'LINK'

@@ -9,6 +9,7 @@ encoded (using the strftime function), by letting them specify
 additional separators. This parser will accept only the simplest
 default English form of an XChat log file, as the following::
 
+  # typos:disable
   **** BEGIN LOGGING AT Mon Dec 31 21:11:55 2001
   dec 31 21:11:55 --> You are now talking on #gugle
   dec 31 21:11:55 --- Topic for #gugle is plaso, nobody knows what it means
@@ -17,6 +18,7 @@ default English form of an XChat log file, as the following::
   dec 31 21:11:55 *   XChat here
   dec 31 21:11:58 <fpi> ola plas-ing guys!
   dec 31 21:12:00 <Kristinn> ftw!
+  # typos:enable
 
 It could be managed the missing month/day case too, by extracting
 the month/day information from the header. But the parser logic
@@ -148,6 +150,7 @@ class XChatLogTextPlugin(interface.TextPlugin, dateless_helper.DateLessLogFormat
     )
 
     # Body (nickname, text and/or service messages) pyparsing structures.
+    # typos:ignore
     # Sample: "dec 31 21:11:58 <fpi> ola plas-ing guys!".
 
     # Date and time values are formatted as: dec 31 21:11:58

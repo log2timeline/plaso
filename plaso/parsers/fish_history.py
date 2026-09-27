@@ -76,7 +76,7 @@ class FishHistoryParser(interface.FileObjectParser):
         file_size = file_object.get_size()
         if file_size > self._MAXIMUM_FISH_HISTORY_FILE_SIZE:
             parser_mediator.ProduceWarning(
-                f"Fish history file size: {file_size:d} exceeds maxmimum"
+                f"Fish history file size: {file_size:d} exceeds maximum"
             )
             return
 

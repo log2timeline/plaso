@@ -15,7 +15,7 @@ class MacOSApplicationUsageEventData(events.EventData):
       application (str): name of the application.
       application_version (str): version of the application.
       bundle_identifier (str): bundle identifier of the application.
-      count (int): number of occurances of the event.
+      count (int): number of occurrences of the event.
       last_used_time (dfdatetime.DateTimeValues): last date and time
           the application was last used.
       query (str): SQL query that was used to obtain the event data.

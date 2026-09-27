@@ -154,7 +154,7 @@ class EventExtractionWorker:
         self._abort = False
         self._analyzers = []
         self._analyzers_profiler = None
-        self._achive_type_scanner = self._CreateArchiveTypeScanner([])
+        self._archive_type_scanner = self._CreateArchiveTypeScanner([])
         self._archive_types = []
         self._event_data_extractor = extractors.EventDataExtractor(
             force_parser=force_parser, parser_filter_expression=parser_filter_expression
@@ -916,7 +916,7 @@ class EventExtractionWorker:
                 )
                 if file_object:
                     scan_state = pysigscan.scan_state()
-                    self._achive_type_scanner.scan_file_object(scan_state, file_object)
+                    self._archive_type_scanner.scan_file_object(scan_state, file_object)
                     results = [
                         scan_result.identifier
                         for scan_result in iter(scan_state.scan_results)
@@ -1006,7 +1006,7 @@ class EventExtractionWorker:
         self._archive_types = [
             archive_type.lower() for archive_type in archive_types_string.split(",")
         ]
-        self._achive_type_scanner = self._CreateArchiveTypeScanner(self._archive_types)
+        self._archive_type_scanner = self._CreateArchiveTypeScanner(self._archive_types)
 
     def _SetHashers(self, hasher_names_string):
         """Sets the hasher names.

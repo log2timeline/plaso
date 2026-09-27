@@ -911,7 +911,7 @@ class WindowsServicesAndDriversPlugin(
             mediator.AddArtifact(service_configuration)
         except KeyError:
             message = (
-                f"Unable to add Windows service configuation: "
+                f"Unable to add Windows service configuration: "
                 f"{registry_value.name:s} artifact."
             )
             mediator.ProducePreprocessingWarning(
@@ -1009,10 +1009,10 @@ class WindowsTimeZonePlugin(interface.WindowsRegistryValueArtifactPreprocessorPl
 
         try:
             mediator.SetTimeZone(value_data)
-        except ValueError as execption:
+        except ValueError as exception:
             message = (
                 f'Unable to map: "{value_data:s}" to time zone with error: '
-                f"{execption!s}"
+                f"{exception!s}"
             )
             mediator.ProducePreprocessingWarning(
                 self.ARTIFACT_DEFINITION_NAME,

@@ -1,12 +1,6 @@
 # Run tox tests on Ubuntu Docker images using the deadsnakes and GIFT PPAs
 name: test_tox
-on:
-  pull_request:
-    branches:
-    - main
-  push:
-    branches:
-    - main
+on: [pull_request, push]
 permissions: read-all
 jobs:
   build:
@@ -24,6 +18,8 @@ jobs:
           toxenv: 'py313'
         - python-version: '3.14'
           toxenv: 'py314'
+        - python-version: '3.15'
+          toxenv: 'py315'
     container:
       image: ubuntu:26.04
     steps:

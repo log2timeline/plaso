@@ -59,5 +59,5 @@ docker build -f nsrlsvr.Dockerfile --force-rm --no-cache -t log2timeline/nsrlsvr
 docker run -v "${PWD}/data:/data:z" log2timeline/nsrlsvr /bin/bash -c "/usr/bin/python3 /usr/bin/nsrlupdate /data/NSRLFile.txt";
 
 # Preserver the intermediate container so we don't have to rebuild hashes.txt
-docker commit `docker ps -lq` | cut -c8- > nsrlsvr.container
+docker commit "$(docker ps -lq)" | cut -c8- > nsrlsvr.container
 

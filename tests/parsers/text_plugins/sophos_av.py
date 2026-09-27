@@ -62,10 +62,12 @@ class SophosAVLogTextPluginTest(test_lib.TextPluginTestCase):
         expected_event_values = {
             "added_time": "2010-07-20T18:38:14",
             "data_type": "sophos:av:log",
+            # typos:disable
             "text": (
                 'File "C:\\Documents and Settings\\Administrator\\Desktop\\'
                 "sxl_test_50.com\" belongs to virus/spyware 'LiveProtectTest'."
             ),
+            # typos:enable
         }
 
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)

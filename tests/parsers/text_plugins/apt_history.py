@@ -66,6 +66,7 @@ class APTHistoryLogTextPluginTest(test_lib.TextPluginTestCase):
             ),
             "data_type": "linux:apt_history_log:entry",
             "end_time": "2019-07-11T12:21:28",
+            # typos:disable
             "packages": (
                 "libmpc3:amd64 (1.0.3-1+b2, automatic), "
                 "manpages:amd64 (4.10-2, automatic), "
@@ -181,6 +182,7 @@ class APTHistoryLogTextPluginTest(test_lib.TextPluginTestCase):
                 "libstdc++-6-dev:amd64 (6.3.0-18+deb9u1, automatic), "
                 "liberror-perl:amd64 (0.17024-1, automatic)"
             ),
+            # typos:enable
             "start_time": "2019-07-11T12:20:55",
         }
 

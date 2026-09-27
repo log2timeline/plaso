@@ -2,7 +2,7 @@
 ---
 name: bookmark_data
 type: format
-description: Mac OS backgrounditems.btm bookmakr data format
+description: Mac OS backgrounditems.btm bookmark data format
 urls: ["https://github.com/libyal/dtformats/blob/main/documentation/Mac%20OS%20background%20item%20bookmark%20data%20format.asciidoc"]
 ---
 name: byte

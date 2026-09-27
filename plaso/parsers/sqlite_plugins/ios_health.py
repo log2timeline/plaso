@@ -513,12 +513,15 @@ class IOSHealthPlugin(interface.SQLitePlugin):
                 "preferred_victory_badge_styles BLOB, maximum_points_per_day "
                 "INTEGER, UNIQUE(friend_uuid, competition_uuid))"
             ),
+            # typos:disable
+            # Note that "occurence" is what is used in the schema.
             "allergy_record_samples": (
                 "CREATE TABLE allergy_record_samples (data_id INTEGER PRIMARY KEY, "
                 "allergy_codings BLOB NOT NULL, onset_date BLOB, asserter TEXT, "
                 "reactions BLOB, criticality_coding BLOB, last_occurence_date BLOB, "
                 "recorded_date BLOB, status_coding BLOB)"
             ),
+            # typos:enable
             "binary_samples": (
                 "CREATE TABLE binary_samples (data_id INTEGER PRIMARY KEY "
                 "REFERENCES samples (data_id) ON DELETE CASCADE, payload BLOB)"
@@ -840,10 +843,10 @@ class IOSHealthPlugin(interface.SQLitePlugin):
     # TODO: consider adding output formatters for
     # * distance conversion: miles = km * 0.621371
     # * duration conversion: "hh:mm:ss"
-    # * temparature conversion: fahrenheit = (celcius * 1.8) + 32
-    # * weigth conversion: lbs = kg * 2.20462262
-    # * weigth conversion: stones = kg / 6.35029317
-    # * weigth conversion: pounds = ((stones - int(stones)) * 14) + 0.5
+    # * temperature conversion: fahrenheit = (celsius * 1.8) + 32
+    # * weight conversion: lbs = kg * 2.20462262
+    # * weight conversion: stones = kg / 6.35029317
+    # * weight conversion: pounds = ((stones - int(stones)) * 14) + 0.5
 
     def _GetObjectValues(self, database, object_identifier):
         """Retrieves the object values.

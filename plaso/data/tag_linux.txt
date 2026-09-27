@@ -108,7 +108,7 @@ service_start
 service_stop
   data_type is 'selinux:line' AND audit_type is 'SERVICE_STOP'
 
-# Tags Linux network promiscious mode change events.
+# Tags Linux network promiscuous mode change events.
 promiscuous
   data_type is 'selinux:line' AND audit_type is 'ANOM_PROMISCUOUS'
   reporter is 'kernel' AND message_body contains 'promiscuous mode'

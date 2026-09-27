@@ -12,7 +12,7 @@ class WindowsEventLogMessageFormatterHelper(interface.CustomEventFormatterHelper
 
     IDENTIFIER = "windows_eventlog_message"
 
-    # Specifiers that expand to a paramter place holder (e.g. %%1053)
+    # Specifiers that expand to a parameter place holder (e.g. %%1053)
     _PARAMETER_REGEX = re.compile(r"(%%[1-9][0-9]*)")
 
     def __init__(self):

@@ -196,7 +196,7 @@ class ArtifactsTrie:
                     )
 
     def _ComparePathIfSanitized(
-        self, current_path, path_separator, artifact_path, artifact_path_seperator
+        self, current_path, path_separator, artifact_path, artifact_path_separator
     ):
         """Compares a current path with an artifact path, handling sanitization.
 
@@ -207,14 +207,14 @@ class ArtifactsTrie:
           current_path (str): The current path being checked.
           path_separator (str): Path separator for the current path.
           artifact_path (str): The artifact path to compare against.
-          artifact_path_seperator (str): Path separator for the artifact path.
+          artifact_path_separator (str): Path separator for the artifact path.
 
         Returns:
           bool: True if the current path matches the artifact path or its
               sanitized version, False otherwise.
         """
         artifact_path_segments = self._GetNonEmptyPathSegments(
-            artifact_path, artifact_path_seperator
+            artifact_path, artifact_path_separator
         )
         sanitized_path_segments = path_helper.PathHelper.SanitizePathSegments(
             artifact_path_segments

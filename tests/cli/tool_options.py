@@ -153,7 +153,7 @@ Test argument parser.
                         besides the default fields. A custom field is defined
                         as "name:value". Multiple custom field names can be
                         defined as list of comma separated values. Note that
-                        regular fields will are favoured above custom fields
+                        regular fields will are favored above custom fields
                         with same name. Output formats that support this are:
                         dynamic, opensearch and xlsx.
   --custom_formatter_definitions, --custom-formatter-definitions PATH
@@ -202,7 +202,7 @@ Test argument parser.
                         besides the default fields. A custom field is defined
                         as "name:value". Multiple custom field names can be
                         defined as list of comma separated values. Note that
-                        regular fields will are favoured above custom fields
+                        regular fields will are favored above custom fields
                         with same name. Output formats that support this are:
                         dynamic, opensearch and xlsx.
   --custom_formatter_definitions PATH, --custom-formatter-definitions PATH

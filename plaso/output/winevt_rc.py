@@ -355,7 +355,7 @@ class WinevtResourcesHelper:
         self._language_tag = language_tag.lower()
         self._lcid = lcid or self.DEFAULT_LCID
         self._message_string_cache = collections.OrderedDict()
-        self._resouce_file_helper = resource_files.WindowsResourceFileHelper
+        self._resource_file_helper = resource_files.WindowsResourceFileHelper
         self._storage_reader = None
         self._windows_eventlog_message_files = None
         self._windows_eventlog_providers = None
@@ -703,7 +703,7 @@ class WinevtResourcesHelper:
 
         message_string = message_strings[0].text
         if database_reader.string_format == "wrc":
-            message_string = self._resouce_file_helper.FormatMessageStringInPEP3101(
+            message_string = self._resource_file_helper.FormatMessageStringInPEP3101(
                 message_string
             )
 
@@ -774,7 +774,7 @@ class WinevtResourcesHelper:
 
         message_string = message_strings[0].text
         if database_reader.string_format == "wrc":
-            message_string = self._resouce_file_helper.FormatMessageStringInPEP3101(
+            message_string = self._resource_file_helper.FormatMessageStringInPEP3101(
                 message_string
             )
 

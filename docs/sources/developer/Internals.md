@@ -60,7 +60,7 @@ compressed streams such as .log.gz.
 ### Extraction
 
 The extraction operation does most of the heavy lifting. Plaso supports
-different types of extaction:
+different types of extraction:
 
 * analyzers, which are used to calculate an integrity hash like SHA-256 or scan file content with YARA rules;
 * parsers (and parser plugins), which are used to extract events from supported data formats.
@@ -94,7 +94,7 @@ objects) and outputs them in human readable or machine processable formats. Here
 Plaso uses:
 
 * output modules, to generate output in a specific format;
-* event formatters, to format indivudual events;
+* event formatters, to format individual events;
 * field formatters, to format individual event values.
 
 The log2timeline.pl l2tcsv format introduced the "desc" and "short" fields that

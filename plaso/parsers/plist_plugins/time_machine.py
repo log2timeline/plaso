@@ -20,7 +20,7 @@ class MacOSTimeMachineBackupEventData(events.EventData):
       backup_alias (str): alias of the backup.
       destination_identifier (str): identifier of the destination volume.
       snapshot_times (list[dfdatetime.DateTimeValues]): dates and times of
-          the creation of backup snaphots.
+          the creation of backup snapshots.
     """
 
     DATA_TYPE = "macos:time_machine:backup"

@@ -326,7 +326,7 @@ class OutputModuleOptions:
                 "Defines custom fields to be included in the output besides the "
                 'default fields. A custom field is defined as "name:value". Multiple '
                 "custom field names can be defined as list of comma separated values. "
-                "Note that regular fields will are favoured above custom fields with "
+                "Note that regular fields will are favored above custom fields with "
                 "same name. Output formats that support this are: dynamic, opensearch "
                 "and xlsx."
             ),

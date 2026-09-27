@@ -91,6 +91,7 @@ class SymantecAccessProtectionUnitTest(test_lib.ParserTestCase):
             "log_session_identifier": "74ac79f8-d0c0-4065-acd7-27af2fc7ec4c",
             "mac_address": "00:30:12:9C:58:3B",
             "new_ext": None,
+            # typos:ignore
             "ntdomain": "BUSINES1",
             "offset": 233,
             "parent": None,

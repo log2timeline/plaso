@@ -163,6 +163,8 @@ class AndroidHangoutsMessagePlugin(interface.SQLitePlugin):
                 "frequent_order INT, person_logging_id TEXT, person_affinity_score "
                 "REAL DEFAULT (0.0), is_in_same_domain INT DEFAULT (0))"
             ),
+            # typos:disable
+            # Note that "timetamp" is what is used in the schema.
             "messages": (
                 "CREATE TABLE messages (_id INTEGER PRIMARY KEY, message_id TEXT, "
                 "message_type INT, conversation_id TEXT, author_chat_id TEXT, "
@@ -197,6 +199,7 @@ class AndroidHangoutsMessagePlugin(interface.SQLitePlugin):
                 "UPDATE CASCADE, UNIQUE (conversation_id,message_id) ON CONFLICT "
                 "REPLACE)"
             ),
+            # typos:enable
             "mms_notification_inds": (
                 "CREATE TABLE mms_notification_inds (_id INTEGER PRIMARY KEY, "
                 "content_location TEXT, transaction_id TEXT, from_address TEXT, "

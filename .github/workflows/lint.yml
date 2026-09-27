@@ -1,12 +1,6 @@
 # Check source.
 name: lint
-on:
-  pull_request:
-    branches:
-    - main
-  push:
-    branches:
-    - main
+on: [pull_request, push]
 permissions: read-all
 jobs:
   black:
@@ -49,6 +43,26 @@ jobs:
         LANG: en_US.UTF-8
       run: |
         tox -e pylint
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+    - name: Install shellcheck
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y shellcheck
+    - name: Check format of bash scripts
+      run: |
+        find . -name "*.sh" -exec shellcheck {} +
+  typos:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+    - name: Install rumdl
+      run: cargo install --locked typos-cli
+    - name: Check for typos
+      run: |
+        typos
   yamllint:
     runs-on: ubuntu-latest
     strategy:

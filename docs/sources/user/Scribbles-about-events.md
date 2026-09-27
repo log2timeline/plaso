@@ -54,7 +54,7 @@ source-level events. For example a line in syslog representing, or a file entry
 creation.
 
 Multiple source-level events can make up higher-level events. For example
-a processess execution log file (source) could have process start and stop
+a processes execution log file (source) could have process start and stop
 events. However these events could be combined into a single process execution
 (duration) event.
 

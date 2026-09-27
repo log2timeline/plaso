@@ -214,7 +214,7 @@ class TestMRUListExShellItemListWindowsRegistryPlugin(test_lib.RegistryPluginTes
 
         # Check Shell item event data.
         expected_event_values = {
-            "accress_time": None,
+            "access_time": "2012-03-12T20:50:00+00:00",
             "creation_time": "2012-03-08T22:16:02+00:00",
             "data_type": "windows:shell_item:file_entry",
             "file_reference": "44518-33",

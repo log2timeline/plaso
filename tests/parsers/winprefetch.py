@@ -475,6 +475,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         expected_event_values = {
             "creation_time": "2017-07-30T19:40:03.5487843+00:00",
             "data_type": "windows:volume:creation",
+            # typos:ignore
             "device_path": "\\VOLUME{01d3096ba3a46863-2ca3d1ae}",
             "origin": "NOTEPAD.EXE-D8414F97.pf",
             "serial_number": 0x2CA3D1AE,

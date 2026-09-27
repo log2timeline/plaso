@@ -35,7 +35,7 @@ class IOSAppPrivacyNetworkEventData(events.EventData):
     """iOS application privacy report event of type network activity.
 
     Attributes:
-      bundle_identifier (str): bundle identifier that accesssed the resource
+      bundle_identifier (str): bundle identifier that accessed the resource
       domain (str): domain name accessed
       recorded_time (dfdatetime.DateTimeValues): date and time the log entry
           was recorded.
@@ -80,7 +80,7 @@ class IOSAppPrivacPlugin(interface.JSONLPlugin):
 
         return event_data
 
-    def _GetNetwordRecordEventData(self, json_dict):
+    def _GetNetworkRecordEventData(self, json_dict):
         """Retrieves event data from a record of type network.
 
         Args:
@@ -119,7 +119,7 @@ class IOSAppPrivacPlugin(interface.JSONLPlugin):
         if event_type == "access":
             event_data = self._GetAccessRecordEventData(json_dict)
         else:
-            event_data = self._GetNetwordRecordEventData(json_dict)
+            event_data = self._GetNetworkRecordEventData(json_dict)
 
         event_data.recorded_time = date_time
 

@@ -297,7 +297,7 @@ class NSKeyedArchiverDecoder:
 
         if value_plist_uid in parent_objects:
             raise RuntimeError(
-                (f"{class_name:s}.$1 wth UID: {value_plist_uid:d} in parent objects")
+                f"{class_name:s}.$1 with UID: {value_plist_uid:d} in parent objects"
             )
 
         referenced_property = objects_array[value_plist_uid]

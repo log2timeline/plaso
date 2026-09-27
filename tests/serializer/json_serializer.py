@@ -122,7 +122,6 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         test_path_spec = path_spec_factory.Factory.NewPathSpec(
             dfvfs_definitions.TYPE_INDICATOR_TSK, location="/", parent=volume_path_spec
         )
-
         event_data_stream = events.EventDataStream()
         event_data_stream.md5_hash = "e3df0d2abd2c27fbdadfb41a47442520"
         event_data_stream.path_spec = test_path_spec
@@ -161,7 +160,6 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
             "  YouTube [blpcfgokakmgnkcojhhkbfbldkacnbeo]\n"
             "\n"
         )
-
         expected_analysis_report = reports.AnalysisReport(
             plugin_name="chrome_extension_test", text=expected_report_text
         )
@@ -170,13 +168,11 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         json_string = json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
             expected_analysis_report
         )
-
         self.assertIsNotNone(json_string)
 
         analysis_report = (
             json_serializer.JSONAttributeContainerSerializer.ReadSerialized(json_string)
         )
-
         self.assertIsNotNone(analysis_report)
         self.assertIsInstance(analysis_report, reports.AnalysisReport)
 
@@ -190,13 +186,11 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         json_string = json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
             expected_event_data
         )
-
         self.assertIsNotNone(json_string)
 
         event_data = json_serializer.JSONAttributeContainerSerializer.ReadSerialized(
             json_string
         )
-
         self.assertIsNotNone(event_data)
         self.assertIsInstance(event_data, events.EventData)
 
@@ -215,7 +209,6 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
             "unicode_string": "And I am a unicorn.",
             "zero_integer": 0,
         }
-
         event_data_dict = event_data.CopyToDict()
         self.assertEqual(event_data_dict, expected_event_data_dict)
 
@@ -226,13 +219,11 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         json_string = json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
             expected_event_data_stream
         )
-
         self.assertIsNotNone(json_string)
 
         event_data_stream = (
             json_serializer.JSONAttributeContainerSerializer.ReadSerialized(json_string)
         )
-
         self.assertIsNotNone(event_data_stream)
         self.assertIsInstance(event_data_stream, events.EventDataStream)
 
@@ -240,7 +231,6 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
             "md5_hash": "e3df0d2abd2c27fbdadfb41a47442520",
             "path_spec": expected_event_data_stream.path_spec,
         }
-
         event_data_stream_dict = event_data_stream.CopyToDict()
 
         self.assertEqual(event_data_stream_dict, expected_event_data_stream_dict)
@@ -254,13 +244,11 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         json_string = json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
             expected_event
         )
-
         self.assertIsNotNone(json_string)
 
         event = json_serializer.JSONAttributeContainerSerializer.ReadSerialized(
             json_string
         )
-
         self.assertIsNotNone(event)
         self.assertIsInstance(event, events.EventObject)
 
@@ -272,7 +260,6 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
             "timestamp": 1621839644,
             "timestamp_desc": definitions.TIME_DESCRIPTION_MODIFICATION,
         }
-
         event_dict = event.CopyToDict()
 
         self.assertIsInstance(
@@ -297,13 +284,11 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         json_string = json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
             expected_event_source
         )
-
         self.assertIsNotNone(json_string)
 
         event_source = json_serializer.JSONAttributeContainerSerializer.ReadSerialized(
             json_string
         )
-
         self.assertIsNotNone(event_source)
         self.assertIsInstance(event_source, event_sources.EventSource)
 
@@ -325,13 +310,11 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         json_string = json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
             expected_event_tag
         )
-
         self.assertIsNotNone(json_string)
 
         event_tag = json_serializer.JSONAttributeContainerSerializer.ReadSerialized(
             json_string
         )
-
         self.assertIsNotNone(event_tag)
         self.assertIsInstance(event_tag, events.EventTag)
 
@@ -339,7 +322,6 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
             "_event_identifier": "event.1",
             "labels": ["Malware", "Common"],
         }
-
         event_tag_dict = event_tag.CopyToDict()
 
         self.assertIsInstance(
@@ -354,27 +336,25 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
             sorted(event_tag_dict.items()), sorted(expected_event_tag_dict.items())
         )
 
-    def testReadAndWriteSerializedEventTripple(self):
-        """Test ReadSerialized and WriteSerialized of EventTripple."""
+    def testReadAndWriteSerializedEventTriple(self):
+        """Test ReadSerialized and WriteSerialized of EventTriple."""
         expected_event_data_stream = self.CreateTestEventDataStream()
         expected_event_data = self.CreateTestEventData(expected_event_data_stream)
-        expected_event_tripple = events.EventTripple()
-        expected_event_tripple.event = self.CreateTestEventObject(expected_event_data)
-        expected_event_tripple.event_data = expected_event_data
-        expected_event_tripple.event_data_stream = expected_event_data_stream
+        expected_event_triple = events.EventTriple()
+        expected_event_triple.event = self.CreateTestEventObject(expected_event_data)
+        expected_event_triple.event_data = expected_event_data
+        expected_event_triple.event_data_stream = expected_event_data_stream
 
         json_string = json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
-            expected_event_tripple
+            expected_event_triple
         )
-
         self.assertIsNotNone(json_string)
 
-        event_tripple = json_serializer.JSONAttributeContainerSerializer.ReadSerialized(
+        event_triple = json_serializer.JSONAttributeContainerSerializer.ReadSerialized(
             json_string
         )
-
-        self.assertIsNotNone(event_tripple)
-        self.assertIsInstance(event_tripple, events.EventTripple)
+        self.assertIsNotNone(event_triple)
+        self.assertIsInstance(event_triple, events.EventTriple)
 
     def testReadAndWriteSerializedSession(self):
         """Test ReadSerialized and WriteSerialized of Session."""
@@ -385,13 +365,11 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         json_string = json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
             expected_session
         )
-
         self.assertIsNotNone(json_string)
 
         session = json_serializer.JSONAttributeContainerSerializer.ReadSerialized(
             json_string
         )
-
         self.assertIsNotNone(session)
         self.assertIsInstance(session, sessions.Session)
 
@@ -405,7 +383,6 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
             "product_version": plaso.__version__,
             "start_time": session.start_time,
         }
-
         session_dict = session.CopyToDict()
         self.assertEqual(
             sorted(session_dict.items()), sorted(expected_session_dict.items())
@@ -420,13 +397,11 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         json_string = json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
             expected_task
         )
-
         self.assertIsNotNone(json_string)
 
         task = json_serializer.JSONAttributeContainerSerializer.ReadSerialized(
             json_string
         )
-
         self.assertIsNotNone(task)
         self.assertIsInstance(task, tasks.Task)
 
@@ -437,7 +412,6 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
             "session_identifier": session_identifier,
             "start_time": task.start_time,
         }
-
         task_dict = task.CopyToDict()
         self.assertEqual(sorted(task_dict.items()), sorted(expected_task_dict.items()))
 

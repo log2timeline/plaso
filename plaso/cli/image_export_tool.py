@@ -377,8 +377,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
             )
 
         if self._enable_artifacts_map:
-            atrifacts_trie = extraction_engine.GetArtifactsTrie()
-            self._filter_collection.SetArtifactsTrie(atrifacts_trie)
+            artifacts_trie = extraction_engine.GetArtifactsTrie()
+            self._filter_collection.SetArtifactsTrie(artifacts_trie)
 
         excluded_find_specs = extraction_engine.GetCollectionExcludedFindSpecs()
         included_find_specs = extraction_engine.GetCollectionIncludedFindSpecs()
@@ -398,7 +398,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
                 if not file_entry:
                     path_spec_string = self._GetPathSpecificationString(path_spec)
                     logger.warning(
-                        f"Unable to open file entry for path specfication: "
+                        f"Unable to open file entry for path specification: "
                         f"{path_spec_string:s}"
                     )
                     continue

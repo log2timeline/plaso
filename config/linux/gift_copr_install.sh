@@ -154,16 +154,16 @@ DEBUG_DEPENDENCIES="libbde-debuginfo
 
 sudo dnf install -q dnf-plugins-core
 sudo dnf copr -q -y enable @gift/dev
-sudo dnf install -q -y ${PYTHON3_DEPENDENCIES}
+sudo dnf install -q -y "${PYTHON3_DEPENDENCIES}"
 
 if [[ "$*" =~ "include-debug" ]]; then
-    sudo dnf install -q -y ${DEBUG_DEPENDENCIES}
+    sudo dnf install -q -y "${DEBUG_DEPENDENCIES}"
 fi
 
 if [[ "$*" =~ "include-development" ]]; then
-    sudo dnf install -q -y ${DEVELOPMENT_DEPENDENCIES}
+    sudo dnf install -q -y "${DEVELOPMENT_DEPENDENCIES}"
 fi
 
 if [[ "$*" =~ "include-test" ]]; then
-    sudo dnf install -q -y ${TEST_DEPENDENCIES}
+    sudo dnf install -q -y "${TEST_DEPENDENCIES}"
 fi
