@@ -757,7 +757,6 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
             generator = storage_reader.GetAttributeContainers(
                 self._CONTAINER_TYPE_ANALYSIS_REPORT
             )
-
             for index, analysis_report in enumerate(generator):
                 date_time_string = None
                 if analysis_report.time_compiled is not None:
@@ -778,10 +777,11 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
                     table_view.AddRow(["Text", analysis_report.text or ""])
                 else:
                     table_view.AddRow(["Results", ""])
-                    for key, count_container in sorted(
+                    # Note that analysis_counter is of type collections.Counter
+                    for key, number_of_events in sorted(
                         analysis_report.analysis_counter.items()
                     ):
-                        table_view.AddRow([key, count_container.number_of_events])
+                        table_view.AddRow([key, number_of_events])
 
                 table_view.Write(self._output_writer)
 
