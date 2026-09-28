@@ -161,19 +161,23 @@ DEBUG_DEPENDENCIES="libbde-dbg
 
 sudo add-apt-repository "ppa:gift/${GIFT_PPA_TRACK}" -y
 sudo apt update -q
-sudo apt install -q -y "${PYTHON_DEPENDENCIES}"
+# shellcheck disable=SC2086
+sudo apt install -q -y ${PYTHON_DEPENDENCIES}
 
 if [[ "$*" =~ "include-debug" ]];
 then
-	sudo apt install -q -y "${DEBUG_DEPENDENCIES}"
+	# shellcheck disable=SC2086
+	sudo apt install -q -y ${DEBUG_DEPENDENCIES}
 fi
 
 if [[ "$*" =~ "include-development" ]];
 then
-	sudo apt install -q -y "${DEVELOPMENT_DEPENDENCIES}"
+	# shellcheck disable=SC2086
+	sudo apt install -q -y ${DEVELOPMENT_DEPENDENCIES}
 fi
 
 if [[ "$*" =~ "include-test" ]];
 then
-	sudo apt install -q -y "${TEST_DEPENDENCIES}"
+	# shellcheck disable=SC2086
+	sudo apt install -q -y ${TEST_DEPENDENCIES}
 fi
