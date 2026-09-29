@@ -8,10 +8,12 @@ from plaso.lib import definitions
 from plaso.parsers import fish_history
 from plaso.parsers import utmp
 from plaso.parsers.jsonl_plugins import docker_layer_config
+from plaso.parsers.text_plugins import apt_history
 from plaso.parsers.text_plugins import bash_history
 from plaso.parsers.text_plugins import dpkg
 from plaso.parsers.text_plugins import selinux
 from plaso.parsers.text_plugins import syslog
+from plaso.parsers.text_plugins import vsftpd
 from plaso.parsers.text_plugins import zsh_extended_history
 
 from tests.data import test_lib
@@ -151,6 +153,27 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
             syslog.SyslogLineEventData, attribute_values_per_name, ["login"]
         )
 
+        # Test: data_type is 'syslog:ssh:login'
+        self._CheckTaggingRule(syslog.SyslogSSHLoginEventData, {}, ["login"])
+
+        # Test: data_type is 'selinux:line' AND audit_type is 'USER_LOGIN' AND
+        #       message_body contains 'res=success'
+        attribute_values_per_name = {
+            "audit_type": ["USER_LOGIN"],
+            "message_body": ["res=success"],
+        }
+        self._CheckTaggingRule(
+            selinux.SELinuxLogEventData, attribute_values_per_name, ["login"]
+        )
+
+        # Test: data_type is 'vsftpd:log' AND text contains 'OK LOGIN'
+        attribute_values_per_name = {
+            "text": ['[svc-backup] OK LOGIN: Client "192.168.1.62"']
+        }
+        self._CheckTaggingRule(
+            vsftpd.VsftpdLogEventData, attribute_values_per_name, ["login"]
+        )
+
     def testRuleLoginFailed(self):
         """Tests the login_failed tagging rule."""
         # Test: data_type is 'selinux:line' AND audit_type is 'ANOM_LOGIN_FAILURES'
@@ -234,6 +257,38 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
         attribute_values_per_name = {"reporter": ["nologin"]}
         self._CheckTaggingRule(
             syslog.SyslogLineEventData, attribute_values_per_name, ["login_failed"]
+        )
+
+        # Test: data_type is 'syslog:ssh:failed_connection'
+        self._CheckTaggingRule(
+            syslog.SyslogSSHFailedConnectionEventData, {}, ["login_failed"]
+        )
+
+        # Test: data_type is 'selinux:line' AND audit_type is 'USER_AUTH' AND
+        #       message_body contains 'res=failed'
+        attribute_values_per_name = {
+            "audit_type": ["USER_AUTH"],
+            "message_body": ["res=failed"],
+        }
+        self._CheckTaggingRule(
+            selinux.SELinuxLogEventData, attribute_values_per_name, ["login_failed"]
+        )
+
+        # Test: reporter is 'su' AND message_body contains 'FAILED SU'
+        attribute_values_per_name = {
+            "message_body": ["FAILED SU (to root) ubuntu on pts/0"],
+            "reporter": ["su"],
+        }
+        self._CheckTaggingRule(
+            syslog.SyslogLineEventData, attribute_values_per_name, ["login_failed"]
+        )
+
+        # Test: data_type is 'vsftpd:log' AND text contains 'FAIL LOGIN'
+        attribute_values_per_name = {
+            "text": ['[svc-backup] FAIL LOGIN: Client "192.168.1.62"']
+        }
+        self._CheckTaggingRule(
+            vsftpd.VsftpdLogEventData, attribute_values_per_name, ["login_failed"]
         )
 
     def testRuleUserAdd(self):
@@ -420,6 +475,12 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
             syslog.SyslogLineEventData, attribute_values_per_name, ["session_start"]
         )
 
+        # Test: data_type is 'selinux:line' AND audit_type is 'USER_START'
+        attribute_values_per_name = {"audit_type": ["USER_START"]}
+        self._CheckTaggingRule(
+            selinux.SELinuxLogEventData, attribute_values_per_name, ["session_start"]
+        )
+
     def testRuleSessionStop(self):
         """Tests the session_stop tagging rule."""
         # Test: reporter is 'systemd-logind' and message_body contains 'Removed session'
@@ -429,6 +490,12 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
         }
         self._CheckTaggingRule(
             syslog.SyslogLineEventData, attribute_values_per_name, ["session_stop"]
+        )
+
+        # Test: data_type is 'selinux:line' AND audit_type is 'USER_END'
+        attribute_values_per_name = {"audit_type": ["USER_END"]}
+        self._CheckTaggingRule(
+            selinux.SELinuxLogEventData, attribute_values_per_name, ["session_stop"]
         )
 
     def testRuleBoot(self):
@@ -466,6 +533,22 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
         attribute_values_per_name = {"audit_type": ["SYSTEM_SHUTDOWN"]}
         self._CheckTaggingRule(
             selinux.SELinuxLogEventData, attribute_values_per_name, ["shutdown"]
+        )
+
+        # Test: reporter is 'systemd-logind' AND
+        #       (message_body contains 'System is powering down' OR
+        #        message_body contains 'System is rebooting' OR
+        #        message_body contains 'System is halting')
+        attribute_values_per_name = {
+            "message_body": [
+                "System is powering down.",
+                "System is rebooting.",
+                "System is halting.",
+            ],
+            "reporter": ["systemd-logind"],
+        }
+        self._CheckTaggingRule(
+            syslog.SyslogLineEventData, attribute_values_per_name, ["shutdown"]
         )
 
     def testRuleRunlevel(self):
@@ -514,6 +597,14 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
         attribute_values_per_name = {"message_body": ["status installed"]}
         self._CheckTaggingRule(
             dpkg.DpkgEventData, attribute_values_per_name, ["application_install"]
+        )
+
+        # Test: data_type is 'linux:apt_history_log:entry' AND command is 'Install'
+        attribute_values_per_name = {"command": ["Install"]}
+        self._CheckTaggingRule(
+            apt_history.APTHistoryLogEventData,
+            attribute_values_per_name,
+            ["application_install"],
         )
 
     def testRuleServiceStart(self):

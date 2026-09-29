@@ -17,6 +17,9 @@ login
   (reporter is 'sshd' OR reporter is 'sshd-session') AND (message_body contains 'session opened' OR message_body contains 'Starting session')
   reporter is 'dovecot' AND message_body contains 'imap-login: Login:'
   reporter is 'postfix/submission/smtpd' AND message_body contains 'sasl_'
+  data_type is 'syslog:ssh:login'
+  data_type is 'selinux:line' AND audit_type is 'USER_LOGIN' AND message_body contains 'res=success'
+  data_type is 'vsftpd:log' AND text contains 'OK LOGIN'
 
 # Tags Linux failed log-in events.
 login_failed
@@ -28,6 +31,10 @@ login_failed
   (reporter is 'xscreensaver' or reporter is 'login') AND message_body contains 'FAILED LOGIN'
   reporter is 'su' and message_body contains 'DENIED'
   reporter is 'nologin'
+  data_type is 'syslog:ssh:failed_connection'
+  data_type is 'selinux:line' AND audit_type is 'USER_AUTH' AND message_body contains 'res=failed'
+  reporter is 'su' AND message_body contains 'FAILED SU'
+  data_type is 'vsftpd:log' AND text contains 'FAIL LOGIN'
 
 # User added.
 useradd
@@ -68,10 +75,12 @@ logout
 # Tags Linux user session start events.
 session_start
   reporter is 'systemd-logind' AND message_body contains 'New session'
+  data_type is 'selinux:line' AND audit_type is 'USER_START'
 
 # Tags Linux user session stop events.
 session_stop
   reporter is 'systemd-logind' AND message_body contains 'Removed session'
+  data_type is 'selinux:line' AND audit_type is 'USER_END'
 
 # Tags Linux system boot events.
 boot
@@ -82,6 +91,7 @@ boot
 shutdown
   data_type is 'linux:utmp:event' AND login_type == 1 AND (terminal is '~~' OR terminal is 'system boot') AND username is 'shutdown'
   data_type is 'selinux:line' AND audit_type is 'SYSTEM_SHUTDOWN'
+  reporter is 'systemd-logind' AND (message_body contains 'System is powering down' OR message_body contains 'System is rebooting' OR message_body contains 'System is halting')
 
 # Tags Linux system run level change events.
 runlevel
@@ -99,6 +109,7 @@ device_disconnection
 # Tags Linux application installation events.
 application_install
   data_type is 'linux:dpkg_log:entry' AND message_body contains 'status installed'
+  data_type is 'linux:apt_history_log:entry' AND command is 'Install'
 
 # Tags Linux service start events.
 service_start
