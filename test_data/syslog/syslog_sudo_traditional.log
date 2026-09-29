@@ -1,0 +1,9 @@
+Jul 28 14:06:23 localhost sudo[3756]: pam_unix(sudo:auth): conversation failed
+Jul 28 14:06:23 localhost sudo[3756]: pam_unix(sudo:auth): auth could not identify password for [svc-backup]
+Jul 28 14:06:52 localhost sudo[3824]: svc-backup : TTY=pts/1 ; PWD=/home/svc-backup ; USER=root ; COMMAND=/usr/bin/id -un
+Jul 28 14:06:52 localhost sudo[3824]: pam_unix(sudo:session): session opened for user root(uid=0) by svc-backup(uid=1000)
+Jul 28 14:06:52 localhost sudo[3824]: pam_unix(sudo:session): session closed for user root
+Jul 28 14:06:57 localhost sudo[3870]: john.doe : user NOT in sudoers ; TTY=pts/1 ; PWD=/home/john.doe ; USER=root ; COMMAND=/usr/bin/id
+Jul 28 14:07:26 localhost sudo[3939]: pam_unix(sudo:auth): authentication failure; logname=test_user uid=1002 euid=0 tty=/dev/pts/1 ruser=test_user rhost=  user=test_user
+Jul 29 05:37:17 localhost sudo[1762]:    root : PWD=/root ; USER=root ; COMMAND=/bin/echo x#011hey
+Jul 29 05:37:17 localhost sudo[1765]:    root : PWD=/root ; USER=root ; COMMAND=/usr/bin/id -un
