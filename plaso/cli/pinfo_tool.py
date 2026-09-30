@@ -270,18 +270,16 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
         Returns:
           dict[str, tuple[int, int]]: mismatching results per key.
         """
-        keys = set(counter.keys())
-        keys.union(compare_counter.keys())
+        keys = set(counter.keys()) | set(compare_counter.keys())
 
         differences = {}
         for key in keys:
-            count_container = counter.get(key, 0)
-            compare_count_container = compare_counter.get(key, 0)
-            if (
-                count_container.number_of_events
-                != compare_count_container.number_of_events
-            ):
-                differences[key] = (count_container, compare_count_container)
+            number_of_events = getattr(counter.get(key), "number_of_events", 0)
+            compare_number_of_events = getattr(
+                compare_counter.get(key), "number_of_events", 0
+            )
+            if number_of_events != compare_number_of_events:
+                differences[key] = (number_of_events, compare_number_of_events)
 
         return differences
 
@@ -814,11 +812,8 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
         table_view = views.ViewsFactory.GetTableView(
             self._views_format_type, column_names=column_names, title=title
         )
-        for key, count_containers in sorted(differences.items()):
-            value_string = (
-                f"{count_containers[0].number_of_events:d} "
-                f"({count_containers[1].number_of_events:d})"
-            )
+        for key, numbers_of_events in sorted(differences.items()):
+            value_string = f"{numbers_of_events[0]:d} ({numbers_of_events[1]:d})"
             if reverse:
                 table_view.AddRow([value_string, key])
             else:
