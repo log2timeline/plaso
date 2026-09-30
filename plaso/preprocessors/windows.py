@@ -355,7 +355,7 @@ class WindowsAvailableTimeZonesPlugin(
         if not tzi_value:
             message = (
                 f"TZI value missing from Windows Registry key: "
-                f"{registry_key.key_path:s}."
+                f"{registry_key.path:s}."
             )
             mediator.ProducePreprocessingWarning(
                 self.ARTIFACT_DEFINITION_NAME,
@@ -373,7 +373,7 @@ class WindowsAvailableTimeZonesPlugin(
         except (ValueError, errors.ParseError) as exception:
             message = (
                 f"Unable to parse TZI record value in Windows Registry key: "
-                f"{registry_key.key_path:s} with error: {exception!s}"
+                f"{registry_key.path:s} with error: {exception!s}"
             )
             mediator.ProducePreprocessingWarning(
                 self.ARTIFACT_DEFINITION_NAME,
