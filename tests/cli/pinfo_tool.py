@@ -1,11 +1,22 @@
 #!/usr/bin/env python3
 """Tests for the pinfo CLI tool."""
 
+import json
+import os
 import unittest
 
-from plaso.cli import pinfo_tool
-from plaso.lib import errors
+from dfvfs.lib import definitions as dfvfs_definitions
+from dfvfs.path import factory as path_spec_factory
 
+from plaso.cli import pinfo_tool
+from plaso.containers import artifacts
+from plaso.containers import counts
+from plaso.containers import events
+from plaso.lib import definitions
+from plaso.lib import errors
+from plaso.storage import factory as storage_factory
+
+from tests import test_lib as shared_test_lib
 from tests.cli import test_lib
 
 
@@ -70,6 +81,53 @@ Storage files are different.
         # Compare the output as list of lines which makes it easier to spot
         # differences.
         self.assertEqual(output.split("\n"), expected_output)
+
+    def testGenerateAnalysisResultsReportAsJSONWithQuotedValue(self):
+        """Tests the _GenerateAnalysisResultsReport function with a quoted value."""
+        image_path = '"C:\\Program Files\\Foo\\svc.exe" -k netsvcs'
+
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+        test_tool._output_format = "json"
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            temp_file = os.path.join(temp_directory, "storage.plaso")
+
+            storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
+                definitions.DEFAULT_STORAGE_FORMAT
+            )
+            storage_writer.Open(path=temp_file)
+            try:
+                service_configuration = artifacts.WindowsServiceConfigurationArtifact(
+                    name="Foo", service_type=0x10, start_type=2
+                )
+                service_configuration.image_path = image_path
+                storage_writer.AddAttributeContainer(service_configuration)
+
+            finally:
+                storage_writer.Close()
+
+            storage_reader = test_tool._GetStorageReader(temp_file)
+            try:
+                column_titles = ["Name", "Service type", "Start type", "Image path"]
+                attribute_names = ["name", "service_type", "start_type", "image_path"]
+                attribute_mappings = {}
+                test_tool._GenerateAnalysisResultsReport(
+                    storage_reader,
+                    "windows_services",
+                    column_titles,
+                    "windows_service_configuration",
+                    attribute_names,
+                    attribute_mappings,
+                )
+
+            finally:
+                storage_reader.Close()
+
+        output = output_writer.ReadOutput()
+
+        json_dict = json.loads(output)
+        self.assertEqual(json_dict["windows_services"][0]["image_path"], image_path)
 
     def testGenerateAnalysisResultsReportAsMarkdown(self):
         """Tests the _GenerateAnalysisResultsReport function."""
@@ -168,6 +226,46 @@ Storage files are different.
         # Compare the output as list of lines which makes it easier to spot
         # differences.
         self.assertEqual(output.split("\n"), expected_output.split("\n"))
+
+    def testGenerateFileHashesReportAsJSONWithQuotedDisplayName(self):
+        """Tests the _GenerateFileHashesReport function with a quoted name."""
+        location = '/tmp/a"b\\c'
+
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+        test_tool._output_format = "json"
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            temp_file = os.path.join(temp_directory, "storage.plaso")
+
+            storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
+                definitions.DEFAULT_STORAGE_FORMAT
+            )
+            storage_writer.Open(path=temp_file)
+            try:
+                event_data_stream = events.EventDataStream()
+                event_data_stream.path_spec = path_spec_factory.Factory.NewPathSpec(
+                    dfvfs_definitions.TYPE_INDICATOR_OS, location=location
+                )
+                event_data_stream.sha256_hash = "0" * 64
+                storage_writer.AddAttributeContainer(event_data_stream)
+
+            finally:
+                storage_writer.Close()
+
+            storage_reader = test_tool._GetStorageReader(temp_file)
+            try:
+                test_tool._GenerateFileHashesReport(storage_reader)
+
+            finally:
+                storage_reader.Close()
+
+        output = output_writer.ReadOutput()
+
+        json_dict = json.loads(output)
+        self.assertEqual(
+            json_dict["file_hashes"][0]["display_name"], f"OS:{location:s}"
+        )
 
     def testGenerateFileHashesReportAsMarkdown(self):
         """Tests the _GenerateFileHashesReport function."""
@@ -488,6 +586,29 @@ Storage files are different.
     # TODO: add test for _PrintSessionsDetails.
     # TODO: add test for _PrintSessionsOverview.
     # TODO: add test for _PrintTasksInformation.
+
+    def testPrintWarningCountersJSON(self):
+        """Tests the _PrintWarningCountersJSON function."""
+        path_spec_key = (
+            'type: OS, location: C:\\image"1.raw\ntype: NTFS, '
+            "location: \\Windows\\System32\n"
+        )
+        warnings_by_path_spec = {path_spec_key: counts.WarningCount(number_of_events=2)}
+        warnings_by_parser_chain = {"winreg": counts.WarningCount(number_of_events=2)}
+
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+        test_tool._output_format = "json"
+
+        test_tool._PrintWarningCountersJSON(
+            warnings_by_path_spec, warnings_by_parser_chain
+        )
+
+        output = output_writer.ReadOutput()
+
+        json_dict = json.loads(f"{{{output:s}}}")
+        self.assertEqual(json_dict["warnings_by_parser"], {"winreg": 2})
+        self.assertEqual(json_dict["warnings_by_path_spec"], {path_spec_key: 2})
 
     def testCompareStores(self):
         """Tests the CompareStores function."""
