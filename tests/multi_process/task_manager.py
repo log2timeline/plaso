@@ -898,6 +898,44 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
         with self.assertRaises(KeyError):
             manager.UpdateTaskAsProcessingByIdentifier(task.identifier)
 
+    def testUpdateTaskAsProcessingByIdentifierWithRetry(self):
+        """Tests the UpdateTaskAsProcessingByIdentifier function with retry task."""
+        manager = task_manager.TaskManager()
+
+        task = manager.CreateTask(self._TEST_SESSION_IDENTIFIER)
+
+        manager._AbandonQueuedTasks()
+
+        retry_task = manager.CreateRetryTask()
+        self.assertIsNotNone(retry_task)
+        self.assertTrue(task.has_retry)
+
+        self.assertEqual(len(manager._tasks_queued), 1)
+        self.assertEqual(len(manager._tasks_processing), 0)
+        self.assertEqual(len(manager._tasks_abandoned), 1)
+
+        # Indicate to the task manager that the abandoned task is processing.
+        # Since the abandoned task has a retry task it should remain abandoned
+        # and not be merged, otherwise the same data is merged twice.
+        manager.UpdateTaskAsProcessingByIdentifier(task.identifier)
+
+        self.assertEqual(len(manager._tasks_queued), 1)
+        self.assertEqual(len(manager._tasks_processing), 0)
+        self.assertEqual(len(manager._tasks_abandoned), 1)
+
+        result = manager.CheckTaskToMerge(task)
+        self.assertFalse(result)
+
+        # Indicate to the task manager that the retry task is processing.
+        manager.UpdateTaskAsProcessingByIdentifier(retry_task.identifier)
+
+        self.assertEqual(len(manager._tasks_queued), 0)
+        self.assertEqual(len(manager._tasks_processing), 1)
+        self.assertEqual(len(manager._tasks_abandoned), 1)
+
+        result = manager.CheckTaskToMerge(retry_task)
+        self.assertTrue(result)
+
 
 if __name__ == "__main__":
     unittest.main()
