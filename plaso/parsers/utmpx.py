@@ -203,7 +203,8 @@ class UtmpxParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
             except errors.ParseError as exception:
                 parser_mediator.ProduceWarning(f"{exception!s}")
                 file_offset += self._RECORD_SIZE
-                corrupted = True
+                file_object.seek(file_offset, os.SEEK_SET)
+                continue
 
             parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
