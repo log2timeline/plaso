@@ -663,15 +663,10 @@ class SkypePlugin(interface.SQLitePlugin):
             src_aux = f"Unknown [{guid:s}]"
             dst_aux = f"Unknown [{guid:s}]"
 
-        if is_incoming == "0":
+        if is_incoming == 0:
             user_start_call = True
             source = src_aux
-
-            ip_address = self._GetRowValue(query_hash, row, "ip_address")
-            if ip_address:
-                destination = f"{dst_aux:s} <{ip_address:s}>"
-            else:
-                destination = dst_aux
+            destination = dst_aux
         else:
             user_start_call = False
             source = src_aux
@@ -692,7 +687,7 @@ class SkypePlugin(interface.SQLitePlugin):
             query_hash, row, "accept_call"
         )
         event_data.user_start_call = user_start_call
-        event_data.video_conference = videostatus == "3"
+        event_data.video_conference = videostatus == 3
 
         start_timestamp = self._GetRowValue(query_hash, row, "accept_call")
         if start_timestamp and call_duration:

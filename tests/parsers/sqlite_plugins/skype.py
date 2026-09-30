@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Tests for the Skype main.db history database plugin."""
 
+import sqlite3
 import unittest
 
 from plaso.parsers.sqlite_plugins import skype
@@ -101,10 +102,38 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
             "end_time": "2013-07-01T22:23:03+00:00",
             "src_call": "gen.beringer",
             "start_time": "2013-07-01T22:12:17+00:00",
-            "user_start_call": False,
+            "user_start_call": True,
             "video_conference": False,
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 19)
+        self.CheckEventData(event_data, expected_event_values)
+
+    def testParseCallVideoConference(self):
+        """Tests the ParseCall function with an incoming video call."""
+        plugin = skype.SkypePlugin()
+        query, _ = plugin.QUERIES[4]
+
+        storage_writer = self._CreateStorageWriter()
+        parser_mediator = self._CreateParserMediator(storage_writer)
+
+        with sqlite3.connect(":memory:") as database_connection:
+            database_connection.row_factory = sqlite3.Row
+            row = database_connection.execute(
+                "SELECT 1 AS id, 'caller-callee-1' AS guid, 1 AS is_incoming, "
+                "1 AS call_db_id, 3 AS videostatus, NULL AS try_call, "
+                "NULL AS accept_call, NULL AS call_duration"
+            ).fetchone()
+
+        plugin.ParseCall(parser_mediator, query, row)
+
+        expected_event_values = {
+            "data_type": "skype:event:call",
+            "dst_call": "callee",
+            "src_call": "caller",
+            "user_start_call": False,
+            "video_conference": True,
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
 
