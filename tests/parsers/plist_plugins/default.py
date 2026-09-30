@@ -4,8 +4,6 @@
 import datetime
 import unittest
 
-import pytz
-
 from plaso.parsers.plist_plugins import default
 
 from tests.parsers.plist_plugins import test_lib
@@ -14,12 +12,11 @@ from tests.parsers.plist_plugins import test_lib
 class TestDefaultPlist(test_lib.PlistPluginTestCase):
     """Tests for the default plist plugin."""
 
+    # Note that plistlib returns naive datetime values that are in UTC.
     _TOP_LEVEL_DICT_SINGLE_KEY = {
         "DE-00-AD-00-BE-EF": {
             "Name": "DBF Industries Slideshow Laser",
-            "LastUsed": datetime.datetime(
-                2012, 11, 2, 1, 21, 38, 997672, tzinfo=pytz.UTC
-            ),
+            "LastUsed": datetime.datetime(2012, 11, 2, 1, 21, 38, 997672),
         }
     }
 
@@ -35,18 +32,12 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
                 "Manufacturer": 76,
                 "PageScanPeriod": 0,
                 "ClockOffset": 17981,
-                "LastNameUpdate": datetime.datetime(
-                    2012, 11, 2, 1, 21, 38, 997672, tzinfo=pytz.UTC
-                ),
+                "LastNameUpdate": datetime.datetime(2012, 11, 2, 1, 21, 38, 997672),
                 "InquiryRSSI": 198,
                 "PageScanRepetitionMode": 1,
-                "LastServicesUpdate": datetime.datetime(
-                    2012, 11, 2, 1, 13, 23, tzinfo=pytz.UTC
-                ),
+                "LastServicesUpdate": datetime.datetime(2012, 11, 2, 1, 13, 23),
                 "displayName": "Apple Magic Trackpad 2",
-                "LastInquiryUpdate": datetime.datetime(
-                    2012, 11, 2, 1, 13, 17, 324095, tzinfo=pytz.UTC
-                ),
+                "LastInquiryUpdate": datetime.datetime(2012, 11, 2, 1, 13, 17, 324095),
                 "Services": "",
                 "BatteryPercent": 0.61,
             },
@@ -55,14 +46,10 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
                 "ClockOffset": 28180,
                 "ClassOfDevice": 3670276,
                 "PageScanMode": 0,
-                "LastNameUpdate": datetime.datetime(
-                    2011, 4, 7, 17, 56, 53, 524275, tzinfo=pytz.UTC
-                ),
+                "LastNameUpdate": datetime.datetime(2011, 4, 7, 17, 56, 53, 524275),
                 "PageScanPeriod": 2,
                 "PageScanRepetitionMode": 1,
-                "LastInquiryUpdate": datetime.datetime(
-                    2012, 7, 10, 22, 5, 0, 20116, tzinfo=pytz.UTC
-                ),
+                "LastInquiryUpdate": datetime.datetime(2012, 7, 10, 22, 5, 0, 20116),
             },
         }
     }
@@ -98,6 +85,7 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
 
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
+        self.assertFalse(event_data.written_time.is_local_time)
 
     def testProcessMulti(self):
         """Tests Process on a plist containing five keys with date values."""
