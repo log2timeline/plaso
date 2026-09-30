@@ -226,6 +226,34 @@ class GenericBinaryOperatorTest(shared_test_lib.BaseTestCase):
         test_value = filter_object._GetValue("tag", event, event_data, None, event_tag)
         self.assertEqual(test_value, ["browser_search"])
 
+    def testMatchesWithFalsyValue(self):
+        """Tests the Matches function with a falsy event value."""
+        test_values = dict(self._TEST_EVENTS[0])
+        test_values["test_string"] = ""
+        test_values["test_value"] = 0
+
+        event, event_data, _ = containers_test_lib.CreateEventFromValues(test_values)
+
+        filter_object = filters.EqualsOperator(arguments=["test_value", 0])
+        result = filter_object.Matches(event, event_data, None, None)
+        self.assertTrue(result)
+
+        filter_object.FlipBool()
+        result = filter_object.Matches(event, event_data, None, None)
+        self.assertFalse(result)
+
+        filter_object = filters.LessThanOperator(arguments=["test_value", 5])
+        result = filter_object.Matches(event, event_data, None, None)
+        self.assertTrue(result)
+
+        filter_object = filters.EqualsOperator(arguments=["test_string", ""])
+        result = filter_object.Matches(event, event_data, None, None)
+        self.assertTrue(result)
+
+        filter_object = filters.NotEqualsOperator(arguments=["test_string", "foo"])
+        result = filter_object.Matches(event, event_data, None, None)
+        self.assertTrue(result)
+
     # TODO: add tests for FlipBool function
 
 
