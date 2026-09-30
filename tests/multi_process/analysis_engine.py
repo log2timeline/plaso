@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Tests for the task-based multi-process processing analysis engine."""
 
+import multiprocessing
 import os
 import shutil
+import time
 import unittest
 
 from plaso.analysis import tagging
@@ -225,6 +227,35 @@ class AnalysisEngineMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
 
             finally:
                 storage_writer.Close()
+
+    def testInternalUpdateProcessingStatus(self):
+        """Tests the _UpdateProcessingStatus function."""
+        # The worker timeout is specified in minutes.
+        test_engine = analysis_engine.AnalysisMultiProcessEngine(worker_timeout=5.0)
+
+        process = multiprocessing.Process(name="Worker_00")
+        test_engine._processes_per_pid[1] = process
+        test_engine._process_information_per_pid[1] = None
+
+        process_status = {
+            "last_activity_timestamp": time.time() - 60.0,
+            "processing_status": definitions.STATUS_INDICATOR_RUNNING,
+        }
+        test_engine._UpdateProcessingStatus(1, process_status, 0)
+
+        worker_status = test_engine._processing_status.workers_status[0]
+        self.assertEqual(worker_status.status, definitions.STATUS_INDICATOR_RUNNING)
+
+        process_status = {
+            "last_activity_timestamp": time.time() - 600.0,
+            "processing_status": definitions.STATUS_INDICATOR_RUNNING,
+        }
+        test_engine._UpdateProcessingStatus(1, process_status, 0)
+
+        worker_status = test_engine._processing_status.workers_status[0]
+        self.assertEqual(
+            worker_status.status, definitions.STATUS_INDICATOR_NOT_RESPONDING
+        )
 
     # TODO: add bogus data location test.
 
