@@ -17,7 +17,7 @@ class FirefoxHistoryTypedCountFormatterHelper(interface.CustomEventFormatterHelp
           event_values (dict[str, object]): event values.
         """
         typed = event_values.get("typed")
-        if typed == "1":
+        if typed in (1, "1"):
             url_typed_string = "(URL directly typed)"
         else:
             url_typed_string = "(URL not typed directly)"
@@ -38,7 +38,7 @@ class FirefoxHistoryURLHiddenFormatterHelper(interface.CustomEventFormatterHelpe
           event_values (dict[str, object]): event values.
         """
         hidden = event_values.get("hidden")
-        if hidden == "1":
+        if hidden in (1, "1"):
             event_values["url_hidden_string"] = "(URL hidden)"
 
 
