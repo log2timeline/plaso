@@ -87,10 +87,12 @@ class UTorrentBencodePlugin(interface.BencodePlugin):
             event_data.destination = torrent_values.GetDecodedValue("path")
             event_data.downloaded_time = torrent_values.GetDateTimeValue("completed_on")
             event_data.modification_times = modification_times or None
-            # Convert seconds to minutes.
-            event_data.seedtime, _ = divmod(seedtime, 60)
 
-        parser_mediator.ProduceEventData(event_data)
+            if seedtime is not None:
+                # Convert seconds to minutes.
+                event_data.seedtime, _ = divmod(seedtime, 60)
+
+            parser_mediator.ProduceEventData(event_data)
 
 
 bencode_parser.BencodeParser.RegisterPlugin(UTorrentBencodePlugin)
