@@ -80,7 +80,7 @@ class XLSXOutputModule(interface.OutputModule):
         try:
             datetime_object = datetime.datetime(1970, 1, 1, 0, 0, 0, 0, tzinfo=pytz.UTC)
             datetime_object += datetime.timedelta(microseconds=event.timestamp)
-            datetime_object.astimezone(output_mediator.time_zone)
+            datetime_object = datetime_object.astimezone(output_mediator.time_zone)
 
             return datetime_object.replace(tzinfo=None)
 
