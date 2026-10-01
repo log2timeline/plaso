@@ -52,7 +52,7 @@ def CalculateEventValuesHash(event_data, event_data_stream):
             )
 
         try:
-            attributes.append(f"{attribute_name:s}: {attribute_value!s}")
+            attributes.append(f"{attribute_name:s}: {attribute_value!r}")
         except UnicodeDecodeError:
             raise RuntimeError(f"Failed to decode attribute {attribute_name:s}")
 
@@ -70,7 +70,7 @@ def CalculateEventValuesHash(event_data, event_data_stream):
                 )
 
             try:
-                attributes.append(f"{attribute_name:s}: {attribute_value!s}")
+                attributes.append(f"{attribute_name:s}: {attribute_value!r}")
             except UnicodeDecodeError:
                 raise RuntimeError(f"Failed to decode attribute {attribute_name:s}")
 

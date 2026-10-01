@@ -60,7 +60,43 @@ class EventValuesHelperTest(shared_test_lib.BaseTestCase):
             event_data, event_data_stream
         )
 
-        self.assertEqual(content_identifier, "31aac7b1f8c1446f4b638c0dc5f92981")
+        self.assertEqual(content_identifier, "877d0173b4aea6e2b6ea48bd710ce635")
+
+    def testCalculateEventValuesHashWithDifferentValueTypes(self):
+        """Tests the CalculateEventValuesHash function with different value types."""
+        event_data = events.EventData()
+        event_data.data_type = "test"
+        event_data.attribute1 = 1
+        event_data.attribute2 = True
+
+        content_identifier1 = events.CalculateEventValuesHash(event_data, None)
+
+        event_data = events.EventData()
+        event_data.data_type = "test"
+        event_data.attribute1 = "1"
+        event_data.attribute2 = True
+
+        content_identifier2 = events.CalculateEventValuesHash(event_data, None)
+
+        self.assertNotEqual(content_identifier1, content_identifier2)
+
+        event_data = events.EventData()
+        event_data.data_type = "test"
+        event_data.attribute1 = 1
+        event_data.attribute2 = "True"
+
+        content_identifier3 = events.CalculateEventValuesHash(event_data, None)
+
+        self.assertNotEqual(content_identifier1, content_identifier3)
+
+        event_data = events.EventData()
+        event_data.data_type = "test"
+        event_data.attribute1 = 1
+        event_data.attribute2 = True
+
+        content_identifier4 = events.CalculateEventValuesHash(event_data, None)
+
+        self.assertEqual(content_identifier1, content_identifier4)
 
 
 class EventDataTest(shared_test_lib.BaseTestCase):
