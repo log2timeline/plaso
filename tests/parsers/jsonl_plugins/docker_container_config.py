@@ -46,6 +46,10 @@ class DockerContainerLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
+        # The event data is not marked as corrupted, since all date and time
+        # values were parsed successfully.
+        self.assertFalse(getattr(event_data, "_corrupted"))
+
 
 if __name__ == "__main__":
     unittest.main()
