@@ -71,6 +71,38 @@ class AtlassianBitbucketTextPluginTest(test_lib.TextPluginTestCase):
 
         self.assertFalse(plugin.CheckRequiredFormat(parser_mediator, text_reader))
 
+        # Check Confluence format, where the logger class is enclosed in brackets.
+        file_object = io.BytesIO(
+            b"2022-07-12 01:08:59,489 INFO [Catalina-utility-1] "
+            b"[confluence.cluster.hazelcast.HazelcastClusterManager] "
+            b"startCluster Starting the cluster.\n"
+            b"2022-07-12 01:09:02,530 INFO [hz.confluence.event-3] "
+            b"[confluence.cluster.hazelcast.LoggingClusterMembershipListener] "
+            b"memberAdded [10.0.0.123]:5801 joined the cluster\n"
+        )
+        text_reader = text_parser.EncodedTextReader(
+            file_object, encoding=plugin.ENCODING
+        )
+        text_reader.ReadLines()
+
+        self.assertFalse(plugin.CheckRequiredFormat(parser_mediator, text_reader))
+
+        # Check Jira format, where the logger class is enclosed in brackets.
+        file_object = io.BytesIO(
+            b"2022-10-03 09:00:01,042 INFO [main] "
+            b"[com.atlassian.jira.startup.JiraStartupLogger] start Jira starting "
+            b"up. Version : 9.2.0\n"
+            b"2022-10-03 09:01:12,884 WARN [Caesium-1-4] "
+            b"[com.atlassian.jira.cluster.ClusterManager] checkClusterLock Lock "
+            b"'CLUSTER_UPGRADE_LOCK' is held by node 'node1'. Cannot acquire.\n"
+        )
+        text_reader = text_parser.EncodedTextReader(
+            file_object, encoding=plugin.ENCODING
+        )
+        text_reader.ReadLines()
+
+        self.assertFalse(plugin.CheckRequiredFormat(parser_mediator, text_reader))
+
         # Check unsupported date and time value.
         file_object = io.BytesIO(
             b"2020-09-08 07:53:45,084 INFO [main] "
