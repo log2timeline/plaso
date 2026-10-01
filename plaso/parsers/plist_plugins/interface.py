@@ -886,6 +886,9 @@ class PlistPlugin(plugins.BasePlugin):
         Returns:
           bool: True if this is the correct plugin, False otherwise.
         """
+        if not isinstance(top_level, dict):
+            return False
+
         return set(top_level.keys()).issuperset(self.PLIST_KEYS)
 
     def Process(self, parser_mediator, top_level=None, **kwargs):
