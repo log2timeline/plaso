@@ -15,6 +15,26 @@ from tests.parsers.text_plugins import test_lib
 class ApacheAccessLogTextPluginTest(test_lib.TextPluginTestCase):
     """Tests for Apache access log text parser plugin."""
 
+    def _ParseLogLines(self, plugin, data):
+        """Parses log lines with a plugin.
+
+        Args:
+          plugin (ApacheAccessLogTextPlugin): Apache access log text plugin.
+          data (bytes): log lines.
+
+        Returns:
+          FakeStorageWriter: storage writer.
+        """
+        storage_writer = self._CreateStorageWriter()
+
+        parser_mediator = parsers_mediator.ParserMediator()
+        parser_mediator.SetStorageWriter(storage_writer)
+
+        file_object = io.BytesIO(data)
+        plugin.Process(parser_mediator, file_object=file_object)
+
+        return storage_writer
+
     def testCheckRequiredFormat(self):
         """Tests the CheckRequiredFormat function."""
         plugin = apache_access.ApacheAccessLogTextPlugin()
@@ -145,6 +165,124 @@ class ApacheAccessLogTextPluginTest(test_lib.TextPluginTestCase):
         )
         self.assertEqual(test_warning.message, expected_message)
         self.assertEqual(test_warning.parser_chain, "text/apache_access")
+
+    def testProcessWithEscapedQuotes(self):
+        """Tests the Process function with escaped quotes in header values."""
+        plugin = apache_access.ApacheAccessLogTextPlugin()
+        storage_writer = self._ParseLogLines(
+            plugin,
+            b'10.0.0.1 - - [13/Jan/2016:19:31:16 +0000] "GET /index.html HTTP/1.1" '
+            b'200 494 "http://localhost/?q=\\"a\\"" "Mozilla/5.0 \\"test\\""\n',
+        )
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 1)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        expected_event_values = {
+            "data_type": "apache:access_log:entry",
+            "http_request": "GET /index.html HTTP/1.1",
+            "http_request_referer": 'http://localhost/?q=\\"a\\"',
+            "http_request_user_agent": 'Mozilla/5.0 \\"test\\"',
+            "http_response_code": 200,
+            "http_response_bytes": 494,
+            "ip_address": "10.0.0.1",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
+
+    def testProcessWithLeadingWhitespace(self):
+        """Tests the Process function with leading whitespace in header values."""
+        plugin = apache_access.ApacheAccessLogTextPlugin()
+        storage_writer = self._ParseLogLines(
+            plugin,
+            b'10.0.0.1 - - [13/Jan/2016:19:31:16 +0000] "GET /index.html HTTP/1.1" '
+            b'200 494 " http://localhost/" "  Mozilla/5.0"\n',
+        )
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 1)
+
+        expected_event_values = {
+            "data_type": "apache:access_log:entry",
+            "http_request_referer": " http://localhost/",
+            "http_request_user_agent": "  Mozilla/5.0",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
+
+    def testProcessWithEmptyRequest(self):
+        """Tests the Process function with an empty request line."""
+        plugin = apache_access.ApacheAccessLogTextPlugin()
+        storage_writer = self._ParseLogLines(
+            plugin,
+            b'10.0.0.1 - - [13/Jan/2016:19:31:16 +0000] "-" 408 -\n'
+            b'10.0.0.1 - - [13/Jan/2016:19:31:17 +0000] "-" 408 - "-" "-"\n',
+        )
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 2)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        expected_event_values = {
+            "data_type": "apache:access_log:entry",
+            "http_request": None,
+            "http_response_code": 408,
+            "ip_address": "10.0.0.1",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
+
+    def testProcessWithOtherRequestMethods(self):
+        """Tests the Process function with other HTTP request methods."""
+        plugin = apache_access.ApacheAccessLogTextPlugin()
+        storage_writer = self._ParseLogLines(
+            plugin,
+            b'10.0.0.1 - - [13/Jan/2016:19:31:16 +0000] "PROPFIND /dav/ HTTP/1.1" '
+            b"207 1024\n"
+            b'10.0.0.1 - - [13/Jan/2016:19:31:17 +0000] "M-SEARCH * HTTP/1.1" '
+            b"501 290\n",
+        )
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 2)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        expected_event_values = {
+            "data_type": "apache:access_log:entry",
+            "http_request": "PROPFIND /dav/ HTTP/1.1",
+            "http_response_code": 207,
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
+
+        expected_event_values = {
+            "data_type": "apache:access_log:entry",
+            "http_request": "M-SEARCH * HTTP/1.1",
+            "http_response_code": 501,
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
+        self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == "__main__":
