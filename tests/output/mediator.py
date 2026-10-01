@@ -161,6 +161,10 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
             username = output_mediator.GetUsername(event_data)
             self.assertEqual(username, "testuser1")
 
+            # Test that the cached username is returned on a subsequent lookup.
+            username = output_mediator.GetUsername(event_data)
+            self.assertEqual(username, "testuser1")
+
             setattr(event_data, "user_sid", "1001")
 
             username = output_mediator.GetUsername(event_data)
