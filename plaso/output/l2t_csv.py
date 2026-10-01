@@ -94,8 +94,10 @@ class L2TCSVFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
     # Note that L2T CSV defines certain fields as part of the format.
     _RESERVED_VARIABLE_NAMES = frozenset(
         [
+            "_corrupted",
             "_event_values_hash",
             "_parser_chain",
+            "_recovered",
             "body",
             "data_type",
             "date_time",

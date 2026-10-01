@@ -16,9 +16,11 @@ class PlistTimeEventDataTest(shared_test_lib.BaseTestCase):
         attribute_container = plist_event.PlistTimeEventData()
 
         expected_attribute_names = [
+            "_corrupted",
             "_event_data_stream_identifier",
             "_event_values_hash",
             "_parser_chain",
+            "_recovered",
             "data_type",
             "key",
             "root",
