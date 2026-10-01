@@ -105,21 +105,28 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
         + pyparsing.Suppress("]")
     ).set_results_name("date_time")
 
-    _HTTP_METHOD = pyparsing.one_of(
-        ["CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT", "TRACE"]
-    )
+    # HTTP request method token, for example "GET", "PROPFIND" or "M-SEARCH".
+    _HTTP_METHOD = pyparsing.Word(pyparsing.alphanums + "!#$%&'*+-.^_`|~")
 
     _HTTP_VERSION = pyparsing.Combine(
         pyparsing.Literal("HTTP/") + pyparsing.Word(pyparsing.nums + ".")
     )
 
+    # The request line is logged as "-" if no request line was received.
     _HTTP_REQUEST = (
         pyparsing.Suppress('"')
-        + pyparsing.Group(
-            _HTTP_METHOD + pyparsing.Regex(r"\S*") + _HTTP_VERSION
-        ).set_results_name("http_request")
+        + (
+            pyparsing.Group(
+                _HTTP_METHOD + pyparsing.Regex(r"\S*") + _HTTP_VERSION
+            ).set_results_name("http_request")
+            | pyparsing.Literal("-")
+        )
         + pyparsing.Suppress('"')
     )
+
+    # Value of a quoted string, where double quotes and backslashes in the value
+    # are escaped with a backslash. Leading whitespace is part of the value.
+    _QUOTED_STRING_VALUE = pyparsing.Regex(r'(?:[^"\\\n]|\\.)*').leave_whitespace()
 
     _IP_ADDRESS = (
         pyparsing.pyparsing_common.ipv4_address
@@ -129,6 +136,12 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
     _REMOTE_NAME = (
         pyparsing.Word(pyparsing.alphanums) | pyparsing.Literal("-")
     ).set_results_name("remote_name")
+
+    _REFERER = (
+        pyparsing.Suppress('"')
+        + _QUOTED_STRING_VALUE.set_results_name("referer")
+        + pyparsing.Suppress('"')
+    )
 
     _RESPONSE_BYTES = (pyparsing.Literal("-") | _INTEGER).set_results_name(
         "response_bytes"
@@ -140,7 +153,7 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
 
     _USER_AGENT = (
         pyparsing.Suppress('"')
-        + pyparsing.CharsNotIn('"').set_results_name("user_agent")
+        + _QUOTED_STRING_VALUE.set_results_name("user_agent")
         + pyparsing.Suppress('"')
     )
 
@@ -175,7 +188,7 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
         + _HTTP_REQUEST
         + _INTEGER.set_results_name("response_code")
         + _RESPONSE_BYTES
-        + pyparsing.QuotedString('"').set_results_name("referer")
+        + _REFERER
         + _USER_AGENT
         + _END_OF_LINE
     )
@@ -193,7 +206,7 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
         + _HTTP_REQUEST
         + _INTEGER.set_results_name("response_code")
         + _RESPONSE_BYTES
-        + pyparsing.QuotedString('"').set_results_name("referer")
+        + _REFERER
         + _USER_AGENT
         + _END_OF_LINE
     )
