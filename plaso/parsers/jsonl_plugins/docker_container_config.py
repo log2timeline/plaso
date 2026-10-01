@@ -88,7 +88,7 @@ class DockerContainerConfigurationJSONLPlugin(interface.JSONLPlugin):
               other components, such as storage and dfVFS.
           json_dict (dict): JSON dictionary of the configuration record.
         """
-        corrupted = True
+        corrupted = False
 
         json_state = self._GetJSONValue(json_dict, "State", default_value={})
         configuration = self._GetJSONValue(json_dict, "Config", default_value={})
