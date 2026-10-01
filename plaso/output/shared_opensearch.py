@@ -299,14 +299,37 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
                 "index": self._index_name,
                 "request_timeout": self._DEFAULT_REQUEST_TIMEOUT,
             }
-            self._client.bulk(**bulk_arguments)
+            response = self._client.bulk(**bulk_arguments)
+
+            # The bulk response indicates documents that could not be inserted,
+            # for example due to a mapping conflict, per item.
+            if response.get("errors", False):
+                item_errors = []
+                for item in response.get("items", []):
+                    for item_result in item.values():
+                        item_error = item_result.get("error", None)
+                        if item_error:
+                            item_errors.append(item_error)
+
+                if item_errors:
+                    first_error = item_errors[0]
+                    if isinstance(first_error, dict):
+                        first_error = (
+                            f"{first_error.get('type', None)!s}: "
+                            f"{first_error.get('reason', None)!s}"
+                        )
+                    logger.warning(
+                        f"Unable to insert {len(item_errors):d} of "
+                        f"{self._number_of_buffered_events:d} events into OpenSearch "
+                        f"with first error: {first_error!s}"
+                    )
 
         except (ValueError, opensearchpy.exceptions.OpenSearchException) as exception:
             # Ignore problematic events
             logger.warning(f"Unable to bulk insert with error: {exception!s}")
 
         logger.debug(
-            "Inserted {self._number_of_buffered_events:d} events into OpenSearch"
+            f"Inserted {self._number_of_buffered_events:d} events into OpenSearch"
         )
         self._event_documents = []
         self._number_of_buffered_events = 0
