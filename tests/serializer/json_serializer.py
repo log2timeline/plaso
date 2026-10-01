@@ -195,10 +195,12 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         self.assertIsInstance(event_data, events.EventData)
 
         expected_event_data_dict = {
+            "_corrupted": False,
             "_event_data_stream_identifier": (
                 expected_event_data.GetEventDataStreamIdentifier().CopyToString()
             ),
             "_parser_chain": "test_parser",
+            "_recovered": False,
             "a_tuple": ("some item", [234, 52, 15]),
             "data_type": "test:event2",
             "empty_string": "",
@@ -211,6 +213,25 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         }
         event_data_dict = event_data.CopyToDict()
         self.assertEqual(event_data_dict, expected_event_data_dict)
+
+    def testReadAndWriteSerializedEventDataCorruptedAndRecovered(self):
+        """Test ReadSerialized and WriteSerialized of corrupted and recovered."""
+        expected_event_data = events.EventData(data_type="test:event")
+        expected_event_data._corrupted = True
+        expected_event_data._recovered = True
+
+        json_string = json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
+            expected_event_data
+        )
+        self.assertIsNotNone(json_string)
+
+        event_data = json_serializer.JSONAttributeContainerSerializer.ReadSerialized(
+            json_string
+        )
+        self.assertIsNotNone(event_data)
+        self.assertIsInstance(event_data, events.EventData)
+        self.assertTrue(event_data._corrupted)
+        self.assertTrue(event_data._recovered)
 
     def testReadAndWriteSerializedEventDataStream(self):
         """Test ReadSerialized and WriteSerialized of EventDataStream."""

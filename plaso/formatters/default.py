@@ -16,8 +16,10 @@ class DefaultEventFormatter(interface.BasicEventFormatter):
 
     _RESERVED_VARIABLE_NAMES = frozenset(
         [
+            "_corrupted",
             "_event_values_hash",
             "_parser_chain",
+            "_recovered",
             "data_type",
             "date_time",
             "path_spec",

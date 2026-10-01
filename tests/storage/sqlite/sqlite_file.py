@@ -458,6 +458,36 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
             finally:
                 test_store.Close()
 
+    def testGetAttributeContainerByIndexWithEventData(self):
+        """Tests the GetAttributeContainerByIndex function with event data."""
+        event_data = events.EventData(data_type="test:event")
+        event_data._corrupted = True
+        event_data._recovered = True
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            test_path = os.path.join(temp_directory, "plaso.sqlite")
+            test_store = sqlite_file.SQLiteStorageFile()
+            test_store.Open(path=test_path, read_only=False)
+
+            try:
+                test_store.AddAttributeContainer(event_data)
+            finally:
+                test_store.Close()
+
+            test_store = sqlite_file.SQLiteStorageFile()
+            test_store.Open(path=test_path)
+
+            try:
+                container = test_store.GetAttributeContainerByIndex(
+                    event_data.CONTAINER_TYPE, 0
+                )
+                self.assertIsNotNone(container)
+                self.assertTrue(container._corrupted)
+                self.assertTrue(container._recovered)
+
+            finally:
+                test_store.Close()
+
     def testGetNumberOfAttributeContainers(self):
         """Tests the GetNumberOfAttributeContainers function."""
         event_data_stream = events.EventDataStream()

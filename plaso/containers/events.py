@@ -27,9 +27,11 @@ def CalculateEventValuesHash(event_data, event_data_stream):
 
     for attribute_name, attribute_value in sorted(event_data.GetAttributes()):
         if attribute_value is None or attribute_name in (
+            "_corrupted",
             "_event_data_stream_identifier",
             "_event_values_hash",
             "_parser_chain",
+            "_recovered",
             "data_type",
         ):
             continue
@@ -205,9 +207,11 @@ class EventData(interface.AttributeContainer):
     }
 
     _SERIALIZABLE_PROTECTED_ATTRIBUTES = [
+        "_corrupted",
         "_event_data_stream_identifier",
         "_event_values_hash",
         "_parser_chain",
+        "_recovered",
     ]
 
     def __init__(self, data_type=None):
