@@ -170,7 +170,7 @@ class BinaryCookieParser(
             parser_mediator,
             event_data.cookie_name,
             event_data.cookie_value,
-            event_data.cookie_name,
+            event_data.url,
         )
 
     @classmethod
