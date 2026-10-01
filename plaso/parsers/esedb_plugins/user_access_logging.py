@@ -434,7 +434,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
                 record_values, "LastSeenActive"
             )
             event_data.serial_number = record_values.get("SerialNumber")
-            event_data.vm_identifier = record_values.get("VMGuid")
+            event_data.vm_identifier = record_values.get("VmGuid")
 
             parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
