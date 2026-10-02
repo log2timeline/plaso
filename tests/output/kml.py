@@ -6,6 +6,8 @@ import os
 import sys
 import unittest
 
+from xml.etree import ElementTree
+
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
@@ -150,6 +152,40 @@ class KMLOutputTest(test_lib.OutputModuleTestCase):
         ]
         # Compare the output as list of lines which makes it easier to spot differences.
         self.assertEqual(event_body.split("\n"), expected_event_body_lines)
+
+    def testWriteFieldValuesWithControlCharacters(self):
+        """Tests the WriteFieldValues function with control characters."""
+        test_file_object = io.StringIO()
+
+        output_mediator = self._CreateOutputMediator()
+        output_module = kml.KMLOutputModule()
+        output_module._file_object = test_file_object
+
+        test_event_values = dict(self._TEST_EVENTS[1])
+        test_event_values["text"] = "Reporter <CRON>\x01 PID: |8442|\x1f"
+
+        event, event_data, event_data_stream = (
+            containers_test_lib.CreateEventFromValues(test_event_values)
+        )
+        field_values = output_module.GetFieldValues(
+            output_mediator, event, event_data, event_data_stream, None
+        )
+        output_module.WriteHeader(output_mediator)
+        output_module.WriteFieldValues(output_mediator, field_values)
+        output_module.WriteFooter()
+
+        kml_root_element = ElementTree.fromstring(test_file_object.getvalue())
+
+        description_xml_element = kml_root_element.find(
+            "{http://www.opengis.net/kml/2.2}Document/"
+            "{http://www.opengis.net/kml/2.2}Placemark/"
+            "{http://www.opengis.net/kml/2.2}description"
+        )
+        self.assertIsNotNone(description_xml_element)
+        self.assertIn(
+            "  {text} Reporter <CRON>\ufffd PID: |8442|\ufffd\n",
+            description_xml_element.text,
+        )
 
     def testWriteFooter(self):
         """Tests the WriteFooter function."""

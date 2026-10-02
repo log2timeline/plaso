@@ -6,6 +6,7 @@ dimensional Earth browsers.
 """
 
 import codecs
+import re
 
 from xml.etree import ElementTree
 
@@ -18,6 +19,11 @@ class KMLOutputModule(rawpy.NativePythonOutputModule):
 
     NAME = "kml"
     DESCRIPTION = "Saves events with geography data into a KML format."
+
+    # Characters that are not allowed in XML 1.0.
+    _ILLEGAL_XML_RE = re.compile(
+        r"[\x00-\x08\x0b\x0c\x0e-\x1f\ud800-\udfff\ufffe\uffff]"
+    )
 
     def WriteFieldValues(self, output_mediator, field_values):
         """Writes field values to the output.
@@ -34,6 +40,7 @@ class KMLOutputModule(rawpy.NativePythonOutputModule):
 
         # TODO: make description_text KML values.
         description_text = self._GetString(field_values)
+        description_text = self._ILLEGAL_XML_RE.sub("\ufffd", description_text)
 
         placemark_xml_element = ElementTree.Element("Placemark")
 
