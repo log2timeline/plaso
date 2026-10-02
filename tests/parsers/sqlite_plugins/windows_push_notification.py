@@ -65,6 +65,21 @@ class WindowsPushNotificationPluginTest(test_lib.SQLitePluginTestCase):
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 68)
         self.CheckEventData(event_data, expected_event_values)
 
+    def testProcessCorrupted(self):
+        """Tests that valid notifications are not flagged as corrupted."""
+        plugin = windows_push_notification.WindowsPushNotificationPlugin()
+        storage_writer = self._ParseDatabaseFileWithPlugin(
+            ["windows", "wpndatabase.db"], plugin
+        )
+
+        number_of_notifications = 0
+        for event_data in storage_writer.GetAttributeContainers("event_data"):
+            if event_data.data_type == "windows:push_notification:notification":
+                number_of_notifications += 1
+                self.assertFalse(getattr(event_data, "_corrupted"))
+
+        self.assertGreater(number_of_notifications, 0)
+
 
 if __name__ == "__main__":
     unittest.main()

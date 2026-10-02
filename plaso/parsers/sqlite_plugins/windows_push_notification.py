@@ -230,7 +230,7 @@ class WindowsPushNotificationPlugin(interface.SQLitePlugin):
         """
         query_hash = hash(query)
 
-        corrupted = True
+        corrupted = False
 
         payload = None
         payload_type = self._GetRowValue(query_hash, row, "PayloadType")
