@@ -50,6 +50,12 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         if worker_memory_limit is None:
             worker_memory_limit = definitions.DEFAULT_WORKER_MEMORY_LIMIT
 
+        if worker_timeout:
+            # The worker timeout is specified in minutes.
+            worker_timeout *= 60.0
+        else:
+            worker_timeout = definitions.DEFAULT_WORKER_TIMEOUT
+
         super().__init__()
         self._analysis_plugins = {}
         self._completed_analysis_processes = set()
@@ -77,7 +83,7 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         self._status_update_callback = None
         self._user_accounts = None
         self._worker_memory_limit = worker_memory_limit
-        self._worker_timeout = worker_timeout or definitions.DEFAULT_WORKER_TIMEOUT
+        self._worker_timeout = worker_timeout
 
     def _AnalyzeEvents(self, storage_writer, analysis_plugins, event_filter=None):
         """Analyzes events in a Plaso storage.

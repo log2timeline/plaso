@@ -2,7 +2,9 @@
 """Tests the multi-process processing engine."""
 
 import collections
+import multiprocessing
 import os
+import time
 import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -89,6 +91,37 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
         expected_parsers_counter = collections.Counter({"filestat": 15, "total": 15})
         self.assertEqual(parsers_counter, expected_parsers_counter)
+
+    def testInternalUpdateProcessingStatus(self):
+        """Tests the _UpdateProcessingStatus function."""
+        # pylint: disable=protected-access
+
+        # The worker timeout is specified in minutes.
+        test_engine = extraction_engine.ExtractionMultiProcessEngine(worker_timeout=5.0)
+
+        process = multiprocessing.Process(name="Worker_00")
+        test_engine._processes_per_pid[1] = process
+        test_engine._process_information_per_pid[1] = None
+
+        process_status = {
+            "last_activity_timestamp": time.time() - 60.0,
+            "processing_status": definitions.STATUS_INDICATOR_RUNNING,
+        }
+        test_engine._UpdateProcessingStatus(1, process_status, 0)
+
+        worker_status = test_engine._processing_status.workers_status[0]
+        self.assertEqual(worker_status.status, definitions.STATUS_INDICATOR_RUNNING)
+
+        process_status = {
+            "last_activity_timestamp": time.time() - 600.0,
+            "processing_status": definitions.STATUS_INDICATOR_RUNNING,
+        }
+        test_engine._UpdateProcessingStatus(1, process_status, 0)
+
+        worker_status = test_engine._processing_status.workers_status[0]
+        self.assertEqual(
+            worker_status.status, definitions.STATUS_INDICATOR_NOT_RESPONDING
+        )
 
     def testProcessSource(self):
         """Tests the PreprocessSource and ProcessSource functions."""

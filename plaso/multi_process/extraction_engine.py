@@ -163,7 +163,10 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         if worker_memory_limit is None:
             worker_memory_limit = definitions.DEFAULT_WORKER_MEMORY_LIMIT
 
-        if not worker_timeout:
+        if worker_timeout:
+            # The worker timeout is specified in minutes.
+            worker_timeout *= 60.0
+        else:
             worker_timeout = definitions.DEFAULT_WORKER_TIMEOUT
 
         super().__init__()
