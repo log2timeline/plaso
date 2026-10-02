@@ -3,13 +3,89 @@
 
 import unittest
 
+import pyparsing
+
 from dfvfs.file_io import fake_file_io
 from dfvfs.path import fake_path_spec
 from dfvfs.resolver import context as dfvfs_context
 
 from plaso.parsers import text_parser
+from plaso.parsers.text_plugins import interface as text_plugins_interface
 
 from tests.parsers import test_lib
+
+
+class TestTextPlugin(text_plugins_interface.TextPlugin):
+    """Text plugin for testing.
+
+    Attributes:
+      processed (bool): True if the plugin processed a file.
+    """
+
+    NAME = "test_text"
+
+    _LINE_STRUCTURES = [("line", pyparsing.rest_of_line)]
+
+    def __init__(self):
+        """Initializes a text plugin for testing."""
+        super().__init__()
+        self.processed = False
+
+    def _ParseRecord(self, parser_mediator, key, structure):
+        """Parses a pyparsing structure.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          key (str): name of the parsed structure.
+          structure (pyparsing.ParseResults): tokens from a parsed log line.
+        """
+        return
+
+    def CheckRequiredFormat(self, parser_mediator, text_reader):
+        """Check if the log record has the minimal structure required by the plugin.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          text_reader (EncodedTextReader): text reader.
+
+        Returns:
+          bool: True if this is the correct plugin, False otherwise.
+        """
+        return True
+
+    # pylint: disable=arguments-differ
+    def Process(self, parser_mediator, file_object=None, **kwargs):
+        """Extracts events from a text log file.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          file_object (Optional[dfvfs.FileIO]): a file-like object.
+        """
+        self.processed = True
+
+
+class TestFailingTextPlugin(TestTextPlugin):
+    """Text plugin for testing that fails during processing."""
+
+    NAME = "test_failing_text"
+
+    # pylint: disable=arguments-differ
+    def Process(self, parser_mediator, file_object=None, **kwargs):
+        """Extracts events from a text log file.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          file_object (Optional[dfvfs.FileIO]): a file-like object.
+
+        Raises:
+          RuntimeError: always.
+        """
+        self.processed = True
+        raise RuntimeError("Unable to process file.")
 
 
 class EncodedTextReaderTest(test_lib.ParserTestCase):
@@ -167,6 +243,34 @@ class TextLogParserTest(test_lib.ParserTestCase):
 
         parser.EnablePlugins(["apache_access"])
         self.assertEqual(len(parser._plugins_per_name), 1)
+
+    def testParseFileObjectWithFailingPlugin(self):
+        """Tests the ParseFileObject function with a plugin that fails."""
+        parser = text_parser.TextLogParser()
+
+        failing_plugin = TestFailingTextPlugin()
+        other_plugin = TestTextPlugin()
+
+        parser._plugins_per_name = {
+            failing_plugin.NAME: failing_plugin,
+            other_plugin.NAME: other_plugin,
+        }
+        parser._plugins_per_encoding = {"default": [failing_plugin, other_plugin]}
+        parser._non_sigscan_plugin_names = set(parser._plugins_per_name.keys())
+
+        storage_writer = self._CreateStorageWriter()
+        parser_mediator = self._CreateParserMediator(storage_writer)
+        file_object = self._CreateFileObject("test.log", b"Log line of text.\n")
+
+        parser.ParseFileObject(parser_mediator, file_object)
+
+        self.assertTrue(failing_plugin.processed)
+        self.assertFalse(other_plugin.processed)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 1)
 
     # TODO: add tests for ParseFileObject
 
