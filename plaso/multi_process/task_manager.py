@@ -639,6 +639,15 @@ class TaskManager:
 
             task_abandoned = self._tasks_abandoned.get(task_identifier)
             if task_abandoned:
+                if task_abandoned.has_retry:
+                    # Do not revive an abandoned task that has a retry task, since
+                    # otherwise both tasks will be merged.
+                    logger.debug(
+                        f"Task {task_identifier:s} was abandoned and has a retry "
+                        f"task, ignoring processing update."
+                    )
+                    return
+
                 del self._tasks_abandoned[task_identifier]
                 self._tasks_processing[task_identifier] = task_abandoned
                 logger.debug(
