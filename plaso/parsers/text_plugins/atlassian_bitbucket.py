@@ -149,12 +149,13 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
 
     # Complete log line structure:
     # <timestamp> <level> [<thread>] [optional request context] <logger> <message_body>
-    # _NOT_BRACKET before _REQUEST_CONTEXT_RAW ensures the first non-whitespace
+    # _NOT_BRACKET before _REQUEST_CONTEXT_TEXT ensures the first non-whitespace
     # character after [thread] is not '[', rejecting Confluence-format lines.
     _BITBUCKET_LOG_LINE = (
         _DATE_TIME
         + _LOG_LEVEL
         + _BITBUCKET_THREAD
+        + _NOT_BRACKET
         + _REQUEST_CONTEXT_TEXT
         + _BITBUCKET_LOGGER
         + _BITBUCKET_LOG_MESSAGE
