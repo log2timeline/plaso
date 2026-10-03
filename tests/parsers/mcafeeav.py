@@ -11,6 +11,24 @@ from tests.parsers import test_lib
 class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
     """Tests for the McAfee AV Log parser."""
 
+    # pylint: disable=protected-access
+
+    def testCreateDateTime(self):
+        """Tests the _CreateDateTime function."""
+        parser = mcafeeav.McafeeAccessProtectionParser()
+
+        date_time = parser._CreateDateTime("7/30/2013", "12:15:03 AM")
+        self.assertEqual(date_time.CopyToDateTimeString(), "2013-07-30 00:15:03")
+
+        date_time = parser._CreateDateTime("7/30/2013", "12:15:03 PM")
+        self.assertEqual(date_time.CopyToDateTimeString(), "2013-07-30 12:15:03")
+
+        date_time = parser._CreateDateTime("7/30/2013", "10:22:48 AM")
+        self.assertEqual(date_time.CopyToDateTimeString(), "2013-07-30 10:22:48")
+
+        date_time = parser._CreateDateTime("7/30/2013", "2:42:26 PM")
+        self.assertEqual(date_time.CopyToDateTimeString(), "2013-07-30 14:42:26")
+
     def testParse(self):
         """Tests the Parse function."""
         parser = mcafeeav.McafeeAccessProtectionParser()
