@@ -157,10 +157,10 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
         self._CheckTaggingRule(syslog.SyslogSSHLoginEventData, {}, ["login"])
 
         # Test: data_type is 'selinux:line' AND audit_type is 'USER_LOGIN' AND
-        #       message_body contains 'res=success'
+        #       operation_result == 1
         attribute_values_per_name = {
             "audit_type": ["USER_LOGIN"],
-            "message_body": ["res=success"],
+            "operation_result": [True],
         }
         self._CheckTaggingRule(
             selinux.SELinuxLogEventData, attribute_values_per_name, ["login"]
@@ -183,10 +183,10 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
         )
 
         # Test: data_type is 'selinux:line' AND audit_type is 'USER_LOGIN' AND
-        #       message_body contains 'res=failed'
+        #       operation_result == 0
         attribute_values_per_name = {
             "audit_type": ["USER_LOGIN"],
-            "message_body": ["res=failed"],
+            "operation_result": [False],
         }
         self._CheckTaggingRule(
             selinux.SELinuxLogEventData, attribute_values_per_name, ["login_failed"]
@@ -265,10 +265,10 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
         )
 
         # Test: data_type is 'selinux:line' AND audit_type is 'USER_AUTH' AND
-        #       message_body contains 'res=failed'
+        #       operation_result == 0
         attribute_values_per_name = {
             "audit_type": ["USER_AUTH"],
-            "message_body": ["res=failed"],
+            "operation_result": [False],
         }
         self._CheckTaggingRule(
             selinux.SELinuxLogEventData, attribute_values_per_name, ["login_failed"]

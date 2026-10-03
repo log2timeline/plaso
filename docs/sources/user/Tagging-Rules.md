@@ -29,7 +29,7 @@ This rule tags log-in events on Linux, which are defined as:
 
 * a utmp event with login type 7 (a user process)
 * a SELinux log line where the audit type is "LOGIN"
-* a SELinux log line where the audit type is "USER_LOGIN" and the result is "res=success", for example:
+* a SELinux log line where the audit type is "USER_LOGIN" and the operation result is success ("res=success"), for example:
 ```
 type=USER_LOGIN msg=audit(1789331920.280:298): pid=1611 uid=0 auid=0 ses=7 subj=system_u:system_r:sshd_session_t:s0-s0:c0.c1023 msg='op=login id=0 exe="/usr/libexec/openssh/sshd-session" hostname=? addr=192.168.1.13 terminal=ssh res=success'
 ```
@@ -57,8 +57,8 @@ Sun Sep 13 21:38:56 2026 [pid 42321] [john.doe] OK LOGIN: Client "::ffff:127.0.0
 This rule tags failed log-in events on Linux, which are defined as:
 
 * a SELinux log line where the audit type is "ANOM_LOGIN_FAILURES"
-* a SELinux log line where the audit type is "USER_LOGIN" and the result is "res=failed"
-* a SELinux log line where the audit type is "USER_AUTH" and the result is "res=failed", for example:
+* a SELinux log line where the audit type is "USER_LOGIN" and the operation result is failed ("res=failed")
+* a SELinux log line where the audit type is "USER_AUTH" and the operation result is failed ("res=failed"), for example:
 ```
 type=USER_AUTH msg=audit(1789331921.882:317): pid=1681 uid=1001 auid=0 ses=7 subj=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023 msg='op=PAM:authentication grantors=? acct="root" exe="/usr/bin/su" hostname=localhost.localdomain addr=? terminal=/dev/pts/0 res=failed'
 ```
