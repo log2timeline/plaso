@@ -103,6 +103,20 @@ class TestPlistPlugin(test_lib.PlistPluginTestCase):
             }
         }
 
+    def testCheckRequiredFormat(self):
+        """Tests the CheckRequiredFormat function."""
+        plugin = MockPlugin()
+
+        top_level = {"DeviceCache": {}, "PairedDevices": []}
+        result = plugin.CheckRequiredFormat(top_level)
+        self.assertTrue(result)
+
+        result = plugin.CheckRequiredFormat(self._top_level_dict)
+        self.assertFalse(result)
+
+        result = plugin.CheckRequiredFormat([top_level])
+        self.assertFalse(result)
+
     def testGetKeys(self):
         """Tests the _GetKeys function."""
         # Ensure the plugin only processes if both filename and keys exist.

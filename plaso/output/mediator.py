@@ -364,11 +364,14 @@ class OutputMediator:
         username = default_username
 
         user_identifier = getattr(event_data, "user_sid", None)
-        if user_identifier and user_identifier not in self._username_by_identifier:
-            user_account = self._ReadUserAccount(user_identifier)
-            if user_account:
-                username = user_account.username
-                self._username_by_identifier[user_identifier] = username
+        if user_identifier:
+            if user_identifier not in self._username_by_identifier:
+                user_account = self._ReadUserAccount(user_identifier)
+                self._username_by_identifier[user_identifier] = (
+                    user_account.username if user_account else None
+                )
+
+            username = self._username_by_identifier[user_identifier]
 
         return username or default_username
 

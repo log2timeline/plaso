@@ -5,7 +5,9 @@ import io
 import os
 import unittest
 
+from plaso.cli import time_slices
 from plaso.engine import configurations
+from plaso.filters import event_filter
 from plaso.lib import definitions
 from plaso.multi_process import output_engine
 from plaso.output import dynamic
@@ -53,7 +55,11 @@ class TestOutputModule(output_interface.OutputModule):
         Returns:
           dict[str, str]: output field values per name.
         """
-        return {}
+        field_values = {}
+        if event_data_stream:
+            field_values["md5_hash"] = event_data_stream.md5_hash
+
+        return field_values
 
     def WriteFieldValues(self, output_mediator_object, field_values):
         """Writes field values to the output.
@@ -271,11 +277,13 @@ class OutputAndFormattingMultiProcessEngineTest(test_lib.MultiProcessingTestCase
         },
     ]
 
-    def _CreateTestStorageFile(self, path):
+    def _CreateTestStorageFile(self, path, event_values_list=None):
         """Creates a storage file for testing.
 
         Args:
           path (str): path.
+          event_values_list (Optional[list[dict[str, str]]]): list of event
+              values, where None represents the default test events.
         """
         storage_file = storage_factory.StorageFactory.CreateStorageFile(
             definitions.DEFAULT_STORAGE_FORMAT
@@ -288,7 +296,9 @@ class OutputAndFormattingMultiProcessEngineTest(test_lib.MultiProcessingTestCase
             event,
             event_data,
             event_data_stream,
-        ) in containers_test_lib.CreateEventsFromValues(self._TEST_EVENTS):
+        ) in containers_test_lib.CreateEventsFromValues(
+            event_values_list or self._TEST_EVENTS
+        ):
             storage_file.AddAttributeContainer(event_data_stream)
 
             event_data.SetEventDataStreamIdentifier(event_data_stream.GetIdentifier())
@@ -359,6 +369,56 @@ class OutputAndFormattingMultiProcessEngineTest(test_lib.MultiProcessingTestCase
 
         self.assertEqual(len(output_module.events), 15)
         self.assertEqual(len(output_module.macb_groups), 3)
+
+    def testInternalExportEventsWithTimeSlicer(self):
+        """Tests the _ExportEvents function with the time slicer."""
+        test_events = [
+            {
+                "data_type": "test:event",
+                "md5_hash": "11111111111111111111111111111111",
+                "text": "context",
+                "timestamp": 5134324321,
+                "timestamp_desc": definitions.TIME_DESCRIPTION_UNKNOWN,
+            },
+            {
+                "data_type": "test:event",
+                "md5_hash": "22222222222222222222222222222222",
+                "text": "match",
+                "timestamp": 5134324322,
+                "timestamp_desc": definitions.TIME_DESCRIPTION_UNKNOWN,
+            },
+        ]
+
+        test_filter = event_filter.EventObjectFilter()
+        test_filter.CompileFilter('text is "match"')
+
+        time_slice = time_slices.TimeSlice(None)
+
+        output_module = TestOutputModule()
+
+        test_engine = output_engine.OutputAndFormattingMultiProcessEngine()
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            temp_file = os.path.join(temp_directory, "storage.plaso")
+            self._CreateTestStorageFile(temp_file, event_values_list=test_events)
+
+            storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
+                temp_file
+            )
+
+            test_engine._ExportEvents(
+                storage_reader,
+                output_module,
+                event_filter=test_filter,
+                time_slice=time_slice,
+                use_time_slicer=True,
+            )
+
+        expected_events = [
+            {"md5_hash": "11111111111111111111111111111111"},
+            {"md5_hash": "22222222222222222222222222222222"},
+        ]
+        self.assertEqual(output_module.events, expected_events)
 
     # TODO: add test for _FlushExportBuffer.
 

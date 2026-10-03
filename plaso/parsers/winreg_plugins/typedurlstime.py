@@ -113,7 +113,9 @@ class TypedURLsTimePlugin(
             if not registry_value.data or not registry_value.DataIsBinaryData():
                 continue
 
-            typed_urls_value = typed_urls_key.GetValueByName(value_name)
+            typed_urls_value = None
+            if typed_urls_key:
+                typed_urls_value = typed_urls_key.GetValueByName(value_name)
 
             if (
                 typed_urls_value
@@ -125,7 +127,13 @@ class TypedURLsTimePlugin(
             else:
                 entry_string = value_name
 
-            date_time = self._ParseFiletime(registry_value.data)
+            try:
+                date_time = self._ParseFiletime(registry_value.data)
+            except errors.ParseError as exception:
+                parser_mediator.ProduceWarning(
+                    f"unable to parse value: {value_name:s} with error: {exception!s}"
+                )
+                continue
 
             event_data = TypedURLsTimeEventData()
             event_data.entry = entry_string

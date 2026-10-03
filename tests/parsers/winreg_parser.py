@@ -113,6 +113,27 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
         )
         self.assertEqual(number_of_warnings, 0)
 
+    def testParseNTUserDatWithTypedURLsTime(self):
+        """Tests the Parse function on a NTUSER.DAT file with TypedURLsTime."""
+        parser = winreg_parser.WinRegistryParser()
+        parser.EnablePlugins(parser.ALL_PLUGINS)
+        storage_writer = self._ParseFile(["regf", "NTUSER.DAT"], parser)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 1620)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "recovery_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
     def testParseNoRootKey(self):
         """Test the parse function on a Registry file with no root key."""
         parser = winreg_parser.WinRegistryParser()

@@ -307,7 +307,7 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
                     self._events_status.number_of_filtered_events += 1
 
                 elif forward_entries == 0:
-                    time_slice_buffer.Append((event, event_data))
+                    time_slice_buffer.Append((event, event_data, event_data_stream))
                     self._events_status.number_of_filtered_events += 1
 
                 elif forward_entries <= time_slice_buffer.size:
@@ -338,6 +338,7 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
                     for (
                         event_in_buffer,
                         event_data_in_buffer,
+                        event_data_stream_in_buffer,
                     ) in time_slice_buffer.Flush():
                         event_tag_in_buffer = None
                         if not resolve_event_tag:
@@ -353,7 +354,7 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
                             output_module,
                             event_in_buffer,
                             event_data_in_buffer,
-                            event_data_stream,
+                            event_data_stream_in_buffer,
                             event_tag=event_tag_in_buffer,
                             deduplicate_events=deduplicate_events,
                             resolve_event_tag=resolve_event_tag,

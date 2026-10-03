@@ -40,10 +40,20 @@ class GoogleChrome8HistoryPluginTest(test_lib.SQLitePluginTestCase):
             "title": "Ubuntu Start Page",
             "typed_count": 0,
             "url": "http://start.ubuntu.com/10.04/Google/",
+            "url_hidden": False,
             "visit_count": 4,
             "visit_source": 3,
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # Check a hidden page visited entry.
+        expected_event_values = {
+            "data_type": "chrome:history:page_visited",
+            "url": "http://www.google.ch/blank.html",
+            "url_hidden": True,
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 20)
         self.CheckEventData(event_data, expected_event_values)
 
         # Check the first file downloaded entry.

@@ -230,7 +230,7 @@ class BaseGoogleChromeHistoryPlugin(interface.SQLitePlugin):
         event_data.title = self._GetRowValue(query_hash, row, "title")
         event_data.typed_count = self._GetRowValue(query_hash, row, "typed_count")
         event_data.url = self._GetRowValue(query_hash, row, "url")
-        event_data.url_hidden = hidden == "1"
+        event_data.url_hidden = bool(hidden)
         event_data.visit_count = self._GetRowValue(query_hash, row, "visit_count")
         event_data.visit_source = self._GetVisitSource(
             visit_identifier, cache, database

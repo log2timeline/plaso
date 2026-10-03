@@ -7,6 +7,7 @@ from dfvfs.helpers import fake_file_system_builder
 from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
+from dfwinreg import definitions as dfwinreg_definitions
 from dfwinreg import fake as dfwinreg_fake
 from dfwinreg import regf as dfwinreg_regf
 from dfwinreg import registry as dfwinreg_registry
@@ -361,6 +362,8 @@ class WindowsAllUsersAppProfileKnowledgeBasePluginTest(
 class WindowsAvailableTimeZonesPluginTest(WindowsArtifactPreprocessorPluginTestCase):
     """Tests for the Windows available time zones plugin."""
 
+    # pylint: disable=protected-access
+
     def testParseKey(self):
         """Tests the _ParseKey function."""
         test_file_path = self._GetTestFilePath(["SOFTWARE"])
@@ -386,6 +389,58 @@ class WindowsAvailableTimeZonesPluginTest(WindowsArtifactPreprocessorPluginTestC
         )
 
         self.assertEqual(available_time_zone.name, "AUS Central Standard Time")
+
+    def testParseKeyWithInvalidTZIValue(self):
+        """Tests the _ParseKey function with a missing or invalid TZI value."""
+        key_path_prefix = (
+            "HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion\\"
+            "Time Zones"
+        )
+        relative_key_path = "Microsoft\\Windows NT\\CurrentVersion\\Time Zones"
+
+        plugin = windows.WindowsAvailableTimeZonesPlugin()
+
+        # Test key without a TZI value.
+        registry_key = dfwinreg_fake.FakeWinRegistryKey(
+            "Test Standard Time",
+            key_path_prefix=key_path_prefix,
+            relative_key_path=relative_key_path,
+        )
+
+        storage_writer = self._CreateTestStorageWriter()
+        test_mediator = mediator.PreprocessMediator(storage_writer)
+        plugin._ParseKey(test_mediator, registry_key, None)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "preprocessing_warning"
+        )
+        self.assertEqual(number_of_warnings, 1)
+
+        number_of_artifacts = storage_writer.GetNumberOfAttributeContainers("time_zone")
+        self.assertEqual(number_of_artifacts, 0)
+
+        # Test key with a TZI value that is too small.
+        registry_key = dfwinreg_fake.FakeWinRegistryKey(
+            "Test Standard Time",
+            key_path_prefix=key_path_prefix,
+            relative_key_path=relative_key_path,
+        )
+        registry_value = dfwinreg_fake.FakeWinRegistryValue(
+            "TZI", data=b"\x00" * 8, data_type=dfwinreg_definitions.REG_BINARY
+        )
+        registry_key.AddValue(registry_value)
+
+        storage_writer = self._CreateTestStorageWriter()
+        test_mediator = mediator.PreprocessMediator(storage_writer)
+        plugin._ParseKey(test_mediator, registry_key, None)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "preprocessing_warning"
+        )
+        self.assertEqual(number_of_warnings, 1)
+
+        number_of_artifacts = storage_writer.GetNumberOfAttributeContainers("time_zone")
+        self.assertEqual(number_of_artifacts, 0)
 
 
 class WindowsCodePagePluginTest(WindowsArtifactPreprocessorPluginTestCase):

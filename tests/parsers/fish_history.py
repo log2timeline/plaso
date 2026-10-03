@@ -31,6 +31,9 @@ class FishHistoryTest(test_lib.ParserTestCase):
         )
         self.assertEqual(number_of_warnings, 0)
 
+        for event_data in storage_writer.GetAttributeContainers("event_data"):
+            self.assertFalse(getattr(event_data, "_corrupted"))
+
         expected_event_values = {
             "command": "ll",
             "data_type": "fish:history:entry",

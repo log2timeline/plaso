@@ -92,7 +92,7 @@ class FishHistoryParser(interface.FileObjectParser):
 
         for entry_index, history_entry in enumerate(fish_history):
             date_time = None
-            corrupted = True
+            corrupted = False
 
             timestamp = history_entry.get("when")
             if timestamp is None:

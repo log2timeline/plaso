@@ -17,10 +17,12 @@ class PinfoToolTest(test_lib.CLIToolTestCase):
     _EXPECTED_OUTPUT_COMPARE_STORES = """\
 
 ************************ Events generated per data type ************************
-Data type name : Number of events
+      Data type name : Number of events
 --------------------------------------------------------------------------------
-       fs:stat : 3 (6)
-         total : 3 (38)
+             fs:stat : 3 (6)
+syslog:cron:task_run : 0 (6)
+         syslog:line : 0 (26)
+               total : 3 (38)
 --------------------------------------------------------------------------------
 
 
@@ -28,7 +30,81 @@ Data type name : Number of events
 Parser (plugin) name : Number of events
 --------------------------------------------------------------------------------
             filestat : 3 (6)
+  syslog_traditional : 0 (32)
                total : 3 (38)
+--------------------------------------------------------------------------------
+
+
+******************* Extraction warnings generated per parser *******************
+   Parser (plugin) name : Number of warnings
+--------------------------------------------------------------------------------
+text/syslog_traditional : 0 (2)
+--------------------------------------------------------------------------------
+
+
+******************* Pathspecs with most extraction warnings ********************
+Number of warnings : Pathspec
+--------------------------------------------------------------------------------
+             0 (2) : type: OS, location: /tmp/test/test_data/syslog/syslog
+
+--------------------------------------------------------------------------------
+
+
+************************ Event tags generated per label ************************
+   Label : Number of event tags
+--------------------------------------------------------------------------------
+   exit1 : 0 (2)
+   exit2 : 0 (2)
+repeated : 0 (4)
+   total : 0 (8)
+--------------------------------------------------------------------------------
+
+Storage files are different.
+"""
+
+    _EXPECTED_OUTPUT_COMPARE_STORES_REVERSED = """\
+
+************************ Events generated per data type ************************
+      Data type name : Number of events
+--------------------------------------------------------------------------------
+             fs:stat : 6 (3)
+syslog:cron:task_run : 6 (0)
+         syslog:line : 26 (0)
+               total : 38 (3)
+--------------------------------------------------------------------------------
+
+
+************************* Events generated per parser **************************
+Parser (plugin) name : Number of events
+--------------------------------------------------------------------------------
+            filestat : 6 (3)
+  syslog_traditional : 32 (0)
+               total : 38 (3)
+--------------------------------------------------------------------------------
+
+
+******************* Extraction warnings generated per parser *******************
+   Parser (plugin) name : Number of warnings
+--------------------------------------------------------------------------------
+text/syslog_traditional : 2 (0)
+--------------------------------------------------------------------------------
+
+
+******************* Pathspecs with most extraction warnings ********************
+Number of warnings : Pathspec
+--------------------------------------------------------------------------------
+             2 (0) : type: OS, location: /tmp/test/test_data/syslog/syslog
+
+--------------------------------------------------------------------------------
+
+
+************************ Event tags generated per label ************************
+   Label : Number of event tags
+--------------------------------------------------------------------------------
+   exit1 : 2 (0)
+   exit2 : 2 (0)
+repeated : 4 (0)
+   total : 8 (0)
 --------------------------------------------------------------------------------
 
 Storage files are different.
@@ -521,6 +597,17 @@ Storage files are different.
 
         output = output_writer.ReadOutput()
         self.assertEqual(output, self._EXPECTED_OUTPUT_COMPARE_STORES)
+
+        options = test_lib.TestOptions()
+        options.compare_storage_file = test_file_path2
+        options.storage_file = test_file_path1
+
+        test_tool.ParseOptions(options)
+
+        self.assertFalse(test_tool.CompareStores())
+
+        output = output_writer.ReadOutput()
+        self.assertEqual(output, self._EXPECTED_OUTPUT_COMPARE_STORES_REVERSED)
 
     def testParseArguments(self):
         """Tests the ParseArguments function."""

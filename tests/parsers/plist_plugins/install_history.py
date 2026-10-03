@@ -11,6 +11,29 @@ from tests.parsers.plist_plugins import test_lib
 class MacOSInstallHistoryPlistPluginTest(test_lib.PlistPluginTestCase):
     """Tests for the install history plist plugin."""
 
+    def testCheckRequiredFormat(self):
+        """Tests the CheckRequiredFormat function."""
+        plugin = install_history.MacOSInstallHistoryPlistPlugin()
+
+        plist_item = {
+            "date": None,
+            "displayName": "OS X",
+            "displayVersion": "10.9 (13A603)",
+            "packageIdentifiers": [],
+            "processName": "OS X Installer",
+        }
+        result = plugin.CheckRequiredFormat([plist_item])
+        self.assertTrue(result)
+
+        result = plugin.CheckRequiredFormat(plist_item)
+        self.assertFalse(result)
+
+        result = plugin.CheckRequiredFormat([{"displayName": "OS X"}])
+        self.assertFalse(result)
+
+        result = plugin.CheckRequiredFormat(["OS X"])
+        self.assertFalse(result)
+
     def testProcess(self):
         """Tests the Process function."""
         plist_name = "InstallHistory.plist"

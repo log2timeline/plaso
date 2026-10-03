@@ -261,6 +261,22 @@ class TaskManager:
             self._latest_task_processing_time, task.last_processing_time
         )
 
+    def _UpdateLatestProcessingTimeIfIdle(self):
+        """Updates the latest processing time when no task is queued or processing.
+
+        Workers do not report a task when they have nothing to process, hence the
+        task inactive time should only start when a task becomes available.
+        Otherwise a task created after the workers were idle for longer than
+        the task inactive time is abandoned before a worker can process it.
+
+        This method does not lock the manager and should be called by a method
+        holding the manager lock.
+        """
+        if not self._tasks_queued and not self._tasks_processing:
+            self._latest_task_processing_time = int(
+                time.time() * definitions.MICROSECONDS_PER_SECOND
+            )
+
     def CheckTaskToMerge(self, task):
         """Checks if the task should be merged.
 
@@ -306,6 +322,8 @@ class TaskManager:
                 )
             )
 
+            self._UpdateLatestProcessingTimeIfIdle()
+
             self._tasks_queued[retry_task.identifier] = retry_task
             self._total_number_of_tasks += 1
 
@@ -333,6 +351,8 @@ class TaskManager:
         logger.debug(f"Created task: {task.identifier:s}")
 
         with self._lock:
+            self._UpdateLatestProcessingTimeIfIdle()
+
             self._tasks_queued[task.identifier] = task
             self._total_number_of_tasks += 1
 
@@ -619,6 +639,15 @@ class TaskManager:
 
             task_abandoned = self._tasks_abandoned.get(task_identifier)
             if task_abandoned:
+                if task_abandoned.has_retry:
+                    # Do not revive an abandoned task that has a retry task, since
+                    # otherwise both tasks will be merged.
+                    logger.debug(
+                        f"Task {task_identifier:s} was abandoned and has a retry "
+                        f"task, ignoring processing update."
+                    )
+                    return
+
                 del self._tasks_abandoned[task_identifier]
                 self._tasks_processing[task_identifier] = task_abandoned
                 logger.debug(

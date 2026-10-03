@@ -20,9 +20,11 @@ class WindowsDistributedLinkTrackingEventDataTest(shared_test_lib.BaseTestCase):
         )
 
         expected_attribute_names = [
+            "_corrupted",
             "_event_data_stream_identifier",
             "_event_values_hash",
             "_parser_chain",
+            "_recovered",
             "creation_time",
             "data_type",
             "mac_address",
@@ -43,9 +45,11 @@ class WindowsShellItemFileEntryEventDataTest(shared_test_lib.BaseTestCase):
         attribute_container = windows_events.WindowsShellItemFileEntryEventData()
 
         expected_attribute_names = [
+            "_corrupted",
             "_event_data_stream_identifier",
             "_event_values_hash",
             "_parser_chain",
+            "_recovered",
             "access_time",
             "creation_time",
             "data_type",
@@ -71,9 +75,11 @@ class WindowsVolumeEventDataTest(shared_test_lib.BaseTestCase):
         attribute_container = windows_events.WindowsVolumeEventData()
 
         expected_attribute_names = [
+            "_corrupted",
             "_event_data_stream_identifier",
             "_event_values_hash",
             "_parser_chain",
+            "_recovered",
             "creation_time",
             "data_type",
             "device_path",

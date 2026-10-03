@@ -304,7 +304,7 @@ class GenericBinaryOperator(BinaryOperator):
             self.left_operand, event, event_data, event_data_stream, event_tag
         )
 
-        if value and self._CompareValue(value, self.right_operand):
+        if value is not None and self._CompareValue(value, self.right_operand):
             return self._bool_value
         return not self._bool_value
 

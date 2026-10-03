@@ -105,10 +105,14 @@ class McafeeAccessProtectionParser(dsv_parser.DSVParser):
         except (AttributeError, ValueError):
             raise errors.ParseError(f"Unsupported time string: {time_string!s}")
 
+        if time_suffix not in ("AM", "PM"):
+            raise errors.ParseError(f"Unsupported time suffix: {time_suffix!s}.")
+
+        # 12:xx AM is 00:xx and 12:xx PM is 12:xx.
+        if hours == 12:
+            hours = 0
         if time_suffix == "PM":
             hours += 12
-        elif time_suffix != "AM":
-            raise errors.ParseError(f"Unsupported time suffix: {time_suffix!s}.")
 
         time_elements_tuple = (year, month, day_of_month, hours, minutes, seconds)
 

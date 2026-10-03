@@ -3,9 +3,74 @@
 
 import unittest
 
+from plaso.parsers import mediator as parsers_mediator
 from plaso.parsers.esedb_plugins import user_access_logging
 
 from tests.parsers.esedb_plugins import test_lib
+
+
+class TestESEDBRecord:
+    """ESE database record for testing.
+
+    Attributes:
+      number_of_values (int): number of values.
+    """
+
+    # Note: that the following functions do not follow the style guide
+    # because they are part of the pyesedb record interface.
+    # pylint: disable=invalid-name
+
+    def __init__(self, values):
+        """Initializes an ESE database record for testing.
+
+        Args:
+          values (list[tuple[str, bytes]]): column name and value data pairs.
+        """
+        super().__init__()
+        self._values = values
+        self.number_of_values = len(values)
+
+    def get_column_name(self, value_entry):
+        """Retrieves the column name of a specific value.
+
+        Args:
+          value_entry (int): value entry.
+
+        Returns:
+          str: column name.
+        """
+        return self._values[value_entry][0]
+
+    def get_value_data(self, value_entry):
+        """Retrieves the data of a specific value.
+
+        Args:
+          value_entry (int): value entry.
+
+        Returns:
+          bytes: value data.
+        """
+        return self._values[value_entry][1]
+
+
+class TestESEDBTable:
+    """ESE database table for testing.
+
+    Attributes:
+      name (str): name of the table.
+      records (list[TestESEDBRecord]): records.
+    """
+
+    def __init__(self, name, records):
+        """Initializes an ESE database table for testing.
+
+        Args:
+          name (str): name of the table.
+          records (list[TestESEDBRecord]): records.
+        """
+        super().__init__()
+        self.name = name
+        self.records = records
 
 
 class UserAccessLoggingESEDBPluginTest(test_lib.ESEDBPluginTestCase):
@@ -112,6 +177,38 @@ class UserAccessLoggingESEDBPluginTest(test_lib.ESEDBPluginTestCase):
 
         guid_string = plugin._ConvertGUIDToString(self._GUID_BYTES)
         self.assertEqual(guid_string, "{35918bc9-196d-40ea-9779-889d79b753f0}")
+
+    def testParseVirtualMachinesTable(self):
+        """Tests the ParseVirtualMachinesTable function."""
+        plugin = user_access_logging.UserAccessLoggingESEDBPlugin()
+
+        storage_writer = self._CreateStorageWriter()
+        parser_mediator = parsers_mediator.ParserMediator()
+        parser_mediator.SetStorageWriter(storage_writer)
+
+        # Column names as defined in the VIRTUALMACHINES table of UAL databases.
+        esedb_record = TestESEDBRecord(
+            [("VmGuid", self._GUID_BYTES), ("BIOSGuid", bytes(range(16)))]
+        )
+        table = TestESEDBTable("VIRTUALMACHINES", [esedb_record])
+
+        plugin.ParseVirtualMachinesTable(
+            parser_mediator, database=object(), table=table
+        )
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 1)
+
+        expected_event_values = {
+            "bios_identifier": "{03020100-0504-0706-0809-0a0b0c0d0e0f}",
+            "data_type": "windows:user_access_logging:virtual_machines",
+            "vm_identifier": "{35918bc9-196d-40ea-9779-889d79b753f0}",
+        }
+
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == "__main__":
