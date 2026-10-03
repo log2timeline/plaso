@@ -255,6 +255,142 @@ class SyslogTextPluginTest(test_lib.TextPluginTestCase):
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
+    def testProcessSudo(self):
+        """Tests the Process function with a sudo syslog file."""
+        plugin = syslog.SyslogTextPlugin()
+        storage_writer = self._ParseTextFileWithPlugin(
+            ["syslog", "syslog_sudo.log"], plugin
+        )
+        # The file has 29 records, of which the last two are one command that sudo
+        # split into a command record and a "(command continued)" record.
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 28)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "recovery_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        # A pam_unix session record.
+        expected_event_values = {
+            "data_type": "syslog:line",
+            "last_written_time": "2026-07-26T13:03:25.681173+00:00",
+            "reporter": "sudo",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # A sudo-rs command record, which has no TTY= field and two spaces after
+        # the user name.
+        expected_event_values = {
+            "account": "root",
+            "command_line": "/usr/sbin/auditctl -D",
+            "data_type": "syslog:sudo:command",
+            "group_name": None,
+            "last_written_time": "2026-07-26T13:03:25.682007+00:00",
+            "reporter": "sudo",
+            "terminal": None,
+            "username": "ubuntu",
+            "working_directory": "/home/ubuntu",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # A command line with a trailing space, as sudo-rs writes it without
+        # arguments.
+        expected_event_values = {
+            "command_line": "/usr/bin/true ",
+            "data_type": "syslog:sudo:command",
+            "last_written_time": "2026-07-28T12:10:50.432238+00:00",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 9)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # A command line with escaped double quotes, stored as logged.
+        expected_event_values = {
+            "command_line": (
+                '/usr/bin/python3 -c import json;d=json.load(open(\\"/var/lib/snapd/'
+                'state.json\\"));print(sorted(d.keys()));print(json.dumps(d,indent=1)'
+                "[:1800])"
+            ),
+            "data_type": "syslog:sudo:command",
+            "last_written_time": "2026-07-28T12:12:44.009943+00:00",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 13)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # A command record with a TTY= field.
+        expected_event_values = {
+            "account": "root",
+            "command_line": "/usr/bin/id -un",
+            "data_type": "syslog:sudo:command",
+            "last_written_time": "2026-07-28T22:17:25.893483+00:00",
+            "terminal": "pts/0",
+            "username": "svc-backup",
+            "working_directory": "/home/svc-backup",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 17)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # A denied command record, which carries a reason before the fields, is
+        # not a command record.
+        expected_event_values = {
+            "data_type": "syslog:line",
+            "last_written_time": "2026-07-28T22:17:31.279993+00:00",
+            "message_body": (
+                "john.doe : user NOT in sudoers ; TTY=pts/0 ; PWD=/home/john.doe ; "
+                "USER=root ; COMMAND=/usr/bin/id"
+            ),
+            "reporter": "sudo",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 18)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # A command record where sudo padded the user name to 8 characters.
+        expected_event_values = {
+            "command_line": "/usr/bin/id -un",
+            "data_type": "syslog:sudo:command",
+            "last_written_time": "2026-07-29T10:36:29.167005+00:00",
+            "username": "ubuntu",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 21)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # A command line with a quoted argument containing an escaped single quote
+        # and an escaped backslash, stored as logged.
+        expected_event_values = {
+            "command_line": "/bin/echo 'it\\'s a \\\\ test'",
+            "data_type": "syslog:sudo:command",
+            "last_written_time": "2026-07-29T10:36:29.308488+00:00",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 26)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # A command that sudo split into two records, joined into one event that
+        # carries the date and time of the first record.
+        expected_event_values = {
+            "data_type": "syslog:sudo:command",
+            "last_written_time": "2026-07-29T10:36:29.418533+00:00",
+            "username": "ubuntu",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 27)
+        self.CheckEventData(event_data, expected_event_values)
+
+        arguments = event_data.command_line.split(" ")
+        self.assertEqual(len(arguments), 201)
+        self.assertEqual(arguments[0], "/bin/echo")
+        self.assertEqual(arguments[1], "arg0000")
+        self.assertEqual(arguments[112], "arg0111")
+        self.assertEqual(arguments[113], "arg0112")
+        self.assertEqual(arguments[200], "arg0199")
+
 
 class TraditionalSyslogTextPluginTest(test_lib.TextPluginTestCase):
     """Tests for the traditional syslog text parser plugin."""
@@ -810,6 +946,74 @@ class TraditionalSyslogTextPluginTest(test_lib.TextPluginTestCase):
             "username": "root",
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 7)
+        self.CheckEventData(event_data, expected_event_values)
+
+    def testProcessSudo(self):
+        """Tests the Process function with a sudo syslog file."""
+        plugin = syslog.TraditionalSyslogTextPlugin()
+        storage_writer = self._ParseTextFileWithPlugin(
+            ["syslog", "syslog_sudo_traditional.log"], plugin
+        )
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 9)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "recovery_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        expected_event_values = {
+            "account": "root",
+            "command_line": "/usr/bin/id -un",
+            "data_type": "syslog:sudo:command",
+            "last_written_time": "0000-07-28T14:06:52",
+            "pid": 3824,
+            "reporter": "sudo",
+            "terminal": "pts/1",
+            "username": "svc-backup",
+            "working_directory": "/home/svc-backup",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 2)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # A denied command record is not a command record.
+        expected_event_values = {
+            "data_type": "syslog:line",
+            "last_written_time": "0000-07-28T14:06:57",
+            "pid": 3870,
+            "reporter": "sudo",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 5)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # A command record where sudo padded the user name to 8 characters, with
+        # a control character in the command line stored as logged.
+        expected_event_values = {
+            "command_line": "/bin/echo x#011hey",
+            "data_type": "syslog:sudo:command",
+            "last_written_time": "0000-07-29T05:37:17",
+            "pid": 1762,
+            "terminal": None,
+            "username": "root",
+            "working_directory": "/root",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 7)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # The last record of the file is a command record.
+        expected_event_values = {
+            "command_line": "/usr/bin/id -un",
+            "data_type": "syslog:sudo:command",
+            "pid": 1765,
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 8)
         self.CheckEventData(event_data, expected_event_values)
 
 

@@ -152,6 +152,39 @@ class SyslogSSHOpenedConnectionEventData(SyslogSSHEventData):
     DATA_TYPE = "syslog:ssh:opened_connection"
 
 
+class SyslogSudoCommandEventData(SyslogLineEventData):
+    """Syslog sudo command event data.
+
+    Attributes:
+      account (str): name of the account the command was run as, the USER= field.
+      command_line (str): command line, the COMMAND= field, as sudo logged it,
+          where control characters are written in octal with a leading "#", a
+          space in the command path is written as "#040", an argument that
+          contains a space is enclosed in single quotes and a single quote or
+          backslash in an argument is escaped with a backslash, see sudoers(5).
+      group_name (str): name of the group the command was run as, the GROUP=
+          field.
+      last_written_time (dfdatetime.DateTimeValues): entry last written date and
+          time.
+      terminal (str): terminal sudo was run from, the TTY= field.
+      username (str): name of the user that ran sudo.
+      working_directory (str): working directory, the PWD= field.
+    """
+
+    DATA_TYPE = "syslog:sudo:command"
+
+    def __init__(self):
+        """Initializes event data."""
+        super().__init__(data_type=self.DATA_TYPE)
+        self.account = None
+        self.command_line = None
+        self.group_name = None
+        self.last_written_time = None
+        self.terminal = None
+        self.username = None
+        self.working_directory = None
+
+
 class BaseSyslogTextPlugin(interface.TextPlugin):
     """Shared functionality for syslog log file text parser plugins."""
 
@@ -277,6 +310,60 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
         ^ pyparsing.Group(_SSHD_OPENED_CONNECTION).set_results_name("opened_connection")
     )
 
+    # sudo writes a command record as "username : [TTY=… ;] PWD=… ; USER=… ;
+    # [GROUP=… ;] COMMAND=…", where a field is followed by " ; " and the command
+    # line is last, see sudoers(5) section EVENT LOGGING and new_logline in
+    # lib/eventlog/eventlog.c. A denied command carries a reason before the
+    # fields and is not matched. sudo-rs writes two spaces after the user name
+    # where it omits the TTY= field.
+    _SUDO_USERNAME = pyparsing.Word(
+        pyparsing.printables, exclude_chars=":"
+    ).set_results_name("username")
+
+    _SUDO_FIELD_VALUE = pyparsing.Regex(r"[^;]+?(?= ;)")
+
+    _SUDO_COMMAND = (
+        _SUDO_USERNAME
+        + pyparsing.Literal(":")
+        + pyparsing.Optional(
+            pyparsing.Literal("TTY=")
+            + _SUDO_FIELD_VALUE.set_results_name("terminal")
+            + pyparsing.Literal(";")
+        )
+        + pyparsing.Literal("PWD=")
+        + _SUDO_FIELD_VALUE.set_results_name("working_directory")
+        + pyparsing.Literal(";")
+        + pyparsing.Literal("USER=")
+        + _SUDO_FIELD_VALUE.set_results_name("account")
+        + pyparsing.Literal(";")
+        + pyparsing.Optional(
+            pyparsing.Literal("GROUP=")
+            + _SUDO_FIELD_VALUE.set_results_name("group_name")
+            + pyparsing.Literal(";")
+        )
+        + pyparsing.Literal("COMMAND=")
+        + pyparsing.Regex(r".*").set_results_name("command_line")
+        + pyparsing.StringEnd()
+    )
+
+    # sudo splits a log message larger than syslog_maxlen, 980 bytes by default,
+    # into multiple syslog records, where each additional record contains
+    # "(command continued)" after the user name and the remainder of the command
+    # line, see sudoers(5) section EVENT LOGGING and do_syslog_sudo in
+    # lib/eventlog/eventlog.c.
+    _SUDO_COMMAND_CONTINUED = (
+        _SUDO_USERNAME
+        + pyparsing.Literal(":")
+        + pyparsing.Literal("(command continued)")
+        + pyparsing.Regex(r".*").set_results_name("command_line")
+        + pyparsing.StringEnd()
+    )
+
+    def __init__(self):
+        """Initializes a text parser plugin."""
+        super().__init__()
+        self._sudo_command_event_data = None
+
     def _ParseCronMessageBody(self, message_body):
         """Parses a cron syslog message body.
 
@@ -310,6 +397,17 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
         event_data.username = structure.get("username")
 
         return event_data
+
+    def _ParseFinalize(self, parser_mediator):
+        """Finalizes parsing.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+        """
+        if self._sudo_command_event_data:
+            parser_mediator.ProduceEventData(self._sudo_command_event_data)
+            self._sudo_command_event_data = None
 
     def _ParseSshdMessageBody(self, message_body):
         """Parses a sshd syslog message body.
@@ -356,6 +454,79 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
         event_data.username = structure.get("username")
 
         return event_data
+
+    def _ParseSudoContinuedCommand(self, message_body):
+        """Parses a sudo "(command continued)" syslog message body.
+
+        The remainder of the command line is joined to the command line of the
+        command record that precedes it.
+
+        Args:
+          message_body (str): syslog message body.
+
+        Returns:
+          bool: True if the message body continued the preceding command record.
+        """
+        if not self._sudo_command_event_data:
+            return False
+
+        try:
+            structure = self._SUDO_COMMAND_CONTINUED.parse_string(message_body)
+        except pyparsing.ParseException:
+            return False
+
+        if structure.get("username") != self._sudo_command_event_data.username:
+            return False
+
+        self._sudo_command_event_data.command_line = " ".join(
+            [self._sudo_command_event_data.command_line, structure.get("command_line")]
+        )
+        return True
+
+    def _ParseSudoMessageBody(self, message_body):
+        """Parses a sudo syslog message body.
+
+        Args:
+          message_body (str): syslog message body.
+
+        Returns:
+          SyslogSudoCommandEventData: event data or None if not available.
+        """
+        try:
+            structure = self._SUDO_COMMAND.parse_string(message_body)
+        except pyparsing.ParseException as exception:
+            logger.debug(f"Unable to parse sudo message body with error: {exception!s}")
+            return None
+
+        event_data = SyslogSudoCommandEventData()
+        event_data.account = structure.get("account")
+        event_data.command_line = structure.get("command_line")
+        event_data.group_name = structure.get("group_name")
+        event_data.terminal = structure.get("terminal")
+        event_data.username = structure.get("username")
+        event_data.working_directory = structure.get("working_directory")
+
+        return event_data
+
+    def _ProduceEventData(self, parser_mediator, event_data):
+        """Produces event data.
+
+        A sudo command record is held back until the next record has been parsed,
+        since sudo can continue its command line in the next record.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          event_data (SyslogLineEventData): event data.
+        """
+        if self._sudo_command_event_data:
+            parser_mediator.ProduceEventData(self._sudo_command_event_data)
+            self._sudo_command_event_data = None
+
+        if isinstance(event_data, SyslogSudoCommandEventData):
+            self._sudo_command_event_data = event_data
+        else:
+            parser_mediator.ProduceEventData(event_data)
 
 
 class SyslogTextPlugin(BaseSyslogTextPlugin):
@@ -614,6 +785,10 @@ class SyslogTextPlugin(BaseSyslogTextPlugin):
             event_data = self._ParseCronMessageBody(message_body)
         elif reporter in self._SSHD_REPORTERS:
             event_data = self._ParseSshdMessageBody(message_body)
+        elif reporter == "sudo":
+            if self._ParseSudoContinuedCommand(message_body):
+                return
+            event_data = self._ParseSudoMessageBody(message_body)
 
         if not event_data:
             event_data = SyslogLineEventData()
@@ -627,7 +802,7 @@ class SyslogTextPlugin(BaseSyslogTextPlugin):
         event_data.reporter = reporter
         event_data.severity = severity
 
-        parser_mediator.ProduceEventData(event_data)
+        self._ProduceEventData(parser_mediator, event_data)
 
     def _ParseTimeElements(self, time_elements_structure):
         """Parses date and time elements of a log line.
@@ -899,6 +1074,10 @@ class TraditionalSyslogTextPlugin(
             event_data = self._ParseCronMessageBody(message_body)
         elif reporter in self._SSHD_REPORTERS:
             event_data = self._ParseSshdMessageBody(message_body)
+        elif reporter == "sudo":
+            if self._ParseSudoContinuedCommand(message_body):
+                return
+            event_data = self._ParseSudoMessageBody(message_body)
 
         if not event_data:
             event_data = SyslogLineEventData()
@@ -910,7 +1089,7 @@ class TraditionalSyslogTextPlugin(
         event_data.reporter = reporter
         event_data.severity = self._GetValueFromStructure(structure, "severity")
 
-        parser_mediator.ProduceEventData(event_data)
+        self._ProduceEventData(parser_mediator, event_data)
 
     def _ParseTimeElements(self, time_elements_structure):
         """Parses date and time elements of a log line.
