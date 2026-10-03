@@ -169,6 +169,7 @@ class PlistParser(interface.FileObjectParser):
                         if path_filter.Match(filename_lower_case):
                             path_filter_match = True
 
+                required_format = False
                 try:
                     required_format = plugin.CheckRequiredFormat(top_level_object)
                 except Exception as exception:  # pylint: disable=broad-except

@@ -8,8 +8,39 @@ from plaso.parsers import plist
 
 # Register all plugins.
 from plaso.parsers import plist_plugins  # pylint: disable=unused-import
+from plaso.parsers.plist_plugins import interface
 
 from tests.parsers import test_lib
+
+
+class FailingFormatCheckPlugin(interface.PlistPlugin):
+    """Plist plugin that fails its format check for testing."""
+
+    NAME = "failing_format_check"
+    DATA_FORMAT = "Test plist file"
+
+    PLIST_KEYS = frozenset([])
+
+    def CheckRequiredFormat(self, top_level):
+        """Check if the plist has the minimal structure required by the plugin.
+
+        Args:
+          top_level (dict[str, object]): plist top-level item.
+
+        Raises:
+          RuntimeError: always.
+        """
+        raise RuntimeError("format check failed")
+
+    # pylint: disable=arguments-differ
+    def _ParsePlist(self, parser_mediator, top_level=None, **unused_kwargs):
+        """Extracts entries for testing.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          top_level (Optional[dict[str, object]]): plist top-level item.
+        """
 
 
 class PlistParserTest(test_lib.ParserTestCase):
@@ -52,6 +83,55 @@ class PlistParserTest(test_lib.ParserTestCase):
             "recovery_warning"
         )
         self.assertEqual(number_of_warnings, 0)
+
+    def testParseWithArrayTopLevel(self):
+        """Tests the Parse function on a plist file with an array top level."""
+        parser = plist.PlistParser()
+        storage_writer = self._ParseFile(["plist", "InstallHistory.plist"], parser)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 7)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "recovery_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        expected_event_values = {
+            "data_type": "macos:install_history:entry",
+            "name": "OS X",
+            "process_name": "OS X Installer",
+            "version": "10.9 (13A603)",
+            "written_time": "2013-11-12T02:59:35.000000+00:00",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
+
+    def testParseWithPluginFormatCheckError(self):
+        """Tests the Parse function with a plugin that fails its format check."""
+        parser = plist.PlistParser()
+        parser._plugins_per_name = {
+            FailingFormatCheckPlugin.NAME: FailingFormatCheckPlugin()
+        }
+        storage_writer = self._ParseFile(["plist", "com.apple.bluetooth.plist"], parser)
+
+        # The default plugin is used when no other plugin matches.
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 12)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 1)
 
     def testParseWithTruncatedFile(self):
         """Tests the Parse function on a truncated plist file."""

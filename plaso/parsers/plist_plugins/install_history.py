@@ -40,6 +40,23 @@ class MacOSInstallHistoryPlistPlugin(interface.PlistPlugin):
         ["date", "displayName", "displayVersion", "processName", "packageIdentifiers"]
     )
 
+    def CheckRequiredFormat(self, top_level):
+        """Check if the plist has the minimal structure required by the plugin.
+
+        Args:
+          top_level (list[dict[str, object]]): plist top-level item.
+
+        Returns:
+          bool: True if this is the correct plugin, False otherwise.
+        """
+        if not isinstance(top_level, list) or not top_level:
+            return False
+
+        if not all(isinstance(plist_item, dict) for plist_item in top_level):
+            return False
+
+        return set(top_level[0].keys()).issuperset(self.PLIST_KEYS)
+
     # pylint: disable=arguments-differ
     def _ParsePlist(self, parser_mediator, top_level=None, **unused_kwargs):
         """Extracts relevant install history entries.
