@@ -1,0 +1,5 @@
+  data_type is 'fish:history:command'
+application_execution
+  data_type is 'windows:prefetch'
+
+  data_type is 'windows:lnk:link'

@@ -4,6 +4,7 @@
 import unittest
 
 from plaso.containers import events
+from plaso.engine import tagging_file
 from plaso.lib import definitions
 from plaso.parsers import fish_history
 from plaso.parsers import utmp
@@ -656,6 +657,16 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
         self._CheckTaggingRule(
             syslog.SyslogLineEventData, attribute_values_per_name, ["crash"]
         )
+
+    def testValidate(self):
+        """Tests the Validate function on the tagging file."""
+        tag_file_path = self._GetDataFilePath([self._TAG_FILE])
+        self._SkipIfPathNotExists(tag_file_path)
+
+        tag_file = tagging_file.TaggingFile(tag_file_path)
+
+        findings = tag_file.Validate()
+        self.assertEqual(findings, [])
 
 
 if __name__ == "__main__":

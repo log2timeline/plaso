@@ -12,6 +12,15 @@ define.
 PYTHONPATH=. ./utils/export_event_data.py
 ```
 
+The following script checks a tagging file for labels and rules that cannot be
+loaded, such as a rule that is not attached to a label, a rule that does not
+compile or a label without rules. It prints the line number of every finding
+and exits with a non-zero status when there are any.
+
+```
+PYTHONPATH=. ./utils/check_tagging_file.py plaso/data/tag_linux.txt
+```
+
 ## Contributing changes to tagging rules
 
 Once you have written or changed one or more tagging rules and want to

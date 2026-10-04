@@ -3,6 +3,7 @@
 import io
 import re
 
+from plaso.containers import events
 from plaso.filters import event_filter
 from plaso.lib import errors
 
@@ -80,3 +81,91 @@ class TaggingFile:
             filter_objects_per_label[label_name] = [filter_object]
 
         return filter_objects_per_label
+
+    def Validate(self):
+        """Validates the labels and rules in the tagging file.
+
+        Returns:
+          list[tuple[int, str]]: line number and description of every label or
+              rule that cannot be loaded, empty if all can be loaded.
+        """
+        findings = []
+        event_tag = events.EventTag()
+        label_names = set()
+
+        label_name = None
+        label_line_number = None
+        number_of_rules = 0
+
+        with open(self._path, "rb") as tagging_file:
+            lines = tagging_file.read().split(b"\n")
+
+        for line_number, line in enumerate(lines, start=1):
+            try:
+                line = line.decode("utf-8")
+            except UnicodeDecodeError as exception:
+                findings.append(
+                    (
+                        line_number,
+                        f"Unable to decode line as UTF-8 with error: {exception!s}",
+                    )
+                )
+                return findings
+
+            line = line.rstrip()
+
+            stripped_line = line.lstrip()
+            if stripped_line and stripped_line[0] == "#":
+                continue
+
+            if not stripped_line or not line[0].isspace():
+                # A blank line or a label line ends the rules of the previous label.
+                if label_name and not number_of_rules:
+                    findings.append(
+                        (label_line_number, f"Label without rules: {label_name:s}")
+                    )
+                label_name = None
+
+            if not stripped_line:
+                continue
+
+            if not line[0].isspace():
+                if line in label_names:
+                    findings.append(
+                        (line_number, f"Label defined more than once: {line:s}")
+                    )
+
+                try:
+                    event_tag.AddLabel(line)
+                except ValueError as exception:
+                    findings.append((line_number, str(exception)))
+
+                label_names.add(line)
+                label_name = line
+                label_line_number = line_number
+                number_of_rules = 0
+
+            elif label_name:
+                number_of_rules += 1
+
+                filter_object = event_filter.EventObjectFilter()
+                try:
+                    filter_object.CompileFilter(stripped_line)
+                except errors.ParseError as exception:
+                    findings.append(
+                        (
+                            line_number,
+                            f"Unable to compile rule: {stripped_line:s} with error: "
+                            f"{exception!s}",
+                        )
+                    )
+
+            else:
+                findings.append(
+                    (line_number, f"Rule not attached to a label: {stripped_line:s}")
+                )
+
+        if label_name and not number_of_rules:
+            findings.append((label_line_number, f"Label without rules: {label_name:s}"))
+
+        return findings

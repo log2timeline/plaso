@@ -1,0 +1,9 @@
+application_execution
+# A comment is not a rule.
+
+file_downloaded
+  data_type is 'chrome:history:file_downloaded'
+login_attempt
+text_contains
+  message_body contains 'a message'
+security_event
