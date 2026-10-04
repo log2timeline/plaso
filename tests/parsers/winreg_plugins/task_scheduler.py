@@ -60,7 +60,6 @@ class TaskCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
             "last_registered_time": "2009-07-14T05:08:50.8116269+00:00",
             "last_written_time": "2011-08-15T08:54:09.0468750+00:00",
             "launch_time": None,
-            "origin_key_path": key_path,
             "task_name": "SynchronizeTime",
             "task_identifier": "{044A6734-E90E-4F8F-B357-B2DC8AB3B5EC}",
             "unknown_time": None,

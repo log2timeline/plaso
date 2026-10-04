@@ -20,8 +20,6 @@ class TaskCacheEventData(events.EventData):
           registered.
       last_written_time (dfdatetime.DateTimeValues): entry last written date and time.
       launch_time (dfdatetime.DateTimeValues): date and time the task was last launched.
-      origin_key_path (str): Windows Registry key path of the Task Cache key the entry
-          originates from.
       task_name (str): name of the task.
       task_identifier (str): identifier of the task.
       unknown_time (dfdatetime.DateTimeValues): unknown date and time.
@@ -36,7 +34,6 @@ class TaskCacheEventData(events.EventData):
         self.last_registered_time = None
         self.last_written_time = None
         self.launch_time = None
-        self.origin_key_path = None
         self.task_name = None
         self.task_identifier = None
         self.unknown_time = None
@@ -158,7 +155,6 @@ class TaskCacheWindowsRegistryPlugin(
             event_data = TaskCacheEventData()
             event_data.key_path = sub_key.path
             event_data.last_written_time = sub_key.last_written_time
-            event_data.origin_key_path = registry_key.path
             event_data.task_name = name
             event_data.task_identifier = sub_key.name
 
