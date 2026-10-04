@@ -12,6 +12,7 @@ from plaso.cli import pinfo_tool
 from plaso.containers import artifacts
 from plaso.containers import counts
 from plaso.containers import events
+from plaso.engine import path_helper
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.storage import factory as storage_factory
@@ -230,6 +231,14 @@ Storage files are different.
     def testGenerateFileHashesReportAsJSONWithQuotedDisplayName(self):
         """Tests the _GenerateFileHashesReport function with a quoted name."""
         location = '/tmp/a"b\\c'
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_OS, location=location
+        )
+        # The OS display name is platform dependent, for example it gains
+        # a drive letter on Windows.
+        expected_display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
+            path_spec
+        )
 
         output_writer = test_lib.TestOutputWriter(encoding="utf-8")
         test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
@@ -244,9 +253,7 @@ Storage files are different.
             storage_writer.Open(path=temp_file)
             try:
                 event_data_stream = events.EventDataStream()
-                event_data_stream.path_spec = path_spec_factory.Factory.NewPathSpec(
-                    dfvfs_definitions.TYPE_INDICATOR_OS, location=location
-                )
+                event_data_stream.path_spec = path_spec
                 event_data_stream.sha256_hash = "0" * 64
                 storage_writer.AddAttributeContainer(event_data_stream)
 
@@ -263,8 +270,9 @@ Storage files are different.
         output = output_writer.ReadOutput()
 
         json_dict = json.loads(output)
+        self.assertIn('a"b', expected_display_name)
         self.assertEqual(
-            json_dict["file_hashes"][0]["display_name"], f"OS:{location:s}"
+            json_dict["file_hashes"][0]["display_name"], expected_display_name
         )
 
     def testGenerateFileHashesReportAsMarkdown(self):
