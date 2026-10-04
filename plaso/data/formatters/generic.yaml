@@ -1084,6 +1084,21 @@ short_message:
 short_source: 'LOG'
 source: 'SSH Log'
 ---
+type: 'conditional'
+data_type: 'syslog:sudo:command'
+message:
+- 'Command: {command_line}'
+- 'run by: {username}'
+- 'as: {account}'
+- 'group: {group_name}'
+- 'in: {working_directory}'
+- 'from: {terminal}'
+- 'pid: {pid}'
+short_message:
+- '{message_body}'
+short_source: 'LOG'
+source: 'sudo log'
+---
 # It would be nice to have the _MACHINE_ID field, which is an unique identifier
 # for the system, and hopefully more unique than the _HOSTNAME field.
 # Unfortunately, journal files that have not been closed cleanly may contain
