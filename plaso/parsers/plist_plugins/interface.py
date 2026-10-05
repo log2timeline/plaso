@@ -789,7 +789,7 @@ class PlistPlugin(plugins.BasePlugin):
 
         return match
 
-    def _RecurseKey(self, plist_item, depth=15, key_path=""):
+    def _RecurseKey(self, plist_item, depth=15, key_path="", visited_object_ids=None):
         """Flattens nested dictionaries and lists by yielding its values.
 
         The hierarchy of a plist file is a series of nested dictionaries and lists.
@@ -814,20 +814,44 @@ class PlistPlugin(plugins.BasePlugin):
           depth (Optional[int]): current recursion depth. This value is used to
               ensure we stop at the maximum recursion depth.
           key_path (Optional[str]): path of the current working key.
+          visited_object_ids (Optional[set[int]]): identities (id()) of container
+              objects already visited, used to avoid re-walking shared or cyclic
+              references. Identity is used rather than equality so that distinct
+              objects with equal contents are both still visited.
 
         Yields:
           tuple[str, str, object]: key path, key name and value.
         """
+        if visited_object_ids is None:
+            visited_object_ids = set()
+
         if depth < 1:
             logger.debug(f"Maximum recursion depth of 15 reached for key: {key_path:s}")
 
         elif isinstance(plist_item, (list, tuple)):
+            # Track container identity so a shared or cyclic reference is walked
+            # once per object rather than once per path. Without this a binary
+            # plist whose decoded object graph shares sub-objects (a DAG) expands
+            # to an unbounded number of visits.
+            object_id = id(plist_item)
+            if object_id in visited_object_ids:
+                return
+            visited_object_ids.add(object_id)
+
             for sub_plist_item in plist_item:
                 yield from self._RecurseKey(
-                    sub_plist_item, depth=depth - 1, key_path=key_path
+                    sub_plist_item,
+                    depth=depth - 1,
+                    key_path=key_path,
+                    visited_object_ids=visited_object_ids,
                 )
 
         elif hasattr(plist_item, "items"):
+            object_id = id(plist_item)
+            if object_id in visited_object_ids:
+                return
+            visited_object_ids.add(object_id)
+
             for subkey_name, value in plist_item.items():
                 yield key_path, subkey_name, value
 
@@ -840,7 +864,10 @@ class PlistPlugin(plugins.BasePlugin):
                     if isinstance(sub_plist_item, dict):
                         subkey_path = "/".join([key_path, subkey_name])
                         yield from self._RecurseKey(
-                            sub_plist_item, depth=depth - 1, key_path=subkey_path
+                            sub_plist_item,
+                            depth=depth - 1,
+                            key_path=subkey_path,
+                            visited_object_ids=visited_object_ids,
                         )
 
     # pylint: disable=arguments-differ
