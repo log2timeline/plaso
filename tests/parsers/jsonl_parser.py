@@ -27,7 +27,7 @@ class FailingFormatCheckPlugin(interface.JSONLPlugin):
         """
         raise RuntimeError("format check failed")
 
-    # pylint: disable=arguments-differ
+    # pylint: disable=arguments-differ,unused-argument
     def _ParseRecord(self, parser_mediator, json_dict):
         """Extracts entries for testing.
 
