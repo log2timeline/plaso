@@ -4,10 +4,14 @@ import abc
 import json
 import os
 
+from json import decoder as json_decoder
+
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from dfvfs.helpers import text_file
 
+from plaso.lib import errors
+from plaso.parsers import logger
 from plaso.parsers import plugins
 
 
@@ -19,6 +23,10 @@ class JSONLPlugin(plugins.BasePlugin):
     """
 
     NAME = "jsonl_plugin"
+
+    # The maximum number of consecutive lines that fail to parse before aborting
+    # parsing.
+    _MAXIMUM_CONSECUTIVE_LINE_FAILURES = 20
 
     def _GetJSONValue(self, json_dict, name, default_value=None):
         """Retrieves a value from a JSON dict.
@@ -108,7 +116,71 @@ class JSONLPlugin(plugins.BasePlugin):
         file_object.seek(0, os.SEEK_SET)
         text_file_object = text_file.TextFile(file_object)
 
-        # TODO: add support to handle corrupt lines like text parser.
-        for line in text_file_object:
-            json_dict = json.loads(line)
-            self._ParseRecord(parser_mediator, json_dict)
+        consecutive_line_failures = 0
+        line_number = 0
+
+        while True:
+            if parser_mediator.abort:
+                break
+
+            if consecutive_line_failures > self._MAXIMUM_CONSECUTIVE_LINE_FAILURES:
+                parser_mediator.ProduceWarning(
+                    f"more than {self._MAXIMUM_CONSECUTIVE_LINE_FAILURES:d} "
+                    f"consecutive failures to parse lines."
+                )
+                break
+
+            try:
+                line = text_file_object.readline()
+            except UnicodeDecodeError as exception:
+                parser_mediator.ProduceWarning(
+                    f"unable to read and decode log line at offset: "
+                    f"{text_file_object.get_offset():d} with error: {exception!s}"
+                )
+                break
+
+            if not line:
+                break
+
+            line_number += 1
+
+            line = line.strip()
+            if not line:
+                continue
+
+            try:
+                json_dict = json.loads(line)
+            except (json_decoder.JSONDecodeError, TypeError, ValueError) as exception:
+                logger.debug(f"unable to parse json with error: {exception!s}")
+
+                if len(line) > 80:
+                    truncated_line = line[:77]
+                    line = f"{truncated_line:s}..."
+
+                parser_mediator.ProduceWarning(
+                    f'unable to parse log line: {line_number:d} "{line:s}"'
+                )
+                consecutive_line_failures += 1
+                continue
+
+            if not isinstance(json_dict, dict):
+                logger.debug("unable to parse json: not a JSON dictionary")
+
+                if len(line) > 80:
+                    truncated_line = line[:77]
+                    line = f"{truncated_line:s}..."
+
+                parser_mediator.ProduceWarning(
+                    f'unable to parse log line: {line_number:d} "{line:s}"'
+                )
+                consecutive_line_failures += 1
+                continue
+
+            consecutive_line_failures = 0
+
+            try:
+                self._ParseRecord(parser_mediator, json_dict)
+            except errors.ParseError as exception:
+                parser_mediator.ProduceWarning(
+                    f"unable to parse record: {line_number:d} with error: {exception!s}"
+                )

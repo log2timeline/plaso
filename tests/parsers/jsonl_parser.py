@@ -5,8 +5,37 @@ import unittest
 
 from plaso.parsers import jsonl_parser
 from plaso.parsers import jsonl_plugins  # pylint: disable=unused-import
+from plaso.parsers.jsonl_plugins import interface
 
 from tests.parsers import test_lib
+
+
+class FailingFormatCheckPlugin(interface.JSONLPlugin):
+    """JSON-L plugin that fails its format check for testing."""
+
+    NAME = "failing_format_check"
+    DATA_FORMAT = "Test JSON-L file"
+
+    def CheckRequiredFormat(self, json_dict):
+        """Check if the log record has the minimal structure required by the plugin.
+
+        Args:
+          json_dict (dict): JSON dictionary of the log record.
+
+        Raises:
+          RuntimeError: always.
+        """
+        raise RuntimeError("format check failed")
+
+    # pylint: disable=arguments-differ
+    def _ParseRecord(self, parser_mediator, json_dict):
+        """Extracts entries for testing.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
+          json_dict (dict): JSON dictionary of the log record.
+        """
 
 
 class JSONLParserTest(test_lib.ParserTestCase):
@@ -43,6 +72,49 @@ class JSONLParserTest(test_lib.ParserTestCase):
             "extraction_warning"
         )
         self.assertEqual(number_of_warnings, 0)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "recovery_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+    def testParseWithCorruptedLines(self):
+        """Tests the Parse function on a file with corrupted lines."""
+        parser = jsonl_parser.JSONLParser()
+        storage_writer = self._ParseFile(["jsonl", "corrupted_lines.jsonl"], parser)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 4)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 3)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "recovery_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+    def testParseWithPluginFormatCheckError(self):
+        """Tests the Parse function with a plugin that fails its format check."""
+        parser = jsonl_parser.JSONLParser()
+        parser._plugins_per_name = {
+            FailingFormatCheckPlugin.NAME: FailingFormatCheckPlugin()
+        }
+        storage_writer = self._ParseFile(["jsonl", "gcp_logging.jsonl"], parser)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 0)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 1)
 
         number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
             "recovery_warning"
