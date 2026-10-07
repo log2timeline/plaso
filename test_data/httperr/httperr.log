@@ -1,0 +1,9 @@
+#Software: Microsoft HTTP API 2.0
+#Version: 1.0
+#Date: 2026-10-07 12:24:54
+#Fields: date time c-ip c-port s-ip s-port cs-version cs-method cs-uri streamid streamid_ex sc-status s-siteid s-reason s-queuename transport fault-code extended-fault-code
+2026-10-07 12:24:54 127.0.0.1 54517 127.0.0.1 8123 HTTP/1.1 GET /test'XOR(1)*! - - 400 - Hostname - TCP - -
+2026-10-07 12:24:54 127.0.0.1 54518 127.0.0.1 8123 HTTP/9.9 GET /a - - 505 - Version_N/S - TCP - -
+2026-10-07 12:24:55 127.0.0.1 54519 127.0.0.1 8123 - - - - - 400 - Verb - TCP - -
+2026-10-07 12:24:55 127.0.0.1 54520 127.0.0.1 8123 - GET - - - 414 - URL_Length - TCP - -
+2026-10-07 12:24:56 127.0.0.1 54521 127.0.0.1 8123 HTTP/1.1 GET /c - - 400 - Header - TCP - -

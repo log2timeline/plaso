@@ -1612,6 +1612,12 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: true
 ---
+data_type: 'windows:httperr_log:entry'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+place_holder_event: true
+---
 data_type: 'windows:lnk:link'
 attribute_mappings:
 - name: 'access_time'

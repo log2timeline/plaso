@@ -167,6 +167,7 @@ File System Format support is provided by [dfVFS](https://dfvfs.readthedocs.io/e
 * MacOS Application firewall log (appfirewall.log) file
 * MacOS security daemon (securityd) log file
 * MacOS Wi-Fi log (wifi.log) file
+* Microsoft HTTP API (HTTP.sys) error log file
 * Microsoft IIS log file
 * OneDrive (or SkyDrive) version 1 log file
 * OneDrive (or SkyDrive) version 2 log file
