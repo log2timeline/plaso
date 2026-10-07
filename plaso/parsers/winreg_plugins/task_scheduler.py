@@ -153,8 +153,8 @@ class TaskCacheWindowsRegistryPlugin(
             name = task_guids.get(sub_key.name, sub_key.name)
 
             event_data = TaskCacheEventData()
-            event_data.key_path = registry_key.path
-            event_data.last_written_time = registry_key.last_written_time
+            event_data.key_path = sub_key.path
+            event_data.last_written_time = sub_key.last_written_time
             event_data.task_name = name
             event_data.task_identifier = sub_key.name
 
