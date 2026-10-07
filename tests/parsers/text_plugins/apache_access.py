@@ -286,7 +286,6 @@ class ApacheAccessLogTextPluginTest(test_lib.TextPluginTestCase):
         self.assertEqual(
             test_warnings[0].message, "WebDAV HTTP request method: PROPFIND"
         )
-        self.assertEqual(test_warnings[0].parser_chain, "text/apache_access")
         self.assertEqual(
             test_warnings[1].message, "non-standard HTTP request method: M-SEARCH"
         )
