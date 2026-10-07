@@ -5,6 +5,7 @@ import unittest
 
 from plaso.containers import events
 from plaso.containers import plist_event
+from plaso.engine import tagging_file
 from plaso.lib import definitions
 from plaso.parsers import filestat
 from plaso.parsers.olecf_plugins import summary
@@ -151,6 +152,16 @@ class MacOSTaggingFileTest(test_lib.TaggingFileTestCase):
         storage_writer = self._TagEvent(event, event_data, None)
 
         self._CheckLabels(storage_writer, ["document_print"])
+
+    def testValidate(self):
+        """Tests the Validate function on the tagging file."""
+        tag_file_path = self._GetDataFilePath([self._TAG_FILE])
+        self._SkipIfPathNotExists(tag_file_path)
+
+        tag_file = tagging_file.TaggingFile(tag_file_path)
+
+        findings = tag_file.Validate()
+        self.assertEqual(findings, [])
 
 
 if __name__ == "__main__":

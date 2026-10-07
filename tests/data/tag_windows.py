@@ -4,6 +4,7 @@
 import unittest
 
 from plaso.containers import events
+from plaso.engine import tagging_file
 from plaso.lib import definitions
 from plaso.parsers import filestat
 from plaso.parsers import winevt
@@ -760,6 +761,16 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
             attribute_values_per_name,
             ["eventlog_cleared"],
         )
+
+    def testValidate(self):
+        """Tests the Validate function on the tagging file."""
+        tag_file_path = self._GetDataFilePath([self._TAG_FILE])
+        self._SkipIfPathNotExists(tag_file_path)
+
+        tag_file = tagging_file.TaggingFile(tag_file_path)
+
+        findings = tag_file.Validate()
+        self.assertEqual(findings, [])
 
 
 if __name__ == "__main__":
