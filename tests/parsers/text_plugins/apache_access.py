@@ -49,6 +49,17 @@ class ApacheAccessLogTextPluginTest(test_lib.TextPluginTestCase):
 
         self.assertTrue(plugin.CheckRequiredFormat(parser_mediator, text_reader))
 
+        # A non-standard request method on the first line does not identify
+        # the format.
+        file_object = io.BytesIO(
+            b'10.0.0.1 - - [13/Jan/2016:19:31:16 +0000] "PROPFIND /dav/ HTTP/1.1" '
+            b"207 1024\n"
+        )
+        text_reader = text_parser.EncodedTextReader(file_object)
+        text_reader.ReadLines()
+
+        self.assertFalse(plugin.CheckRequiredFormat(parser_mediator, text_reader))
+
         # Check non-matching format.
         file_object = io.BytesIO(
             b"Jan 22 07:52:33 myhostname.myhost.com client[30840]: INFO No new "
@@ -266,7 +277,19 @@ class ApacheAccessLogTextPluginTest(test_lib.TextPluginTestCase):
         number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
             "extraction_warning"
         )
-        self.assertEqual(number_of_warnings, 0)
+        self.assertEqual(number_of_warnings, 2)
+
+        generator = storage_writer.GetAttributeContainers(
+            warnings.ExtractionWarning.CONTAINER_TYPE
+        )
+        test_warnings = list(generator)
+        self.assertEqual(
+            test_warnings[0].message, "WebDAV HTTP request method: PROPFIND"
+        )
+        self.assertEqual(test_warnings[0].parser_chain, "text/apache_access")
+        self.assertEqual(
+            test_warnings[1].message, "non-standard HTTP request method: M-SEARCH"
+        )
 
         expected_event_values = {
             "data_type": "apache:access_log:entry",
