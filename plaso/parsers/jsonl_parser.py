@@ -73,8 +73,14 @@ class JSONLParser(interface.FileObjectParser):
 
             parser_mediator.SampleFormatCheckStartTiming(profiling_name)
 
+            result = False
             try:
                 result = plugin.CheckRequiredFormat(json_dict)
+            except Exception as exception:  # pylint: disable=broad-except
+                parser_mediator.ProduceWarning(
+                    f"plugin: {plugin_name:s} unable to parse JSON-L file with error: "
+                    f"{exception!s}"
+                )
             finally:
                 parser_mediator.SampleFormatCheckStopTiming(profiling_name)
 
