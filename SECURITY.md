@@ -27,5 +27,8 @@ Please include:
 * A description of the vulnerability and its impact. Do not speculate about impact, and make sure
   to include your impact analysis. No need to include CVSS scores.
 * Step-by-step instructions to reproduce the issue, including any specific test data or
-  configurations. Add integrity hashes of the files.
+  configurations. 
+  * Report in text, no screenshots or videos.
+  * Make sure to include a working proof-of-concept (POC).
+  * Add integrity hashes of the files.
 * Any proposed fixes, patches, or mitigations.
