@@ -40,7 +40,7 @@ from plaso.parsers.text_plugins import teamviewer
 from plaso.parsers.text_plugins import viminfo
 from plaso.parsers.text_plugins import vsftpd
 from plaso.parsers.text_plugins import winfirewall
-from plaso.parsers.text_plugins import winhttperr
+from plaso.parsers.text_plugins import winhttp_api_error
 from plaso.parsers.text_plugins import xchatlog
 from plaso.parsers.text_plugins import xchatscrollback
 from plaso.parsers.text_plugins import zsh_extended_history

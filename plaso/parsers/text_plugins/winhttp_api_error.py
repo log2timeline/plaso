@@ -1,4 +1,4 @@
-"""Text parser plugin for Microsoft HTTP API (HTTP.sys) error log files.
+"""Text parser plugin for Microsoft HTTP Server API (HTTP.sys) error log files.
 
 HTTP.sys writes requests it rejects before they reach an application, such as
 malformed requests, connection time-outs or queue overflows, to error log files,
@@ -18,12 +18,12 @@ from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import interface
 
 
-class WinHTTPErrEventData(events.EventData):
-    """Microsoft HTTP API (HTTP.sys) error log event data.
+class WinHTTPAPIErrorEventData(events.EventData):
+    """Microsoft HTTP Server API (HTTP.sys) error log event data.
 
     Attributes:
-      dest_ip (str): IP address of the server.
-      dest_port (int): server port number.
+      destination_ip (str): IP address of the server.
+      destination_port (int): server port number.
       extended_fault_code (str): extended fault code.
       extended_stream_identifier (str): extended stream identifier.
       fault_code (str): fault code.
@@ -48,8 +48,8 @@ class WinHTTPErrEventData(events.EventData):
     def __init__(self):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
-        self.dest_ip = None
-        self.dest_port = None
+        self.destination_ip = None
+        self.destination_port = None
         self.extended_fault_code = None
         self.extended_stream_identifier = None
         self.fault_code = None
@@ -67,24 +67,27 @@ class WinHTTPErrEventData(events.EventData):
         self.transport = None
 
 
-class WinHTTPErrTextPlugin(interface.TextPlugin):
-    """Text parser plugin for Microsoft HTTP API (HTTP.sys) error log files."""
+class WinHTTPAPIErrorTextPlugin(interface.TextPlugin):
+    """Text parser plugin for Microsoft HTTP Server API (HTTP.sys) error log files."""
 
-    NAME = "winhttperr"
-    DATA_FORMAT = "Microsoft HTTP API (HTTP.sys) error log file"
+    NAME = "winhttp_api_error"
+    DATA_FORMAT = "Microsoft HTTP Server API (HTTP.sys) error log file"
 
     # HTTP.sys writes error log files in UTF-8.
     ENCODING = "utf-8"
 
     # The values of fields are separated by a single space and an unused or
     # empty value is represented by a hyphen.
-    _BLANK = pyparsing.Regex(r"-(?=[ \t\r\n]|$)").suppress()
+    _BLANK = pyparsing.Literal("-").suppress()
 
     # Values such as the requested URI are logged as received from the client and
     # can contain any non-whitespace character, for example characters used in
     # SQL injection attempts. Hence, the values are not restricted to a specific
-    # set of characters.
-    _STRING_OR_BLANK = _BLANK | pyparsing.Regex(r"[^ \t\r\n]+")
+    # set of characters. A single regular expression is used per value, instead
+    # of an alternation with _BLANK, since a value can start with a hyphen.
+    _STRING_OR_BLANK = pyparsing.Regex(r"[^ \t\r\n]+").set_parse_action(
+        lambda tokens: [] if tokens[0] == "-" else tokens
+    )
 
     _INTEGER_OR_BLANK = _BLANK | pyparsing.Word(pyparsing.nums).set_parse_action(
         lambda tokens: int(tokens[0], 10)
@@ -156,8 +159,8 @@ class WinHTTPErrTextPlugin(interface.TextPlugin):
         "date": _DATE.set_results_name("date"),
         "extended-fault-code": _STRING_OR_BLANK.set_results_name("extended_fault_code"),
         "fault-code": _STRING_OR_BLANK.set_results_name("fault_code"),
-        "s-ip": _IP_ADDRESS_OR_BLANK.set_results_name("dest_ip"),
-        "s-port": _PORT_NUMBER_OR_BLANK.set_results_name("dest_port"),
+        "s-ip": _IP_ADDRESS_OR_BLANK.set_results_name("destination_ip"),
+        "s-port": _PORT_NUMBER_OR_BLANK.set_results_name("destination_port"),
         "s-queuename": _STRING_OR_BLANK.set_results_name("queue_name"),
         "s-reason": _STRING_OR_BLANK.set_results_name("reason"),
         "s-siteid": _INTEGER_OR_BLANK.set_results_name("site_identifier"),
@@ -178,8 +181,8 @@ class WinHTTPErrTextPlugin(interface.TextPlugin):
         + _TIME.set_results_name("time")
         + _IP_ADDRESS_OR_BLANK.set_results_name("source_ip")
         + _PORT_NUMBER_OR_BLANK.set_results_name("source_port")
-        + _IP_ADDRESS_OR_BLANK.set_results_name("dest_ip")
-        + _PORT_NUMBER_OR_BLANK.set_results_name("dest_port")
+        + _IP_ADDRESS_OR_BLANK.set_results_name("destination_ip")
+        + _PORT_NUMBER_OR_BLANK.set_results_name("destination_port")
         + _STRING_OR_BLANK.set_results_name("protocol_version")
         + _STRING_OR_BLANK.set_results_name("http_method")
         + _STRING_OR_BLANK.set_results_name("requested_uri")
@@ -205,30 +208,26 @@ class WinHTTPErrTextPlugin(interface.TextPlugin):
 
     VERIFICATION_LITERALS = ["#Software: Microsoft HTTP API "]
 
-    def _GetLogLineStructure(self, fields, parser_mediator=None):
+    def _GetLogLineStructure(self, parser_mediator, fields):
         """Builds a log line structure based on field definitions.
 
         Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           fields (str): field definitions, separated by a space.
-          parser_mediator (Optional[ParserMediator]): mediates interactions between
-              parsers and other components, such as storage and dfVFS.
 
         Returns:
           pyparsing.ParserElement: log line structure.
         """
         log_line_structure = pyparsing.Empty()
-        for member in fields.split(" "):
-            if not member:
-                continue
-
+        for member in fields.split():
             field_structure = self._LOG_LINE_STRUCTURES.get(member)
             if not field_structure:
                 field_structure = self._STRING_OR_BLANK
-                if parser_mediator:
-                    parser_mediator.ProduceWarning(
-                        f"missing definition for field: {member:s} defaulting to "
-                        f"STRING_OR_BLANK"
-                    )
+                parser_mediator.ProduceWarning(
+                    f"missing definition for field: {member:s} defaulting to "
+                    f"STRING_OR_BLANK"
+                )
 
             log_line_structure += field_structure
 
@@ -244,9 +243,13 @@ class WinHTTPErrTextPlugin(interface.TextPlugin):
               other components, such as storage and dfVFS.
           structure (pyparsing.ParseResults): tokens from a parsed log line.
         """
-        event_data = WinHTTPErrEventData()
-        event_data.dest_ip = self._GetValueFromStructure(structure, "dest_ip")
-        event_data.dest_port = self._GetValueFromStructure(structure, "dest_port")
+        event_data = WinHTTPAPIErrorEventData()
+        event_data.destination_ip = self._GetValueFromStructure(
+            structure, "destination_ip"
+        )
+        event_data.destination_port = self._GetValueFromStructure(
+            structure, "destination_port"
+        )
         event_data.extended_fault_code = self._GetValueFromStructure(
             structure, "extended_fault_code"
         )
@@ -293,7 +296,7 @@ class WinHTTPErrTextPlugin(interface.TextPlugin):
             fields = self._GetValueFromStructure(structure, "fields", default_value="")
             fields = fields.strip()
             if fields:
-                self._SetLogLineStructure(fields, parser_mediator=parser_mediator)
+                self._SetLogLineStructure(parser_mediator, fields)
 
         elif key == "log_line":
             self._ParseLogLine(parser_mediator, structure)
@@ -334,17 +337,15 @@ class WinHTTPErrTextPlugin(interface.TextPlugin):
         """Resets stored values."""
         self._SetLineStructures(self._LINE_STRUCTURES)
 
-    def _SetLogLineStructure(self, fields, parser_mediator=None):
+    def _SetLogLineStructure(self, parser_mediator, fields):
         """Sets the line structures based on field definitions.
 
         Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           fields (str): field definitions, separated by a space.
-          parser_mediator (Optional[ParserMediator]): mediates interactions between
-              parsers and other components, such as storage and dfVFS.
         """
-        log_line_structure = self._GetLogLineStructure(
-            fields, parser_mediator=parser_mediator
-        )
+        log_line_structure = self._GetLogLineStructure(parser_mediator, fields)
         self._SetLineStructures(
             [
                 ("comment_line", self._COMMENT_LOG_LINE),
@@ -373,4 +374,4 @@ class WinHTTPErrTextPlugin(interface.TextPlugin):
         return True
 
 
-text_parser.TextLogParser.RegisterPlugin(WinHTTPErrTextPlugin)
+text_parser.TextLogParser.RegisterPlugin(WinHTTPAPIErrorTextPlugin)

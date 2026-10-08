@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
-"""Tests for the Microsoft HTTP API (HTTP.sys) error log text parser plugin."""
+"""Tests for the Microsoft HTTP Server API (HTTP.sys) error log text parser plugin."""
 
 import io
 import unittest
 
 from plaso.parsers import mediator as parsers_mediator
 from plaso.parsers import text_parser
-from plaso.parsers.text_plugins import winhttperr
+from plaso.parsers.text_plugins import winhttp_api_error
 
 from tests.parsers.text_plugins import test_lib
 
 
-class WinHTTPErrTextPluginTest(test_lib.TextPluginTestCase):
-    """Tests for the Microsoft HTTP API (HTTP.sys) error log text parser plugin."""
+class WinHTTPAPIErrorTextPluginTest(test_lib.TextPluginTestCase):
+    """Tests for the Microsoft HTTP Server API (HTTP.sys) error log text plugin."""
 
     _HEADER = (
         b"#Software: Microsoft HTTP API 2.0\r\n"
@@ -29,7 +29,7 @@ class WinHTTPErrTextPluginTest(test_lib.TextPluginTestCase):
         Returns:
           FakeStorageWriter: storage writer.
         """
-        plugin = winhttperr.WinHTTPErrTextPlugin()
+        plugin = winhttp_api_error.WinHTTPAPIErrorTextPlugin()
 
         storage_writer = self._CreateStorageWriter()
         parser_mediator = parsers_mediator.ParserMediator()
@@ -49,7 +49,7 @@ class WinHTTPErrTextPluginTest(test_lib.TextPluginTestCase):
 
     def testCheckRequiredFormat(self):
         """Tests for the CheckRequiredFormat function."""
-        plugin = winhttperr.WinHTTPErrTextPlugin()
+        plugin = winhttp_api_error.WinHTTPAPIErrorTextPlugin()
         parser_mediator = parsers_mediator.ParserMediator()
 
         file_object = io.BytesIO(
@@ -85,7 +85,7 @@ class WinHTTPErrTextPluginTest(test_lib.TextPluginTestCase):
 
     def testProcess(self):
         """Tests the Process function."""
-        plugin = winhttperr.WinHTTPErrTextPlugin()
+        plugin = winhttp_api_error.WinHTTPAPIErrorTextPlugin()
         storage_writer = self._ParseTextFileWithPlugin(
             ["httperr", "httperr.log"], plugin
         )
@@ -108,8 +108,8 @@ class WinHTTPErrTextPluginTest(test_lib.TextPluginTestCase):
         # A requested URI that contains characters used in SQL injection attempts.
         expected_event_values = {
             "data_type": "windows:httperr_log:entry",
-            "dest_ip": "127.0.0.1",
-            "dest_port": 8123,
+            "destination_ip": "127.0.0.1",
+            "destination_port": 8123,
             "extended_fault_code": None,
             "fault_code": None,
             "http_method": "GET",
@@ -146,7 +146,7 @@ class WinHTTPErrTextPluginTest(test_lib.TextPluginTestCase):
 
     def testProcessWithServiceRestart(self):
         """Tests the Process function with fields that change within the file."""
-        plugin = winhttperr.WinHTTPErrTextPlugin()
+        plugin = winhttp_api_error.WinHTTPAPIErrorTextPlugin()
         storage_writer = self._ParseTextFileWithPlugin(
             ["httperr", "httperr_restart.log"], plugin
         )
@@ -188,7 +188,7 @@ class WinHTTPErrTextPluginTest(test_lib.TextPluginTestCase):
         # an IPv6 address with a zone index.
         expected_event_values = {
             "data_type": "windows:httperr_log:entry",
-            "dest_ip": "2001:db8::1",
+            "destination_ip": "2001:db8::1",
             "http_method": "POST",
             "http_status": 413,
             "last_written_time": "2025-03-14T09:15:02+00:00",
@@ -237,6 +237,45 @@ class WinHTTPErrTextPluginTest(test_lib.TextPluginTestCase):
         }
 
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
+
+    def testProcessWithValuesStartingWithHyphen(self):
+        """Tests the Process function with values that start with a hyphen."""
+        storage_writer = self._ParseData(
+            self._HEADER + b"#Fields: date time c-ip cs-method cs-uri s-reason\r\n"
+            b"2025-03-14 08:00:01 192.0.2.10 GET -/--x -\r\n"
+            b"2025-03-14 08:00:02 192.0.2.11 - - -Hostname\r\n"
+        )
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 2)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        # A value that starts with a hyphen is not a blank value.
+        expected_event_values = {
+            "data_type": "windows:httperr_log:entry",
+            "http_method": "GET",
+            "reason": None,
+            "requested_uri": "-/--x",
+        }
+
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
+
+        expected_event_values = {
+            "data_type": "windows:httperr_log:entry",
+            "http_method": None,
+            "reason": "-Hostname",
+            "requested_uri": None,
+        }
+
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 
     def testProcessWithUnsupportedField(self):
