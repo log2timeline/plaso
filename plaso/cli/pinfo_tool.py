@@ -2,6 +2,7 @@
 
 import argparse
 import collections
+import json
 import os
 import uuid
 
@@ -520,7 +521,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
                     elif isinstance(value, int):
                         value = attribute_mappings.get(key, {}).get(value, value)
                     elif self._output_format == "json":
-                        value = value.replace("\\", "\\\\")
+                        value = json.dumps(value, ensure_ascii=False)[1:-1]
                     attribute_values[key] = value
 
                 self._output_writer.Write(
@@ -558,6 +559,8 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
                 display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
                     event_data_stream.path_spec
                 )
+                if self._output_format == "json":
+                    display_name = json.dumps(display_name, ensure_ascii=False)[1:-1]
 
             attribute_values = {
                 "display_name": display_name,
@@ -1528,7 +1531,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
                 self._output_writer.Write(", ")
 
             key = key or "N/A"
-            key = key.replace("\n", "\\n")
+            key = json.dumps(key, ensure_ascii=False)[1:-1]
             self._output_writer.Write(
                 f'"{key:s}": {count_container.number_of_events:d}'
             )
