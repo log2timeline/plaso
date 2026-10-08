@@ -1492,7 +1492,19 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: false
 ---
+data_type: 'syslog:ssh:closed_connection'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+place_holder_event: false
+---
 data_type: 'syslog:ssh:failed_connection'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+place_holder_event: false
+---
+data_type: 'syslog:ssh:invalid_user'
 attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'
@@ -1505,6 +1517,12 @@ attribute_mappings:
 place_holder_event: false
 ---
 data_type: 'syslog:ssh:opened_connection'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+place_holder_event: false
+---
+data_type: 'syslog:ssh:received_disconnect'
 attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'
