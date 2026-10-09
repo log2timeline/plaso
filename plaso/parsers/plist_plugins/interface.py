@@ -42,6 +42,12 @@ class NSKeyedArchiverDecoder:
         "NSUUID": "_DecodeNSUUID",
     }
 
+    def __init__(self):
+        """Initializes a NSKeyedArchiver decoder."""
+        super().__init__()
+        self._cycle_skip_count = 0
+        self._decoded_object_cache = {}
+
     def _DecodeCompositeObject(self, plist_property, objects_array, parent_objects):
         """Decodes a composite object.
 
@@ -72,14 +78,12 @@ class NSKeyedArchiverDecoder:
                 continue
 
             if value_plist_uid in parent_objects:
+                self._cycle_skip_count += 1
                 continue
 
-            parent_objects.append(value_plist_uid)
-
-            composite_object[key] = self._DecodeObject(
-                objects_array[value_plist_uid], objects_array, parent_objects
+            composite_object[key] = self._DecodeReferencedObject(
+                value_plist_uid, objects_array, parent_objects
             )
-            parent_objects.pop(-1)
 
         return composite_object
 
@@ -113,16 +117,12 @@ class NSKeyedArchiverDecoder:
                 )
 
             if ns_object_plist_uid in parent_objects:
+                self._cycle_skip_count += 1
                 continue
 
-            ns_object_referenced_property = objects_array[ns_object_plist_uid]
-
-            parent_objects.append(ns_object_plist_uid)
-
-            ns_array_element = self._DecodeObject(
-                ns_object_referenced_property, objects_array, parent_objects
+            ns_array_element = self._DecodeReferencedObject(
+                ns_object_plist_uid, objects_array, parent_objects
             )
-            parent_objects.pop(-1)
 
             ns_array.append(ns_array_element)
 
@@ -256,17 +256,12 @@ class NSKeyedArchiverDecoder:
                 )
 
             if ns_object_plist_uid in parent_objects:
+                self._cycle_skip_count += 1
                 continue
 
-            ns_object_referenced_property = objects_array[ns_object_plist_uid]
-
-            parent_objects.append(ns_object_plist_uid)
-
-            ns_dictionary[ns_key] = self._DecodeObject(
-                ns_object_referenced_property, objects_array, parent_objects
+            ns_dictionary[ns_key] = self._DecodeReferencedObject(
+                ns_object_plist_uid, objects_array, parent_objects
             )
-
-            parent_objects.pop(-1)
 
         return ns_dictionary
 
@@ -521,6 +516,50 @@ class NSKeyedArchiverDecoder:
 
         return plist_property
 
+    def _DecodeReferencedObject(self, plist_uid, objects_array, parent_objects):
+        """Decodes an object referenced by a plist UID, reusing shared results.
+
+        Shared object references (plist UIDs) can point at the same object
+        many times. Decoding each reference on its own causes the same object
+        to be decoded repeatedly, which expands into exponential processing
+        time and memory when many references point at the same shared subtree.
+        Decoded objects are therefore memoized by their plist UID so that each
+        shared object is decoded only once and reused.
+
+        An object is only memoized when decoding its subtree did not skip a
+        reference back to a parent object, because the decoded value of such a
+        subtree depends on the path taken to reach it and is therefore not safe
+        to reuse. The existing cycle check is kept unchanged for genuine
+        cycles.
+
+        Args:
+          plist_uid (int): plist UID of the referenced object.
+          objects_array (list[object]): $objects array.
+          parent_objects (list[int]): parent object UIDs.
+
+        Returns:
+          object: decoded object.
+
+        Raises:
+          RuntimeError: if the object cannot be decoded.
+        """
+        if plist_uid in self._decoded_object_cache:
+            return self._decoded_object_cache[plist_uid]
+
+        cycle_skip_count = self._cycle_skip_count
+
+        parent_objects.append(plist_uid)
+
+        decoded_object = self._DecodeObject(
+            objects_array[plist_uid], objects_array, parent_objects
+        )
+        parent_objects.pop(-1)
+
+        if self._cycle_skip_count == cycle_skip_count:
+            self._decoded_object_cache[plist_uid] = decoded_object
+
+        return decoded_object
+
     def _GetClassName(self, plist_property, objects_array):
         """Retrieves a class name.
 
@@ -603,22 +642,31 @@ class NSKeyedArchiverDecoder:
 
         objects_array = root_item.get("$objects") or []
 
-        top_property = root_item.get("$top") or {}
-        for name, value_property in top_property.items():
-            value_plist_uid = self._GetPlistUID(value_property)
-            if value_plist_uid is None:
-                decoded_object[name] = value_property
-                continue
+        # Reset the per-plist state used to reuse decoded shared object
+        # references so it does not leak between plists decoded by the same
+        # decoder instance.
+        self._cycle_skip_count = 0
+        self._decoded_object_cache = {}
 
-            value_referenced_property = objects_array[value_plist_uid]
-            if not value_referenced_property:
-                raise RuntimeError(
-                    f'Missing $top["{name:s}"] with UID: {value_plist_uid:d}.'
+        try:
+            top_property = root_item.get("$top") or {}
+            for name, value_property in top_property.items():
+                value_plist_uid = self._GetPlistUID(value_property)
+                if value_plist_uid is None:
+                    decoded_object[name] = value_property
+                    continue
+
+                value_referenced_property = objects_array[value_plist_uid]
+                if not value_referenced_property:
+                    raise RuntimeError(
+                        f'Missing $top["{name:s}"] with UID: {value_plist_uid:d}.'
+                    )
+
+                decoded_object[name] = self._DecodeObject(
+                    value_referenced_property, objects_array, [value_plist_uid]
                 )
-
-            decoded_object[name] = self._DecodeObject(
-                value_referenced_property, objects_array, [value_plist_uid]
-            )
+        finally:
+            self._decoded_object_cache = {}
 
         # The root $top appears to be internal only to the NSKeyedArchiver encoded
         # plist.
