@@ -111,9 +111,12 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
     _LOG_LEVEL = pyparsing.oneOf(_BITBUCKET_LEVELS).set_results_name("level")
 
     # Thread name enclosed in brackets. Thread names do not contain ']'.
+    # The scan is bounded to the current line (fail_on the line end) so that a
+    # line without a closing ']' fails fast instead of running to the end of
+    # the buffer.
     _BITBUCKET_THREAD = (
         pyparsing.Suppress("[")
-        + pyparsing.SkipTo("]").set_results_name("thread")
+        + pyparsing.SkipTo("]", fail_on=pyparsing.LineEnd()).set_results_name("thread")
         + pyparsing.Suppress("]")
     )
 
@@ -138,9 +141,16 @@ class AtlassianBitbucketTextPlugin(interface.TextPlugin):
     # "action".
     # We capture everything between ']' and the logger class as original text and
     # parse it afterwards.
-    _REQUEST_CONTEXT_TEXT = pyparsing.SkipTo(_BITBUCKET_LOGGER).set_results_name(
-        "request_context_text"
-    )
+    # The capture consumes whitespace-delimited tokens left-to-right up to the
+    # first logger-class token, bounded to the current line, rather than probing
+    # for the logger class at every offset (which re-scans the remainder of the
+    # line at each position). The original text is kept verbatim so the captured
+    # value is unchanged.
+    _REQUEST_CONTEXT_TEXT = pyparsing.original_text_for(
+        pyparsing.ZeroOrMore(
+            pyparsing.NotAny(_BITBUCKET_LOGGER) + pyparsing.Regex(r"\S+")
+        )
+    ).set_results_name("request_context_text")
 
     # Guard that ensures the logger class is NOT preceded by '[', which
     # would indicate a Confluence-format log line where the logger is wrapped

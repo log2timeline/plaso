@@ -1,18 +1,46 @@
 #!/usr/bin/env python3
 """Tests for the MacOS Application firewall log file text parser plugin."""
 
+import threading
 import unittest
 
 from dfvfs.helpers import fake_file_system_builder
 
+from plaso.lib import errors
 from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import macos_appfirewall
 
 from tests.parsers.text_plugins import test_lib
 
 
+def _ParseStringCompletesWithinTimeout(plugin, string, timeout=15.0):
+    """Checks that parsing a string completes within a time budget.
+
+    Args:
+      plugin (TextPlugin): text log file plugin.
+      string (str): string to parse.
+      timeout (float): maximum number of seconds to wait.
+
+    Returns:
+      bool: True if parsing completed within the time budget.
+    """
+
+    def _Run():
+        try:
+            plugin._ParseString(string)  # pylint: disable=protected-access
+        except errors.ParseError:
+            pass
+
+    thread = threading.Thread(target=_Run, daemon=True)
+    thread.start()
+    thread.join(timeout)
+    return not thread.is_alive()
+
+
 class MacOSAppFirewallTextPluginTest(test_lib.TextPluginTestCase):
     """Tests for the MacOS Application firewall log file text parser plugin."""
+
+    # pylint: disable=protected-access
 
     def testCheckRequiredFormat(self):
         """Tests for the CheckRequiredFormat function."""
@@ -104,6 +132,34 @@ class MacOSAppFirewallTextPluginTest(test_lib.TextPluginTestCase):
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 46)
         self.CheckEventData(event_data, expected_event_values)
+
+    def testParseLongLineCompletesInLinearTime(self):
+        """Tests that a long line is parsed in bounded (linear) time."""
+        plugin = macos_appfirewall.MacOSAppFirewallTextPlugin()
+
+        # Many repeated-line starts without a closing "---" previously made the
+        # repeated-line SkipTo scan the remainder of the buffer at every start
+        # offset, so parsing was superlinear in the length of the input. It must
+        # now complete quickly.
+        long_text = "Nov 29 22:18:29 ---X\n" * 1500
+        self.assertTrue(_ParseStringCompletesWithinTimeout(plugin, long_text))
+
+        # A normal line still parses to the same fields.
+        normal_line = (
+            "Nov  2 04:07:35 DarkTemplar-2.local socketfilterfw[112] "
+            "<Info>: Dropbox: Allow TCP LISTEN  (in:0 out:1)\n"
+        )
+        key, structure, _, _ = plugin._ParseString(normal_line)
+        self.assertEqual(key, "log_line")
+        self.assertEqual(plugin._GetValueFromStructure(structure, "status"), "Info")
+        self.assertEqual(
+            plugin._GetStringValueFromStructure(structure, "process_name"),
+            "Dropbox",
+        )
+        self.assertEqual(
+            plugin._GetValueFromStructure(structure, "action"),
+            "Allow TCP LISTEN  (in:0 out:1)",
+        )
 
 
 if __name__ == "__main__":

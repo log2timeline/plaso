@@ -2,6 +2,7 @@
 """Tests for the Atlassian Bitbucket application log text parser plugin."""
 
 import io
+import threading
 import unittest
 
 from plaso.lib import errors
@@ -10,6 +11,30 @@ from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import atlassian_bitbucket
 
 from tests.parsers.text_plugins import test_lib
+
+
+def _ParseStringCompletesWithinTimeout(plugin, string, timeout=15.0):
+    """Checks that parsing a string completes within a time budget.
+
+    Args:
+      plugin (TextPlugin): text log file plugin.
+      string (str): string to parse.
+      timeout (float): maximum number of seconds to wait.
+
+    Returns:
+      bool: True if parsing completed within the time budget.
+    """
+
+    def _Run():
+        try:
+            plugin._ParseString(string)  # pylint: disable=protected-access
+        except errors.ParseError:
+            pass
+
+    thread = threading.Thread(target=_Run, daemon=True)
+    thread.start()
+    thread.join(timeout)
+    return not thread.is_alive()
 
 
 class AtlassianBitbucketTextPluginTest(test_lib.TextPluginTestCase):
@@ -157,6 +182,37 @@ class AtlassianBitbucketTextPluginTest(test_lib.TextPluginTestCase):
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
+
+    def testParseLongLineCompletesInLinearTime(self):
+        """Tests that a long line is parsed in bounded (linear) time."""
+        plugin = atlassian_bitbucket.AtlassianBitbucketTextPlugin()
+
+        # A long line whose request-context region holds no logger-class token
+        # previously made the request-context scan re-run from every offset, so
+        # parsing was superlinear in the length of the input. It must now
+        # complete quickly.
+        long_text = "2020-09-08 07:53:45,084 INFO [thread] " + ("a" * 100000)
+        self.assertTrue(_ParseStringCompletesWithinTimeout(plugin, long_text))
+
+        # A normal line still parses to the same fields.
+        normal_line = (
+            "2014-12-04 19:39:39,749 DEBUG [clusterScheduler_Worker-8] "
+            "org.hibernate.SQL delete sta_activity_0\n"
+        )
+        key, structure, _, _ = plugin._ParseString(normal_line)
+        self.assertEqual(key, "log_entry")
+        self.assertEqual(
+            plugin._GetValueFromStructure(structure, "thread"),
+            "clusterScheduler_Worker-8",
+        )
+        self.assertEqual(
+            plugin._GetValueFromStructure(structure, "logger_class"),
+            "org.hibernate.SQL",
+        )
+        self.assertEqual(
+            plugin._GetValueFromStructure(structure, "message_body"),
+            "delete sta_activity_0",
+        )
 
 
 if __name__ == "__main__":
