@@ -96,8 +96,11 @@ class PathCollectionFiltersHelper:
                         expand_path = True
 
                 if expand_path:
+                    # The path segments are used as regular expressions, so
+                    # metacharacters in environment variable values are escaped to
+                    # keep them matched literally.
                     path_segments = path_helper.PathHelper.ExpandWindowsPathSegments(
-                        path_segments, environment_variables
+                        path_segments, environment_variables, escape_values=True
                     )
 
                 if path_segments[0] != "":
