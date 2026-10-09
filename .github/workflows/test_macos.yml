@@ -18,6 +18,9 @@ jobs:
         brew update -q
         brew install -q gettext gnu-sed openssl@3 python@${{ matrix.python-version }} tox || true
         brew link --force gettext
+        echo "LDFLAGS=-L$(brew --prefix openssl@3)/lib" >> $GITHUB_ENV
+        echo "CPPFLAGS=-I$(brew --prefix openssl@3)/include" >> $GITHUB_ENV
+        echo "PKG_CONFIG_PATH=$(brew --prefix openssl@3)/lib/pkgconfig" >> $GITHUB_ENV
     - name: Run tests
       run: |
         tox -e ${{ matrix.toxenv }}
