@@ -369,10 +369,23 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
         """
         entry_array_object = self._ParseEntryArrayObject(file_object, file_offset)
 
+        visited_offsets = {file_offset}
         entry_object_offsets = list(entry_array_object.entry_object_offsets)
         while entry_array_object.next_entry_array_offset != 0:
+            next_entry_array_offset = entry_array_object.next_entry_array_offset
+
+            # An entry array object that refers back to an offset that was already
+            # read would prevent the entry array objects from being read to
+            # completion.
+            if next_entry_array_offset in visited_offsets:
+                raise errors.ParseError(
+                    f"Invalid entry array offset: 0x{next_entry_array_offset:08x} "
+                    f"already read"
+                )
+            visited_offsets.add(next_entry_array_offset)
+
             entry_array_object = self._ParseEntryArrayObject(
-                file_object, entry_array_object.next_entry_array_offset
+                file_object, next_entry_array_offset
             )
             entry_object_offsets.extend(entry_array_object.entry_object_offsets)
 
@@ -545,9 +558,16 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
         self._maximum_journal_file_offset = max(
             data_hash_table_end_offset, field_hash_table_end_offset
         )
-        entry_object_offsets = self._ParseEntryObjectOffsets(
-            file_object, file_header.entry_array_offset
-        )
+        try:
+            entry_object_offsets = self._ParseEntryObjectOffsets(
+                file_object, file_header.entry_array_offset
+            )
+        except errors.ParseError as exception:
+            parser_mediator.ProduceWarning(
+                f"unable to read entry array objects with error: {exception!s}"
+            )
+            return
+
         for entry_object_offset in entry_object_offsets:
             if entry_object_offset == 0:
                 continue
