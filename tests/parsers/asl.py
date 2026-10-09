@@ -204,6 +204,64 @@ class ASLParserTest(test_lib.ParserTestCase):
         )
         self.assertEqual(number_of_warnings, 0)
 
+    def testParseFileObjectSelfReferencingRecordChain(self):
+        """Tests the ParseFileObject function on a self-referencing record chain."""
+        parser = asl.ASLParser()
+
+        file_header_data = self._CreateFileHeaderData(parser)
+
+        # Build a single record whose next record offset points back to the start
+        # of the record chain (offset 80), which forms a chain that refers back to
+        # itself. A data size of 92 results in no additional record data.
+        record_map = parser._GetDataTypeMap("asl_record")
+        record = record_map.CreateStructureValues(
+            unknown1=0,
+            data_size=92,
+            next_record_offset=80,
+            message_identifier=0,
+            written_time=0,
+            written_time_nanoseconds=0,
+            alert_level=0,
+            flags=0,
+            process_identifier=0,
+            user_identifier=0,
+            group_identifier=0,
+            read_user_identifier=0,
+            read_group_identifier=0,
+            reference_process_identifier=0,
+            hostname_string_offset=0,
+            sender_string_offset=0,
+            facility_string_offset=0,
+            message_string_offset=0,
+        )
+        record_data = record_map.FoldByteStream(record)
+
+        storage_writer = self._CreateStorageWriter()
+        parser_mediator = self._CreateParserMediator(storage_writer)
+
+        file_object = self._CreateFileObject(
+            "asl", b"".join([file_header_data, record_data])
+        )
+
+        # Parsing must terminate rather than follow the self-referencing chain
+        # without end.
+        parser.ParseFileObject(parser_mediator, file_object)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 1)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 1)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "recovery_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
     def testParse(self):
         """Tests the Parse function."""
         parser = asl.ASLParser()
