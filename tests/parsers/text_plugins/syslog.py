@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Tests for the syslog text parser plugin."""
 
+import threading
+import time
 import unittest
 
 from dfvfs.helpers import fake_file_system_builder
@@ -1015,6 +1017,97 @@ class TraditionalSyslogTextPluginTest(test_lib.TextPluginTestCase):
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 8)
         self.CheckEventData(event_data, expected_event_values)
+
+    def _ProcessByteStream(self, plugin, data):
+        """Parses an in-memory byte stream with a traditional syslog plugin.
+
+        Args:
+          plugin (TextPlugin): text log file plugin.
+          data (bytes): contents of the log file to parse.
+
+        Returns:
+          FakeStorageWriter: storage writer.
+        """
+        file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+        file_system_builder.AddFile("/file.txt", data)
+
+        file_entry = file_system_builder.file_system.GetFileEntryByPath("/file.txt")
+
+        storage_writer = self._CreateStorageWriter()
+        parser_mediator = self._CreateParserMediator(
+            storage_writer, file_entry=file_entry
+        )
+        parser_mediator.AppendToParserChain("text")
+
+        file_object = file_entry.GetFileObject()
+        text_reader = text_parser.EncodedTextReader(file_object, encoding="utf-8")
+        text_reader.ReadLines()
+
+        required_format = plugin.CheckRequiredFormat(parser_mediator, text_reader)
+        self.assertTrue(required_format)
+
+        plugin.UpdateChainAndProcess(parser_mediator, file_object=file_object)
+
+        return storage_writer
+
+    def testProcessComment(self):
+        """Tests the Process function with a syslog comment line."""
+        plugin = syslog.TraditionalSyslogTextPlugin()
+
+        data = (
+            b"Jan 22 07:54:32 myhostname client[30840]: starting up\n"
+            b"Jan 22 07:54:32: --- last message repeated 5 times ---\n"
+        )
+
+        storage_writer = self._ProcessByteStream(plugin, data)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 2)
+
+        expected_event_values = {
+            "data_type": "syslog:line",
+            "message_body": "last message repeated 5 times ---",
+            "reporter": "---",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
+        self.CheckEventData(event_data, expected_event_values)
+
+    def testProcessCommentWithoutTerminator(self):
+        """Tests parsing comment lines that lack a closing terminator.
+
+        A comment line whose body is not closed by "---" must not cause the
+        comment-body scan to run to the end of the read buffer again from every
+        following line. With the scan bounded to the current line a large number
+        of such lines parses in roughly linear time; without it parsing is
+        superlinear and does not complete in a reasonable time.
+        """
+        plugin = syslog.TraditionalSyslogTextPlugin()
+
+        data = b"Jan 22 07:54:32 myhostname client[30840]: starting up\n" + (
+            b"Jan 22 07:54:32: --- the quick brown fox jumps lazy\n" * 1000
+        )
+
+        parse_completed = []
+
+        def _Parse():
+            self._ProcessByteStream(plugin, data)
+            parse_completed.append(True)
+
+        worker = threading.Thread(target=_Parse)
+        worker.daemon = True
+
+        start_time = time.perf_counter()
+        worker.start()
+        worker.join(30.0)
+        elapsed_time = time.perf_counter() - start_time
+
+        self.assertFalse(
+            worker.is_alive(),
+            f"parsing did not complete within {elapsed_time:.1f} seconds",
+        )
+        self.assertEqual(parse_completed, [True])
 
 
 if __name__ == "__main__":

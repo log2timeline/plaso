@@ -1027,7 +1027,9 @@ class TraditionalSyslogTextPlugin(
 
     _SYSLOG_COMMENT_BODY = (
         pyparsing.Suppress(": ---")
-        + pyparsing.SkipTo(_SYSLOG_COMMENT_END).set_results_name("message_body")
+        + pyparsing.SkipTo(_SYSLOG_COMMENT_END, fail_on=_END_OF_LINE).set_results_name(
+            "message_body"
+        )
         + pyparsing.Suppress("---")
     )
 
