@@ -101,6 +101,19 @@ Description : The description in the table
 
         # TODO: add test without title.
 
+        # A value that contains terminal control characters should have those
+        # characters neutralized so they cannot rewrite earlier terminal output.
+        table_view = views.CLITableView(
+            column_names=["Name", "Description"], title="Title"
+        )
+        table_view.AddRow(["Name", "value\x1b[2Kwith control"])
+
+        table_view.Write(output_writer)
+        string = output_writer.ReadOutput()
+
+        self.assertNotIn("\x1b", string)
+        self.assertIn("value\\x1b[2Kwith control", string)
+
         # Table with a too large title.
         # TODO: determine if this is the desired behavior.
         title = (
