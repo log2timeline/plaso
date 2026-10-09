@@ -2,7 +2,10 @@
 """Tests for the selinux log file text parser plugin."""
 
 import io
+import time
 import unittest
+
+from unittest import mock
 
 from plaso.parsers import mediator as parsers_mediator
 from plaso.parsers import text_parser
@@ -13,6 +16,8 @@ from tests.parsers.text_plugins import test_lib
 
 class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
     """Tests for the selinux log file text parser plugin."""
+
+    # pylint: disable=protected-access
 
     def testCheckRequiredFormat(self):
         """Tests for the CheckRequiredFormat function."""
@@ -508,6 +513,37 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
             storage_writer, "USER_AUTH", 904
         )
         self.CheckEventData(event_data, expected_event_values)
+
+    def testGetArgumentsWithLargeArgumentCount(self):
+        """Tests the _GetArguments function with a large argument count.
+
+        An EXECVE record stores its argument count (argc) separately from the
+        individual argument fields (a0 .. aN). This test builds a record whose
+        argc is far larger than the number of argument fields actually present
+        and verifies that only the argument fields present in the record are
+        read and that the command line is still assembled correctly.
+        """
+        plugin = selinux.SELinuxTextPlugin()
+        parser_mediator = parsers_mediator.ParserMediator()
+
+        values = plugin._GetValues('argc=1000000 a0="/bin/sh" a1="-c"')
+
+        with mock.patch.object(
+            plugin, "_GetEncodedStringValue", wraps=plugin._GetEncodedStringValue
+        ) as encoded_string_value_mock:
+            start_time = time.time()
+            arguments, corrupted = plugin._GetArguments(parser_mediator, values)
+            elapsed_time = time.time() - start_time
+
+        self.assertEqual(arguments, "/bin/sh -c")
+        self.assertFalse(corrupted)
+
+        # The number of argument field lookups must be bounded by the number of
+        # fields actually present in the record, not by the (much larger) argc
+        # value.
+        self.assertLessEqual(encoded_string_value_mock.call_count, len(values))
+
+        self.assertLess(elapsed_time, 5.0)
 
 
 if __name__ == "__main__":
