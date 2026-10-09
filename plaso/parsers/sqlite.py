@@ -255,8 +255,12 @@ class SQLiteDatabase:
                 self.columns_per_table.setdefault(table_name, [])
 
                 # The table name needs to be enclosed in quotes in case it contains
-                # special characters like a dot.
-                pragma_results = cursor.execute(f'PRAGMA table_info("{table_name}")')
+                # special characters like a dot. Any embedded double quote must be
+                # doubled so the quoted identifier remains valid.
+                quoted_table_name = table_name.replace('"', '""')
+                pragma_results = cursor.execute(
+                    f'PRAGMA table_info("{quoted_table_name}")'
+                )
 
                 for pragma_result in pragma_results:
                     self.columns_per_table[table_name].append(pragma_result["name"])

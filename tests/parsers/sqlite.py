@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """Tests for the SQLite database parser."""
 
+import io
+import os
+import sqlite3
+import tempfile
 import unittest
 
 from plaso.parsers import sqlite
@@ -36,6 +40,28 @@ class SQLiteDatabaseTest(test_lib.ParserTestCase):
         database = sqlite.SQLiteDatabase("data.db")
         with open(database_file_path, "rb") as database_file_object:
             database.Open(database_file_object)
+            database.Close()
+
+    def testOpenCloseOnDatabaseWithDoubleQuoteInTableName(self):
+        """Tests Open and Close on a database with a double quote in a table name."""
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            database_file_path = os.path.join(temporary_directory, "events.db")
+
+            connection = sqlite3.connect(database_file_path)
+            connection.execute('CREATE TABLE "events""log" (field1 INTEGER)')
+            connection.commit()
+            connection.close()
+
+            with open(database_file_path, "rb") as file_object:
+                database_file_object = io.BytesIO(file_object.read())
+
+        database = sqlite.SQLiteDatabase("events.db")
+        database.Open(database_file_object)
+
+        try:
+            self.assertIn('events"log', database.tables)
+            self.assertEqual(database.columns_per_table['events"log'], ["field1"])
+        finally:
             database.Close()
 
     def testQueryOnDatabaseWithWAL(self):
