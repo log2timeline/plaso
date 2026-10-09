@@ -31,7 +31,9 @@ class DSVEventFormattingHelper(formatting_helper.EventFormattingHelper):
     def _SanitizeField(self, field):
         """Sanitizes a field for output.
 
-        This method replaces any field delimiters with a space.
+        This method replaces any field delimiters, carriage returns and newlines
+        with a space, and neutralizes a value that a spreadsheet application would
+        otherwise read as a formula.
 
         Args:
           field (str): value of the field to sanitize.
@@ -39,8 +41,23 @@ class DSVEventFormattingHelper(formatting_helper.EventFormattingHelper):
         Returns:
           str: sanitized value of the field.
         """
-        if self.field_delimiter and isinstance(field, str):
-            return field.replace(self.field_delimiter, " ")
+        if not isinstance(field, str):
+            return field
+
+        if self.field_delimiter:
+            field = field.replace(self.field_delimiter, " ")
+
+        # A carriage return or newline would split a single event over multiple
+        # rows.
+        field = field.replace("\r", " ").replace("\n", " ")
+
+        # A value starting with one of these characters is read as a formula by
+        # spreadsheet applications. Prefix it with an apostrophe so the value is
+        # read as text. A single character is not a formula and is left as is, so
+        # that the "-" placeholder for an empty field is preserved.
+        if len(field) > 1 and field[0] in ("=", "+", "-", "@"):
+            field = "".join(["'", field])
+
         return field
 
     def GetFieldValues(
