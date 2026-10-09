@@ -2,6 +2,7 @@
 
 import abc
 
+from dfwinreg import errors as dfwinreg_errors
 from dfwinreg import registry_searcher
 
 from artifacts import definitions as artifact_definitions
@@ -271,7 +272,13 @@ class WindowsRegistryKeyArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
 
                     if registry_key:
                         value_name = key_value_pair.get("value")
-                        self._ParseKey(mediator, registry_key, value_name)
+                        try:
+                            self._ParseKey(mediator, registry_key, value_name)
+                        except (OSError, dfwinreg_errors.Error) as exception:
+                            raise errors.PreProcessFail(
+                                f"Unable to parse Windows Registry key: {key_path:s} "
+                                f"with error: {exception!s}"
+                            )
 
 
 class WindowsRegistryValueArtifactPreprocessorPlugin(
