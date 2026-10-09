@@ -14,6 +14,7 @@ from dfwinreg import registry as dfwinreg_registry
 from dfwinreg import registry_searcher
 
 from plaso.containers import artifacts
+from plaso.lib import errors
 from plaso.preprocessors import manager
 from plaso.preprocessors import mediator
 from plaso.preprocessors import windows
@@ -492,8 +493,91 @@ class WindowsEventLogPublishersPluginTest(WindowsArtifactPreprocessorPluginTestC
         self.assertEqual(number_of_artifacts, 438)
 
 
+class _SingleKeyWinRegistrySearcher:
+    """Windows Registry searcher that returns a single, fixed key.
+
+    This is used to exercise WindowsRegistryKeyArtifactPreprocessorPlugin
+    .Collect() without requiring a full Windows Registry file or virtual
+    key hierarchy to be constructed.
+    """
+
+    # pylint: disable=unused-argument
+
+    def __init__(self, key_path, registry_key):
+        """Initializes a Windows Registry searcher.
+
+        Args:
+          key_path (str): key path to return as the single match.
+          registry_key (dfwinreg.WinRegistryKey): Windows Registry key to
+              return for key_path.
+        """
+        super().__init__()
+        self._key_path = key_path
+        self._registry_key = registry_key
+
+    def Find(self, find_specs=None):
+        """Searches for matching keys within the Windows Registry.
+
+        Args:
+          find_specs (list[FindSpec]): find specifications, which are
+              ignored by this implementation.
+
+        Yields:
+          str: key path of a matching Windows Registry key.
+        """
+        yield self._key_path
+
+    def GetKeyByPath(self, key_path):
+        """Retrieves a specific key within the Windows Registry.
+
+        Args:
+          key_path (str): key path, which is ignored by this implementation.
+
+        Returns:
+          dfwinreg.WinRegistryKey: Windows Registry key.
+        """
+        return self._registry_key
+
+
 class WindowsEventLogSourcesPluginTest(WindowsArtifactPreprocessorPluginTestCase):
     """Tests for the Windows Event Log sources plugin."""
+
+    def testCollectWithCorruptedCategoryMessageFileValue(self):
+        """Tests Collect() with a corrupted CategoryMessageFile value.
+
+        This is a regression test for a Windows Registry value that cannot be
+        decoded, for example a REG_EXPAND_SZ value with a truncated UTF-16
+        little-endian byte stream. Previously the dfwinreg.errors.Error raised
+        by WinRegistryValue.GetDataAsObject() while parsing such a value was
+        not caught, causing the error to propagate out of Collect() and abort
+        the entire preprocessing run instead of being reported as a single
+        preprocessing warning.
+        """
+        registry_key = dfwinreg_fake.FakeWinRegistryKey("TestProvider")
+        registry_value = dfwinreg_fake.FakeWinRegistryValue(
+            "CategoryMessageFile",
+            data=b"\x01",
+            data_type=dfwinreg_definitions.REG_EXPAND_SZ,
+        )
+        registry_key.AddValue(registry_value)
+
+        searcher = _SingleKeyWinRegistrySearcher(
+            "HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Services\\EventLog\\"
+            "Application\\TestProvider",
+            registry_key,
+        )
+
+        artifact_definition = self._artifacts_registry.GetDefinitionByName(
+            "WindowsEventLogSources"
+        )
+        self.assertIsNotNone(artifact_definition)
+
+        storage_writer = self._CreateTestStorageWriter()
+        test_mediator = mediator.PreprocessMediator(storage_writer)
+
+        plugin = windows.WindowsEventLogSourcesPlugin()
+        with self.assertRaises(errors.PreProcessFail):
+            plugin.Collect(test_mediator, artifact_definition, searcher)
 
     def testParseValueData(self):
         """Tests the _ParseValueData function."""

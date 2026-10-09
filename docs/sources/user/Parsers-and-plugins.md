@@ -244,6 +244,7 @@ teamviewer_connections_outgoing | Parser for TeamViewer connections.txt log file
 viminfo | Parser for Viminfo files.
 vsftpd | Parser for vsftpd log files.
 winfirewall | Parser for Windows Firewall log files.
+winhttp_api_error | Parser for Microsoft HTTP Server API (HTTP.sys) error log files.
 winiis | Parser for Microsoft IIS log files.
 xchatlog | Parser for XChat log files.
 xchatscrollback | Parser for XChat scrollback log files.
