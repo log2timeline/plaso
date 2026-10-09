@@ -16,7 +16,7 @@ jobs:
     - name: Install dependencies
       run: |
         brew update -q
-        brew install -q gettext gnu-sed python@${{ matrix.python-version }} tox || true
+        brew install -q gettext gnu-sed openssl@3 python@${{ matrix.python-version }} tox || true
         brew link --force gettext
     - name: Run tests
       run: |
