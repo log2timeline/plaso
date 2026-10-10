@@ -18,15 +18,27 @@ class WindowsDefenderHistoryEventData(events.EventData):
 
     Attributes:
       additional_filenames (list[str]): locations of additional detected files.
+      category (int): category of the threat.
       container_filenames (list[str]): location of files detected inside a
           container.
       filename (str): name of the file that the threat was detected in.
       host_and_user (str): name of the host and user in "DOMAIN\\USER" format.
+      initial_detection_time (dfdatetime.DateTimeValues): date and time the
+          threat was first detected.
+      last_threat_status_change_time (dfdatetime.DateTimeValues): date and time
+          the status of the threat last changed.
       process (str): name of the process that caused the detection.
       recorded_time (dfdatetime.DateTimeValues): date and time the log entry
           was recorded.
+      remediation_account (str): name of the account under which the threat was
+          remediated in "DOMAIN\\USER" format.
+      remediation_time (dfdatetime.DateTimeValues): date and time the threat
+          was remediated.
+      severity (int): severity of the threat.
       sha256 (str): SHA-256 hash of the file.
+      threat_identifier (int): identifier of the threat.
       threat_name (str): name of the threat that was detected.
+      threat_status (int): status of the threat.
       web_filenames (list[str]): URI of files detected as downloaded from the web.
     """
 
@@ -36,13 +48,21 @@ class WindowsDefenderHistoryEventData(events.EventData):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
         self.additional_filenames = None
+        self.category = None
         self.container_filenames = None
         self.filename = None
         self.host_and_user = None
-        self.recorded_time = None
+        self.initial_detection_time = None
+        self.last_threat_status_change_time = None
         self.process = None
+        self.recorded_time = None
+        self.remediation_account = None
+        self.remediation_time = None
+        self.severity = None
         self.sha256 = None
+        self.threat_identifier = None
         self.threat_name = None
+        self.threat_status = None
         self.web_filenames = None
 
 
@@ -58,7 +78,13 @@ class WinDefenderHistoryParser(
 
     _VALUE_DESCRIPTIONS = [
         {0: "Threat identifier", 1: "Identifier"},
-        {0: "UnknownMagic1", 1: "Threat name", 4: "Category"},
+        {
+            0: "UnknownMagic1",
+            1: "Threat name",
+            3: "Severity",
+            4: "Category",
+            7: "Threat status",
+        },
         {
             0: "UnknownMagic2",
             1: "Resource type",
@@ -99,6 +125,20 @@ class WinDefenderHistoryParser(
             cls._FILE_SIGNATURE.encode("utf-16-le"), offset=0x30
         )
         return format_specification
+
+    def _GetDateTime(self, filetime):
+        """Retrieves the date and time from a FILETIME timestamp.
+
+        Args:
+          filetime (int): FILETIME timestamp.
+
+        Returns:
+          dfdatetime.DateTimeValues: date and time or None if not set.
+        """
+        if not filetime:
+            return None
+
+        return dfdatetime_filetime.Filetime(timestamp=filetime)
 
     def _ReadThreatTrackingData(self, threat_tracking_data, file_offset):
         """Reads the threat tracking data.
@@ -275,7 +315,7 @@ class WinDefenderHistoryParser(
                     resource_name = None
 
                 else:
-                    threat_attributes[description] = value_string
+                    threat_attributes[description] = value_object
 
             value_index += 1
 
@@ -309,13 +349,27 @@ class WinDefenderHistoryParser(
 
         event_data = WindowsDefenderHistoryEventData()
         event_data.additional_filenames = additional_filenames
+        event_data.category = threat_attributes.get("Category")
         event_data.container_filenames = container_files
         event_data.filename = filenames[0]
         event_data.host_and_user = threat_attributes.get("Domain user1")
+        event_data.initial_detection_time = self._GetDateTime(
+            threat_attributes.get("Initial detection time")
+        )
+        event_data.last_threat_status_change_time = self._GetDateTime(
+            threat_attributes.get("Last threat status change time")
+        )
         event_data.process = threat_attributes.get("Process name")
         event_data.recorded_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
+        event_data.remediation_account = threat_attributes.get("Domain user2") or None
+        event_data.remediation_time = self._GetDateTime(
+            threat_attributes.get("Remediation time")
+        )
+        event_data.severity = threat_attributes.get("Severity")
         event_data.sha256 = threat_attributes.get("ThreatTrackingSha256")
+        event_data.threat_identifier = threat_attributes.get("Threat identifier")
         event_data.threat_name = threat_attributes.get("Threat name")
+        event_data.threat_status = threat_attributes.get("Threat status")
         event_data.web_filenames = web_files
 
         parser_mediator.ProduceEventData(event_data)
