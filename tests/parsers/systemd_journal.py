@@ -43,6 +43,72 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
         with self.assertRaises(errors.ParseError):
             parser._ParseDataObject(file_object, 0)
 
+    def testParseEntryObjectOffsetsWithSelfReferencingObject(self):
+        """Tests _ParseEntryObjectOffsets stops on a self-referencing object.
+
+        An entry array object whose next entry array offset refers back to the
+        same object previously caused _ParseEntryObjectOffsets to loop without
+        terminating.
+        """
+        # Entry array object at offset 208: object_type=6 (entry array),
+        # object_flags=0, 6 reserved bytes, data_size=24 and a next entry array
+        # offset that refers back to offset 208 (the object itself).
+        entry_array_object_data = (
+            bytes([6, 0])
+            + b"\x00" * 6
+            + (24).to_bytes(8, "little")
+            + (208).to_bytes(8, "little")
+        )
+
+        file_object = io.BytesIO(b"\x00" * 208 + entry_array_object_data)
+
+        parser = systemd_journal.SystemdJournalParser()
+
+        with self.assertRaises(errors.ParseError):
+            parser._ParseEntryObjectOffsets(file_object, 208)
+
+    def testParseFileObjectWithSelfReferencingEntryArray(self):
+        """Tests ParseFileObject terminates on a self-referencing entry array.
+
+        A full parse of a journal whose entry array object refers back to itself
+        terminates with an extraction warning and produces no events instead of
+        looping without terminating.
+        """
+        # File header (208 bytes): signature "LPKSHHRH", header_size=208 at
+        # offset 88 and entry_array_offset=208 at offset 176, with every other
+        # field left zero (incompatible_flags=0 so compact mode is not used).
+        file_header_data = bytearray(208)
+        file_header_data[0:8] = b"LPKSHHRH"
+        file_header_data[88:96] = (208).to_bytes(8, "little")
+        file_header_data[176:184] = (208).to_bytes(8, "little")
+
+        # Entry array object at offset 208 whose next entry array offset refers
+        # back to offset 208 (the object itself).
+        entry_array_object_data = (
+            bytes([6, 0])
+            + b"\x00" * 6
+            + (24).to_bytes(8, "little")
+            + (208).to_bytes(8, "little")
+        )
+
+        file_object = io.BytesIO(bytes(file_header_data) + entry_array_object_data)
+
+        parser = systemd_journal.SystemdJournalParser()
+        storage_writer = self._CreateStorageWriter()
+        parser_mediator = self._CreateParserMediator(storage_writer)
+
+        parser.ParseFileObject(parser_mediator, file_object)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 0)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 1)
+
     def testParseKeyValuePair(self):
         """Tests the _ParseKeyValuePair function with text and binary values."""
         parser = systemd_journal.SystemdJournalParser()
