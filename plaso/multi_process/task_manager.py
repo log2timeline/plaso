@@ -121,10 +121,11 @@ class TaskManager:
     Tasks are considered "pending" when there is more work that needs to be done
     to complete these tasks. Pending applies to tasks that are:
     * not abandoned;
-    * abandoned, but need to be retried.
+    * abandoned, but need to be retried, up to a maximum number of retries.
 
-    Abandoned tasks without corresponding retry tasks are considered "failed"
-    when the foreman is done processing.
+    Abandoned tasks without corresponding retry tasks, including tasks that have
+    exhausted the maximum number of retries, are considered "failed" when the
+    foreman is done processing.
     """
 
     # Stop pylint from reporting:
@@ -133,6 +134,11 @@ class TaskManager:
 
     # Consider a task inactive after 5 minutes of no activity.
     _TASK_INACTIVE_TIME = 5.0 * 60.0
+
+    # Maximum number of times a task that keeps being abandoned, for example
+    # because it repeatedly terminates the worker processing it, is retried
+    # before it is considered failed.
+    _MAXIMUM_NUMBER_OF_RETRIES = 3
 
     def __init__(self):
         """Initializes a task manager."""
@@ -221,7 +227,10 @@ class TaskManager:
               no abandoned tasks that should be retried.
         """
         for task in self._tasks_abandoned.values():
-            if not task.has_retry:
+            if (
+                not task.has_retry
+                and task.retry_count < self._MAXIMUM_NUMBER_OF_RETRIES
+            ):
                 return task
 
         return None
