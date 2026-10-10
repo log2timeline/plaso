@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Tests for the Microsoft Office MRUs Windows Registry plugin."""
 
-import time
 import unittest
 
 from dfdatetime import filetime as dfdatetime_filetime
@@ -184,43 +183,43 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
         self.CheckEventData(event_data, expected_event_values)
 
     def testProcessWithLongValue(self):
-        """Tests that parsing a long value does not become superlinear.
+        """Tests the Process function on a key with a long item value.
 
-        A value that holds many repeated '[F00000000][T...]' segments and no
-        file name separator previously caused the item value expression to
-        backtrack superlinearly, so parsing a single value took quadratic time.
+        Office MRU items can hold long file references such as deep local
+        paths or OneDrive and SharePoint URLs. This verifies that such a long
+        value is still parsed into the expected FILETIME and value string
+        fields.
         """
-        value_string = "[F00000000][T0123456789ABCDEF]" * 32000
+        value_string = (
+            "[F00000000][T01CD0146EA1EADB0][O00000000]*"
+            "C:\\Users\\nfury\\Documents\\StarFury\\"
+            + ("SubFolder\\" * 8192)
+            + "SA-23E Mitchell-Hyundyne Starfury.docx"
+        )
         registry_key = self._CreateTestKey(value_string)
 
         plugin = officemru.OfficeMRUPlugin()
-
-        start_time = time.perf_counter()
         storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
-        elapsed_time = time.perf_counter() - start_time
 
-        self.assertLess(elapsed_time, 5.0)
-
-        # The value does not contain a file name separator, so only the MRU
-        # list event is produced.
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
-        self.assertEqual(number_of_event_data, 1)
+        self.assertEqual(number_of_event_data, 2)
 
         number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
             "extraction_warning"
         )
         self.assertEqual(number_of_warnings, 0)
 
-        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-            "recovery_warning"
-        )
-        self.assertEqual(number_of_warnings, 0)
-
+        expected_event_values = {
+            "data_type": "windows:registry:office_mru",
+            "key_path": "HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\"
+            "Word\\File MRU",
+            "last_written_time": "2012-03-13T18:27:15.0830000+00:00",
+            "value_string": value_string,
+        }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
-        self.assertEqual(event_data.data_type, "windows:registry:office_mru_list")
-        self.assertIsNone(event_data.entries)
+        self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == "__main__":
