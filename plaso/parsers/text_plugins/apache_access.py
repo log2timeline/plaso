@@ -112,18 +112,11 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
         ["CONNECT", "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT", "TRACE"]
     )
 
-    # HTTP request methods defined by WebDAV, see RFC 4918 section 9:
-    # https://www.rfc-editor.org/rfc/rfc4918#section-9
-    _WEBDAV_HTTP_METHODS = frozenset(
-        ["COPY", "LOCK", "MKCOL", "MOVE", "PROPFIND", "PROPPATCH", "UNLOCK"]
-    )
-
     # HTTP request method token, see RFC 9110 section 5.6.2, for example "GET",
-    # "PROPFIND" or "M-SEARCH". Other methods than the standard ones are parsed
-    # as well, since a request with an unusual method can be a sign of scanning
-    # or exploitation attempts, but a warning is produced to make the user aware
-    # of them. Registered methods are listed in the IANA HTTP Method Registry:
-    # https://www.iana.org/assignments/http-methods
+    # "PROPFIND" or "M-SEARCH". Methods other than the standard ones (such as the
+    # WebDAV methods of RFC 4918 section 9) are parsed as well, so requests with
+    # an unusual method are not dropped. Registered methods are listed in the IANA
+    # HTTP Method Registry: https://www.iana.org/assignments/http-methods
     _HTTP_METHOD = pyparsing.Word(pyparsing.alphanums + "!#$%&'*+-.^_`|~")
 
     _HTTP_VERSION = pyparsing.Combine(
@@ -270,16 +263,6 @@ class ApacheAccessLogTextPlugin(interface.TextPlugin):
 
         http_request = self._GetValueFromStructure(structure, "http_request")
         if http_request:
-            http_method = http_request[0]
-            if http_method in self._WEBDAV_HTTP_METHODS:
-                parser_mediator.ProduceWarning(
-                    f"WebDAV HTTP request method: {http_method:s}"
-                )
-            elif http_method not in self._STANDARD_HTTP_METHODS:
-                parser_mediator.ProduceWarning(
-                    f"non-standard HTTP request method: {http_method:s}"
-                )
-
             http_request = " ".join(http_request)
 
         remote_name = self._GetValueFromStructure(structure, "remote_name")

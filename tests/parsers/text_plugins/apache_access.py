@@ -277,18 +277,7 @@ class ApacheAccessLogTextPluginTest(test_lib.TextPluginTestCase):
         number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
             "extraction_warning"
         )
-        self.assertEqual(number_of_warnings, 2)
-
-        generator = storage_writer.GetAttributeContainers(
-            warnings.ExtractionWarning.CONTAINER_TYPE
-        )
-        test_warnings = list(generator)
-        self.assertEqual(
-            test_warnings[0].message, "WebDAV HTTP request method: PROPFIND"
-        )
-        self.assertEqual(
-            test_warnings[1].message, "non-standard HTTP request method: M-SEARCH"
-        )
+        self.assertEqual(number_of_warnings, 0)
 
         expected_event_values = {
             "data_type": "apache:access_log:entry",
