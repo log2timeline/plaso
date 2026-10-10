@@ -1040,6 +1040,29 @@ short_source: 'LOG'
 source: 'Log File'
 ---
 type: 'conditional'
+data_type: 'syslog:ssh:closed_connection'
+boolean_helpers:
+- input_attribute: 'is_authenticated'
+  output_attribute: 'authenticated_string'
+  value_if_true: 'authenticated'
+- input_attribute: 'is_invalid_user'
+  output_attribute: 'invalid_user_string'
+  value_if_true: 'invalid user'
+message:
+- 'Connection closed '
+- 'of user: {username} '
+- '({authenticated_string}) '
+- '({invalid_user_string}) '
+- 'from {ip_address}'
+- ':{port}'
+- ' ssh pid: {pid}'
+separator: ''
+short_message:
+- '{message_body}'
+short_source: 'LOG'
+source: 'SSH Log'
+---
+type: 'conditional'
 data_type: 'syslog:ssh:failed_connection'
 boolean_helpers:
 - input_attribute: 'is_invalid_user'
@@ -1051,6 +1074,19 @@ message:
 - 'from {ip_address}:'
 - '{port} '
 - 'using authentication method: {authentication_method} '
+- 'ssh pid: {pid}'
+separator: ''
+short_message:
+- '{message_body}'
+short_source: 'LOG'
+source: 'SSH Log'
+---
+type: 'conditional'
+data_type: 'syslog:ssh:invalid_user'
+message:
+- 'Invalid user: {username} '
+- 'from {ip_address}:'
+- '{port} '
 - 'ssh pid: {pid}'
 separator: ''
 short_message:
@@ -1077,6 +1113,20 @@ data_type: 'syslog:ssh:opened_connection'
 message:
 - 'Connection opened {ip_address}:'
 - '{port} '
+- 'ssh pid: {pid}'
+separator: ''
+short_message:
+- '{message_body}'
+short_source: 'LOG'
+source: 'SSH Log'
+---
+type: 'conditional'
+data_type: 'syslog:ssh:received_disconnect'
+message:
+- 'Disconnect received from {ip_address}:'
+- '{port} '
+- 'reason: {disconnect_reason_code} '
+- '{disconnect_reason} '
 - 'ssh pid: {pid}'
 separator: ''
 short_message:

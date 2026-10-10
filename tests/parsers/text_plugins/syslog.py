@@ -255,6 +255,207 @@ class SyslogTextPluginTest(test_lib.TextPluginTestCase):
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
+    def testProcessSshdConnectionEnd(self):
+        """Tests the Process function with sshd connection end messages."""
+        plugin = syslog.SyslogTextPlugin()
+        storage_writer = self._ParseTextFileWithPlugin(
+            ["syslog", "syslog_sshd_connection_end.log"], plugin
+        )
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 23)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "recovery_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        expected_data_types = [
+            "syslog:ssh:closed_connection",
+            "syslog:ssh:received_disconnect",
+            "syslog:ssh:closed_connection",
+            "syslog:line",
+            "syslog:ssh:closed_connection",
+            "syslog:ssh:closed_connection",
+            "syslog:ssh:closed_connection",
+            "syslog:ssh:closed_connection",
+            "syslog:ssh:invalid_user",
+            "syslog:ssh:closed_connection",
+            "syslog:ssh:login",
+            "syslog:ssh:received_disconnect",
+            "syslog:ssh:closed_connection",
+            "syslog:ssh:invalid_user",
+            "syslog:ssh:failed_connection",
+            "syslog:ssh:received_disconnect",
+            "syslog:ssh:closed_connection",
+            "syslog:ssh:failed_connection",
+            "syslog:ssh:received_disconnect",
+            "syslog:ssh:closed_connection",
+            "syslog:ssh:closed_connection",
+            "syslog:ssh:closed_connection",
+            "syslog:ssh:closed_connection",
+        ]
+        for index, expected_data_type in enumerate(expected_data_types):
+            event_data = storage_writer.GetAttributeContainerByIndex(
+                "event_data", index
+            )
+            self.assertEqual(event_data.data_type, expected_data_type, index)
+
+        # Connection closed by authenticating user svc-backup 192.168.1.92 port
+        # 38204 [preauth]
+        expected_event_values = {
+            "data_type": "syslog:ssh:closed_connection",
+            "ip_address": "192.168.1.92",
+            "is_authenticated": False,
+            "is_invalid_user": False,
+            "last_written_time": "2026-07-28T18:57:09.958129+00:00",
+            "port": "38204",
+            "reporter": "sshd-session",
+            "username": "svc-backup",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # Received disconnect from 192.168.137.1 port 63234:11: disconnected by user
+        expected_event_values = {
+            "data_type": "syslog:ssh:received_disconnect",
+            "disconnect_reason": "disconnected by user",
+            "disconnect_reason_code": 11,
+            "ip_address": "192.168.137.1",
+            "last_written_time": "2026-07-26T13:03:24.719663+00:00",
+            "port": "63234",
+            "reporter": "sshd-session",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # Disconnected from user ubuntu 192.168.137.1 port 63234
+        expected_event_values = {
+            "data_type": "syslog:ssh:closed_connection",
+            "ip_address": "192.168.137.1",
+            "is_authenticated": True,
+            "is_invalid_user": False,
+            "port": "63234",
+            "username": "ubuntu",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 2)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # Connection reset by 192.168.248.1 port 60274
+        expected_event_values = {
+            "data_type": "syslog:ssh:closed_connection",
+            "ip_address": "192.168.248.1",
+            "is_authenticated": None,
+            "is_invalid_user": None,
+            "port": "60274",
+            "username": None,
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 4)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # Timeout, client not responding from user ubuntu 192.168.248.1 port 55307
+        expected_event_values = {
+            "data_type": "syslog:ssh:closed_connection",
+            "ip_address": "192.168.248.1",
+            "is_authenticated": True,
+            "port": "55307",
+            "username": "ubuntu",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 6)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # Timeout before authentication for connection from 192.168.248.1 to
+        # 192.168.248.128, pid = 2903
+        expected_event_values = {
+            "data_type": "syslog:ssh:closed_connection",
+            "ip_address": "192.168.248.1",
+            "is_authenticated": None,
+            "port": None,
+            "reporter": "sshd",
+            "username": None,
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 7)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # Invalid user john doe from 192.168.248.1 port 54928
+        expected_event_values = {
+            "data_type": "syslog:ssh:invalid_user",
+            "ip_address": "192.168.248.1",
+            "last_written_time": "2026-10-08T00:19:26.539626+00:00",
+            "port": "54928",
+            "username": "john doe",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 8)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # Connection closed by invalid user john doe 192.168.248.1 port 54928
+        # [preauth]
+        expected_event_values = {
+            "data_type": "syslog:ssh:closed_connection",
+            "ip_address": "192.168.248.1",
+            "is_authenticated": False,
+            "is_invalid_user": True,
+            "port": "54928",
+            "username": "john doe",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 9)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # Accepted publickey for ubuntu from fe80::621:e520:10d6:6621%ens36 port
+        # 54931 ssh2: ED25519 SHA256:a79QfkCiaM8pEpw/wmP0Qfkl3ttsHxPlSKgqilMv9K8
+        expected_event_values = {
+            "authentication_method": "publickey",
+            "data_type": "syslog:ssh:login",
+            "fingerprint": "ED25519 SHA256:a79QfkCiaM8pEpw/wmP0Qfkl3ttsHxPlSKgqilMv9K8",
+            "ip_address": "fe80::621:e520:10d6:6621%ens36",
+            "port": "54931",
+            "username": "ubuntu",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 10)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # error: Received disconnect from 192.168.248.1 port 54936:14: No more
+        # authentication methods available [preauth]
+        expected_event_values = {
+            "data_type": "syslog:ssh:received_disconnect",
+            "disconnect_reason": "No more authentication methods available",
+            "disconnect_reason_code": 14,
+            "ip_address": "192.168.248.1",
+            "port": "54936",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 15)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # Disconnected from invalid user nosuchuser 192.168.248.1 port 54936
+        # [preauth]
+        expected_event_values = {
+            "data_type": "syslog:ssh:closed_connection",
+            "is_authenticated": False,
+            "is_invalid_user": True,
+            "port": "54936",
+            "username": "nosuchuser",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 16)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # Read error from remote host 192.168.248.1 port 54939: Connection reset
+        # by peer
+        expected_event_values = {
+            "data_type": "syslog:ssh:closed_connection",
+            "ip_address": "192.168.248.1",
+            "is_authenticated": None,
+            "port": "54939",
+            "username": None,
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 20)
+        self.CheckEventData(event_data, expected_event_values)
+
     def testProcessSudo(self):
         """Tests the Process function with a sudo syslog file."""
         plugin = syslog.SyslogTextPlugin()
@@ -922,14 +1123,29 @@ class TraditionalSyslogTextPluginTest(test_lib.TextPluginTestCase):
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 4)
         self.CheckEventData(event_data, expected_event_values)
 
-        # A message that the sshd structures do not define, which is retained as
-        # a syslog:line.
         expected_event_values = {
-            "data_type": "syslog:line",
+            "data_type": "syslog:ssh:received_disconnect",
+            "disconnect_reason": "disconnected by user",
+            "disconnect_reason_code": 11,
+            "ip_address": "192.168.1.62",
             "last_written_time": "0000-08-02T11:42:18",
+            "port": "60218",
             "reporter": "sshd-session",
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 5)
+        self.CheckEventData(event_data, expected_event_values)
+
+        expected_event_values = {
+            "data_type": "syslog:ssh:closed_connection",
+            "ip_address": "192.168.1.62",
+            "is_authenticated": True,
+            "is_invalid_user": False,
+            "last_written_time": "0000-08-02T11:42:18",
+            "port": "60218",
+            "reporter": "sshd-session",
+            "username": "root",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 6)
         self.CheckEventData(event_data, expected_event_values)
 
         expected_event_values = {

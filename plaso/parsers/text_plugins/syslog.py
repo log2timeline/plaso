@@ -122,6 +122,27 @@ class SyslogSSHEventData(SyslogLineEventData):
         self.username = None
 
 
+class SyslogSSHClosedConnectionEventData(SyslogSSHEventData):
+    """SSH closed connection event data.
+
+    Attributes:
+      is_authenticated (bool): True if sshd wrote the user name as an
+          authenticated user, False if as a user that was still authenticating or
+          as an invalid user, None if the message does not name a user.
+      is_invalid_user (bool): True if sshd wrote the user name as an invalid user,
+          which is a name that does not resolve to an account that is allowed to
+          log in, None if the message does not name a user.
+    """
+
+    DATA_TYPE = "syslog:ssh:closed_connection"
+
+    def __init__(self):
+        """Initializes event data."""
+        super().__init__()
+        self.is_authenticated = None
+        self.is_invalid_user = None
+
+
 # TODO: merge separate SyslogSSHEventData classes.
 class SyslogSSHLoginEventData(SyslogSSHEventData):
     """SSH login event data."""
@@ -146,10 +167,34 @@ class SyslogSSHFailedConnectionEventData(SyslogSSHEventData):
         self.is_invalid_user = None
 
 
+class SyslogSSHInvalidUserEventData(SyslogSSHEventData):
+    """SSH invalid user event data."""
+
+    DATA_TYPE = "syslog:ssh:invalid_user"
+
+
 class SyslogSSHOpenedConnectionEventData(SyslogSSHEventData):
     """SSH opened connection event data."""
 
     DATA_TYPE = "syslog:ssh:opened_connection"
+
+
+class SyslogSSHReceivedDisconnectEventData(SyslogSSHEventData):
+    """SSH received disconnect event data.
+
+    Attributes:
+      disconnect_reason (str): disconnect reason as sent by the peer.
+      disconnect_reason_code (int): disconnect reason code as sent by the peer,
+          see RFC 4253 section 11.1.
+    """
+
+    DATA_TYPE = "syslog:ssh:received_disconnect"
+
+    def __init__(self):
+        """Initializes event data."""
+        super().__init__()
+        self.disconnect_reason = None
+        self.disconnect_reason_code = None
 
 
 class SyslogSudoCommandEventData(SyslogLineEventData):
@@ -256,12 +301,56 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
         .set_results_name("username")
     )
 
-    _SSH_IP_ADDRESS = (
-        pyparsing.pyparsing_common.ipv4_address
-        | pyparsing.pyparsing_common.ipv6_address
+    # A link-local IPv6 address is logged with its zone identifier, such as
+    # "fe80::1%eth0", since sshd determines the address with getnameinfo and
+    # NI_NUMERICHOST, see get_peer_ipaddr in OpenSSH canohost.c and RFC 4007
+    # section 11.
+    _SSH_IP_ADDRESS = pyparsing.Combine(
+        (
+            pyparsing.pyparsing_common.ipv4_address
+            | pyparsing.pyparsing_common.ipv6_address
+        )
+        + pyparsing.Optional(
+            pyparsing.Literal("%") + pyparsing.Word(pyparsing.alphanums + "_.-")
+        )
     )
 
     _SSH_PORT = pyparsing.Word(pyparsing.nums, max=5).set_results_name("port")
+
+    # sshd writes the user name as "user NAME" after a successful
+    # authentication, and as "authenticating user NAME" or "invalid user NAME"
+    # once an authentication request named a user, see
+    # ssh_packet_set_log_preamble in OpenSSH auth2.c. In the connection
+    # identifier the name directly precedes the address, see
+    # sshpkt_fmt_connection_id in packet.c, hence the name is determined by the
+    # text that precedes the address and port.
+    _SSH_CONNECTION_USERNAME = (
+        pyparsing.SkipTo(_SSH_IP_ADDRESS + pyparsing.Literal("port") + _SSH_PORT)
+        .set_parse_action(lambda tokens: tokens[0].strip())
+        .set_results_name("username")
+    )
+
+    _SSH_CONNECTION_IDENTIFIER = (
+        pyparsing.Optional(
+            (
+                (
+                    pyparsing.Keyword("authenticating") + pyparsing.Keyword("user")
+                ).set_results_name("authenticating_user")
+                | (
+                    pyparsing.Keyword("invalid") + pyparsing.Keyword("user")
+                ).set_results_name("invalid_user")
+                | pyparsing.Keyword("user").set_results_name("authenticated_user")
+            )
+            + _SSH_CONNECTION_USERNAME
+        )
+        + _SSH_IP_ADDRESS.set_results_name("ip_address")
+        + pyparsing.Literal("port")
+        + _SSH_PORT
+    )
+
+    # Messages the unprivileged pre-authentication process writes are suffixed
+    # with "[preauth]" by the monitor, see monitor.c in OpenSSH.
+    _SSHD_PREAUTH_SUFFIX = pyparsing.Optional(pyparsing.Literal("[preauth]"))
 
     # sshd writes "invalid user" before the user name when the name does not
     # resolve to an account that is allowed to log in, see auth_log in OpenSSH
@@ -304,10 +393,91 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
         + pyparsing.StringEnd()
     )
 
+    # The end of a connection is written with the connection identifier by
+    # sshpkt_vfatal in OpenSSH packet.c, for the peer sending a disconnect
+    # message, closing or resetting the TCP connection, and by client_alive_check
+    # in serverloop.c, for a client that stops responding.
+    _SSHD_CLOSED_CONNECTION = (
+        (
+            pyparsing.Literal("Connection closed by")
+            | pyparsing.Literal("Connection reset by")
+            | pyparsing.Literal("Disconnected from")
+            | pyparsing.Literal("Timeout, client not responding from")
+        )
+        + _SSH_CONNECTION_IDENTIFIER
+        + _SSHD_PREAUTH_SUFFIX
+        + pyparsing.StringEnd()
+    )
+
+    # A read error after authentication is written with the address and port
+    # and the error message, see process_input in OpenSSH serverloop.c.
+    _SSHD_READ_ERROR = (
+        pyparsing.Literal("Read error from remote host")
+        + _SSH_IP_ADDRESS.set_results_name("ip_address")
+        + pyparsing.Literal("port")
+        + _SSH_PORT
+        + pyparsing.Literal(":")
+        + pyparsing.Regex(r".+")
+        + pyparsing.StringEnd()
+    )
+
+    # The listener writes a connection that did not authenticate within
+    # LoginGraceTime with the remote and local addresses, see OpenSSH sshd.c.
+    _SSHD_AUTHENTICATION_TIMEOUT = (
+        pyparsing.Literal("Timeout before authentication for connection from")
+        + _SSH_IP_ADDRESS.set_results_name("ip_address")
+        + pyparsing.Literal("to")
+        + _SSH_IP_ADDRESS
+        + pyparsing.Literal(", pid =")
+        + pyparsing.Word(pyparsing.nums)
+        + pyparsing.StringEnd()
+    )
+
+    # sshd writes the invalid user message once per connection when the user
+    # name does not resolve, see getpwnamallow in OpenSSH auth.c.
+    _SSHD_INVALID_USER = (
+        pyparsing.Literal("Invalid user")
+        + _SSH_USERNAME
+        + pyparsing.Literal("from")
+        + _SSH_IP_ADDRESS.set_results_name("ip_address")
+        + pyparsing.Literal("port")
+        + _SSH_PORT
+        + pyparsing.StringEnd()
+    )
+
+    # A disconnect message of the peer is written with its reason code and text,
+    # see ssh_packet_read_poll2 in OpenSSH packet.c. A reason other than 11, a
+    # normal client exit, is logged at the error level, which OpenSSH prefixes
+    # with "error: ", see do_log in log.c.
+    _SSHD_RECEIVED_DISCONNECT = (
+        pyparsing.Optional(pyparsing.Literal("error:"))
+        + pyparsing.Literal("Received disconnect from")
+        + _SSH_IP_ADDRESS.set_results_name("ip_address")
+        + pyparsing.Literal("port")
+        + _SSH_PORT
+        + pyparsing.Literal(":")
+        + pyparsing.Word(pyparsing.nums)
+        .set_parse_action(lambda tokens: int(tokens[0], 10))
+        .set_results_name("disconnect_reason_code")
+        + pyparsing.Literal(":")
+        + pyparsing.SkipTo(_SSHD_PREAUTH_SUFFIX + pyparsing.StringEnd())
+        .set_parse_action(lambda tokens: tokens[0].strip())
+        .set_results_name("disconnect_reason")
+        + _SSHD_PREAUTH_SUFFIX
+        + pyparsing.StringEnd()
+    )
+
     _SSHD_MESSAGE = (
-        pyparsing.Group(_SSHD_FAILED_CONNECTION).set_results_name("failed_connection")
+        pyparsing.Group(
+            _SSHD_CLOSED_CONNECTION | _SSHD_READ_ERROR | _SSHD_AUTHENTICATION_TIMEOUT
+        ).set_results_name("closed_connection")
+        ^ pyparsing.Group(_SSHD_FAILED_CONNECTION).set_results_name("failed_connection")
+        ^ pyparsing.Group(_SSHD_INVALID_USER).set_results_name("invalid_user")
         ^ pyparsing.Group(_SSHD_LOGIN).set_results_name("login")
         ^ pyparsing.Group(_SSHD_OPENED_CONNECTION).set_results_name("opened_connection")
+        ^ pyparsing.Group(_SSHD_RECEIVED_DISCONNECT).set_results_name(
+            "received_disconnect"
+        )
     )
 
     # sudo writes a command record as "username : [TTY=… ;] PWD=… ; USER=… ;
@@ -431,13 +601,24 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
         key = keys[0]
         structure = structure[0]
 
-        if key == "failed_connection":
+        if key == "closed_connection":
+            event_data = SyslogSSHClosedConnectionEventData()
+            if "username" in structure:
+                event_data.is_authenticated = "authenticated_user" in structure
+                event_data.is_invalid_user = "invalid_user" in structure
+        elif key == "failed_connection":
             event_data = SyslogSSHFailedConnectionEventData()
             event_data.is_invalid_user = structure.get("invalid_user") is not None
+        elif key == "invalid_user":
+            event_data = SyslogSSHInvalidUserEventData()
         elif key == "login":
             event_data = SyslogSSHLoginEventData()
         elif key == "opened_connection":
             event_data = SyslogSSHOpenedConnectionEventData()
+        elif key == "received_disconnect":
+            event_data = SyslogSSHReceivedDisconnectEventData()
+            event_data.disconnect_reason = structure.get("disconnect_reason")
+            event_data.disconnect_reason_code = structure.get("disconnect_reason_code")
         else:
             return None
 
