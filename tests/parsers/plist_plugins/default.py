@@ -130,7 +130,7 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
         )
         binary_plist = plistlib.dumps(
             {"Device": {"LastUsed": datetime.datetime(2012, 11, 2, 1, 21, 38)}},
-            fmt=plistlib.FMT_BINARY,
+            fmt=plistlib.PlistFormat.FMT_BINARY,
         )
 
         expected_event_values = {
