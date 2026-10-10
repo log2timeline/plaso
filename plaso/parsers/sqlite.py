@@ -232,7 +232,13 @@ class SQLiteDatabase:
             # sqlite3.connect()
             temporary_filename = f"{self._temp_db_file_path}-wal"
 
-            with open(temporary_filename, "wb") as temporary_file:
+            # Restrict the permissions of the temporary WAL copy to the current
+            # user, consistent with the temporary database copy that
+            # tempfile.NamedTemporaryFile creates with mode 0600.
+            file_descriptor = os.open(
+                temporary_filename, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600
+            )
+            with os.fdopen(file_descriptor, "wb") as temporary_file:
                 try:
                     self._CopyFileObjectToTemporaryFile(wal_file_object, temporary_file)
                     self._temp_wal_file_path = temporary_filename
