@@ -1232,6 +1232,95 @@ class TraditionalSyslogTextPluginTest(test_lib.TextPluginTestCase):
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 8)
         self.CheckEventData(event_data, expected_event_values)
 
+    def _ProcessByteStream(self, plugin, data):
+        """Parses an in-memory byte stream with a traditional syslog plugin.
+
+        Args:
+          plugin (TextPlugin): text log file plugin.
+          data (bytes): contents of the log file to parse.
+
+        Returns:
+          FakeStorageWriter: storage writer.
+        """
+        file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+        file_system_builder.AddFile("/file.txt", data)
+
+        file_entry = file_system_builder.file_system.GetFileEntryByPath("/file.txt")
+
+        storage_writer = self._CreateStorageWriter()
+        parser_mediator = self._CreateParserMediator(
+            storage_writer, file_entry=file_entry
+        )
+        parser_mediator.AppendToParserChain("text")
+
+        file_object = file_entry.GetFileObject()
+        text_reader = text_parser.EncodedTextReader(file_object, encoding="utf-8")
+        text_reader.ReadLines()
+
+        required_format = plugin.CheckRequiredFormat(parser_mediator, text_reader)
+        self.assertTrue(required_format)
+
+        plugin.UpdateChainAndProcess(parser_mediator, file_object=file_object)
+
+        return storage_writer
+
+    def testProcessComment(self):
+        """Tests the Process function with a syslog comment line."""
+        plugin = syslog.TraditionalSyslogTextPlugin()
+
+        data = (
+            b"Jan 22 07:54:32 myhostname client[30840]: starting up\n"
+            b"Jan 22 07:54:32: --- last message repeated 5 times ---\n"
+        )
+
+        storage_writer = self._ProcessByteStream(plugin, data)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 2)
+
+        expected_event_values = {
+            "data_type": "syslog:line",
+            "message_body": "last message repeated 5 times ---",
+            "reporter": "---",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
+        self.CheckEventData(event_data, expected_event_values)
+
+    def testProcessLongComment(self):
+        """Tests the Process function with a long syslog comment line.
+
+        Bounding the comment-body scan to the current line leaves the parsed
+        message body unchanged, whether the comment body is short or long. This
+        parses a long comment line and checks that it produces the same event
+        data structure and message body as the short comment line parsed by
+        testProcessComment.
+        """
+        plugin = syslog.TraditionalSyslogTextPlugin()
+
+        comment_body = ("the quick brown fox jumps over the lazy dog " * 200).strip()
+
+        data = (
+            b"Jan 22 07:54:32 myhostname client[30840]: starting up\n"
+            + f"Jan 22 07:54:32: --- {comment_body} ---\n".encode("utf-8")
+        )
+
+        storage_writer = self._ProcessByteStream(plugin, data)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 2)
+
+        expected_event_values = {
+            "data_type": "syslog:line",
+            "message_body": f"{comment_body} ---",
+            "reporter": "---",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
+        self.CheckEventData(event_data, expected_event_values)
+
 
 if __name__ == "__main__":
     unittest.main()
