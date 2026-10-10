@@ -297,7 +297,7 @@ class TextPlugin(plugins.BasePlugin):
             if not self._pyparsing_grammar:
                 self._pyparsing_grammar = expression
             else:
-                self._pyparsing_grammar ^= expression
+                self._pyparsing_grammar |= expression
 
         # Override Pyparsing's default replacement of tabs with spaces to
         # SkipAhead() the correct number of bytes after a match.
