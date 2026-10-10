@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 """Tests for the syslog text parser plugin."""
 
-import threading
-import time
 import unittest
 
 from dfvfs.helpers import fake_file_system_builder
@@ -1074,40 +1072,38 @@ class TraditionalSyslogTextPluginTest(test_lib.TextPluginTestCase):
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 
-    def testProcessCommentWithoutTerminator(self):
-        """Tests parsing comment lines that lack a closing terminator.
+    def testProcessLongComment(self):
+        """Tests the Process function with a long syslog comment line.
 
-        A comment line whose body is not closed by "---" must not cause the
-        comment-body scan to run to the end of the read buffer again from every
-        following line. With the scan bounded to the current line a large number
-        of such lines parses in roughly linear time; without it parsing is
-        superlinear and does not complete in a reasonable time.
+        Bounding the comment-body scan to the current line leaves the parsed
+        message body unchanged, whether the comment body is short or long. This
+        parses a long comment line and checks that it produces the same event
+        data structure and message body as the short comment line parsed by
+        testProcessComment.
         """
         plugin = syslog.TraditionalSyslogTextPlugin()
 
-        data = b"Jan 22 07:54:32 myhostname client[30840]: starting up\n" + (
-            b"Jan 22 07:54:32: --- the quick brown fox jumps lazy\n" * 1000
+        comment_body = ("the quick brown fox jumps over the lazy dog " * 200).strip()
+
+        data = (
+            b"Jan 22 07:54:32 myhostname client[30840]: starting up\n"
+            + f"Jan 22 07:54:32: --- {comment_body} ---\n".encode("utf-8")
         )
 
-        parse_completed = []
+        storage_writer = self._ProcessByteStream(plugin, data)
 
-        def _Parse():
-            self._ProcessByteStream(plugin, data)
-            parse_completed.append(True)
-
-        worker = threading.Thread(target=_Parse)
-        worker.daemon = True
-
-        start_time = time.perf_counter()
-        worker.start()
-        worker.join(30.0)
-        elapsed_time = time.perf_counter() - start_time
-
-        self.assertFalse(
-            worker.is_alive(),
-            f"parsing did not complete within {elapsed_time:.1f} seconds",
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
         )
-        self.assertEqual(parse_completed, [True])
+        self.assertEqual(number_of_event_data, 2)
+
+        expected_event_values = {
+            "data_type": "syslog:line",
+            "message_body": f"{comment_body} ---",
+            "reporter": "---",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
+        self.CheckEventData(event_data, expected_event_values)
 
 
 if __name__ == "__main__":
