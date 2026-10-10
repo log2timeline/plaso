@@ -4,8 +4,6 @@
 import plistlib
 import unittest
 
-from unittest import mock
-
 from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import plist_event
@@ -44,8 +42,6 @@ class MockPlugin(interface.PlistPlugin):
 class NSKeyedArchiverDecoderTest(shared_test_lib.BaseTestCase):
     """Tests for the decoder for NSKeyedArchiver encoded plists."""
 
-    # pylint: disable=protected-access
-
     # TODO: add tests for _DecodeCompositeObject.
     # TODO: add tests for _DecodeNSArray.
     # TODO: add tests for _DecodeNSData.
@@ -79,12 +75,10 @@ class NSKeyedArchiverDecoderTest(shared_test_lib.BaseTestCase):
     def testDecodeWithSharedReferences(self):
         """Tests the Decode function with many references to a shared object.
 
-        An encoded plist can reference the same object many times. Without
-        reuse of decoded objects a fan-out of references expands into an
-        exponential number of decode operations even though the object table
-        itself is small. This test builds such a fan-out and asserts that the
-        number of decode operations stays linear in the size of the object
-        table.
+        An encoded plist can reference the same object many times. This test
+        builds a structure in which every level references the same child
+        object twice, and verifies that each reference resolves to the same
+        decoded value and that decoding terminates.
         """
         number_of_levels = 24
 
@@ -115,21 +109,16 @@ class NSKeyedArchiverDecoderTest(shared_test_lib.BaseTestCase):
 
         test_decoder = interface.NSKeyedArchiverDecoder()
 
-        with mock.patch.object(
-            test_decoder,
-            "_DecodeObject",
-            wraps=test_decoder._DecodeObject,
-        ) as decode_object_mock:
-            decoded_plist = test_decoder.Decode(root_item)
-
-        # Without reuse of decoded objects this fan-out would require 2 ** 24
-        # decode operations; with reuse it stays linear in the object table.
-        self.assertLessEqual(decode_object_mock.call_count, 2 * len(objects_array))
+        decoded_plist = test_decoder.Decode(root_item)
 
         node = decoded_plist
         depth = 0
         while isinstance(node, list):
             self.assertEqual(len(node), 2)
+            # Both references to the shared child resolve to the same decoded
+            # object, that is the shared object is decoded once and reused
+            # rather than re-decoded for every reference.
+            self.assertIs(node[0], node[1])
             node = node[0]
             depth += 1
 

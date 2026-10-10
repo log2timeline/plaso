@@ -45,7 +45,7 @@ class NSKeyedArchiverDecoder:
     def __init__(self):
         """Initializes a NSKeyedArchiver decoder."""
         super().__init__()
-        self._cycle_skip_count = 0
+        self._number_of_cyclic_references = 0
         self._decoded_object_cache = {}
 
     def _DecodeCompositeObject(self, plist_property, objects_array, parent_objects):
@@ -78,7 +78,7 @@ class NSKeyedArchiverDecoder:
                 continue
 
             if value_plist_uid in parent_objects:
-                self._cycle_skip_count += 1
+                self._number_of_cyclic_references += 1
                 continue
 
             composite_object[key] = self._DecodeReferencedObject(
@@ -117,7 +117,7 @@ class NSKeyedArchiverDecoder:
                 )
 
             if ns_object_plist_uid in parent_objects:
-                self._cycle_skip_count += 1
+                self._number_of_cyclic_references += 1
                 continue
 
             ns_array_element = self._DecodeReferencedObject(
@@ -256,7 +256,7 @@ class NSKeyedArchiverDecoder:
                 )
 
             if ns_object_plist_uid in parent_objects:
-                self._cycle_skip_count += 1
+                self._number_of_cyclic_references += 1
                 continue
 
             ns_dictionary[ns_key] = self._DecodeReferencedObject(
@@ -546,7 +546,7 @@ class NSKeyedArchiverDecoder:
         if plist_uid in self._decoded_object_cache:
             return self._decoded_object_cache[plist_uid]
 
-        cycle_skip_count = self._cycle_skip_count
+        number_of_cyclic_references = self._number_of_cyclic_references
 
         parent_objects.append(plist_uid)
 
@@ -555,7 +555,7 @@ class NSKeyedArchiverDecoder:
         )
         parent_objects.pop(-1)
 
-        if self._cycle_skip_count == cycle_skip_count:
+        if self._number_of_cyclic_references == number_of_cyclic_references:
             self._decoded_object_cache[plist_uid] = decoded_object
 
         return decoded_object
@@ -645,7 +645,7 @@ class NSKeyedArchiverDecoder:
         # Reset the per-plist state used to reuse decoded shared object
         # references so it does not leak between plists decoded by the same
         # decoder instance.
-        self._cycle_skip_count = 0
+        self._number_of_cyclic_references = 0
         self._decoded_object_cache = {}
 
         try:
