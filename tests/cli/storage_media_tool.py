@@ -1419,6 +1419,91 @@ Test argument parser.
         output = self._RunArgparseFormatHelp(argument_parser)
         self.assertEqual(output, self._EXPECTED_OUTPUT_VSS_PROCESSING_OPTIONS)
 
+    def testScanSourceWithPartitions(self):
+        """Tests the ScanSource function with the partitions option."""
+        test_file_path = self._GetTestFilePath(["multi_partition_image.vmdk"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        test_tool = storage_media_tool.StorageMediaTool()
+        test_tool._unattended_mode = True
+
+        options = test_lib.TestOptions()
+        options.partitions = "1,2"
+        options.source = test_file_path
+
+        test_tool._ParseStorageMediaOptions(options)
+        test_tool.ScanSource(test_tool._source_path)
+
+        self.assertEqual(len(test_tool._file_system_path_specs), 2)
+
+        test_tool = storage_media_tool.StorageMediaTool()
+        test_tool._unattended_mode = True
+
+        # Partition 12 does not exist and should not be read as partition 1 and 2.
+        options.partitions = "12"
+
+        test_tool._ParseStorageMediaOptions(options)
+
+        with self.assertRaises(errors.SourceScannerError):
+            test_tool.ScanSource(test_tool._source_path)
+
+    def testScanSourceWithVolumes(self):
+        """Tests the ScanSource function with the volumes option."""
+        test_file_path = self._GetTestFilePath(["lvm.raw"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        test_tool = storage_media_tool.StorageMediaTool()
+        test_tool._unattended_mode = True
+
+        options = test_lib.TestOptions()
+        options.source = test_file_path
+        options.volumes = "1..2"
+
+        test_tool._ParseStorageMediaOptions(options)
+        test_tool.ScanSource(test_tool._source_path)
+
+        # Only the first of the 2 LVM volumes contains a file system.
+        self.assertEqual(len(test_tool._file_system_path_specs), 1)
+
+        test_tool = storage_media_tool.StorageMediaTool()
+        test_tool._unattended_mode = True
+
+        options.volumes = "1"
+
+        test_tool._ParseStorageMediaOptions(options)
+        test_tool.ScanSource(test_tool._source_path)
+
+        self.assertEqual(len(test_tool._file_system_path_specs), 1)
+
+    def testScanSourceWithVSSStores(self):
+        """Tests the ScanSource function with the VSS stores option."""
+        test_file_path = self._GetTestFilePath(["vsstest.qcow2"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        test_tool = storage_media_tool.StorageMediaTool()
+        test_tool._unattended_mode = True
+
+        options = test_lib.TestOptions()
+        options.source = test_file_path
+        options.vss_stores = "1,2"
+
+        test_tool._ParseStorageMediaOptions(options)
+        test_tool.ScanSource(test_tool._source_path)
+
+        # The 2 VSS stores and the current volume.
+        self.assertEqual(len(test_tool._file_system_path_specs), 3)
+
+        test_tool = storage_media_tool.StorageMediaTool()
+        test_tool._unattended_mode = True
+
+        # VSS store 12 does not exist and should not be read as VSS store 1 and 2.
+        options.vss_stores = "12"
+
+        test_tool._ParseStorageMediaOptions(options)
+
+        with self.assertRaises(errors.SourceScannerError):
+            test_tool.ScanSource(test_tool._source_path)
+
 
 if __name__ == "__main__":
     unittest.main()
