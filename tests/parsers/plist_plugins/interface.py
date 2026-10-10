@@ -72,6 +72,103 @@ class NSKeyedArchiverDecoderTest(shared_test_lib.BaseTestCase):
         self.assertIn("MyString", decoded_plist)
         self.assertEqual(decoded_plist["MyString"], "Some string")
 
+    def testDecodeWithSharedReferences(self):
+        """Tests the Decode function with many references to a shared object.
+
+        An encoded plist can reference the same object many times. This test
+        builds a structure in which every level references the same child
+        object twice, and verifies that each reference resolves to the same
+        decoded value and that decoding terminates.
+        """
+        number_of_levels = 24
+
+        class_definition = {
+            "$classname": "NSArray",
+            "$classes": ["NSArray", "NSObject"],
+        }
+        objects_array = ["$null", class_definition, "leaf"]
+        leaf_uid = 2
+
+        child_uid = leaf_uid
+        for _ in range(number_of_levels):
+            level_uid = len(objects_array)
+            objects_array.append(
+                {
+                    "$class": plistlib.UID(1),
+                    "NS.objects": [plistlib.UID(child_uid), plistlib.UID(child_uid)],
+                }
+            )
+            child_uid = level_uid
+
+        root_item = {
+            "$archiver": "NSKeyedArchiver",
+            "$version": 100000,
+            "$objects": objects_array,
+            "$top": {"root": plistlib.UID(child_uid)},
+        }
+
+        test_decoder = interface.NSKeyedArchiverDecoder()
+
+        decoded_plist = test_decoder.Decode(root_item)
+
+        node = decoded_plist
+        depth = 0
+        while isinstance(node, list):
+            self.assertEqual(len(node), 2)
+            # Both references to the shared child resolve to the same decoded
+            # object, that is the shared object is decoded once and reused
+            # rather than re-decoded for every reference.
+            self.assertIs(node[0], node[1])
+            node = node[0]
+            depth += 1
+
+        self.assertEqual(depth, number_of_levels)
+        self.assertEqual(node, "leaf")
+
+    def testDecodeWithObjectCycle(self):
+        """Tests the Decode function with mutually referencing objects.
+
+        Reuse of decoded objects must not change the result for objects that
+        reference each other, since the decoded value of such a subtree depends
+        on the path taken to reach it.
+        """
+        class_definition = {
+            "$classname": "NSDictionary",
+            "$classes": ["NSDictionary", "NSObject"],
+        }
+        objects_array = [
+            "$null",
+            class_definition,
+            "a",
+            "b",
+            {
+                "$class": plistlib.UID(1),
+                "NS.keys": [plistlib.UID(3)],
+                "NS.objects": [plistlib.UID(5)],
+            },
+            {
+                "$class": plistlib.UID(1),
+                "NS.keys": [plistlib.UID(2)],
+                "NS.objects": [plistlib.UID(4)],
+            },
+            {
+                "$class": plistlib.UID(1),
+                "NS.keys": [plistlib.UID(2), plistlib.UID(3)],
+                "NS.objects": [plistlib.UID(4), plistlib.UID(5)],
+            },
+        ]
+        root_item = {
+            "$archiver": "NSKeyedArchiver",
+            "$version": 100000,
+            "$objects": objects_array,
+            "$top": {"root": plistlib.UID(6)},
+        }
+
+        test_decoder = interface.NSKeyedArchiverDecoder()
+
+        decoded_plist = test_decoder.Decode(root_item)
+        self.assertEqual(decoded_plist, {"a": {"b": {}}, "b": {"a": {}}})
+
     # TODO: add tests for IsEncoded.
 
 
