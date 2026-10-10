@@ -4,6 +4,8 @@ Also see:
   https://docs.virustotal.com/reference/overview
 """
 
+import re
+
 from plaso.analysis import hash_tagging
 from plaso.analysis import logger
 from plaso.analysis import manager
@@ -19,6 +21,8 @@ class VirusTotalAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
     NAME = "virustotal"
 
     SUPPORTED_HASHES = frozenset(["md5", "sha1", "sha256"])
+
+    _API_KEY_REDACTION_PATTERN = re.compile(r"(apikey=)[^&\s]+")
 
     _EICAR_SHA256 = "275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f"
 
@@ -109,7 +113,12 @@ class VirusTotalAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
             )
         except errors.ConnectionError as exception:
             json_response = None
-            logger.error(f"Unable to query VirusTotal with error: {exception!s}.")
+            # The API key is part of the request URL, which can appear in the
+            # error text, so redact it before writing the error to the log.
+            error_string = self._API_KEY_REDACTION_PATTERN.sub(
+                r"\1[redacted]", str(exception)
+            )
+            logger.error(f"Unable to query VirusTotal with error: {error_string:s}.")
 
         return json_response
 
