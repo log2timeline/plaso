@@ -103,9 +103,9 @@ class Task(interface.AttributeContainer):
         retry_task.file_entry_type = self.file_entry_type
         retry_task.merge_priority = self.merge_priority
         retry_task.path_spec = self.path_spec
+        retry_task.retry_count = self.retry_count + 1
         retry_task.storage_file_size = self.storage_file_size
         retry_task.storage_format = self.storage_format
-        retry_task.retry_count = self.retry_count + 1
 
         self.has_retry = True
 
