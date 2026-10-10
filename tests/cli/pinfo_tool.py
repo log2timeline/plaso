@@ -57,8 +57,7 @@ text/syslog_traditional : 0 (2)
 ******************* Pathspecs with most extraction warnings ********************
 Number of warnings : Pathspec
 --------------------------------------------------------------------------------
-             0 (2) : type: OS, location: /tmp/test/test_data/syslog/syslog
-
+             0 (2) : type: OS, location: /tmp/test/test_data/syslog/syslog\\x0a
 --------------------------------------------------------------------------------
 
 
@@ -105,8 +104,7 @@ text/syslog_traditional : 2 (0)
 ******************* Pathspecs with most extraction warnings ********************
 Number of warnings : Pathspec
 --------------------------------------------------------------------------------
-             2 (0) : type: OS, location: /tmp/test/test_data/syslog/syslog
-
+             2 (0) : type: OS, location: /tmp/test/test_data/syslog/syslog\\x0a
 --------------------------------------------------------------------------------
 
 
