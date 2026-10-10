@@ -3,14 +3,54 @@
 
 import unittest
 
-from unittest import mock
-
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
 from plaso.parsers import ntfs
 
 from tests.parsers import test_lib
+
+
+class TestMFTEntry:
+    """MFT entry for testing.
+
+    Attributes:
+      file_reference (int): NTFS file reference.
+    """
+
+    def __init__(self, file_reference):
+        """Initializes an MFT entry for testing.
+
+        Args:
+          file_reference (int): NTFS file reference.
+        """
+        super().__init__()
+        self.file_reference = file_reference
+
+
+class TestMFTAttribute:
+    """MFT attribute for testing.
+
+    Attributes:
+      attribute_type (int): attribute type.
+      birth_droid_file_identifier (str): birth droid file identifier.
+      droid_file_identifier (str): droid file identifier.
+    """
+
+    def __init__(
+        self, attribute_type, droid_file_identifier, birth_droid_file_identifier
+    ):
+        """Initializes an MFT attribute for testing.
+
+        Args:
+          attribute_type (int): attribute type.
+          droid_file_identifier (str): droid file identifier.
+          birth_droid_file_identifier (str): birth droid file identifier.
+        """
+        super().__init__()
+        self.attribute_type = attribute_type
+        self.droid_file_identifier = droid_file_identifier
+        self.birth_droid_file_identifier = birth_droid_file_identifier
 
 
 class NTFSMFTParserTest(test_lib.ParserTestCase):
@@ -116,11 +156,11 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
         storage_writer = self._CreateStorageWriter()
         parser_mediator = self._CreateParserMediator(storage_writer)
 
-        mft_entry = mock.Mock(file_reference=(1 << 48) | 462)
-        mft_attribute = mock.Mock(
-            attribute_type=0x00000040,
-            birth_droid_file_identifier="9fe44b71-2709-11dc-a06b-001122334455",
-            droid_file_identifier="9fe44b69-2709-11dc-a06b-db3099beae3c",
+        mft_entry = TestMFTEntry((1 << 48) | 462)
+        mft_attribute = TestMFTAttribute(
+            0x00000040,
+            "9fe44b69-2709-11dc-a06b-db3099beae3c",
+            "9fe44b71-2709-11dc-a06b-001122334455",
         )
 
         parser._ParseObjectIDAttribute(parser_mediator, mft_entry, mft_attribute)
