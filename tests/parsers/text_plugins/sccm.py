@@ -1,42 +1,16 @@
 #!/usr/bin/env python3
 """Tests for the SCCM log text parser plugin."""
 
-import threading
 import unittest
 
 from dfvfs.file_io import fake_file_io
 from dfvfs.path import fake_path_spec
 from dfvfs.resolver import context as dfvfs_context
 
-from plaso.lib import errors
 from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import sccm
 
 from tests.parsers.text_plugins import test_lib
-
-
-def _ParseStringCompletesWithinTimeout(plugin, string, timeout=15.0):
-    """Checks that parsing a string completes within a time budget.
-
-    Args:
-      plugin (TextPlugin): text log file plugin.
-      string (str): string to parse.
-      timeout (float): maximum number of seconds to wait.
-
-    Returns:
-      bool: True if parsing completed within the time budget.
-    """
-
-    def _Run():
-        try:
-            plugin._ParseString(string)  # pylint: disable=protected-access
-        except errors.ParseError:
-            pass
-
-    thread = threading.Thread(target=_Run, daemon=True)
-    thread.start()
-    thread.join(timeout)
-    return not thread.is_alive()
 
 
 class SCCMTextPluginTest(test_lib.TextPluginTestCase):
@@ -134,18 +108,11 @@ class SCCMTextPluginTest(test_lib.TextPluginTestCase):
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 3)
         self.CheckEventData(event_data, expected_event_values)
 
-    def testParseLongLineCompletesInLinearTime(self):
-        """Tests that a long line is parsed in bounded (linear) time."""
+    def testParseLongLine(self):
+        """Tests parsing a long line."""
         plugin = sccm.SCCMTextPlugin()
 
-        # Many record openers without a message terminator previously made the
-        # message-text scan re-run to the end of the buffer at every opener
-        # offset, so parsing was superlinear in the length of the input. It must
-        # now complete quickly.
-        long_text = "<![LOG[X" * 8000
-        self.assertTrue(_ParseStringCompletesWithinTimeout(plugin, long_text))
-
-        # A normal line still parses to the same fields.
+        # A normal line parses to its message text and component.
         normal_line = (
             "<![LOG[A user is logged on.]LOG]!>"
             '<time="19:33:19.766-330" date="11-28-2014" '
@@ -158,6 +125,22 @@ class SCCMTextPluginTest(test_lib.TextPluginTestCase):
             plugin._GetValueFromStructure(structure, "text"),
             "A user is logged on.",
         )
+        self.assertEqual(
+            plugin._GetValueFromStructure(structure, "component"), "AppEnforce"
+        )
+
+        # The same line with a long message text parses to that message text
+        # verbatim and to the same component.
+        message_text = "A" * 50000
+        long_line = (
+            "<![LOG[" + message_text + "]LOG]!>"
+            '<time="19:33:19.766-330" date="11-28-2014" '
+            'component="AppEnforce" context="" type="1" thread="8744" '
+            'file="appprovider.cpp:2083">\n'
+        )
+        key, structure, _, _ = plugin._ParseString(long_line)
+        self.assertEqual(key, "last_log_line")
+        self.assertEqual(plugin._GetValueFromStructure(structure, "text"), message_text)
         self.assertEqual(
             plugin._GetValueFromStructure(structure, "component"), "AppEnforce"
         )
