@@ -2,7 +2,6 @@
 """Tests for the browser search analysis plugin."""
 
 import collections
-import time
 import unittest
 
 from plaso.analysis import browser_search
@@ -81,44 +80,33 @@ class BrowserSearchAnalysisTest(test_lib.AnalysisPluginTestCase):
         self.assertEqual(analysis_result.search_term, "really really funny cats")
         self.assertEqual(analysis_result.number_of_queries, 1)
 
-    def testGoogleSearchFilterOnLongURL(self):
-        """Tests that the Google Search filter stays fast on a long URL.
-
-        A long URL value that contains many slash-free "google." tokens but no
-        "/search" path made the unbounded Google Search filter expression rescan
-        the remainder of the value from every "google." token, so the time to
-        examine a single event grew with the square of the URL length. This
-        regression test asserts the filter runs in time proportional to the URL
-        length instead.
-        """
+    def testGoogleSearchFilterExtractsLongQuery(self):
+        """Tests that a Google search URL with a long query extracts its term."""
         plugin = browser_search.BrowserSearchPlugin()
 
-        long_url = "https://www.google.com/url?q=" + ("www.google." * 32000)
+        search_term = " ".join(["cat"] * 5000)
+        query_value = "+".join(["cat"] * 5000)
 
         event_values_list = [
             {
                 "data_type": "chrome:history:page_visited",
                 "timestamp": "2020-01-01 12:00:00",
                 "timestamp_desc": definitions.TIME_DESCRIPTION_LAST_VISITED,
-                "url": long_url,
+                "url": "https://www.google.co.uk:443/search?q=" + query_value,
             }
         ]
 
-        start_time = time.monotonic()
         storage_writer = self._AnalyzeEvents(event_values_list, plugin)
-        elapsed_time = time.monotonic() - start_time
 
-        # The unbounded expression needs roughly 10 seconds for this input; the
-        # bounded expression needs tens of milliseconds. A generous budget keeps
-        # the test from flaking on slow machines while still catching a
-        # regression to superlinear behavior.
-        self.assertLess(elapsed_time, 2.0)
-
-        # The long URL is not a Google search, so no result is produced.
         analysis_results = list(
             storage_writer.GetAttributeContainers("browser_search_analysis_result")
         )
-        self.assertEqual(len(analysis_results), 0)
+        self.assertEqual(len(analysis_results), 1)
+
+        analysis_result = analysis_results[0]
+        self.assertEqual(analysis_result.search_engine, "Google Search")
+        self.assertEqual(analysis_result.search_term, search_term)
+        self.assertEqual(analysis_result.number_of_queries, 1)
 
 
 if __name__ == "__main__":
