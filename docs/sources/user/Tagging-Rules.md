@@ -71,6 +71,11 @@ type=USER_AUTH msg=audit(1789331921.882:317): pid=1681 uid=1001 auid=0 ses=7 sub
 2026-09-13T21:02:45.907303+00:00 ubuntu-26-parsers sshd-session[21146]: Failed password for john.doe from 192.168.1.138 port 39144 ssh2
 ```
 
+* a syslog line from sshd or sshd-session that records an authentication request for a user name that does not exist, for example:
+```
+2026-10-08T00:19:26.539626+00:00 ubuntu sshd-session[3824]: Invalid user john doe from 192.168.248.1 port 54928
+```
+
 * a syslog line from xscreensaver or login that contains "FAILED LOGIN"
 * a syslog line from su that contains "DENIED"
 * a syslog line from su that contains "FAILED SU", for example:
@@ -85,6 +90,19 @@ Sun Sep 13 21:38:48 2026 [pid 42238] [john.doe] FAIL LOGIN: Client "::ffff:127.0
 ```
 
 ### logout
+
+This rule tags log-out events on Linux, which are defined as:
+
+* a utmp event of type DEAD_PROCESS (8) with a terminal and a process identifier, which also matches the gettys that init stops during a shutdown or reboot
+* a syslog line from login that contains "session closed"
+* a syslog line from sshd or sshd-session that contains "session closed" or "Close session"
+* a syslog line from systemd-logind that contains "logged out"
+* a syslog line from dovecot that contains "Logged out"
+* a SELinux log line where the audit type is "USER_LOGOUT"
+* a syslog line from sshd or sshd-session that records the end of a connection of an authenticated user, for example:
+```
+2026-10-08T00:19:28.778673+00:00 ubuntu sshd-session[3884]: Disconnected from user ubuntu fe80::621:e520:10d6:6621%ens36 port 54931
+```
 
 ### session_start
 
