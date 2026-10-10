@@ -114,7 +114,7 @@ class MacOSAppFirewallTextPlugin(
     _REPEATED_LOG_LINE = (
         _DATE_TIME.set_results_name("date_time")
         + pyparsing.Suppress("---")
-        + pyparsing.SkipTo(_REPEATED_LOG_LINE_END)
+        + pyparsing.SkipTo(_REPEATED_LOG_LINE_END, fail_on=pyparsing.LineEnd())
         + _REPEATED_LOG_LINE_END
     )
 
