@@ -7,11 +7,14 @@ import unittest
 from dfvfs.path import fake_path_spec
 
 from plaso.analysis import hash_tagging
+from plaso.analysis import mediator as analysis_mediator
 from plaso.containers import events
 from plaso.containers import reports
 from plaso.lib import definitions
+from plaso.storage.fake import writer as fake_writer
 
 from tests.analysis import test_lib
+from tests.containers import test_lib as containers_test_lib
 
 
 class TestHashTaggingAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
@@ -158,6 +161,61 @@ class HashTaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
         ):
             labels.extend(event_tag.labels)
         self.assertEqual(len(labels), 0)
+
+    def testExamineEventWithMultipleEventsPerDataStream(self):
+        """Tests the ExamineEvent function with multiple events per data stream."""
+        plugin = TestHashTaggingAnalysisPlugin()
+
+        storage_writer = fake_writer.FakeStorageWriter()
+        storage_writer.Open()
+
+        event, event_data, event_data_stream = (
+            containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0])
+        )
+        storage_writer.AddAttributeContainer(event_data_stream)
+
+        event_data.SetEventDataStreamIdentifier(event_data_stream.GetIdentifier())
+        storage_writer.AddAttributeContainer(event_data)
+
+        event.SetEventDataIdentifier(event_data.GetIdentifier())
+        storage_writer.AddAttributeContainer(event)
+
+        # A second event, such as a modification time event, of the same file.
+        second_event = events.EventObject()
+        second_event.timestamp = event.timestamp + 1
+        second_event.timestamp_desc = definitions.TIME_DESCRIPTION_MODIFICATION
+        second_event.SetEventDataIdentifier(event_data.GetIdentifier())
+        storage_writer.AddAttributeContainer(second_event)
+
+        mediator = analysis_mediator.AnalysisMediator()
+        mediator.SetStorageWriter(storage_writer)
+
+        plugin.ExamineEvent(mediator, event, event_data, event_data_stream)
+        plugin.ExamineEvent(mediator, second_event, event_data, event_data_stream)
+
+        analysis_report = plugin.CompileReport(mediator)
+
+        expected_analysis_counter = collections.Counter({"hashtag": 2})
+        self.assertEqual(analysis_report.analysis_counter, expected_analysis_counter)
+
+        number_of_event_tags = storage_writer.GetNumberOfAttributeContainers(
+            "event_tag"
+        )
+        self.assertEqual(number_of_event_tags, 2)
+
+        event_identifiers = set()
+        for event_tag in storage_writer.GetAttributeContainers(
+            events.EventTag.CONTAINER_TYPE
+        ):
+            self.assertEqual(event_tag.labels, ["hashtag"])
+            event_identifier = event_tag.GetEventIdentifier()
+            event_identifiers.add(event_identifier.CopyToString())
+
+        expected_event_identifiers = {
+            event.GetIdentifier().CopyToString(),
+            second_event.GetIdentifier().CopyToString(),
+        }
+        self.assertEqual(event_identifiers, expected_event_identifiers)
 
     def testSetLookupHash(self):
         """Tests the SetLookupHash function."""
