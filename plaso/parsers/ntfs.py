@@ -253,7 +253,9 @@ class NTFSMFTParser(interface.FileObjectParser):
         if mft_attribute.birth_droid_file_identifier:
             try:
                 self._ParseDistributedTrackingIdentifier(
-                    parser_mediator, mft_attribute.droid_file_identifier, display_name
+                    parser_mediator,
+                    mft_attribute.birth_droid_file_identifier,
+                    display_name,
                 )
             except (TypeError, ValueError) as exception:
                 parser_mediator.ProduceWarning(
