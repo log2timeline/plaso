@@ -265,6 +265,11 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
             syslog.SyslogSSHFailedConnectionEventData, {}, ["login_failed"]
         )
 
+        # Test: data_type is 'syslog:ssh:invalid_user'
+        self._CheckTaggingRule(
+            syslog.SyslogSSHInvalidUserEventData, {}, ["login_failed"]
+        )
+
         # Test: data_type is 'selinux:line' AND audit_type is 'USER_AUTH' AND
         #       operation_result == 0
         attribute_values_per_name = {
@@ -463,6 +468,14 @@ class LinuxTaggingFileTest(test_lib.TaggingFileTestCase):
         attribute_values_per_name = {"audit_type": ["USER_LOGOUT"]}
         self._CheckTaggingRule(
             selinux.SELinuxLogEventData, attribute_values_per_name, ["logout"]
+        )
+
+        # Test: data_type is 'syslog:ssh:closed_connection' AND is_authenticated == 1
+        attribute_values_per_name = {"is_authenticated": [True]}
+        self._CheckTaggingRule(
+            syslog.SyslogSSHClosedConnectionEventData,
+            attribute_values_per_name,
+            ["logout"],
         )
 
     def testRuleSessionStart(self):

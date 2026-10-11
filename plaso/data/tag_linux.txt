@@ -32,6 +32,7 @@ login_failed
   reporter is 'su' and message_body contains 'DENIED'
   reporter is 'nologin'
   data_type is 'syslog:ssh:failed_connection'
+  data_type is 'syslog:ssh:invalid_user'
   data_type is 'selinux:line' AND audit_type is 'USER_AUTH' AND operation_result == 0
   reporter is 'su' AND message_body contains 'FAILED SU'
   data_type is 'vsftpd:log' AND text contains 'FAIL LOGIN'
@@ -71,6 +72,7 @@ logout
   reporter is 'systemd-logind' AND message_body contains 'logged out'
   reporter is 'dovecot' AND message_body contains 'Logged out'
   data_type is 'selinux:line' AND audit_type is 'USER_LOGOUT'
+  data_type is 'syslog:ssh:closed_connection' AND is_authenticated == 1
 
 # Tags Linux user session start events.
 session_start
