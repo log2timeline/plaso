@@ -158,6 +158,58 @@ class AtlassianBitbucketTextPluginTest(test_lib.TextPluginTestCase):
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 
+    def testParseLongLine(self):
+        """Tests parsing a long line."""
+        plugin = atlassian_bitbucket.AtlassianBitbucketTextPlugin()
+
+        # A normal line parses to its thread, logger class and message body.
+        normal_line = (
+            "2014-12-04 19:39:39,749 DEBUG [clusterScheduler_Worker-8] "
+            "org.hibernate.SQL delete sta_activity_0\n"
+        )
+        key, structure, _, _ = plugin._ParseString(normal_line)
+        self.assertEqual(key, "log_entry")
+        self.assertEqual(
+            plugin._GetValueFromStructure(structure, "thread"),
+            "clusterScheduler_Worker-8",
+        )
+        self.assertEqual(
+            plugin._GetValueFromStructure(structure, "logger_class"),
+            "org.hibernate.SQL",
+        )
+        self.assertEqual(
+            plugin._GetValueFromStructure(structure, "message_body"),
+            "delete sta_activity_0",
+        )
+
+        # The same line with a long request-context region before the logger
+        # class parses to the same thread, logger class and message body, and
+        # captures the request context verbatim.
+        request_context = "ctx " * 5000
+        long_line = (
+            "2014-12-04 19:39:39,749 DEBUG [clusterScheduler_Worker-8] "
+            + request_context
+            + "org.hibernate.SQL delete sta_activity_0\n"
+        )
+        key, structure, _, _ = plugin._ParseString(long_line)
+        self.assertEqual(key, "log_entry")
+        self.assertEqual(
+            plugin._GetValueFromStructure(structure, "thread"),
+            "clusterScheduler_Worker-8",
+        )
+        self.assertEqual(
+            plugin._GetValueFromStructure(structure, "logger_class"),
+            "org.hibernate.SQL",
+        )
+        self.assertEqual(
+            plugin._GetValueFromStructure(structure, "message_body"),
+            "delete sta_activity_0",
+        )
+        self.assertEqual(
+            plugin._GetValueFromStructure(structure, "request_context_text"),
+            request_context.strip(),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

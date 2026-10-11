@@ -16,6 +16,8 @@ from tests.parsers.text_plugins import test_lib
 class SCCMTextPluginTest(test_lib.TextPluginTestCase):
     """Tests for the SCCM log text parser plugin."""
 
+    # pylint: disable=protected-access
+
     def testCheckRequiredFormat(self):
         """Tests for the CheckRequiredFormat function."""
         plugin = sccm.SCCMTextPlugin()
@@ -105,6 +107,43 @@ class SCCMTextPluginTest(test_lib.TextPluginTestCase):
 
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 3)
         self.CheckEventData(event_data, expected_event_values)
+
+    def testParseLongLine(self):
+        """Tests parsing a long line."""
+        plugin = sccm.SCCMTextPlugin()
+
+        # A normal line parses to its message text and component.
+        normal_line = (
+            "<![LOG[A user is logged on.]LOG]!>"
+            '<time="19:33:19.766-330" date="11-28-2014" '
+            'component="AppEnforce" context="" type="1" thread="8744" '
+            'file="appprovider.cpp:2083">\n'
+        )
+        key, structure, _, _ = plugin._ParseString(normal_line)
+        self.assertEqual(key, "last_log_line")
+        self.assertEqual(
+            plugin._GetValueFromStructure(structure, "text"),
+            "A user is logged on.",
+        )
+        self.assertEqual(
+            plugin._GetValueFromStructure(structure, "component"), "AppEnforce"
+        )
+
+        # The same line with a long message text parses to that message text
+        # verbatim and to the same component.
+        message_text = "A" * 50000
+        long_line = (
+            "<![LOG[" + message_text + "]LOG]!>"
+            '<time="19:33:19.766-330" date="11-28-2014" '
+            'component="AppEnforce" context="" type="1" thread="8744" '
+            'file="appprovider.cpp:2083">\n'
+        )
+        key, structure, _, _ = plugin._ParseString(long_line)
+        self.assertEqual(key, "last_log_line")
+        self.assertEqual(plugin._GetValueFromStructure(structure, "text"), message_text)
+        self.assertEqual(
+            plugin._GetValueFromStructure(structure, "component"), "AppEnforce"
+        )
 
 
 if __name__ == "__main__":

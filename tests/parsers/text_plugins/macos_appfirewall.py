@@ -14,6 +14,8 @@ from tests.parsers.text_plugins import test_lib
 class MacOSAppFirewallTextPluginTest(test_lib.TextPluginTestCase):
     """Tests for the MacOS Application firewall log file text parser plugin."""
 
+    # pylint: disable=protected-access
+
     def testCheckRequiredFormat(self):
         """Tests for the CheckRequiredFormat function."""
         plugin = macos_appfirewall.MacOSAppFirewallTextPlugin()
@@ -104,6 +106,33 @@ class MacOSAppFirewallTextPluginTest(test_lib.TextPluginTestCase):
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 46)
         self.CheckEventData(event_data, expected_event_values)
+
+    def testParseLongLine(self):
+        """Tests parsing a long line."""
+        plugin = macos_appfirewall.MacOSAppFirewallTextPlugin()
+
+        # A normal line parses to its status, process name and action.
+        normal_line = (
+            "Nov  2 04:07:35 DarkTemplar-2.local socketfilterfw[112] "
+            "<Info>: Dropbox: Allow TCP LISTEN  (in:0 out:1)\n"
+        )
+        key, structure, _, _ = plugin._ParseString(normal_line)
+        self.assertEqual(key, "log_line")
+        self.assertEqual(plugin._GetValueFromStructure(structure, "status"), "Info")
+        self.assertEqual(
+            plugin._GetStringValueFromStructure(structure, "process_name"),
+            "Dropbox",
+        )
+        self.assertEqual(
+            plugin._GetValueFromStructure(structure, "action"),
+            "Allow TCP LISTEN  (in:0 out:1)",
+        )
+
+        # A repeated-line record with a long message between the "---" markers
+        # parses to the repeated-line record.
+        long_line = "Nov  2 04:07:35 --- " + ("x" * 50000) + " ---\n"
+        key, _, _, _ = plugin._ParseString(long_line)
+        self.assertEqual(key, "repeated_log_line")
 
 
 if __name__ == "__main__":
