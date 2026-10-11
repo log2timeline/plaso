@@ -6,6 +6,7 @@ import unittest
 
 from plaso.analysis import browser_search
 from plaso.containers import reports
+from plaso.lib import definitions
 from plaso.parsers import sqlite
 
 from tests.analysis import test_lib
@@ -53,6 +54,59 @@ class BrowserSearchAnalysisTest(test_lib.AnalysisPluginTestCase):
             }
         )
         self.assertEqual(analysis_report.analysis_counter, expected_analysis_counter)
+
+    def testGoogleSearchFilterExtractsNormalQuery(self):
+        """Tests that a regular Google search URL still extracts its term."""
+        plugin = browser_search.BrowserSearchPlugin()
+
+        event_values_list = [
+            {
+                "data_type": "chrome:history:page_visited",
+                "timestamp": "2020-01-01 12:00:00",
+                "timestamp_desc": definitions.TIME_DESCRIPTION_LAST_VISITED,
+                "url": "https://www.google.com/search?q=really+really+funny+cats",
+            }
+        ]
+
+        storage_writer = self._AnalyzeEvents(event_values_list, plugin)
+
+        analysis_results = list(
+            storage_writer.GetAttributeContainers("browser_search_analysis_result")
+        )
+        self.assertEqual(len(analysis_results), 1)
+
+        analysis_result = analysis_results[0]
+        self.assertEqual(analysis_result.search_engine, "Google Search")
+        self.assertEqual(analysis_result.search_term, "really really funny cats")
+        self.assertEqual(analysis_result.number_of_queries, 1)
+
+    def testGoogleSearchFilterExtractsLongQuery(self):
+        """Tests that a Google search URL with a long query extracts its term."""
+        plugin = browser_search.BrowserSearchPlugin()
+
+        search_term = " ".join(["cat"] * 5000)
+        query_value = "+".join(["cat"] * 5000)
+
+        event_values_list = [
+            {
+                "data_type": "chrome:history:page_visited",
+                "timestamp": "2020-01-01 12:00:00",
+                "timestamp_desc": definitions.TIME_DESCRIPTION_LAST_VISITED,
+                "url": "https://www.google.co.uk:443/search?q=" + query_value,
+            }
+        ]
+
+        storage_writer = self._AnalyzeEvents(event_values_list, plugin)
+
+        analysis_results = list(
+            storage_writer.GetAttributeContainers("browser_search_analysis_result")
+        )
+        self.assertEqual(len(analysis_results), 1)
+
+        analysis_result = analysis_results[0]
+        self.assertEqual(analysis_result.search_engine, "Google Search")
+        self.assertEqual(analysis_result.search_term, search_term)
+        self.assertEqual(analysis_result.number_of_queries, 1)
 
 
 if __name__ == "__main__":

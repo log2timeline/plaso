@@ -75,7 +75,13 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
             ),
             (
                 "Google Search",
-                re.compile(r"(www\.|encrypted\.|/)google\.[^/]*/search"),
+                # The segment between "google." and "/search" is the remainder
+                # of the host (a TLD, optionally a port), so it is short. Bound
+                # it rather than using an unbounded "[^/]*": the unbounded form
+                # rescans the rest of a slash-free value from every "google."
+                # token, making the examine time grow with the square of the
+                # URL length on long values.
+                re.compile(r"(www\.|encrypted\.|/)google\.[^/]{0,256}/search"),
                 "_ExtractGoogleSearchQuery",
             ),
             (
