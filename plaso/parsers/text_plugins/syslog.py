@@ -68,6 +68,71 @@ class SyslogLineEventData(events.EventData):
         self.severity = None
 
 
+class SyslogAnacronJobEventData(SyslogLineEventData):
+    """Syslog anacron job event data.
+
+    Attributes:
+      job_identifier (str): identifier of the job, such as "cron.daily".
+      last_written_time (dfdatetime.DateTimeValues): entry last written date and time.
+    """
+
+    def __init__(self):
+        """Initializes event data."""
+        super().__init__(data_type=self.DATA_TYPE)
+        self.job_identifier = None
+        self.last_written_time = None
+
+
+class SyslogAnacronJobEndEventData(SyslogAnacronJobEventData):
+    """Syslog anacron job end event data.
+
+    Attributes:
+      exit_status (int): exit status of the job, or None if anacron reported a
+          signal or an abnormal termination instead.
+    """
+
+    DATA_TYPE = "syslog:anacron:job_end"
+
+    def __init__(self):
+        """Initializes event data."""
+        super().__init__()
+        self.exit_status = None
+
+
+class SyslogAnacronJobStartEventData(SyslogAnacronJobEventData):
+    """Syslog anacron job start event data."""
+
+    DATA_TYPE = "syslog:anacron:job_start"
+
+
+class SyslogCronEntryEventData(SyslogLineEventData):
+    """Syslog cron entry event data.
+
+    Cron writes every entry as "(name) EVENT (detail)", where the name is the
+    literal "CRON" for the daemon's own messages, otherwise a user name or the
+    system crontab.
+
+    Attributes:
+      detail (str): detail of the entry, such as a version, a crontab path or an
+          informational message.
+      event_type (str): type of the entry, such as "STARTUP", "INFO", "RELOAD" or
+          "REPLACE".
+      last_written_time (dfdatetime.DateTimeValues): entry last written date and time.
+      username (str): name of the user the entry is about, or the system crontab
+          as cron writes it, or None for the daemon's own messages.
+    """
+
+    DATA_TYPE = "syslog:cron:entry"
+
+    def __init__(self):
+        """Initializes event data."""
+        super().__init__(data_type=self.DATA_TYPE)
+        self.detail = None
+        self.event_type = None
+        self.last_written_time = None
+        self.username = None
+
+
 class SyslogCronTaskEventData(SyslogLineEventData):
     """Syslog cron task event data.
 
@@ -95,6 +160,35 @@ class SyslogCronTaskRunEventData(SyslogCronTaskEventData):
     """Syslog cron task run event data."""
 
     DATA_TYPE = "syslog:cron:task_run"
+
+
+class SyslogRunPartsScriptEventData(SyslogLineEventData):
+    """Syslog run-parts script event data.
+
+    Attributes:
+      directory (str): directory the script was run from, such as "/etc/cron.daily".
+      last_written_time (dfdatetime.DateTimeValues): entry last written date and time.
+      script_name (str): name of the script.
+    """
+
+    def __init__(self):
+        """Initializes event data."""
+        super().__init__(data_type=self.DATA_TYPE)
+        self.directory = None
+        self.last_written_time = None
+        self.script_name = None
+
+
+class SyslogRunPartsScriptEndEventData(SyslogRunPartsScriptEventData):
+    """Syslog run-parts script end event data."""
+
+    DATA_TYPE = "syslog:run_parts:script_end"
+
+
+class SyslogRunPartsScriptStartEventData(SyslogRunPartsScriptEventData):
+    """Syslog run-parts script start event data."""
+
+    DATA_TYPE = "syslog:run_parts:script_start"
 
 
 class SyslogSSHEventData(SyslogLineEventData):
@@ -235,9 +329,11 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
 
     # pylint: disable=abstract-method
 
+    # cron writes the account name as is, which is not limited to letters and
+    # digits, hence the name is determined by the text inside the parentheses.
     _CRON_USERNAME = (
         pyparsing.Literal("(")
-        + pyparsing.Word(pyparsing.alphanums).set_results_name("username")
+        + pyparsing.Regex(r"[^)]+").set_results_name("username")
         + pyparsing.Literal(")")
     )
 
@@ -263,13 +359,46 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
         + pyparsing.StringEnd()
     )
 
-    _CRON_MESSAGE = pyparsing.Group(_CRON_TASK_END).set_results_name(
-        "task_end"
-    ) ^ pyparsing.Group(_CRON_TASK_RUN).set_results_name("task_run")
+    # Every other entry has the same shape, see log_it in cron misc.c, where
+    # the name is the literal "CRON" for the daemon's own messages and cronie
+    # appends the error message when an errno is passed.
+    _CRON_ENTRY = pyparsing.Regex(
+        r"\((?P<username>[^)]+)\) (?P<event_type>.+?) \((?P<detail>.*)\)(?:: .+)?$"
+    )
 
-    # cronie writes job records under the upper case reporter name, CROND, and
-    # the daemon's own messages under the lower case name, crond.
-    _CRON_REPORTERS = frozenset(["CRON", "CROND"])
+    _CRON_MESSAGE = (
+        pyparsing.Group(_CRON_TASK_END).set_results_name("task_end")
+        | pyparsing.Group(_CRON_TASK_RUN).set_results_name("task_run")
+        | pyparsing.Group(_CRON_ENTRY).set_results_name("entry")
+    )
+
+    # cron and cronie write job records under the upper case reporter name,
+    # CRON and CROND, the daemon's own messages under the lower case name, and
+    # the crontab command its records under crontab.
+    _CRON_REPORTERS = frozenset(["CRON", "CROND", "cron", "crond", "crontab"])
+
+    # run-parts writes the start and end of every script it runs from a cron
+    # directory, see run-parts in crontabs.
+    _RUN_PARTS_MESSAGE = (
+        pyparsing.Literal("(")
+        + pyparsing.Regex(r"[^)]+").set_results_name("directory")
+        + pyparsing.Literal(")")
+        + (
+            pyparsing.Keyword("starting").set_results_name("start")
+            | pyparsing.Keyword("finished").set_results_name("end")
+        )
+        + pyparsing.Regex(r".+").set_results_name("script_name")
+        + pyparsing.StringEnd()
+    )
+
+    # anacron writes the start and the end of a job, where the end carries the
+    # exit status when it is not 0, or the signal, see tend_job in anacron
+    # runjob.c.
+    _ANACRON_JOB = pyparsing.Regex(
+        r"Job `(?P<job_identifier>[^']+)' (?:(?P<started>started)|terminated"
+        r"(?: \(exit status: (?P<exit_status>\d+)\)| due to signal (?P<signal>\d+)"
+        r"|(?P<abnormal> abnormally))?(?: \(produced output\))?)$"
+    )
 
     # OpenSSH 9.8 split the server into a listener binary, sshd, and a per-session
     # binary, sshd-session, which writes the authentication messages.
@@ -556,6 +685,17 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
         key = keys[0]
         structure = structure[0]
 
+        if key == "entry":
+            entry_event_data = SyslogCronEntryEventData()
+            entry_event_data.detail = structure.get("detail")
+            entry_event_data.event_type = structure.get("event_type")
+
+            username = structure.get("username")
+            if username != "CRON":
+                entry_event_data.username = username
+
+            return entry_event_data
+
         if key == "task_end":
             event_data = SyslogCronTaskEndEventData()
         elif key == "task_run":
@@ -565,6 +705,40 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
 
         event_data.command = structure.get("command")
         event_data.username = structure.get("username")
+
+        return event_data
+
+    def _ParseAnacronMessageBody(self, message_body):
+        """Parses an anacron syslog message body.
+
+        Args:
+          message_body (str): syslog message body.
+
+        Returns:
+          SyslogAnacronJobEventData: event data or None if not available.
+        """
+        try:
+            structure = self._ANACRON_JOB.parse_string(message_body)
+        except pyparsing.ParseException as exception:
+            logger.debug(
+                f"Unable to parse anacron message body with error: {exception!s}"
+            )
+            return None
+
+        if structure.get("started"):
+            event_data = SyslogAnacronJobStartEventData()
+        else:
+            event_data = SyslogAnacronJobEndEventData()
+
+            exit_status = structure.get("exit_status")
+            if exit_status is not None:
+                event_data.exit_status = int(exit_status, 10)
+            elif not structure.get("signal") and not structure.get("abnormal"):
+                # anacron only writes a job as terminated without a status when the
+                # status is 0.
+                event_data.exit_status = 0
+
+        event_data.job_identifier = structure.get("job_identifier")
 
         return event_data
 
@@ -578,6 +752,33 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
         if self._sudo_command_event_data:
             parser_mediator.ProduceEventData(self._sudo_command_event_data)
             self._sudo_command_event_data = None
+
+    def _ParseRunPartsMessageBody(self, message_body):
+        """Parses a run-parts syslog message body.
+
+        Args:
+          message_body (str): syslog message body.
+
+        Returns:
+          SyslogRunPartsScriptEventData: event data or None if not available.
+        """
+        try:
+            structure = self._RUN_PARTS_MESSAGE.parse_string(message_body)
+        except pyparsing.ParseException as exception:
+            logger.debug(
+                f"Unable to parse run-parts message body with error: {exception!s}"
+            )
+            return None
+
+        if structure.get("start"):
+            event_data = SyslogRunPartsScriptStartEventData()
+        else:
+            event_data = SyslogRunPartsScriptEndEventData()
+
+        event_data.directory = structure.get("directory")
+        event_data.script_name = structure.get("script_name")
+
+        return event_data
 
     def _ParseSshdMessageBody(self, message_body):
         """Parses a sshd syslog message body.
@@ -964,6 +1165,10 @@ class SyslogTextPlugin(BaseSyslogTextPlugin):
         event_data = None
         if reporter in self._CRON_REPORTERS:
             event_data = self._ParseCronMessageBody(message_body)
+        elif reporter == "anacron":
+            event_data = self._ParseAnacronMessageBody(message_body)
+        elif reporter == "run-parts":
+            event_data = self._ParseRunPartsMessageBody(message_body)
         elif reporter in self._SSHD_REPORTERS:
             event_data = self._ParseSshdMessageBody(message_body)
         elif reporter == "sudo":
@@ -1253,6 +1458,10 @@ class TraditionalSyslogTextPlugin(
         event_data = None
         if reporter in self._CRON_REPORTERS:
             event_data = self._ParseCronMessageBody(message_body)
+        elif reporter == "anacron":
+            event_data = self._ParseAnacronMessageBody(message_body)
+        elif reporter == "run-parts":
+            event_data = self._ParseRunPartsMessageBody(message_body)
         elif reporter in self._SSHD_REPORTERS:
             event_data = self._ParseSshdMessageBody(message_body)
         elif reporter == "sudo":

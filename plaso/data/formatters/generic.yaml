@@ -1000,6 +1000,39 @@ short_source: 'LOG'
 source: 'Snort3/Suricata fast-log alert log'
 ---
 type: 'conditional'
+data_type: 'syslog:anacron:job_end'
+message:
+- 'Anacron job: {job_identifier} terminated'
+- 'exit status: {exit_status}'
+- 'pid: {pid}'
+short_message:
+- '{message_body}'
+short_source: 'LOG'
+source: 'Cron log'
+---
+type: 'conditional'
+data_type: 'syslog:anacron:job_start'
+message:
+- 'Anacron job: {job_identifier} started'
+- 'pid: {pid}'
+short_message:
+- '{message_body}'
+short_source: 'LOG'
+source: 'Cron log'
+---
+type: 'conditional'
+data_type: 'syslog:cron:entry'
+message:
+- 'Cron {event_type}'
+- 'user: {username}'
+- '({detail})'
+- 'pid: {pid}'
+short_message:
+- '{message_body}'
+short_source: 'LOG'
+source: 'Cron log'
+---
+type: 'conditional'
 data_type: 'syslog:cron:task_end'
 message:
 - 'Cron finished: {command}'
@@ -1038,6 +1071,28 @@ short_message:
 - '] {message_body}'
 short_source: 'LOG'
 source: 'Log File'
+---
+type: 'conditional'
+data_type: 'syslog:run_parts:script_end'
+message:
+- 'Cron script finished: {script_name}'
+- 'in: {directory}'
+- 'pid: {pid}'
+short_message:
+- '{message_body}'
+short_source: 'LOG'
+source: 'Cron log'
+---
+type: 'conditional'
+data_type: 'syslog:run_parts:script_start'
+message:
+- 'Cron script started: {script_name}'
+- 'in: {directory}'
+- 'pid: {pid}'
+short_message:
+- '{message_body}'
+short_source: 'LOG'
+source: 'Cron log'
 ---
 type: 'conditional'
 data_type: 'syslog:ssh:closed_connection'

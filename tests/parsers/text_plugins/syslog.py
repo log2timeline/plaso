@@ -191,6 +191,105 @@ class SyslogTextPluginTest(test_lib.TextPluginTestCase):
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
+    def testProcessCronDebian(self):
+        """Tests the Process function with Debian cron daemon and crontab messages."""
+        plugin = syslog.SyslogTextPlugin()
+        storage_writer = self._ParseTextFileWithPlugin(
+            ["syslog", "syslog_cron_debian.log"], plugin
+        )
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 15)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "recovery_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        expected_data_types = [
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:task_run",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:task_run",
+            "syslog:cron:entry",
+        ]
+        for index, expected_data_type in enumerate(expected_data_types):
+            event_data = storage_writer.GetAttributeContainerByIndex(
+                "event_data", index
+            )
+            self.assertEqual(event_data.data_type, expected_data_type, index)
+
+        # cron[1615]: (CRON) INFO (pidfile fd = 3)
+        expected_event_values = {
+            "data_type": "syslog:cron:entry",
+            "detail": "pidfile fd = 3",
+            "event_type": "INFO",
+            "last_written_time": "2026-10-10T11:45:20.510482+00:00",
+            "reporter": "cron",
+            "username": None,
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # CRON[1682]: (svc-backup) CMD (/usr/local/bin/agent --daemon)
+        expected_event_values = {
+            "command": "/usr/local/bin/agent --daemon",
+            "data_type": "syslog:cron:task_run",
+            "last_written_time": "2026-10-10T11:45:20.972191+00:00",
+            "reporter": "CRON",
+            "username": "svc-backup",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 2)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # crontab[2436]: (ubuntu) REPLACE (ubuntu)
+        expected_event_values = {
+            "data_type": "syslog:cron:entry",
+            "detail": "ubuntu",
+            "event_type": "REPLACE",
+            "reporter": "crontab",
+            "username": "ubuntu",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 3)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # cron[1615]: (ubuntu) RELOAD (crontabs/ubuntu)
+        expected_event_values = {
+            "data_type": "syslog:cron:entry",
+            "detail": "crontabs/ubuntu",
+            "event_type": "RELOAD",
+            "reporter": "cron",
+            "username": "ubuntu",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 8)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # cron[2478]: (*system*plaso-capture) RELOAD (/etc/cron.d/plaso-capture)
+        expected_event_values = {
+            "data_type": "syslog:cron:entry",
+            "detail": "/etc/cron.d/plaso-capture",
+            "event_type": "RELOAD",
+            "username": "*system*plaso-capture",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 14)
+        self.CheckEventData(event_data, expected_event_values)
+
     def testProcessRsyslog(self):
         """Tests the Process function with a rsyslog file."""
         plugin = syslog.SyslogTextPlugin()
@@ -830,11 +929,14 @@ class TraditionalSyslogTextPluginTest(test_lib.TextPluginTestCase):
 
         # The daemon writes its own messages under the lower case reporter name.
         expected_event_values = {
-            "data_type": "syslog:line",
+            "data_type": "syslog:cron:entry",
+            "detail": "1.7.2",
+            "event_type": "STARTUP",
             "last_written_time": "0000-07-07T20:56:16",
             "message_body": "(CRON) STARTUP (1.7.2)",
             "pid": 1276,
             "reporter": "crond",
+            "username": None,
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
@@ -851,10 +953,12 @@ class TraditionalSyslogTextPluginTest(test_lib.TextPluginTestCase):
         self.CheckEventData(event_data, expected_event_values)
 
         expected_event_values = {
-            "data_type": "syslog:line",
+            "data_type": "syslog:run_parts:script_start",
+            "directory": "/etc/cron.hourly",
             "last_written_time": "0000-07-07T21:01:00",
             "message_body": "(/etc/cron.hourly) starting 0anacron",
             "reporter": "run-parts",
+            "script_name": "0anacron",
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 5)
         self.CheckEventData(event_data, expected_event_values)
@@ -868,6 +972,171 @@ class TraditionalSyslogTextPluginTest(test_lib.TextPluginTestCase):
             "username": "root",
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 12)
+        self.CheckEventData(event_data, expected_event_values)
+
+    def testProcessCronie(self):
+        """Tests the Process function with cronie, crontab, run-parts and anacron."""
+        plugin = syslog.TraditionalSyslogTextPlugin()
+        storage_writer = self._ParseTextFileWithPlugin(
+            ["syslog", "syslog_cronie.log"], plugin
+        )
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 33)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "recovery_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        expected_data_types = [
+            "syslog:cron:entry",
+            "syslog:line",
+            "syslog:line",
+            "syslog:line",
+            "syslog:anacron:job_start",
+            "syslog:anacron:job_end",
+            "syslog:line",
+            "syslog:line",
+            "syslog:line",
+            "syslog:line",
+            "syslog:line",
+            "syslog:anacron:job_start",
+            "syslog:run_parts:script_start",
+            "syslog:run_parts:script_end",
+            "syslog:anacron:job_end",
+            "syslog:line",
+            "syslog:line",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+        ]
+        for index, expected_data_type in enumerate(expected_data_types):
+            event_data = storage_writer.GetAttributeContainerByIndex(
+                "event_data", index
+            )
+            self.assertEqual(event_data.data_type, expected_data_type, index)
+
+        # crontab[1578]: (root) REPLACE (root)
+        expected_event_values = {
+            "data_type": "syslog:cron:entry",
+            "detail": "root",
+            "event_type": "REPLACE",
+            "last_written_time": "0000-10-10T06:44:29",
+            "reporter": "crontab",
+            "username": "root",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # anacron[1588]: Job `plaso-fail' started
+        expected_event_values = {
+            "data_type": "syslog:anacron:job_start",
+            "job_identifier": "plaso-fail",
+            "last_written_time": "0000-10-10T06:44:39",
+            "reporter": "anacron",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 4)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # anacron[1588]: Job `plaso-fail' terminated (exit status: 3) (produced output)
+        expected_event_values = {
+            "data_type": "syslog:anacron:job_end",
+            "exit_status": 3,
+            "job_identifier": "plaso-fail",
+            "reporter": "anacron",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 5)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # run-parts[1601]: (/etc/cron.daily) starting zz-plaso-fail
+        expected_event_values = {
+            "data_type": "syslog:run_parts:script_start",
+            "directory": "/etc/cron.daily",
+            "last_written_time": "0000-10-10T06:44:42",
+            "reporter": "run-parts",
+            "script_name": "zz-plaso-fail",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 12)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # run-parts[1605]: (/etc/cron.daily) finished zz-plaso-fail
+        expected_event_values = {
+            "data_type": "syslog:run_parts:script_end",
+            "directory": "/etc/cron.daily",
+            "script_name": "zz-plaso-fail",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 13)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # anacron[1595]: Job `cron.daily' terminated (produced output)
+        expected_event_values = {
+            "data_type": "syslog:anacron:job_end",
+            "exit_status": 0,
+            "job_identifier": "cron.daily",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 14)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # crond[1608]: (CRON) STARTUP (1.7.2)
+        expected_event_values = {
+            "data_type": "syslog:cron:entry",
+            "detail": "1.7.2",
+            "event_type": "STARTUP",
+            "reporter": "crond",
+            "username": None,
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 18)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # crond[1608]: (*system*) RELOAD (/etc/cron.d/0hourly)
+        expected_event_values = {
+            "data_type": "syslog:cron:entry",
+            "detail": "/etc/cron.d/0hourly",
+            "event_type": "RELOAD",
+            "username": "*system*",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 25)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # crontab[1781]: (root) BEGIN EDIT (root)
+        expected_event_values = {
+            "data_type": "syslog:cron:entry",
+            "detail": "root",
+            "event_type": "BEGIN EDIT",
+            "username": "root",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 28)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # crond[1608]: (root) RELOAD (/var/spool/cron/root)
+        expected_event_values = {
+            "data_type": "syslog:cron:entry",
+            "detail": "/var/spool/cron/root",
+            "event_type": "RELOAD",
+            "last_written_time": "0000-10-10T06:48:00",
+            "username": "root",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 30)
         self.CheckEventData(event_data, expected_event_values)
 
     def testProcessDarwin(self):
