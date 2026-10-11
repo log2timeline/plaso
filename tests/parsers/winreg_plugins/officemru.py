@@ -3,6 +3,10 @@
 
 import unittest
 
+from dfdatetime import filetime as dfdatetime_filetime
+from dfwinreg import definitions as dfwinreg_definitions
+from dfwinreg import fake as dfwinreg_fake
+
 from plaso.parsers.winreg_plugins import officemru
 
 from tests.parsers.winreg_plugins import test_lib
@@ -10,6 +14,33 @@ from tests.parsers.winreg_plugins import test_lib
 
 class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
     """Tests for the Microsoft Office MRUs Windows Registry plugin."""
+
+    def _CreateTestKey(self, value_string):
+        """Creates a Registry key with a single Office MRU item value.
+
+        Args:
+          value_string (str): data of the 'Item 1' REG_SZ value.
+
+        Returns:
+          dfwinreg.WinRegistryKey: Windows Registry key.
+        """
+        filetime = dfdatetime_filetime.Filetime()
+        filetime.CopyFromDateTimeString("2012-03-13 18:27:15")
+        registry_key = dfwinreg_fake.FakeWinRegistryKey(
+            "File MRU",
+            key_path_prefix="HKEY_CURRENT_USER",
+            last_written_time=filetime.timestamp,
+            offset=1456,
+            relative_key_path=("Software\\Microsoft\\Office\\14.0\\Word\\File MRU"),
+        )
+
+        value_data = value_string.encode("utf_16_le")
+        registry_value = dfwinreg_fake.FakeWinRegistryValue(
+            "Item 1", data=value_data, data_type=dfwinreg_definitions.REG_SZ
+        )
+        registry_key.AddValue(registry_value)
+
+        return registry_key
 
     def testFilters(self):
         """Tests the FILTERS class attribute."""
@@ -115,6 +146,77 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
                 "C:\\Users\\nfury\\Documents\\StarFury\\StarFury\\"
                 "SA-23E Mitchell-Hyundyne Starfury.docx"
             ),
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
+
+    def testProcessWithSingleValue(self):
+        """Tests the Process function on a created key with a single value."""
+        value_string = (
+            "[F00000000][T01CD0146EA1EADB0][O00000000]*"
+            "C:\\Users\\nfury\\Documents\\StarFury\\StarFury\\"
+            "SA-23E Mitchell-Hyundyne Starfury.docx"
+        )
+        registry_key = self._CreateTestKey(value_string)
+
+        plugin = officemru.OfficeMRUPlugin()
+        storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 2)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        expected_event_values = {
+            "data_type": "windows:registry:office_mru",
+            "key_path": "HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\"
+            "Word\\File MRU",
+            "last_written_time": "2012-03-13T18:27:15.0830000+00:00",
+            "value_string": value_string,
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
+
+    def testProcessWithLongValue(self):
+        """Tests the Process function on a key with a long item value.
+
+        Office MRU items can hold long file references such as deep local
+        paths or OneDrive and SharePoint URLs. This verifies that such a long
+        value is still parsed into the expected FILETIME and value string
+        fields.
+        """
+        value_string = (
+            "[F00000000][T01CD0146EA1EADB0][O00000000]*"
+            "C:\\Users\\nfury\\Documents\\StarFury\\"
+            + ("SubFolder\\" * 8192)
+            + "SA-23E Mitchell-Hyundyne Starfury.docx"
+        )
+        registry_key = self._CreateTestKey(value_string)
+
+        plugin = officemru.OfficeMRUPlugin()
+        storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 2)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        expected_event_values = {
+            "data_type": "windows:registry:office_mru",
+            "key_path": "HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\"
+            "Word\\File MRU",
+            "last_written_time": "2012-03-13T18:27:15.0830000+00:00",
+            "value_string": value_string,
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
