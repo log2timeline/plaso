@@ -6,6 +6,7 @@ import os
 import unittest
 
 from plaso.cli import time_slices
+from plaso.containers import events
 from plaso.engine import configurations
 from plaso.filters import event_filter
 from plaso.lib import definitions
@@ -310,6 +311,39 @@ class OutputAndFormattingMultiProcessEngineTest(test_lib.MultiProcessingTestCase
         storage_file.Close()
 
     # TODO: add test for _ExportEvent.
+
+    def testGetEventTag(self):
+        """Tests the _GetEventTag function."""
+        test_engine = output_engine.OutputAndFormattingMultiProcessEngine()
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            temp_file = os.path.join(temp_directory, "storage.plaso")
+            self._CreateTestStorageFile(temp_file)
+
+            storage_file = storage_factory.StorageFactory.CreateStorageFile(
+                definitions.DEFAULT_STORAGE_FORMAT
+            )
+            storage_file.Open(path=temp_file, read_only=False)
+
+            storage_reader_events = list(storage_file.GetSortedEvents())
+            event_tag = events.EventTag()
+            event_tag.SetEventIdentifier(storage_reader_events[1].GetIdentifier())
+            event_tag.AddLabel("test_label")
+            storage_file.AddAttributeContainer(event_tag)
+            storage_file.Close()
+
+            storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
+                temp_file
+            )
+
+            event_tags = [
+                test_engine._GetEventTag(storage_reader, event)
+                for event in storage_reader.GetSortedEvents()
+            ]
+
+        self.assertIsNone(event_tags[0])
+        self.assertEqual(event_tags[1].labels, ["test_label"])
+        self.assertEqual(event_tags.count(None), len(event_tags) - 1)
 
     def testInternalExportEvents(self):
         """Tests the _ExportEvents function."""
