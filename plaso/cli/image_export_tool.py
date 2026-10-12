@@ -174,7 +174,12 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         target_directory = os.path.join(destination_path, *path_segments)
 
         if source_data_stream_name:
-            target_filename = "_".join([target_filename, source_data_stream_name])
+            # The data stream name is read from the source and must be sanitized
+            # like any other path segment, including the Windows path separator.
+            sanitized_data_stream_name = path_helper.PathHelper.SanitizePathSegments(
+                [source_data_stream_name.replace("\\", "_")]
+            )[0]
+            target_filename = "_".join([target_filename, sanitized_data_stream_name])
 
         return target_directory, target_filename
 
@@ -218,6 +223,18 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
             target_directory, target_filename, destination_path
         )
         target_path = os.path.join(target_directory, target_filename)
+
+        # Defense in depth: never write outside the destination directory.
+        real_destination_path = os.path.realpath(destination_path)
+        if (
+            os.path.commonpath([real_destination_path, os.path.realpath(target_path)])
+            != real_destination_path
+        ):
+            logger.error(
+                f"[skipping] export path of file entry: {display_name:s} resolves "
+                f"outside of the destination directory."
+            )
+            return
 
         self._paths_by_hash[digest].append(path)
 
