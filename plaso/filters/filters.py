@@ -269,9 +269,13 @@ class GenericBinaryOperator(BinaryOperator):
                 ):
                     attribute_value = value_types.DateTimeValueType(attribute_value)
 
-        elif (
-            event_data_stream
-            and attribute_name in event_data_stream.GetAttributeNames()
+        elif event_data_stream and (
+            # pylint: disable=protected-access
+            attribute_name in event_data_stream._SERIALIZABLE_PROTECTED_ATTRIBUTES
+            or (
+                attribute_name in event_data_stream.__dict__
+                and attribute_name[0] != "_"
+            )
         ):
             attribute_value = getattr(event_data_stream, attribute_name, None)
 
