@@ -1,5 +1,6 @@
 """Binary line reader file-like object."""
 
+import collections
 import os
 
 
@@ -120,12 +121,16 @@ class BinaryLineReader:
                 self._lines.append(self._lines_buffer)
                 self._lines_buffer = b""
 
+            # Lines are consumed from the front, which is a constant time
+            # operation for a deque but linear in the number of lines for a list.
+            self._lines = collections.deque(self._lines)
+
         if not self._lines:
             line = self._lines_buffer
             self._lines_buffer = b""
 
         elif not size or size >= len(self._lines[0]):
-            line = self._lines.pop(0)
+            line = self._lines.popleft()
 
         else:
             line = self._lines[0]
