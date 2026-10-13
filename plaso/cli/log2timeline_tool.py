@@ -209,6 +209,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
             help="Disable the dependencies check.",
         )
         self.AddLogFileOptions(info_group)
+        self.AddRedactionOptions(info_group)
 
         helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
             info_group, names=["status_view"]

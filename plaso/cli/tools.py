@@ -41,6 +41,21 @@ class CLITool:
     # The fall back preferred encoding.
     _PREFERRED_ENCODING = "utf-8"
 
+    # Value used to replace a redacted secret in the command line arguments.
+    _REDACTED_VALUE = "<redacted>"
+
+    # Command line options of which the value is a secret, such as a password,
+    # that should be redacted when the command line arguments are stored.
+    _SECRET_OPTIONS = frozenset(
+        [
+            "--credential",
+            "--opensearch-password",
+            "--opensearch_password",
+            "--virustotal-api-key",
+            "--virustotal_api_key",
+        ]
+    )
+
     def __init__(self, input_reader=None, output_writer=None):
         """Initializes a command line interface tool.
 
@@ -71,6 +86,7 @@ class CLITool:
         self._log_file = None
         self._output_writer = output_writer
         self._quiet_mode = False
+        self._redact_secrets = True
         self._unattended_mode = False
         self._views_format_type = views.ViewsFactory.FORMAT_TYPE_CLI
         self._vfs_back_end = "auto"
@@ -171,6 +187,7 @@ class CLITool:
         """
         self._debug_mode = getattr(options, "debug", False)
         self._quiet_mode = getattr(options, "quiet", False)
+        self._redact_secrets = getattr(options, "redact_secrets", True)
         self._unattended_mode = getattr(options, "unattended", False)
 
         if self._debug_mode and self._quiet_mode:
@@ -217,6 +234,58 @@ class CLITool:
         """
         self._output_writer.Write(f"{input_text:s}: ")
         return self._input_reader.Read()
+
+    def _RedactSecretValue(self, option, value):
+        """Redacts the value of a secret option.
+
+        Args:
+          option (str): name of the secret option.
+          value (str): value of the secret option.
+
+        Returns:
+          str: redacted value, where the type of a credential, such as "password"
+              in "password:DATA", is preserved.
+        """
+        if option == "--credential":
+            credential_type, separator, _ = value.partition(":")
+            if separator:
+                return f"{credential_type:s}:{self._REDACTED_VALUE:s}"
+
+        return self._REDACTED_VALUE
+
+    def _RedactSecrets(self, command_line_arguments):
+        """Redacts the values of secret options in command line arguments.
+
+        Both the "--option value" and "--option=value" forms are supported, as
+        well as option names abbreviated as supported by argparse.
+
+        Args:
+          command_line_arguments (list[str]): command line arguments.
+
+        Returns:
+          list[str]: command line arguments with the secret values redacted.
+        """
+        redacted_arguments = []
+        secret_option = None
+        for argument in command_line_arguments:
+            if secret_option:
+                argument = self._RedactSecretValue(secret_option, argument)
+                secret_option = None
+
+            elif argument.startswith("--") and len(argument) > 2:
+                name, separator, value = argument.partition("=")
+                for option in self._SECRET_OPTIONS:
+                    if option.startswith(name):
+                        if separator:
+                            value = self._RedactSecretValue(option, value)
+                            argument = f"{name:s}={value:s}"
+                        else:
+                            secret_option = option
+                        break
+
+            redacted_arguments.append(argument)
+
+        return redacted_arguments
 
     def _WaitUserWarning(self):
         """Waits 15 seconds after printing warnings to the user."""
@@ -310,6 +379,28 @@ class CLITool:
             ),
         )
 
+    def AddRedactionOptions(self, argument_group):
+        """Adds the redaction options to the argument group.
+
+        Args:
+          argument_group (argparse._ArgumentGroup): argparse argument group.
+        """
+        argument_group.add_argument(
+            "--no_redact_secrets",
+            "--no-redact-secrets",
+            dest="redact_secrets",
+            action="store_false",
+            default=True,
+            help=(
+                "Do not redact secrets, such as credentials, the OpenSearch "
+                "password and the VirusTotal API key, in the command line "
+                "arguments that are stored in the storage file. By default these "
+                'secrets are replaced by "<redacted>". WARNING the storage file '
+                "will contain these secrets in plain text, so use this option "
+                "with care."
+            ),
+        )
+
     def CheckOutDated(self):
         """Checks if the version of plaso is outdated and warns the user."""
         version_date_time = datetime.datetime(
@@ -359,6 +450,9 @@ class CLITool:
                     argument.decode(encoding, errors="backslashreplace")
                     for argument in command_line_arguments
                 ]
+
+        if self._redact_secrets:
+            command_line_arguments = self._RedactSecrets(command_line_arguments)
 
         return " ".join(command_line_arguments)
 

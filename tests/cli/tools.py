@@ -42,6 +42,22 @@ Test argument parser.
                     instead.
 """
 
+    _EXPECTED_REDACTION_OPTIONS = f"""\
+usage: tool_test.py [--no_redact_secrets]
+
+Test argument parser.
+
+{test_lib.ARGPARSE_OPTIONS}:
+  --no_redact_secrets, --no-redact-secrets
+                        Do not redact secrets, such as credentials, the
+                        OpenSearch password and the VirusTotal API key, in the
+                        command line arguments that are stored in the storage
+                        file. By default these secrets are replaced by
+                        "<redacted>". WARNING the storage file will contain
+                        these secrets in plain text, so use this option with
+                        care.
+"""
+
     _EXPECTED_SEPARATOR_LINE = """\
 --------------------------------------------------------------------------------
 """
@@ -77,6 +93,50 @@ Test argument parser.
 
     # TODO: add test for _PromptUserForInput
 
+    def testRedactSecrets(self):
+        """Tests the _RedactSecrets function."""
+        test_tool = tools.CLITool()
+
+        command_line_arguments = test_tool._RedactSecrets(
+            [
+                "psort.py",
+                "--credential",
+                "recovery_password:123456",
+                "--credential=key_data",
+                "--cred",
+                "password:test",
+                "--opensearch-password",
+                "secret1",
+                "--opensearch-pass=secret2",
+                "--virustotal_api_key",
+                "secret3",
+                "--virustotal-api-key=secret4",
+                "--opensearch-user",
+                "analyst",
+                "test.plaso",
+            ]
+        )
+        self.assertEqual(
+            command_line_arguments,
+            [
+                "psort.py",
+                "--credential",
+                "recovery_password:<redacted>",
+                "--credential=<redacted>",
+                "--cred",
+                "password:<redacted>",
+                "--opensearch-password",
+                "<redacted>",
+                "--opensearch-pass=<redacted>",
+                "--virustotal_api_key",
+                "<redacted>",
+                "--virustotal-api-key=<redacted>",
+                "--opensearch-user",
+                "analyst",
+                "test.plaso",
+            ],
+        )
+
     def testAddBasicOptions(self):
         """Tests the AddBasicOptions function."""
         argument_parser = self._GetTestArgumentParser("tool_test.py")
@@ -99,6 +159,22 @@ Test argument parser.
 
     # TODO: add test for AddLogFileOptions
 
+    def testAddRedactionOptions(self):
+        """Tests the AddRedactionOptions function."""
+        argument_parser = self._GetTestArgumentParser("tool_test.py")
+
+        test_tool = tools.CLITool()
+        test_tool.AddRedactionOptions(argument_parser)
+
+        output = self._RunArgparseFormatHelp(argument_parser)
+        self.assertEqual(output, self._EXPECTED_REDACTION_OPTIONS)
+
+        options = argument_parser.parse_args([])
+        self.assertTrue(options.redact_secrets)
+
+        options = argument_parser.parse_args(["--no-redact-secrets"])
+        self.assertFalse(options.redact_secrets)
+
     def testCheckOutDated(self):
         """Tests the CheckOutDated function."""
         cli_tool = tools.CLITool()
@@ -112,6 +188,41 @@ Test argument parser.
 
         command_line_arguments = cli_tool.GetCommandLineArguments()
         self.assertIsNotNone(command_line_arguments)
+
+        original_argv = sys.argv
+        sys.argv = [
+            "log2timeline.py",
+            "--credential",
+            "password:BDE-test",
+            "--opensearch_password=secret",
+            "source.raw",
+        ]
+        try:
+            command_line_arguments = cli_tool.GetCommandLineArguments()
+            self.assertEqual(
+                command_line_arguments,
+                (
+                    "log2timeline.py --credential password:<redacted> "
+                    "--opensearch_password=<redacted> source.raw"
+                ),
+            )
+
+            options = test_lib.TestOptions()
+            options.redact_secrets = False
+
+            cli_tool._ParseInformationalOptions(options)
+
+            command_line_arguments = cli_tool.GetCommandLineArguments()
+            self.assertEqual(
+                command_line_arguments,
+                (
+                    "log2timeline.py --credential password:BDE-test "
+                    "--opensearch_password=secret source.raw"
+                ),
+            )
+
+        finally:
+            sys.argv = original_argv
 
     def testListTimeZones(self):
         """Tests the ListTimeZones function."""
