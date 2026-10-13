@@ -26,6 +26,7 @@ class TaskTest(shared_test_lib.BaseTestCase):
             "aborted": False,
             "has_retry": False,
             "identifier": task.identifier,
+            "retry_count": 0,
             "session_identifier": task.session_identifier,
             "start_time": task.start_time,
         }

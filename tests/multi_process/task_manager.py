@@ -337,6 +337,38 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
 
         self.assertEqual(manager._total_number_of_tasks, 2)
 
+    def testCreateRetryTaskDoesNotRetryIndefinitely(self):
+        """Tests that an abandoned task is retried a bounded number of times."""
+        manager = task_manager.TaskManager()
+
+        task = manager.CreateTask(self._TEST_SESSION_IDENTIFIER)
+        task.path_spec = "test_path_spec"
+
+        # Simulate the original task's worker terminating.
+        manager._AbandonQueuedTasks()
+
+        # Repeatedly retry and abandon the same source, as would happen when a
+        # source keeps terminating the worker processing it.
+        number_of_retries = 0
+        retry_task = manager.CreateRetryTask()
+        while retry_task and number_of_retries < 100:
+            number_of_retries += 1
+
+            # Simulate the retry task's worker terminating as well.
+            manager._AbandonQueuedTasks()
+
+            retry_task = manager.CreateRetryTask()
+
+        self.assertEqual(number_of_retries, manager._MAXIMUM_NUMBER_OF_RETRIES)
+        self.assertIsNone(retry_task)
+
+        # The source is no longer pending and is reported as a failed task.
+        self.assertFalse(manager.HasPendingTasks())
+
+        failed_tasks = manager.GetFailedTasks()
+        self.assertEqual(len(failed_tasks), 1)
+        self.assertEqual(failed_tasks[0].path_spec, "test_path_spec")
+
     def testCreateTask(self):
         """Tests the CreateTask function."""
         manager = task_manager.TaskManager()
