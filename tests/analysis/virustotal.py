@@ -6,6 +6,8 @@ import unittest
 
 from unittest import mock
 
+import requests
+
 from dfvfs.path import fake_path_spec
 
 from plaso.analysis import virustotal
@@ -128,6 +130,34 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
 
         expected_labels = ["virustotal_detections_10"]
         self.assertEqual(labels, expected_labels)
+
+    def testQueryHashesRedactsAPIKeyFromError(self):
+        """Tests that the API key is redacted from logged request errors."""
+        api_key = "SECRETAPIKEYVALUE"
+
+        plugin = virustotal.VirusTotalAnalysisPlugin()
+        plugin.SetAPIKey(api_key)
+
+        # pylint: disable=unused-argument
+        def _MockGetRaises(url, params=None, timeout=None):
+            """Mock that simulates a failed request whose error contains the URL."""
+            raise requests.ConnectionError(
+                "HTTPSConnectionPool(host='www.virustotal.com', port=443): "
+                "Max retries exceeded with url: "
+                f"/vtapi/v2/file/report?apikey={api_key:s}"
+                f"&resource={self._EVENT_1_HASH:s} "
+                "(Caused by NewConnectionError('Failed to establish a connection'))"
+            )
+
+        with mock.patch("requests.get", _MockGetRaises):
+            with self.assertLogs("analysis", level="ERROR") as logs:
+                json_response = plugin._QueryHashes([self._EVENT_1_HASH])
+
+        self.assertIsNone(json_response)
+
+        logged_text = "\n".join(logs.output)
+        self.assertIn("apikey=", logged_text)
+        self.assertNotIn(api_key, logged_text)
 
 
 if __name__ == "__main__":
