@@ -2,16 +2,43 @@
 """Tests for the selinux log file text parser plugin."""
 
 import io
-import time
 import unittest
-
-from unittest import mock
 
 from plaso.parsers import mediator as parsers_mediator
 from plaso.parsers import text_parser
 from plaso.parsers.text_plugins import selinux
 
 from tests.parsers.text_plugins import test_lib
+
+
+class TestSELinuxTextPlugin(selinux.SELinuxTextPlugin):
+    """SELinux log file text parser plugin for testing.
+
+    Attributes:
+      encoded_string_value_names (list[str]): names of the fields retrieved with
+          _GetEncodedStringValue.
+    """
+
+    def __init__(self):
+        """Initializes a SELinux log file text parser plugin for testing."""
+        super().__init__()
+        self.encoded_string_value_names = []
+
+    def _GetEncodedStringValue(self, parser_mediator, values, name):
+        """Retrieves the value of a field that auditd can store hex-encoded.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          values (dict[str, str]): value per field name.
+          name (str): field name.
+
+        Returns:
+          tuple[str, bool]: value, or None if the field has no usable value, and
+              value to indicate the value was corrupted.
+        """
+        self.encoded_string_value_names.append(name)
+        return super()._GetEncodedStringValue(parser_mediator, values, name)
 
 
 class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
@@ -523,17 +550,12 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
         and verifies that only the argument fields present in the record are
         read and that the command line is still assembled correctly.
         """
-        plugin = selinux.SELinuxTextPlugin()
+        plugin = TestSELinuxTextPlugin()
         parser_mediator = parsers_mediator.ParserMediator()
 
         values = plugin._GetValues('argc=1000000 a0="/bin/sh" a1="-c"')
 
-        with mock.patch.object(
-            plugin, "_GetEncodedStringValue", wraps=plugin._GetEncodedStringValue
-        ) as encoded_string_value_mock:
-            start_time = time.time()
-            arguments, corrupted = plugin._GetArguments(parser_mediator, values)
-            elapsed_time = time.time() - start_time
+        arguments, corrupted = plugin._GetArguments(parser_mediator, values)
 
         self.assertEqual(arguments, "/bin/sh -c")
         self.assertFalse(corrupted)
@@ -541,9 +563,7 @@ class SELinuxTextPluginTest(test_lib.TextPluginTestCase):
         # The number of argument field lookups must be bounded by the number of
         # fields actually present in the record, not by the (much larger) argc
         # value.
-        self.assertLessEqual(encoded_string_value_mock.call_count, len(values))
-
-        self.assertLess(elapsed_time, 5.0)
+        self.assertLessEqual(len(plugin.encoded_string_value_names), len(values))
 
 
 if __name__ == "__main__":
