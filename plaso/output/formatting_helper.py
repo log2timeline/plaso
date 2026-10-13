@@ -2,7 +2,6 @@
 
 import abc
 import datetime
-import math
 import pytz
 
 from dfdatetime import posix_time as dfdatetime_posix_time
@@ -134,21 +133,7 @@ class FieldFormattingHelper:
             if not event.date_time or event.date_time.is_local_time:
                 timestamp = event.timestamp
             else:
-                timestamp, fraction_of_second = (
-                    event.date_time.CopyToPosixTimestampWithFractionOfSecond()
-                )
-                timestamp = (timestamp or 0) * 1000000
-
-                if fraction_of_second:
-                    while fraction_of_second < 1000000:
-                        fraction_of_second *= 10
-                    while fraction_of_second >= 1000000:
-                        fraction_of_second /= 10
-
-                    if timestamp < 0:
-                        timestamp -= math.ceil(fraction_of_second)
-                    else:
-                        timestamp += math.ceil(fraction_of_second)
+                timestamp = event.date_time.GetPlasoTimestamp()
 
             # For now check if event.timestamp is set, to mimic existing behavior of
             # using 0000-00-00T00:00:00.000000+00:00 for 0 timestamp values
