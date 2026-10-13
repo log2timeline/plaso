@@ -465,6 +465,18 @@ class JSONAttributeContainerSerializer(
         Returns:
           dict|list: The JSON serialized object which can be a dictionary or a list.
         """
+        # Fast-path for common scalar values (str, int, bool, float), which have
+        # no JSON conversion and otherwise fall through the entire isinstance
+        # ladder below before being returned unchanged.
+        value_type = type(attribute_value)
+        if (
+            value_type is str
+            or value_type is int
+            or value_type is bool
+            or value_type is float
+        ):
+            return attribute_value
+
         convert_function = None
 
         if isinstance(attribute_value, bytes):
