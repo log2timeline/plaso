@@ -175,9 +175,10 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
         if source_data_stream_name:
             # The data stream name is read from the source and must be sanitized
-            # like any other path segment, including the Windows path separator.
+            # like any other path segment. Both "/" and "\" are replaced since
+            # either can be a path separator depending on the host.
             sanitized_data_stream_name = path_helper.PathHelper.SanitizePathSegments(
-                [source_data_stream_name.replace("\\", "_")]
+                [source_data_stream_name.replace("/", "_").replace("\\", "_")]
             )[0]
             target_filename = "_".join([target_filename, sanitized_data_stream_name])
 
