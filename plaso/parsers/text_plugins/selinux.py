@@ -420,6 +420,12 @@ class SELinuxTextPlugin(interface.TextPlugin):
 
         corrupted = False
         arguments = []
+        # A well-formed record stores argc alongside an argument field (a0 .. aN)
+        # per argument, so the number of fields present is always larger than
+        # argc. Bounding the loop by the number of fields present prevents a
+        # record whose argc does not match the argument fields present from
+        # causing a large number of argument field look-ups.
+        number_of_arguments = min(number_of_arguments, len(values))
         for index in range(number_of_arguments):
             argument, value_corrupted = self._GetEncodedStringValue(
                 parser_mediator, values, f"a{index:d}"
