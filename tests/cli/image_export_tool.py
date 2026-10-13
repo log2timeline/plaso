@@ -5,8 +5,6 @@ import json
 import os
 import unittest
 
-from unittest import mock
-
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
@@ -17,6 +15,48 @@ from plaso.lib import errors
 
 from tests import test_lib as shared_test_lib
 from tests.cli import test_lib
+
+
+class TestImageExportTool(image_export_tool.ImageExportTool):
+    """Image export tool for testing.
+
+    Attributes:
+      sanitized_destination (tuple[str, str]): destination directory and
+          filename returned by _CreateSanitizedDestination.
+    """
+
+    def __init__(self, sanitized_destination):
+        """Initializes an image export tool for testing.
+
+        Args:
+          sanitized_destination (tuple[str, str]): destination directory and
+              filename to return from _CreateSanitizedDestination.
+        """
+        super().__init__()
+        self.sanitized_destination = sanitized_destination
+
+    # pylint: disable=unused-argument
+    def _CreateSanitizedDestination(
+        self,
+        source_file_entry,
+        file_system_path_spec,
+        source_data_stream_name,
+        destination_path,
+    ):
+        """Creates a sanitized path of both destination directory and filename.
+
+        Args:
+          source_file_entry (dfvfs.FileEntry): file entry of the source file.
+          file_system_path_spec (dfvfs.PathSpec): path specifications of the source
+              file system to process.
+          source_data_stream_name (str): name of the data stream of the source file
+              entry.
+          destination_path (str): path of the destination directory.
+
+        Returns:
+          tuple[str, str]: destination directory and filename.
+        """
+        return self.sanitized_destination
 
 
 class ImageExportToolTest(test_lib.CLIToolTestCase):
@@ -176,18 +216,14 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
             test_tool._ExtractDataStream(file_entry, "", temp_directory, output_writer)
 
         # Test that a destination outside the destination path is not written.
-        test_tool = image_export_tool.ImageExportTool()
-
         with shared_test_lib.TempDirectory() as temp_directory:
             destination_path = os.path.join(temp_directory, "export")
             os.mkdir(destination_path)
 
-            with mock.patch.object(
-                test_tool,
-                "_CreateSanitizedDestination",
-                return_value=(destination_path, os.path.join("..", "escaped")),
-            ):
-                test_tool._ExtractDataStream(file_entry, "", destination_path)
+            test_tool = TestImageExportTool(
+                (destination_path, os.path.join("..", "escaped"))
+            )
+            test_tool._ExtractDataStream(file_entry, "", destination_path)
 
             self.assertFalse(os.path.exists(os.path.join(temp_directory, "escaped")))
 
