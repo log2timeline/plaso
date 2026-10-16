@@ -345,32 +345,32 @@ class WinDefenderHistoryParser(
             for threat_attribute in threat_attributes["Resources"]
             if "file" not in threat_attribute["Type"]
         ]
-        timestamp = threat_attributes.get("ThreatTrackingStartTime", 0)
-
         event_data = WindowsDefenderHistoryEventData()
-        event_data.additional_filenames = additional_filenames
+        event_data.additional_filenames = additional_filenames or None
         event_data.category = threat_attributes.get("Category")
-        event_data.container_filenames = container_files
-        event_data.filename = filenames[0]
-        event_data.host_and_user = threat_attributes.get("Domain user1")
+        event_data.container_filenames = container_files or None
+        event_data.filename = filenames[0] or None
+        event_data.host_and_user = threat_attributes.get("Domain user1") or None
         event_data.initial_detection_time = self._GetDateTime(
             threat_attributes.get("Initial detection time")
         )
         event_data.last_threat_status_change_time = self._GetDateTime(
             threat_attributes.get("Last threat status change time")
         )
-        event_data.process = threat_attributes.get("Process name")
-        event_data.recorded_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
+        event_data.process = threat_attributes.get("Process name") or None
+        event_data.recorded_time = self._GetDateTime(
+            threat_attributes.get("ThreatTrackingStartTime")
+        )
         event_data.remediation_account = threat_attributes.get("Domain user2") or None
         event_data.remediation_time = self._GetDateTime(
             threat_attributes.get("Remediation time")
         )
         event_data.severity = threat_attributes.get("Severity")
-        event_data.sha256 = threat_attributes.get("ThreatTrackingSha256")
+        event_data.sha256 = threat_attributes.get("ThreatTrackingSha256") or None
         event_data.threat_identifier = threat_attributes.get("Threat identifier")
-        event_data.threat_name = threat_attributes.get("Threat name")
+        event_data.threat_name = threat_attributes.get("Threat name") or None
         event_data.threat_status = threat_attributes.get("Threat status")
-        event_data.web_filenames = web_files
+        event_data.web_filenames = web_files or None
 
         parser_mediator.ProduceEventData(event_data)
 

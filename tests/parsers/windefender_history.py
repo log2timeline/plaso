@@ -34,7 +34,9 @@ class WinDefenderHistoryUnitTest(test_lib.ParserTestCase):
         self.assertEqual(number_of_warnings, 0)
 
         expected_event_values = {
+            "additional_filenames": None,
             "category": 27,
+            "container_filenames": None,
             "data_type": "av:defender:detection_history",
             "filename": "C:\\Users\\testuser\\Downloads\\PotentiallyUnwanted.exe",
             "host_and_user": "FRYPTOP\\testuser",
@@ -86,6 +88,7 @@ class WinDefenderHistoryUnitTest(test_lib.ParserTestCase):
         self.assertEqual(number_of_warnings, 0)
 
         expected_event_values = {
+            "additional_filenames": None,
             "category": 42,
             "container_filenames": ["C:\\Users\\testuser\\Downloads\\eicar_com.zip"],
             "data_type": "av:defender:detection_history",
@@ -139,8 +142,9 @@ class WinDefenderHistoryUnitTest(test_lib.ParserTestCase):
         self.assertEqual(number_of_warnings, 0)
 
         expected_event_values = {
+            "additional_filenames": None,
             "category": 42,
-            "container_filenames": [],
+            "container_filenames": None,
             "data_type": "av:defender:detection_history",
             "filename": "C:\\wmilab\\eicar\\eicar1.com",
             "host_and_user": "plaso\\batman",
@@ -157,7 +161,7 @@ class WinDefenderHistoryUnitTest(test_lib.ParserTestCase):
             "threat_identifier": 2147519003,
             "threat_name": "Virus:DOS/EICAR_Test_File",
             "threat_status": 3,
-            "web_filenames": [],
+            "web_filenames": None,
         }
 
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
