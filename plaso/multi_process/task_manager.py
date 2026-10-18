@@ -229,7 +229,7 @@ class TaskManager:
         for task in self._tasks_abandoned.values():
             if (
                 not task.has_retry
-                and task.retry_count < self._MAXIMUM_NUMBER_OF_RETRIES
+                and task.number_of_retries < self._MAXIMUM_NUMBER_OF_RETRIES
             ):
                 return task
 
