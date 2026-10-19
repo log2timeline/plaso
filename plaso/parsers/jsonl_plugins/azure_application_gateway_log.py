@@ -55,7 +55,7 @@ class AzureApplicationGatewayAccessEventData(events.EventData):
           the response to the client. It's important to note that the Time-Taken
           field usually includes the time that the request and response packets
           are traveling over the network.
-      transaction_id (str): Unique identifier to correlate the request received
+      transaction_identifier (str): Unique identifier to correlate the request received
           from the client
       user_agent (str): User agent from the HTTP request header.
       waf_evaluation_time (str): Duration, in seconds, that it takes for
