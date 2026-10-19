@@ -1,7 +1,6 @@
 """The path helper."""
 
 import os
-import re
 
 from dfvfs.lib import definitions as dfvfs_definitions
 
@@ -28,6 +27,11 @@ class PathHelper:
         ],
         "%%users.temp%%": [["%%users.localappdata%%", "Temp"]],
     }
+
+    # Characters that have a special meaning in a regular expression, outside
+    # and inside a character class.
+    _REGULAR_EXPRESSION_SPECIAL_CHARACTERS = frozenset("$()*+-.?[\\]^{|}")
+
     _DIRTY_CHARACTERS = frozenset(
         [
             "\x00",
@@ -180,6 +184,29 @@ class PathHelper:
         # TODO: add support for %%users.username%%
         path = path_separator.join(path_segments)
         return [path]
+
+    @classmethod
+    def _EscapeRegularExpression(cls, string):
+        """Escapes the regular expression special characters in a string.
+
+        Unlike re.escape, which characters are escaped does not depend on the
+        Python version: only the characters in
+        _REGULAR_EXPRESSION_SPECIAL_CHARACTERS are escaped.
+
+        Args:
+          string (str): string to escape.
+
+        Returns:
+          str: string that matches the original string literally when used as a
+              regular expression.
+        """
+        escaped_characters = []
+        for character in string:
+            if character in cls._REGULAR_EXPRESSION_SPECIAL_CHARACTERS:
+                escaped_characters.append("\\")
+            escaped_characters.append(character)
+
+        return "".join(escaped_characters)
 
     @classmethod
     def _IsWindowsDrivePathSegment(cls, path_segment):
@@ -360,7 +387,9 @@ class PathHelper:
             # matched literally, so escape regular expression metacharacters it
             # contains when the result is used as a regular expression.
             if escape_values and value_found:
-                path_segment = [re.escape(segment) for segment in path_segment]
+                path_segment = [
+                    cls._EscapeRegularExpression(segment) for segment in path_segment
+                ]
 
             expanded_path_segments = list(path_segments[:index])
             expanded_path_segments.extend(path_segment)
