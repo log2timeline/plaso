@@ -219,6 +219,8 @@ class GenericBinaryOperator(BinaryOperator):
         """
         super().__init__(arguments=arguments, **kwargs)
         self._bool_value = True
+        self._event_data_stream = None
+        self._event_data_stream_attribute_names = frozenset()
 
     @abc.abstractmethod
     def _CompareValue(self, event_value, filter_value):
@@ -231,6 +233,26 @@ class GenericBinaryOperator(BinaryOperator):
         Returns:
           bool: True if the values match according to the operator, False otherwise.
         """
+
+    def _GetEventDataStreamAttributeNames(self, event_data_stream):
+        """Retrieves the attribute names of an event data stream.
+
+        The names of the most recently seen event data stream are cached, since
+        consecutive events typically share the same event data stream.
+
+        Args:
+          event_data_stream (EventDataStream): event data stream.
+
+        Returns:
+          frozenset[str]: attribute names of the event data stream.
+        """
+        if event_data_stream is not self._event_data_stream:
+            self._event_data_stream = event_data_stream
+            self._event_data_stream_attribute_names = frozenset(
+                event_data_stream.GetAttributeNames()
+            )
+
+        return self._event_data_stream_attribute_names
 
     def _GetValue(
         self, attribute_name, event, event_data, event_data_stream, event_tag
@@ -269,13 +291,10 @@ class GenericBinaryOperator(BinaryOperator):
                 ):
                     attribute_value = value_types.DateTimeValueType(attribute_value)
 
-        elif event_data_stream and (
-            # pylint: disable=protected-access
-            attribute_name in event_data_stream._SERIALIZABLE_PROTECTED_ATTRIBUTES
-            or (
-                attribute_name in event_data_stream.__dict__
-                and attribute_name[0] != "_"
-            )
+        elif (
+            event_data_stream
+            and attribute_name
+            in self._GetEventDataStreamAttributeNames(event_data_stream)
         ):
             attribute_value = getattr(event_data_stream, attribute_name, None)
 
