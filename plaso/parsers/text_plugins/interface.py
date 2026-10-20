@@ -33,12 +33,17 @@ class TextPlugin(plugins.BasePlugin):
     # aborting parsing.
     _MAXIMUM_CONSECUTIVE_LINE_FAILURES = 20
 
+    # Message of the exception that stops the scan for a match that starts on
+    # the first line.
+    _END_OF_FIRST_LINE = "End of first line"
+
     def __init__(self):
         """Initializes a parser."""
         super().__init__()
         self._current_offset = 0
         self._parser_mediator = None
         self._pyparsing_grammar = None
+        self._pyparsing_first_line_grammar = None
 
         codecs.register_error("text_parser_handler", self._EncodingErrorHandler)
 
@@ -241,67 +246,50 @@ class TextPlugin(plugins.BasePlugin):
           ParseError: when the structure type is unknown.
         """
 
-    def _ScanFirstLineMatch(self, string, first_newline_offset):
+    @staticmethod
+    def _IsOnFirstLine(string, location, unused_tokens):
+        """Determines if a location is on the first line of a string.
+
+        Args:
+          string (str): string being parsed.
+          location (int): location in the string.
+          unused_tokens (pyparsing.ParseResults): tokens.
+
+        Returns:
+          bool: True if the location is 0 or before the first newline.
+        """
+        return location == 0 or string.find("\n", 0, location + 1) == -1
+
+    def _ScanFirstLineMatch(self, string):
         """Scans for the first grammar match that starts on the first line.
 
-        This mirrors pyparsing.ParserElement.scan_string() with max_matches=1 but
-        only attempts to match at offsets before the first newline. A match that
-        _ParseString() accepts must start before the first newline (a match that
-        starts on a later line is rejected as having a preceding line), so there
-        is no need to let pyparsing walk the remainder of the forward read buffer
-        one character at a time searching for a match that would be discarded
-        anyway. The full string is still used as the parse input so multi-line
-        grammars can look ahead past the first newline.
+        This is equivalent to pyparsing.ParserElement.scan_string() with
+        max_matches=1 but only attempts to match at offsets before the first
+        newline. A match that _ParseString() accepts must start before the first
+        newline (a match that starts on a later line is rejected as having a
+        preceding line), so there is no need to let pyparsing walk the remainder
+        of the forward read buffer one character at a time searching for a match
+        that would be discarded anyway. The full string is still used as the parse
+        input so multi-line grammars can look ahead past the first newline.
 
         Args:
           string (str): string.
-          first_newline_offset (int): offset of the first newline in string, which
-              must not be -1.
 
         Returns:
           tuple[pyparsing.ParseResults, int, int] or None: parsed tokens, start
               and end offset, or None if there is no match starting on the first
               line.
         """
-        grammar = self._pyparsing_grammar
-        if not grammar.streamlined:
-            grammar.streamline()
-        for ignore_expression in grammar.ignoreExprs:
-            ignore_expression.streamline()
+        try:
+            return next(
+                self._pyparsing_first_line_grammar.scan_string(string, max_matches=1),
+                None,
+            )
 
-        instring = string
-        if not grammar.keepTabs:
-            instring = str(instring).expandtabs()
-
-        instring_length = len(instring)
-        # pylint: disable=protected-access
-        preparse_function = grammar.preParse
-        parse_function = grammar._parse
-        pyparsing.ParserElement.reset_cache()
-
-        location = 0
-        while location <= instring_length:
-            try:
-                preloc = preparse_function(instring, location)
-                # A match at or beyond the first newline is rejected by
-                # _ParseString() as having a preceding line, and since scan
-                # locations only increase every later match would be rejected
-                # too, so stop scanning here.
-                if preloc > 0 and preloc >= first_newline_offset:
-                    break
-
-                next_location, tokens = parse_function(
-                    instring, preloc, callPreParse=False
-                )
-
-            except pyparsing.ParseException:
-                location = preloc + 1
-
-            else:
-                if next_location > location:
-                    return tokens, preloc, next_location
-
-                location = preloc + 1
+        except pyparsing.ParseFatalException as exception:
+            # The scan reached the first newline without a match.
+            if exception.msg != self._END_OF_FIRST_LINE:
+                raise
 
         return None
 
@@ -324,16 +312,17 @@ class TextPlugin(plugins.BasePlugin):
         start = 0
         end = 0
         try:
-            if first_newline_offset == -1:
-                # The forward read buffer contains no newline, so fall back to an
-                # unbounded scan to preserve the original behavior.
+            if first_newline_offset == -1 or self._pyparsing_grammar.ignoreExprs:
+                # The forward read buffer contains no newline or the grammar has
+                # ignore expressions, so fall back to an unbounded scan to preserve
+                # the original behavior.
                 structure_generator = self._pyparsing_grammar.scan_string(
                     string, max_matches=1
                 )
                 structure, start, end = next(structure_generator)
 
             else:
-                match = self._ScanFirstLineMatch(string, first_newline_offset)
+                match = self._ScanFirstLineMatch(string)
                 if match is not None:
                     structure, start, end = match
 
@@ -382,6 +371,22 @@ class TextPlugin(plugins.BasePlugin):
 
         # Override Pyparsing's whitespace characters to spaces only.
         self._pyparsing_grammar.set_default_whitespace_chars(" ")
+
+        # Prefix the grammar with an empty expression that stops scan_string()
+        # in _ScanFirstLineMatch() once it reaches the first newline. The empty
+        # expression has the whitespace characters of the grammar so that
+        # scan_string() skips the same leading whitespace.
+        first_line_condition = (
+            pyparsing.Empty()
+            .set_whitespace_chars(self._pyparsing_grammar.whiteChars)
+            .add_condition(
+                self._IsOnFirstLine, fatal=True, message=self._END_OF_FIRST_LINE
+            )
+        )
+        self._pyparsing_first_line_grammar = (
+            first_line_condition + self._pyparsing_grammar
+        )
+        self._pyparsing_first_line_grammar.parse_with_tabs()
 
     def _VerifyString(self, string):
         """Checks a string for known grammar.
