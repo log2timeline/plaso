@@ -275,6 +275,8 @@ class BodyfileParser(interface.FileObjectParser):
             if mft_entry <= self._UINT32_MAX:
                 inode_value = mft_entry
 
+        corrupted = False
+
         filename = "|".join(values)
         escaped_filename = filename.translate(self._SURROGATE_ESCAPE_CHARACTERS)
         if filename != escaped_filename:
@@ -282,6 +284,7 @@ class BodyfileParser(interface.FileObjectParser):
                 f"filename in line: {line_number:d} contains unescaped surrogate "
                 f"characters"
             )
+            corrupted = True
             filename = escaped_filename
 
         escaped_filename = filename.translate(self._ESCAPE_CHARACTERS)
@@ -321,7 +324,7 @@ class BodyfileParser(interface.FileObjectParser):
         event_data.size = size_value
         event_data.symbolic_link_target = symbolic_link_target
 
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def ParseFileObject(self, parser_mediator, file_object):
         """Parses a bodyfile file-like object.

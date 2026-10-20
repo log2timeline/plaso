@@ -134,6 +134,8 @@ class BodyfileTest(test_lib.ParserTestCase):
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
+        self.assertTrue(getattr(event_data, "_corrupted"))
+
     def testParseWithUnpairedSurrogatesOnSubsequentLines(self):
         """Tests the Parse function with an unpaired surrogate on line 1."""
         parser = bodyfile.BodyfileParser()
@@ -164,6 +166,9 @@ class BodyfileTest(test_lib.ParserTestCase):
         )
         self.assertEqual(number_of_warnings, 1)
 
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.assertFalse(getattr(event_data, "_corrupted"))
+
         expected_event_values = {
             "data_type": "fs:bodyfile:entry",
             "filename": "/test/file_\\U0000d800.txt",
@@ -172,6 +177,8 @@ class BodyfileTest(test_lib.ParserTestCase):
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 
+        self.assertTrue(getattr(event_data, "_corrupted"))
+
         expected_event_values = {
             "data_type": "fs:bodyfile:entry",
             "filename": "/normal_file2.txt",
@@ -179,6 +186,8 @@ class BodyfileTest(test_lib.ParserTestCase):
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 2)
         self.CheckEventData(event_data, expected_event_values)
+
+        self.assertFalse(getattr(event_data, "_corrupted"))
 
     def testParseWithPreEscapedSurrogates(self):
         """Tests the Parse function on a bodyfile with pre-escaped surrogate strings."""
@@ -206,6 +215,9 @@ class BodyfileTest(test_lib.ParserTestCase):
             "extraction_warning"
         )
         self.assertEqual(number_of_warnings, 0)
+
+        for event_data in storage_writer.GetAttributeContainers("event_data"):
+            self.assertFalse(getattr(event_data, "_corrupted"))
 
         # Confirm literal text escapes are not double-escaped.
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
@@ -269,6 +281,8 @@ class BodyfileTest(test_lib.ParserTestCase):
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
+
+        self.assertTrue(getattr(event_data, "_corrupted"))
 
 
 if __name__ == "__main__":
