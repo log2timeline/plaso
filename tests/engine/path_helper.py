@@ -332,6 +332,18 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
         )
         self.assertEqual(expanded_path_segment, ["%SystemRoot%", "System32"])
 
+        # Test escaping regular expression special characters in values.
+        environment_variable = artifacts.EnvironmentVariableArtifact(
+            case_sensitive=False, name="UserProfile", value="C:\\Users\\a.b (1)"
+        )
+
+        expanded_path_segment = path_helper.PathHelper.ExpandWindowsPathSegments(
+            ["%UserProfile%", "x[.]txt"], [environment_variable], escape_values=True
+        )
+        self.assertEqual(
+            expanded_path_segment, ["", "Users", "a\\.b \\(1\\)", "x[.]txt"]
+        )
+
     def testGetDisplayNameForPathSpec(self):
         """Tests the GetDisplayNameForPathSpec function."""
         test_path = self._GetTestFilePath(["syslog.gz"])
