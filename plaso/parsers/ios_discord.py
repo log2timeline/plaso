@@ -17,7 +17,7 @@ class IOSDiscordMessageEventData(events.EventData):
 
     Attributes:
       attachment_name (str): The attachment filename.
-      attachment_proxy_urls (str): The attachment proxy URL.
+      attachment_proxy_url (str): The attachment proxy URL.
       attachment_size (int): The attachment size.
       attachment_type (str): The attachment type.
       channel_identifier (str): identifier of the user channel.
