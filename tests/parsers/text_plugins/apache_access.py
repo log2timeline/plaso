@@ -121,6 +121,7 @@ class ApacheAccessLogTextPluginTest(test_lib.TextPluginTestCase):
             "http_response_code": 200,
             "http_response_bytes": 494,
             "ip_address": "10.0.0.1",
+            "is_webdav": False,
             "recorded_time": "2016-01-13T19:31:16+00:00",
             "remote_name": None,
             "username": None,
@@ -254,6 +255,7 @@ class ApacheAccessLogTextPluginTest(test_lib.TextPluginTestCase):
             "http_request": None,
             "http_response_code": 408,
             "ip_address": "10.0.0.1",
+            "is_webdav": None,
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
@@ -283,6 +285,7 @@ class ApacheAccessLogTextPluginTest(test_lib.TextPluginTestCase):
             "data_type": "apache:access_log:entry",
             "http_request": "PROPFIND /dav/ HTTP/1.1",
             "http_response_code": 207,
+            "is_webdav": True,
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
@@ -291,6 +294,7 @@ class ApacheAccessLogTextPluginTest(test_lib.TextPluginTestCase):
             "data_type": "apache:access_log:entry",
             "http_request": "M-SEARCH * HTTP/1.1",
             "http_response_code": 501,
+            "is_webdav": False,
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
