@@ -281,7 +281,7 @@ class BodyfileParser(interface.FileObjectParser):
         escaped_filename = filename.translate(self._SURROGATE_ESCAPE_CHARACTERS)
         if filename != escaped_filename:
             parser_mediator.ProduceWarning(
-                f"filename in line: {line_number:d} contains unescaped surrogate "
+                f"filename in line: {line_number:d} contains unpaired surrogate "
                 f"characters"
             )
             corrupted = True
