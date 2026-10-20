@@ -45,6 +45,8 @@ class NSKeyedArchiverDecoder:
     def __init__(self):
         """Initializes a NSKeyedArchiver decoder."""
         super().__init__()
+        # Number of skipped references back to an object that is still being
+        # decoded (cycles); shared references are decoded once and reused.
         self._number_of_cyclic_references = 0
         self._decoded_object_cache = {}
 
