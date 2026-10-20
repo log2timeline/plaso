@@ -64,7 +64,7 @@ place_holder_event: true
 ---
 data_type: 'android:sqlite:app_launch'
 attribute_mappings:
-- name: 'launch_time'
+- name: 'start_time'
   description: 'App Launch Time'
 place_holder_event: true
 ---
@@ -659,7 +659,9 @@ place_holder_event: true
 ---
 data_type: 'ios:health:workouts'
 attribute_mappings:
-- name: 'date_time'
+- name: 'end_time'
+  description: 'Workout End Time'
+- name: 'start_time'
   description: 'Workout Start Time'
 place_holder_event: true
 ---
@@ -1076,8 +1078,6 @@ attribute_mappings:
   description: 'Last Login Time'
 - name: 'last_password_set_time'
   description: 'Last Password Set Time'
-- name: 'last_written_time'
-  description: 'Content Modification Time'
 place_holder_event: true
 ---
 data_type: 'macos:utmpx:entry'
@@ -2010,8 +2010,6 @@ place_holder_event: true
 ---
 data_type: 'windows:srum:application_usage'
 attribute_mappings:
-- name: 'last_connected_time'
-  description: 'Last Connection Time'
 - name: 'recorded_time'
   description: 'Recorded Time'
 place_holder_event: true
@@ -2026,8 +2024,6 @@ place_holder_event: true
 ---
 data_type: 'windows:srum:network_usage'
 attribute_mappings:
-- name: 'last_connected_time'
-  description: 'Last Connection Time'
 - name: 'recorded_time'
   description: 'Recorded Time'
 place_holder_event: true
