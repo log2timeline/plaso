@@ -64,6 +64,8 @@ class TimelinerDataTest(shared_test_lib.BaseTestCase):
                 except TypeError:
                     # Event data that cannot be instantiated without arguments is
                     # reported by utils/export_event_data.py.
+                    # TODO: remove this exception and fail instead, once all event
+                    # data can be instantiated without arguments.
                     continue
 
                 # The timeliner processes event data that was read back from storage,
