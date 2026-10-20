@@ -34,6 +34,10 @@ class TextPlugin(plugins.BasePlugin):
     # a line matches the grammar.
     _MAXIMUM_CONSECUTIVE_LINE_FAILURES = 20
 
+    # The maximum number of times per file that lines are skipped until a line
+    # matches the grammar, before aborting parsing.
+    _MAXIMUM_NUMBER_OF_RESYNCS = 3
+
     def __init__(self):
         """Initializes a parser."""
         super().__init__()
@@ -160,7 +164,9 @@ class TextPlugin(plugins.BasePlugin):
         """
         consecutive_line_failures = 0
         first_failed_line_number = 0
+        # Whether a line was parsed since the start of the file or the last resync.
         has_parsed_lines = False
+        number_of_resyncs = 0
 
         try:
             text_reader.ReadLines()
@@ -177,15 +183,36 @@ class TextPlugin(plugins.BasePlugin):
                 break
 
             if consecutive_line_failures > self._MAXIMUM_CONSECUTIVE_LINE_FAILURES:
-                if not has_parsed_lines:
+                # Abort if no line was parsed since the start of the file or since
+                # the previous resync, or if the maximum number of resyncs is reached.
+                if not has_parsed_lines and not number_of_resyncs:
                     parser_mediator.ProduceWarning(
                         f"more than {self._MAXIMUM_CONSECUTIVE_LINE_FAILURES:d} "
                         f"consecutive failures to parse lines."
                     )
                     break
 
+                if not has_parsed_lines:
+                    parser_mediator.ProduceWarning(
+                        f"more than {self._MAXIMUM_CONSECUTIVE_LINE_FAILURES:d} "
+                        f"consecutive failures to parse lines, no lines parsed "
+                        f"since the previous resync."
+                    )
+                    break
+
+                if number_of_resyncs >= self._MAXIMUM_NUMBER_OF_RESYNCS:
+                    parser_mediator.ProduceWarning(
+                        f"more than {self._MAXIMUM_CONSECUTIVE_LINE_FAILURES:d} "
+                        f"consecutive failures to parse lines, maximum number of "
+                        f"resyncs: {self._MAXIMUM_NUMBER_OF_RESYNCS:d} reached."
+                    )
+                    break
+
                 # Since the plugin parsed lines of this file before, skip lines
                 # until a line matches the grammar, instead of aborting.
+                number_of_resyncs += 1
+                has_parsed_lines = False
+
                 decode_error = None
                 try:
                     self._SkipLinesUntilMatch(parser_mediator, text_reader)
