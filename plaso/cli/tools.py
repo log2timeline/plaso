@@ -86,7 +86,7 @@ class CLITool:
         self._log_file = None
         self._output_writer = output_writer
         self._quiet_mode = False
-        self._redact_secrets = True
+        self._redact_secrets = False
         self._unattended_mode = False
         self._views_format_type = views.ViewsFactory.FORMAT_TYPE_CLI
         self._vfs_back_end = "auto"
@@ -187,7 +187,7 @@ class CLITool:
         """
         self._debug_mode = getattr(options, "debug", False)
         self._quiet_mode = getattr(options, "quiet", False)
-        self._redact_secrets = getattr(options, "redact_secrets", True)
+        self._redact_secrets = getattr(options, "redact_secrets", False)
         self._unattended_mode = getattr(options, "unattended", False)
 
         if self._debug_mode and self._quiet_mode:
@@ -263,9 +263,12 @@ class CLITool:
           command_line_arguments (list[str]): command line arguments.
 
         Returns:
-          list[str]: command line arguments with the secret values redacted.
+          tuple[list[str], list[str]]: command line arguments with the secret
+              values redacted and the names of the options, as specified on the
+              command line, of which the values were redacted.
         """
         redacted_arguments = []
+        redacted_options = []
         secret_option = None
         for argument in command_line_arguments:
             if secret_option:
@@ -281,11 +284,14 @@ class CLITool:
                             argument = f"{name:s}={value:s}"
                         else:
                             secret_option = option
+
+                        if name not in redacted_options:
+                            redacted_options.append(name)
                         break
 
             redacted_arguments.append(argument)
 
-        return redacted_arguments
+        return redacted_arguments, redacted_options
 
     def _WaitUserWarning(self):
         """Waits 15 seconds after printing warnings to the user."""
@@ -386,18 +392,17 @@ class CLITool:
           argument_group (argparse._ArgumentGroup): argparse argument group.
         """
         argument_group.add_argument(
-            "--no_redact_secrets",
-            "--no-redact-secrets",
+            "--redact_secrets",
+            "--redact-secrets",
             dest="redact_secrets",
-            action="store_false",
-            default=True,
+            action="store_true",
+            default=False,
             help=(
-                "Do not redact secrets, such as credentials, the OpenSearch "
-                "password and the VirusTotal API key, in the command line "
-                "arguments that are stored in the storage file. By default these "
-                'secrets are replaced by "<redacted>". WARNING the storage file '
-                "will contain these secrets in plain text, so use this option "
-                "with care."
+                "Redact secrets, such as credentials, the OpenSearch password "
+                "and the VirusTotal API key, in the command line arguments that "
+                "are stored in the storage file, by replacing them with "
+                '"<redacted>". The names of the redacted options are logged. By '
+                "default the command line arguments are stored as-is."
             ),
         )
 
@@ -422,6 +427,10 @@ class CLITool:
 
     def GetCommandLineArguments(self):
         """Retrieves the command line arguments.
+
+        The values of secret options are only redacted when redaction was
+        explicitly requested, in which case the names of the redacted options
+        are logged.
 
         Returns:
           str: command line arguments.
@@ -452,7 +461,16 @@ class CLITool:
                 ]
 
         if self._redact_secrets:
-            command_line_arguments = self._RedactSecrets(command_line_arguments)
+            command_line_arguments, redacted_options = self._RedactSecrets(
+                command_line_arguments
+            )
+            if redacted_options:
+                redacted_options_string = ", ".join(redacted_options)
+                logger.info(
+                    f"Redacted the values of the options: "
+                    f"{redacted_options_string:s} in the command line arguments "
+                    f"stored in the storage file."
+                )
 
         return " ".join(command_line_arguments)
 
