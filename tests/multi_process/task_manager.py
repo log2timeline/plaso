@@ -811,9 +811,11 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
             manager.RemoveTask(task)
 
         # Test with abandoned task that was retried (has retry task).
-        task.has_retry = True
+        manager._tasks_retried.add(task.identifier)
 
         manager.RemoveTask(task)
+
+        self.assertNotIn(task.identifier, manager._tasks_retried)
 
         self.assertEqual(len(manager._tasks_queued), 0)
         self.assertEqual(len(manager._tasks_processing), 0)
@@ -1016,7 +1018,7 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
 
         retry_task = manager.CreateRetryTask()
         self.assertIsNotNone(retry_task)
-        self.assertTrue(task.has_retry)
+        self.assertIn(task.identifier, manager._tasks_retried)
 
         self.assertEqual(len(manager._tasks_queued), 1)
         self.assertEqual(len(manager._tasks_processing), 0)

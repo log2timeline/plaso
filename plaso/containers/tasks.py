@@ -21,8 +21,8 @@ class Task(interface.AttributeContainer):
           number of micro seconds since January 1, 1970, 00:00:00 UTC.
       file_entry_type (str): dfVFS type of the file entry the path specification
           is referencing.
-      has_retry (bool): True if the task was previously abandoned and a retry
-          task was created, False otherwise.
+      has_retry (bool): deprecated, no longer set. Retained so that task
+          containers written by older versions can still be deserialized.
       identifier (str): unique identifier of the task.
       last_processing_time (int): the last time the task was marked as being
           processed as number of milliseconds since January 1, 1970, 00:00:00 UTC.
@@ -106,8 +106,6 @@ class Task(interface.AttributeContainer):
         retry_task.number_of_retries = self.number_of_retries + 1
         retry_task.storage_file_size = self.storage_file_size
         retry_task.storage_format = self.storage_format
-
-        self.has_retry = True
 
         return retry_task
 

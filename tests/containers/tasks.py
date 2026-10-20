@@ -43,8 +43,7 @@ class TaskTest(shared_test_lib.BaseTestCase):
 
         retry_task = task.CreateRetryTask()
         self.assertNotEqual(retry_task.identifier, task.identifier)
-        self.assertTrue(task.has_retry)
-        self.assertFalse(retry_task.has_retry)
+        self.assertEqual(retry_task.number_of_retries, task.number_of_retries + 1)
         self.assertEqual(retry_task.path_spec, task.path_spec)
 
     def testUpdateProcessingTime(self):
