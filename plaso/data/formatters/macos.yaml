@@ -16,7 +16,7 @@ enumeration_helpers:
     0: 'False'
     1: 'True'
 message:
-- 'Row ID: {identifier}'
+- 'Row ID: {offset}'
 - 'iMessage ID: {imessage_id}'
 - 'Read Receipt: {read_receipt}'
 - 'Message Type: {message_type}'
@@ -339,8 +339,8 @@ source: 'MacOS KnowledgeC (Safari)'
 ---
 type: 'basic'
 data_type: 'macos:launchd:entry'
-message: 'Launchd service config {name} points to {program} with user:{user_name} group:{group_name}'
-short_message: 'Launchd service config {name} points to {program} with user:{user_name} group:{group_name}'
+message: 'Launchd service config {name} points to {program} with user:{username} group:{group_name}'
+short_message: 'Launchd service config {name} points to {program} with user:{username} group:{group_name}'
 short_source: 'PLIST'
 source: 'MacOS launchd plist'
 ---
@@ -503,8 +503,8 @@ source: 'MacOS Transparency, Control and Consent logs'
 ---
 type: 'basic'
 data_type: 'macos:time_machine:backup'
-message: 'TimeMachine Backup in {backup_alias} ({device_identifier})'
-short_message: 'TimeMachine Backup in {backup_alias} ({device_identifier})'
+message: 'TimeMachine Backup in {backup_alias} ({destination_identifier})'
+short_message: 'TimeMachine Backup in {backup_alias} ({destination_identifier})'
 short_source: 'PLIST'
 source: 'MacOS TimeMachine plist'
 ---
