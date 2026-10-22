@@ -1,6 +1,7 @@
 """The task-based multi-process processing analysis engine."""
 
 import collections
+import logging
 import os
 import time
 
@@ -11,6 +12,7 @@ from plaso.containers import tasks
 from plaso.engine import processing_status
 from plaso.lib import definitions
 from plaso.lib import errors
+from plaso.lib import loggers
 from plaso.multi_process import analysis_process
 from plaso.multi_process import logger
 from plaso.multi_process import merge_helpers
@@ -415,7 +417,21 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
             event_filter_expression=self._event_filter_expression,
             name=process_name,
         )
+        # Remove all possible log handlers to prevent a child process from logging
+        # to the main process log file and garbling the log. The log handlers are
+        # recreated after the worker process has been started.
+        for handler in list(logging.root.handlers):
+            logging.root.removeHandler(handler)
+            handler.close()
+
         process.start()
+
+        loggers.ConfigureLogging(
+            debug_output=self._debug_output,
+            filename=self._log_filename,
+            mode="a",
+            quiet_mode=self._quiet_mode,
+        )
 
         logger.info(
             f"Started analysis plugin: {process_name:s} (PID: {process.pid:d})."
@@ -643,6 +659,9 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         self._event_filter_expression = event_filter_expression
         self._events_status = processing_status.EventsStatus()
         self._processing_configuration = processing_configuration
+
+        self._debug_output = processing_configuration.debug_output
+        self._log_filename = processing_configuration.log_filename
         self._session = session
         self._status_update_callback = status_update_callback
         self._storage_file_path = storage_file_path
