@@ -346,7 +346,7 @@ class TextLogParser(interface.FileObjectParser):
                             f"plugin: {plugin.NAME:s} unable to parse text file with "
                             f"error: {exception!s}"
                         )
-                        continue
+                        break
 
                     finally:
                         parser_mediator.SampleStopTiming(profiling_name)
