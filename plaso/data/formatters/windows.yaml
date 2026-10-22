@@ -185,7 +185,7 @@ message:
 - '>'
 - '{destination_ip}'
 - ':{destination_port}'
-- 'Size (bytes): {size}'
+- 'Size (bytes): {packet_size}'
 - 'TCP flags [{tcp_flags}]'
 - 'TCP sequence number: {tcp_sequence_number}'
 - 'TCP ACK number: {tcp_ack}'

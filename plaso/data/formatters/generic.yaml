@@ -115,7 +115,7 @@ source: 'AWS CloudTrail Log'
 type: 'conditional'
 data_type: 'aws:elb:access'
 message:
-- 'type: {type}'
+- 'type: {request_type}'
 - 'resource_identifier: {resource_identifier}'
 - 'source_ip_address: {source_ip_address}'
 - 'source_port: {source_port}'
@@ -134,8 +134,8 @@ message:
 - 'classification: {classification}'
 - 'classification_reason: {classification_reason}'
 short_message:
-- 'source_ip_address: {client_ip_address}'
-- 'destination_ip_address: {target_ip_address}'
+- 'source_ip_address: {source_ip_address}'
+- 'destination_ip_address: {destination_ip_address}'
 - 'domain_name: {domain_name}'
 - 'request: {request}'
 - 'user_agent: {user_agent}'
@@ -256,7 +256,7 @@ message:
 - 'Owner: {owner}'
 - 'Job Name: {job_name}'
 - 'Application: {application}'
-- 'Document type: {type_doc}'
+- 'Document type: {document_type}'
 - 'Printer: {printer_id}'
 short_message:
 - 'Status: {status}'
