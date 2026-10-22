@@ -18,6 +18,9 @@ class EventDataAttributeContainersSchemaExtractor:
     Attributes:
       number_of_documentation_issues (int): number of event data attribute
           documentation issues found while formatting the schema.
+      number_of_inspection_issues (int): number of event data attribute
+          containers that could not be inspected while formatting the schema,
+          because they cannot be instantiated without arguments.
     """
 
     # Name at the start of an entry of the "Attributes:" docstring section,
@@ -28,6 +31,7 @@ class EventDataAttributeContainersSchemaExtractor:
         """Initializes an event data attribute containers schema extractor."""
         super().__init__()
         self.number_of_documentation_issues = 0
+        self.number_of_inspection_issues = 0
 
     def _CheckDocumentation(self, cls, event_data):
         """Checks that the event data attributes are documented.
@@ -164,6 +168,7 @@ class EventDataAttributeContainersSchemaExtractor:
                 event_data = cls()
             except TypeError:
                 logging.warning(f"Unable to inspect data type: {cls.DATA_TYPE:s}")
+                self.number_of_inspection_issues += 1
                 continue
 
             self._CheckDocumentation(cls, event_data)
@@ -201,7 +206,7 @@ def Main():
         default=False,
         help=(
             "return an error if the event data attributes are not correctly "
-            "documented."
+            "documented or if event data cannot be inspected."
         ),
     )
     options = argument_parser.parse_args()
@@ -216,7 +221,10 @@ def Main():
     schema = extractor.FormatSchema(attribute_containers)
     print(schema)
 
-    if options.strict and extractor.number_of_documentation_issues:
+    if options.strict and (
+        extractor.number_of_documentation_issues
+        or extractor.number_of_inspection_issues
+    ):
         return 1
 
     return 0
