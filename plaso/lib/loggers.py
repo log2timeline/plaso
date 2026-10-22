@@ -42,8 +42,9 @@ def ConfigureLogging(debug_output=False, filename=None, mode="w", quiet_mode=Fal
     """
     # Remove all possible log handlers. The log handlers cannot be reconfigured
     # and therefore must be recreated.
-    for handler in logging.root.handlers:
+    for handler in list(logging.root.handlers):
         logging.root.removeHandler(handler)
+        handler.close()
 
     logger = logging.getLogger()
 
