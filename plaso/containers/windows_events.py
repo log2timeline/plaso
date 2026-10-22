@@ -20,33 +20,49 @@ class WindowsDistributedLinkTrackingEventData(events.EventData):
 
     DATA_TYPE = "windows:distributed_link_tracking:creation"
 
-    def __init__(self, uuid, origin):
-        """Initializes an event object.
+    def __init__(self):
+        """Initializes event data."""
+        super().__init__(data_type=self.DATA_TYPE)
+        self.creation_time = None
+        self.mac_address = None
+        # TODO: replace origin my something machine readable.
+        self.origin = None
+        self.uuid = None
+
+    @classmethod
+    def CreateFromUUID(cls, uuid_object, origin):
+        """Creates event data from a distributed link tracking identifier.
 
         Args:
-          uuid (uuid.UUID): UUID.
+          uuid_object (uuid.UUID): UUID of the distributed link tracking identifier.
           origin (str): origin of the event (event source).
               E.g. the path of the corresponding LNK file or file reference
               MFT entry with the corresponding NTFS $OBJECT_ID attribute.
 
+        Returns:
+          WindowsDistributedLinkTrackingEventData: event data.
+
         Raises:
           ValueError: if the UUID version is not supported.
         """
-        if uuid.version != 1:
+        if uuid_object.version != 1:
             raise ValueError("Unsupported UUID version.")
 
         mac_address = (
-            f"{uuid.hex[20:22]:s}:{uuid.hex[22:24]:s}:"
-            f"{uuid.hex[24:26]:s}:{uuid.hex[26:28]:s}:"
-            f"{uuid.hex[28:30]:s}:{uuid.hex[30:32]:s}"
+            f"{uuid_object.hex[20:22]:s}:{uuid_object.hex[22:24]:s}:"
+            f"{uuid_object.hex[24:26]:s}:{uuid_object.hex[26:28]:s}:"
+            f"{uuid_object.hex[28:30]:s}:{uuid_object.hex[30:32]:s}"
         )
 
-        super().__init__(data_type=self.DATA_TYPE)
-        self.creation_time = dfdatetime_uuid_time.UUIDTime(timestamp=uuid.time)
-        self.mac_address = mac_address
-        # TODO: replace origin my something machine readable.
-        self.origin = origin
-        self.uuid = f"{uuid!s}"
+        event_data = cls()
+        event_data.creation_time = dfdatetime_uuid_time.UUIDTime(
+            timestamp=uuid_object.time
+        )
+        event_data.mac_address = mac_address
+        event_data.origin = origin
+        event_data.uuid = f"{uuid_object!s}"
+
+        return event_data
 
 
 class WindowsRegistryEventData(events.EventData):

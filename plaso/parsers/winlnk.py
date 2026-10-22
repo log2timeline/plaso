@@ -143,8 +143,10 @@ class WinLnkParser(interface.FileObjectParser):
         uuid_object = uuid.UUID(uuid_string)
 
         if uuid_object.version == 1:
-            event_data = windows_events.WindowsDistributedLinkTrackingEventData(
-                uuid_object, origin
+            event_data = (
+                windows_events.WindowsDistributedLinkTrackingEventData.CreateFromUUID(
+                    uuid_object, origin
+                )
             )
             parser_mediator.ProduceEventData(event_data)
 
