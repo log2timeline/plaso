@@ -39,6 +39,7 @@ class SnortFastAlertEventData(events.EventData):
           time.
       message_body (str): message body.
       priority (int): priority, ranging from 1 (high) to 4 (very low).
+      protocol (str): network protocol, such as TCP or UDP.
       rule_identifier (str): identifier of the Snort3/Suricata rule that generated
           the alert.
       source_ip (str): source IP-address.

@@ -54,6 +54,7 @@ class EventDataTimeliner:
         self._preferred_time_zone = None
         self._preferred_year = preferred_year
         self._time_zone_per_path_spec = None
+        self._time_zones_per_hint = {}
 
         self.data_types_counter = collections.Counter()
         self.event_labels_counter = collections.Counter()
@@ -343,19 +344,23 @@ class EventDataTimeliner:
             if date_time.is_local_time:
                 time_zone = None
                 if date_time.time_zone_hint:
-                    # TODO: cache time zones per hint.
-                    try:
-                        time_zone = pytz.timezone(date_time.time_zone_hint)
-                    except pytz.UnknownTimeZoneError:
-                        message = (
-                            f"unsupported time zone hint: "
-                            f"{date_time.time_zone_hint:s}, using default time zone"
-                        )
-                        self._ProduceTimeliningWarning(
-                            storage_writer,
-                            event_data,
-                            message,
-                        )
+                    time_zone = self._time_zones_per_hint.get(date_time.time_zone_hint)
+                    if not time_zone:
+                        try:
+                            time_zone = pytz.timezone(date_time.time_zone_hint)
+                            self._time_zones_per_hint[date_time.time_zone_hint] = (
+                                time_zone
+                            )
+                        except pytz.UnknownTimeZoneError:
+                            message = (
+                                f"unsupported time zone hint: "
+                                f"{date_time.time_zone_hint:s}, using default time zone"
+                            )
+                            self._ProduceTimeliningWarning(
+                                storage_writer,
+                                event_data,
+                                message,
+                            )
 
                 if not time_zone and event_data_stream:
                     try:
@@ -376,7 +381,7 @@ class EventDataTimeliner:
                 if not time_zone:
                     time_zone = self._preferred_time_zone or self._DEFAULT_TIME_ZONE
 
-                date_time = copy.deepcopy(date_time)
+                date_time = copy.copy(date_time)
                 date_time.is_local_time = False
 
                 if time_zone != pytz.UTC:

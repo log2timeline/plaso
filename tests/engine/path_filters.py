@@ -4,6 +4,7 @@
 import io
 import unittest
 
+from dfvfs.helpers import fake_file_system_builder
 from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
@@ -104,6 +105,59 @@ class PathCollectionFiltersHelperTest(shared_test_lib.BaseTestCase):
         # Two evtx, one symbolic link to evtx, one AUTHORS, two filter_*.txt files,
         # total 6 path specifications.
         self.assertEqual(len(path_specs), 6)
+
+    def testBuildFindSpecsWithEnvironmentVariableMetacharacters(self):
+        """Tests BuildFindSpecs with an environment variable value metacharacter.
+
+        An environment variable value is defined by the evidence and is matched
+        literally, so regular expression metacharacters it contains, such as the
+        parentheses in "test (1)", must not change which paths the filter selects.
+        """
+        file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+        file_system_builder.AddFile("/Users/test (1)/x.txt", b"")
+        file_system_builder.AddFile("/Users/test 1/x.txt", b"")
+
+        test_filter_file_data = "\n".join(
+            [
+                "type: include",
+                "path_separator: '\\'",
+                "paths:",
+                "- '%UserProfile%\\\\x[.]txt'",
+                "",
+            ]
+        )
+
+        test_filter_file = yaml_filter_file.YAMLFilterFile()
+        test_path_filters = test_filter_file._ReadFromFileObject(
+            io.StringIO(test_filter_file_data)
+        )
+
+        environment_variable = artifacts.EnvironmentVariableArtifact(
+            case_sensitive=False, name="UserProfile", value="C:\\Users\\test (1)"
+        )
+
+        test_helper = path_filters.PathCollectionFiltersHelper()
+        test_helper.BuildFindSpecs(
+            test_path_filters, environment_variables=[environment_variable]
+        )
+
+        self.assertEqual(len(test_helper.included_file_system_find_specs), 1)
+
+        mount_point = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_FAKE, location="/"
+        )
+        searcher = file_system_searcher.FileSystemSearcher(
+            file_system_builder.file_system, mount_point
+        )
+
+        path_specs = list(
+            searcher.Find(find_specs=test_helper.included_file_system_find_specs)
+        )
+
+        # Only the file in the "test (1)" directory should match, since the
+        # environment variable value is matched literally.
+        self.assertEqual(len(path_specs), 1)
+        self.assertEqual(path_specs[0].location, "/Users/test (1)/x.txt")
 
 
 if __name__ == "__main__":

@@ -3,6 +3,20 @@
 This project does not consider minor code weaknesses, vulnerabilities. Minor code weaknesses can be
 reported as regular issues.
 
+## What is considered a vulnerability
+
+This project reserves the term "vulnerability" for issues that would allow remote access or other
+types of critical weaknesses, in line with the following definition:
+
+> A vulnerability is a weakness or flaw in computer code, system architecture, or network design
+> that a malicious actor (or hacker) can exploit to gain unauthorized access or cause damage.
+
+Plaso is intended to be used inside a lab environment where other controls are in place and access
+is limited. Issues that require an actor who already has authorized access to that environment,
+such as a local user on the analysis host or the person running the tools, are not considered
+vulnerabilities. Such issues, and other undesirable behavior such as parsing edge cases, can be
+reported as regular issues or addressed with a pull request.
+
 ## Reporting an actual vulnerability
 
 **Please do not open public GitHub issues for security vulnerabilities.**

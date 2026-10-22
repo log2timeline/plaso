@@ -172,7 +172,7 @@ message:
 - 'Scan ID: {scan_identifier}'
 - 'Event Data: {event_data}'
 - 'Remote Machine: {remote_machine}'
-- 'Remote IP: {remote_machine_ip}'
+- 'Remote IP: {remote_ip_address}'
 separator: '; '
 short_message:
 - '{file_path}'

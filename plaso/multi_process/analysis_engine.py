@@ -133,10 +133,13 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
             else:
                 event_data_stream = None
 
-            event_identifier = event.GetIdentifier()
-            event_tag = storage_writer.GetEventTagByEventIdentifier(event_identifier)
-
             if event_filter:
+                # The event tag is only needed to apply the event filter.
+                event_identifier = event.GetIdentifier()
+                event_tag = storage_writer.GetEventTagByEventIdentifier(
+                    event_identifier
+                )
+
                 filter_match = event_filter.Match(
                     event, event_data, event_data_stream, event_tag
                 )

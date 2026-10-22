@@ -13,7 +13,7 @@ class GoogleDriveSnapshotCloudEntryEventData(events.EventData):
     Attributes:
       creation_time (dfdatetime.DateTimeValues): date and time the snapshot cloud
           entry was created.
-      doc_type (int): document type.
+      document_type (int): document type.
       modification_time (dfdatetime.DateTimeValues): date and time the snapshot
           cloud entry was last modified.
       path (str): path of the file.

@@ -430,6 +430,7 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
             "aborted": False,
             "has_retry": False,
             "identifier": task.identifier,
+            "number_of_retries": 0,
             "session_identifier": session_identifier,
             "start_time": task.start_time,
         }

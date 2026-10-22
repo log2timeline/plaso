@@ -70,6 +70,8 @@ class SantaExecutionEventData(events.EventData):
       process_arguments (str): executed process with its arguments.
       process_hash (str): SHA256 hash for the executed process.
       process_path (str): process file path.
+      quarantine_url (str): URL the executed file was downloaded from, if the
+          file was quarantined.
       reason (str): reason behind Santa decision to execute or block a process.
       uid (str): user identifier associated with the executed process.
       username (str): username associated with the executed process.
