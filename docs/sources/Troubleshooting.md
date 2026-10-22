@@ -243,7 +243,7 @@ c
 
 Wait until the crash occurs and generate a back trace.
 
-Also see: [DebuggingWithGdb](https://wiki.python.org/moin/DebuggingWithGdb),
+Also see: [DebuggingWithGdb](https://wiki.python.org/python/archive/DebuggingWithGdb.html),
 [gdb Support](https://docs.python.org/3/howto/gdb_helpers.html#gdb).
 
 ## High memory usage
