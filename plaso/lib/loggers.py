@@ -2,6 +2,11 @@
 
 import gzip
 import logging
+import weakref
+
+# Log handlers created by ConfigureLogging. Only these handlers are closed when
+# the logging is reconfigured, handlers added by other code are only removed.
+_CREATED_HANDLERS = weakref.WeakSet()
 
 
 class CompressedFileHandler(logging.FileHandler):
@@ -41,10 +46,12 @@ def ConfigureLogging(debug_output=False, filename=None, mode="w", quiet_mode=Fal
           quiet_mode.
     """
     # Remove all possible log handlers. The log handlers cannot be reconfigured
-    # and therefore must be recreated.
+    # and therefore must be recreated. list() makes a shallow copy of the list of
+    # handlers, otherwise removing a handler while iterating skips the next one.
     for handler in list(logging.root.handlers):
         logging.root.removeHandler(handler)
-        handler.close()
+        if handler in _CREATED_HANDLERS:
+            handler.close()
 
     logger = logging.getLogger()
 
@@ -74,3 +81,4 @@ def ConfigureLogging(debug_output=False, filename=None, mode="w", quiet_mode=Fal
     handler.setLevel(level)
 
     logger.addHandler(handler)
+    _CREATED_HANDLERS.add(handler)

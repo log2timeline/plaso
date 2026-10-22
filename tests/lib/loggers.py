@@ -38,33 +38,44 @@ class LoggersTests(shared_test_lib.BaseTestCase):
         loggers.ConfigureLogging()
 
     def testConfigureLoggingReplacesAllHandlers(self):
-        """Tests that ConfigureLogging removes and closes all existing handlers."""
+        """Tests that ConfigureLogging removes all existing handlers."""
         original_handlers = list(logging.root.handlers)
         for handler in original_handlers:
             logging.root.removeHandler(handler)
 
-        try:
-            with shared_test_lib.TempDirectory() as temp_directory:
-                existing_handlers = [
-                    logging.FileHandler(os.path.join(temp_directory, f"{index:d}.log"))
-                    for index in range(3)
-                ]
-                for handler in existing_handlers:
+        other_handlers = []
+        with shared_test_lib.TempDirectory() as temp_directory:
+            try:
+                filename = os.path.join(temp_directory, "plaso.log")
+                loggers.ConfigureLogging(filename=filename)
+                configured_handler = logging.root.handlers[0]
+
+                for index in range(3):
+                    filename = os.path.join(temp_directory, f"{index:d}.log")
+                    other_handlers.append(logging.FileHandler(filename))
+
+                for handler in other_handlers:
                     logging.root.addHandler(handler)
 
                 loggers.ConfigureLogging()
 
                 self.assertEqual(len(logging.root.handlers), 1)
-                for handler in existing_handlers:
-                    self.assertNotIn(handler, logging.root.handlers)
-                    self.assertIsNone(handler.stream)
+                self.assertNotIn(configured_handler, logging.root.handlers)
+                self.assertIsNone(configured_handler.stream)
 
-        finally:
-            for handler in list(logging.root.handlers):
-                logging.root.removeHandler(handler)
-                handler.close()
-            for handler in original_handlers:
-                logging.root.addHandler(handler)
+                # Handlers added by other code are removed but not closed.
+                for handler in other_handlers:
+                    self.assertNotIn(handler, logging.root.handlers)
+                    self.assertIsNotNone(handler.stream)
+
+            finally:
+                for handler in list(logging.root.handlers):
+                    logging.root.removeHandler(handler)
+                    handler.close()
+                for handler in other_handlers:
+                    handler.close()
+                for handler in original_handlers:
+                    logging.root.addHandler(handler)
 
 
 if __name__ == "__main__":

@@ -940,7 +940,9 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         )
         # Remove all possible log handlers to prevent a child process from logging
         # to the main process log file and garbling the log. The log handlers are
-        # recreated after the worker process has been started.
+        # recreated after the worker process has been started. list() makes a
+        # shallow copy of the list of handlers, otherwise removing a handler while
+        # iterating skips the next one.
         for handler in list(logging.root.handlers):
             logging.root.removeHandler(handler)
             handler.close()
