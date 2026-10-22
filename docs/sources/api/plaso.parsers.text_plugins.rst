@@ -332,6 +332,14 @@ plaso.parsers.text\_plugins.winfirewall module
    :show-inheritance:
    :undoc-members:
 
+plaso.parsers.text\_plugins.winhttp\_api\_error module
+------------------------------------------------------
+
+.. automodule:: plaso.parsers.text_plugins.winhttp_api_error
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 plaso.parsers.text\_plugins.xchatlog module
 -------------------------------------------
 

@@ -105,16 +105,18 @@ class TextPluginTest(test_lib.ParserTestCase):
         ]
         for plugin, line in test_cases:
             # Match at the start of the first line.
-            match = self._CheckEquivalentToScanString(plugin, line + line)
+            test_string = line + line
+            match = self._CheckEquivalentToScanString(plugin, test_string)
             self.assertIsNotNone(match)
             self.assertEqual(match[2], 0)
 
             # Match after leading whitespace or text on the first line. Note that
             # the PostgreSQL grammar requires the match to start at a line start.
-            match = self._CheckEquivalentToScanString(plugin, "   " + line + line)
-            match_after_text = self._CheckEquivalentToScanString(
-                plugin, "bogus " + line
-            )
+            test_string = "   " + line + line
+            match = self._CheckEquivalentToScanString(plugin, test_string)
+
+            test_string = "bogus " + line
+            match_after_text = self._CheckEquivalentToScanString(plugin, test_string)
             if plugin.NAME == "postgresql":
                 self.assertIsNone(match)
                 self.assertIsNone(match_after_text)
@@ -124,26 +126,32 @@ class TextPluginTest(test_lib.ParserTestCase):
                 self.assertIsNotNone(match_after_text)
 
             # Match at a line start after the first line.
-            match = self._CheckEquivalentToScanString(plugin, "bogus " + line + line)
+            test_string = "bogus " + line + line
+            match = self._CheckEquivalentToScanString(plugin, test_string)
             if plugin.NAME == "postgresql":
                 self.assertIsNone(match)
 
             # Match that only starts on a later line.
-            match = self._CheckEquivalentToScanString(plugin, "bogus\n" + line)
+            test_string = "bogus\n" + line
+            match = self._CheckEquivalentToScanString(plugin, test_string)
             self.assertIsNone(match)
 
             # Match after a whitespace only first line.
-            self._CheckEquivalentToScanString(plugin, "   \n" + line)
+            test_string = "   \n" + line
+            self._CheckEquivalentToScanString(plugin, test_string)
 
             # Match after an empty first line.
-            self._CheckEquivalentToScanString(plugin, "\n" + line)
+            test_string = "\n" + line
+            self._CheckEquivalentToScanString(plugin, test_string)
 
             # Tab on the first line.
-            self._CheckEquivalentToScanString(plugin, "\t" + line)
+            test_string = "\t" + line
+            self._CheckEquivalentToScanString(plugin, test_string)
             self._CheckEquivalentToScanString(plugin, line.replace(" ", "\t", 1))
 
             # No match.
-            match = self._CheckEquivalentToScanString(plugin, "bogus\nbogus\n")
+            test_string = "bogus\nbogus\n"
+            match = self._CheckEquivalentToScanString(plugin, test_string)
             self.assertIsNone(match)
 
     def testParseString(self):

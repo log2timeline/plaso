@@ -334,12 +334,9 @@ class TaskManager:
             retry_task = abandoned_task.CreateRetryTask()
             self._tasks_retried.add(abandoned_task.identifier)
             logger.debug(
-                (
-                    f"Retrying task {abandoned_task.identifier:s} as "
-                    f"{retry_task.identifier:s}."
-                )
+                f"Retrying task {abandoned_task.identifier:s} as "
+                f"{retry_task.identifier:s}."
             )
-
             self._UpdateLatestProcessingTimeIfIdle()
 
             self._tasks_queued[retry_task.identifier] = retry_task
