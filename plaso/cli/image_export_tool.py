@@ -156,7 +156,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         path_segments = self._SanitizeExportPathSegments(
             file_system.SplitPath(path) if path else []
         )
-
         target_filename = None
         if path_segments:
             target_filename = path_segments.pop()
@@ -168,16 +167,19 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
             parent_path_segments = self._SanitizeExportPathSegments(
                 [(parent_location or "")[1:]]
             )
-
             if parent_path_spec.type_indicator in (
                 dfvfs_definitions.FILE_SYSTEM_TYPE_INDICATORS
             ):
+                # Note that this statement inserts the parent_path_segment list at the
+                # front of path_segments.
                 path_segments[0:0] = parent_path_segments
                 break
 
             if parent_path_spec.type_indicator == (
                 dfvfs_definitions.TYPE_INDICATOR_VSHADOW
             ):
+                # Note that this statement inserts the parent_path_segment list at the
+                # front of path_segments.
                 path_segments[0:0] = parent_path_segments
 
             parent_path_spec = getattr(parent_path_spec, "parent", None)
@@ -603,6 +605,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
                     # TODO: find another way to do this that doesn't use an undocumented
                     # API.
                     pattern = codecs.escape_decode(pattern)[0]
+
                 # ValueError is raised when the patterns contains invalid escaped
                 # characters, such as "\xg1".
                 except ValueError:
@@ -633,8 +636,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         """
         export_path_segments = []
         for path_segment in path_segments:
-            # Treat both "/" and backslash as path separators, regardless of
-            # which one the platform uses as path separator.
+            # Treat both "/" and backslash as path separators, regardless of which one
+            # the platform uses as path separator.
             for path_fragment in f"{path_segment:s}".replace("\\", "/").split("/"):
                 sanitized_path_fragment = path_helper.PathHelper.SanitizePathSegments(
                     [path_fragment]
