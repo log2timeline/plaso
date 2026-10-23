@@ -17,6 +17,48 @@ from tests import test_lib as shared_test_lib
 from tests.cli import test_lib
 
 
+class TestImageExportTool(image_export_tool.ImageExportTool):
+    """Image export tool for testing.
+
+    Attributes:
+      sanitized_destination (tuple[str, str]): destination directory and
+          filename returned by _CreateSanitizedDestination.
+    """
+
+    def __init__(self, sanitized_destination):
+        """Initializes an image export tool for testing.
+
+        Args:
+          sanitized_destination (tuple[str, str]): destination directory and
+              filename to return from _CreateSanitizedDestination.
+        """
+        super().__init__()
+        self.sanitized_destination = sanitized_destination
+
+    # pylint: disable=unused-argument
+    def _CreateSanitizedDestination(
+        self,
+        source_file_entry,
+        file_system_path_spec,
+        source_data_stream_name,
+        destination_path,
+    ):
+        """Creates a sanitized path of both destination directory and filename.
+
+        Args:
+          source_file_entry (dfvfs.FileEntry): file entry of the source file.
+          file_system_path_spec (dfvfs.PathSpec): path specifications of the source
+              file system to process.
+          source_data_stream_name (str): name of the data stream of the source file
+              entry.
+          destination_path (str): path of the destination directory.
+
+        Returns:
+          tuple[str, str]: destination directory and filename.
+        """
+        return self.sanitized_destination
+
+
 class ImageExportToolTest(test_lib.CLIToolTestCase):
     """Tests for the image export CLI tool."""
 
@@ -107,7 +149,48 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
         with self.assertRaises(dfvfs_errors.BackEndError):
             test_tool._CalculateDigestHash(file_entry, "")
 
-    # TODO: add tests for _CreateSanitizedDestination.
+    def testCreateSanitizedDestination(self):
+        """Tests the _CreateSanitizedDestination function."""
+        test_file_path = self._GetTestFilePath(["ímynd.dd"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        test_tool = image_export_tool.ImageExportTool()
+
+        os_path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
+        )
+        tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_TSK,
+            inode=16,
+            location="/a_directory/another_file",
+            parent=os_path_spec,
+        )
+
+        file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            target_directory, target_filename = test_tool._CreateSanitizedDestination(
+                file_entry, tsk_path_spec, "", temp_directory
+            )
+            self.assertEqual(
+                target_directory, os.path.join(temp_directory, "a_directory")
+            )
+            self.assertEqual(target_filename, "another_file")
+
+            # Test with a data stream name that contains path separators.
+            target_directory, target_filename = test_tool._CreateSanitizedDestination(
+                file_entry, tsk_path_spec, "end/../../escaped.txt", temp_directory
+            )
+            self.assertEqual(
+                target_directory, os.path.join(temp_directory, "a_directory")
+            )
+            self.assertEqual(target_filename, "another_file_end_.._.._escaped.txt")
+
+            _, target_filename = test_tool._CreateSanitizedDestination(
+                file_entry, tsk_path_spec, "end\\..\\..\\escaped.txt", temp_directory
+            )
+            self.assertEqual(target_filename, "another_file_end_.._.._escaped.txt")
+
     # TODO: add tests for _Extract.
 
     def testExtractDataStream(self):
@@ -131,6 +214,18 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
         file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
         with shared_test_lib.TempDirectory() as temp_directory:
             test_tool._ExtractDataStream(file_entry, "", temp_directory, output_writer)
+
+        # Test that a destination outside the destination path is not written.
+        with shared_test_lib.TempDirectory() as temp_directory:
+            destination_path = os.path.join(temp_directory, "export")
+            os.mkdir(destination_path)
+
+            test_tool = TestImageExportTool(
+                (destination_path, os.path.join("..", "escaped"))
+            )
+            test_tool._ExtractDataStream(file_entry, "", destination_path)
+
+            self.assertFalse(os.path.exists(os.path.join(temp_directory, "escaped")))
 
     def testExtractFileEntry(self):
         """Tests the _ExtractFileEntry function."""
