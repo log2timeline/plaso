@@ -70,7 +70,6 @@ class NTFSUSNChangeEventData(events.EventData):
       file_attribute_flags (int): NTFS file attribute flags.
       filename (str): name of the file associated with the event.
       file_reference (int): NTFS file reference.
-      file_system_type (str): file system type.
       parent_file_reference (int): NTFS file reference of the parent.
       offset (int): offset of the USN record relative to the start of the $J data
           stream, from which the event data was extracted.
