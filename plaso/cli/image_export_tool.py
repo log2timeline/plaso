@@ -132,8 +132,11 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     ):
         """Creates a sanitized path of both destination directory and filename.
 
-        This function replaces non-printable and other characters defined in
-         _DIRTY_CHARACTERS with an underscore "_".
+        Path segments are split on "/\" and "\\" since either can be a path
+        separator depending on the platform. Non-printable and other special
+        characters are replaced with an underscore "_", empty path segments, as
+        well as "." and ".." path segments are removed or replaced, since those
+        cannot be used to define a safe export destination.
 
         Args:
           source_file_entry (dfvfs.FileEntry): file entry of the source file.
@@ -144,36 +147,44 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
           destination_path (str): path of the destination directory.
 
         Returns:
-          tuple[str, str]: sanitized paths of both destination directory and
-              filename.
+          tuple[str, Optional[str]]: sanitized paths of both destination directory
+              and filename, where the filename can be None if a safe destination
+              path cannot be determined.
         """
         file_system = source_file_entry.GetFileSystem()
         path = getattr(file_system_path_spec, "location", None)
-        path_segments = file_system.SplitPath(path)
+        path_segments = self._SanitizeExportPathSegments(
+            file_system.SplitPath(path) if path else []
+        )
 
-        path_segments = path_helper.PathHelper.SanitizePathSegments(path_segments)
-
-        target_filename = path_segments.pop()
+        target_filename = None
+        if path_segments:
+            target_filename = path_segments.pop()
 
         parent_path_spec = getattr(source_file_entry.path_spec, "parent", None)
 
         while parent_path_spec:
+            parent_location = getattr(parent_path_spec, "location", None)
+            parent_path_segments = self._SanitizeExportPathSegments(
+                [(parent_location or "")[1:]]
+            )
+
             if parent_path_spec.type_indicator in (
                 dfvfs_definitions.FILE_SYSTEM_TYPE_INDICATORS
             ):
-                path_segments.insert(0, parent_path_spec.location[1:])
+                path_segments[0:0] = parent_path_segments
                 break
 
             if parent_path_spec.type_indicator == (
                 dfvfs_definitions.TYPE_INDICATOR_VSHADOW
             ):
-                path_segments.insert(0, parent_path_spec.location[1:])
+                path_segments[0:0] = parent_path_segments
 
             parent_path_spec = getattr(parent_path_spec, "parent", None)
 
         target_directory = os.path.join(destination_path, *path_segments)
 
-        if source_data_stream_name:
+        if source_data_stream_name and target_filename:
             # The data stream name is read from the source and must be sanitized
             # like any other path segment. Both "/" and "\" are replaced since
             # either can be a path separator depending on the host.
@@ -220,6 +231,13 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         target_directory, target_filename = self._CreateSanitizedDestination(
             file_entry, file_entry.path_spec, data_stream_name, destination_path
         )
+        if not target_filename:
+            logger.error(
+                f"[skipping] unable to determine a safe export destination for "
+                f"file entry: {display_name:s}"
+            )
+            return
+
         path = path_helper.PathHelper.GetRelativePath(
             target_directory, target_filename, destination_path
         )
@@ -227,10 +245,18 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
         # Defense in depth: never write outside the destination directory.
         real_destination_path = os.path.realpath(destination_path)
-        if (
-            os.path.commonpath([real_destination_path, os.path.realpath(target_path)])
-            != real_destination_path
-        ):
+        try:
+            within_destination_path = (
+                os.path.commonpath(
+                    [real_destination_path, os.path.realpath(target_path)]
+                )
+                == real_destination_path
+            )
+        except ValueError:
+            # For example a target path on another drive (Windows).
+            within_destination_path = False
+
+        if not within_destination_path:
             logger.error(
                 f"[skipping] export path of file entry: {display_name:s} resolves "
                 f"outside of the destination directory."
@@ -250,8 +276,15 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
             self._digests[digest] = display_name
 
-        if not os.path.isdir(target_directory):
-            os.makedirs(target_directory)
+        try:
+            if not os.path.isdir(target_directory):
+                os.makedirs(target_directory)
+        except OSError as exception:
+            logger.error(
+                f"[skipping] unable to create destination directory: "
+                f"{target_directory:s} with error: {exception!s}"
+            )
+            return
 
         if os.path.exists(target_path):
             logger.warning(
@@ -582,6 +615,40 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
         return specification_store
 
+    def _SanitizeExportPathSegments(self, path_segments):
+        """Sanitizes path segments for use in an export destination path.
+
+        Both "/" and "\\" are treated as path separators, since either can be
+        a path separator depending on the platform. Non-printable and other
+        special characters are replaced with an underscore "_", empty path
+        segments are removed, and "." and ".." path segments are replaced
+        with an underscore "_", since those cannot be used to define a safe
+        export destination path.
+
+        Args:
+          path_segments (list[str]): path segments.
+
+        Returns:
+          list[str]: sanitized path segments.
+        """
+        export_path_segments = []
+        for path_segment in path_segments:
+            # Treat both "/" and backslash as path separators, regardless of
+            # which one the platform uses as path separator.
+            for path_fragment in f"{path_segment:s}".replace("\\", "/").split("/"):
+                sanitized_path_fragment = path_helper.PathHelper.SanitizePathSegments(
+                    [path_fragment]
+                )[0]
+                if not sanitized_path_fragment:
+                    continue
+
+                if sanitized_path_fragment in (".", ".."):
+                    sanitized_path_fragment = "_"
+
+                export_path_segments.append(sanitized_path_fragment)
+
+        return export_path_segments
+
     def _WriteFileEntry(self, file_entry, data_stream_name, destination_file):
         """Writes the contents of the source file entry to a destination file.
 
@@ -901,6 +968,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         """Processes the source.
 
         Raises:
+          BadConfigOption: if the export directory cannot be created.
           SourceScannerError: if the source scanner could not find a supported
               file system.
           UserAbort: if the user initiated an abort.
@@ -919,8 +987,14 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
         self._output_writer.Write("Export started.\n")
 
-        if not os.path.isdir(self._destination_path):
-            os.makedirs(self._destination_path)
+        try:
+            if not os.path.isdir(self._destination_path):
+                os.makedirs(self._destination_path)
+        except OSError as exception:
+            raise errors.BadConfigOption(
+                f"Unable to create export directory: {self._destination_path:s} "
+                f"with error: {exception!s}"
+            )
 
         self._Extract(
             self._file_system_path_specs,

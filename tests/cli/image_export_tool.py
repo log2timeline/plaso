@@ -3,11 +3,13 @@
 
 import json
 import os
+import types
 import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
+from dfvfs.path import vshadow_path_spec
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.cli import image_export_tool
@@ -57,6 +59,41 @@ class TestImageExportTool(image_export_tool.ImageExportTool):
           tuple[str, str]: destination directory and filename.
         """
         return self.sanitized_destination
+
+
+class FakeFileEntry:
+    """A minimal file entry for testing.
+
+    Attributes:
+      path_spec (PathSpec): path specification of the file entry.
+    """
+
+    def __init__(self, path_spec, path_segments=None):
+        """Initializes a fake file entry.
+
+        Args:
+          path_spec (PathSpec): path specification of the file entry.
+          path_segments (Optional[list[str]]): path segments to return for the
+              location of the path specification, where None indicates that
+              the location should be split on "/".
+        """
+        self._path_segments = path_segments
+        self.path_spec = path_spec
+
+    def GetFileSystem(self):
+        """Retrieves a file system.
+
+        Returns:
+          types.SimpleNamespace: file system that splits on "/".
+        """
+        if self._path_segments is not None:
+            split_path = lambda path: list(self._path_segments)  # noqa: E731
+        else:
+            split_path = lambda path: [  # noqa: E731
+                path_segment for path_segment in (path or "").split("/") if path_segment
+            ]
+
+        return types.SimpleNamespace(SplitPath=split_path)
 
 
 class ImageExportToolTest(test_lib.CLIToolTestCase):
@@ -191,6 +228,81 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
             )
             self.assertEqual(target_filename, "another_file_end_.._.._escaped.txt")
 
+    def testCreateSanitizedDestination_PathTraversal(self):
+        """Tests _CreateSanitizedDestination for path traversal segments."""
+        test_file_path = self._GetTestFilePath(["ímynd.dd"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        test_tool = image_export_tool.ImageExportTool()
+
+        os_path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
+        )
+
+        # Test with a file system location that contains "." and ".." path
+        # segments, such as those that can be found in crafted source files.
+        tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_TSK,
+            inode=16,
+            location="/../../../../../escaped.txt",
+            parent=os_path_spec,
+        )
+        file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            target_directory, target_filename = test_tool._CreateSanitizedDestination(
+                file_entry, tsk_path_spec, "", temp_directory
+            )
+            self.assertEqual(
+                target_directory,
+                os.path.join(temp_directory, "_", "_", "_", "_", "_"),
+            )
+            self.assertEqual(target_filename, "escaped.txt")
+
+            # The export destination must resolve to a path within the
+            # destination directory.
+            final_path = os.path.realpath(
+                os.path.join(target_directory, target_filename)
+            )
+            self.assertEqual(
+                os.path.commonpath([os.path.realpath(temp_directory), final_path]),
+                os.path.realpath(temp_directory),
+            )
+
+        # Test with a VSS (vshadow) location that contains path separators and
+        # ".." path segments. Such a location is read from the source and
+        # therefore cannot be trusted.
+        vshadow_spec = vshadow_path_spec.VShadowPathSpec(
+            location="..\\..\\escaped",
+            parent=os_path_spec,
+        )
+        top_path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_TSK,
+            inode=16,
+            location="/another_file",
+            parent=vshadow_spec,
+        )
+        file_entry = FakeFileEntry(top_path_spec)
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            target_directory, target_filename = test_tool._CreateSanitizedDestination(
+                file_entry, top_path_spec, "", temp_directory
+            )
+            self.assertEqual(
+                target_directory, os.path.join(temp_directory, "_", "_", "escaped")
+            )
+            self.assertEqual(target_filename, "another_file")
+
+        # Test with a file system that does not return any path segments.
+        file_entry = FakeFileEntry(os_path_spec, path_segments=[])
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            target_directory, target_filename = test_tool._CreateSanitizedDestination(
+                file_entry, os_path_spec, "", temp_directory
+            )
+            self.assertEqual(target_directory, temp_directory)
+            self.assertIsNone(target_filename)
+
     # TODO: add tests for _Extract.
 
     def testExtractDataStream(self):
@@ -213,7 +325,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
 
         file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
         with shared_test_lib.TempDirectory() as temp_directory:
-            test_tool._ExtractDataStream(file_entry, "", temp_directory, output_writer)
+            test_tool._ExtractDataStream(file_entry, "", temp_directory)
 
         # Test that a destination outside the destination path is not written.
         with shared_test_lib.TempDirectory() as temp_directory:
@@ -226,6 +338,123 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
             test_tool._ExtractDataStream(file_entry, "", destination_path)
 
             self.assertFalse(os.path.exists(os.path.join(temp_directory, "escaped")))
+
+    def testExtractDataStream_PathTraversal(self):
+        """Tests _ExtractDataStream with path traversal segments."""
+        test_file_path = self._GetTestFilePath(["ímynd.dd"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        test_tool = image_export_tool.ImageExportTool()
+
+        os_path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
+        )
+        tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_TSK,
+            inode=16,
+            location="/../../../../../escaped.txt",
+            parent=os_path_spec,
+        )
+
+        file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            destination_path = os.path.join(temp_directory, "export")
+            os.mkdir(destination_path)
+
+            test_tool._ExtractDataStream(file_entry, "", destination_path)
+
+            # The file is exported within the destination directory, not at
+            # the location the file entry suggests.
+            self.assertTrue(
+                os.path.isfile(
+                    os.path.join(
+                        destination_path, "_", "_", "_", "_", "_", "escaped.txt"
+                    )
+                )
+            )
+            self.assertFalse(
+                os.path.exists(os.path.join(temp_directory, "escaped.txt"))
+            )
+
+    def testExtractDataStream_CollidingExportedFile(self):
+        """Tests _ExtractDataStream with a destination under an exported file.
+
+        A source file can map to an export destination below a path that is
+        already exported as a file, for example due to a name collision.
+        """
+        test_file_path = self._GetTestFilePath(["ímynd.dd"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        os_path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
+        )
+        tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_TSK,
+            inode=16,
+            location="/a_directory/another_file",
+            parent=os_path_spec,
+        )
+
+        file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            destination_path = os.path.join(temp_directory, "export")
+            os.mkdir(destination_path)
+
+            # Pre-create a file where a destination directory is expected.
+            blocking_path = os.path.join(destination_path, "a")
+            with open(blocking_path, "wb") as file_object:
+                file_object.write(b"an existing file\n")
+
+            test_tool = TestImageExportTool(
+                (os.path.join(destination_path, "a", "b"), "c")
+            )
+
+            # The collision should not abort the extraction run.
+            test_tool._ExtractDataStream(file_entry, "", destination_path)
+
+            self.assertTrue(os.path.isfile(blocking_path))
+            self.assertFalse(os.path.exists(os.path.join(destination_path, "a", "b")))
+
+    def testExtractDataStream_PrePlantedSymlink(self):
+        """Tests _ExtractDataStream with a pre-planted symlink in the destination.
+
+        A symlink within the destination directory, that points outside of the
+        destination directory, must not be used to write to a path outside of
+        the destination directory.
+        """
+        test_file_path = self._GetTestFilePath(["ímynd.dd"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        os_path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
+        )
+        tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_TSK,
+            inode=16,
+            location="/a_directory/another_file",
+            parent=os_path_spec,
+        )
+
+        file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            destination_path = os.path.join(temp_directory, "export")
+            os.mkdir(destination_path)
+
+            outside_path = os.path.join(temp_directory, "escaped")
+            symlink_path = os.path.join(destination_path, "a_symlink")
+            try:
+                os.symlink(outside_path, symlink_path)
+            except OSError as exception:
+                self.skipTest(f"Cannot create symlink: {exception!s}")
+
+            test_tool = TestImageExportTool((destination_path, "a_symlink"))
+            test_tool._ExtractDataStream(file_entry, "", destination_path)
+
+            self.assertFalse(os.path.exists(outside_path))
+            self.assertTrue(os.path.islink(symlink_path))
 
     def testExtractFileEntry(self):
         """Tests the _ExtractFileEntry function."""
