@@ -358,7 +358,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
 
             self.assertFalse(os.path.exists(os.path.join(temp_directory, "escaped")))
 
-    def testExtractDataStream_PathTraversal(self):
+    def testExtractDataStreamWithPathTraversal(self):
         """Tests _ExtractDataStream with path traversal segments."""
         test_file_path = self._GetTestFilePath(["ímynd.dd"])
         self._SkipIfPathNotExists(test_file_path)
@@ -396,7 +396,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
                 os.path.exists(os.path.join(temp_directory, "escaped.txt"))
             )
 
-    def testExtractDataStream_CollidingExportedFile(self):
+    def testExtractDataStreamWithCollidingExportedFile(self):
         """Tests _ExtractDataStream with a destination under an exported file.
 
         A source file can map to an export destination below a path that is
@@ -436,7 +436,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
             self.assertTrue(os.path.isfile(blocking_path))
             self.assertFalse(os.path.exists(os.path.join(destination_path, "a", "b")))
 
-    def testExtractDataStream_PrePlantedSymlink(self):
+    def testExtractDataStreamWithPrePlantedSymlink(self):
         """Tests _ExtractDataStream with a pre-planted symlink in the destination.
 
         A symlink within the destination directory, that points outside of the
