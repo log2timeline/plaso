@@ -22,6 +22,15 @@ If you're adding a new feature or have some code fix a bug, please also open a
 [GitHub issue](https://github.com/log2timeline/plaso/issues) so that we can
 track progress, and discuss any broader ramifications.
 
+## Pull request template
+
+Pull requests use the [pull request template](https://github.com/log2timeline/plaso/blob/main/.github/PULL_REQUEST_TEMPLATE.md),
+which includes a checklist. When you create a pull request in the GitHub web
+interface the template is filled in automatically. When you create a pull
+request programmatically, for example with `gh pr create --body`, the GitHub
+API or an AI agent, the template is not applied. Look it up in
+`.github/PULL_REQUEST_TEMPLATE.md` and use it for the pull request description.
+
 ## Getting started
 
 * Make sure you have a [GitHub account](https://github.com/signup/free), then create your own Plaso fork
