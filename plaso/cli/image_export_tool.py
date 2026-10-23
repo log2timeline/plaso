@@ -6,6 +6,7 @@ import collections
 import io
 import json
 import os
+import stat
 import textwrap
 
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -197,6 +198,51 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
         return target_directory, target_filename
 
+    def _CreateDirectoryPath(self, destination_path, target_directory):
+        """Creates the missing directories in a path within the destination.
+
+        The path is traversed one component at a time, starting with the
+        destination directory. Existing components are verified, using lstat
+        which does not follow symbolic links, to be directories, such that no
+        directory is created through a symbolic link or outside of the
+        destination directory.
+
+        Args:
+          destination_path (str): path of the destination directory.
+          target_directory (str): path of the directory to create, within the
+              destination directory.
+
+        Raises:
+          OSError: if the target directory is outside of the destination
+              directory, if a path component is a symbolic link or a file, or
+              the directories cannot be created.
+        """
+        relative_path = os.path.relpath(target_directory, destination_path)
+        if os.path.isabs(relative_path) or ".." in relative_path.split(os.sep):
+            raise OSError(
+                f"Target directory: {target_directory:s} is outside of "
+                f"destination directory: {destination_path:s}"
+            )
+
+        directory_path = destination_path
+        for path_segment in relative_path.split(os.sep):
+            if path_segment == ".":
+                continue
+
+            directory_path = os.path.join(directory_path, path_segment)
+            try:
+                stat_result = os.lstat(directory_path)
+            except OSError:
+                # The component does not exist, create it in its parent
+                # directory, which was verified not to be a symbolic link.
+                os.mkdir(directory_path)
+                continue
+
+            if stat.S_ISLNK(stat_result.st_mode) or not stat.S_ISDIR(
+                stat_result.st_mode
+            ):
+                raise OSError(f"Path component: {directory_path:s} is not a directory")
+
     def _ExtractDataStream(
         self, file_entry, data_stream_name, destination_path, skip_duplicates=True
     ):
@@ -280,7 +326,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
         try:
             if not os.path.isdir(target_directory):
-                os.makedirs(target_directory)
+                self._CreateDirectoryPath(destination_path, target_directory)
         except OSError as exception:
             logger.error(
                 f"[skipping] unable to create destination directory: "
@@ -288,7 +334,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
             )
             return
 
-        if os.path.exists(target_path):
+        if os.path.lexists(target_path):
             logger.warning(
                 f"[skipping] unable to export contents of file entry: "
                 f"{display_name:s} because exported file: {target_path:s} already "
@@ -655,7 +701,9 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     def _WriteFileEntry(self, file_entry, data_stream_name, destination_file):
         """Writes the contents of the source file entry to a destination file.
 
-        Note that this function will overwrite an existing file.
+        The destination file is created exclusively and must not already exist,
+        so the contents are never written to an existing file, or through a
+        symbolic link at the destination path.
 
         Args:
           file_entry (dfvfs.FileEntry): file entry whose content is to be written.
@@ -667,7 +715,22 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         if not source_file_object:
             return
 
-        with open(destination_file, "wb") as destination_file_object:
+        try:
+            destination_file_descriptor = os.open(
+                destination_file, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o644
+            )
+        except OSError as exception:
+            # The destination file cannot be created, for example because it
+            # already exists or it is a symbolic link. Do not raise, to prevent
+            # the caller from removing a file which this function has not
+            # created.
+            logger.error(
+                f"[skipping] unable to create destination file: "
+                f"{destination_file:s} with error: {exception!s}"
+            )
+            return
+
+        with os.fdopen(destination_file_descriptor, "wb") as destination_file_object:
             source_file_object.seek(0, os.SEEK_SET)
 
             data = source_file_object.read(self._COPY_BUFFER_SIZE)
@@ -806,7 +869,10 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
             type=str,
             metavar="PATH",
             default="export",
-            help=("The directory in which extracted files should be stored."),
+            help=(
+                "The directory in which extracted files should be stored. The "
+                "destination directory must not be a symbolic link."
+            ),
         )
         argument_parser.add_argument(
             "--include_duplicates",
@@ -971,11 +1037,19 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         """Processes the source.
 
         Raises:
-          BadConfigOption: if the export directory cannot be created.
+          BadConfigOption: if the destination directory is a symbolic link or
+              cannot be created.
           SourceScannerError: if the source scanner could not find a supported
               file system.
           UserAbort: if the user initiated an abort.
         """
+        if os.path.islink(self._destination_path):
+            raise errors.BadConfigOption(
+                f"Destination directory: {self._destination_path:s} is a "
+                "symbolic link, choose a destination directory that is not a "
+                "symbolic link."
+            )
+
         try:
             self.ScanSource(self._source_path)
             if self._source_type not in self._SOURCE_TYPES_TO_PREPROCESS:
@@ -989,6 +1063,9 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
             raise errors.UserAbort(exception)
 
         self._output_writer.Write("Export started.\n")
+        self._output_writer.Write(
+            f"Destination directory: " f"{os.path.realpath(self._destination_path):s}\n"
+        )
 
         try:
             if not os.path.isdir(self._destination_path):
@@ -1015,17 +1092,29 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
             hashes_file_path = os.path.join(
                 self._destination_path, self._HASHES_FILENAME
             )
-            with open(hashes_file_path, "w", encoding="utf-8") as file_object:
-                for sha256, paths in self._paths_by_hash.items():
-                    json_data.append({"sha256": sha256, "paths": paths})
-                json.dump(json_data, file_object)
+            if os.path.islink(hashes_file_path):
+                logger.warning(
+                    f"[skipping] unable to write the {self._HASHES_FILENAME:s} "
+                    "file because it is a symbolic link."
+                )
+            else:
+                with open(hashes_file_path, "w", encoding="utf-8") as file_object:
+                    for sha256, paths in self._paths_by_hash.items():
+                        json_data.append({"sha256": sha256, "paths": paths})
+                    json.dump(json_data, file_object)
 
         if self._enable_artifacts_map:
             artifacts_map_file = os.path.join(
                 self._destination_path, "artifacts_map.json"
             )
-            with open(artifacts_map_file, "w", encoding="utf-8") as file_object:
-                json.dump(self._artifacts_paths_map, file_object)
+            if os.path.islink(artifacts_map_file):
+                logger.warning(
+                    "[skipping] unable to write the artifacts_map.json file "
+                    "because it is a symbolic link."
+                )
+            else:
+                with open(artifacts_map_file, "w", encoding="utf-8") as file_object:
+                    json.dump(self._artifacts_paths_map, file_object)
 
         self._output_writer.Write("Export completed.\n")
         self._output_writer.Write("\n")
