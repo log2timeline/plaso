@@ -59,7 +59,8 @@ class TestImageExportTool(image_export_tool.ImageExportTool):
         """
         return self.sanitized_destination
 
-class TestFakeFileSystem(object):
+
+class TestFakeFileSystem:
     """A minimal fake file system for testing path splitting."""
 
     def __init__(self, path_segments=None):
@@ -68,6 +69,7 @@ class TestFakeFileSystem(object):
         Args:
           path_segments (Optional[list[str]]): pre-defined path segments.
         """
+        super().__init__()
         self._path_segments = path_segments
 
     def SplitPath(self, path):
@@ -83,12 +85,11 @@ class TestFakeFileSystem(object):
             return list(self._path_segments)
 
         return [
-            path_segment for path_segment in (path or "").split("/")
-            if path_segment
+            path_segment for path_segment in (path or "").split("/") if path_segment
         ]
 
 
-class TestFakeFileEntry(object):
+class TestFakeFileEntry:
     """A minimal file entry for testing.
 
     Attributes:
@@ -104,6 +105,7 @@ class TestFakeFileEntry(object):
               location of the path specification, where None indicates that
               the location should be split on "/".
         """
+        super().__init__()
         self._path_segments = path_segments
         self.path_spec = path_spec
 
