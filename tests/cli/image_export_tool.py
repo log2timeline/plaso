@@ -3,7 +3,6 @@
 
 import json
 import os
-import types
 import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -60,8 +59,36 @@ class TestImageExportTool(image_export_tool.ImageExportTool):
         """
         return self.sanitized_destination
 
+class TestFakeFileSystem(object):
+    """A minimal fake file system for testing path splitting."""
 
-class FakeFileEntry:
+    def __init__(self, path_segments=None):
+        """Initializes a fake file system.
+
+        Args:
+          path_segments (Optional[list[str]]): pre-defined path segments.
+        """
+        self._path_segments = path_segments
+
+    def SplitPath(self, path):
+        """Splits a path into path segments.
+
+        Args:
+          path (str): path to split.
+
+        Returns:
+          list[str]: path segments.
+        """
+        if self._path_segments is not None:
+            return list(self._path_segments)
+
+        return [
+            path_segment for path_segment in (path or "").split("/")
+            if path_segment
+        ]
+
+
+class TestFakeFileEntry(object):
     """A minimal file entry for testing.
 
     Attributes:
@@ -84,16 +111,9 @@ class FakeFileEntry:
         """Retrieves a file system.
 
         Returns:
-          types.SimpleNamespace: file system that splits on "/".
+          TestFakeFileSystem: file system that splits paths.
         """
-        if self._path_segments is not None:
-            split_path = lambda path: list(self._path_segments)  # noqa: E731
-        else:
-            split_path = lambda path: [  # noqa: E731
-                path_segment for path_segment in (path or "").split("/") if path_segment
-            ]
-
-        return types.SimpleNamespace(SplitPath=split_path)
+        return TestFakeFileSystem(path_segments=self._path_segments)
 
 
 class ImageExportToolTest(test_lib.CLIToolTestCase):
@@ -282,7 +302,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
             location="/another_file",
             parent=vshadow_spec,
         )
-        file_entry = FakeFileEntry(top_path_spec)
+        file_entry = TestFakeFileEntry(top_path_spec)
 
         with shared_test_lib.TempDirectory() as temp_directory:
             target_directory, target_filename = test_tool._CreateSanitizedDestination(
@@ -294,7 +314,7 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
             self.assertEqual(target_filename, "another_file")
 
         # Test with a file system that does not return any path segments.
-        file_entry = FakeFileEntry(os_path_spec, path_segments=[])
+        file_entry = TestFakeFileEntry(os_path_spec, path_segments=[])
 
         with shared_test_lib.TempDirectory() as temp_directory:
             target_directory, target_filename = test_tool._CreateSanitizedDestination(
@@ -310,7 +330,6 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
         test_file_path = self._GetTestFilePath(["ímynd.dd"])
         self._SkipIfPathNotExists(test_file_path)
 
-        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
         test_tool = image_export_tool.ImageExportTool()
 
         os_path_spec = path_spec_factory.Factory.NewPathSpec(
