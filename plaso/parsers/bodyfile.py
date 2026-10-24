@@ -82,6 +82,12 @@ class BodyfileParser(interface.FileObjectParser):
         {value: f"\\x{value:02x}" for value in _NON_PRINTABLE_CHARACTERS}
     )
 
+    # Characters that are considered Unicode surrogate characters.
+    _SURROGATE_ESCAPE_CHARACTERS = {
+        value: definitions.NON_PRINTABLE_CHARACTER_TRANSLATION_TABLE[value]
+        for value in range(0xD800, 0xE000)
+    }
+
     def _GetDateTimeFromTimestamp(self, float_value):
         """Retrieves a date time object from the floating-point timestamp.
 
@@ -269,7 +275,18 @@ class BodyfileParser(interface.FileObjectParser):
             if mft_entry <= self._UINT32_MAX:
                 inode_value = mft_entry
 
+        corrupted = False
+
         filename = "|".join(values)
+        escaped_filename = filename.translate(self._SURROGATE_ESCAPE_CHARACTERS)
+        if filename != escaped_filename:
+            parser_mediator.ProduceWarning(
+                f"filename in line: {line_number:d} contains unpaired surrogate "
+                f"characters"
+            )
+            corrupted = True
+            filename = escaped_filename
+
         escaped_filename = filename.translate(self._ESCAPE_CHARACTERS)
         if filename != escaped_filename:
             parser_mediator.ProduceWarning(
@@ -307,7 +324,7 @@ class BodyfileParser(interface.FileObjectParser):
         event_data.size = size_value
         event_data.symbolic_link_target = symbolic_link_target
 
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def ParseFileObject(self, parser_mediator, file_object):
         """Parses a bodyfile file-like object.
@@ -323,7 +340,10 @@ class BodyfileParser(interface.FileObjectParser):
         # Note that we cannot use the DSVParser here since the bodyfile format is
         # not a strict and clean file format.
         line_reader = text_file.TextFile(
-            file_object, encoding="UTF-8", end_of_line="\n"
+            file_object,
+            encoding="UTF-8",
+            encoding_errors="surrogatepass",
+            end_of_line="\n",
         )
         first_line = True
         file_offset = 0
