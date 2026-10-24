@@ -329,6 +329,7 @@ class PsortTool(analysis_tool.AnalysisTool, tool_options.OutputModuleOptions):
 
         self.AddLogFileOptions(info_group)
         self.AddInformationalOptions(info_group)
+        self.AddRedactionOptions(info_group)
 
         info_group.add_argument(
             "--use_markdown",
