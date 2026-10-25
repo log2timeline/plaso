@@ -6,9 +6,12 @@ import unittest
 from acstore.containers import interface as containers_interface
 
 from plaso.containers import event_sources
+from plaso.containers import sessions
 from plaso.storage import reader
+from plaso.storage import time_range as storage_time_range
 from plaso.storage.fake import fake_store
 
+from tests.containers import test_lib as containers_test_lib
 from tests.storage import test_lib
 
 
@@ -22,7 +25,22 @@ class StorageReaderTest(test_lib.StorageTestCase):
         test_reader = reader.StorageReader()
         self.assertIsNotNone(test_reader)
 
-    # TODO: add tests for __enter__ and __exit__
+    def testEnterExit(self):
+        """Tests the __enter__ and __exit__ functions."""
+        test_store = fake_store.FakeStore()
+
+        with reader.StorageReader() as test_reader:
+            self.assertIsInstance(test_reader, reader.StorageReader)
+
+            test_reader._store = test_store
+            test_reader._store.Open()
+
+        self.assertIsNone(test_reader._store)
+
+        # The underlying store is closed on exit.
+        with self.assertRaises(OSError):
+            test_store.Close()
+
     # TODO: add tests for Close
 
     def testGetAttributeContainerByIdentifier(self):
@@ -128,8 +146,63 @@ class StorageReaderTest(test_lib.StorageTestCase):
         serialization_format = test_reader.GetSerializationFormat()
         self.assertIsNone(serialization_format)
 
-    # TODO: add tests for GetSessions
-    # TODO: add tests for GetSortedEvents
+    def testGetSessions(self):
+        """Tests the GetSessions function."""
+        test_reader = reader.StorageReader()
+        test_reader._store = fake_store.FakeStore()
+        test_reader._store.Open()
+
+        try:
+            test_sessions = list(test_reader.GetSessions())
+            self.assertEqual(len(test_sessions), 0)
+
+            session = sessions.Session()
+            test_reader._store.AddAttributeContainer(session)
+
+            event_source = event_sources.EventSource()
+            test_reader._store.AddAttributeContainer(event_source)
+
+            test_sessions = list(test_reader.GetSessions())
+            self.assertEqual(len(test_sessions), 1)
+            self.assertEqual(test_sessions[0].CONTAINER_TYPE, session.CONTAINER_TYPE)
+            self.assertEqual(test_sessions[0].identifier, session.identifier)
+
+        finally:
+            test_reader._store.Close()
+
+    def testGetSortedEvents(self):
+        """Tests the GetSortedEvents function."""
+        test_reader = reader.StorageReader()
+        test_reader._store = fake_store.FakeStore()
+        test_reader._store.Open()
+
+        try:
+            for event, _, _ in containers_test_lib.CreateEventsFromValues(
+                self._TEST_EVENTS
+            ):
+                test_reader._store.AddAttributeContainer(event)
+
+            test_events = list(test_reader.GetSortedEvents())
+            timestamps = [event.timestamp for event in test_events]
+            self.assertEqual(
+                timestamps,
+                [
+                    1238934459000000,
+                    1334940286000000,
+                    1334961526929596,
+                    1334966206929596,
+                ],
+            )
+
+            time_range = storage_time_range.TimeRange(
+                1334940286000000, 1334961526929596
+            )
+            test_events = list(test_reader.GetSortedEvents(time_range=time_range))
+            timestamps = [event.timestamp for event in test_events]
+            self.assertEqual(timestamps, [1334940286000000, 1334961526929596])
+
+        finally:
+            test_reader._store.Close()
 
     def testHasAttributeContainers(self):
         """Tests the HasAttributeContainers function."""

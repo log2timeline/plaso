@@ -88,10 +88,79 @@ class RedisAttributeContainerStoreTest(test_lib.StorageTestCase):
 
             self._RemoveSessionData(redis_client, session.identifier)
 
-    # TODO: add tests for _GetFinalizationKey
-    # TODO: add tests for _RaiseIfNotReadable
-    # TODO: add tests for _RaiseIfNotWritable
-    # TODO: add tests for _SetClientName
+    def testRaiseIfNotReadable(self):
+        """Tests the _RaiseIfNotReadable function."""
+        redis_client = self._CreateRedisClient()
+
+        session = sessions.Session()
+        task = tasks.Task(session_identifier=session.identifier)
+
+        test_store = redis_store.RedisAttributeContainerStore()
+
+        with self.assertRaises(OSError):
+            test_store._RaiseIfNotReadable()
+
+        test_store.Open(
+            redis_client=redis_client,
+            session_identifier=task.session_identifier,
+            task_identifier=task.identifier,
+        )
+
+        try:
+            test_store._RaiseIfNotReadable()
+
+        finally:
+            test_store.Close()
+
+            self._RemoveSessionData(redis_client, session.identifier)
+
+        with self.assertRaises(OSError):
+            test_store._RaiseIfNotReadable()
+
+    def testRaiseIfNotWritable(self):
+        """Tests the _RaiseIfNotWritable function."""
+        redis_client = self._CreateRedisClient()
+
+        session = sessions.Session()
+        task = tasks.Task(session_identifier=session.identifier)
+
+        test_store = redis_store.RedisAttributeContainerStore()
+
+        with self.assertRaises(OSError):
+            test_store._RaiseIfNotWritable()
+
+        test_store.Open(
+            redis_client=redis_client,
+            session_identifier=task.session_identifier,
+            task_identifier=task.identifier,
+        )
+
+        try:
+            test_store._RaiseIfNotWritable()
+
+        finally:
+            test_store.Close()
+
+            self._RemoveSessionData(redis_client, session.identifier)
+
+        with self.assertRaises(OSError):
+            test_store._RaiseIfNotWritable()
+
+    def testSetClientName(self):
+        """Tests the _SetClientName function."""
+        redis_client = self._CreateRedisClient()
+
+        session = sessions.Session()
+
+        client_name = f"{session.identifier:s}-test"
+        redis_store.RedisAttributeContainerStore._SetClientName(
+            redis_client, client_name
+        )
+
+        result = redis_client.client_getname()
+        if isinstance(result, bytes):
+            result = result.decode("utf-8")
+        self.assertEqual(result, client_name)
 
     def testWriteExistingAttributeContainer(self):
         """Tests the _WriteExistingAttributeContainer function."""
@@ -205,7 +274,42 @@ class RedisAttributeContainerStoreTest(test_lib.StorageTestCase):
         with self.assertRaises(OSError):
             test_store.AddAttributeContainer(event_data_stream)
 
-    # TODO: add tests for _WriteStorageMetadata
+    def testWriteStorageMetadata(self):
+        """Tests the _WriteStorageMetadata function."""
+        redis_client = self._CreateRedisClient()
+
+        session = sessions.Session()
+        task = tasks.Task(session_identifier=session.identifier)
+
+        test_store = redis_store.RedisAttributeContainerStore()
+        test_store.Open(
+            redis_client=redis_client,
+            session_identifier=task.session_identifier,
+            task_identifier=task.identifier,
+        )
+
+        try:
+            metadata_key = test_store._GetRedisHashName("metadata")
+            redis_client.delete(metadata_key)
+            self.assertFalse(redis_client.exists(metadata_key))
+
+            test_store._WriteStorageMetadata()
+
+            metadata_values = redis_client.hgetall(metadata_key)
+            self.assertEqual(
+                metadata_values,
+                {
+                    b"format_version": f"{test_store._FORMAT_VERSION:d}".encode(
+                        "utf-8"
+                    ),
+                    b"serialization_format": b"json",
+                },
+            )
+
+        finally:
+            test_store.Close()
+
+            self._RemoveSessionData(redis_client, session.identifier)
 
     def testGetAttributeContainerByIdentifier(self):
         """Tests the GetAttributeContainerByIdentifier method."""
