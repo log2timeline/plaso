@@ -230,7 +230,7 @@ class KnowledgeBase:
         try:
             self._time_zone = pytz.timezone(time_zone)
         except pytz.UnknownTimeZoneError:
-            raise ValueError("Unsupported time zone: {time_zone!s}")
+            raise ValueError(f"Unsupported time zone: {time_zone!s}")
 
     def SetValue(self, identifier, value):
         """Sets a value by identifier.
