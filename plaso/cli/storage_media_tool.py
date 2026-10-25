@@ -481,7 +481,7 @@ class StorageMediaTool(tools.CLITool):
         self._partitions = getattr(options, "partitions", None)
         if self._partitions:
             try:
-                self._mediator.ParseVolumeIdentifiersString(
+                self._partitions = self._mediator.ParseVolumeIdentifiersString(
                     self._partitions, prefix="p"
                 )
             except ValueError:
@@ -491,11 +491,19 @@ class StorageMediaTool(tools.CLITool):
         self._volumes = getattr(options, "volumes", None)
         if self._volumes:
             try:
-                self._mediator.ParseVolumeIdentifiersString(
+                self._volumes = self._mediator.ParseVolumeIdentifiersString(
                     self._volumes, prefix="apfs"
                 )
             except ValueError:
                 raise errors.BadConfigOption("Unsupported volumes")
+
+            # The volume identifier prefix depends on the volume system, such as
+            # APFS or LVM, hence the volume identifiers are passed as integers.
+            if self._volumes != ["all"]:
+                self._volumes = [
+                    int(volume_identifier.removeprefix("apfs"), 10)
+                    for volume_identifier in self._volumes
+                ]
 
     def _ParseVSSProcessingOptions(self, options):
         """Parses the VSS processing options.
@@ -519,7 +527,9 @@ class StorageMediaTool(tools.CLITool):
 
         if vss_stores and vss_stores != "none":
             try:
-                self._mediator.ParseVolumeIdentifiersString(vss_stores, prefix="vss")
+                vss_stores = self._mediator.ParseVolumeIdentifiersString(
+                    vss_stores, prefix="vss"
+                )
             except ValueError:
                 raise errors.BadConfigOption("Unsupported VSS stores")
 
@@ -672,24 +682,16 @@ class StorageMediaTool(tools.CLITool):
             options.scan_mode = options.SCAN_MODE_ALL
         options.snapshots_only = self._vss_only
 
-        if self._partitions == "all":
-            options.partitions = ["all"]
-        else:
-            options.partitions = self._partitions
+        options.partitions = self._partitions
 
         if not self._vss_stores and self._unattended_mode:
             options.snapshots = ["none"]
-        elif self._vss_stores == "all":
-            options.snapshots = ["all"]
         elif self._vss_stores == "none":
             options.snapshots = ["none"]
         else:
             options.snapshots = self._vss_stores
 
-        if self._volumes == "all":
-            options.volumes = ["all"]
-        else:
-            options.volumes = self._volumes
+        options.volumes = self._volumes
 
         if self._unattended_mode:
             mediator = None
