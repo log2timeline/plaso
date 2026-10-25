@@ -16,7 +16,6 @@ class WinPrefetchExecutionEventData(events.EventData):
 
     Attributes:
       executable (str): executable filename.
-      format_version (int): format version.
       last_run_time (dfdatetime.DateTimeValues): executable (binary) last run date and
           time.
       mapped_files (list[str]): mapped filenames.
@@ -26,6 +25,7 @@ class WinPrefetchExecutionEventData(events.EventData):
       previous_run_times (list[dfdatetime.DateTimeValues]): previous executable (binary)
           run date and time.
       run_count (int): run count.
+      version (int): format version.
       volume_device_paths (list[str]): volume device paths.
       volume_serial_numbers (list[int]): volume serial numbers.
     """

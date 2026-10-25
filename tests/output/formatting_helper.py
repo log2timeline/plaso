@@ -3,6 +3,7 @@
 
 import unittest
 
+from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import posix_time as dfdatetime_posix_time
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
@@ -166,6 +167,41 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
             output_mediator, event, event_data, event_data_stream
         )
         self.assertEqual(date_time_string, "1920-04-30T10:34:20.672552+00:00")
+
+        # Test with a fraction of second that has leading zeros.
+        event.date_time = dfdatetime_posix_time.PosixTimeInMilliseconds(
+            timestamp=1340821021005
+        )
+
+        date_time_string = test_helper._FormatDateTime(
+            output_mediator, event, event_data, event_data_stream
+        )
+        self.assertEqual(date_time_string, "2012-06-27T18:17:01.005000+00:00")
+
+        event.date_time = dfdatetime_posix_time.PosixTimeInMilliseconds(
+            timestamp=-1567517139005
+        )
+
+        date_time_string = test_helper._FormatDateTime(
+            output_mediator, event, event_data, event_data_stream
+        )
+        self.assertEqual(date_time_string, "1920-04-30T10:34:20.995000+00:00")
+
+        event.date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+            timestamp=1340821021012345
+        )
+
+        date_time_string = test_helper._FormatDateTime(
+            output_mediator, event, event_data, event_data_stream
+        )
+        self.assertEqual(date_time_string, "2012-06-27T18:17:01.012345+00:00")
+
+        event.date_time = dfdatetime_filetime.Filetime(timestamp=129852946210123456)
+
+        date_time_string = test_helper._FormatDateTime(
+            output_mediator, event, event_data, event_data_stream
+        )
+        self.assertEqual(date_time_string, "2012-06-27T18:17:01.012346+00:00")
 
         event.date_time = dfdatetime_semantic_time.InvalidTime()
 

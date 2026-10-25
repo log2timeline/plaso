@@ -226,6 +226,41 @@ class GenericBinaryOperatorTest(shared_test_lib.BaseTestCase):
         test_value = filter_object._GetValue("tag", event, event_data, None, event_tag)
         self.assertEqual(test_value, ["browser_search"])
 
+    def testGetValueWithEventDataStream(self):
+        """Tests the _GetValue function with alternating event data streams."""
+        event, event_data, _ = containers_test_lib.CreateEventFromValues(
+            self._TEST_EVENTS[0]
+        )
+        event_data.stream_a_value = "event_data_a"
+        event_data.stream_b_value = "event_data_b"
+
+        event_data_stream_a = events.EventDataStream()
+        event_data_stream_a.stream_a_value = "stream_a"
+
+        event_data_stream_b = events.EventDataStream()
+        event_data_stream_b.stream_b_value = "stream_b"
+
+        filter_object = filters.GenericBinaryOperator(arguments=["test_value", 1])
+
+        expected_values = [
+            (event_data_stream_a, "stream_a", "event_data_b"),
+            (event_data_stream_b, "event_data_a", "stream_b"),
+            (event_data_stream_a, "stream_a", "event_data_b"),
+            (event_data_stream_b, "event_data_a", "stream_b"),
+            (None, "event_data_a", "event_data_b"),
+            (event_data_stream_a, "stream_a", "event_data_b"),
+        ]
+        for event_data_stream, expected_a, expected_b in expected_values:
+            test_value = filter_object._GetValue(
+                "stream_a_value", event, event_data, event_data_stream, None
+            )
+            self.assertEqual(test_value, expected_a)
+
+            test_value = filter_object._GetValue(
+                "stream_b_value", event, event_data, event_data_stream, None
+            )
+            self.assertEqual(test_value, expected_b)
+
     def testMatchesWithFalsyValue(self):
         """Tests the Matches function with a falsy event value."""
         test_values = dict(self._TEST_EVENTS[0])

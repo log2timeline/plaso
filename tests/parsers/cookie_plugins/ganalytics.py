@@ -36,16 +36,21 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
 
         expected_event_values = {
             "cookie_name": "__utmz",
+            "cookie_values": [
+                ("utmccn", "(referral)"),
+                (
+                    "utmcct",
+                    "/frettir/erlent/2013/10/30/maelt_med_kerfisbundnum_hydingum/",
+                ),
+                ("utmcmd", "referral"),
+                ("utmcsr", "mbl.is"),
+            ],
             "data_type": "cookie:google:analytics:utmz",
             "domain_hash": "137167072",
             "last_visited_time": "2013-10-30T21:56:06+00:00",
             "sessions": 1,
             "sources": 1,
             "url": "http://ads.aha.is/",
-            "utmccn": "(referral)",
-            "utmcct": "/frettir/erlent/2013/10/30/maelt_med_kerfisbundnum_hydingum/",
-            "utmcmd": "referral",
-            "utmcsr": "mbl.is",
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 48)
         self.CheckEventData(event_data, expected_event_values)
@@ -75,16 +80,18 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
         # Check an UTMZ Google Analytics entry.
         expected_event_values = {
             "cookie_name": "__utmz",
+            "cookie_values": [
+                ("utmccn", "(organic)"),
+                ("utmcmd", "organic"),
+                ("utmcsr", "google"),
+                ("utmctr", "enders game"),
+            ],
             "data_type": "cookie:google:analytics:utmz",
             "domain_hash": "68898382",
             "last_visited_time": "2012-03-22T01:57:06+00:00",
             "sessions": 1,
             "sources": 1,
             "url": "http://imdb.com/",
-            "utmccn": "(organic)",
-            "utmctr": "enders game",
-            "utmcmd": "organic",
-            "utmcsr": "google",
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 287)
         self.CheckEventData(event_data, expected_event_values)
