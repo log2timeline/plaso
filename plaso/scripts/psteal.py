@@ -2,7 +2,7 @@
 """Psteal (Plaso SýndarheimsTímalína sem Er ALgjörlega sjálfvirk).
 
 Psteal combines the log2timeline and psort tools into a single tool.
-Currently doesn't support any of the two tools flags.
+Currently supports only a limited subset of the two tools flags.
 
 Sample Usage:
   psteal.py --source=/tmp/mystorage.dump --write=/tmp/mystorage_timeline.csv
@@ -55,6 +55,10 @@ def Main():
         return 1
 
     have_list_option = False
+    if tool.list_analysis_plugins:
+        tool.ListAnalysisPlugins()
+        have_list_option = True
+
     if tool.list_archive_types:
         tool.ListArchiveTypes()
         have_list_option = True

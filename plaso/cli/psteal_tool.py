@@ -7,6 +7,7 @@ import textwrap
 # The following import makes sure the output modules are registered.
 from plaso import output  # pylint: disable=unused-import
 
+from plaso.cli import analysis_tool
 from plaso.cli import extraction_tool
 from plaso.cli import tool_options
 from plaso.cli import views
@@ -23,21 +24,25 @@ from plaso.storage import factory as storage_factory
 
 class PstealTool(
     extraction_tool.ExtractionTool,
+    analysis_tool.AnalysisTool,
     tool_options.OutputModuleOptions,
     tool_options.StorageFileOptions,
 ):
     """Psteal CLI tool.
 
     Psteal extract events from the provided source and stores them in an
-    intermediate storage file. After extraction an output log file is created.
-    This mimics the behavior of the log2timeline.pl.
+    intermediate storage file. Optionally analysis plugins are run on the stored
+    events. After extraction and analysis an output log file is created. This
+    mimics the behavior of the log2timeline.pl.
 
-    The tool currently doesn't support any of the log2timeline or psort tools'
+    The tool supports only a limited subset of the log2timeline and psort tools'
     flags.
 
     Attributes:
       dependencies_check (bool): True if the availability and versions of dependencies
           should be checked.
+      list_analysis_plugins (bool): True if information about the analysis plugins
+          should be shown.
       list_archive_types (bool): True if the archive types should be listed.
       list_hashers (bool): True if the hashers should be listed.
       list_output_modules (bool): True if information about the output modules should
@@ -95,7 +100,6 @@ class PstealTool(
         super().__init__(input_reader=input_reader, output_writer=output_writer)
         self._artifacts_registry = None
         self._deduplicate_events = True
-        self._number_of_analysis_reports = 0
         self._output_format = None
         self._parsers_manager = parsers_manager.ParsersManager
         self._preferred_year = None
@@ -187,6 +191,11 @@ class PstealTool(
         self.AddVSSProcessingOptions(extraction_group)
         self.AddCredentialOptions(extraction_group)
 
+        analysis_group = argument_parser.add_argument_group("analysis arguments")
+
+        helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+            analysis_group, names=["analysis_plugins"]
+        )
         info_group = argument_parser.add_argument_group("informational arguments")
 
         self.AddInformationalOptions(info_group)
@@ -289,12 +298,13 @@ class PstealTool(
         # and output_time_zone options.
         self._ParseOutputOptions(options)
 
-        argument_helper_names = ["archives", "hashers", "parsers"]
+        argument_helper_names = ["analysis_plugins", "archives", "hashers", "parsers"]
         helpers_manager.ArgumentHelperManager.ParseOptions(
             options, self, names=argument_helper_names
         )
         self._ParseExtractionOptions(options)
 
+        self.list_analysis_plugins = self._analysis_plugins == "list"
         self.list_archive_types = self._archive_types_string == "list"
         self.list_hashers = self._hasher_names_string == "list"
         self.list_parsers_and_plugins = self._parser_filter_expression == "list"
@@ -308,7 +318,8 @@ class PstealTool(
 
         # Check the list options first otherwise required options will raise.
         if (
-            self.list_archive_types
+            self.list_analysis_plugins
+            or self.list_archive_types
             or self.list_hashers
             or self.list_language_tags
             or self.list_parsers_and_plugins
@@ -358,6 +369,11 @@ class PstealTool(
 
         self._EnforceProcessMemoryLimit(self._process_memory_limit)
 
+        if self._data_location:
+            # Update the data location with the calculated value.
+            options.data_location = self._data_location
+
+        self._analysis_plugins = self._CreateAnalysisPlugins(options)
         self._output_module = self._CreateOutputModule(options)
 
     def ProcessStorage(self):
@@ -383,7 +399,7 @@ class PstealTool(
             )
 
         try:
-            self._number_of_analysis_reports = (
+            self._number_of_stored_analysis_reports = (
                 storage_reader.GetNumberOfAttributeContainers(
                     self._CONTAINER_TYPE_ANALYSIS_REPORT
                 )
@@ -393,13 +409,20 @@ class PstealTool(
 
         configuration = self._CreateOutputAndFormattingProcessingConfiguration()
 
-        if self._output_format != "null":
+        status_update_callback = None
+        if self._analysis_plugins or self._output_format != "null":
             self._status_view.SetMode(self._status_view_mode)
             self._status_view.SetStatusFile(self._status_view_file)
             self._status_view.SetStorageFileInformation(self._storage_file_path)
 
             status_update_callback = self._status_view.GetAnalysisStatusUpdateCallback()
 
+        if self._analysis_plugins:
+            self._AnalyzeEvents(
+                session, configuration, status_update_callback=status_update_callback
+            )
+
+        if self._output_format != "null":
             storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
                 self._storage_file_path
             )
@@ -425,3 +448,12 @@ class PstealTool(
         self._output_writer.Write("Processing completed.\n")
 
         self._output_writer.Write(f"Storage file is: {self._storage_file_path:s}\n")
+
+        if self._analysis_plugins:
+            storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
+                self._storage_file_path
+            )
+            try:
+                self._PrintAnalysisReportsDetails(storage_reader)
+            finally:
+                storage_reader.Close()

@@ -34,3 +34,13 @@ example for help regarding the [output formats](Using-psort.md#output-format).
 
 If your use case requires specific options to either log2timeline or psort,
 please use both command line tools separately.
+
+### Analysis plugins
+
+Psteal can run [analysis plugins](Analysis-plugins.md) on the extracted events
+before the output is created, using the same ``--analysis`` option as psort.
+For example:
+
+`psteal.py --source ~/cases/greendale/registrar.dd --analysis tagging --tagging-file tag_windows.txt -w /tmp/registrar.csv`
+
+Use ``--analysis list`` to see a list of available analysis plugins.

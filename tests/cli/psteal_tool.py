@@ -2,6 +2,7 @@
 """Tests for the psteal CLI tool."""
 
 import os
+import shutil
 import unittest
 
 from dfvfs.resolver import resolver as dfvfs_resolver
@@ -108,6 +109,44 @@ class PstealToolTest(test_lib.CLIToolTestCase):
 
             with self.assertRaises(errors.BadConfigOption):
                 test_tool.ParseOptions(options)
+
+        # Test when the analysis plugins should be listed.
+        options = test_lib.TestOptions()
+        options.analysis_plugins = "list"
+
+        test_tool = psteal_tool.PstealTool(output_writer=output_writer)
+        test_tool.ParseOptions(options)
+        self.assertTrue(test_tool.list_analysis_plugins)
+
+        # Test when a non-existent analysis plugin is specified.
+        options = test_lib.TestOptions()
+        options.analysis_plugins = "bogus"
+        options.source = test_file_path
+
+        test_tool = psteal_tool.PstealTool(output_writer=output_writer)
+
+        expected_error = "Non-existent analysis plugins specified: bogus"
+        with self.assertRaisesRegex(errors.BadConfigOption, expected_error):
+            test_tool.ParseOptions(options)
+
+        # Test when the analysis plugin options are invalid.
+        options = test_lib.TestOptions()
+        options.analysis_plugins = "tagging"
+        options.artifact_definitions_path = test_artifacts_path
+        options.source = test_file_path
+        options.status_view_interval = 0.5
+        options.status_view_mode = "none"
+
+        test_tool = psteal_tool.PstealTool(output_writer=output_writer)
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            options.log_file = os.path.join(temp_directory, "output.log")
+            options.write = os.path.join(temp_directory, "dynamic.out")
+
+            with self.assertRaises(errors.BadConfigOption):
+                test_tool.ParseOptions(options)
+
+            self.assertFalse(os.path.exists(options.write))
 
     def testParseArguments(self):
         """Tests the ParseArguments function."""
@@ -430,6 +469,43 @@ class PstealToolTest(test_lib.CLIToolTestCase):
 
         output = output_writer.ReadOutput()
         self.assertIn("Processing completed.", output)
+
+    def testProcessStorageWithAnalysisPlugins(self):
+        """Test the ProcessStorage function with analysis plugins."""
+        test_artifacts_path = self._GetTestFilePath(["artifacts"])
+        self._SkipIfPathNotExists(test_artifacts_path)
+
+        test_file_path = self._GetTestFilePath(["psort_test.plaso"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        test_tagging_file_path = self._GetTestFilePath(["tagging_file", "valid.txt"])
+        self._SkipIfPathNotExists(test_tagging_file_path)
+
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = psteal_tool.PstealTool(output_writer=output_writer)
+
+        options = test_lib.TestOptions()
+        options.analysis_plugins = "tagging"
+        options.artifact_definitions_path = test_artifacts_path
+        options.output_format = "null"
+        options.source = "unused_source"
+        options.status_view_interval = 0.5
+        options.status_view_mode = "none"
+        options.tagging_file = test_tagging_file_path
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            options.log_file = os.path.join(temp_directory, "output.log")
+            options.storage_file = os.path.join(temp_directory, "storage.plaso")
+            options.write = os.path.join(temp_directory, "output.txt")
+
+            shutil.copyfile(test_file_path, options.storage_file)
+
+            test_tool.ParseOptions(options)
+            test_tool.ProcessStorage()
+
+        output = output_writer.ReadOutput()
+        self.assertIn("Processing completed.", output)
+        self.assertIn("Analysis report: tagging", output)
 
 
 if __name__ == "__main__":
