@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Tests for the task-based multi-process processing analysis engine."""
 
+import gzip
+import logging
 import multiprocessing
 import os
 import shutil
@@ -11,6 +13,7 @@ from plaso.analysis import tagging
 from plaso.containers import sessions
 from plaso.engine import configurations
 from plaso.lib import definitions
+from plaso.lib import loggers
 from plaso.multi_process import analysis_engine
 from plaso.storage import factory as storage_factory
 
@@ -128,6 +131,78 @@ class AnalysisEngineMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
 
             finally:
                 storage_writer.Close()
+
+    def testAnalyzeEventsWithCompressedLog(self):
+        """Tests that analysis processes do not corrupt a compressed log file."""
+        test_file_path = self._GetTestFilePath(["psort_test.plaso"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        test_tagging_file_path = self._GetTestFilePath(["tagging_file", "valid.txt"])
+        self._SkipIfPathNotExists(test_tagging_file_path)
+
+        session = sessions.Session()
+
+        data_location = ""
+
+        analysis_plugin = tagging.TaggingAnalysisPlugin()
+        analysis_plugin.SetAndLoadTagFile(test_tagging_file_path)
+
+        analysis_plugins = {"tagging": analysis_plugin}
+
+        test_engine = analysis_engine.AnalysisMultiProcessEngine()
+
+        original_handlers = list(logging.root.handlers)
+        for handler in original_handlers:
+            logging.root.removeHandler(handler)
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            try:
+                temp_file = os.path.join(temp_directory, "storage.plaso")
+                shutil.copyfile(test_file_path, temp_file)
+
+                log_file = os.path.join(temp_directory, "test.log.gz")
+                loggers.ConfigureLogging(filename=log_file)
+
+                configuration = configurations.ProcessingConfiguration()
+                configuration.log_filename = log_file
+
+                storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
+                    definitions.DEFAULT_STORAGE_FORMAT
+                )
+                storage_writer.Open(path=temp_file)
+
+                logging.warning("before analysis")
+
+                try:
+                    test_engine.AnalyzeEvents(
+                        session,
+                        storage_writer,
+                        data_location,
+                        analysis_plugins,
+                        configuration,
+                        storage_file_path=temp_directory,
+                    )
+                finally:
+                    storage_writer.Close()
+
+                logging.warning("after analysis")
+
+                for handler in list(logging.root.handlers):
+                    logging.root.removeHandler(handler)
+                    handler.close()
+
+                with gzip.open(log_file, "rt", encoding="utf-8") as file_object:
+                    log_text = file_object.read()
+
+            finally:
+                for handler in list(logging.root.handlers):
+                    logging.root.removeHandler(handler)
+                    handler.close()
+                for handler in original_handlers:
+                    logging.root.addHandler(handler)
+
+        self.assertIn("before analysis", log_text)
+        self.assertIn("after analysis", log_text)
 
     def testAnalyzeEventsWithoutParserCount(self):
         """Tests the AnalyzeEvents function on a storage file without counts."""
