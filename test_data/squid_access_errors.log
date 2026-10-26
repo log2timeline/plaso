@@ -1,0 +1,3 @@
+1759742600.201      0 192.0.2.31 NONE_NONE/000 0 - error:transaction-end-before-headers - HIER_NONE/- -
+1759742601.330      0 192.0.2.31 NONE/400 3735 NONE error:invalid-request - HIER_NONE/- text/html
+1759742612.000    104 192.0.2.40 TCP_MISS_ABORTED/000 0 GET http://www.example.com/big.iso - HIER_DIRECT/198.51.100.10 -
