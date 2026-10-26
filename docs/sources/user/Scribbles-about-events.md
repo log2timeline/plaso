@@ -149,3 +149,29 @@ which event data originates in an event data stream attribute container
 * a MD5, SHA-1, SHA-256 digest hash of the data stream
 * matches of Yara signatures
 
+### Event data state
+
+A parser can indicate the state of the event data it produces. Plaso uses
+the following terms:
+
+* corrupted; the parser encountered a format (edge) case where parsing failed. Note that this can also be related to the parsing configuration, such as the code page, or an edge case the parser cannot handle, such as an UCS-2 string conversion;
+* recovered; the parser recovered the event data outside the regular (allocated) structures of the data format, for example a recovered Windows EventLog (EVT) or Windows XML EventLog (EVTX) record.
+
+Events of corrupted or recovered event data are tagged with the label
+`corrupted` or `recovered` respectively. These labels can be used in an
+[event filter](Event-filters.md), for example:
+
+```
+tag contains 'recovered'
+```
+
+A parser can also produce warnings. Warnings produced while recovering event
+data are stored as recovery warnings, other parser warnings as extraction
+warnings. Both types of warnings can be shown with:
+
+```bash
+$ pinfo.py --sections warnings timeline.plaso
+```
+
+Parsers set the state with the `corrupted` and `recovered` arguments of the
+`ProduceEventData` method of the [parsers mediator](https://plaso.readthedocs.io/en/latest/sources/api/plaso.parsers.html#module-plaso.parsers.mediator).
