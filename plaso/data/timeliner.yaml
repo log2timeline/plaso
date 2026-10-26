@@ -1104,6 +1104,12 @@ attribute_mappings:
   description: 'Recorded Time'
 place_holder_event: true
 ---
+data_type: 'mongodb:log:entry'
+attribute_mappings:
+- name: 'recorded_time'
+  description: 'Recorded Time'
+place_holder_event: true
+---
 data_type: 'msie:webcache:container'
 attribute_mappings:
 - name: 'access_time'
