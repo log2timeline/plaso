@@ -6,12 +6,15 @@ import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import context
+from dfvfs.resolver import resolver as path_spec_resolver
 from dfvfs.path import factory as path_spec_factory
 
 from plaso.containers import events
 from plaso.containers import sessions
 from plaso.engine import configurations
+from plaso.engine import profilers
 from plaso.engine import worker
+from plaso.lib import definitions
 from plaso.parsers import mediator as parsers_mediator
 from plaso.storage.fake import writer as fake_writer
 
@@ -23,6 +26,23 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     """Tests for the event extraction worker."""
 
     # pylint: disable=protected-access
+
+    def _CreateParserMediator(self, storage_writer):
+        """Creates a parser mediator.
+
+        Args:
+          storage_writer (StorageWriter): storage writer.
+
+        Returns:
+          ParserMediator: parser mediator.
+        """
+        resolver_context = context.Context()
+        parser_mediator = parsers_mediator.ParserMediator(
+            resolver_context=resolver_context
+        )
+        parser_mediator.SetStorageWriter(storage_writer)
+
+        return parser_mediator
 
     def _GetEventDataOfEvent(self, storage_writer, event):
         """Retrieves the event data of an event.
@@ -73,6 +93,37 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
         return path_spec_factory.Factory.NewPathSpec(
             dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
+        )
+
+    def _GetTestNTFSFileEntry(self, parser_mediator, location):
+        """Retrieves a file entry of the NTFS file system in a test image.
+
+        Args:
+          parser_mediator (ParserMediator): parser mediator.
+          location (str): location of the file entry in the NTFS file system.
+
+        Returns:
+          dfvfs.FileEntry: file entry.
+
+        Raises:
+          SkipTest: if the path inside the test data directory does not exist and
+              the test should be skipped.
+        """
+        # Note that the image file is a RAW (VMDK flat) image.
+        path_spec = self._GetTestFilePathSpec(["multi_partition_image.vmdk"])
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION,
+            location="/p1",
+            part_index=2,
+            start_offset=0x00010000,
+            parent=path_spec,
+        )
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_TSK, location=location, parent=path_spec
+        )
+
+        return path_spec_resolver.Resolver.OpenFileEntry(
+            path_spec, resolver_context=parser_mediator.resolver_context
         )
 
     def _TestProcessPathSpec(
@@ -273,7 +324,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         storage_writer = fake_writer.FakeStorageWriter()
         parser_mediator.SetStorageWriter(storage_writer)
 
-        extraction_worker = worker.EventExtractionWorker()
+        extraction_worker = worker.EventExtractionWorker(
+            parser_filter_expression="filestat,text/syslog_traditional"
+        )
 
         test_analyzer = analyzers_manager_test.TestAnalyzer()
         self.assertEqual(len(test_analyzer.GetResults()), 0)
@@ -284,16 +337,23 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
         storage_writer.AddAttributeContainer(session)
 
-        file_entry = self._GetTestFileEntry(["syslog.tgz"])
+        file_entry = self._GetTestFileEntry(["syslog", "syslog"])
         parser_mediator.SetFileEntry(file_entry)
 
         extraction_worker._ExtractContentFromDataStream(parser_mediator, file_entry, "")
 
         storage_writer.UpdateAttributeContainer(session)
 
-        storage_writer.Close()
+        # Only the content is extracted, so no file system metadata is expected.
+        expected_event_data_counts = {"syslog:cron:task_run": 3, "syslog:line": 13}
+        self.CheckEventDataCounts(storage_writer, expected_event_data_counts)
 
-        # TODO: check results in storage writer
+        self.assertEqual(
+            extraction_worker.processing_status,
+            definitions.STATUS_INDICATOR_RUNNING,
+        )
+
+        storage_writer.Close()
 
     def testExtractMetadataFromFileEntry(self):
         """Tests the _ExtractMetadataFromFileEntry function."""
@@ -307,7 +367,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         storage_writer = fake_writer.FakeStorageWriter()
         parser_mediator.SetStorageWriter(storage_writer)
 
-        extraction_worker = worker.EventExtractionWorker()
+        extraction_worker = worker.EventExtractionWorker(
+            parser_filter_expression="filestat,text/syslog_traditional"
+        )
 
         test_analyzer = analyzers_manager_test.TestAnalyzer()
         self.assertEqual(len(test_analyzer.GetResults()), 0)
@@ -318,16 +380,23 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
         storage_writer.AddAttributeContainer(session)
 
-        file_entry = self._GetTestFileEntry(["syslog.tgz"])
+        file_entry = self._GetTestFileEntry(["syslog", "syslog"])
         parser_mediator.SetFileEntry(file_entry)
 
         extraction_worker._ExtractMetadataFromFileEntry(parser_mediator, file_entry, "")
 
         storage_writer.UpdateAttributeContainer(session)
 
-        storage_writer.Close()
+        # Only the file system metadata is extracted, so no content is expected.
+        expected_event_data_counts = {"fs:stat": 1}
+        self.CheckEventDataCounts(storage_writer, expected_event_data_counts)
 
-        # TODO: check results in storage writer
+        self.assertEqual(
+            extraction_worker.processing_status,
+            definitions.STATUS_INDICATOR_RUNNING,
+        )
+
+        storage_writer.Close()
 
     def testGetCompressedStreamTypes(self):
         """Tests the _GetCompressedStreamTypes function."""
@@ -374,12 +443,378 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         result = extraction_worker._IsMetadataFile(file_entry)
         self.assertFalse(result)
 
-    # TODO: add tests for _ProcessArchiveTypes
-    # TODO: add tests for _ProcessCompressedStreamTypes
-    # TODO: add tests for _ProcessDirectory
-    # TODO: add tests for _ProcessFileEntry
-    # TODO: add tests for _ProcessFileEntryDataStream
-    # TODO: add tests for _ProcessMetadataFile
+    def testProcessArchiveType(self):
+        """Tests the _ProcessArchiveType function."""
+        storage_writer = fake_writer.FakeStorageWriter()
+        parser_mediator = self._CreateParserMediator(storage_writer)
+
+        extraction_worker = worker.EventExtractionWorker(
+            parser_filter_expression="filestat"
+        )
+
+        path_spec = self._GetTestFilePathSpec(["syslog.tar"])
+
+        storage_writer.Open()
+
+        try:
+            extraction_worker._ProcessArchiveType(
+                parser_mediator, path_spec, dfvfs_definitions.TYPE_INDICATOR_TAR
+            )
+
+            event_sources = list(storage_writer.GetAttributeContainers("event_source"))
+            self.assertEqual(len(event_sources), 1)
+
+            event_source_path_spec = event_sources[0].path_spec
+            self.assertEqual(
+                event_source_path_spec.type_indicator,
+                dfvfs_definitions.TYPE_INDICATOR_TAR,
+            )
+            self.assertEqual(event_source_path_spec.location, "/syslog")
+            self.assertEqual(event_source_path_spec.parent, path_spec)
+
+            self.assertEqual(
+                extraction_worker.processing_status,
+                definitions.STATUS_INDICATOR_COLLECTING,
+            )
+
+            # Test with a data stream that does not contain the archive type.
+            path_spec = self._GetTestFilePathSpec(["syslog", "syslog"])
+
+            extraction_worker._ProcessArchiveType(
+                parser_mediator, path_spec, dfvfs_definitions.TYPE_INDICATOR_TAR
+            )
+
+            number_of_event_sources = storage_writer.GetNumberOfAttributeContainers(
+                "event_source"
+            )
+            self.assertEqual(number_of_event_sources, 1)
+
+        finally:
+            storage_writer.Close()
+
+    def testProcessCompressedStreamTypes(self):
+        """Tests the _ProcessCompressedStreamTypes function."""
+        storage_writer = fake_writer.FakeStorageWriter()
+        parser_mediator = self._CreateParserMediator(storage_writer)
+
+        extraction_worker = worker.EventExtractionWorker(
+            parser_filter_expression="filestat"
+        )
+
+        path_spec = self._GetTestFilePathSpec(["syslog.bz2"])
+        file_entry = self._GetTestFileEntry(["syslog.bz2"])
+        parser_mediator.SetFileEntry(file_entry)
+
+        storage_writer.Open()
+
+        try:
+            # Test without type indicators.
+            extraction_worker._ProcessCompressedStreamTypes(
+                parser_mediator, path_spec, []
+            )
+
+            number_of_event_sources = storage_writer.GetNumberOfAttributeContainers(
+                "event_source"
+            )
+            self.assertEqual(number_of_event_sources, 0)
+
+            self.assertEqual(
+                extraction_worker.processing_status, definitions.STATUS_INDICATOR_IDLE
+            )
+
+            type_indicators = [
+                dfvfs_definitions.TYPE_INDICATOR_BZIP2,
+                dfvfs_definitions.TYPE_INDICATOR_GZIP,
+                dfvfs_definitions.TYPE_INDICATOR_XZ,
+                "bogus",
+            ]
+            extraction_worker._ProcessCompressedStreamTypes(
+                parser_mediator, path_spec, type_indicators
+            )
+
+            self.assertEqual(
+                extraction_worker.processing_status,
+                definitions.STATUS_INDICATOR_COLLECTING,
+            )
+
+            event_sources = list(storage_writer.GetAttributeContainers("event_source"))
+            self.assertEqual(len(event_sources), 3)
+
+            event_source_path_spec = event_sources[0].path_spec
+            self.assertEqual(
+                event_source_path_spec.type_indicator,
+                dfvfs_definitions.TYPE_INDICATOR_COMPRESSED_STREAM,
+            )
+            self.assertEqual(
+                event_source_path_spec.compression_method,
+                dfvfs_definitions.COMPRESSION_METHOD_BZIP2,
+            )
+            self.assertEqual(event_source_path_spec.parent, path_spec)
+
+            event_source_path_spec = event_sources[1].path_spec
+            self.assertEqual(
+                event_source_path_spec.type_indicator,
+                dfvfs_definitions.TYPE_INDICATOR_GZIP,
+            )
+            self.assertEqual(event_source_path_spec.parent, path_spec)
+
+            event_source_path_spec = event_sources[2].path_spec
+            self.assertEqual(
+                event_source_path_spec.type_indicator,
+                dfvfs_definitions.TYPE_INDICATOR_COMPRESSED_STREAM,
+            )
+            self.assertEqual(
+                event_source_path_spec.compression_method,
+                dfvfs_definitions.COMPRESSION_METHOD_XZ,
+            )
+
+            # The unsupported type indicator should result in a warning.
+            warnings = list(storage_writer.GetAttributeContainers("extraction_warning"))
+            self.assertEqual(len(warnings), 1)
+            self.assertIn("bogus", warnings[0].message)
+
+        finally:
+            storage_writer.Close()
+
+    def testProcessDirectory(self):
+        """Tests the _ProcessDirectory function."""
+        storage_writer = fake_writer.FakeStorageWriter()
+        parser_mediator = self._CreateParserMediator(storage_writer)
+
+        extraction_worker = worker.EventExtractionWorker(
+            parser_filter_expression="filestat"
+        )
+
+        file_entry = self._GetTestFileEntry(["testdir"])
+        parser_mediator.SetFileEntry(file_entry)
+
+        storage_writer.Open()
+
+        try:
+            extraction_worker._ProcessDirectory(parser_mediator, file_entry)
+
+            self.assertEqual(
+                extraction_worker.processing_status,
+                definitions.STATUS_INDICATOR_RUNNING,
+            )
+
+            file_names = sorted(
+                [
+                    event_source.path_spec.location.rsplit("/", maxsplit=1)[-1]
+                    for event_source in storage_writer.GetAttributeContainers(
+                        "event_source"
+                    )
+                ]
+            )
+            self.assertEqual(
+                file_names, ["filter2.txt", "filter_1.txt", "filter_3.txt"]
+            )
+
+            # The directory itself is collected but not parsed.
+            number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+                "event_data"
+            )
+            self.assertEqual(number_of_event_data, 0)
+
+        finally:
+            storage_writer.Close()
+
+    def testProcessFileEntry(self):
+        """Tests the _ProcessFileEntry function."""
+        extraction_worker = worker.EventExtractionWorker(
+            parser_filter_expression="filestat,mft,text/syslog_traditional"
+        )
+
+        # Test a regular file.
+        storage_writer = fake_writer.FakeStorageWriter()
+        parser_mediator = self._CreateParserMediator(storage_writer)
+
+        file_entry = self._GetTestFileEntry(["syslog", "syslog"])
+        parser_mediator.SetFileEntry(file_entry)
+
+        storage_writer.Open()
+
+        try:
+            extraction_worker._ProcessFileEntry(parser_mediator, file_entry)
+
+            expected_event_data_counts = {
+                "fs:stat": 1,
+                "syslog:cron:task_run": 3,
+                "syslog:line": 13,
+            }
+            self.CheckEventDataCounts(storage_writer, expected_event_data_counts)
+
+            number_of_event_data_streams = (
+                storage_writer.GetNumberOfAttributeContainers("event_data_stream")
+            )
+            self.assertEqual(number_of_event_data_streams, 1)
+
+        finally:
+            storage_writer.Close()
+
+        # Test a directory, of which only the metadata is extracted.
+        storage_writer = fake_writer.FakeStorageWriter()
+        parser_mediator = self._CreateParserMediator(storage_writer)
+
+        file_entry = self._GetTestFileEntry(["testdir"])
+        parser_mediator.SetFileEntry(file_entry)
+
+        storage_writer.Open()
+
+        try:
+            extraction_worker._ProcessFileEntry(parser_mediator, file_entry)
+
+            expected_event_data_counts = {"fs:stat": 1}
+            self.CheckEventDataCounts(storage_writer, expected_event_data_counts)
+
+            number_of_event_sources = storage_writer.GetNumberOfAttributeContainers(
+                "event_source"
+            )
+            self.assertEqual(number_of_event_sources, 0)
+
+        finally:
+            storage_writer.Close()
+
+        # Test a NTFS metadata file.
+        storage_writer = fake_writer.FakeStorageWriter()
+        parser_mediator = self._CreateParserMediator(storage_writer)
+
+        file_entry = self._GetTestNTFSFileEntry(parser_mediator, "/$MFT")
+        parser_mediator.SetFileEntry(file_entry)
+
+        storage_writer.Open()
+
+        try:
+            extraction_worker._ProcessFileEntry(parser_mediator, file_entry)
+
+            expected_event_data_counts = {"fs:stat": 1, "fs:stat:ntfs": 44}
+            self.CheckEventDataCounts(storage_writer, expected_event_data_counts)
+
+        finally:
+            storage_writer.Close()
+
+    def testProcessFileEntryDataStream(self):
+        """Tests the _ProcessFileEntryDataStream function."""
+        extraction_worker = worker.EventExtractionWorker(
+            parser_filter_expression="filestat,text/syslog_traditional"
+        )
+
+        file_entry = self._GetTestFileEntry(["syslog", "syslog"])
+
+        # Test with the default data stream.
+        storage_writer = fake_writer.FakeStorageWriter()
+        parser_mediator = self._CreateParserMediator(storage_writer)
+        parser_mediator.SetFileEntry(file_entry)
+
+        storage_writer.Open()
+
+        try:
+            extraction_worker._ProcessFileEntryDataStream(
+                parser_mediator, file_entry, file_entry.GetDataStream("")
+            )
+
+            expected_event_data_counts = {
+                "fs:stat": 1,
+                "syslog:cron:task_run": 3,
+                "syslog:line": 13,
+            }
+            self.CheckEventDataCounts(storage_writer, expected_event_data_counts)
+
+            event_data_streams = list(
+                storage_writer.GetAttributeContainers("event_data_stream")
+            )
+            self.assertEqual(len(event_data_streams), 1)
+            self.assertEqual(event_data_streams[0].path_spec, file_entry.path_spec)
+
+        finally:
+            storage_writer.Close()
+
+        # Test without a data stream, of which only the metadata is extracted.
+        storage_writer = fake_writer.FakeStorageWriter()
+        parser_mediator = self._CreateParserMediator(storage_writer)
+        parser_mediator.SetFileEntry(file_entry)
+
+        storage_writer.Open()
+
+        try:
+            extraction_worker._ProcessFileEntryDataStream(
+                parser_mediator, file_entry, None
+            )
+
+            expected_event_data_counts = {"fs:stat": 1}
+            self.CheckEventDataCounts(storage_writer, expected_event_data_counts)
+
+            number_of_event_data_streams = (
+                storage_writer.GetNumberOfAttributeContainers("event_data_stream")
+            )
+            self.assertEqual(number_of_event_data_streams, 0)
+
+        finally:
+            storage_writer.Close()
+
+    def testProcessMetadataFile(self):
+        """Tests the _ProcessMetadataFile function."""
+        extraction_worker = worker.EventExtractionWorker(
+            parser_filter_expression="filestat,mft"
+        )
+
+        # Test a $MFT metadata file, which is parsed by the MFT parser.
+        storage_writer = fake_writer.FakeStorageWriter()
+        parser_mediator = self._CreateParserMediator(storage_writer)
+
+        file_entry = self._GetTestNTFSFileEntry(parser_mediator, "/$MFT")
+        parser_mediator.SetFileEntry(file_entry)
+
+        storage_writer.Open()
+
+        try:
+            extraction_worker._ProcessMetadataFile(parser_mediator, file_entry)
+
+            expected_event_data_counts = {"fs:stat": 1, "fs:stat:ntfs": 44}
+            self.CheckEventDataCounts(storage_writer, expected_event_data_counts)
+
+            number_of_event_data_streams = (
+                storage_writer.GetNumberOfAttributeContainers("event_data_stream")
+            )
+            self.assertEqual(number_of_event_data_streams, 1)
+
+            self.assertEqual(
+                extraction_worker.processing_status,
+                definitions.STATUS_INDICATOR_EXTRACTING,
+            )
+
+        finally:
+            storage_writer.Close()
+
+        # Test a $BadClus metadata file, which has 2 data streams but is not
+        # parsed further.
+        storage_writer = fake_writer.FakeStorageWriter()
+        parser_mediator = self._CreateParserMediator(storage_writer)
+
+        file_entry = self._GetTestNTFSFileEntry(parser_mediator, "/$BadClus")
+        parser_mediator.SetFileEntry(file_entry)
+
+        storage_writer.Open()
+
+        try:
+            extraction_worker._ProcessMetadataFile(parser_mediator, file_entry)
+
+            expected_event_data_counts = {"fs:stat": 1}
+            self.CheckEventDataCounts(storage_writer, expected_event_data_counts)
+
+            data_stream_names = sorted(
+                [
+                    getattr(event_data_stream.path_spec, "data_stream", None) or ""
+                    for event_data_stream in storage_writer.GetAttributeContainers(
+                        "event_data_stream"
+                    )
+                ]
+            )
+            self.assertEqual(data_stream_names, ["", "$Bad"])
+
+        finally:
+            storage_writer.Close()
+
     # TODO: add tests for _SetHashers
     # TODO: add tests for _SetYaraRules
     # TODO: add tests for GetAnalyzerNames
@@ -693,9 +1128,124 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         self._TestProcessPathSpec(storage_writer, path_spec, expected_event_data_counts)
 
     # TODO: add tests for SetExtractionConfiguration
-    # TODO: add tests for SetAnalyzersProfiler
-    # TODO: add tests for SetProcessingProfiler
-    # TODO: add tests for SignalAbort
+
+    def testSetAnalyzersProfiler(self):
+        """Tests the SetAnalyzersProfiler function."""
+        extraction_worker = worker.EventExtractionWorker(
+            parser_filter_expression="filestat"
+        )
+        extraction_worker._analyzers = [analyzers_manager_test.TestAnalyzer()]
+
+        file_entry = self._GetTestFileEntry(["syslog.tgz"])
+        file_object = file_entry.GetFileObject()
+
+        profiling_configuration = configurations.ProfilingConfiguration()
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            profiling_configuration.directory = temp_directory
+
+            analyzers_profiler = profilers.AnalyzersProfiler(
+                "test", profiling_configuration
+            )
+            analyzers_profiler.Start()
+
+            try:
+                extraction_worker.SetAnalyzersProfiler(analyzers_profiler)
+                self.assertEqual(
+                    extraction_worker._analyzers_profiler, analyzers_profiler
+                )
+
+                event_data_stream = events.EventDataStream()
+                extraction_worker._AnalyzeFileObject(
+                    file_object, "syslog.tgz", event_data_stream
+                )
+
+            finally:
+                analyzers_profiler.Stop()
+
+        self.assertEqual(
+            list(analyzers_profiler._profile_measurements.keys()), ["testanalyze"]
+        )
+
+        extraction_worker.SetAnalyzersProfiler(None)
+        self.assertIsNone(extraction_worker._analyzers_profiler)
+
+    def testSetProcessingProfiler(self):
+        """Tests the SetProcessingProfiler function."""
+        extraction_worker = worker.EventExtractionWorker(
+            parser_filter_expression="filestat"
+        )
+        extraction_worker._analyzers = [analyzers_manager_test.TestAnalyzer()]
+
+        storage_writer = fake_writer.FakeStorageWriter()
+        parser_mediator = self._CreateParserMediator(storage_writer)
+
+        file_entry = self._GetTestFileEntry(["syslog.tgz"])
+        parser_mediator.SetFileEntry(file_entry)
+
+        profiling_configuration = configurations.ProfilingConfiguration()
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            profiling_configuration.directory = temp_directory
+
+            processing_profiler = profilers.ProcessingProfiler(
+                "test", profiling_configuration
+            )
+            processing_profiler.Start()
+
+            storage_writer.Open()
+
+            try:
+                extraction_worker.SetProcessingProfiler(processing_profiler)
+                self.assertEqual(
+                    extraction_worker._processing_profiler, processing_profiler
+                )
+
+                extraction_worker._ProcessFileEntryDataStream(
+                    parser_mediator, file_entry, file_entry.GetDataStream("")
+                )
+
+            finally:
+                storage_writer.Close()
+                processing_profiler.Stop()
+
+        self.assertEqual(
+            sorted(processing_profiler._profile_measurements.keys()),
+            ["analyzing", "extracting"],
+        )
+
+        extraction_worker.SetProcessingProfiler(None)
+        self.assertIsNone(extraction_worker._processing_profiler)
+
+    def testSignalAbort(self):
+        """Tests the SignalAbort function."""
+        extraction_worker = worker.EventExtractionWorker(
+            parser_filter_expression="filestat"
+        )
+        self.assertFalse(extraction_worker._abort)
+
+        extraction_worker.SignalAbort()
+        self.assertTrue(extraction_worker._abort)
+
+        # An aborted worker should no longer produce event sources.
+        storage_writer = fake_writer.FakeStorageWriter()
+        parser_mediator = self._CreateParserMediator(storage_writer)
+
+        file_entry = self._GetTestFileEntry(["testdir"])
+        parser_mediator.SetFileEntry(file_entry)
+
+        storage_writer.Open()
+
+        try:
+            extraction_worker._ProcessDirectory(parser_mediator, file_entry)
+
+            number_of_event_sources = storage_writer.GetNumberOfAttributeContainers(
+                "event_source"
+            )
+            self.assertEqual(number_of_event_sources, 0)
+
+        finally:
+            storage_writer.Close()
 
     def testExtractionWorkerHashing(self):
         """Test that the worker sets up and runs hashing code correctly."""
