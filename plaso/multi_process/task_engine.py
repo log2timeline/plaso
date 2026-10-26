@@ -2,6 +2,7 @@
 
 import os
 import shutil
+import sqlite3
 import tempfile
 
 from plaso.lib import definitions
@@ -74,8 +75,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           StorageReader: storage reader of the task storage.
 
         Raises:
-          OSError: if the temporary path for the task storage does not exist or
-              if the temporary path for the task storage doe not refers to a file.
+          OSError: if the temporary path for the task storage does not exist,
+              if the temporary path for the task storage does not refer to a file
+              or if the task storage cannot be opened.
         """
         merge_storage_file_path = self._GetMergeTaskStorageFilePath(
             task_storage_format, task
@@ -88,9 +90,18 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
             if not os.path.isfile(merge_storage_file_path):
                 raise OSError("Merge task storage path is not a file.")
 
-        task_storage_reader = storage_factory.StorageFactory.CreateTaskStorageReader(
-            task_storage_format, task, merge_storage_file_path
-        )
+        try:
+            task_storage_reader = (
+                storage_factory.StorageFactory.CreateTaskStorageReader(
+                    task_storage_format, task, merge_storage_file_path
+                )
+            )
+        except sqlite3.DatabaseError as exception:
+            raise OSError(
+                f"Unable to open task storage file: {merge_storage_file_path:s} "
+                f"with error: {exception!s}"
+            )
+
         task_storage_reader.SetStorageProfiler(self._storage_profiler)
 
         return task_storage_reader

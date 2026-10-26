@@ -94,6 +94,69 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
         expected_parsers_counter = collections.Counter({"filestat": 15, "total": 15})
         self.assertEqual(parsers_counter, expected_parsers_counter)
 
+    def _MergeTaskStorageWithInvalidTaskStorage(self, task_storage_data):
+        """Merges an invalid task storage with the _MergeTaskStorage function.
+
+        Args:
+          task_storage_data (bytes): data of the invalid task storage file.
+        """
+        # pylint: disable=protected-access
+        session = sessions.Session()
+
+        test_engine = extraction_engine.ExtractionMultiProcessEngine()
+        test_engine._processing_configuration = configurations.ProcessingConfiguration()
+        test_engine._task_storage_format = definitions.STORAGE_FORMAT_SQLITE
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            test_engine._storage_file_path = os.path.join(
+                temp_directory, "storage.plaso"
+            )
+            test_engine._StartTaskStorage(definitions.STORAGE_FORMAT_SQLITE)
+
+            task = test_engine._task_manager.CreateTask(session.identifier)
+            test_engine._task_manager.UpdateTaskAsProcessingByIdentifier(
+                task.identifier
+            )
+
+            task_storage_path = test_engine._GetProcessedStorageFilePath(task)
+            with open(task_storage_path, "wb") as file_object:
+                file_object.write(task_storage_data)
+
+            storage_writer = sqlite_writer.SQLiteStorageWriter()
+            storage_writer.Open(path=test_engine._storage_file_path)
+
+            try:
+                test_engine._MergeTaskStorage(storage_writer, session.identifier)
+            finally:
+                storage_writer.Close()
+
+            self.assertIsNone(test_engine._merge_task)
+            self.assertIsNone(test_engine._task_merge_helper)
+            self.assertFalse(test_engine._task_manager.HasPendingTasks())
+
+            self.assertFalse(os.path.exists(task_storage_path))
+
+            merge_task_storage_path = test_engine._GetMergeTaskStorageFilePath(
+                definitions.STORAGE_FORMAT_SQLITE, task
+            )
+            self.assertFalse(os.path.exists(merge_task_storage_path))
+
+            # Stopping the task storage without abort fails if a task storage file
+            # was left behind.
+            test_engine._StopTaskStorage(
+                definitions.STORAGE_FORMAT_SQLITE, session.identifier
+            )
+
+    def testInternalMergeTaskStorageWithEmptyTaskStorage(self):
+        """Tests the _MergeTaskStorage function with an empty task storage."""
+        self._MergeTaskStorageWithInvalidTaskStorage(b"")
+
+    def testInternalMergeTaskStorageWithNonSQLiteTaskStorage(self):
+        """Tests the _MergeTaskStorage function with a non-SQLite task storage."""
+        self._MergeTaskStorageWithInvalidTaskStorage(
+            b"This is not a SQLite database file.\n" * 4
+        )
+
     def testInternalProcessEventSourcesWithFailedTask(self):
         """Tests the _ProcessEventSources function with a failed task."""
         # pylint: disable=protected-access
