@@ -62,6 +62,40 @@ class TestEngine(engine.BaseEngine):
         return self._file_system, self._mount_point
 
 
+class MultiVolumeTestEngine(engine.BaseEngine):
+    """Class that defines a processing engine with multiple volumes for testing."""
+
+    def __init__(self, file_systems):
+        """Initialize a test engine object.
+
+        Args:
+          file_systems (dict[str, dfvfs.FileSystem]): file systems per volume
+              location.
+        """
+        super().__init__()
+        self._file_systems = file_systems
+        self._mount_point = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_FAKE, location="/"
+        )
+
+    def GetSourceFileSystem(self, file_system_path_spec, resolver_context=None):
+        """Retrieves the file system of the source.
+
+        Args:
+          file_system_path_spec (dfvfs.PathSpec): path specifications of
+              the source file system to process.
+          resolver_context (dfvfs.Context): resolver context.
+
+        Returns:
+          tuple: containing:
+
+            dfvfs.FileSystem: file system
+            path.PathSpec: mount point path specification.
+        """
+        location = getattr(file_system_path_spec, "location", None)
+        return self._file_systems[location], self._mount_point
+
+
 class BaseEngineTest(shared_test_lib.BaseTestCase):
     """Tests for the engine object."""
 
@@ -264,6 +298,111 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
 
         self.assertEqual(len(source_configurations), 1)
         self.assertEqual(source_configurations[0].operating_system, "Windows NT")
+
+    def testPreprocessSourceWithVolumeWithoutOperatingSystem(self):
+        """Tests the PreprocessSource function with a volume without OS."""
+        test_plist_path = self._GetTestFilePath(["plist", "com.apple.HIToolbox.plist"])
+        self._SkipIfPathNotExists(test_plist_path)
+
+        test_artifacts_path = shared_test_lib.GetTestFilePath(["artifacts"])
+        self._SkipIfPathNotExists(test_artifacts_path)
+
+        # The first volume contains a macOS keyboard layout but no operating
+        # system and the second volume contains a Linux operating system.
+        file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+        file_system_builder.AddFileReadData(
+            "/Library/Preferences/com.apple.HIToolbox.plist", test_plist_path
+        )
+        first_file_system = file_system_builder.file_system
+
+        file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+        file_system_builder.AddFile("/etc/hostname", b"plaso.example.com\n")
+        second_file_system = file_system_builder.file_system
+
+        test_engine = MultiVolumeTestEngine(
+            {"/volume1": first_file_system, "/volume2": second_file_system}
+        )
+        test_engine.BuildArtifactsRegistry(test_artifacts_path, None)
+
+        file_system_path_specs = [
+            path_spec_factory.Factory.NewPathSpec(
+                dfvfs_definitions.TYPE_INDICATOR_FAKE, location="/volume1"
+            ),
+            path_spec_factory.Factory.NewPathSpec(
+                dfvfs_definitions.TYPE_INDICATOR_FAKE, location="/volume2"
+            ),
+        ]
+
+        storage_writer = fake_writer.FakeStorageWriter()
+        storage_writer.Open()
+
+        source_configurations = test_engine.PreprocessSource(
+            file_system_path_specs, storage_writer
+        )
+
+        self.assertEqual(len(source_configurations), 1)
+        self.assertEqual(source_configurations[0].operating_system, "Linux")
+        self.assertIsNone(source_configurations[0].keyboard_layout)
+
+    def testPreprocessSourceWithMultipleOperatingSystems(self):
+        """Tests the PreprocessSource function with multiple operating systems."""
+        test_file_path = self._GetTestFilePath(["SOFTWARE"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        test_file_path = self._GetTestFilePath(["SYSTEM"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        test_artifacts_path = shared_test_lib.GetTestFilePath(["artifacts"])
+        self._SkipIfPathNotExists(test_artifacts_path)
+
+        # The first volume contains a Windows operating system and the second
+        # volume contains a Linux operating system.
+        windows_test_engine = TestEngine()
+        first_file_system = windows_test_engine._file_system
+
+        file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+        file_system_builder.AddFile("/etc/hostname", b"plaso.example.com\n")
+        second_file_system = file_system_builder.file_system
+
+        test_engine = MultiVolumeTestEngine(
+            {"/volume1": first_file_system, "/volume2": second_file_system}
+        )
+        test_engine.BuildArtifactsRegistry(test_artifacts_path, None)
+
+        file_system_path_specs = [
+            path_spec_factory.Factory.NewPathSpec(
+                dfvfs_definitions.TYPE_INDICATOR_FAKE, location="/volume1"
+            ),
+            path_spec_factory.Factory.NewPathSpec(
+                dfvfs_definitions.TYPE_INDICATOR_FAKE, location="/volume2"
+            ),
+        ]
+
+        storage_writer = fake_writer.FakeStorageWriter()
+        storage_writer.Open()
+
+        source_configurations = test_engine.PreprocessSource(
+            file_system_path_specs, storage_writer
+        )
+
+        self.assertEqual(len(source_configurations), 2)
+        self.assertEqual(source_configurations[0].operating_system, "Windows NT")
+        self.assertEqual(source_configurations[1].operating_system, "Linux")
+
+        # The knowledge base is filled from the first system configuration.
+        expected_environment_variables = sorted(
+            environment_variable.name
+            for environment_variable in source_configurations[0].environment_variables
+        )
+        self.assertNotEqual(expected_environment_variables, [])
+
+        environment_variables = sorted(
+            environment_variable.name
+            for environment_variable in (
+                test_engine.knowledge_base.GetEnvironmentVariables()
+            )
+        )
+        self.assertEqual(environment_variables, expected_environment_variables)
 
 
 if __name__ == "__main__":
