@@ -11,6 +11,57 @@ from plaso.lib import definitions
 class PathHelper:
     """Class that implements the path helper."""
 
+    # Locations of NTFS metadata files.
+    _METADATA_FILE_LOCATIONS_NTFS = frozenset(
+        [
+            "\\$AttrDef",
+            "\\$BadClus",
+            "\\$Bitmap",
+            "\\$Boot",
+            "\\$Extend\\$ObjId",
+            "\\$Extend\\$Quota",
+            "\\$Extend\\$Reparse",
+            "\\$Extend\\$RmMetadata\\$Repair",
+            "\\$Extend\\$RmMetadata\\$TxfLog\\$Tops",
+            "\\$Extend\\$UsnJrnl",
+            "\\$LogFile",
+            "\\$MFT",
+            "\\$MFTMirr",
+            "\\$Secure",
+            "\\$UpCase",
+            "\\$Volume",
+        ]
+    )
+
+    # Locations of metadata files supported by TSK.
+    _METADATA_FILE_LOCATIONS_TSK = frozenset(
+        [
+            # NTFS
+            "/$AttrDef",
+            "/$BadClus",
+            "/$Bitmap",
+            "/$Boot",
+            "/$Extend/$ObjId",
+            "/$Extend/$Quota",
+            "/$Extend/$Reparse",
+            "/$Extend/$RmMetadata/$Repair",
+            "/$Extend/$RmMetadata/$TxfLog/$Tops",
+            "/$Extend/$UsnJrnl",
+            "/$LogFile",
+            "/$MFT",
+            "/$MFTMirr",
+            "/$Secure",
+            "/$UpCase",
+            "/$Volume",
+            # HFS+/HFSX
+            "/$ExtentsFile",
+            "/$CatalogFile",
+            "/$BadBlockFile",
+            "/$AllocationFile",
+            "/$AttributesFile",
+        ]
+    )
+
     _RECURSIVE_GLOB_LIMIT = 10
 
     _PATH_EXPANSIONS_PER_USERS_VARIABLE = {
@@ -528,6 +579,29 @@ class PathHelper:
         path = cls.ExpandWindowsPath(path, environment_variables)
 
         return path, filename
+
+    @classmethod
+    def IsMetadataFile(cls, path_spec):
+        """Determines if a path specification refers to a file system metadata file.
+
+        File system metadata files are files that are part of the file system
+        format, such as the NTFS $MFT and $UsnJrnl files.
+
+        Args:
+          path_spec (dfvfs.PathSpec): path specification.
+
+        Returns:
+          bool: True if the path specification refers to a file system metadata
+              file.
+        """
+        location = getattr(path_spec, "location", None)
+        if path_spec.type_indicator == dfvfs_definitions.TYPE_INDICATOR_NTFS:
+            return location in cls._METADATA_FILE_LOCATIONS_NTFS
+
+        if path_spec.type_indicator == dfvfs_definitions.TYPE_INDICATOR_TSK:
+            return location in cls._METADATA_FILE_LOCATIONS_TSK
+
+        return False
 
     @classmethod
     def SanitizePathSegments(cls, path_segments):

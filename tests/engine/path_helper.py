@@ -495,6 +495,67 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
         display_name = path_helper.PathHelper.GetRelativePathForPathSpec(qcow_path_spec)
         self.assertIsNone(display_name)
 
+    def testIsMetadataFile(self):
+        """Tests the IsMetadataFile function."""
+        test_file_path = self._GetTestFilePath(["vsstest.qcow2"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        os_path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
+        )
+        qcow_path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_QCOW, parent=os_path_spec
+        )
+
+        # Test with NTFS file system metadata files.
+        for location in ("\\$MFT", "\\$Secure", "\\$Extend\\$RmMetadata\\$Repair"):
+            path_spec = path_spec_factory.Factory.NewPathSpec(
+                dfvfs_definitions.TYPE_INDICATOR_NTFS,
+                location=location,
+                parent=qcow_path_spec,
+            )
+            self.assertTrue(path_helper.PathHelper.IsMetadataFile(path_spec))
+
+        # Test with NTFS files that are not file system metadata files.
+        for location in (
+            "\\password.txt",
+            "\\$Extend",
+            "\\$Extend\\$RmMetadata\\$TxfLog\\$TxfLog.blf",
+            "\\System Volume Information",
+            "/$MFT",
+        ):
+            path_spec = path_spec_factory.Factory.NewPathSpec(
+                dfvfs_definitions.TYPE_INDICATOR_NTFS,
+                location=location,
+                parent=qcow_path_spec,
+            )
+            self.assertFalse(path_helper.PathHelper.IsMetadataFile(path_spec))
+
+        # Test with TSK file system metadata files.
+        for location in ("/$MFT", "/$Secure", "/$Extend/$RmMetadata/$Repair"):
+            path_spec = path_spec_factory.Factory.NewPathSpec(
+                dfvfs_definitions.TYPE_INDICATOR_TSK,
+                location=location,
+                parent=qcow_path_spec,
+            )
+            self.assertTrue(path_helper.PathHelper.IsMetadataFile(path_spec))
+
+        # Test with TSK files that are not file system metadata files.
+        for location in ("/password.txt", "/$Extend", "\\$MFT"):
+            path_spec = path_spec_factory.Factory.NewPathSpec(
+                dfvfs_definitions.TYPE_INDICATOR_TSK,
+                location=location,
+                parent=qcow_path_spec,
+            )
+            self.assertFalse(path_helper.PathHelper.IsMetadataFile(path_spec))
+
+        # Test with a file named like a file system metadata file in another
+        # type of file system.
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_OS, location="/$MFT"
+        )
+        self.assertFalse(path_helper.PathHelper.IsMetadataFile(path_spec))
+
     def testSanitizePathSegments(self):
         """Tests the SanitizePathSegments function."""
         # Test with an empty list of path segments.

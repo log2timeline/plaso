@@ -20,6 +20,7 @@ from plaso.containers import event_sources
 from plaso.containers import events
 from plaso.engine import extractors
 from plaso.engine import logger
+from plaso.engine import path_helper
 from plaso.lib import definitions
 from plaso.lib import errors
 
@@ -74,57 +75,6 @@ class EventExtractionWorker:
       processing_status (str): human readable status indication such as:
           'Extracting', 'Hashing'.
     """
-
-    # NTFS metadata files that need special handling.
-    _METADATA_FILE_LOCATIONS_NTFS = frozenset(
-        [
-            "\\$AttrDef",
-            "\\$BadClus",
-            "\\$Bitmap",
-            "\\$Boot",
-            "\\$Extend\\$ObjId",
-            "\\$Extend\\$Quota",
-            "\\$Extend\\$Reparse",
-            "\\$Extend\\$RmMetadata\\$Repair",
-            "\\$Extend\\$RmMetadata\\$TxfLog\\$Tops",
-            "\\$Extend\\$UsnJrnl",
-            "\\$LogFile",
-            "\\$MFT",
-            "\\$MFTMirr",
-            "\\$Secure",
-            "\\$UpCase",
-            "\\$Volume",
-        ]
-    )
-
-    # TSK metadata files that need special handling.
-    _METADATA_FILE_LOCATIONS_TSK = frozenset(
-        [
-            # NTFS
-            "/$AttrDef",
-            "/$BadClus",
-            "/$Bitmap",
-            "/$Boot",
-            "/$Extend/$ObjId",
-            "/$Extend/$Quota",
-            "/$Extend/$Reparse",
-            "/$Extend/$RmMetadata/$Repair",
-            "/$Extend/$RmMetadata/$TxfLog/$Tops",
-            "/$Extend/$UsnJrnl",
-            "/$LogFile",
-            "/$MFT",
-            "/$MFTMirr",
-            "/$Secure",
-            "/$UpCase",
-            "/$Volume",
-            # HFS+/HFSX
-            "/$ExtentsFile",
-            "/$CatalogFile",
-            "/$BadBlockFile",
-            "/$AllocationFile",
-            "/$AttributesFile",
-        ]
-    )
 
     # TODO: make this filtering solution more generic. Also see:
     # https://github.com/log2timeline/plaso/issues/467
@@ -593,19 +543,7 @@ class EventExtractionWorker:
         Returns:
           bool: True if the file entry is a metadata file.
         """
-        if (
-            file_entry.type_indicator == dfvfs_definitions.TYPE_INDICATOR_NTFS
-            and file_entry.path_spec.location in self._METADATA_FILE_LOCATIONS_NTFS
-        ):
-            return True
-
-        if (
-            file_entry.type_indicator == dfvfs_definitions.TYPE_INDICATOR_TSK
-            and file_entry.path_spec.location in self._METADATA_FILE_LOCATIONS_TSK
-        ):
-            return True
-
-        return False
+        return path_helper.PathHelper.IsMetadataFile(file_entry.path_spec)
 
     def _ProcessArchiveType(self, parser_mediator, path_spec, type_indicator):
         """Processes a data stream containing an archive type such as: TAR or ZIP.

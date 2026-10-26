@@ -1170,6 +1170,124 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
 
         self.assertEqual(sorted(extracted_files), expected_extracted_files)
 
+    def _ProcessSourceWithNTFSImage(self, include_metadata_files=False):
+        """Exports files from vsstest.qcow2.
+
+        Args:
+          include_metadata_files (Optional[bool]): True if file system metadata
+              files should be exported.
+
+        Returns:
+          list[str]: sorted relative paths of the exported files and directories,
+              excluding the hashes file.
+        """
+        test_artifacts_path = self._GetTestFilePath(["artifacts"])
+        self._SkipIfPathNotExists(test_artifacts_path)
+
+        test_file_path = self._GetTestFilePath(["vsstest.qcow2"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
+
+        options = test_lib.TestOptions()
+        options.artifact_definitions_path = test_artifacts_path
+        options.image = test_file_path
+        options.include_duplicates = True
+        options.include_metadata_files = include_metadata_files
+        options.quiet = True
+        options.vss_stores = "none"
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            options.path = temp_directory
+
+            test_tool.ParseOptions(options)
+
+            test_tool.ProcessSource()
+
+            extracted_files = [
+                os.path.relpath(path, temp_directory)
+                for path in self._RecursiveList(temp_directory)
+            ]
+
+        return sorted(path for path in extracted_files if path != "hashes.json")
+
+    def testProcessSourceExtractWithoutMetadataFiles(self):
+        """Tests the ProcessSource function without file system metadata files."""
+        extracted_files = self._ProcessSourceWithNTFSImage()
+
+        # Note that files in $Extend that are not file system metadata files,
+        # such as $TxfLog.blf, are exported.
+        expected_extracted_files = sorted(
+            [
+                "_Extend",
+                os.path.join("_Extend", "_RmMetadata"),
+                os.path.join("_Extend", "_RmMetadata", "_TxfLog"),
+                os.path.join("_Extend", "_RmMetadata", "_TxfLog", "_TxfLog.blf"),
+                os.path.join(
+                    "_Extend",
+                    "_RmMetadata",
+                    "_TxfLog",
+                    "_TxfLogContainer00000000000000000001",
+                ),
+                os.path.join(
+                    "_Extend",
+                    "_RmMetadata",
+                    "_TxfLog",
+                    "_TxfLogContainer00000000000000000002",
+                ),
+                "another_file",
+                "password.txt",
+                "syslog.gz",
+                "System Volume Information",
+                os.path.join(
+                    "System Volume Information",
+                    "{3808876b-c176-4e48-b7ae-04046e6cc752}",
+                ),
+                os.path.join(
+                    "System Volume Information",
+                    "{600f0b69-5bdf-11e3-9d6c-005056c00008}"
+                    "{3808876b-c176-4e48-b7ae-04046e6cc752}",
+                ),
+                os.path.join(
+                    "System Volume Information",
+                    "{600f0b6d-5bdf-11e3-9d6c-005056c00008}"
+                    "{3808876b-c176-4e48-b7ae-04046e6cc752}",
+                ),
+            ]
+        )
+        self.assertEqual(extracted_files, expected_extracted_files)
+
+    def testProcessSourceExtractWithMetadataFiles(self):
+        """Tests the ProcessSource function with file system metadata files."""
+        extracted_files_without_metadata_files = self._ProcessSourceWithNTFSImage()
+
+        extracted_files = self._ProcessSourceWithNTFSImage(include_metadata_files=True)
+
+        expected_metadata_files = sorted(
+            [
+                "_AttrDef",
+                "_BadClus",
+                "_BadClus__Bad",
+                "_Bitmap",
+                "_Boot",
+                os.path.join("_Extend", "_RmMetadata", "_Repair"),
+                os.path.join("_Extend", "_RmMetadata", "_Repair__Config"),
+                os.path.join("_Extend", "_RmMetadata", "_TxfLog", "_Tops"),
+                os.path.join("_Extend", "_RmMetadata", "_TxfLog", "_Tops__T"),
+                "_LogFile",
+                "_MFT",
+                "_MFTMirr",
+                "_Secure__SDS",
+                "_UpCase",
+                "_Volume",
+            ]
+        )
+        expected_extracted_files = sorted(
+            extracted_files_without_metadata_files + expected_metadata_files
+        )
+        self.assertEqual(extracted_files, expected_extracted_files)
+
     def testProcessSourceExtractWithArtifactsFilter(self):
         """Tests the ProcessSource function with a artifacts filter file."""
         test_artifacts_path = self._GetTestFilePath(["artifacts"])
