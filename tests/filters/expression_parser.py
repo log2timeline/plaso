@@ -391,6 +391,16 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
         with self.assertRaises(errors.ParseError):
             parser.Parse(r'a is "\xJZ"')
 
+    def testParseWithNonASCIIHexadecimalEscaping(self):
+        """Tests the Parse function with non-ASCII hexadecimal escaping."""
+        parser = expression_parser.EventFilterExpressionParser()
+
+        with self.assertRaises(errors.ParseError):
+            parser.Parse(r'a is "\xff"')
+
+        with self.assertRaises(errors.ParseError):
+            parser.Parse(r"a is '\x80'")
+
     def testParseWithEvents(self):
         """Tests the Parse function with events."""
         event, event_data, _ = containers_test_lib.CreateEventFromValues(
