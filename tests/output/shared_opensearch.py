@@ -224,6 +224,31 @@ class SharedOpenSearchOutputModuleTest(test_lib.OutputModuleTestCase):
 
         self.assertEqual(field_values, expected_field_values)
 
+    def testSetAdditionalFields(self):
+        """Tests the SetAdditionalFields function."""
+        output_module = TestOpenSearchOutputModule()
+        output_module.SetAdditionalFields(["additional_field"])
+
+        self.assertIn("additional_field", output_module._field_names)
+
+        output_module = TestOpenSearchOutputModule()
+
+        self.assertEqual(output_module._field_names, output_module._DEFAULT_FIELD_NAMES)
+        self.assertNotIn("additional_field", output_module._field_names)
+
+    def testSetCustomFields(self):
+        """Tests the SetCustomFields function."""
+        output_module = TestOpenSearchOutputModule()
+        output_module.SetCustomFields([("custom_field", "value")])
+
+        self.assertEqual(output_module._custom_fields, {"custom_field": "value"})
+        self.assertIn("custom_field", output_module._field_names)
+
+        output_module = TestOpenSearchOutputModule()
+
+        self.assertEqual(output_module._field_names, output_module._DEFAULT_FIELD_NAMES)
+        self.assertNotIn("custom_field", output_module._field_names)
+
     def testSetFlushInterval(self):
         """Tests the SetFlushInterval function."""
         output_module = TestOpenSearchOutputModule()
