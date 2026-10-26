@@ -9,6 +9,7 @@ from plaso.containers import counts
 from plaso.containers import events
 from plaso.containers import reports
 from plaso.containers import tasks
+from plaso.containers import warnings
 from plaso.engine import processing_status
 from plaso.lib import definitions
 from plaso.lib import errors
@@ -66,6 +67,7 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         self._event_labels_counter = None
         self._event_queues = {}
         self._events_status = processing_status.EventsStatus()
+        self._failed_analysis_plugins = set()
         self._memory_profiler = None
         self._merge_task = None
         self._number_of_consumed_analysis_reports = 0
@@ -114,6 +116,8 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         self._number_of_produced_event_tags = 0
         self._number_of_produced_events = 0
         self._number_of_produced_sources = 0
+
+        self._failed_analysis_plugins = set()
 
         number_of_filtered_events = 0
 
@@ -193,6 +197,30 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
                 merge_ready = self._CheckTaskReadyForMerge(
                     definitions.STORAGE_FORMAT_SQLITE, task
                 )
+                if not merge_ready and not self._IsAnalysisProcessAlive(plugin_name):
+                    # The analysis process can have finalized the task storage right
+                    # before it exited.
+                    merge_ready = self._CheckTaskReadyForMerge(
+                        definitions.STORAGE_FORMAT_SQLITE, task
+                    )
+                    if not merge_ready:
+                        logger.error(
+                            f"Analysis plugin: {plugin_name:s} stopped without results."
+                        )
+                        warning = warnings.AnalysisWarning(
+                            message="analysis process stopped without results",
+                            plugin_name=plugin_name,
+                        )
+                        storage_writer.AddAttributeContainer(warning)
+
+                        event_queue = self._event_queues.pop(plugin_name, None)
+                        if event_queue:
+                            event_queue.Close(abort=True)
+
+                        self._failed_analysis_plugins.add(plugin_name)
+                        plugin_names.remove(plugin_name)
+                        continue
+
                 if merge_ready:
                     self._PrepareMergeTaskStorage(
                         definitions.STORAGE_FORMAT_SQLITE, task
@@ -319,6 +347,21 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
                 f"correctly. Status code: {status_indicator!s}."
             )
             self._TerminateProcessByPid(pid)
+
+    def _IsAnalysisProcessAlive(self, plugin_name):
+        """Determines if the analysis process of an analysis plugin is alive.
+
+        Args:
+          plugin_name (str): name of the analysis plugin.
+
+        Returns:
+          bool: True if the analysis process of the analysis plugin is alive.
+        """
+        for process in list(self._processes_per_pid.values()):
+            if process.name == plugin_name:
+                return process.is_alive()
+
+        return False
 
     def _MergeAttributeContainers(self, storage_writer, merge_helper):
         """Merges attribute containers from a task store into the storage writer.
@@ -761,9 +804,15 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
             # due to incorrectly finalized IPC.
             self._KillProcess(os.getpid())
 
+        # The task storage of an analysis process that stopped without producing
+        # results is not finalized and can only be removed on abort.
+        task_storage_abort = self._abort or bool(self._failed_analysis_plugins)
+
         try:
             self._StopTaskStorage(
-                definitions.STORAGE_FORMAT_SQLITE, session.identifier, abort=self._abort
+                definitions.STORAGE_FORMAT_SQLITE,
+                session.identifier,
+                abort=task_storage_abort,
             )
         except OSError as exception:
             logger.error(f"Unable to stop task storage with error: {exception!s}")

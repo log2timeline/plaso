@@ -9,6 +9,7 @@ import shutil
 import time
 import unittest
 
+from plaso.analysis import interface as analysis_interface
 from plaso.analysis import tagging
 from plaso.containers import sessions
 from plaso.engine import configurations
@@ -20,6 +21,34 @@ from plaso.storage import factory as storage_factory
 from tests import test_lib as shared_test_lib
 from tests.filters import test_lib as filters_test_lib
 from tests.multi_process import test_lib
+
+
+class TestExitingAnalysisPlugin(analysis_interface.AnalysisPlugin):
+    """Analysis plugin for testing that exits its process when reporting."""
+
+    NAME = "test_exiting"
+
+    # pylint: disable=unused-argument
+    def CompileReport(self, analysis_mediator):
+        """Exits the analysis process without finalizing the task storage.
+
+        Args:
+          analysis_mediator (AnalysisMediator): mediates interactions between
+              analysis plugins and other components, such as storage and dfVFS.
+        """
+        os._exit(1)  # pylint: disable=protected-access
+
+    def ExamineEvent(self, analysis_mediator, event, event_data, event_data_stream):
+        """Analyzes an event.
+
+        Args:
+          analysis_mediator (AnalysisMediator): mediates interactions between
+              analysis plugins and other components, such as storage and dfVFS.
+          event (EventObject): event.
+          event_data (EventData): event data.
+          event_data_stream (EventDataStream): event data stream.
+        """
+        return
 
 
 class AnalysisEngineMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
@@ -131,6 +160,57 @@ class AnalysisEngineMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
 
             finally:
                 storage_writer.Close()
+
+    def testAnalyzeEventsWithExitingAnalysisProcess(self):
+        """Tests the AnalyzeEvents function with an exiting analysis process."""
+        test_file_path = self._GetTestFilePath(["psort_test.plaso"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        session = sessions.Session()
+
+        analysis_plugins = {"test_exiting": TestExitingAnalysisPlugin()}
+
+        configuration = configurations.ProcessingConfiguration()
+        test_engine = analysis_engine.AnalysisMultiProcessEngine()
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            temp_file = os.path.join(temp_directory, "storage.plaso")
+            shutil.copyfile(test_file_path, temp_file)
+
+            storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
+                definitions.DEFAULT_STORAGE_FORMAT
+            )
+            storage_writer.Open(path=temp_file)
+
+            try:
+                number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+                    "analysis_warning"
+                )
+
+                test_engine.AnalyzeEvents(
+                    session,
+                    storage_writer,
+                    "",
+                    analysis_plugins,
+                    configuration,
+                    storage_file_path=temp_directory,
+                )
+                number_of_reports = storage_writer.GetNumberOfAttributeContainers(
+                    "analysis_report"
+                )
+                self.assertEqual(number_of_reports, 2)
+
+                analysis_warnings = list(
+                    storage_writer.GetAttributeContainers("analysis_warning")
+                )
+                self.assertEqual(len(analysis_warnings), number_of_warnings + 1)
+                self.assertEqual(analysis_warnings[-1].plugin_name, "test_exiting")
+
+            finally:
+                storage_writer.Close()
+
+            self.assertEqual(test_engine._event_queues, {})
+            self.assertEqual(os.listdir(temp_directory), ["storage.plaso"])
 
     def testAnalyzeEventsWithCompressedLog(self):
         """Tests that analysis processes do not corrupt a compressed log file."""
