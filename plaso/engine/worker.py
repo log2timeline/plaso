@@ -419,6 +419,15 @@ class EventExtractionWorker:
         scanner_object = pysigscan.scanner()
         scanner_object.set_scan_buffer_size(65536)
 
+        if "ewf" in archive_types:
+            # Only match the first segment file, which has segment number 1.
+            scanner_object.add_signature(
+                "ewf",
+                0,
+                b"EVF\x09\x0d\x0a\xff\x00\x01\x01\x00\x00\x00",
+                pysigscan.signature_flags.RELATIVE_FROM_START,
+            )
+
         if "iso9660" in archive_types:
             scanner_object.add_signature(
                 "iso9660",
@@ -657,6 +666,7 @@ class EventExtractionWorker:
         self.processing_status = definitions.STATUS_INDICATOR_COLLECTING
 
         if type_indicator in (
+            dfvfs_definitions.TYPE_INDICATOR_EWF,
             dfvfs_definitions.TYPE_INDICATOR_MODI,
             dfvfs_definitions.TYPE_INDICATOR_VHDI,
         ):
@@ -925,7 +935,11 @@ class EventExtractionWorker:
             except OSError:
                 pass
 
-            if results == ["iso9660"]:
+            if results == ["ewf"]:
+                self._ProcessStorageMediaImageType(
+                    parser_mediator, path_spec, dfvfs_definitions.TYPE_INDICATOR_EWF
+                )
+            elif results == ["iso9660"]:
                 self._ProcessStorageMediaImageType(
                     parser_mediator, path_spec, dfvfs_definitions.TYPE_INDICATOR_TSK
                 )

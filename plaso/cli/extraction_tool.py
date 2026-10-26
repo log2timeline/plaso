@@ -67,6 +67,7 @@ class ExtractionTool(
     )
 
     _SUPPORTED_ARCHIVE_TYPES = {
+        "ewf": "Expert Witness Compression Format (EWF) image (.E01) file",
         "iso9660": "ISO-9660 disk image (.iso) file",
         "modi": "MacOS disk image (.dmg) file",
         "tar": "tape archive (.tar) file",
