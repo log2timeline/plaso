@@ -19,6 +19,7 @@ from plaso.containers import events
 from plaso.containers import reports
 from plaso.containers import sessions
 from plaso.containers import tasks
+from plaso.containers import warnings
 from plaso.lib import definitions
 from plaso.serializer import json_serializer
 
@@ -176,7 +177,36 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         self.assertIsNotNone(analysis_report)
         self.assertIsInstance(analysis_report, reports.AnalysisReport)
 
-    # TODO: add ExtractionWarning tests.
+    def testReadAndWriteSerializedExtractionWarning(self):
+        """Test ReadSerialized and WriteSerialized of ExtractionWarning."""
+        test_path_spec = fake_path_spec.FakePathSpec(location="/opt/plaso.txt")
+
+        expected_extraction_warning = warnings.ExtractionWarning(
+            message="unable to parse file",
+            parser_chain="text/syslog",
+            path_spec=test_path_spec,
+        )
+
+        json_string = json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
+            expected_extraction_warning
+        )
+        self.assertIsNotNone(json_string)
+
+        extraction_warning = (
+            json_serializer.JSONAttributeContainerSerializer.ReadSerialized(json_string)
+        )
+        self.assertIsNotNone(extraction_warning)
+        self.assertIsInstance(extraction_warning, warnings.ExtractionWarning)
+
+        expected_extraction_warning_dict = {
+            "message": "unable to parse file",
+            "parser_chain": "text/syslog",
+            "path_spec": test_path_spec,
+        }
+
+        extraction_warning_dict = extraction_warning.CopyToDict()
+
+        self.assertEqual(extraction_warning_dict, expected_extraction_warning_dict)
 
     def testReadAndWriteSerializedEventData(self):
         """Test ReadSerialized and WriteSerialized of EventData."""

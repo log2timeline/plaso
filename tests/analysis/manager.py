@@ -75,7 +75,19 @@ class AnalysisPluginManagerTest(shared_test_lib.BaseTestCase):
 
         manager.AnalysisPluginManager.DeregisterPlugin(TestAnalysisPlugin)
 
-    # TODO: add tests for GetPluginNames.
+    def testGetPluginNames(self):
+        """Tests the GetPluginNames function."""
+        manager.AnalysisPluginManager.RegisterPlugin(TestAnalysisPlugin)
+
+        try:
+            plugin_names = manager.AnalysisPluginManager.GetPluginNames()
+            self.assertIn("test_plugin", plugin_names)
+            self.assertEqual(plugin_names, sorted(plugin_names))
+        finally:
+            manager.AnalysisPluginManager.DeregisterPlugin(TestAnalysisPlugin)
+
+        plugin_names = manager.AnalysisPluginManager.GetPluginNames()
+        self.assertNotIn("test_plugin", plugin_names)
 
 
 if __name__ == "__main__":
