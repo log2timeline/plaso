@@ -1339,6 +1339,22 @@ Test argument parser.
 
         # TODO: improve test coverage.
 
+    def testParseCredentialOptionsWithKeyData(self):
+        """Tests the _ParseCredentialOptions function with key data."""
+        test_tool = storage_media_tool.StorageMediaTool()
+
+        options = test_lib.TestOptions()
+        options.credentials = ["key_data:00ff"]
+
+        test_tool._ParseCredentialOptions(options)
+        self.assertEqual(test_tool._credentials, [("key_data", b"\x00\xff")])
+
+        for credential_string in ("key_data:zz", "key_data:0", "key_data:\u00e9"):
+            options.credentials = [credential_string]
+
+            with self.assertRaises(errors.BadConfigOption):
+                test_tool._ParseCredentialOptions(options)
+
     def testParseSourcePathOption(self):
         """Tests the _ParseSourcePathOption function."""
         test_file_path = self._GetTestFilePath(["ímynd.dd"])
