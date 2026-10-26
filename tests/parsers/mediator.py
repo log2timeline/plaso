@@ -7,6 +7,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
+from plaso.containers import event_sources
 from plaso.containers import events
 from plaso.parsers import mediator
 from plaso.storage.fake import writer as fake_writer
@@ -19,8 +20,29 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
 
     # pylint: disable=protected-access
 
-    # TODO: add tests for AppendToParserChain.
-    # TODO: add tests for ClearParserChain.
+    def testAppendToParserChain(self):
+        """Tests the AppendToParserChain function."""
+        parser_mediator = mediator.ParserMediator()
+
+        parser_mediator.AppendToParserChain("parser")
+        self.assertEqual(parser_mediator.GetParserChain(), "parser")
+
+        parser_mediator.AppendToParserChain("plugin")
+        self.assertEqual(parser_mediator.GetParserChain(), "parser/plugin")
+
+    def testClearParserChain(self):
+        """Tests the ClearParserChain function."""
+        parser_mediator = mediator.ParserMediator()
+
+        parser_mediator.AppendToParserChain("parser")
+        parser_mediator.AppendToParserChain("plugin")
+        self.assertEqual(parser_mediator.GetParserChain(), "parser/plugin")
+
+        parser_mediator.ClearParserChain()
+        self.assertEqual(parser_mediator.GetParserChain(), "")
+
+        parser_mediator.AppendToParserChain("other")
+        self.assertEqual(parser_mediator.GetParserChain(), "other")
 
     def testGetCodePage(self):
         """Tests the GetCodePage function."""
@@ -29,7 +51,13 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
         code_page = parser_mediator.GetCodePage()
         self.assertEqual(code_page, "cp1252")
 
-        # TODO: improve test coverage.
+        parser_mediator.SetPreferredCodepage("UTF-8")
+        code_page = parser_mediator.GetCodePage()
+        self.assertEqual(code_page, "utf-8")
+
+        parser_mediator.SetPreferredCodepage(None)
+        code_page = parser_mediator.GetCodePage()
+        self.assertEqual(code_page, "cp1252")
 
     def testGetDisplayName(self):
         """Tests the GetDisplayName function."""
@@ -136,11 +164,74 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
         language_tag = parser_mediator.GetLanguageTag()
         self.assertEqual(language_tag, "en-us")
 
-        # TODO: improve test coverage.
+        parser_mediator.SetPreferredLanguage("is-IS")
+        language_tag = parser_mediator.GetLanguageTag()
+        self.assertEqual(language_tag, "is-is")
 
-    # TODO: add tests for GetParserChain.
-    # TODO: add tests for GetRelativePathForPathSpec.
-    # TODO: add tests for PopFromParserChain.
+        parser_mediator.SetPreferredLanguage(None)
+        language_tag = parser_mediator.GetLanguageTag()
+        self.assertEqual(language_tag, "en-us")
+
+        with self.assertRaises(ValueError):
+            parser_mediator.SetPreferredLanguage("bogus")
+
+    def testGetParserChain(self):
+        """Tests the GetParserChain function."""
+        parser_mediator = mediator.ParserMediator()
+
+        parser_chain = parser_mediator.GetParserChain()
+        self.assertEqual(parser_chain, "")
+
+        parser_mediator.AppendToParserChain("parser")
+        parser_mediator.AppendToParserChain("plugin")
+
+        parser_chain = parser_mediator.GetParserChain()
+        self.assertEqual(parser_chain, "parser/plugin")
+
+        # Test that the cached parser chain is returned on subsequent calls.
+        parser_chain = parser_mediator.GetParserChain()
+        self.assertEqual(parser_chain, "parser/plugin")
+
+    def testGetRelativePathForPathSpec(self):
+        """Tests the GetRelativePathForPathSpec function."""
+        parser_mediator = mediator.ParserMediator()
+
+        test_file_path = self._GetTestFilePath(["syslog.gz"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        os_path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
+        )
+
+        relative_path = parser_mediator.GetRelativePathForPathSpec(os_path_spec)
+        self.assertEqual(relative_path, test_file_path)
+
+        gzip_path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_GZIP, parent=os_path_spec
+        )
+
+        relative_path = parser_mediator.GetRelativePathForPathSpec(gzip_path_spec)
+        self.assertEqual(relative_path, test_file_path)
+
+        relative_path = parser_mediator.GetRelativePathForPathSpec(None)
+        self.assertIsNone(relative_path)
+
+    def testPopFromParserChain(self):
+        """Tests the PopFromParserChain function."""
+        parser_mediator = mediator.ParserMediator()
+
+        parser_mediator.AppendToParserChain("parser")
+        parser_mediator.AppendToParserChain("plugin")
+        self.assertEqual(parser_mediator.GetParserChain(), "parser/plugin")
+
+        parser_mediator.PopFromParserChain()
+        self.assertEqual(parser_mediator.GetParserChain(), "parser")
+
+        parser_mediator.PopFromParserChain()
+        self.assertEqual(parser_mediator.GetParserChain(), "")
+
+        with self.assertRaises(IndexError):
+            parser_mediator.PopFromParserChain()
 
     def testProduceEventData(self):
         """Tests the ProduceEventData method."""
@@ -176,7 +267,43 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
         self.assertEqual(number_of_warnings, 0)
 
     # TODO: add tests for ProduceEventDataStream.
-    # TODO: add tests for ProduceEventSource.
+
+    def testProduceEventSource(self):
+        """Tests the ProduceEventSource method."""
+        parser_mediator = mediator.ParserMediator()
+
+        test_file_path = self._GetTestFilePath(["syslog.gz"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        os_path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
+        )
+        event_source = event_sources.EventSource(path_spec=os_path_spec)
+
+        with self.assertRaises(RuntimeError):
+            parser_mediator.ProduceEventSource(event_source)
+
+        storage_writer = fake_writer.FakeStorageWriter()
+        parser_mediator.SetStorageWriter(storage_writer)
+
+        storage_writer.Open()
+
+        try:
+            parser_mediator.ProduceEventSource(event_source)
+
+            number_of_event_sources = storage_writer.GetNumberOfAttributeContainers(
+                "event_source"
+            )
+            self.assertEqual(number_of_event_sources, 1)
+            self.assertEqual(parser_mediator.number_of_produced_event_sources, 1)
+
+            stored_event_source = storage_writer.GetAttributeContainerByIndex(
+                "event_source", 0
+            )
+            self.assertEqual(stored_event_source.path_spec, os_path_spec)
+
+        finally:
+            storage_writer.Close()
 
     def testProduceWarning(self):
         """Tests the ProduceWarning method."""

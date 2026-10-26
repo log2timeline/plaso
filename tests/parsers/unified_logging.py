@@ -1278,7 +1278,85 @@ class DSCFileTest(shared_test_lib.BaseTestCase):
         self.assertEqual(uuids[197].text_size, 36864)
         self.assertEqual(uuids[197].image_path, "/usr/lib/libIOReport.dylib")
 
-    # TODO: add test for GetImageValues
+    def testGetImageValues(self):
+        """Tests the GetImageValues function."""
+        dsc_range_tuple = collections.namedtuple(
+            "dsc_range",
+            [
+                "data_offset",
+                "image_identifier",
+                "image_path",
+                "range_offset",
+                "range_size",
+                "text_offset",
+                "text_size",
+            ],
+        )
+        first_image_identifier = uuid.UUID("5b14b45b-a15b-31ad-93fb-bac43c001a23")
+        second_image_identifier = uuid.UUID("081b5e9e-59ea-39cd-83c9-eedb68a84076")
+
+        test_file = unified_logging.DSCFile()
+        test_file.ranges = [
+            dsc_range_tuple(
+                data_offset=8,
+                image_identifier=first_image_identifier,
+                image_path="/usr/lib/first.dylib",
+                range_offset=0x1000,
+                range_size=0x20,
+                text_offset=0x8000,
+                text_size=0x100,
+            ),
+            dsc_range_tuple(
+                data_offset=24,
+                image_identifier=second_image_identifier,
+                image_path="/usr/lib/second.dylib",
+                range_offset=0x2000,
+                range_size=0x20,
+                text_offset=0x9000,
+                text_size=0x100,
+            ),
+        ]
+        test_file._file_object = io.BytesIO(
+            b"".join([b"\x00" * 8, b"first string\x00\x00\x00\x00", b"second\x00"])
+        )
+
+        image_values = test_file.GetImageValues(0x1000, False)
+        self.assertIsNotNone(image_values)
+        self.assertEqual(image_values.identifier, first_image_identifier)
+        self.assertEqual(image_values.path, "/usr/lib/first.dylib")
+        self.assertEqual(image_values.string, "first string")
+        self.assertEqual(image_values.text_offset, 0x8000)
+
+        image_values = test_file.GetImageValues(0x1006, False)
+        self.assertIsNotNone(image_values)
+        self.assertEqual(image_values.string, "string")
+
+        image_values = test_file.GetImageValues(0x2000, False)
+        self.assertIsNotNone(image_values)
+        self.assertEqual(image_values.identifier, second_image_identifier)
+        self.assertEqual(image_values.path, "/usr/lib/second.dylib")
+        self.assertEqual(image_values.string, "second")
+        self.assertEqual(image_values.text_offset, 0x9000)
+
+        # Test with a dynamic string reference.
+        image_values = test_file.GetImageValues(0x9010, True)
+        self.assertIsNotNone(image_values)
+        self.assertEqual(image_values.identifier, second_image_identifier)
+        self.assertEqual(image_values.string, "%s")
+        self.assertEqual(image_values.text_offset, 0x9000)
+
+        # Test with string references that are not within a range.
+        image_values = test_file.GetImageValues(0x0800, False)
+        self.assertIsNone(image_values)
+
+        image_values = test_file.GetImageValues(0x1800, False)
+        self.assertIsNone(image_values)
+
+        image_values = test_file.GetImageValues(0x3000, False)
+        self.assertIsNone(image_values)
+
+        image_values = test_file.GetImageValues(0x1000, True)
+        self.assertIsNone(image_values)
 
     def testReadFileObject(self):
         """Tests the ReadFileObject function."""
@@ -3695,6 +3773,18 @@ class TraceV3FileTest(shared_test_lib.BaseTestCase):
         )
     )
 
+    _STATEDUMP_WITH_DECODER_CHUNK_DATA = bytes.fromhex(
+        "6a00000000000000190100000e0000000e97b15b00000000e9010000000000805ff0170f"
+        "a239305dad3c0c120a25db1f03000000480000006c6f636174696f6e0000000000000000"
+        "000000000000000000000000000000000000000000000000000000000000000000000000"
+        "0000000000000000000000005f434c4c6f636174696f6e4d616e61676572537461746554"
+        "7261636b6572537461746500000000000000000000000000000000000000000000000000"
+        "00000000434c4c6f636174696f6e4d616e616765725374617465547261636b6572000000"
+        "000000000000000000000000000000000000000000000000000000000000000000000000"
+        "0000f0bf000000000070a7400000000000000000000000000000f03f0100000000000000"
+        "0000000000000000000000000000000001000000000000010000000000000000"
+    )
+
     def setUp(self):
         """Makes preparations before running an individual test."""
         test_file_path = os.path.join(
@@ -3790,7 +3880,43 @@ class TraceV3FileTest(shared_test_lib.BaseTestCase):
         self.assertEqual(string_reference, 0x105F327B0)
         self.assertFalse(is_dynamic)
 
-        # TODO: improve tests
+        tracepoint_data_object = tracepoint_data_object_tuple(
+            name_string_reference_lower=0x05F327B0, name_string_reference_upper=None
+        )
+        string_reference, is_dynamic = test_file._CalculateNameStringReference(
+            tracepoint_data_object
+        )
+        self.assertEqual(string_reference, 0x05F327B0)
+        self.assertFalse(is_dynamic)
+
+        # Test with a dynamic string reference.
+        tracepoint_data_object = tracepoint_data_object_tuple(
+            name_string_reference_lower=0x8000D8E2, name_string_reference_upper=None
+        )
+        string_reference, is_dynamic = test_file._CalculateNameStringReference(
+            tracepoint_data_object
+        )
+        self.assertEqual(string_reference, 0xD8E2)
+        self.assertTrue(is_dynamic)
+
+        tracepoint_data_object = tracepoint_data_object_tuple(
+            name_string_reference_lower=0x8000D8E2, name_string_reference_upper=0x0002
+        )
+        string_reference, is_dynamic = test_file._CalculateNameStringReference(
+            tracepoint_data_object
+        )
+        self.assertEqual(string_reference, 0x10000D8E2)
+        self.assertTrue(is_dynamic)
+
+        # Test without a string reference.
+        tracepoint_data_object = tracepoint_data_object_tuple(
+            name_string_reference_lower=None, name_string_reference_upper=None
+        )
+        string_reference, is_dynamic = test_file._CalculateNameStringReference(
+            tracepoint_data_object
+        )
+        self.assertEqual(string_reference, 0)
+        self.assertFalse(is_dynamic)
 
     def testCalculateProgramCounter(self):
         """Tests the _CalculateProgramCounter function."""
@@ -3805,7 +3931,34 @@ class TraceV3FileTest(shared_test_lib.BaseTestCase):
                 "load_address_upper",
             ],
         )
-        # TODO: improve tests
+        tracepoint_data_object = tracepoint_data_object_tuple(
+            large_offset_data=0,
+            large_shared_cache_data=0,
+            load_address_lower=0x00002000,
+            load_address_upper=0x0001,
+        )
+        program_counter = test_file._CalculateProgramCounter(
+            tracepoint_data_object, 0x1000
+        )
+        self.assertEqual(program_counter, 0x100001000)
+
+        tracepoint_data_object = tracepoint_data_object_tuple(
+            large_offset_data=0x0001,
+            large_shared_cache_data=0,
+            load_address_lower=0x00000010,
+            load_address_upper=None,
+        )
+        program_counter = test_file._CalculateProgramCounter(tracepoint_data_object, 0)
+        self.assertEqual(program_counter, 0x80000010)
+
+        tracepoint_data_object = tracepoint_data_object_tuple(
+            large_offset_data=0,
+            large_shared_cache_data=0x0004,
+            load_address_lower=0x00001234,
+            load_address_upper=0,
+        )
+        program_counter = test_file._CalculateProgramCounter(tracepoint_data_object, 0)
+        self.assertEqual(program_counter, 0x200001234)
 
         tracepoint_data_object = tracepoint_data_object_tuple(
             large_offset_data=0x0001,
@@ -3826,10 +3979,6 @@ class TraceV3FileTest(shared_test_lib.BaseTestCase):
         )
         program_counter = test_file._CalculateProgramCounter(tracepoint_data_object, 0)
         self.assertEqual(program_counter, 0x8008ECF707E9)
-
-    # TODO: add tests for _FormatArrayOfStrings
-    # TODO: add tests for _FormatArrayOfUUIDS
-    # TODO: add tests for _FormatStreamAsSignature
 
     def testReadCatalog(self):
         """Tests the _ReadCatalog function."""
@@ -4048,9 +4197,145 @@ class TraceV3FileTest(shared_test_lib.BaseTestCase):
         self.assertEqual(oversize_chunk.unknown3, 0x22)
         self.assertEqual(oversize_chunk.number_of_data_items, 2)
 
-    # TODO: add tests for _ReadSimpleDumpChunkData
-    # TODO: add tests for _ReadStateDumpChunkData
-    # TODO: add tests for ReadFileObject
+    def testReadSimpleDumpChunkData(self):
+        """Tests the _ReadSimpleDumpChunkData function."""
+        test_file = unified_logging.TraceV3File()
+
+        # Test without a corresponding catalog process information entry.
+        with self.assertRaises(errors.ParseError):
+            list(test_file._ReadSimpleDumpChunkData(self._SIMPLEDUMP_CHUNK_DATA, 0))
+
+        process_information_entry_tuple = collections.namedtuple(
+            "process_information_entry", ["main_uuid", "process_identifier"]
+        )
+        test_file._catalog_process_information_entries["1@7"] = (
+            process_information_entry_tuple(main_uuid=None, process_identifier=99)
+        )
+
+        log_entries = list(
+            test_file._ReadSimpleDumpChunkData(self._SIMPLEDUMP_CHUNK_DATA, 0)
+        )
+        self.assertEqual(len(log_entries), 1)
+
+        sender_image_identifier = uuid.UUID("1d625353-a9fa-3ec9-94c0-b2952315b2d2")
+
+        log_entry = log_entries[0]
+        self.assertEqual(
+            log_entry.event_message, "Skipping boot-task: restore-datapartition"
+        )
+        self.assertEqual(log_entry.event_type, "logEvent")
+        self.assertEqual(log_entry.mach_timestamp, 567448911)
+        self.assertEqual(log_entry.message_type, "Default")
+        self.assertEqual(log_entry.process_identifier, 99)
+        self.assertIsNone(log_entry.process_image_identifier)
+        self.assertIsNone(log_entry.process_image_path)
+        self.assertEqual(log_entry.sender_image_identifier, sender_image_identifier)
+        self.assertEqual(log_entry.sender_program_counter, 230724)
+        self.assertEqual(log_entry.thread_identifier, 1887)
+        self.assertEqual(log_entry.timestamp, 567448911)
+        self.assertEqual(log_entry.trace_identifier, 0)
+
+        self.assertEqual(len(log_entry.backtrace_frames), 1)
+        self.assertEqual(
+            log_entry.backtrace_frames[0].image_identifier, sender_image_identifier
+        )
+        self.assertEqual(log_entry.backtrace_frames[0].image_offset, 230724)
+
+    def testReadStateDumpChunkData(self):
+        """Tests the _ReadStateDumpChunkData function."""
+        test_file = unified_logging.TraceV3File()
+
+        # Test without a corresponding catalog process information entry.
+        with self.assertRaises(errors.ParseError):
+            list(test_file._ReadStateDumpChunkData(self._STATEDUMP_CHUNK_DATA, 0))
+
+        process_information_entry_tuple = collections.namedtuple(
+            "process_information_entry", ["main_uuid", "process_identifier"]
+        )
+        test_file._catalog_process_information_entries["292241@875466"] = (
+            process_information_entry_tuple(main_uuid=None, process_identifier=99)
+        )
+
+        log_entries = list(
+            test_file._ReadStateDumpChunkData(self._STATEDUMP_CHUNK_DATA, 0)
+        )
+        self.assertEqual(len(log_entries), 1)
+
+        sender_image_identifier = uuid.UUID("081b5e9e-59ea-39cd-83c9-eedb68a84076")
+
+        log_entry = log_entries[0]
+        self.assertEqual(log_entry.activity_identifier, 15389225)
+        self.assertEqual(log_entry.event_message, "")
+        self.assertEqual(log_entry.event_type, "stateEvent")
+        self.assertEqual(log_entry.mach_timestamp, 100662123537283)
+        self.assertEqual(log_entry.process_identifier, 99)
+        self.assertEqual(log_entry.sender_image_identifier, sender_image_identifier)
+        self.assertEqual(log_entry.timestamp, 100662123537283)
+        self.assertEqual(log_entry.trace_identifier, 0)
+
+        self.assertEqual(len(log_entry.backtrace_frames), 1)
+        self.assertEqual(
+            log_entry.backtrace_frames[0].image_identifier, sender_image_identifier
+        )
+        self.assertEqual(log_entry.backtrace_frames[0].image_offset, 0)
+
+        # Test with state data that is formatted by a decoder.
+        test_file._catalog_process_information_entries["106@281"] = (
+            process_information_entry_tuple(main_uuid=None, process_identifier=77)
+        )
+
+        log_entries = list(
+            test_file._ReadStateDumpChunkData(
+                self._STATEDUMP_WITH_DECODER_CHUNK_DATA, 0
+            )
+        )
+        self.assertEqual(len(log_entries), 1)
+
+        log_entry = log_entries[0]
+        self.assertEqual(log_entry.activity_identifier, 489)
+        self.assertEqual(log_entry.event_type, "stateEvent")
+        self.assertEqual(log_entry.mach_timestamp, 1538365198)
+        self.assertEqual(log_entry.process_identifier, 77)
+        self.assertEqual(
+            log_entry.sender_image_identifier,
+            uuid.UUID("5ff0170f-a239-305d-ad3c-0c120a25db1f"),
+        )
+
+        title, _, value = log_entry.event_message.partition("\n")
+        self.assertEqual(title, "CLLocationManagerStateTracker")
+        self.assertTrue(value.startswith("{"))
+        self.assertIn('"desiredAccuracy":3000', value)
+        self.assertIn('"distanceFilter":-1', value)
+
+    def testReadFileObject(self):
+        """Tests the ReadFileObject function."""
+        test_file_path = "/private/var/db/Diagnostics/Signpost/0000000000000001.tracev3"
+        test_path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_APFS,
+            location=test_file_path,
+            parent=self._parent_path_spec,
+        )
+        file_entry = path_spec_resolver.Resolver.OpenFileEntry(test_path_spec)
+
+        test_file = unified_logging.TraceV3File(file_system=file_entry.GetFileSystem())
+        test_file.Open(file_entry)
+
+        try:
+            self.assertEqual(test_file._uuidtext_path, "/private/var/db/uuidtext")
+            self.assertEqual(
+                test_file._timesync_path, "/private/var/db/diagnostics/timesync"
+            )
+            self.assertEqual(test_file._header_timestamp, 1673487385000000000)
+            self.assertAlmostEqual(test_file._header_timebase, 125.0 / 3.0)
+            self.assertEqual(
+                test_file._boot_identifier,
+                uuid.UUID("dca6f382-13f5-4a21-bf2b-4f1be8b136bd"),
+            )
+            self.assertEqual(len(test_file._timesync_sync_records), 4)
+            self.assertIsNotNone(test_file._timesync_boot_record)
+
+        finally:
+            test_file.Close()
 
 
 class UUIDTextFileTest(shared_test_lib.BaseTestCase):
