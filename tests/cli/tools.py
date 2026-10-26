@@ -53,8 +53,26 @@ Test argument parser.
 --------------------------------------------------------------------------------
 """
 
-    # TODO: add test for _ConfigureLogging
-    # TODO: add test for _EncodeString
+    def testEncodeString(self):
+        """Tests the _EncodeString function."""
+        test_tool = tools.CLITool()
+        test_tool.preferred_encoding = "utf-8"
+
+        encoded_string = test_tool._EncodeString("þriðja string")
+        self.assertEqual(encoded_string, b"\xc3\xberi\xc3\xb0ja string")
+        self.assertEqual(test_tool._encode_errors, "strict")
+
+        test_tool.preferred_encoding = "ascii"
+
+        with self.assertLogs("cli", level="ERROR"):
+            encoded_string = test_tool._EncodeString("þriðja string")
+
+        self.assertEqual(encoded_string, b"\\xferi\\xf0ja string")
+        self.assertEqual(test_tool._encode_errors, "backslashreplace")
+
+        # The error tolerant encoding is retained for subsequent strings.
+        encoded_string = test_tool._EncodeString("ð")
+        self.assertEqual(encoded_string, b"\\xf0")
 
     def testParseInformationalOptions(self):
         """Tests the _ParseInformationalOptions function."""
@@ -75,7 +93,19 @@ Test argument parser.
 
         test_tool._ParseLogFileOptions(options)
 
-    # TODO: add test for _PromptUserForInput
+    def testPromptUserForInput(self):
+        """Tests the _PromptUserForInput function."""
+        input_reader = tools.FileObjectInputReader(io.BytesIO(b"an answer\n"))
+        output_writer = test_lib.TestOutputWriter()
+        test_tool = tools.CLITool(
+            input_reader=input_reader, output_writer=output_writer
+        )
+
+        input_string = test_tool._PromptUserForInput("A question")
+        self.assertEqual(input_string, "an answer\n")
+
+        output = output_writer.ReadOutput()
+        self.assertEqual(output, "A question: ")
 
     def testAddBasicOptions(self):
         """Tests the AddBasicOptions function."""

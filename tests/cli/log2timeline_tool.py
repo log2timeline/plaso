@@ -63,8 +63,25 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
         return options
 
-    # TODO: add tests for _CheckStorageFile
-    # TODO: add tests for _CreateProcessingConfiguration
+    def testCheckStorageFile(self):
+        """Tests the _CheckStorageFile function."""
+        test_tool = log2timeline_tool.Log2TimelineTool()
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            storage_file_path = os.path.join(temp_directory, "storage.plaso")
+            test_tool._CheckStorageFile(storage_file_path)
+
+            with open(storage_file_path, "wb") as file_object:
+                file_object.write(b"")
+
+            with self.assertLogs("cli", level="WARNING") as log_context:
+                test_tool._CheckStorageFile(storage_file_path, warn_about_existing=True)
+
+            self.assertEqual(len(log_context.output), 1)
+            self.assertIn("already existing storage file", log_context.output[0])
+
+            with self.assertRaises(errors.BadConfigOption):
+                test_tool._CheckStorageFile(temp_directory)
 
     def testGetPluginData(self):
         """Tests the _GetPluginData function."""
@@ -112,8 +129,6 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
         # Ensure there are no events left unaccounted for.
         self.assertEqual(event_counters, collections.Counter())
 
-    # TODO: add tests for _PrintProcessingSummary
-
     def testParseArguments(self):
         """Tests the ParseArguments function."""
         output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
@@ -122,7 +137,9 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
         result = test_tool.ParseArguments([])
         self.assertFalse(result)
 
-        # TODO: check output.
+        output = output_writer.ReadOutput()
+        self.assertTrue(output.startswith("ERROR: Missing source path.\n\nusage: "))
+
         # TODO: improve test coverage.
 
     def testParseOptions(self):

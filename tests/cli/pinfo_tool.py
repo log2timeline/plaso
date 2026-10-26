@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Tests for the pinfo CLI tool."""
 
+import collections
 import json
 import os
 import unittest
@@ -120,8 +121,78 @@ repeated : 4 (0)
 Storage files are different.
 """
 
-    # TODO: add test for _CalculateStorageCounters.
-    # TODO: add test for _CompareStores.
+    def testCalculateStorageCounters(self):
+        """Tests the _CalculateStorageCounters function."""
+        test_file_path = self._GetTestFilePath(["psort_test.plaso"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        test_tool = pinfo_tool.PinfoTool()
+
+        storage_reader = test_tool._GetStorageReader(test_file_path)
+        try:
+            storage_counters = test_tool._CalculateStorageCounters(storage_reader)
+        finally:
+            storage_reader.Close()
+
+        self.assertEqual(
+            sorted(storage_counters.keys()),
+            [
+                "analysis_reports",
+                "data_types",
+                "event_labels",
+                "extraction_warnings_by_parser_chain",
+                "extraction_warnings_by_path_spec",
+                "parsers",
+                "recovery_warnings_by_parser_chain",
+                "recovery_warnings_by_path_spec",
+                "timelining_warnings_by_parser_chain",
+                "timelining_warnings_by_path_spec",
+            ],
+        )
+
+        parsers_counter = storage_counters["parsers"]
+        self.assertEqual(parsers_counter["filestat"].number_of_events, 6)
+        self.assertEqual(parsers_counter["total"].number_of_events, 38)
+
+        warnings_counter = storage_counters["extraction_warnings_by_parser_chain"]
+        self.assertEqual(
+            {key: value.number_of_events for key, value in warnings_counter.items()},
+            {"text/syslog_traditional": 2},
+        )
+
+        self.assertEqual(storage_counters["recovery_warnings_by_path_spec"], {})
+
+    def testCompareStoresWithStorageReaders(self):
+        """Tests the _CompareStores function."""
+        test_file_path1 = self._GetTestFilePath(["psort_test.plaso"])
+        self._SkipIfPathNotExists(test_file_path1)
+
+        test_file_path2 = self._GetTestFilePath(["pinfo_test.plaso"])
+        self._SkipIfPathNotExists(test_file_path2)
+
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+        test_tool._output_format = "text"
+
+        storage_reader = test_tool._GetStorageReader(test_file_path1)
+        compare_storage_reader = test_tool._GetStorageReader(test_file_path2)
+        try:
+            result = test_tool._CompareStores(storage_reader, storage_reader)
+            self.assertTrue(result)
+
+            output = output_writer.ReadOutput()
+            self.assertEqual(output, "")
+
+            result = test_tool._CompareStores(storage_reader, compare_storage_reader)
+            self.assertFalse(result)
+
+        finally:
+            compare_storage_reader.Close()
+            storage_reader.Close()
+
+        output = output_writer.ReadOutput()
+        self.assertIn("Events generated per data type", output)
+        self.assertIn("syslog:line : 26 (0)", output)
 
     def testGenerateAnalysisResultsReportAsJSON(self):
         """Tests the _GenerateAnalysisResultsReport function."""
@@ -658,6 +729,195 @@ Storage files are different.
         with self.assertRaises(errors.BadConfigOption):
             test_tool._GetStorageReader("bogus.plaso")
 
+    def _CreateCounter(self, container_class, number_of_events_per_key):
+        """Creates a counter for testing.
+
+        Args:
+          container_class (type): count attribute container class.
+          number_of_events_per_key (dict[str, int]): number of events per key.
+
+        Returns:
+          collections.Counter: counter with a count container per key.
+        """
+        counter = collections.Counter()
+        for key, number_of_events in number_of_events_per_key.items():
+            counter[key] = container_class(number_of_events=number_of_events)
+
+        return counter
+
+    def testPrintAnalysisReportCounter(self):
+        """Tests the _PrintAnalysisReportCounter function."""
+        analysis_reports_counter = self._CreateCounter(
+            counts.WarningCount, {"tagging": 2, "total": 2}
+        )
+
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+
+        test_tool._output_format = "json"
+        test_tool._PrintAnalysisReportCounter(analysis_reports_counter)
+
+        output = output_writer.ReadOutput()
+        json_dict = json.loads(f"{{{output:s}}}")
+        self.assertEqual(json_dict, {"analysis_reports": {"tagging": 2, "total": 2}})
+
+        test_tool._output_format = "text"
+        test_tool._PrintAnalysisReportCounter(
+            analysis_reports_counter, session_identifier="session1"
+        )
+
+        output = output_writer.ReadOutput()
+        self.assertIn("Reports generated per plugin: session1", output)
+        self.assertIn("tagging : 2", output)
+        self.assertIn("  Total : 2", output)
+
+        test_tool._PrintAnalysisReportCounter(collections.Counter())
+
+        output = output_writer.ReadOutput()
+        self.assertEqual(output, "")
+
+    def testPrintAnalysisReportsDetails(self):
+        """Tests the _PrintAnalysisReportsDetails function."""
+        test_file_path1 = self._GetTestFilePath(["psort_test.plaso"])
+        self._SkipIfPathNotExists(test_file_path1)
+
+        test_file_path2 = self._GetTestFilePath(["pinfo_test.plaso"])
+        self._SkipIfPathNotExists(test_file_path2)
+
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+        test_tool._output_format = "text"
+
+        storage_reader = test_tool._GetStorageReader(test_file_path1)
+        try:
+            test_tool._PrintAnalysisReportsDetails(storage_reader)
+        finally:
+            storage_reader.Close()
+
+        output = output_writer.ReadOutput()
+        self.assertIn("Analysis report: 0", output)
+        self.assertIn("Analysis report: 1", output)
+        self.assertIn("  Name plugin : tagging", output)
+        self.assertIn(" Event filter : N/A", output)
+        self.assertIn("     repeated : 2", output)
+
+        storage_reader = test_tool._GetStorageReader(test_file_path2)
+        try:
+            test_tool._PrintAnalysisReportsDetails(storage_reader)
+        finally:
+            storage_reader.Close()
+
+        output = output_writer.ReadOutput()
+        self.assertEqual(output, "\nNo analysis reports stored.\n")
+
+    def testPrintEventLabelsCounter(self):
+        """Tests the _PrintEventLabelsCounter function."""
+        event_labels_counter = self._CreateCounter(
+            counts.EventLabelCount, {"exit1": 2, "total": 2}
+        )
+
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+
+        test_tool._output_format = "json"
+        test_tool._PrintEventLabelsCounter(event_labels_counter)
+
+        output = output_writer.ReadOutput()
+        json_dict = json.loads(f"{{{output:s}}}")
+        self.assertEqual(json_dict, {"event_labels": {"exit1": 2, "total": 2}})
+
+        test_tool._output_format = "text"
+        test_tool._PrintEventLabelsCounter(event_labels_counter)
+
+        output = output_writer.ReadOutput()
+        self.assertIn("Event tags generated per label", output)
+        self.assertIn("exit1 : 2", output)
+        self.assertIn("Total : 2", output)
+
+        test_tool._PrintEventLabelsCounter(collections.Counter())
+
+        output = output_writer.ReadOutput()
+        self.assertEqual(output, "\nNo events labels stored.\n")
+
+        test_tool._PrintEventLabelsCounter(
+            collections.Counter(), session_identifier="session1"
+        )
+
+        output = output_writer.ReadOutput()
+        self.assertEqual(output, "")
+
+        test_tool._output_format = "markdown"
+        test_tool._PrintEventLabelsCounter(collections.Counter())
+
+        output = output_writer.ReadOutput()
+        self.assertEqual(output, "## Event tags generated per label\n\nN/A\n\n")
+
+    def testPrintParsersCounter(self):
+        """Tests the _PrintParsersCounter function."""
+        parsers_counter = self._CreateCounter(
+            counts.ParserCount, {"filestat": 3, "total": 3}
+        )
+
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+
+        test_tool._output_format = "json"
+        test_tool._PrintParsersCounter(parsers_counter)
+
+        output = output_writer.ReadOutput()
+        json_dict = json.loads(f"{{{output:s}}}")
+        self.assertEqual(json_dict, {"parsers": {"filestat": 3, "total": 3}})
+
+        # A session identifier prefixes the JSON output with a separator.
+        test_tool._PrintParsersCounter(parsers_counter, session_identifier="session1")
+
+        output = output_writer.ReadOutput()
+        self.assertTrue(output.startswith(', "parsers": {'))
+
+        test_tool._output_format = "text"
+        test_tool._PrintParsersCounter(parsers_counter, session_identifier="session1")
+
+        output = output_writer.ReadOutput()
+        self.assertIn("Events generated per parser: session1", output)
+        self.assertIn("filestat : 3", output)
+
+        test_tool._PrintParsersCounter(collections.Counter())
+
+        output = output_writer.ReadOutput()
+        self.assertEqual(output, "\nNo events stored.\n")
+
+        test_tool._output_format = "markdown"
+        test_tool._PrintParsersCounter(collections.Counter())
+
+        output = output_writer.ReadOutput()
+        self.assertEqual(output, "## Events generated per parser\n\nN/A\n\n")
+
+    # TODO: add test for _PrintSessionsDetails.
+
+    def testPrintSessionsOverview(self):
+        """Tests the _PrintSessionsOverview function."""
+        test_file_path = self._GetTestFilePath(["pinfo_test.plaso"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+        test_tool._output_format = "text"
+
+        storage_reader = test_tool._GetStorageReader(test_file_path)
+        try:
+            test_tool._PrintSessionsOverview(storage_reader)
+        finally:
+            storage_reader.Close()
+
+        output = output_writer.ReadOutput()
+        self.assertIn(
+            (
+                "bf263ca6-f352-4480-b06b-d5849ba95d17 : "
+                "2026-07-02T17:48:14.943433+00:00"
+            ),
+            output,
+        )
+
     def testPrintCounterDifferences(self):
         """Tests the _PrintCounterDifferences function."""
         path_spec_key = (
@@ -781,8 +1041,17 @@ Storage files are different.
         result = test_tool.ParseArguments([])
         self.assertFalse(result)
 
-        # TODO: check output.
-        # TODO: improve test coverage.
+        output = output_writer.ReadOutput()
+        self.assertTrue(
+            output.startswith(b"ERROR: Missing storage file option.\n\nusage: ")
+        )
+
+        test_file_path = self._GetTestFilePath(["bogus.plaso"])
+        result = test_tool.ParseArguments([test_file_path])
+        self.assertFalse(result)
+
+        output = output_writer.ReadOutput()
+        self.assertTrue(output.startswith(b"ERROR: No such storage file: "))
 
     def testParseOptions(self):
         """Tests the ParseOptions function."""
@@ -802,7 +1071,32 @@ Storage files are different.
         with self.assertRaises(errors.BadConfigOption):
             test_tool.ParseOptions(options)
 
-        # TODO: improve test coverage.
+        options = test_lib.TestOptions()
+        options.sections = "list"
+
+        test_tool.ParseOptions(options)
+        self.assertTrue(test_tool.list_sections)
+
+        options = test_lib.TestOptions()
+        options.report = "bogus"
+        options.storage_file = test_file_path
+
+        with self.assertRaises(errors.BadConfigOption):
+            test_tool.ParseOptions(options)
+
+        options = test_lib.TestOptions()
+        options.compare_storage_file = self._GetTestFilePath(["bogus.plaso"])
+        options.storage_file = test_file_path
+
+        with self.assertRaises(errors.BadConfigOption):
+            test_tool.ParseOptions(options)
+
+        options = test_lib.TestOptions()
+        options.storage_file = test_file_path
+        options.write = test_file_path
+
+        with self.assertRaises(errors.BadConfigOption):
+            test_tool.ParseOptions(options)
 
     def testPrintStorageInformation(self):
         """Tests the PrintStorageInformation function."""

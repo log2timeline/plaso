@@ -10,7 +10,9 @@ except ImportError:
     resource = None
 
 from plaso.cli import extraction_tool
+from plaso.lib import errors
 
+from tests import test_lib as shared_test_lib
 from tests.cli import test_lib
 
 
@@ -274,7 +276,22 @@ Test argument parser.
 
     _STORAGE_FILENAME_TEMPLATE = r"\d{{8}}T\d{{6}}-{filename}.plaso"
 
-    # TODO: add test for _CreateProcessingConfiguration
+    def testCreateExtractionProcessingConfiguration(self):
+        """Tests the _CreateExtractionProcessingConfiguration function."""
+        test_tool = extraction_tool.ExtractionTool()
+        test_tool._artifact_filters = ["WindowsEventLogSystem"]
+        test_tool._data_location = shared_test_lib.DATA_PATH
+        test_tool._hasher_names_string = "sha256"
+        test_tool._preferred_time_zone = "CET"
+        test_tool._preferred_year = 2012
+
+        configuration = test_tool._CreateExtractionProcessingConfiguration()
+        self.assertIsNotNone(configuration)
+        self.assertEqual(configuration.artifact_filters, ["WindowsEventLogSystem"])
+        self.assertEqual(configuration.data_location, shared_test_lib.DATA_PATH)
+        self.assertEqual(configuration.extraction.hasher_names_string, "sha256")
+        self.assertEqual(configuration.preferred_time_zone, "CET")
+        self.assertEqual(configuration.preferred_year, 2012)
 
     def testGenerateStorageFileName(self):
         """Tests the _GenerateStorageFileName function."""
@@ -348,8 +365,20 @@ Test argument parser.
 
         test_tool._ParseProcessingOptions(options)
 
-    # TODO: add test for _ReadParserPresetsFromFile
-    # TODO: add test for _SetExtractionPreferredTimeZone
+    def testReadParserPresetsFromFile(self):
+        """Tests the _ReadParserPresetsFromFile function."""
+        test_tool = extraction_tool.ExtractionTool()
+        test_tool._data_location = shared_test_lib.DATA_PATH
+
+        test_tool._ReadParserPresetsFromFile()
+
+        parser_preset = test_tool._presets_manager.GetPresetByName("win7")
+        self.assertIsNotNone(parser_preset)
+
+        test_tool._data_location = self._GetTestFilePath(["bogus"])
+
+        with self.assertRaises(errors.BadConfigOption):
+            test_tool._ReadParserPresetsFromFile()
 
     def testAddExtractionOptions(self):
         """Tests the AddExtractionOptions function."""
