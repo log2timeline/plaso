@@ -326,6 +326,14 @@ plaso.parsers.presets module
    :show-inheritance:
    :undoc-members:
 
+plaso.parsers.recently\_used\_xbel module
+-----------------------------------------
+
+.. automodule:: plaso.parsers.recently_used_xbel
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 plaso.parsers.recycler module
 -----------------------------
 
