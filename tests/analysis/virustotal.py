@@ -12,6 +12,7 @@ from plaso.analysis import virustotal
 from plaso.containers import events
 from plaso.containers import reports
 from plaso.lib import definitions
+from plaso.parsers import pe
 
 from tests.analysis import test_lib
 
@@ -41,10 +42,12 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
 
     _FAKE_API_KEY = "4"
 
+    _EVENT_2_HASH = "91"
+
     _TEST_EVENTS = [
         {
             "_parser_chain": "pe",
-            "data_type": "pe:compilation:compilation_time",
+            "data_type": "pe_coff:file",
             "path_spec": fake_path_spec.FakePathSpec(
                 location="C:\\WINDOWS\\system32\\evil.exe"
             ),
@@ -52,7 +55,17 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
             "sha256_hash": _EVENT_1_HASH,
             "timestamp": "2015-01-01 17:00:00",
             "timestamp_desc": definitions.TIME_DESCRIPTION_UNKNOWN,
-        }
+        },
+        {
+            "_parser_chain": "filestat",
+            "data_type": "fs:stat",
+            "path_spec": fake_path_spec.FakePathSpec(
+                location="C:\\WINDOWS\\system32\\evil.txt"
+            ),
+            "sha256_hash": _EVENT_2_HASH,
+            "timestamp": "2015-01-01 17:00:00",
+            "timestamp_desc": definitions.TIME_DESCRIPTION_MODIFICATION,
+        },
     ]
 
     # pylint: disable=unused-argument
@@ -91,6 +104,19 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
     def tearDown(self):
         """Cleans up after running an individual test."""
         self.requests_patcher.stop()
+
+    def testDataTypes(self):
+        """Tests that the data types are those produced by the PE parser."""
+        expected_data_types = frozenset(
+            [
+                pe.PEDLLImportEventData.DATA_TYPE,
+                pe.PEFileEventData.DATA_TYPE,
+                pe.PEResourceEventData.DATA_TYPE,
+            ]
+        )
+        self.assertEqual(
+            virustotal.VirusTotalAnalysisPlugin.DATA_TYPES, expected_data_types
+        )
 
     def testExamineEventAndCompileReport(self):
         """Tests the ExamineEvent and CompileReport functions."""

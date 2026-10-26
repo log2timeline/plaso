@@ -14,7 +14,7 @@ class VirusTotalAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
     """An analysis plugin for looking up hashes in VirusTotal."""
 
     # TODO: Check if there are other file types worth checking VirusTotal for.
-    DATA_TYPES = frozenset(["pe", "pe:compilation:compilation_time"])
+    DATA_TYPES = frozenset(["pe_coff:dll_import", "pe_coff:file", "pe_coff:resource"])
 
     NAME = "virustotal"
 
