@@ -3,6 +3,8 @@
 
 import unittest
 
+import pyfwsi
+
 from plaso.parsers.shared import shell_items
 
 from tests.parsers import test_lib
@@ -561,12 +563,114 @@ class ShellItemsParserTest(test_lib.ParserTestCase):
         )
     )
 
-    # TODO: add tests for _GetDateTime
-    # TODO: add tests for _GetSanitizedPathString
-    # TODO: add tests for _ParseShellItem
-    # TODO: add tests for _ParseShellItemPathSegment
     # TODO: add tests for CopyToPath
     # TODO: add tests for GetUpperPathSegment
+
+    # pylint: disable=protected-access
+
+    def _GetShellItems(self):
+        """Retrieves the shell items of the test data.
+
+        Returns:
+          list[pyfwsi.item]: shell items.
+        """
+        shell_item_list = pyfwsi.item_list()
+        shell_item_list.copy_from_byte_stream(self._TEST_DATA)
+        return list(shell_item_list.items)
+
+    def testGetDateTime(self):
+        """Tests the _GetDateTime function."""
+        parser = shell_items.ShellItemsParser("test_origin")
+
+        date_time = parser._GetDateTime(0x00000000)
+        self.assertIsNone(date_time)
+
+        date_time = parser._GetDateTime(None)
+        self.assertIsNone(date_time)
+
+        date_time = parser._GetDateTime(0xABAA3C3D)
+        self.assertIsNotNone(date_time)
+        self.assertEqual(date_time.CopyToDateTimeString(), "2010-01-29 21:29:20")
+
+    def testGetSanitizedPathString(self):
+        """Tests the _GetSanitizedPathString function."""
+        parser = shell_items.ShellItemsParser("test_origin")
+
+        path_string = parser._GetSanitizedPathString(None)
+        self.assertIsNone(path_string)
+
+        path_string = parser._GetSanitizedPathString("")
+        self.assertIsNone(path_string)
+
+        path_string = parser._GetSanitizedPathString("InfoTool.exe")
+        self.assertEqual(path_string, "InfoTool.exe")
+
+        path_string = parser._GetSanitizedPathString("C:\\Nero\x01\x7f")
+        self.assertEqual(path_string, "C:\\\\Nero\\x01\\x7f")
+
+    def testParseShellItem(self):
+        """Tests the _ParseShellItem function."""
+        storage_writer = self._CreateStorageWriter()
+        parser_mediator = self._CreateParserMediator(storage_writer)
+
+        parser = shell_items.ShellItemsParser("test_origin")
+
+        root_folder, volume, file_entry = self._GetShellItems()[:3]
+
+        # Shell items that are not a file entry only add a path segment.
+        parser._ParseShellItem(parser_mediator, root_folder)
+        parser._ParseShellItem(parser_mediator, volume)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 0)
+        self.assertEqual(parser.CopyToPath(), "<My Computer> C:\\\\")
+
+        parser._ParseShellItem(parser_mediator, file_entry)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 1)
+
+        expected_event_values = {
+            "access_time": "2010-01-29T21:29:20+00:00",
+            "creation_time": "2009-07-14T03:20:10+00:00",
+            "data_type": "windows:shell_item:file_entry",
+            "file_reference": "274-1",
+            "long_name": "Program Files (x86)",
+            "modification_time": "2010-01-29T21:29:20+00:00",
+            "name": "PROGRA~2",
+            "origin": "test_origin",
+            "shell_item_path": "<My Computer> C:\\\\Program Files (x86)",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
+
+    def testParseShellItemPathSegment(self):
+        """Tests the _ParseShellItemPathSegment function."""
+        parser = shell_items.ShellItemsParser("test_origin")
+
+        path_segments = [
+            parser._ParseShellItemPathSegment(shell_item)
+            for shell_item in self._GetShellItems()
+        ]
+        self.assertEqual(
+            path_segments,
+            [
+                "<My Computer>",
+                "C:\\\\",
+                "Program Files (x86)",
+                "Nero",
+                "Nero 9",
+                "Nero InfoTool",
+                "InfoTool.exe",
+            ],
+        )
+
+        # Determining a path segment does not change the shell item path.
+        self.assertIsNone(parser.CopyToPath())
 
     def testParseByteStream(self):
         """Tests the ParseByteStream function."""
