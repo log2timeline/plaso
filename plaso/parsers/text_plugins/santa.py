@@ -375,7 +375,8 @@ class SantaTextPlugin(interface.TextPlugin):
         + _GROUP
         + _MODE
         + _PATH
-        + pyparsing.Optional(_ARGS)
+        # Do not skip the end of line when the optional arguments are absent.
+        + pyparsing.Optional(_ARGS).set_whitespace_chars(" ")
         + _END_OF_LINE
     )
 
