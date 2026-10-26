@@ -1079,16 +1079,17 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
             table_view.Write(self._output_writer)
 
-    def _PrintSessionDetailsAsJSON(self, session):
+    def _PrintSessionDetailsAsJSON(self, session, session_identifier):
         """Prints the details of a session as JSON.
 
         Args:
           session (Session): session.
+          session_identifier (str): session identifier, formatted as a UUID.
         """
         json_string = json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
             session
         )
-        self._output_writer.Write(f'"session": {json_string:s}')
+        self._output_writer.Write(f'"{session_identifier:s}": {json_string:s}')
 
     def _PrintSessionDetailsAsTable(self, session, session_identifier):
         """Prints the details of a session as a table.
@@ -1160,7 +1161,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
                 if session_index != 0:
                     self._output_writer.Write(", ")
 
-                self._PrintSessionDetailsAsJSON(session)
+                self._PrintSessionDetailsAsJSON(session, session_identifier)
 
             elif self._output_format in ("markdown", "text"):
                 self._PrintSessionDetailsAsTable(session, session_identifier)

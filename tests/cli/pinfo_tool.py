@@ -665,7 +665,31 @@ Storage files are different.
     # TODO: add test for _PrintParsersCounter.
     # TODO: add test for _PrintPreprocessingInformation.
     # TODO: add test for _PrintRecoveryWarningsDetails.
-    # TODO: add test for _PrintSessionsDetails.
+
+    def testPrintSessionsDetailsAsJSON(self):
+        """Tests the _PrintSessionsDetails function with JSON output."""
+        test_file_path = self._GetTestFilePath(["psort_test.plaso"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+        test_tool._output_format = "json"
+
+        storage_reader = test_tool._GetStorageReader(test_file_path)
+        try:
+            test_tool._PrintSessionsDetails(storage_reader)
+        finally:
+            storage_reader.Close()
+
+        output = output_writer.ReadOutput()
+
+        json_dict = json.loads(f"{{{output:s}}}")
+        sessions = json_dict["sessions"]
+        self.assertEqual(len(sessions), 4)
+
+        for session in sessions.values():
+            self.assertEqual(session["__container_type__"], "session")
+
     # TODO: add test for _PrintSessionsOverview.
     # TODO: add test for _PrintTasksInformation.
 
