@@ -52,6 +52,30 @@ class DSVEventFormattingHelperTest(test_lib.OutputModuleTestCase):
         sanitized_field = formatting_helper._SanitizeField("-")
         self.assertEqual(sanitized_field, "-")
 
+        # A value that contains a double quote is enclosed in double quotes and
+        # the double quote is escaped with another double quote.
+        sanitized_field = formatting_helper._SanitizeField('a"b')
+        self.assertEqual(sanitized_field, '"a""b"')
+
+        sanitized_field = formatting_helper._SanitizeField('"quoted", value')
+        self.assertEqual(sanitized_field, '"""quoted""  value"')
+
+        sanitized_field = formatting_helper._SanitizeField('=1+"1"')
+        self.assertEqual(sanitized_field, '"\'=1+""1"""')
+
+        # A value that contains a single quote is not enclosed in double quotes.
+        sanitized_field = formatting_helper._SanitizeField("it's")
+        self.assertEqual(sanitized_field, "it's")
+
+        # A value that contains a double quote is left unchanged when quoting is
+        # disabled.
+        formatting_helper = shared_dsv.DSVEventFormattingHelper(
+            None, ["field"], field_delimiter="|", quote_fields=False
+        )
+
+        sanitized_field = formatting_helper._SanitizeField('a"b')
+        self.assertEqual(sanitized_field, 'a"b')
+
 
 class DSVOutputModuleTest(test_lib.OutputModuleTestCase):
     """Tests the delimiter separated values shared output module."""
