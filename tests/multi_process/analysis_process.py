@@ -12,6 +12,7 @@ from plaso.engine import configurations
 from plaso.multi_process import analysis_process
 from plaso.multi_process import plaso_queue
 from plaso.multi_process import zeromq_queue
+from plaso.storage.fake import writer as fake_writer
 
 from tests import test_lib as shared_test_lib
 from tests.multi_process import test_lib
@@ -177,7 +178,11 @@ class AnalysisProcessTest(test_lib.MultiProcessingTestCase):
         event_triple.event_data = events.EventData()
         event_triple.event_data_stream = events.EventDataStream()
 
+        storage_writer = fake_writer.FakeStorageWriter()
+        storage_writer.Open()
+
         test_mediator = analysis_mediator.AnalysisMediator()
+        test_mediator.SetStorageWriter(storage_writer)
 
         with shared_test_lib.TempDirectory() as temp_directory:
             configuration = configurations.ProcessingConfiguration()
@@ -200,19 +205,30 @@ class AnalysisProcessTest(test_lib.MultiProcessingTestCase):
                 ],
             )
 
+            number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+                "analysis_warning"
+            )
+            self.assertEqual(number_of_warnings, 0)
+
             # Test with an analysis plugin that raises an exception.
             analysis_plugin = TestFailingAnalysisPlugin()
             test_process = analysis_process.AnalysisProcess(
                 None, analysis_plugin, configuration, [], name="TestAnalysis"
             )
+            test_process._ProcessEventTriple(test_mediator, event_triple)
 
-            with self.assertLogs("multi_process", level="WARNING") as log_context:
-                test_process._ProcessEventTriple(test_mediator, event_triple)
-
-            self.assertIn(
-                "Unhandled exception while processing event object.",
-                log_context.output[0],
+            warnings = list(storage_writer.GetAttributeContainers("analysis_warning"))
+            self.assertEqual(len(warnings), 1)
+            self.assertEqual(warnings[0].plugin_name, "test_failing_plugin")
+            self.assertEqual(
+                warnings[0].message,
+                (
+                    "Unhandled exception while processing event with error: "
+                    "Unable to examine event."
+                ),
             )
+
+        storage_writer.Close()
 
     def testSignalAbort(self):
         """Tests the SignalAbort function."""

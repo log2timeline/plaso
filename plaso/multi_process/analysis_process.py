@@ -264,10 +264,13 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
             )
 
         except Exception as exception:  # pylint: disable=broad-except
-            # TODO: write analysis error and change logger to debug only.
+            message = (
+                "Unhandled exception while processing event with error: "
+                f"{exception!s}"
+            )
+            mediator.ProduceAnalysisWarning(message, self._analysis_plugin.plugin_name)
 
-            logger.warning("Unhandled exception while processing event object.")
-            logger.exception(exception)
+            logger.debug(message, exc_info=True)
 
     def SignalAbort(self):
         """Signals the process to abort."""
