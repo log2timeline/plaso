@@ -244,6 +244,65 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
                 test_engine._task_queue.Close(abort=True)
 
+    def testInternalCheckStatusWorkerProcessWithoutReplacement(self):
+        """Tests the _CheckStatusWorkerProcess function without replacement."""
+        # pylint: disable=protected-access
+
+        test_engine = extraction_engine.ExtractionMultiProcessEngine(
+            number_of_worker_processes=1, replace_worker_processes=False
+        )
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            processing_configuration = configurations.ProcessingConfiguration()
+            processing_configuration.data_location = shared_test_lib.DATA_PATH
+            processing_configuration.task_storage_format = (
+                definitions.STORAGE_FORMAT_SQLITE
+            )
+            processing_configuration.task_storage_path = temp_directory
+
+            test_engine._processing_configuration = processing_configuration
+            test_engine._system_configurations = []
+            test_engine._windows_event_log_providers = []
+
+            test_engine._task_queue = zeromq_queue.ZeroMQBufferedReplyBindQueue(
+                delay_open=True,
+                linger_seconds=0,
+                maximum_items=1,
+                name="main_task_queue",
+                timeout_seconds=test_engine._ZEROMQ_NO_WORKER_REQUEST_TIME_SECONDS,
+            )
+            test_engine._task_queue.Open()
+            test_engine._task_queue_port = test_engine._task_queue.port
+
+            try:
+                process = test_engine._StartWorkerProcess("Worker_00")
+                self.assertIsNotNone(process)
+
+                pid = process.pid
+                self.assertIn(pid, test_engine._process_information_per_pid)
+
+                test_engine._KillProcess(pid)
+                # A SIGKILL cannot be handled, hence join returns once the worker
+                # process has been terminated.
+                process.join()
+                self.assertFalse(process.is_alive())
+
+                test_engine._CheckStatusWorkerProcess(pid)
+
+                # The killed worker process is no longer monitored and no
+                # replacement worker process was started.
+                self.assertNotIn(pid, test_engine._process_information_per_pid)
+                self.assertEqual(len(test_engine._processes_per_pid), 1)
+                self.assertEqual(test_engine._last_worker_number, 1)
+
+            finally:
+                test_engine._StopMonitoringProcesses()
+                test_engine._AbortKill()
+                for process in test_engine._processes_per_pid.values():
+                    process.join()
+
+                test_engine._task_queue.Close(abort=True)
+
     def testInternalProcessEventSourcesWithFailedTask(self):
         """Tests the _ProcessEventSources function with a failed task."""
         # pylint: disable=protected-access

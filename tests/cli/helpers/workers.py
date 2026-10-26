@@ -20,12 +20,16 @@ class WorkersArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
 
     if _PYTHON3_13_OR_LATER:
         _EXPECTED_OUTPUT = f"""\
-usage: cli_helper.py [--worker_memory_limit SIZE] [--worker_timeout MINUTES]
-                     [--workers WORKERS]
+usage: cli_helper.py [--no_worker_replacement] [--worker_memory_limit SIZE]
+                     [--worker_timeout MINUTES] [--workers WORKERS]
 
 Test argument parser.
 
 {cli_test_lib.ARGPARSE_OPTIONS:s}:
+  --no_worker_replacement, --no-worker-replacement
+                        Do not replace a worker process that is killed or not
+                        functioning correctly, for example when debugging a
+                        worker process.
   --worker_memory_limit, --worker-memory-limit SIZE
                         Maximum amount of memory (data segment and shared
                         memory) a worker process is allowed to consume in
@@ -45,12 +49,16 @@ Test argument parser.
 
     else:
         _EXPECTED_OUTPUT = f"""\
-usage: cli_helper.py [--worker_memory_limit SIZE] [--worker_timeout MINUTES]
-                     [--workers WORKERS]
+usage: cli_helper.py [--no_worker_replacement] [--worker_memory_limit SIZE]
+                     [--worker_timeout MINUTES] [--workers WORKERS]
 
 Test argument parser.
 
 {cli_test_lib.ARGPARSE_OPTIONS:s}:
+  --no_worker_replacement, --no-worker-replacement
+                        Do not replace a worker process that is killed or not
+                        functioning correctly, for example when debugging a
+                        worker process.
   --worker_memory_limit SIZE, --worker-memory-limit SIZE
                         Maximum amount of memory (data segment and shared
                         memory) a worker process is allowed to consume in
@@ -86,6 +94,12 @@ Test argument parser.
         workers.WorkersArgumentsHelper.ParseOptions(options, test_tool)
 
         self.assertEqual(test_tool._number_of_extraction_workers, options.workers)
+        self.assertTrue(test_tool._replace_worker_processes)
+
+        options.no_worker_replacement = True
+        workers.WorkersArgumentsHelper.ParseOptions(options, test_tool)
+
+        self.assertFalse(test_tool._replace_worker_processes)
 
         with self.assertRaises(errors.BadConfigObject):
             workers.WorkersArgumentsHelper.ParseOptions(options, None)

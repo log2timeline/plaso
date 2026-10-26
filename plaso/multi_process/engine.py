@@ -49,6 +49,7 @@ class MultiProcessEngine(engine.BaseEngine):
         self._process_information_per_pid = {}
         self._processes_per_pid = {}
         self._quiet_mode = False
+        self._replace_worker_processes = True
         self._rpc_clients_per_pid = {}
         self._rpc_errors_per_pid = {}
         self._status_update_active = False
@@ -90,8 +91,8 @@ class MultiProcessEngine(engine.BaseEngine):
     def _CheckStatusWorkerProcess(self, pid):
         """Checks the status of a worker process.
 
-        If a worker process is not responding the process is terminated and
-        a replacement process is started.
+        If a worker process is not responding the process is terminated and,
+        unless disabled, a replacement process is started.
 
         Args:
           pid (int): process ID (PID) of a registered worker process.
@@ -169,6 +170,10 @@ class MultiProcessEngine(engine.BaseEngine):
             )
 
             self._TerminateProcessByPid(pid)
+
+            if not self._replace_worker_processes:
+                logger.warning(f"Not replacing worker process: {process.name:s}")
+                return
 
             replacement_process = None
             replacement_process_name = f"Worker_{self._last_worker_number:02d}"

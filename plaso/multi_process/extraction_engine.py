@@ -117,6 +117,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         self,
         maximum_number_of_tasks=None,
         number_of_worker_processes=0,
+        replace_worker_processes=True,
         status_update_callback=None,
         worker_memory_limit=None,
         worker_timeout=None,
@@ -127,6 +128,8 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           maximum_number_of_tasks (Optional[int]): maximum number of concurrent
               tasks, where 0 represents no limit.
           number_of_worker_processes (Optional[int]): number of worker processes.
+          replace_worker_processes (Optional[bool]): True if a worker process that
+              is not functioning correctly should be replaced.
           status_update_callback (Optional[function]): callback function for status
               updates.
           worker_memory_limit (Optional[int]): maximum amount of memory a worker is
@@ -191,6 +194,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         self._number_of_produced_sources = 0
         self._number_of_worker_processes = number_of_worker_processes
         self._path_spec_extractor = extractors.PathSpecExtractor()
+        self._replace_worker_processes = replace_worker_processes
         self._resolver_context = context.Context()
         self._status = definitions.STATUS_INDICATOR_IDLE
         self._status_update_callback = status_update_callback
