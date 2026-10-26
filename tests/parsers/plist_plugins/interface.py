@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Tests for the plist plugin interface."""
 
+import datetime
 import plistlib
 import unittest
 
@@ -213,6 +214,42 @@ class TestPlistPlugin(test_lib.PlistPluginTestCase):
 
         result = plugin.CheckRequiredFormat([top_level])
         self.assertFalse(result)
+
+    def testGetDateTimeValueFromPlistKey(self):
+        """Tests the _GetDateTimeValueFromPlistKey function."""
+        plugin = MockPlugin()
+
+        xml_plist = (
+            b'<?xml version="1.0" encoding="UTF-8"?>\n'
+            b'<plist version="1.0"><dict><key>Device</key><dict>'
+            b"<key>LastUsed</key><date>2012-11-02T01:21:38Z</date>"
+            b"</dict></dict></plist>\n"
+        )
+        binary_plist = plistlib.dumps(
+            {"Device": {"LastUsed": datetime.datetime(2012, 11, 2, 1, 21, 38)}},
+            fmt=plistlib.PlistFormat.FMT_BINARY,
+        )
+
+        for plist_data in (xml_plist, binary_plist):
+            top_level = plistlib.loads(plist_data)
+            plist_key = top_level["Device"]
+
+            # plistlib is expected to return the UTC date and time value as
+            # a naive datetime value.
+            datetime_value = plist_key["LastUsed"]
+            self.assertIsNone(datetime_value.tzinfo)
+            self.assertEqual(datetime_value, datetime.datetime(2012, 11, 2, 1, 21, 38))
+
+            date_time = plugin._GetDateTimeValueFromPlistKey(plist_key, "LastUsed")
+            self.assertIsNotNone(date_time)
+            self.assertFalse(date_time.is_local_time)
+            self.assertEqual(
+                date_time.CopyToDateTimeStringISO8601(),
+                "2012-11-02T01:21:38.000000+00:00",
+            )
+
+            date_time = plugin._GetDateTimeValueFromPlistKey(plist_key, "Bogus")
+            self.assertIsNone(date_time)
 
     def testGetKeys(self):
         """Tests the _GetKeys function."""
