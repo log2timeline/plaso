@@ -29,6 +29,7 @@ File System Format support is provided by [dfVFS](https://dfvfs.readthedocs.io/e
 * [Extensible Storage Engine (ESE) Database File (EDB) format](https://forensics.wiki/extensible_storage_engine_(ese)_database_file_(edb)_format) using [libesedb](https://github.com/libyal/libesedb)
 * Firefox Cache
 * Fish history file
+* GTK recently used (recently-used.xbel) file
 * iOS discord message
 * Ivanti Connect Secure (.vc0) log file
 * [Java WebStart IDX](https://forensics.wiki/java)
