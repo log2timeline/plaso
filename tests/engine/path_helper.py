@@ -115,6 +115,103 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
         expected_expanded_paths = ["\\Windows"]
         self.assertEqual(sorted(expanded_paths), expected_expanded_paths)
 
+        # Test expansion of the username variable as a path segment.
+        path_segments = ["C:", "Users", "%%users.username%%", "NTUSER.DAT"]
+        expanded_paths = path_helper.PathHelper._ExpandUsersVariablePathSegments(
+            path_segments, "\\", user_accounts
+        )
+
+        expected_expanded_paths = [
+            "\\Users\\Test1\\NTUSER.DAT",
+            "\\Users\\Test2\\NTUSER.DAT",
+        ]
+        self.assertEqual(sorted(expanded_paths), expected_expanded_paths)
+
+        # Test expansion of the username variable as part of a path segment
+        # together with a users variable that expands to the profile directory.
+        path_segments = [
+            "%%users.localappdata%%",
+            "ConnectedDevicesPlatform",
+            "L.%%users.username%%",
+            "ActivitiesCache.db",
+        ]
+        expanded_paths = path_helper.PathHelper._ExpandUsersVariablePathSegments(
+            path_segments, "\\", user_accounts
+        )
+
+        expected_expanded_paths = [
+            (
+                "\\Users\\Test1\\AppData\\Local\\ConnectedDevicesPlatform\\L.Test1\\"
+                "ActivitiesCache.db"
+            ),
+            (
+                "\\Users\\Test1\\Local Settings\\Application Data\\"
+                "ConnectedDevicesPlatform\\L.Test1\\ActivitiesCache.db"
+            ),
+            (
+                "\\Users\\Test2\\AppData\\Local\\ConnectedDevicesPlatform\\L.Test2\\"
+                "ActivitiesCache.db"
+            ),
+            (
+                "\\Users\\Test2\\Local Settings\\Application Data\\"
+                "ConnectedDevicesPlatform\\L.Test2\\ActivitiesCache.db"
+            ),
+        ]
+        self.assertEqual(sorted(expanded_paths), expected_expanded_paths)
+
+    def testExpandUsersUsernamePathSegments(self):
+        """Tests the _ExpandUsersUsernamePathSegments function."""
+        user_account_artifact = artifacts.UserAccountArtifact(
+            user_directory="/home/test1", username="test1"
+        )
+
+        path_segments = ["", "home", "%%users.username%%", ".bashrc"]
+        expanded_path_segments = (
+            path_helper.PathHelper._ExpandUsersUsernamePathSegments(
+                path_segments, user_account_artifact
+            )
+        )
+        self.assertEqual(expanded_path_segments, ["", "home", "test1", ".bashrc"])
+
+        # Test that the username variable is case insensitive.
+        path_segments = ["", "home", "%%USERS.USERNAME%%", ".bashrc"]
+        expanded_path_segments = (
+            path_helper.PathHelper._ExpandUsersUsernamePathSegments(
+                path_segments, user_account_artifact
+            )
+        )
+        self.assertEqual(expanded_path_segments, ["", "home", "test1", ".bashrc"])
+
+        # Test that similar variables are not expanded.
+        path_segments = ["", "home", "%%users.user%%", "%users.username%", "username"]
+        expanded_path_segments = (
+            path_helper.PathHelper._ExpandUsersUsernamePathSegments(
+                path_segments, user_account_artifact
+            )
+        )
+        self.assertEqual(expanded_path_segments, path_segments)
+
+        # Test a user account without username.
+        user_account_artifact = artifacts.UserAccountArtifact(
+            user_directory="/home/test2"
+        )
+
+        path_segments = ["", "home", "%%users.username%%", ".bashrc"]
+        expanded_path_segments = (
+            path_helper.PathHelper._ExpandUsersUsernamePathSegments(
+                path_segments, user_account_artifact
+            )
+        )
+        self.assertIsNone(expanded_path_segments)
+
+        path_segments = ["", "etc", "passwd"]
+        expanded_path_segments = (
+            path_helper.PathHelper._ExpandUsersUsernamePathSegments(
+                path_segments, user_account_artifact
+            )
+        )
+        self.assertEqual(expanded_path_segments, path_segments)
+
     def testIsWindowsDrivePathSegment(self):
         """Tests the _IsWindowsDrivePathSegment function."""
         result = path_helper.PathHelper._IsWindowsDrivePathSegment("C:")
@@ -228,6 +325,41 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
             "\\Users\\Test2\\Application Data\\Microsoft\\Windows\\Recent",
         ]
         self.assertEqual(sorted(expanded_paths), expected_expanded_paths)
+
+        # Test that the username variable is expanded with the username of the
+        # same user account as the home directory and that user accounts without
+        # username are skipped.
+        user_account_artifact1 = artifacts.UserAccountArtifact(
+            user_directory="/home/test1", username="test1"
+        )
+        user_account_artifact2 = artifacts.UserAccountArtifact(
+            user_directory="/home/test2"
+        )
+        user_account_artifact3 = artifacts.UserAccountArtifact(
+            user_directory="/var/lib/test3", username="test3"
+        )
+
+        user_accounts = [
+            user_account_artifact1,
+            user_account_artifact2,
+            user_account_artifact3,
+        ]
+
+        path = "%%users.homedir%%/.cache/%%users.username%%.log"
+        expanded_paths = path_helper.PathHelper.ExpandUsersVariablePath(
+            path, "/", user_accounts
+        )
+
+        expected_expanded_paths = [
+            "/home/test1/.cache/test1.log",
+            "/var/lib/test3/.cache/test3.log",
+        ]
+        self.assertEqual(expanded_paths, expected_expanded_paths)
+
+        # Test the username variable without user accounts.
+        path = "/home/%%users.username%%/.bashrc"
+        expanded_paths = path_helper.PathHelper.ExpandUsersVariablePath(path, "/", [])
+        self.assertEqual(expanded_paths, [])
 
     def testExpandWindowsPath(self):
         """Tests the ExpandWindowsPath function."""
