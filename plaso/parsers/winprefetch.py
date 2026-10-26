@@ -1,11 +1,15 @@
 """Parser for Windows Prefetch files."""
 
+import os
+
+import pyfwnt
 import pyscca
 
 from dfdatetime import filetime as dfdatetime_filetime
 
 from plaso.containers import events
 from plaso.containers import windows_events
+from plaso.lib import errors
 from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
@@ -53,6 +57,10 @@ class WinPrefetchParser(interface.FileObjectParser):
 
     _INITIAL_FILE_OFFSET = None
 
+    # Number of bytes of compressed data read to determine the signature of the
+    # uncompressed data.
+    _COMPRESSED_DATA_READ_SIZE = 4096
+
     NAME = "prefetch"
     DATA_FORMAT = "Windows Prefetch File (PF)"
 
@@ -67,6 +75,38 @@ class WinPrefetchParser(interface.FileObjectParser):
         format_specification.AddNewSignature(b"SCCA", offset=4)
         format_specification.AddNewSignature(b"MAM\x04", offset=0)
         return format_specification
+
+    def _CheckCompressedSignature(self, file_object):
+        """Checks the signature of a MAM compressed file.
+
+        Files other than Windows Prefetch files, such as Emergency Boot Disk (EBD)
+        files, can be compressed using the same MAM compressed format.
+
+        Args:
+          file_object (dfvfs.FileIO): file-like object.
+
+        Raises:
+          WrongParser: if the uncompressed data does not contain a Windows Prefetch
+              file signature.
+        """
+        file_object.seek(0, os.SEEK_SET)
+        compressed_data = file_object.read(8 + self._COMPRESSED_DATA_READ_SIZE)
+
+        if compressed_data[:4] == b"MAM\x04" and len(compressed_data) > 8:
+            try:
+                uncompressed_data = pyfwnt.lzxpress_huffman_decompress(
+                    compressed_data[8:], 8
+                )
+            except OSError:
+                # Errors are reported when the file is opened by pyscca.
+                uncompressed_data = None
+
+            if uncompressed_data and uncompressed_data[4:8] != b"SCCA":
+                raise errors.WrongParser(
+                    "Unsupported signature in MAM compressed data."
+                )
+
+        file_object.seek(0, os.SEEK_SET)
 
     def _ParseSCCAFile(self, parser_mediator, scca_file):
         """Parses a Windows Prefetch (SCCA) file.
@@ -182,7 +222,12 @@ class WinPrefetchParser(interface.FileObjectParser):
           parser_mediator (ParserMediator): mediates interactions between parsers and
               other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): file-like object.
+
+        Raises:
+          WrongParser: when the file cannot be parsed.
         """
+        self._CheckCompressedSignature(file_object)
+
         scca_file = pyscca.file()
 
         try:
