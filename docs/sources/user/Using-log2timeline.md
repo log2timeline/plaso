@@ -127,18 +127,89 @@ That is evident by the entries like:
 Here log2timeline.py detected that the hostname from the Windows installation
 in this partition is: **N-1A9ODN6ZXK4LQ**.
 
-Note that the pre-processing will also determine the most appropriate [parser preset](Parsers-and-plugins.md#parser-presets-plaso-data-presets-yaml).
+Note that the pre-processing will also determine the most appropriate
+[parser preset](Parsers-and-plugins.md#parser-presets-plaso-data-presets-yaml).
 The parser preset defines which parser are enabled. The auto-detection can be
-overwritten with the `--parsers` option.
-
-Note that for the `--parsers` option parser plugins need to be prefixed with
-the name of their parent e.g. "winiis" should be specified as "text/winiis".
-
-For more information about parsers and preset selection see: [Internals](../developer/Internals.md).
+overwritten with the `--parsers` option, see [parsers and presets](#parsers-and-presets).
 
 After that the tool spins up several workers (the actual number differs depends
 on number of CPU's on the system running the tool), a collector and a storage
 process.
+
+## Parsers and presets
+
+A parser extracts events from a specific data format, for example `winevtx`
+for Windows XML EventLog (EVTX) files. Several parsers, such as `sqlite`,
+`winreg` and `text`, use parser plugins to support the many variants of
+their data format. A parser preset is a named list of parsers and parser
+plugins, for example `win7`.
+
+The [parsers and plugins](Parsers-and-plugins.md) page lists the available
+parsers, parser plugins and presets. The same list is shown by:
+
+```bash
+$ log2timeline.py --parsers list
+```
+
+### How the parsers are selected
+
+log2timeline.py determines the parsers and parser plugins to use as follows:
+
+1. If the `--parsers` option is set, its expression is used.
+2. Otherwise, if pre-processing determined the operating system of the source, every preset that defines a matching operating system is used, for example `win7` for Windows NT.
+3. Otherwise, all parsers and parser plugins are used.
+
+Also see [Internals](../developer/Internals.md).
+
+### The parsers option
+
+The `--parsers` option takes a comma separated list of preset, parser and
+parser plugin names. Names are case insensitive.
+
+* A parser plugin is specified as the parser name and the plugin name separated by a `/`, for example `sqlite/chrome_27_history` or `text/winiis`.
+* A parser specified without a plugin name enables all of its plugins, for example `sqlite`.
+* A preset is expanded to the parsers and parser plugins it defines. Presets can contain other presets, for example `win7` contains `win_gen`.
+* An element prefixed with `!` is excluded. Exclusions take precedence over inclusions.
+* A parser plugin can only be excluded if its parser is also included, otherwise log2timeline.py will report an error.
+
+For example:
+
+```bash
+$ log2timeline.py --parsers "linux,!text/bash_history" --storage-file timeline.plaso image.raw
+$ log2timeline.py --parsers "sqlite,!sqlite/chrome_27_history" --storage-file timeline.plaso image.raw
+$ log2timeline.py --parsers "win7,text/syslog" --storage-file timeline.plaso image.raw
+```
+
+### The presets file
+
+The presets are defined in the `presets.yaml` file in the data directory,
+[plaso/data/presets.yaml](https://github.com/log2timeline/plaso/blob/main/plaso/data/presets.yaml)
+in the source. A different data directory can be specified with the `--data`
+option.
+
+The file contains a YAML document per preset, for example:
+
+```yaml
+name: winxp
+description: Preset for Windows 2000, Windows XP and Windows 2003.
+operating_systems:
+- {product: Windows 2000}
+- {product: Windows XP}
+- {product: Windows 2003}
+parsers:
+- recycle_bin_info2
+- rplog
+- win_gen
+- winevt
+```
+
+Key | Description
+--- | ---
+name | Name of the preset, which is required.
+description | Description of the preset.
+operating_systems | Optional list of operating systems the preset is used for when the `--parsers` option is not set. Each operating system is defined by a `family`, such as `Windows NT`, `Linux` or `MacOS`, and/or a `product`, such as `Windows XP`, and an optional `version`.
+parsers | List of preset, parser and parser plugin names, which is required.
+deprecated | Optional, `true` if the preset is deprecated. Using a deprecated preset will log a warning.
 
 ## The info option
 
