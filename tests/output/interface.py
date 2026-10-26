@@ -4,6 +4,7 @@
 import io
 import unittest
 
+from plaso.containers import events
 from plaso.lib import definitions
 from plaso.output import formatting_helper
 from plaso.output import interface
@@ -50,7 +51,15 @@ class TestXMLOutputModule(interface.OutputModule):
             output_mediator, event, event_data, event_data_stream
         )
 
-        return {"datetime": date_time_string, "entry": event_data.entry}
+        tag_string = self._field_formatting_helper._FormatTag(
+            output_mediator, event_tag
+        )
+
+        return {
+            "datetime": date_time_string,
+            "entry": event_data.entry,
+            "tag": tag_string,
+        }
 
     def WriteFieldValues(self, output_mediator, field_values):
         """Writes field values to the output.
@@ -62,11 +71,13 @@ class TestXMLOutputModule(interface.OutputModule):
         """
         datetime_value = field_values["datetime"]
         entry_value = field_values["entry"]
+        tag_value = field_values["tag"]
 
         output_text = (
             f"<Event>\n"
             f"\t<DateTime>{datetime_value!s}</DateTime>\n"
             f"\t<Entry>{entry_value!s}</Entry>\n"
+            f"\t<Tag>{tag_value!s}</Tag>\n"
             f"</Event>\n"
         )
 
@@ -123,16 +134,22 @@ class TextFileOutputModuleTest(test_lib.OutputModuleTestCase):
         output_mediator = self._CreateOutputMediator()
         output_module = TestXMLOutputModule()
 
+        event_tag = events.EventTag()
+        event_tag.AddLabels(["Malware", "Printed"])
+
         output_module.WriteHeader(output_mediator)
 
-        for event_values in self._TEST_EVENTS:
+        for index, event_values in enumerate(self._TEST_EVENTS):
             event, event_data, event_data_stream = (
                 containers_test_lib.CreateEventFromValues(event_values)
             )
 
-            # TODO: add test for event_tag.
             field_values = output_module.GetFieldValues(
-                output_mediator, event, event_data, event_data_stream, None
+                output_mediator,
+                event,
+                event_data,
+                event_data_stream,
+                event_tag if index == 0 else None,
             )
 
             output_module.WriteFieldValues(output_mediator, field_values)
@@ -144,18 +161,22 @@ class TextFileOutputModuleTest(test_lib.OutputModuleTestCase):
             "<Event>\n"
             "\t<DateTime>2012-06-27T18:17:01.000000+00:00</DateTime>\n"
             "\t<Entry>My Event Is Now!</Entry>\n"
+            "\t<Tag>Malware Printed</Tag>\n"
             "</Event>\n"
             "<Event>\n"
             "\t<DateTime>2012-06-27T18:18:23.000000+00:00</DateTime>\n"
             "\t<Entry>There is no tomorrow.</Entry>\n"
+            "\t<Tag>-</Tag>\n"
             "</Event>\n"
             "<Event>\n"
             "\t<DateTime>2012-06-27T19:11:54.000000+00:00</DateTime>\n"
             "\t<Entry>Tomorrow is now.</Entry>\n"
+            "\t<Tag>-</Tag>\n"
             "</Event>\n"
             "<Event>\n"
             "\t<DateTime>2012-06-27T19:12:03.000000+00:00</DateTime>\n"
             "\t<Entry>This is just some stuff to fill the line.</Entry>\n"
+            "\t<Tag>-</Tag>\n"
             "</Event>\n"
             "</EventFile>\n"
         )

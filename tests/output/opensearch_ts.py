@@ -7,6 +7,7 @@ from unittest.mock import MagicMock
 
 from dfvfs.path import fake_path_spec
 
+from plaso.containers import events
 from plaso.lib import definitions
 from plaso.output import opensearch_ts
 from plaso.output import shared_opensearch
@@ -70,15 +71,18 @@ class OpenSearchTimesketchOutputModuleTest(test_lib.OutputModuleTestCase):
             containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0])
         )
 
-        # TODO: add test for event_tag.
+        event_tag = events.EventTag()
+        event_tag.AddLabel("Test")
+
         field_values = output_module.GetFieldValues(
-            output_mediator, event, event_data, event_data_stream, None
+            output_mediator, event, event_data, event_data_stream, event_tag
         )
 
         output_module.WriteFieldValues(output_mediator, field_values)
 
         self.assertEqual(len(output_module._event_documents), 2)
         self.assertEqual(output_module._number_of_buffered_events, 1)
+        self.assertEqual(output_module._event_documents[1]["tag"], ["Test"])
 
         output_module._FlushEvents()
 
@@ -111,15 +115,18 @@ class OpenSearchTimesketchOutputModuleTest(test_lib.OutputModuleTestCase):
             containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0])
         )
 
-        # TODO: add test for event_tag.
+        event_tag = events.EventTag()
+        event_tag.AddLabel("Test")
+
         field_values = output_module.GetFieldValues(
-            output_mediator, event, event_data, event_data_stream, None
+            output_mediator, event, event_data, event_data_stream, event_tag
         )
 
         output_module.WriteFieldValues(output_mediator, field_values)
 
         self.assertEqual(len(output_module._event_documents), 2)
         self.assertEqual(output_module._number_of_buffered_events, 1)
+        self.assertEqual(output_module._event_documents[1]["tag"], ["Test"])
 
     def testWriteHeader(self):
         """Tests the WriteHeader function.
