@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 """Tests for the parsers manager."""
 
+import io
 import unittest
 
+import pysigscan
+
+from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
 from plaso.parsers import plugins
@@ -71,7 +75,28 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
 
     # pylint: disable=protected-access
 
-    # TODO: add tests for CreateSignatureScanner.
+    def testCreateSignatureScanner(self):
+        """Tests the CreateSignatureScanner function."""
+        specification_store = specification.FormatSpecificationStore()
+
+        format_specification = specification.FormatSpecification("no_offset")
+        format_specification.AddNewSignature(b"ANYW")
+        specification_store.AddSpecification(format_specification)
+
+        scanner_object = manager.ParsersManager.CreateSignatureScanner(
+            specification_store
+        )
+        self.assertIsNotNone(scanner_object)
+
+        # A signature without an offset matches anywhere in the data.
+        scan_state = pysigscan.scan_state()
+        scanner_object.scan_file_object(scan_state, io.BytesIO(b"0123456789ANYW"))
+        scan_results = [result.identifier for result in iter(scan_state.scan_results)]
+        self.assertEqual(scan_results, ["no_offset:0"])
+
+        scan_state = pysigscan.scan_state()
+        scanner_object.scan_file_object(scan_state, io.BytesIO(b"0123456789ANYX"))
+        self.assertEqual(scan_state.number_of_scan_results, 0)
 
     def testParserRegistration(self):
         """Tests the RegisterParser and DeregisterParser functions."""
