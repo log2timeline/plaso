@@ -3,6 +3,9 @@
 
 import unittest
 
+from dfwinreg import definitions as dfwinreg_definitions
+from dfwinreg import fake as dfwinreg_fake
+
 from plaso.parsers.winreg_plugins import ccleaner
 
 from tests.parsers.winreg_plugins import test_lib
@@ -11,7 +14,53 @@ from tests.parsers.winreg_plugins import test_lib
 class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
     """Tests for the CCleaner Windows Registry plugin."""
 
-    # TODO: add tests for _ParseUpdateKeyValue
+    # pylint: disable=protected-access
+
+    def testParseUpdateKeyValue(self):
+        """Tests the _ParseUpdateKeyValue function."""
+        storage_writer = self._CreateStorageWriter()
+        parser_mediator = self._CreateParserMediator(storage_writer)
+
+        plugin = ccleaner.CCleanerPlugin()
+
+        test_cases = [
+            ("07/13/2013 12:03:14 AM", "2013-07-13 00:03:14"),
+            ("07/13/2013 12:03:14 PM", "2013-07-13 12:03:14"),
+            ("07/13/2013 01:03:14 PM", "2013-07-13 13:03:14"),
+        ]
+        for value_string, expected_date_time_string in test_cases:
+            registry_value = dfwinreg_fake.FakeWinRegistryValue(
+                "UpdateKey",
+                data=value_string.encode("utf_16_le"),
+                data_type=dfwinreg_definitions.REG_SZ,
+            )
+            date_time = plugin._ParseUpdateKeyValue(parser_mediator, registry_value)
+            self.assertIsNotNone(date_time)
+            self.assertEqual(
+                date_time.CopyToDateTimeString(), expected_date_time_string
+            )
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        for value_string in ("07/13/2013 00:03:14 AM", "07/13/2013 13:03:14 PM"):
+            storage_writer = self._CreateStorageWriter()
+            parser_mediator = self._CreateParserMediator(storage_writer)
+
+            registry_value = dfwinreg_fake.FakeWinRegistryValue(
+                "UpdateKey",
+                data=value_string.encode("utf_16_le"),
+                data_type=dfwinreg_definitions.REG_SZ,
+            )
+            date_time = plugin._ParseUpdateKeyValue(parser_mediator, registry_value)
+            self.assertIsNone(date_time)
+
+            number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+                "extraction_warning"
+            )
+            self.assertEqual(number_of_warnings, 1)
 
     def testFilters(self):
         """Tests the FILTERS class attribute."""
