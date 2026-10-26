@@ -85,6 +85,7 @@ File System Format support is provided by [dfVFS](https://dfvfs.readthedocs.io/e
 
 ### Compound ZIP file formats
 
+* Apple Wallet pass (pkpass) file
 * OpenXML (OXML) file
 
 ### ESE database file formats
