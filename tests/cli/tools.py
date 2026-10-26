@@ -10,6 +10,7 @@ import unittest
 from plaso.cli import tools
 from plaso.lib import errors
 
+from tests import test_lib as shared_test_lib
 from tests.cli import test_lib
 
 
@@ -74,6 +75,34 @@ Test argument parser.
         options.log_file = "file.log"
 
         test_tool._ParseLogFileOptions(options)
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            options.log_file = os.path.join(temp_directory, "file.log")
+            test_tool._ParseLogFileOptions(options)
+
+            options.log_file = os.path.join(temp_directory, "bogus", "file.log")
+            with self.assertRaises(errors.BadConfigOption):
+                test_tool._ParseLogFileOptions(options)
+
+    @unittest.skipIf(
+        not hasattr(os, "geteuid") or os.geteuid() == 0,
+        "requires a non-root user on a POSIX system",
+    )
+    def testParseLogFileOptionsReadOnlyDirectory(self):
+        """Tests the _ParseLogFileOptions function with a read-only directory."""
+        test_tool = tools.CLITool()
+
+        options = test_lib.TestOptions()
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            options.log_file = os.path.join(temp_directory, "file.log")
+
+            os.chmod(temp_directory, 0o500)
+            try:
+                with self.assertRaises(errors.BadConfigOption):
+                    test_tool._ParseLogFileOptions(options)
+            finally:
+                os.chmod(temp_directory, 0o700)
 
     # TODO: add test for _PromptUserForInput
 
