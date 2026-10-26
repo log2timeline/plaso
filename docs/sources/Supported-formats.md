@@ -283,6 +283,7 @@ File System Format support is provided by [dfVFS](https://dfvfs.readthedocs.io/e
 * Windows USB Plug And Play Manager USBStor Registry data
 * Windows version (product) Registry data
 * WinRAR History Registry data
+* WinSCP sessions Registry data
 
 ### Hashers Supported
 

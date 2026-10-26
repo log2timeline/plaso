@@ -1996,6 +1996,12 @@ attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'
 ---
+data_type: 'windows:registry:winscp:session'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+place_holder_event: true
+---
 data_type: 'windows:restore_point:info'
 attribute_mappings:
 - name: 'creation_time'

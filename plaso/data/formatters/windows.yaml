@@ -867,6 +867,19 @@ short_source: 'REG'
 source: 'WinRAR History Registry Key'
 ---
 type: 'conditional'
+data_type: 'windows:registry:winscp:session'
+message:
+- '[{key_path}]'
+- 'Host name: {hostname}'
+- 'Port number: {port_number}'
+- 'Username: {username}'
+short_message:
+- '[{key_path}]'
+- '{hostname}'
+short_source: 'REG'
+source: 'WinSCP Sessions Registry Key'
+---
+type: 'conditional'
 data_type: 'windows:restore_point:info'
 enumeration_helpers:
 - input_attribute: 'restore_point_event_type'
