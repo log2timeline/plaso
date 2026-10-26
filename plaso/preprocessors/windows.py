@@ -193,6 +193,7 @@ class WindowsPathEnvironmentVariablePreprocessorPlugin(
           PreProcessFail: if the preprocessing fails.
         """
         last_exception = None
+        has_succeeded = False
 
         for path in self._WINDOWS_PATHS:
             find_spec = file_system_searcher.FindSpec(
@@ -209,12 +210,12 @@ class WindowsPathEnvironmentVariablePreprocessorPlugin(
                         path_specification,
                         "\\",
                     )
-                    last_exception = None
+                    has_succeeded = True
 
                 except errors.PreProcessFail as exception:
                     last_exception = exception
 
-        if last_exception:
+        if last_exception and not has_succeeded:
             # Only raise an exception if none of the paths were successfully
             # pre-processed.
             raise last_exception
