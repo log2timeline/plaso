@@ -896,6 +896,21 @@ short_source: 'RP'
 source: 'Windows Restore Point'
 ---
 type: 'conditional'
+data_type: 'windows:search:item'
+message:
+- 'Path: {item_path}'
+- 'URL: {item_url}'
+- 'Owner: {file_owner}'
+- 'Computer name: {hostname}'
+- 'Size: {file_size}'
+- 'File attribute flags: 0x{file_attribute_flags:08x}'
+- 'Document identifier: {document_identifier}'
+short_message:
+- 'Path: {item_path}'
+short_source: 'WINSEARCH'
+source: 'Windows Search Index'
+---
+type: 'conditional'
 data_type: 'windows:setupapi:log:line'
 message:
 - '{entry_type}'

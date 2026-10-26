@@ -91,6 +91,7 @@ File System Format support is provided by [dfVFS](https://dfvfs.readthedocs.io/e
 
 * Internet Explorer WebCache ESE database (WebCacheV01.dat, WebCacheV24.dat) file
 * System Resource Usage Monitor (SRUM) ESE database file
+* Windows 7 Search ESE database (Windows.edb) file
 * Windows 8 File History ESE database file
 * Windows User Access Logging ESE database file
 
