@@ -203,6 +203,32 @@ class UserAccountArtifactTest(shared_test_lib.BaseTestCase):
         attribute_names = sorted(attribute_container.GetAttributeNames())
         self.assertEqual(attribute_names, expected_attribute_names)
 
+    def testGetUserDirectoryPathSegments(self):
+        """Tests the GetUserDirectoryPathSegments function."""
+        attribute_container = artifacts.UserAccountArtifact()
+        path_segments = attribute_container.GetUserDirectoryPathSegments()
+        self.assertEqual(path_segments, [])
+
+        attribute_container = artifacts.UserAccountArtifact(
+            user_directory="/home/test1"
+        )
+        path_segments = attribute_container.GetUserDirectoryPathSegments()
+        self.assertEqual(path_segments, ["", "home", "test1"])
+
+        # Test a Windows user directory without path segment separator, such as
+        # a user account read back from storage.
+        attribute_container = artifacts.UserAccountArtifact(
+            user_directory="C:\\Users\\test2"
+        )
+        path_segments = attribute_container.GetUserDirectoryPathSegments()
+        self.assertEqual(path_segments, ["C:", "Users", "test2"])
+
+        attribute_container = artifacts.UserAccountArtifact(
+            path_separator="/", user_directory="C:\\Users\\test2"
+        )
+        path_segments = attribute_container.GetUserDirectoryPathSegments()
+        self.assertEqual(path_segments, ["C:\\Users\\test2"])
+
 
 class WindowsEventLogMessageFileArtifactTest(shared_test_lib.BaseTestCase):
     """Tests for the Windows EventLog message file artifact."""
