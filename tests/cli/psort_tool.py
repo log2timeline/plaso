@@ -217,8 +217,6 @@ Test argument parser.
 
     # TODO: add test for _CreateOutputModule.
     # TODO: add test for _FormatStatusTableRow.
-    # TODO: add test for _GetAnalysisPlugins.
-    # TODO: add test for _ParseAnalysisPluginOptions.
     # TODO: add test for _ParseInformationalOptions.
     # TODO: add test for _ParseProcessingOptions.
     # TODO: add test for _PrintStatusHeader.
