@@ -150,7 +150,7 @@ parameter. In the new version this same functionality is exposed as the
 
 ```bash
 log2timeline.py --parsers "win7" --storage-file /cases/timeline/timeline.plaso image.dd
-log2timeline.py --parsers "win7,\!winreg" --storage-file /cases/timeline/timeline.plaso image.dd
+log2timeline.py --parsers 'win7,!winreg' --storage-file /cases/timeline/timeline.plaso image.dd
 log2timeline.py --parsers "winreg,winevt,winevtx" --storage-file /cases/timeline/timeline.plaso image.dd
 ```
 
