@@ -352,6 +352,25 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
         with self.assertRaises(errors.ParseError):
             parser.Parse("a is 3)")
 
+    def testParseWithHexadecimalIntegers(self):
+        """Tests the Parse function with hexadecimal integers."""
+        parser = expression_parser.EventFilterExpressionParser()
+
+        expression = parser.Parse("a == 0xff")
+        self.assertEqual(expression.args, [255])
+
+        expression = parser.Parse("a == 0x1F")
+        self.assertEqual(expression.args, [31])
+
+        expression = parser.Parse("a == 0x10")
+        self.assertEqual(expression.args, [16])
+
+        with self.assertRaises(errors.ParseError):
+            parser.Parse("a == 0xZZ")
+
+        with self.assertRaises(errors.ParseError):
+            parser.Parse("a == 0x1g")
+
     def testParseWithEscaping(self):
         """Tests the Parse function with escaping."""
         parser = expression_parser.EventFilterExpressionParser()
