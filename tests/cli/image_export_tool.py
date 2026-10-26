@@ -1170,6 +1170,80 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
 
         self.assertEqual(sorted(extracted_files), expected_extracted_files)
 
+    def _ProcessSourceWithArtifactFilters(self, artifact_filter_string):
+        """Runs ProcessSource on image.qcow2 with artifact filters.
+
+        Args:
+          artifact_filter_string (str): names of the artifact definitions.
+
+        Returns:
+          list[str]: sorted paths of the extracted files and directories,
+              relative to the export directory.
+        """
+        test_artifacts_path = self._GetTestFilePath(["artifacts"])
+        self._SkipIfPathNotExists(test_artifacts_path)
+
+        test_file_path = self._GetTestFilePath(["image.qcow2"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
+
+        options = test_lib.TestOptions()
+        options.artifact_definitions_path = test_artifacts_path
+        options.image = test_file_path
+        options.quiet = True
+        options.artifact_filter_string = artifact_filter_string
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            options.path = temp_directory
+
+            test_tool.ParseOptions(options)
+
+            test_tool.ProcessSource()
+
+            extracted_files = self._RecursiveList(temp_directory)
+
+        return sorted(os.path.relpath(path, temp_directory) for path in extracted_files)
+
+    def testProcessSourceExtractWithArtifactsAliasFilter(self):
+        """Tests the ProcessSource function with an artifact definition alias."""
+        extracted_files = self._ProcessSourceWithArtifactFilters("TestFilesAlias")
+
+        self.assertEqual(extracted_files, ["hashes.json", "passwords.txt"])
+
+    def testProcessSourceExtractWithArtifactsMultipleSourcesFilter(self):
+        """Tests the ProcessSource function with multiple sources.
+
+        The first sources of the artifact definition do not apply.
+        """
+        extracted_files = self._ProcessSourceWithArtifactFilters("TestMultipleSources")
+
+        expected_extracted_files = [
+            "a_directory",
+            os.path.join("a_directory", "another_file"),
+            "hashes.json",
+        ]
+        self.assertEqual(extracted_files, expected_extracted_files)
+
+    def testProcessSourceExtractWithArtifactsNestedGroupFilter(self):
+        """Tests the ProcessSource function with a nested group."""
+        extracted_files = self._ProcessSourceWithArtifactFilters("TestNestedGroup")
+
+        self.assertEqual(extracted_files, ["hashes.json", "passwords.txt"])
+
+    def testProcessSourceExtractWithArtifactsFilterWithoutFindSpecs(self):
+        """Tests the ProcessSource function with artifact filters without paths.
+
+        The image contains no user accounts, hence the users variable cannot be
+        expanded.
+        """
+        with self.assertRaises(errors.BadConfigOption):
+            self._ProcessSourceWithArtifactFilters("TestUsersFiles")
+
+        with self.assertRaises(errors.BadConfigOption):
+            self._ProcessSourceWithArtifactFilters("DoesNotExist")
+
     def testProcessSourceExtractWithSignaturesFilter(self):
         """Tests the ProcessSource function with a signatures filter."""
         test_artifacts_path = self._GetTestFilePath(["artifacts"])
