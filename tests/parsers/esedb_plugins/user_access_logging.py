@@ -178,6 +178,44 @@ class UserAccessLoggingESEDBPluginTest(test_lib.ESEDBPluginTestCase):
         guid_string = plugin._ConvertGUIDToString(self._GUID_BYTES)
         self.assertEqual(guid_string, "{35918bc9-196d-40ea-9779-889d79b753f0}")
 
+    def testProcessSystemInformationDatabase(self):
+        """Tests the _ProcessSystemInformationDatabase function."""
+        plugin = user_access_logging.UserAccessLoggingESEDBPlugin()
+
+        # Test with an ESE database that does not contain the expected tables.
+        storage_writer = self._CreateStorageWriter()
+        parser_mediator = parsers_mediator.ParserMediator()
+        parser_mediator.SetStorageWriter(storage_writer)
+
+        file_entry = self._GetTestFileEntry(["SRUDB.dat"])
+        plugin._ProcessSystemInformationDatabase(parser_mediator, file_entry)
+
+        warnings = list(storage_writer.GetAttributeContainers("extraction_warning"))
+        warning_messages = [warning.message for warning in warnings]
+        self.assertEqual(
+            warning_messages,
+            [
+                "unable to get ROLE_IDS table in SystemIdentity.mdb",
+                "unable to get SYSTEM_IDENTITY table in SystemIdentity.mdb",
+            ],
+        )
+
+        # Test with a file that is not an ESE database.
+        storage_writer = self._CreateStorageWriter()
+        parser_mediator = parsers_mediator.ParserMediator()
+        parser_mediator.SetStorageWriter(storage_writer)
+
+        file_entry = self._GetTestFileEntry(["AccessProtectionLog.txt"])
+        plugin._ProcessSystemInformationDatabase(parser_mediator, file_entry)
+
+        warnings = list(storage_writer.GetAttributeContainers("extraction_warning"))
+        self.assertEqual(len(warnings), 1)
+        self.assertTrue(
+            warnings[0].message.startswith(
+                "unable to open SystemIdentity.mdb with error: "
+            )
+        )
+
     def testParseVirtualMachinesTable(self):
         """Tests the ParseVirtualMachinesTable function."""
         plugin = user_access_logging.UserAccessLoggingESEDBPlugin()
