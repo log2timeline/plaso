@@ -1444,7 +1444,9 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
                         source
                     )
                 )
-                self._output_writer.Write(f'"source": {json_string:s}')
+                identifier = source.GetIdentifier()
+                identifier_string = identifier.CopyToString()
+                self._output_writer.Write(f'"{identifier_string:s}": {json_string:s}')
 
             elif self._output_format in ("markdown", "text"):
                 if self._verbose or "sources" in self._sections:
