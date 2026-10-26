@@ -11,6 +11,56 @@ from tests.parsers import test_lib
 class MSIECFParserTest(test_lib.ParserTestCase):
     """Tests for the MSIE Cache Files (MSIECF) parser."""
 
+    # pylint: disable=protected-access
+
+    def testGetUsernameFromLocation(self):
+        """Tests the _GetUsernameFromLocation function."""
+        parser = msiecf.MSIECFParser()
+
+        username = parser._GetUsernameFromLocation(
+            "history", "Visited: user1@http://example.com/"
+        )
+        self.assertEqual(username, "user1")
+
+        username = parser._GetUsernameFromLocation(
+            "history", "Visited: Mr. Evil@http://www.yahoo.com"
+        )
+        self.assertEqual(username, "Mr. Evil")
+
+        # Test with location strings that should not match.
+        username = parser._GetUsernameFromLocation(
+            "cache", "Visited: user1@http://example.com/"
+        )
+        self.assertIsNone(username)
+
+        username = parser._GetUsernameFromLocation(
+            "history", "http://user1@example.com/"
+        )
+        self.assertIsNone(username)
+
+        username = parser._GetUsernameFromLocation(
+            "history", "Visited: http://user1@example.com/"
+        )
+        self.assertIsNone(username)
+
+        username = parser._GetUsernameFromLocation(
+            "history", "Visited: http://example.com/"
+        )
+        self.assertIsNone(username)
+
+        username = parser._GetUsernameFromLocation(
+            "history", "Visited:user1@http://example.com/"
+        )
+        self.assertIsNone(username)
+
+        username = parser._GetUsernameFromLocation(
+            "history", "Visited: @http://example.com/"
+        )
+        self.assertIsNone(username)
+
+        username = parser._GetUsernameFromLocation("history", None)
+        self.assertIsNone(username)
+
     def testParseWithContentIE5(self):
         """Tests the Parse function on a Content.IE5 index.dat file."""
         parser = msiecf.MSIECFParser()
@@ -46,6 +96,7 @@ class MSIECFParserTest(test_lib.ParserTestCase):
             "secondary_time": None,
             "synchronization_time": "2015-08-25T11:05:36+00:00",
             "url": "http://www.bing.com/favicon.ico",
+            "username": None,
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 2)
         self.CheckEventData(event_data, expected_event_values)
@@ -93,6 +144,7 @@ class MSIECFParserTest(test_lib.ParserTestCase):
             "secondary_time": "2015-08-25T11:05:18.5120000+00:00",
             "synchronization_time": "2015-08-25T11:05:20+00:00",
             "url": "Visited: gold_administrator@http://www.msn.com/?ocid=iehp",
+            "username": "gold_administrator",
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)

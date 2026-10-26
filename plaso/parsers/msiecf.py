@@ -1,5 +1,7 @@
 """Parser for Microsoft Internet Explorer (MSIE) Cache Files (CF)."""
 
+import re
+
 import pymsiecf
 
 from dfdatetime import fat_date_time as dfdatetime_fat_date_time
@@ -83,6 +85,7 @@ class MSIECFURLEventData(events.EventData):
       synchronization_time (dfdatetime.DateTimeValues): synchronization date
           and time.
       url (str): location URL.
+      username (str): name of the user account that visited the URL.
     """
 
     DATA_TYPE = "msiecf:url"
@@ -107,6 +110,7 @@ class MSIECFURLEventData(events.EventData):
         self.secondary_time = None
         self.synchronization_time = None
         self.url = None
+        self.username = None
 
 
 class MSIECFParser(interface.FileObjectParser):
@@ -114,6 +118,28 @@ class MSIECFParser(interface.FileObjectParser):
 
     NAME = "msiecf"
     DATA_FORMAT = "Microsoft Internet Explorer (MSIE) 4 - 9 cache (index.dat) file"
+
+    # The location of a history URL item is formatted as "Visited: user@URL".
+    _HISTORY_LOCATION_RE = re.compile(r"Visited: ([^@:/]+)@")
+
+    def _GetUsernameFromLocation(self, item_type, location):
+        """Retrieves the username from the location of a history URL item.
+
+        Args:
+          item_type (str): MSIECF item type.
+          location (str): MSIECF item location.
+
+        Returns:
+          str: username or None if not available.
+        """
+        if item_type != "history" or not location:
+            return None
+
+        match = self._HISTORY_LOCATION_RE.match(location)
+        if not match:
+            return None
+
+        return match.group(1)
 
     def _ParseLeak(
         self, parser_mediator, cache_directories, msiecf_item, recovered=False
@@ -316,6 +342,9 @@ class MSIECFParser(interface.FileObjectParser):
         event_data.number_of_hits = msiecf_item.number_of_hits
         event_data.offset = msiecf_item.offset
         event_data.url = msiecf_item.location
+        event_data.username = self._GetUsernameFromLocation(
+            msiecf_item.type, msiecf_item.location
+        )
 
         if (
             event_data.cache_directory_index >= 0
