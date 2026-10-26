@@ -61,6 +61,8 @@ class ChromeExtensionInstallationEventData(events.EventData):
       extension_name (str): extension name.
       installation_time (dfdatetime.DateTimeValues): date and time the Chrome
           extension was installed.
+      last_ping_time (dfdatetime.DateTimeValues): date and time of the day
+          of the last update check (ping) of the Chrome extension.
       path (str): path.
     """
 
@@ -72,6 +74,7 @@ class ChromeExtensionInstallationEventData(events.EventData):
         self.extension_identifier = None
         self.extension_name = None
         self.installation_time = None
+        self.last_ping_time = None
         self.path = None
 
 
@@ -133,6 +136,21 @@ class ChromePreferencesParser(interface.FileObjectParser):
                     )
                     corrupted = True
 
+            last_ping_date_time = None
+            last_ping_day = extension.get("lastpingday")
+            if last_ping_day:
+                try:
+                    last_ping_day = int(last_ping_day, 10)
+                    last_ping_date_time = dfdatetime_webkit_time.WebKitTime(
+                        timestamp=last_ping_day
+                    )
+                except (TypeError, ValueError):
+                    parser_mediator.ProduceWarning(
+                        f"unsupported last ping day: '{last_ping_day!s}' for "
+                        f"extension identifier: '{extension_identifier!s}'"
+                    )
+                    corrupted = True
+
             manifest = extension.get("manifest")
             if not manifest:
                 parser_mediator.ProduceWarning(
@@ -146,6 +164,7 @@ class ChromePreferencesParser(interface.FileObjectParser):
             event_data.extension_identifier = extension_identifier
             event_data.extension_name = manifest.get("name")
             event_data.installation_time = date_time
+            event_data.last_ping_time = last_ping_date_time
             event_data.path = extension.get("path")
 
             parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
@@ -282,6 +301,27 @@ class ChromePreferencesParser(interface.FileObjectParser):
                 event_data.message_body = "Chrome extensions autoupdater next run"
                 event_data.recorded_time = dfdatetime_webkit_time.WebKitTime(
                     timestamp=autoupdate_nextcheck
+                )
+                parser_mediator.ProduceEventData(event_data)
+
+        install_signature_dict = extensions_setting_dict.get("install_signature")
+        if install_signature_dict:
+            install_signature_timestamp = install_signature_dict.get("timestamp")
+            if install_signature_timestamp:
+                try:
+                    install_signature_timestamp = int(install_signature_timestamp, 10)
+                except (TypeError, ValueError):
+                    parser_mediator.ProduceWarning(
+                        f"unsupported install signature timestamp: "
+                        f"'{install_signature_timestamp!s}'"
+                    )
+                    install_signature_timestamp = None
+
+            if install_signature_timestamp:
+                event_data = ChromeExtensionsAutoupdaterEventData()
+                event_data.message_body = "Chrome extensions install signature obtained"
+                event_data.recorded_time = dfdatetime_webkit_time.WebKitTime(
+                    timestamp=install_signature_timestamp
                 )
                 parser_mediator.ProduceEventData(event_data)
 
