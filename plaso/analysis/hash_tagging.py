@@ -57,6 +57,7 @@ class HashTaggingAnalysisPlugin(interface.AnalysisPlugin):
         self._data_streams_by_hash = collections.defaultdict(set)
         self._event_identifiers_by_data_stream = collections.defaultdict(set)
         self._hashes_per_batch = self._DEFAULT_HASHES_PER_BATCH
+        self._labels_by_data_stream = {}
         self._lookup_hash = self._DEFAULT_LOOKUP_HASH
         self._wait_after_analysis = self._DEFAULT_WAIT_AFTER_ANALYSIS
 
@@ -128,6 +129,42 @@ class HashTaggingAnalysisPlugin(interface.AnalysisPlugin):
 
         return response.json()
 
+    def _ProduceEventTag(self, analysis_mediator, event_identifier, labels, digest):
+        """Produces an event tag.
+
+        Args:
+          analysis_mediator (AnalysisMediator): mediates interactions between
+              analysis plugins and other components, such as storage and dfVFS.
+          event_identifier (AttributeContainerIdentifier): identifier of the event
+              to tag.
+          labels (list[str]): labels to tag the event with.
+          digest (str): digest hash the labels were generated for.
+
+        Returns:
+          list[str]: labels the event was tagged with.
+        """
+        event_tag = events.EventTag()
+        event_tag.SetEventIdentifier(event_identifier)
+
+        try:
+            event_tag.AddLabels(labels)
+        except (TypeError, ValueError):
+            error_label = f"error_{self.NAME:s}"
+            labels_string = ", ".join(labels)
+            logger.error(
+                f"unable to add labels: {labels_string!s} for digest hash: "
+                f"{digest!s} defaulting to: {error_label:s}"
+            )
+            labels = [error_label]
+            event_tag.AddLabels(labels)
+
+        analysis_mediator.ProduceEventTag(event_tag)
+
+        for label in labels:
+            self._analysis_counter[label] += 1
+
+        return labels
+
     def _ProcessHashAnalysis(self, analysis_mediator, hash_analysis):
         """Processes the results of the analysis of a hash.
 
@@ -160,31 +197,22 @@ class HashTaggingAnalysisPlugin(interface.AnalysisPlugin):
                 data_stream_identifier
             )
 
+            # Store the labels so that events of the data stream that are examined
+            # after the hash was analyzed are tagged as well.
+            self._labels_by_data_stream[data_stream_identifier] = labels
+
             # Do no bail out earlier to maintain the state of
             # self._data_streams_by_hash and self._event_identifiers_by_data_stream.
             if not labels:
                 continue
 
             for event_identifier in event_identifiers:
-                event_tag = events.EventTag()
-                event_tag.SetEventIdentifier(event_identifier)
-
-                try:
-                    event_tag.AddLabels(labels)
-                except (TypeError, ValueError):
-                    error_label = f"error_{self.NAME:s}"
-                    labels_string = ", ".join(labels)
-                    logger.error(
-                        f"unable to add labels: {labels_string!s} for digest hash: "
-                        f"{hash_analysis.subject_hash:s} defaulting to: {error_label:s}"
-                    )
-                    labels = [error_label]
-                    event_tag.AddLabels(labels)
-
-                analysis_mediator.ProduceEventTag(event_tag)
-
-                for label in labels:
-                    self._analysis_counter[label] += 1
+                labels = self._ProduceEventTag(
+                    analysis_mediator,
+                    event_identifier,
+                    labels,
+                    hash_analysis.subject_hash,
+                )
 
     def CompileReport(self, analysis_mediator):
         """Compiles an analysis report.
@@ -222,6 +250,19 @@ class HashTaggingAnalysisPlugin(interface.AnalysisPlugin):
             return
 
         data_stream_identifier = event_data_stream.GetIdentifier()
+        labels = self._labels_by_data_stream.get(data_stream_identifier, None)
+        if labels is not None:
+            # The hash of the data stream was already analyzed.
+            if labels:
+                lookup_hash = f"{self._lookup_hash:s}_hash"
+                lookup_hash = getattr(event_data_stream, lookup_hash, None)
+                self._labels_by_data_stream[data_stream_identifier] = (
+                    self._ProduceEventTag(
+                        analysis_mediator, event.GetIdentifier(), labels, lookup_hash
+                    )
+                )
+            return
+
         if data_stream_identifier not in self._data_stream_identifiers:
             self._data_stream_identifiers.add(data_stream_identifier)
 
