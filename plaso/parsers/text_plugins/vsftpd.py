@@ -127,7 +127,6 @@ class VsftpdLogTextPlugin(interface.TextPlugin):
             _, month_string, day_of_month, hours, minutes, seconds, year = (
                 time_elements_structure
             )
-
             month = self._MONTH_DICT.get(month_string.lower(), 0)
 
             time_elements_tuple = (year, month, day_of_month, hours, minutes, seconds)
