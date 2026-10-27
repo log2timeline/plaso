@@ -76,7 +76,6 @@ class ViminfoTextPluginTest(test_lib.TextPluginTestCase):
             "item_number": 0,
             "recorded_time": "2009-02-13T23:31:30+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -88,7 +87,6 @@ class ViminfoTextPluginTest(test_lib.TextPluginTestCase):
             "item_number": 0,
             "recorded_time": "2009-02-13T23:31:32+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 2)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -100,7 +98,6 @@ class ViminfoTextPluginTest(test_lib.TextPluginTestCase):
             "item_number": 0,
             "recorded_time": "2009-02-13T23:31:34+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 4)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -112,7 +109,6 @@ class ViminfoTextPluginTest(test_lib.TextPluginTestCase):
             "item_number": 0,
             "recorded_time": "2009-02-13T23:31:36+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 6)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -124,7 +120,6 @@ class ViminfoTextPluginTest(test_lib.TextPluginTestCase):
             "item_number": 0,
             "recorded_time": "2009-02-13T23:31:38+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 8)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -135,7 +130,6 @@ class ViminfoTextPluginTest(test_lib.TextPluginTestCase):
                 warnings.ExtractionWarning.CONTAINER_TYPE
             )
         )
-
         expected_message = 'unable to parse log line: 64 "> ~\\_vimrc"'
 
         self.assertEqual(extraction_warnings[0].message, expected_message)
@@ -143,7 +137,6 @@ class ViminfoTextPluginTest(test_lib.TextPluginTestCase):
         expected_message = (
             'unable to parse log line: 68 "> C:\\Program Files (x86)\\Vim\\.vimrc"'
         )
-
         self.assertEqual(extraction_warnings[3].message, expected_message)
 
     def testProcessAlternateHeader(self):
