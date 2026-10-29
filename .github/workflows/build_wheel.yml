@@ -1,5 +1,8 @@
 # Build Python sdist and wheel.
 name: build_wheels
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 on:
   pull_request:
   push:
@@ -7,13 +10,17 @@ on:
     types: [published]
   # Allow trigger via API
   workflow_dispatch:
-permissions: read-all
+permissions:
+  contents: read
 jobs:
   build_sdist:
     name: Build sdist
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
     - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
     - name: Install build dependencies
       run: |
         sudo apt update
@@ -28,8 +35,11 @@ jobs:
   build_wheel:
     name: Build wheel
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
     - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
     - name: Install build dependencies
       run: |
         sudo apt update
@@ -44,6 +54,7 @@ jobs:
   upload_test_pypi:
     needs: [build_sdist, build_wheel]
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     environment: pypi
     permissions:
       id-token: write
@@ -60,6 +71,7 @@ jobs:
   upload_pypi:
     needs: [upload_test_pypi]
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     environment: pypi
     permissions:
       id-token: write

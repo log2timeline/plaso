@@ -1,10 +1,17 @@
 # Run tests on Mac OS.
 name: test_macos
-on: [pull_request, push]
-permissions: read-all
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+on:
+  pull_request:
+  push:
+permissions:
+  contents: read
 jobs:
   test_macos:
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
     strategy:
       matrix:
         include:
@@ -13,6 +20,8 @@ jobs:
           toxenv: 'py314'
     steps:
     - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
     - name: Install dependencies
       run: |
         brew update -q

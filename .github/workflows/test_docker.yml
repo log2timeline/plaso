@@ -1,10 +1,16 @@
 # Run tests on Fedora and Ubuntu Docker images using GIFT COPR and GIFT PPA on commit
 name: test_docker
-on: [push]
-permissions: read-all
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+on:
+  push:
+permissions:
+  contents: read
 jobs:
   test_fedora:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     strategy:
       matrix:
         version: ['44']
@@ -12,6 +18,8 @@ jobs:
       image: registry.fedoraproject.org/fedora:${{ matrix.version }}
     steps:
     - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
     - name: Set up container
       run: |
         dnf install -y dnf-plugins-core langpacks-en
@@ -35,6 +43,7 @@ jobs:
         python3 -m build --no-isolation --wheel
   test_ubuntu:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     strategy:
       matrix:
         version: ['26.04']
@@ -42,6 +51,8 @@ jobs:
       image: ubuntu:${{ matrix.version }}
     steps:
     - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
     - name: Set up container
       env:
         DEBIAN_FRONTEND: noninteractive
