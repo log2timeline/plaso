@@ -36,6 +36,18 @@ class TestProcess(base_process.MultiProcessBaseProcess):
         return
 
 
+class FailingTestProcess(TestProcess):
+    """Implementation of the multi-processing base process that fails."""
+
+    def _Main(self):
+        """The process main loop.
+
+        Raises:
+          RuntimeError: always.
+        """
+        raise RuntimeError("Main loop failed for testing.")
+
+
 class MultiProcessBaseProcessTest(shared_test_lib.BaseTestCase):
     """Tests the multi-processing base process."""
 
@@ -54,8 +66,22 @@ class MultiProcessBaseProcessTest(shared_test_lib.BaseTestCase):
     # TODO: add test for _SigTermHandler.
     # TODO: add test for _StartProcessStatusRPCServer.
     # TODO: add test for _StopProcessStatusRPCServer.
-    # TODO: add test for _WaitForStatusNotRunning.
-    # TODO: add test for run.
+
+    def testRunWithFailingMain(self):
+        """Tests that the process exits when the main loop raises."""
+        configuration = configurations.ProcessingConfiguration()
+
+        test_process = FailingTestProcess(configuration, name="TestFailing")
+        test_process.start()
+        try:
+            test_process.join(timeout=60)
+            self.assertFalse(test_process.is_alive())
+            self.assertEqual(test_process.exitcode, 1)
+
+        finally:
+            if test_process.is_alive():
+                test_process.kill()
+                test_process.join()
 
 
 if __name__ == "__main__":
