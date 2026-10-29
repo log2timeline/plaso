@@ -467,6 +467,52 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         task_dict = task.CopyToDict()
         self.assertEqual(sorted(task_dict.items()), sorted(expected_task_dict.items()))
 
+    def testReadAndWriteSerializedTaskWithPathSpecs(self):
+        """Test ReadSerialized and WriteSerialized of Task with path specifications."""
+        session_identifier = f"{uuid.uuid4().hex:s}"
+
+        os_path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_OS, location="/tmp/test.qcow2"
+        )
+        qcow_path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_QCOW, parent=os_path_spec
+        )
+        path_specs = [
+            path_spec_factory.Factory.NewPathSpec(
+                dfvfs_definitions.TYPE_INDICATOR_TSK,
+                inode=15,
+                location="/file1.txt",
+                parent=qcow_path_spec,
+            ),
+            path_spec_factory.Factory.NewPathSpec(
+                dfvfs_definitions.TYPE_INDICATOR_TSK,
+                inode=16,
+                location="/file2.txt",
+                parent=qcow_path_spec,
+            ),
+        ]
+
+        expected_task = tasks.Task(session_identifier=session_identifier)
+        expected_task.path_spec = path_specs[0]
+        expected_task.path_specs = path_specs
+
+        json_string = json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
+            expected_task
+        )
+        self.assertIsNotNone(json_string)
+
+        task = json_serializer.JSONAttributeContainerSerializer.ReadSerialized(
+            json_string
+        )
+        self.assertIsNotNone(task)
+        self.assertIsInstance(task, tasks.Task)
+
+        self.assertEqual(task.path_spec.comparable, path_specs[0].comparable)
+        self.assertEqual(
+            [path_spec.comparable for path_spec in task.path_specs],
+            [path_spec.comparable for path_spec in path_specs],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
