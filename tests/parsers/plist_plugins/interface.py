@@ -668,6 +668,46 @@ class NSKeyedArchiverDecoderTest(shared_test_lib.BaseTestCase):
         decoded_plist = test_decoder.Decode(root_item)
         self.assertEqual(decoded_plist, {"a": {"b": {}}, "b": {"a": {}}})
 
+    def testDecodeWithSharedReferencesAndObjectCycle(self):
+        """Tests the Decode function with many references to a cyclic object.
+
+        An object that references one of its parent objects cannot be reused
+        and is decoded again for every reference. This test builds a structure
+        in which every level references the same child object twice and the
+        deepest level references the root object, and verifies that decoding
+        terminates with an error instead of decoding an exponential number of
+        objects.
+        """
+        number_of_levels = 24
+
+        class_definition = {
+            "$classname": "NSArray",
+            "$classes": ["NSArray", "NSObject"],
+        }
+        objects_array = ["$null", class_definition]
+        root_uid = len(objects_array)
+
+        for level in range(number_of_levels):
+            if level + 1 < number_of_levels:
+                child_uid = root_uid + level + 1
+                ns_objects = [plistlib.UID(child_uid), plistlib.UID(child_uid)]
+            else:
+                ns_objects = [plistlib.UID(root_uid)]
+
+            objects_array.append({"$class": plistlib.UID(1), "NS.objects": ns_objects})
+
+        root_item = {
+            "$archiver": "NSKeyedArchiver",
+            "$version": 100000,
+            "$objects": objects_array,
+            "$top": {"root": plistlib.UID(root_uid)},
+        }
+
+        test_decoder = interface.NSKeyedArchiverDecoder()
+
+        with self.assertRaises(RuntimeError):
+            test_decoder.Decode(root_item)
+
     def testIsEncoded(self):
         """Tests the IsEncoded function."""
         test_decoder = interface.NSKeyedArchiverDecoder()
