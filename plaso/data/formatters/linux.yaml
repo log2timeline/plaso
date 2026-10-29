@@ -57,6 +57,15 @@ short_source: 'LOG'
 source: 'Popularity Contest Log'
 ---
 type: 'conditional'
+data_type: 'linux:trash_info:entry'
+message:
+- 'Original path: {original_path}'
+short_message:
+- 'Deleted file: {original_path}'
+short_source: 'RECBIN'
+source: 'Trash'
+---
+type: 'conditional'
 data_type: 'linux:utmp:event'
 enumeration_helpers:
 - input_attribute: 'login_type'
