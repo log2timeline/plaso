@@ -868,6 +868,12 @@ attribute_mappings:
   description: 'Start Time'
 place_holder_event: true
 ---
+data_type: 'linux:trash_info:entry'
+attribute_mappings:
+- name: 'deletion_time'
+  description: 'Content Deletion Time'
+place_holder_event: true
+---
 data_type: 'linux:utmp:event'
 attribute_mappings:
 - name: 'written_time'
