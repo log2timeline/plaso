@@ -36,6 +36,26 @@ class TestEventExtractionWorker(worker.EventExtractionWorker):
         return
 
 
+class TestFileEntryRecordingExtractionWorker(worker.EventExtractionWorker):
+    """Event extraction worker that records the file entries it processes."""
+
+    def __init__(self):
+        """Initializes an event extraction worker."""
+        super().__init__()
+        self.processed_locations = []
+
+    # pylint: disable=unused-argument
+    def ProcessFileEntry(self, parser_mediator, file_entry):
+        """Processes a file entry.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          file_entry (dfvfs.FileEntry): file entry.
+        """
+        self.processed_locations.append(file_entry.path_spec.location)
+
+
 class WorkerProcessTest(test_lib.MultiProcessingTestCase):
     """Tests the multi-processing worker process."""
 
@@ -153,6 +173,46 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
             )
             task = tasks.Task(session_identifier=session.identifier)
             test_process._ProcessTask(task)
+
+    def testProcessTaskWithMultiplePathSpecs(self):
+        """Tests the _ProcessTask function with multiple path specifications."""
+        test_file_paths = [
+            self._GetTestFilePath(["testdir", "filter_1.txt"]),
+            self._GetTestFilePath(["testdir", "filter2.txt"]),
+        ]
+        for test_file_path in test_file_paths:
+            self._SkipIfPathNotExists(test_file_path)
+
+        path_specs = [
+            path_spec_factory.Factory.NewPathSpec(
+                dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
+            )
+            for test_file_path in test_file_paths
+        ]
+
+        session = sessions.Session()
+        with shared_test_lib.TempDirectory() as temp_directory:
+            configuration = configurations.ProcessingConfiguration()
+            configuration.task_storage_path = temp_directory
+            configuration.task_storage_format = definitions.STORAGE_FORMAT_SQLITE
+
+            test_process = extraction_process.ExtractionWorkerProcess(
+                None, configuration, [], [], None, name="TestWorker"
+            )
+            extraction_worker = TestFileEntryRecordingExtractionWorker()
+            test_process._extraction_worker = extraction_worker
+
+            task_storage_writer = self._CreateStorageWriter()
+            test_process._parser_mediator = self._CreateParserMediator(
+                task_storage_writer
+            )
+            task = tasks.Task(session_identifier=session.identifier)
+            task.path_spec = path_specs[0]
+            task.path_specs = path_specs
+            test_process._ProcessTask(task)
+
+            self.assertEqual(extraction_worker.processed_locations, test_file_paths)
+            self.assertEqual(test_process._number_of_consumed_sources, 2)
 
     def testStartAndStopProfiling(self):
         """Tests the _StartProfiling and _StopProfiling functions."""

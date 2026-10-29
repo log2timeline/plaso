@@ -372,6 +372,55 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
         self.assertEqual(len(failed_tasks), 1)
         self.assertEqual(failed_tasks[0].path_spec, "test_path_spec")
 
+    def testCreateRetryTaskWithMultiplePathSpecs(self):
+        """Tests the CreateRetryTask function with multiple path specifications."""
+        manager = task_manager.TaskManager()
+
+        task = manager.CreateTask(self._TEST_SESSION_IDENTIFIER)
+        task.path_spec = "test_path_spec1"
+        task.path_specs = ["test_path_spec1", "test_path_spec2", "test_path_spec3"]
+
+        manager._AbandonQueuedTasks()
+
+        self.assertTrue(manager.HasPendingTasks())
+
+        # The abandoned task is retried as one retry task per path specification.
+        retry_tasks = []
+        retry_task = manager.CreateRetryTask()
+        while retry_task:
+            retry_tasks.append(retry_task)
+            retry_task = manager.CreateRetryTask()
+
+        self.assertEqual(
+            [retry_task.path_spec for retry_task in retry_tasks],
+            ["test_path_spec1", "test_path_spec2", "test_path_spec3"],
+        )
+        for retry_task in retry_tasks:
+            self.assertIsNone(retry_task.path_specs)
+            self.assertEqual(retry_task.number_of_retries, 1)
+
+        self.assertEqual(len(manager._tasks_queued), 3)
+        self.assertEqual(manager._total_number_of_tasks, 4)
+
+        result = manager.CheckTaskToMerge(task)
+        self.assertFalse(result)
+
+        # Only the path specification that keeps failing is reported as failed.
+        retry_tasks[0].storage_file_size = 10
+        manager.UpdateTaskAsPendingMerge(retry_tasks[0])
+
+        retry_tasks[2].storage_file_size = 10
+        manager.UpdateTaskAsPendingMerge(retry_tasks[2])
+
+        retry_task = retry_tasks[1]
+        while retry_task:
+            manager._AbandonQueuedTasks()
+            retry_task = manager.CreateRetryTask()
+
+        failed_tasks = manager.GetFailedTasks()
+        self.assertEqual(len(failed_tasks), 1)
+        self.assertEqual(failed_tasks[0].GetPathSpecs(), ["test_path_spec2"])
+
     def testCreateTask(self):
         """Tests the CreateTask function."""
         manager = task_manager.TaskManager()
