@@ -12,6 +12,8 @@ class BaseTaskMergeHelper:
     """Interface of helper for merging task related attribute containers.
 
     Attributes:
+      compression_format (str): compression format of the stored data of
+          the task storage or None if not available.
       task_identifier (str): identifier of the task that is merged.
     """
 
@@ -29,6 +31,7 @@ class BaseTaskMergeHelper:
         self._generator = self._GetAttributeContainers(task_storage_reader)
         self._task_storage_reader = task_storage_reader
 
+        self.compression_format = task_storage_reader.GetCompressionFormat()
         self.fully_merged = False
         self.task_identifier = task_identifier
 
@@ -39,10 +42,13 @@ class BaseTaskMergeHelper:
           task_storage_reader (StorageReader): task storage reader.
 
         Yields:
-          AttributeContainer: attribute container.
+          tuple[AttributeContainer, object]: attribute container and its stored
+              data or None if not available.
         """
         for container_type in self._CONTAINER_TYPES:
-            yield from task_storage_reader.GetAttributeContainers(container_type)
+            yield from task_storage_reader.GetAttributeContainersWithStoredData(
+                container_type
+            )
 
         self.fully_merged = True
 
@@ -57,12 +63,20 @@ class BaseTaskMergeHelper:
         Returns:
           AttributeContainer: attribute container or None if not available.
         """
-        try:
-            container = next(self._generator)
-        except StopIteration:
-            container = None
-
+        container, _ = self.GetAttributeContainerWithStoredData()
         return container
+
+    def GetAttributeContainerWithStoredData(self):
+        """Retrieves an attribute container to merge and its stored data.
+
+        Returns:
+          tuple[AttributeContainer, object]: attribute container or None if not
+              available and its stored data or None if not available.
+        """
+        try:
+            return next(self._generator)
+        except StopIteration:
+            return None, None
 
     def GetAttributeContainerIdentifier(self, lookup_key):
         """Retrieves an attribute container.
