@@ -39,7 +39,8 @@ class DtFabricHelper:
       data_type: int32
 
     The path to the definition file is defined in the class constant
-    "_DEFINITION_FILE" and will be read on class instantiation.
+    "_DEFINITION_FILE" and will be read on class instantiation. The definition
+    is parsed when the first data type map is requested.
 
     The definition files contains data type definitions such as "int32" and
     "point3d" in the previous example.
@@ -58,7 +59,8 @@ class DtFabricHelper:
         """Initializes the dtFabric format definition helper mix-in."""
         super().__init__()
         self._data_type_maps = {}
-        self._fabric = self._ReadDefinitionFile(self._DEFINITION_FILE)
+        self._definition = self._ReadDefinitionFile(self._DEFINITION_FILE)
+        self._fabric = None
 
     def _FormatPackedIPv4Address(self, packed_ip_address):
         """Formats a packed IPv4 address as a human readable string.
@@ -89,7 +91,8 @@ class DtFabricHelper:
     def _GetDataTypeMap(self, name):
         """Retrieves a data type map defined by the definition file.
 
-        The data type maps are cached for reuse.
+        The definition is parsed on first use and the data type maps are cached
+        for reuse.
 
         Args:
           name (str): name of the data type as defined by the definition file.
@@ -100,6 +103,11 @@ class DtFabricHelper:
         """
         data_type_map = self._data_type_maps.get(name)
         if not data_type_map:
+            if self._fabric is None and self._definition is not None:
+                self._fabric = dtfabric_fabric.DataTypeFabric(
+                    yaml_definition=self._definition
+                )
+
             data_type_map = self._fabric.CreateDataTypeMap(name)
             self._data_type_maps[name] = data_type_map
 
@@ -150,21 +158,23 @@ class DtFabricHelper:
     def _ReadDefinitionFile(self, path):
         """Reads a dtFabric definition file.
 
+        The definition is not parsed, but a missing definition file is reported
+        when the helper is initialized.
+
         Args:
           path (str): path of the dtFabric definition file.
 
         Returns:
-          dtfabric.DataTypeFabric: data type fabric which contains the data format
-              data type maps of the data type definition, such as a structure, that
-              can be mapped onto binary data or None if no path is provided.
+          bytes: dtFabric definition or None if no path is provided.
+
+        Raises:
+          OSError: if the definition file cannot be read.
         """
         if not path:
             return None
 
         with open(path, "rb") as file_object:
-            definition = file_object.read()
-
-        return dtfabric_fabric.DataTypeFabric(yaml_definition=definition)
+            return file_object.read()
 
     def _ReadStructureFromByteStream(
         self, byte_stream, file_offset, data_type_map, context=None
