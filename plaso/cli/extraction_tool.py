@@ -466,9 +466,12 @@ class ExtractionTool(
 
         extraction_engine = self._CreateExtractionEngine(single_process_mode)
 
-        extraction_engine.BuildArtifactsRegistry(
-            self._artifact_definitions_path, self._custom_artifacts_path
-        )
+        if self._artifacts_registry:
+            extraction_engine.SetArtifactsRegistry(self._artifacts_registry)
+        else:
+            extraction_engine.BuildArtifactsRegistry(
+                self._artifact_definitions_path, self._custom_artifacts_path
+            )
 
         source_configuration = artifacts.SourceConfigurationArtifact(
             path=self._source_path, source_type=self._source_type
