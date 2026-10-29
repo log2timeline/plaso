@@ -976,47 +976,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         helpers_manager.ArgumentHelperManager.ParseOptions(
             options, self, names=argument_helper_names
         )
-        if self._vfs_back_end == "fsext":
-            dfvfs_definitions.PREFERRED_EXT_BACK_END = (
-                dfvfs_definitions.TYPE_INDICATOR_EXT
-            )
-
-        elif self._vfs_back_end == "fsfat":
-            dfvfs_definitions.PREFERRED_FAT_BACK_END = (
-                dfvfs_definitions.TYPE_INDICATOR_FAT
-            )
-
-        elif self._vfs_back_end == "fshfs":
-            dfvfs_definitions.PREFERRED_HFS_BACK_END = (
-                dfvfs_definitions.TYPE_INDICATOR_HFS
-            )
-
-        elif self._vfs_back_end == "fsntfs":
-            dfvfs_definitions.PREFERRED_NTFS_BACK_END = (
-                dfvfs_definitions.TYPE_INDICATOR_NTFS
-            )
-
-        elif self._vfs_back_end == "tsk":
-            dfvfs_definitions.PREFERRED_EXT_BACK_END = (
-                dfvfs_definitions.TYPE_INDICATOR_TSK
-            )
-            dfvfs_definitions.PREFERRED_FAT_BACK_END = (
-                dfvfs_definitions.TYPE_INDICATOR_TSK
-            )
-            dfvfs_definitions.PREFERRED_GPT_BACK_END = (
-                dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION
-            )
-            dfvfs_definitions.PREFERRED_HFS_BACK_END = (
-                dfvfs_definitions.TYPE_INDICATOR_TSK
-            )
-            dfvfs_definitions.PREFERRED_NTFS_BACK_END = (
-                dfvfs_definitions.TYPE_INDICATOR_TSK
-            )
-
-        elif self._vfs_back_end == "vsgpt":
-            dfvfs_definitions.PREFERRED_GPT_BACK_END = (
-                dfvfs_definitions.TYPE_INDICATOR_GPT
-            )
+        engine.BaseEngine.SetPreferredVFSBackEnd(self._vfs_back_end)
 
         self._ParseFilterOptions(options)
 

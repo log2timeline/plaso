@@ -67,6 +67,26 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
 
     # pylint: disable=protected-access
 
+    _PREFERRED_BACK_END_NAMES = [
+        "PREFERRED_EXT_BACK_END",
+        "PREFERRED_FAT_BACK_END",
+        "PREFERRED_GPT_BACK_END",
+        "PREFERRED_HFS_BACK_END",
+        "PREFERRED_NTFS_BACK_END",
+    ]
+
+    def setUp(self):
+        """Makes preparations before running an individual test."""
+        self._preferred_back_ends = {
+            name: getattr(dfvfs_definitions, name)
+            for name in self._PREFERRED_BACK_END_NAMES
+        }
+
+    def tearDown(self):
+        """Cleans up after running an individual test."""
+        for name, value in self._preferred_back_ends.items():
+            setattr(dfvfs_definitions, name, value)
+
     def testStartStopProfiling(self):
         """Tests the _StartProfiling and _StopProfiling functions."""
         with shared_test_lib.TempDirectory() as temp_directory:
@@ -264,6 +284,50 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
 
         self.assertEqual(len(source_configurations), 1)
         self.assertEqual(source_configurations[0].operating_system, "Windows NT")
+
+    def testSetPreferredVFSBackEnd(self):
+        """Tests the SetPreferredVFSBackEnd function."""
+        engine.BaseEngine.SetPreferredVFSBackEnd("auto")
+
+        for name, value in self._preferred_back_ends.items():
+            self.assertEqual(getattr(dfvfs_definitions, name), value)
+
+        engine.BaseEngine.SetPreferredVFSBackEnd("fsntfs")
+
+        self.assertEqual(
+            dfvfs_definitions.PREFERRED_NTFS_BACK_END,
+            dfvfs_definitions.TYPE_INDICATOR_NTFS,
+        )
+
+        engine.BaseEngine.SetPreferredVFSBackEnd("tsk")
+
+        self.assertEqual(
+            dfvfs_definitions.PREFERRED_EXT_BACK_END,
+            dfvfs_definitions.TYPE_INDICATOR_TSK,
+        )
+        self.assertEqual(
+            dfvfs_definitions.PREFERRED_FAT_BACK_END,
+            dfvfs_definitions.TYPE_INDICATOR_TSK,
+        )
+        self.assertEqual(
+            dfvfs_definitions.PREFERRED_GPT_BACK_END,
+            dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION,
+        )
+        self.assertEqual(
+            dfvfs_definitions.PREFERRED_HFS_BACK_END,
+            dfvfs_definitions.TYPE_INDICATOR_TSK,
+        )
+        self.assertEqual(
+            dfvfs_definitions.PREFERRED_NTFS_BACK_END,
+            dfvfs_definitions.TYPE_INDICATOR_TSK,
+        )
+
+        engine.BaseEngine.SetPreferredVFSBackEnd("vsgpt")
+
+        self.assertEqual(
+            dfvfs_definitions.PREFERRED_GPT_BACK_END,
+            dfvfs_definitions.TYPE_INDICATOR_GPT,
+        )
 
 
 if __name__ == "__main__":
