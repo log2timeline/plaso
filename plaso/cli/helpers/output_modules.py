@@ -58,13 +58,15 @@ class OutputModulesArgumentsHelper(interface.ArgumentsHelper):
             argument_index = arguments.index("--output-format") + 1
 
         if 0 < argument_index < len(arguments):
-            names = [name.strip() for name in arguments[argument_index].split(",")]
+            output_format = arguments[argument_index].strip()
         else:
-            names = ["dynamic"]
+            output_format = "dynamic"
 
-        if names and names != ["list"]:
+        # Only add the arguments of a single supported output format, an
+        # unsupported output format is reported by ParseOptions.
+        if output_manager.OutputManager.HasOutputClass(output_format):
             manager.ArgumentHelperManager.AddCommandLineArguments(
-                argument_group, category="output", names=names
+                argument_group, category="output", names=[output_format]
             )
 
     @classmethod
