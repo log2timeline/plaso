@@ -137,14 +137,33 @@ class PowerShellTranscriptLogTextPlugin(interface.TextPlugin):
 
     VERIFICATION_LITERALS = ["Windows PowerShell"]
 
-    # TODO: handle footer with end time.
-
     def __init__(self):
         """Initializes a text parser plugin."""
         super().__init__()
         self._command_history = []
         self._event_data = None
+        self._has_footer = False
         self._in_command_history = False
+
+    def _ParseFinalize(self, parser_mediator):
+        """Finalizes parsing.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+        """
+        if self._event_data and not self._has_footer:
+            if self._in_command_history and self._command_history:
+                event_data = copy.deepcopy(self._event_data)
+                event_data.commands = "; ".join(self._command_history)
+
+                parser_mediator.ProduceEventData(event_data)
+
+            parser_mediator.ProduceWarning(
+                "missing PowerShell transcript footer, file is likely incomplete."
+            )
+
+        self._ResetState()
 
     def _ParseHeader(self, parser_mediator, text_reader):
         """Parses a text-log file header.
@@ -257,7 +276,13 @@ class PowerShellTranscriptLogTextPlugin(interface.TextPlugin):
                 message_body = self._GetStringValueFromStructure(
                     structure, "message_body"
                 )
-                if ":" in message_body:
+                # The footer starts with a line that contains "Windows PowerShell"
+                # such as "Windows PowerShell transcript end", followed by the end
+                # time, which is not a command start time.
+                if "Windows PowerShell" in message_body:
+                    self._has_footer = True
+
+                elif ":" in message_body and not self._has_footer:
                     date_time_structure = message_body.rsplit(":", maxsplit=1)[
                         -1
                     ].strip()
@@ -318,6 +343,7 @@ class PowerShellTranscriptLogTextPlugin(interface.TextPlugin):
         """Resets stored values."""
         self._command_history = []
         self._event_data = None
+        self._has_footer = False
         self._in_command_history = False
 
     def CheckRequiredFormat(self, parser_mediator, text_reader):
