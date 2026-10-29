@@ -13,7 +13,7 @@ Python and use of git.
 
 ### Terminology
 
-* event; a subclass of [EventObject](../api/plaso.containers.html#plaso.containers.events.EventObject) which represents [an event](Scribbles-about-events.md#what-is-an-event)
+* event; a subclass of [EventObject](../api/plaso.containers.html#plaso.containers.events.EventObject) which represents [an event](../user/Scribbles-about-events.md#what-is-an-event)
 * event data; a subclass of [EventData](../api/plaso.containers.html#plaso.containers.events.EventData) which represents data related to the event.
 * event data stream; a subclass of [EventDataStream](../api/plaso.containers.html#plaso.containers.events.EventDataStream) which represents the data stream which the event data originated from.
 * message formatter; a configuration driven subsystem of Plaso that generates a human readable message of the event data.

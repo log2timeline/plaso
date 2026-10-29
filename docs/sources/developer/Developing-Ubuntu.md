@@ -14,8 +14,8 @@ git clone https://github.com/log2timeline/plaso.git
 ## Dependencies
 
 Install the dependencies, using either:
-* A [virtualenv](Developing-Virtualenv.html#Ubuntu)
-* The [prepackaged dependencies](Development-Dependencies.html#Ubuntu).
+* A [virtualenv](Developing-Virtualenv.html#ubuntu)
+* The [prepackaged dependencies](Development-Dependencies.html#ubuntu).
 
 Check if you have all the dependencies installed and have the right minimum
 versions:
