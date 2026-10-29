@@ -363,7 +363,10 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
         storage_file_path = self._GetTaskStorageFilePath(
             self._processing_configuration.task_storage_format, task
         )
+        # The task storage is kept in memory, when supported, so that it is
+        # written to file only once.
         task_storage_writer.Open(
+            in_memory=True,
             path=storage_file_path,
             session_identifier=task.session_identifier,
             task_identifier=task.identifier,
