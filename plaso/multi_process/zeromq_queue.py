@@ -2,6 +2,7 @@
 
 import abc
 import errno
+import pickle
 import queue
 import threading
 import time
@@ -13,6 +14,23 @@ from plaso.lib import errors
 from plaso.multi_process import plaso_queue
 
 # pylint: disable=no-member
+
+
+class ZeroMQSerializedItem:
+    """Item that is serialized once to be pushed on multiple ZeroMQ queues.
+
+    Attributes:
+      data (bytes): pickled item.
+    """
+
+    def __init__(self, item):
+        """Initializes a serialized item.
+
+        Args:
+          item (object): item to serialize.
+        """
+        super().__init__()
+        self.data = pickle.dumps(item, pickle.DEFAULT_PROTOCOL)
 
 
 class ZeroMQQueue(plaso_queue.Queue):
@@ -93,19 +111,21 @@ class ZeroMQQueue(plaso_queue.Queue):
 
         Args:
           zmq_socket (zmq.Socket): used to the send the item.
-          item (object): sent on the queue. Will be pickled prior to sending.
+          item (object): sent on the queue. Will be pickled prior to sending,
+              unless it is a ZeroMQSerializedItem.
           block (Optional[bool]): whether the push should be performed in blocking
               or non-blocking mode.
 
         Returns:
           bool: whether the item was sent successfully.
         """
+        flags = 0 if block else zmq.DONTWAIT
         try:
             logger.debug(f"[{self.name:s}] Sending item.")
-            if block:
-                zmq_socket.send_pyobj(item)
+            if isinstance(item, ZeroMQSerializedItem):
+                zmq_socket.send(item.data, flags=flags)
             else:
-                zmq_socket.send_pyobj(item, zmq.DONTWAIT)
+                zmq_socket.send_pyobj(item, flags=flags)
             logger.debug(f"[{self.name:s}] Sent item.")
             return True
 
