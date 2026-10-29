@@ -758,7 +758,7 @@ class StatusViewTest(test_lib.CLIToolTestCase):
         self.assertEqual(output, expected_output)
 
         path_spec = path_spec_factory.Factory.NewPathSpec(
-            dfvfs_definitions.TYPE_INDICATOR_OS, location="/test/file\x01name"
+            dfvfs_definitions.TYPE_INDICATOR_FAKE, location="/test/file\x01name"
         )
         process_status.error_path_specs = [path_spec]
         test_view.PrintExtractionSummary(process_status, 0)
@@ -767,7 +767,7 @@ class StatusViewTest(test_lib.CLIToolTestCase):
             "Processing completed with errors.\n"
             "\n"
             "Path specifications that could not be processed:\n"
-            "type: OS, location: /test/file\\x01name\n"
+            "type: FAKE, location: /test/file\\x01name\n"
             "\n"
             "\n"
         )
