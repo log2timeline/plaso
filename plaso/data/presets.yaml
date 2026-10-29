@@ -125,6 +125,7 @@ parsers:
 - chrome_preferences
 - esedb/msie_webcache
 - firefox_cache
+- firefox_mork_history
 - java_idx
 - msiecf
 - opera_global

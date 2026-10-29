@@ -134,6 +134,14 @@ plaso.parsers.firefox\_cache module
    :show-inheritance:
    :undoc-members:
 
+plaso.parsers.firefox\_mork\_history module
+-------------------------------------------
+
+.. automodule:: plaso.parsers.firefox_mork_history
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 plaso.parsers.fish\_history module
 ----------------------------------
 
