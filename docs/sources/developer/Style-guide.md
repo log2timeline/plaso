@@ -4,6 +4,20 @@ Plaso follows the [log2timeline style guide](https://github.com/log2timeline/l2t
 
 ## Plaso specific style points
 
+### Formatting
+
+Python code formatting is enforced by tools rather than applied by hand:
+
+* [black](https://black.readthedocs.io) formats the code, with a line length
+of 88 characters, as configured in `[tool.black]` in `pyproject.toml`;
+* [docformatter](https://docformatter.readthedocs.io) formats the docstrings,
+as configured in `[tool.docformatter]` in `pyproject.toml`.
+
+Run `tox -e black` and `tox -e docformatter` to reformat the code, and
+`tox -e pylint` to check it against `.pylintrc`. The lint workflow in
+`.github/workflows/lint.yml` runs `black --check`, pylint, typos and yamllint
+on every pull request.
+
 ### Event data attribute containers
 
 #### Data types
@@ -42,8 +56,9 @@ are:
 * bool (also see note below)
 * int
 * str
+* dfdatetime.DateTimeValues, for date and time values
 
-A list, of the types previously mentioned types, are supported. **Do not use
+A list of one of the previously mentioned types is supported. **Do not use
 dict or binary strings.**
 
 Use a bool sparsely. For now it is preferred to preserve the original type.
@@ -53,14 +68,24 @@ human readable string.
 
 ### Tests
 
-* Use  the test functions available in the local test_lib.py as much as possible
- nstead of writing your own test functions. If you think a test function is
+* Use the test functions available in the local test_lib.py as much as possible
+ instead of writing your own test functions. If you think a test function is
  missing please add it, or mail the developer list to see if you can get someone
  else to do it.
-* Use `self.CheckTimestamp` for testing timestamp values.
+* Use `self.CheckEventData` for testing event data attribute values. Date and
+ time values are compared as ISO 8601 strings, for example:
 
-Common test code should be stored in "test library" files, for example. the parser test
-library is `tests/parsers/test_lib.py`.
+```python
+expected_event_values = {
+    "data_type": "bsm:entry",
+    "written_time": "2013-11-04T18:36:20.000381+00:00",
+}
+event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+self.CheckEventData(event_data, expected_event_values)
+```
+
+Common test code should be stored in "test library" files, for example the
+parser test library is `tests/parsers/test_lib.py`.
 
 We do this for a few reasons:
 
