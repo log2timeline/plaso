@@ -74,7 +74,6 @@ TEST_FILE="psort_test.plaso"
 # parser failing early on non-leap years.
 
 PYTHONPATH=. python ./plaso/scripts/log2timeline.py \
-    --buffer_size=300 \
     --quiet \
     --preferred-year 2012 \
     --storage-file ${TEST_FILE} \
