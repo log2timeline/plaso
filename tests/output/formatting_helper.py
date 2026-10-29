@@ -530,6 +530,29 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
         )
         self.assertEqual(zone_string, "UTC")
 
+        # Test with timestamps near daylight saving time transitions.
+        output_mediator.SetTimeZone("Europe/Brussels")
+
+        test_values = [
+            ("2024-03-31 00:30:00", "CET"),
+            ("2024-03-31 01:30:00", "CEST"),
+            ("2024-03-31 02:30:00", "CEST"),
+            ("2024-10-27 00:30:00", "CEST"),
+            ("2024-10-27 01:30:00", "CET"),
+            ("2024-10-27 02:30:00", "CET"),
+        ]
+        for timestamp, expected_zone_string in test_values:
+            event_values = dict(self._TEST_EVENTS[0])
+            event_values["timestamp"] = timestamp
+            event, event_data, event_data_stream = (
+                containers_test_lib.CreateEventFromValues(event_values)
+            )
+
+            zone_string = test_helper._FormatTimeZone(
+                output_mediator, event, event_data, event_data_stream
+            )
+            self.assertEqual(zone_string, expected_zone_string)
+
     def testFormatUsername(self):
         """Tests the _FormatUsername function."""
         output_mediator = self._CreateOutputMediator()
