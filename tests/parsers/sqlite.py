@@ -9,6 +9,11 @@ import sys
 import tempfile
 import unittest
 
+from dfvfs.lib import definitions as dfvfs_definitions
+from dfvfs.path import factory as path_spec_factory
+from dfvfs.resolver import resolver as path_spec_resolver
+
+from plaso.containers import events
 from plaso.parsers import sqlite
 
 # Register all plugins.
@@ -223,6 +228,33 @@ class SQLiteParserTest(test_lib.ParserTestCase):
             "recovery_warning"
         )
         self.assertEqual(number_of_warnings, 0)
+
+    def testParseFileEntryRemovesTemporaryFiles(self):
+        """Tests that ParseFileEntry removes its temporary files."""
+        test_file_path = self._GetTestFilePath(["wal_database.db"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
+        )
+        file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+
+        storage_writer = self._CreateStorageWriter()
+        parser_mediator = self._CreateParserMediator(
+            storage_writer, file_entry=file_entry
+        )
+
+        event_data_stream = events.EventDataStream()
+        event_data_stream.path_spec = file_entry.path_spec
+        parser_mediator.ProduceEventDataStream(event_data_stream)
+
+        parser = sqlite.SQLiteParser()
+
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            parser_mediator.SetTemporaryDirectory(temporary_directory)
+            parser.Parse(parser_mediator)
+
+            self.assertEqual(os.listdir(temporary_directory), [])
 
 
 if __name__ == "__main__":
