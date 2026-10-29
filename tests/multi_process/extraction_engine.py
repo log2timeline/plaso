@@ -19,6 +19,64 @@ from plaso.storage.sqlite import writer as sqlite_writer
 from tests import test_lib as shared_test_lib
 
 
+class TestFailingMergeExtractionMultiProcessEngine(
+    extraction_engine.ExtractionMultiProcessEngine
+):
+    """Extraction multi-process engine of which every merge check fails."""
+
+    # Number of merge checks after which the task scheduler loop is aborted,
+    # so that the test fails instead of hangs when the loop does not stop.
+    _MAXIMUM_NUMBER_OF_MERGE_CHECKS = 1000
+
+    def __init__(self, fail_extraction_warning=False):
+        """Initializes a test extraction multi-process engine.
+
+        Args:
+          fail_extraction_warning (Optional[bool]): True if producing an
+              extraction warning should fail as well.
+        """
+        super().__init__()
+        self._fail_extraction_warning = fail_extraction_warning
+        self.number_of_merge_checks = 0
+
+    def _MergeTaskStorage(self, storage_writer, session_identifier):
+        """Merges a task storage with the session storage.
+
+        Args:
+          storage_writer (StorageWriter): storage writer for a session storage.
+          session_identifier (str): the identifier of the session.
+
+        Raises:
+          RuntimeError: always.
+        """
+        self.number_of_merge_checks += 1
+        if self.number_of_merge_checks >= self._MAXIMUM_NUMBER_OF_MERGE_CHECKS:
+            self._abort = True
+
+        raise RuntimeError("Unable to check task storage to merge.")
+
+    def _ProduceExtractionWarning(self, storage_writer, message, path_spec):
+        """Produces an extraction warning.
+
+        Args:
+          storage_writer (StorageWriter): storage writer for a session storage.
+          message (str): message of the warning.
+          path_spec (dfvfs.PathSpec): path specification.
+
+        Raises:
+          RuntimeError: if producing an extraction warning should fail.
+        """
+        if self._fail_extraction_warning:
+            raise RuntimeError("Unable to produce extraction warning.")
+
+        # The task scheduler loop can pass "N/A" instead of a path specification,
+        # which cannot be stored.
+        if path_spec == "N/A":
+            path_spec = None
+
+        super()._ProduceExtractionWarning(storage_writer, message, path_spec)
+
+
 class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
     """Tests for the task-based multi-process extraction engine."""
 
@@ -122,6 +180,75 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
         self.assertEqual(
             worker_status.status, definitions.STATUS_INDICATOR_NOT_RESPONDING
         )
+
+    def _ProcessEventSourcesWithRepeatingError(self, test_engine):
+        """Processes event sources with an error that repeats on every iteration.
+
+        Args:
+          test_engine (TestFailingMergeExtractionMultiProcessEngine): test
+              extraction multi-process engine.
+
+        Returns:
+          int: number of extraction warnings.
+        """
+        # pylint: disable=protected-access
+        session = sessions.Session()
+
+        test_engine._processing_configuration = configurations.ProcessingConfiguration()
+        test_engine._task_storage_format = definitions.STORAGE_FORMAT_SQLITE
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            test_engine._storage_file_path = os.path.join(
+                temp_directory, "storage.plaso"
+            )
+            test_engine._StartTaskStorage(definitions.STORAGE_FORMAT_SQLITE)
+
+            storage_writer = sqlite_writer.SQLiteStorageWriter()
+            storage_writer.Open(path=test_engine._storage_file_path)
+
+            try:
+                test_engine._ProcessEventSources(storage_writer, session.identifier)
+
+                number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+                    "extraction_warning"
+                )
+
+            finally:
+                storage_writer.Close()
+
+            test_engine._StopTaskStorage(
+                definitions.STORAGE_FORMAT_SQLITE, session.identifier, abort=True
+            )
+
+        return number_of_warnings
+
+    def testInternalProcessEventSourcesWithRepeatingError(self):
+        """Tests the _ProcessEventSources function with a repeating error."""
+        # pylint: disable=protected-access
+        test_engine = TestFailingMergeExtractionMultiProcessEngine()
+
+        number_of_warnings = self._ProcessEventSourcesWithRepeatingError(test_engine)
+
+        maximum_number_of_errors = test_engine._MAXIMUM_NUMBER_OF_CONSECUTIVE_ERRORS
+        self.assertEqual(test_engine.number_of_merge_checks, maximum_number_of_errors)
+        self.assertEqual(number_of_warnings, maximum_number_of_errors)
+        self.assertTrue(test_engine._abort)
+        self.assertTrue(test_engine._processing_status.aborted)
+
+    def testInternalProcessEventSourcesWithRepeatingWarningError(self):
+        """Tests the _ProcessEventSources function with a failing warning."""
+        # pylint: disable=protected-access
+        test_engine = TestFailingMergeExtractionMultiProcessEngine(
+            fail_extraction_warning=True
+        )
+
+        number_of_warnings = self._ProcessEventSourcesWithRepeatingError(test_engine)
+
+        maximum_number_of_errors = test_engine._MAXIMUM_NUMBER_OF_CONSECUTIVE_ERRORS
+        self.assertEqual(test_engine.number_of_merge_checks, maximum_number_of_errors)
+        self.assertEqual(number_of_warnings, 0)
+        self.assertTrue(test_engine._abort)
+        self.assertTrue(test_engine._processing_status.aborted)
 
     def testProcessSource(self):
         """Tests the PreprocessSource and ProcessSource functions."""
