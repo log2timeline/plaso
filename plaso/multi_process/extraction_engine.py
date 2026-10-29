@@ -106,6 +106,10 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     # Maximum number of concurrent tasks.
     _MAXIMUM_NUMBER_OF_TASKS = 10000
 
+    # Maximum number of consecutive iterations of the task scheduler loop that
+    # fail with an error, before processing is aborted.
+    _MAXIMUM_NUMBER_OF_CONSECUTIVE_ERRORS = 100
+
     _TASK_QUEUE_TIMEOUT_SECONDS = 2
 
     _WORKER_PROCESSES_MINIMUM = 2
@@ -783,6 +787,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         task = None
         has_pending_tasks = True
         idle_sleep_time = 0.0
+        number_of_consecutive_errors = 0
 
         while event_source or has_pending_tasks:
             if self._abort:
@@ -843,6 +848,8 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
                     idle_sleep_time = self._GetIdleSleepTime(idle_sleep_time)
                     time.sleep(idle_sleep_time)
 
+                number_of_consecutive_errors = 0
+
             except KeyboardInterrupt:
                 if self._debug_output:
                     traceback.print_exc()
@@ -859,12 +866,29 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
                 warning_message = (
                     f"unable to process path specification with error: {exception!s}"
                 )
-                self._ProduceExtractionWarning(
-                    storage_writer,
-                    warning_message,
-                    path_spec,
+                self._TryProduceExtractionWarning(
+                    storage_writer, warning_message, path_spec
                 )
+
                 event_source = None
+
+                # An error that repeats on every iteration would otherwise make
+                # the task scheduler loop spin forever without making progress.
+                number_of_consecutive_errors += 1
+                if (
+                    number_of_consecutive_errors
+                    >= self._MAXIMUM_NUMBER_OF_CONSECUTIVE_ERRORS
+                ):
+                    logger.error(
+                        "Aborting task scheduler after "
+                        f"{number_of_consecutive_errors:d} consecutive errors, last "
+                        f"error: {exception!s}"
+                    )
+                    self._abort = True
+
+                    self._processing_status.aborted = True
+                    if self._status_update_callback:
+                        self._status_update_callback(self._processing_status)
 
         for task in self._task_manager.GetFailedTasks():
             self._ProduceExtractionWarning(
@@ -1063,6 +1087,21 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
         # Kill any lingering processes.
         self._AbortKill()
+
+    def _TryProduceExtractionWarning(self, storage_writer, message, path_spec):
+        """Produces an extraction warning and logs an error if that fails.
+
+        Args:
+          storage_writer (StorageWriter): storage writer for a session storage.
+          message (str): message of the warning.
+          path_spec (dfvfs.PathSpec): path specification.
+        """
+        try:
+            self._ProduceExtractionWarning(storage_writer, message, path_spec)
+        except Exception as exception:  # pylint: disable=broad-except
+            logger.error(
+                f"Unable to produce extraction warning with error: {exception!s}"
+            )
 
     def _UpdateForemanProcessStatus(self):
         """Update the foreman process status."""
