@@ -504,7 +504,9 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
                 skip_file_entry = False
                 for find_spec in excluded_find_specs or []:
-                    skip_file_entry = find_spec.CompareLocation(file_entry)
+                    skip_file_entry = find_spec.CompareLocation(
+                        file_entry, mount_point=file_system_path_spec
+                    )
                     if skip_file_entry:
                         break
 

@@ -179,6 +179,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         self._maximum_number_of_tasks = maximum_number_of_tasks
         self._merge_task = None
         self._merge_task_on_hold = None
+        self._mount_point_path_spec = None
         self._number_of_consumed_event_data = 0
         self._number_of_consumed_sources = 0
         self._number_of_produced_event_data = 0
@@ -233,8 +234,15 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           bool: True if the path specification should be excluded from extraction.
         """
         for find_spec in self._excluded_file_system_find_specs or []:
-            if find_spec.ComparePathSpecLocation(path_spec, file_system):
-                return True
+            try:
+                if find_spec.ComparePathSpecLocation(
+                    path_spec, file_system, mount_point=self._mount_point_path_spec
+                ):
+                    return True
+
+            except ValueError:
+                # The path specification location is outside the mount point.
+                pass
 
         return False
 
@@ -838,6 +846,16 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           file_system_path_specs (list[dfvfs.PathSpec]): path specifications of
               the source file systems to process.
         """
+        # Exclusion filters on an OS source, such as a directory, are relative to
+        # the source in the same way as the inclusion filters.
+        self._mount_point_path_spec = None
+        for file_system_path_spec in file_system_path_specs:
+            if (
+                file_system_path_spec.type_indicator
+                == dfvfs_definitions.TYPE_INDICATOR_OS
+            ):
+                self._mount_point_path_spec = file_system_path_spec
+
         if self._processing_profiler:
             self._processing_profiler.StartTiming("process_source")
 
