@@ -68,6 +68,8 @@ class EventFilterExpressionParser:
       @imported_modules (num_symbols = 14 AND symbol.name is "FindWindow")
     """
 
+    _BINARY_OPERATOR_SYNONYMS = {"&&": "and", "||": "or"}
+
     _OPERATORS_WITH_NEGATION = frozenset(["contains", "equals", "inset", "is"])
 
     _STATE_ARGUMENT = "ARGUMENT"
@@ -367,11 +369,15 @@ class EventFilterExpressionParser:
         number_of_items = len(self._stack) - 1
         while item_index < number_of_items:
             item = self._stack[item_index]
-            if (
-                isinstance(item, expressions.BinaryExpression)
-                and item.operator.lower() == operator_lower
-                and not item.args
-            ):
+            if isinstance(item, expressions.BinaryExpression):
+                item_operator = item.operator.lower()
+                item_operator = self._BINARY_OPERATOR_SYNONYMS.get(
+                    item_operator, item_operator
+                )
+            else:
+                item_operator = None
+
+            if item_operator == operator_lower and not item.args:
                 previous_item = self._stack[item_index - 1]
                 next_item = self._stack[item_index + 1]
 

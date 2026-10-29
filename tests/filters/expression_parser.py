@@ -352,6 +352,36 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
         with self.assertRaises(errors.ParseError):
             parser.Parse("a is 3)")
 
+    def testParseWithSymbolicBinaryOperators(self):
+        """Tests the Parse function with the && and || binary operators."""
+        parser = expression_parser.EventFilterExpressionParser()
+
+        expression = parser.Parse("a is 1 && b is 2")
+        event_filter = expression.Compile()
+        self.assertIsInstance(event_filter, filters.AndFilter)
+
+        expression = parser.Parse("a is 1 || b is 2")
+        event_filter = expression.Compile()
+        self.assertIsInstance(event_filter, filters.OrFilter)
+
+        # Test that && takes precedence over ||, the same as "and" over "or".
+        expression = parser.Parse("a is 1 || b is 2 && c is 3")
+        event_filter = expression.Compile()
+        self.assertIsInstance(event_filter, filters.OrFilter)
+        self.assertIsInstance(event_filter.args[1], filters.AndFilter)
+
+        expression = parser.Parse("(a is 1 || b is 2) && c is 3")
+        event_filter = expression.Compile()
+        self.assertIsInstance(event_filter, filters.AndFilter)
+        self.assertIsInstance(event_filter.args[0], filters.OrFilter)
+
+        # Test a single & or | is not a binary operator.
+        with self.assertRaises(errors.ParseError):
+            parser.Parse("a is 1 & b is 2")
+
+        with self.assertRaises(errors.ParseError):
+            parser.Parse("a is 1 | b is 2")
+
     def testParseWithEscaping(self):
         """Tests the Parse function with escaping."""
         parser = expression_parser.EventFilterExpressionParser()
