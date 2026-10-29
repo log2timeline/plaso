@@ -35,7 +35,8 @@ the file isn't in Virustotal, it will be tagged as `virustotal_not_present`.
 ### API key in logs
 
 The Virustotal API key is sent as the `apikey` parameter of the request URL.
-Errors about failed requests have the API key redacted, but when debug output
+Errors about failed requests show only the first and last 4 characters of the
+API key, so you can tell which key was used, but when debug output
 is enabled (`--debug`) the request URLs logged by the underlying HTTP library
 contain the API key. Do not share debug logs of a psort run that uses the
 virustotal analysis plugin without removing the API key first.

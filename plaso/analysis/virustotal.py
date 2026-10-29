@@ -22,7 +22,7 @@ class VirusTotalAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
 
     SUPPORTED_HASHES = frozenset(["md5", "sha1", "sha256"])
 
-    _API_KEY_REDACTION_PATTERN = re.compile(r"(apikey=)[^&\s]+")
+    _API_KEY_REDACTION_PATTERN = re.compile(r"(apikey=)([^&\s]+)")
 
     _EICAR_SHA256 = "275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f"
 
@@ -114,9 +114,10 @@ class VirusTotalAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
         except errors.ConnectionError as exception:
             json_response = None
             # The API key is part of the request URL, which can appear in the
-            # error text, so redact it before writing the error to the log.
+            # error text, so partially redact it before writing the error to
+            # the log.
             error_string = self._API_KEY_REDACTION_PATTERN.sub(
-                r"\1[redacted]", str(exception)
+                self._RedactAPIKey, str(exception)
             )
             logger.error(f"Unable to query VirusTotal with error: {error_string:s}.")
 
@@ -129,6 +130,24 @@ class VirusTotalAnalysisPlugin(hash_tagging.HashTaggingAnalysisPlugin):
         """
         self._hashes_per_batch = 4
         self._wait_after_analysis = 60.0
+
+    def _RedactAPIKey(self, match):
+        """Partially redacts an API key matched in a request error.
+
+        The first and last 4 characters are kept, so it is possible to tell which
+        API key was used. Short values are fully redacted.
+
+        Args:
+          match (re.Match): match of the API key redaction pattern.
+
+        Returns:
+          str: URL parameter with the partially redacted API key.
+        """
+        api_key = match.group(2)
+        if len(api_key) <= 12:
+            return f"{match.group(1):s}[redacted]"
+
+        return f"{match.group(1):s}{api_key[:4]:s}...{api_key[-4:]:s}"
 
     def SetAPIKey(self, api_key):
         """Sets the VirusTotal API key to use in queries.

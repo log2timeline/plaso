@@ -132,8 +132,8 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
         self.assertEqual(labels, expected_labels)
 
     def testQueryHashesRedactsAPIKeyFromError(self):
-        """Tests that the API key is redacted from logged request errors."""
-        api_key = "SECRETAPIKEYVALUE"
+        """Tests that the API key is partially redacted from request errors."""
+        api_key = "4a1bSECRETAPIKEYVALUE9f2e"
 
         plugin = virustotal.VirusTotalAnalysisPlugin()
         plugin.SetAPIKey(api_key)
@@ -156,8 +156,9 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
         self.assertIsNone(json_response)
 
         logged_text = "\n".join(logs.output)
-        self.assertIn("apikey=", logged_text)
+        self.assertIn("apikey=4a1b...9f2e&", logged_text)
         self.assertNotIn(api_key, logged_text)
+        self.assertNotIn("SECRETAPIKEYVALUE", logged_text)
 
 
 if __name__ == "__main__":
