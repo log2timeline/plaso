@@ -586,6 +586,67 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
     # TODO: add tests for Open and Close
 
+    def testPrefetchAttributeContainers(self):
+        """Tests the PrefetchAttributeContainers function."""
+        event_data_stream = events.EventDataStream()
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            test_path = os.path.join(temp_directory, "plaso.sqlite")
+            test_store = sqlite_file.SQLiteStorageFile()
+            test_store.Open(path=test_path, read_only=False)
+
+            try:
+                test_store.AddAttributeContainer(event_data_stream)
+                for data_type in ("test:event1", "test:event2", "test:event3"):
+                    event_data = events.EventData(data_type=data_type)
+                    test_store.AddAttributeContainer(event_data)
+            finally:
+                test_store.Close()
+
+            test_store = sqlite_file.SQLiteStorageFile()
+            test_store.Open(path=test_path)
+
+            try:
+                test_store.PrefetchAttributeContainers(
+                    event_data_stream.CONTAINER_TYPE, [0]
+                )
+                container = test_store._GetCachedAttributeContainer(
+                    event_data_stream.CONTAINER_TYPE, 0
+                )
+                self.assertIsNone(container)
+
+                test_store.PrefetchAttributeContainers(
+                    events.EventData.CONTAINER_TYPE, [2, 0, 99]
+                )
+
+                container = test_store._GetCachedAttributeContainer(
+                    events.EventData.CONTAINER_TYPE, 0
+                )
+                self.assertIsNotNone(container)
+                self.assertEqual(container.data_type, "test:event1")
+
+                identifier = container.GetIdentifier()
+                self.assertEqual(identifier.sequence_number, 1)
+
+                container = test_store._GetCachedAttributeContainer(
+                    events.EventData.CONTAINER_TYPE, 1
+                )
+                self.assertIsNone(container)
+
+                container = test_store._GetCachedAttributeContainer(
+                    events.EventData.CONTAINER_TYPE, 2
+                )
+                self.assertIsNotNone(container)
+                self.assertEqual(container.data_type, "test:event3")
+
+                container = test_store.GetAttributeContainerByIndex(
+                    events.EventData.CONTAINER_TYPE, 2
+                )
+                self.assertEqual(container.data_type, "test:event3")
+
+            finally:
+                test_store.Close()
+
     def testUpdateAttributeContainer(self):
         """Tests the UpdateAttributeContainer function."""
         event_data_stream = events.EventDataStream()
