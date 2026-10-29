@@ -362,6 +362,38 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
             except OSError:
                 pass
 
+    def _ExtractPathSpecs(self, file_system_path_spec, find_specs=None):
+        """Extracts path specifications from a source file system.
+
+        A directory that matches the find specifications is expanded into the
+        path specifications of its files and subdirectories.
+
+        Args:
+          file_system_path_spec (dfvfs.PathSpec): path specification of the source
+              file system.
+          find_specs (Optional[list[dfvfs.FindSpec]]): find specifications used
+              in path specification extraction.
+
+        Yields:
+          dfvfs.PathSpec: path specification of a file entry.
+        """
+        path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
+            file_system_path_spec,
+            find_specs=find_specs,
+            resolver_context=self._resolver_context,
+        )
+        for path_spec in path_spec_generator:
+            yield path_spec
+
+            if find_specs:
+                file_entry = path_spec_resolver.Resolver.OpenFileEntry(
+                    path_spec, resolver_context=self._resolver_context
+                )
+                if file_entry and file_entry.IsDirectory():
+                    yield from self._path_spec_extractor.ExtractPathSpecs(
+                        path_spec, resolver_context=self._resolver_context
+                    )
+
     def _ExtractFileEntry(self, file_entry, destination_path, skip_duplicates=True):
         """Extracts a file entry.
 
@@ -485,10 +517,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         output_writer.Write("Extracting file entries.\n")
 
         for file_system_path_spec in file_system_path_specs:
-            path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
-                file_system_path_spec,
-                find_specs=included_find_specs,
-                resolver_context=self._resolver_context,
+            path_spec_generator = self._ExtractPathSpecs(
+                file_system_path_spec, find_specs=included_find_specs
             )
             for path_spec in path_spec_generator:
                 file_entry = path_spec_resolver.Resolver.OpenFileEntry(
