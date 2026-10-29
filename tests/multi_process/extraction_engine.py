@@ -10,6 +10,7 @@ import unittest
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
+from plaso.containers import event_sources
 from plaso.containers import sessions
 from plaso.containers import warnings
 from plaso.lib import definitions
@@ -93,6 +94,63 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
         expected_parsers_counter = collections.Counter({"filestat": 15, "total": 15})
         self.assertEqual(parsers_counter, expected_parsers_counter)
+
+    def testInternalFillEventSourceHeap(self):
+        """Tests the _FillEventSourceHeap function."""
+        # pylint: disable=protected-access
+        test_engine = extraction_engine.ExtractionMultiProcessEngine()
+
+        event_source_heap = extraction_engine._EventSourceHeap()
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            temp_file = os.path.join(temp_directory, "storage.plaso")
+            storage_writer = sqlite_writer.SQLiteStorageWriter()
+            storage_writer.Open(path=temp_file)
+
+            try:
+                result = test_engine._FillEventSourceHeap(
+                    storage_writer, event_source_heap, start_with_first=True
+                )
+                self.assertFalse(result)
+
+                event_source = event_sources.EventSource()
+                storage_writer.AddAttributeContainer(event_source)
+
+                result = test_engine._FillEventSourceHeap(
+                    storage_writer, event_source_heap, start_with_first=True
+                )
+                self.assertTrue(result)
+
+                result = test_engine._FillEventSourceHeap(
+                    storage_writer, event_source_heap
+                )
+                self.assertFalse(result)
+
+            finally:
+                storage_writer.Close()
+
+        self.assertIsNotNone(event_source_heap.PopEventSource())
+        self.assertIsNone(event_source_heap.PopEventSource())
+
+    def testInternalGetIdleSleepTime(self):
+        """Tests the _GetIdleSleepTime function."""
+        # pylint: disable=protected-access
+        test_engine = extraction_engine.ExtractionMultiProcessEngine()
+
+        minimum_sleep_time = test_engine._IDLE_SLEEP_MINIMUM_SECONDS
+        maximum_sleep_time = test_engine._IDLE_SLEEP_MAXIMUM_SECONDS
+
+        idle_sleep_time = test_engine._GetIdleSleepTime(0.0)
+        self.assertEqual(idle_sleep_time, minimum_sleep_time)
+
+        idle_sleep_time = test_engine._GetIdleSleepTime(idle_sleep_time)
+        self.assertEqual(idle_sleep_time, minimum_sleep_time * 2.0)
+
+        for _ in range(100):
+            idle_sleep_time = test_engine._GetIdleSleepTime(idle_sleep_time)
+            self.assertLessEqual(idle_sleep_time, maximum_sleep_time)
+
+        self.assertEqual(idle_sleep_time, maximum_sleep_time)
 
     def testInternalProcessEventSourcesWithFailedTask(self):
         """Tests the _ProcessEventSources function with a failed task."""
