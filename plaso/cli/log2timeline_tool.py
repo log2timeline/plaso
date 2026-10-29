@@ -57,11 +57,13 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
                 "Example usage:",
                 "",
                 "Run the tool against a storage media image (full kitchen sink)",
-                "    log2timeline.py /cases/mycase/storage.plaso ímynd.dd",
+                "    log2timeline.py --storage-file /cases/mycase/storage.plaso "
+                "ímynd.dd",
                 "",
                 "Instead of answering questions, indicate some of the options on the",
                 "command line (including data from particular VSS stores).",
-                "    log2timeline.py --vss_stores 1,2 /cases/plaso_vss.plaso image.E01",
+                "    log2timeline.py --vss_stores 1,2 --storage-file "
+                "/cases/plaso_vss.plaso image.E01",
                 "",
                 "And that is how you build a timeline using log2timeline...",
                 "",
