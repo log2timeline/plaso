@@ -2,6 +2,7 @@
 """Tests the event extraction worker."""
 
 import collections
+import os
 import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -600,7 +601,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
             file_names = sorted(
                 [
-                    event_source.path_spec.location.rsplit("/", maxsplit=1)[-1]
+                    os.path.basename(event_source.path_spec.location)
                     for event_source in storage_writer.GetAttributeContainers(
                         "event_source"
                     )
