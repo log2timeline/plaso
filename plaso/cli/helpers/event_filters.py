@@ -43,8 +43,9 @@ class EventFiltersArgumentsHelper(interface.ArgumentsHelper):
                 "defined, will display all events that happened X minutes before "
                 "and after the defined date, where X is controlled by the "
                 "--slice_size option, which is 5 minutes by default. The date and "
-                "time must be specified in ISO 8601 format including time zone "
-                "offset, for example: 20200619T20:09:23+02:00."
+                "time must be specified in ISO 8601 format, for example: "
+                "2020-06-19T20:09:23+02:00. The time zone offset is optional and "
+                "defaults to UTC."
             ),
         )
 
@@ -87,7 +88,7 @@ class EventFiltersArgumentsHelper(interface.ArgumentsHelper):
             type=str,
             help=(
                 f"A filter that can be used to filter the dataset before it is "
-                f"written into storage. More information about the filters and "
+                f"written to the output. More information about the filters and "
                 f"how to use them can be found here: {cls._DOCUMENTATION_URL:s}"
             ),
         )
