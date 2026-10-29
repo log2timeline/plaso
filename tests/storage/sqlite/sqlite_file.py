@@ -41,6 +41,12 @@ class _TestSQLiteStorageFileV20221023(sqlite_file.SQLiteStorageFile):
     _READ_COMPATIBLE_FORMAT_VERSION = 20211121
 
 
+class _TestSQLiteStorageFileV20260516(sqlite_file.SQLiteStorageFile):
+    """Test class for testing the event data stream identifier in event data."""
+
+    _FORMAT_VERSION = 20260516
+
+
 class _TestSQLiteStorageFileV20221023Upgrade(sqlite_file.SQLiteStorageFile):
     """Test class for testing format version upgrades."""
 
@@ -141,13 +147,16 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
                 test_store.AddAttributeContainer(event_data)
                 test_store._CommitWriteCache(event_data.CONTAINER_TYPE)
 
+                column_names = ["_data", "_event_data_stream_identifier"]
+
                 test_store._cursor.execute(
-                    f"SELECT _data FROM {event_data.CONTAINER_TYPE:s} WHERE rowid = 1"
+                    f"SELECT {', '.join(column_names):s} FROM "
+                    f"{event_data.CONTAINER_TYPE:s} WHERE rowid = 1"
                 )
                 row = test_store._cursor.fetchone()
 
                 container = test_store._CreateAttributeContainerFromRow(
-                    event_data.CONTAINER_TYPE, ["_data"], row, 0
+                    event_data.CONTAINER_TYPE, column_names, row, 0
                 )
                 self.assertIsNotNone(container)
                 self.assertEqual(container.CONTAINER_TYPE, event_data.CONTAINER_TYPE)
@@ -158,7 +167,7 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
                 serialized_data = test_store._SerializeAttributeContainer(event_data)
 
                 container = test_store._CreateAttributeContainerFromRow(
-                    event_data.CONTAINER_TYPE, ["_data"], [serialized_data], 0
+                    event_data.CONTAINER_TYPE, column_names, [serialized_data, None], 0
                 )
                 self.assertIsNotNone(container)
                 self.assertEqual(container.data_type, "test:event")
@@ -167,7 +176,10 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
                 compressed_data = zlib.compress(serialized_data)
                 with self.assertRaises(OSError):
                     test_store._CreateAttributeContainerFromRow(
-                        event_data.CONTAINER_TYPE, ["_data"], [compressed_data], 0
+                        event_data.CONTAINER_TYPE,
+                        column_names,
+                        [compressed_data, None],
+                        0,
                     )
 
             finally:
@@ -194,6 +206,20 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
         )
         self.assertIsNotNone(container)
         self.assertEqual(container.data_type, "test:event")
+
+        # The event data stream identifier is stored in a separate column.
+        identifier = container.GetEventDataStreamIdentifier()
+        self.assertIsNone(identifier)
+
+        # Test with a format that stores the identifier in the serialized data.
+        test_store._has_event_data_stream_identifier_column = False
+
+        serialized_data = test_store._SerializeAttributeContainer(event_data)
+
+        container = test_store._DeserializeAttributeContainer(
+            event_data.CONTAINER_TYPE, serialized_data
+        )
+        self.assertIsNotNone(container)
 
         identifier = container.GetEventDataStreamIdentifier()
         self.assertIsNotNone(identifier)
@@ -420,6 +446,15 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
         self.assertNotIn("_event_data_stream_identifier", json_dict)
 
         event_data.SetEventDataStreamIdentifier(event_data_stream_identifier)
+
+        # The event data stream identifier is stored in a separate column.
+        serialized_data = test_store._SerializeAttributeContainer(event_data)
+
+        json_dict = json.loads(serialized_data.decode("utf-8"))
+        self.assertNotIn("_event_data_stream_identifier", json_dict)
+
+        # Test with a format that stores the identifier in the serialized data.
+        test_store._has_event_data_stream_identifier_column = False
 
         serialized_data = test_store._SerializeAttributeContainer(event_data)
 
@@ -815,6 +850,196 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
 
             finally:
                 test_store.Close()
+
+    def testEventDataWithEventDataStreamIdentifierInSerializedData(self):
+        """Tests reading and appending event data in the previous format."""
+        event_data_stream = events.EventDataStream()
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            test_path = os.path.join(temp_directory, "plaso.sqlite")
+            test_store = _TestSQLiteStorageFileV20260516()
+            test_store.Open(path=test_path, read_only=False)
+
+            try:
+                test_store.AddAttributeContainer(event_data_stream)
+
+                event_data = events.EventData(data_type="test:event")
+                event_data.SetEventDataStreamIdentifier(
+                    event_data_stream.GetIdentifier()
+                )
+                test_store.AddAttributeContainer(event_data)
+            finally:
+                test_store.Close()
+
+            # Appending to the previous format must keep using that format.
+            test_store = sqlite_file.SQLiteStorageFile()
+            test_store.Open(path=test_path, read_only=False)
+
+            try:
+                self.assertEqual(test_store.format_version, 20260516)
+
+                containers = list(
+                    test_store.GetAttributeContainersWithStoredData("event_data")
+                )
+                self.assertEqual(len(containers), 1)
+
+                _, stored_data = containers[0]
+                self.assertIsNone(stored_data)
+
+                event_data = events.EventData(data_type="test:event")
+                event_data.SetEventDataStreamIdentifier(
+                    event_data_stream.GetIdentifier()
+                )
+                test_store.AddAttributeContainerWithStoredData(
+                    event_data, b"bogus", test_store.compression_format
+                )
+            finally:
+                test_store.Close()
+
+            test_store = sqlite_file.SQLiteStorageFile()
+            test_store.Open(path=test_path)
+
+            try:
+                self.assertEqual(test_store.format_version, 20260516)
+
+                for index in range(2):
+                    container = test_store.GetAttributeContainerByIndex(
+                        "event_data", index
+                    )
+                    self.assertIsNotNone(container)
+                    self.assertEqual(container.data_type, "test:event")
+
+                    identifier = container.GetEventDataStreamIdentifier()
+                    self.assertEqual(identifier.CopyToString(), "event_data_stream.1")
+
+            finally:
+                test_store.Close()
+
+    def testGetAttributeContainersWithStoredData(self):
+        """Tests the GetAttributeContainersWithStoredData function."""
+        with shared_test_lib.TempDirectory() as temp_directory:
+            test_path = os.path.join(temp_directory, "plaso.sqlite")
+            test_store = sqlite_file.SQLiteStorageFile()
+            test_store.Open(path=test_path, read_only=False)
+
+            try:
+                containers = list(
+                    test_store.GetAttributeContainersWithStoredData("event_data")
+                )
+                self.assertEqual(containers, [])
+
+                event_data_stream = events.EventDataStream()
+                test_store.AddAttributeContainer(event_data_stream)
+
+                event_data = events.EventData(data_type="test:event")
+                event_data.SetEventDataStreamIdentifier(
+                    event_data_stream.GetIdentifier()
+                )
+                test_store.AddAttributeContainer(event_data)
+
+                containers = list(
+                    test_store.GetAttributeContainersWithStoredData("event_data_stream")
+                )
+                self.assertEqual(len(containers), 1)
+
+                _, stored_data = containers[0]
+                self.assertIsNone(stored_data)
+
+                containers = list(
+                    test_store.GetAttributeContainersWithStoredData("event_data")
+                )
+                self.assertEqual(len(containers), 1)
+
+                container, stored_data = containers[0]
+                self.assertEqual(container.data_type, "test:event")
+                self.assertEqual(
+                    container.GetIdentifier().CopyToString(), "event_data.1"
+                )
+
+                identifier = container.GetEventDataStreamIdentifier()
+                self.assertEqual(identifier.CopyToString(), "event_data_stream.1")
+
+                # The stored data does not contain the event data stream identifier.
+                serialized_data = zlib.decompress(stored_data)
+                self.assertNotIn(b"_event_data_stream_identifier", serialized_data)
+
+            finally:
+                test_store.Close()
+
+    def testAddAttributeContainerWithStoredData(self):
+        """Tests the AddAttributeContainerWithStoredData function."""
+        with shared_test_lib.TempDirectory() as temp_directory:
+            task_path = os.path.join(temp_directory, "task.sqlite")
+            task_store = sqlite_file.SQLiteStorageFile()
+            task_store.Open(path=task_path, read_only=False)
+
+            try:
+                event_data_stream = events.EventDataStream()
+                task_store.AddAttributeContainer(event_data_stream)
+
+                event_data = events.EventData(data_type="test:event")
+                event_data.SetEventDataStreamIdentifier(
+                    event_data_stream.GetIdentifier()
+                )
+                task_store.AddAttributeContainer(event_data)
+
+                container, stored_data = next(
+                    task_store.GetAttributeContainersWithStoredData("event_data")
+                )
+            finally:
+                task_store.Close()
+
+            session_path = os.path.join(temp_directory, "session.sqlite")
+            session_store = sqlite_file.SQLiteStorageFile()
+            session_store.Open(path=session_path, read_only=False)
+
+            try:
+                # Add 2 event data streams so that the identifier of the event data
+                # stream of the event data changes on merge.
+                for _ in range(2):
+                    event_data_stream = events.EventDataStream()
+                    session_store.AddAttributeContainer(event_data_stream)
+
+                container.SetEventDataStreamIdentifier(
+                    event_data_stream.GetIdentifier()
+                )
+                session_store.AddAttributeContainerWithStoredData(
+                    container, stored_data, definitions.COMPRESSION_FORMAT_ZLIB
+                )
+                self.assertEqual(
+                    container.GetIdentifier().CopyToString(), "event_data.1"
+                )
+
+                # Stored data with another compression format is not added as-is.
+                event_data = events.EventData(data_type="test:other")
+                session_store.AddAttributeContainerWithStoredData(
+                    event_data, stored_data, definitions.COMPRESSION_FORMAT_NONE
+                )
+            finally:
+                session_store.Close()
+
+            session_store = sqlite_file.SQLiteStorageFile()
+            session_store.Open(path=session_path)
+
+            try:
+                containers = list(
+                    session_store.GetAttributeContainersWithStoredData("event_data")
+                )
+                self.assertEqual(len(containers), 2)
+
+                container, session_stored_data = containers[0]
+                self.assertEqual(container.data_type, "test:event")
+                self.assertEqual(session_stored_data, stored_data)
+
+                identifier = container.GetEventDataStreamIdentifier()
+                self.assertEqual(identifier.CopyToString(), "event_data_stream.2")
+
+                container, _ = containers[1]
+                self.assertEqual(container.data_type, "test:other")
+                self.assertIsNone(container.GetEventDataStreamIdentifier())
+
+            finally:
+                session_store.Close()
 
     def testGetNumberOfAttributeContainers(self):
         """Tests the GetNumberOfAttributeContainers function."""
