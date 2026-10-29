@@ -336,6 +336,9 @@ class WinevtResourcesHelper:
     # The maximum number of cached message strings
     _MAXIMUM_CACHED_MESSAGE_STRINGS = 64 * 1024
 
+    # The maximum number of cached lookups without a message string
+    _MAXIMUM_CACHED_MISSING_MESSAGE_STRINGS = 64 * 1024
+
     _WINEVT_RC_DATABASE = "winevt-rc.db"
 
     def __init__(self, storage_reader, data_location, lcid):
@@ -355,6 +358,7 @@ class WinevtResourcesHelper:
         self._language_tag = language_tag.lower()
         self._lcid = lcid or self.DEFAULT_LCID
         self._message_string_cache = collections.OrderedDict()
+        self._missing_message_strings = set()
         self._resource_file_helper = resource_files.WindowsResourceFileHelper
         self._storage_reader = None
         self._windows_eventlog_message_files = None
@@ -399,6 +403,20 @@ class WinevtResourcesHelper:
                 lookup_key = f"{lookup_key:s}:{event_version:d}"
             self._message_string_cache[lookup_key] = message_string
             self._message_string_cache.move_to_end(lookup_key, last=False)
+
+    def _CacheMissingMessageString(self, lookup_key):
+        """Caches a lookup for which no message string is available.
+
+        Args:
+          lookup_key (tuple): lookup key of the missing message string.
+        """
+        if (
+            len(self._missing_message_strings)
+            >= self._MAXIMUM_CACHED_MISSING_MESSAGE_STRINGS
+        ):
+            self._missing_message_strings.clear()
+
+        self._missing_message_strings.add(lookup_key)
 
     def _GetCachedMessageString(
         self, provider_identifier, log_source, message_identifier, event_version
@@ -981,28 +999,44 @@ class WinevtResourcesHelper:
         message_string = self._GetCachedMessageString(
             provider_identifier, log_source, message_identifier, event_version
         )
-        if not message_string:
-            if self._storage_reader:
-                message_string = self._ReadEventMessageString(
-                    self._storage_reader,
-                    provider_identifier,
-                    log_source,
-                    message_identifier,
-                    event_version,
-                )
-            else:
-                message_string = self._GetWinevtRcDatabaseMessageString(
-                    provider_identifier, log_source, message_identifier, event_version
-                )
+        if message_string:
+            return message_string
 
-            if message_string:
-                self._CacheMessageString(
-                    provider_identifier,
-                    log_source,
-                    message_identifier,
-                    event_version,
-                    message_string,
-                )
+        # The message string lookup is expensive and the result for the same
+        # lookup key does not change, hence lookups without a result are cached.
+        lookup_key = (
+            "message",
+            provider_identifier,
+            log_source,
+            message_identifier,
+            event_version,
+        )
+        if lookup_key in self._missing_message_strings:
+            return None
+
+        if self._storage_reader:
+            message_string = self._ReadEventMessageString(
+                self._storage_reader,
+                provider_identifier,
+                log_source,
+                message_identifier,
+                event_version,
+            )
+        else:
+            message_string = self._GetWinevtRcDatabaseMessageString(
+                provider_identifier, log_source, message_identifier, event_version
+            )
+
+        if message_string:
+            self._CacheMessageString(
+                provider_identifier,
+                log_source,
+                message_identifier,
+                event_version,
+                message_string,
+            )
+        elif message_string is None:
+            self._CacheMissingMessageString(lookup_key)
 
         return message_string
 
@@ -1020,28 +1054,36 @@ class WinevtResourcesHelper:
         message_string = self._GetCachedMessageString(
             provider_identifier, log_source, message_identifier, None
         )
-        if not message_string:
-            if self._storage_reader:
-                message_string = self._ReadParameterMessageString(
-                    self._storage_reader,
-                    provider_identifier,
-                    log_source,
-                    message_identifier,
-                )
-            else:
-                message_string = self._GetWinevtRcDatabaseParameterMessageString(
-                    provider_identifier,
-                    log_source,
-                    message_identifier,
-                )
+        if message_string:
+            return message_string
 
-            if message_string:
-                self._CacheMessageString(
-                    provider_identifier,
-                    log_source,
-                    message_identifier,
-                    None,
-                    message_string,
-                )
+        lookup_key = ("parameter", provider_identifier, log_source, message_identifier)
+        if lookup_key in self._missing_message_strings:
+            return None
+
+        if self._storage_reader:
+            message_string = self._ReadParameterMessageString(
+                self._storage_reader,
+                provider_identifier,
+                log_source,
+                message_identifier,
+            )
+        else:
+            message_string = self._GetWinevtRcDatabaseParameterMessageString(
+                provider_identifier,
+                log_source,
+                message_identifier,
+            )
+
+        if message_string:
+            self._CacheMessageString(
+                provider_identifier,
+                log_source,
+                message_identifier,
+                None,
+                message_string,
+            )
+        elif message_string is None:
+            self._CacheMissingMessageString(lookup_key)
 
         return message_string
