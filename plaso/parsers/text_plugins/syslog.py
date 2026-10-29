@@ -1433,12 +1433,58 @@ class TraditionalSyslogTextPlugin(
 
     _LINE_STRUCTURES = [("log_line", _LOG_LINE)]
 
+    # Regular expression pattern of the date and time elements of a log line
+    # that is shared by the verification grammar and the log line regular
+    # expression.
+    _DATE_TIME_PATTERN = (
+        r"(?P<month>Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) "
+        r"(?P<day_of_month> [1-9]|[1-9][0-9]) "
+        r"(?P<hours>[0-9]{2}):(?P<minutes>[0-9]{2}):(?P<seconds>[0-9]{2})"
+    )
+
+    _FACILITY_PATTERN = f"[{re.escape(_FACILITY_CHARACTERS):s}]+"
+
+    _REPORTER_PATTERN = f"[{re.escape(_REPORTER_CHARACTERS):s}]+"
+
+    # Regular expression of the rsyslog traditional file format log line up to
+    # the message body, which is used to parse the most common lines without
+    # pyparsing. It matches a subset of the lines _LOG_LINE matches, where the
+    # tokens are separated by spaces only. Lines where the time elements are
+    # followed by a host name that starts with "kernel", ":" or ".", which can
+    # match the kernel or comment body or the fraction of seconds, and lines
+    # where the body could start with an optional element are left to _LOG_LINE.
+    _LOG_LINE_REGEX = re.compile(
+        rf"{_DATE_TIME_PATTERN:s}(?:\.(?P<fraction_of_second>[0-9]+))? +"
+        r"(?!kernel|[.:])(?P<hostname>[!-~]+) +"
+        rf"(?P<reporter>{_REPORTER_PATTERN:s})(?!{_REPORTER_PATTERN:s})"
+        r"(?:\[(?P<pid>[0-9]{1,5})\])?"
+        rf"(?:<(?P<facility>{_FACILITY_PATTERN:s})>)?"
+        r"(?::[ ]*(?=\S)|[ ]*(?=[^\s:<\[]))"
+    )
+
+    _BODY_REGEX = re.compile(_BODY_PATTERN, re.DOTALL)
+
     # Using a regular expression here is faster on non-match than the log line
     # grammar.
-    VERIFICATION_GRAMMAR = pyparsing.Regex(
-        r"(?P<date_time>(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) "
-        r"( [1-9]|[1-9][0-9]) [0-9]{2}:[0-9]{2}:[0-9]{2}) \S+ .*\n"
-    )
+    VERIFICATION_GRAMMAR = pyparsing.Regex(rf"{_DATE_TIME_PATTERN:s} \S+ .*\n")
+
+    def _GetTimeElements(self, values):
+        """Retrieves the date and time elements of a log line.
+
+        Args:
+          values (pyparsing.ParseResults|re.Match): values of the named groups of
+              the date and time regular expression pattern.
+
+        Returns:
+          list[object]: date and time elements of a log line.
+        """
+        return [
+            values["month"],
+            int(values["day_of_month"], 10),
+            int(values["hours"], 10),
+            int(values["minutes"], 10),
+            int(values["seconds"], 10),
+        ]
 
     def _ParseRecord(self, parser_mediator, key, structure):
         """Parses a pyparsing structure.
@@ -1447,7 +1493,8 @@ class TraditionalSyslogTextPlugin(
           parser_mediator (ParserMediator): mediates interactions between parsers
               and other components, such as storage and dfVFS.
           key (str): name of the parsed structure.
-          structure (pyparsing.ParseResults): tokens from a parsed log line.
+          structure (pyparsing.ParseResults|dict[str, object]): tokens from a
+              parsed log line.
 
         Raises:
           ParseError: if the structure cannot be parsed.
@@ -1483,12 +1530,56 @@ class TraditionalSyslogTextPlugin(
 
         self._ProduceEventData(parser_mediator, event_data)
 
+    def _ParseString(self, string):
+        """Parses a string for known grammar.
+
+        Args:
+          string (str): string.
+
+        Returns:
+          tuple[str, pyparsing.ParseResults|dict[str, object], int, int]: key,
+              parsed tokens, start and end offset.
+
+        Raises:
+          ParseError: when the string cannot be parsed by the grammar.
+        """
+        match = self._LOG_LINE_REGEX.match(string)
+        if not match:
+            return super()._ParseString(string)
+
+        # The message body is followed by a newline or the end of the string,
+        # where pyparsing.LineEnd() also adds 1 to the offset.
+        body_match = self._BODY_REGEX.match(string, match.end())
+
+        time_elements = self._GetTimeElements(match)
+
+        fraction_of_second = match["fraction_of_second"]
+        if fraction_of_second is not None:
+            time_elements.append(fraction_of_second)
+
+        structure = {
+            "date_time": time_elements,
+            "hostname": match["hostname"],
+            "message_body": body_match.group(),
+            "reporter": match["reporter"],
+        }
+
+        facility = match["facility"]
+        if facility is not None:
+            structure["facility"] = facility
+
+        pid = match["pid"]
+        if pid is not None:
+            structure["pid"] = int(pid, 10)
+
+        return "log_line", structure, 0, body_match.end() + 1
+
     def _ParseTimeElements(self, time_elements_structure):
         """Parses date and time elements of a log line.
 
         Args:
-          time_elements_structure (pyparsing.ParseResults): date and time elements
-              of a log line.
+          time_elements_structure (pyparsing.ParseResults|list[object]): date and
+              time elements of a log line.
 
         Returns:
           dfdatetime.TimeElements: date and time value.
@@ -1546,12 +1637,7 @@ class TraditionalSyslogTextPlugin(
         except errors.ParseError:
             return False
 
-        date_time_structure = self._GetValueFromStructure(structure, "date_time")
-
-        try:
-            time_elements_structure = self._DATE_TIME.parse_string(date_time_structure)
-        except pyparsing.ParseException:
-            return False
+        time_elements_structure = self._GetTimeElements(structure)
 
         self._SetEstimatedYear(parser_mediator)
 
