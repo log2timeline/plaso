@@ -96,7 +96,7 @@ class BinaryLineReader:
                 read_size = self.MAXIMUM_READ_BUFFER_SIZE
 
             if self._lines_buffer_offset + read_size > self._file_object_size:
-                size = self._file_object_size - self._lines_buffer_offset
+                read_size = self._file_object_size - self._lines_buffer_offset
 
             self._file_object.seek(self._lines_buffer_offset, os.SEEK_SET)
             read_buffer = self._file_object.read(read_size)
@@ -106,10 +106,9 @@ class BinaryLineReader:
             self._lines = read_buffer.split(self.end_of_line)
             if self._lines_buffer:
                 self._lines[0] = b"".join([self._lines_buffer, self._lines[0]])
-                self._lines_buffer = b""
 
-            if read_buffer[self._end_of_line_length :] != self.end_of_line:
-                self._lines_buffer = self._lines.pop()
+            # The last element is empty or an incomplete line.
+            self._lines_buffer = self._lines.pop()
 
             for index, line in enumerate(self._lines):
                 self._lines[index] = b"".join([line, self.end_of_line])
