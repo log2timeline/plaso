@@ -16,7 +16,7 @@ The Plaso bodyfile parser supports timestamps with a fraction of a second since
 ## Optimizing log2timeline and psteal
 
 The options below are supported by both log2timeline.py and psteal.py, unless
-indicated otherwise. Also see [performance related issues](../Troubleshooting.html#performance-related-issues).
+indicated otherwise. Also see [performance related issues](../Troubleshooting.md#performance-related-issues).
 
 ### Number of workers and memory
 
@@ -42,7 +42,7 @@ Every file that is processed needs to be read at least once. To reduce the
 amount of data that is read:
 
 * store the source data on local low-latency media;
-* only enable the parsers you need with `--parsers`, see [parsers and presets](Using-log2timeline.html#parsers-and-presets);
+* only enable the parsers you need with `--parsers`, see [parsers and plugins](Parsers-and-plugins.md);
 * only process the files you need with a filter file (`--filter-file`) or artifact definitions (`--artifact_filters`), see [collection filters](Collection-Filters.md). These options are only supported by log2timeline.py;
 * only process the partitions and Volume Shadow Snapshots (VSS) you need with `--partitions` and `--vss_stores`;
 * do not process the content of archives, which is the default, or limit it to the archive types you need with `--archives`;
