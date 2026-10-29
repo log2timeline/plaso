@@ -1,10 +1,17 @@
 # Run tox tests on Ubuntu Docker images using the deadsnakes and GIFT PPAs
 name: test_tox
-on: [pull_request, push]
-permissions: read-all
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+on:
+  pull_request:
+  push:
+permissions:
+  contents: read
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     strategy:
       matrix:
         include:
@@ -24,6 +31,8 @@ jobs:
       image: ubuntu:26.04
     steps:
     - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
     - name: Set up container
       env:
         DEBIAN_FRONTEND: noninteractive
@@ -49,6 +58,7 @@ jobs:
         tox -e ${{ matrix.toxenv }},wheel
   coverage:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     strategy:
       matrix:
         python-version: ['3.14']
@@ -56,6 +66,8 @@ jobs:
       image: ubuntu:26.04
     steps:
     - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
     - name: Set up container
       env:
         DEBIAN_FRONTEND: noninteractive
