@@ -3,6 +3,8 @@
 
 import unittest
 
+import zmq
+
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
@@ -191,6 +193,50 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
                 None, configuration, [], [], None, name="TestWorker"
             )
             test_process.SignalAbort()
+
+    def testSignalAbortWhileWaitingForTask(self):
+        """Tests SIGTERM while the worker is waiting for a task that never comes."""
+        # A reply socket that receives the request for a task but never replies,
+        # like when the QueueAbort was not received.
+        zmq_context = zmq.Context()  # pylint: disable=abstract-class-instantiated
+        zmq_socket = zmq_context.socket(zmq.REP)
+        zmq_socket.setsockopt(zmq.LINGER, 0)
+        port = zmq_socket.bind_to_random_port("tcp://127.0.0.1")
+
+        input_task_queue = zeromq_queue.ZeroMQRequestConnectQueue(
+            delay_open=True,
+            linger_seconds=0,
+            name="test input task queue",
+            port=port,
+            timeout_seconds=self._QUEUE_TIMEOUT,
+        )
+        with shared_test_lib.TempDirectory() as temp_directory:
+            configuration = configurations.ProcessingConfiguration()
+            configuration.task_storage_path = temp_directory
+
+            test_process = extraction_process.ExtractionWorkerProcess(
+                input_task_queue, configuration, [], [], None, name="TestWorker"
+            )
+            test_process.start()
+            try:
+                # Wait for the request for a task, at which point the worker is
+                # waiting for the reply.
+                self.assertTrue(zmq_socket.poll(30000))
+                zmq_socket.recv_multipart()
+
+                test_process.terminate()
+                test_process.join(timeout=20)
+                is_alive = test_process.is_alive()
+
+            finally:
+                if test_process.is_alive():
+                    test_process.kill()
+                    test_process.join()
+
+                zmq_socket.close()
+                zmq_context.term()
+
+            self.assertFalse(is_alive)
 
 
 if __name__ == "__main__":
