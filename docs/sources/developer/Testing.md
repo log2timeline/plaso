@@ -24,9 +24,9 @@ Or if you have tox installed:
 tox -epy310
 ```
 
-The unit tests are also run on [GitHub](https://github.com/log2timeline/plaso/actions)
-and [AppVeyor](https://ci.appveyor.com/project/log2timeline/plaso) after every
-pull request or commit to detect issues early.
+The unit tests are also run on [GitHub](https://github.com/log2timeline/plaso/actions),
+on Linux, macOS and Windows, after every pull request or commit to detect
+issues early.
 
 ## End-to-end tests
 
