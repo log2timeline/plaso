@@ -2,6 +2,7 @@
 
 from plaso.parsers.text_plugins import android_logcat
 from plaso.parsers.text_plugins import apache_access
+from plaso.parsers.text_plugins import apache_error
 from plaso.parsers.text_plugins import apt_history
 from plaso.parsers.text_plugins import atlassian_bitbucket
 from plaso.parsers.text_plugins import atlassian_confluence
