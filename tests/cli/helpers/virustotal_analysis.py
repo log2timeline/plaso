@@ -42,9 +42,10 @@ Test argument parser.
   --virustotal-api-key, --virustotal_api_key API_KEY
                         Specify the API key for use with VirusTotal.
   --virustotal-free-rate-limit, --virustotal_free_rate_limit
-                        Limit Virustotal requests to the default free API key
-                        rate of 4 requests per minute. Set this to false if
-                        you have an key for the private API.
+                        Disable the limit of VirusTotal requests to the free
+                        API key rate of 4 requests per minute, which is
+                        enabled by default. Use this option if you have a key
+                        for the private API.
   --virustotal-hash, --virustotal_hash HASH
                         Type of hash to query VirusTotal, the default is:
                         sha256
@@ -61,9 +62,10 @@ Test argument parser.
   --virustotal-api-key API_KEY, --virustotal_api_key API_KEY
                         Specify the API key for use with VirusTotal.
   --virustotal-free-rate-limit, --virustotal_free_rate_limit
-                        Limit Virustotal requests to the default free API key
-                        rate of 4 requests per minute. Set this to false if
-                        you have an key for the private API.
+                        Disable the limit of VirusTotal requests to the free
+                        API key rate of 4 requests per minute, which is
+                        enabled by default. Use this option if you have a key
+                        for the private API.
   --virustotal-hash HASH, --virustotal_hash HASH
                         Type of hash to query VirusTotal, the default is:
                         sha256
@@ -79,6 +81,12 @@ Test argument parser.
 
         output = self._RunArgparseFormatHelp(argument_parser)
         self.assertEqual(output, self._EXPECTED_OUTPUT)
+
+        options = argument_parser.parse_args([])
+        self.assertTrue(options.virustotal_free_rate_limit)
+
+        options = argument_parser.parse_args(["--virustotal-free-rate-limit"])
+        self.assertFalse(options.virustotal_free_rate_limit)
 
     def testParseOptions(self):
         """Tests the ParseOptions function."""
