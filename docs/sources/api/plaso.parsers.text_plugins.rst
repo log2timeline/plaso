@@ -308,6 +308,14 @@ plaso.parsers.text\_plugins.teamviewer module
    :show-inheritance:
    :undoc-members:
 
+plaso.parsers.text\_plugins.trash\_info module
+----------------------------------------------
+
+.. automodule:: plaso.parsers.text_plugins.trash_info
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 plaso.parsers.text\_plugins.viminfo module
 ------------------------------------------
 
