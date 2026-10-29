@@ -213,7 +213,7 @@ class ParserPresetsManager:
 
             str: preset name.
             str: comma separated parser and plugin names that are defined by
-                the preset.
+            the preset.
         """
         presets_information = []
         for name, parser_preset in sorted(self._definitions.items()):

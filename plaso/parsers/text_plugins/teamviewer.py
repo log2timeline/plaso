@@ -36,7 +36,7 @@ class TeamViewerConnectionsIncomingEventData(events.EventData):
     Attributes:
       activity_type (str): Type of the activity, such as RemoteSupport or
           FileTransfer.
-      connection_display_name (string): The display name of the incoming connection
+      connection_display_name (str): The display name of the incoming connection
           source. Usually the computer name or the TeamViewer user name.
       connection_identifier (str): identifier of the connection, contains an UUID.
       end_time (dfdatetime.DateTimeValues): connection end time in UTC.

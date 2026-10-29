@@ -34,7 +34,7 @@ class PsortEventHeap:
           tuple: containing:
 
             str: identifier of the event MACB group or None if the event cannot
-                be grouped.
+            be grouped.
             str: identifier of the event content.
             EventObject: event.
             EventData: event data.
@@ -62,7 +62,7 @@ class PsortEventHeap:
           tuple: containing:
 
             str: identifier of the event MACB group or None if the event cannot
-                be grouped.
+            be grouped.
             str: identifier of the event content.
             EventObject: event.
             EventData: event data.
