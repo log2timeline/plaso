@@ -4,9 +4,11 @@
 import collections
 import unittest
 
+from dfvfs.helpers import fake_file_system_builder
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import context
 from dfvfs.path import factory as path_spec_factory
+from dfvfs.path import fake_path_spec
 
 from plaso.containers import events
 from plaso.containers import sessions
@@ -53,6 +55,63 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         return storage_writer.GetAttributeContainerByIdentifier(
             events.EventDataStream.CONTAINER_TYPE, event_data_stream_identifier
         )
+
+    def _GetFakeFileEntry(self, location, file_data):
+        """Retrieves a file entry of a file in a fake file system.
+
+        Args:
+          location (str): location of the file in the fake file system.
+          file_data (bytes): data of the file.
+
+        Returns:
+          dfvfs.FileEntry: file entry.
+        """
+        file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+        file_system_builder.AddFile(location, file_data)
+
+        path_spec = fake_path_spec.FakePathSpec(location=location)
+        return file_system_builder.file_system.GetFileEntryByPathSpec(path_spec)
+
+    def _GetHashesOfProcessedFileEntry(self, extraction_worker, file_entry):
+        """Processes a file entry and retrieves the hashes of its event data stream.
+
+        Args:
+          extraction_worker (EventExtractionWorker): worker to process the file
+              entry.
+          file_entry (dfvfs.FileEntry): file entry.
+
+        Returns:
+          list[str]: MD5 hashes of the event data streams of the produced event
+              data, where None represents an event data stream without a hash.
+        """
+        session = sessions.Session()
+
+        resolver_context = context.Context()
+        parser_mediator = parsers_mediator.ParserMediator(
+            resolver_context=resolver_context
+        )
+
+        storage_writer = fake_writer.FakeStorageWriter()
+        parser_mediator.SetStorageWriter(storage_writer)
+
+        storage_writer.Open()
+
+        try:
+            storage_writer.AddAttributeContainer(session)
+
+            extraction_worker.ProcessFileEntry(parser_mediator, file_entry)
+
+            md5_hashes = []
+            for event_data in storage_writer.GetAttributeContainers("event_data"):
+                event_data_stream = self._GetEventDataStreamOfEventData(
+                    storage_writer, event_data
+                )
+                md5_hashes.append(getattr(event_data_stream, "md5_hash", None))
+
+        finally:
+            storage_writer.Close()
+
+        return md5_hashes
 
     def _GetTestFilePathSpec(self, path_segments):
         """Retrieves a path specification of a test file in the test data directory.
@@ -257,6 +316,16 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         extraction_worker = worker.EventExtractionWorker()
 
         file_entry = self._GetTestFileEntry(["syslog.tgz"])
+
+        result = extraction_worker._CanSkipContentExtraction(file_entry)
+        self.assertFalse(result)
+
+        file_entry = self._GetFakeFileEntry("/pagefile.sys", b"pagefile")
+
+        result = extraction_worker._CanSkipContentExtraction(file_entry)
+        self.assertTrue(result)
+
+        file_entry = self._GetFakeFileEntry("/Windows/pagefile.sys", b"pagefile")
 
         result = extraction_worker._CanSkipContentExtraction(file_entry)
         self.assertFalse(result)
@@ -728,6 +797,34 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
             self.assertEqual(event_data_stream.md5_hash, empty_file_md5)
 
         storage_writer.Close()
+
+    def testExtractionWorkerHashingSkipExcludedFiles(self):
+        """Tests that the worker skips hashing of files excluded from extraction."""
+        pagefile_md5 = "5df5c29e8a832e37deb6dfab14da9597"
+
+        configuration = configurations.ExtractionConfiguration()
+        configuration.hasher_names_string = "md5"
+
+        extraction_worker = worker.EventExtractionWorker()
+        extraction_worker.SetExtractionConfiguration(configuration)
+
+        file_entry = self._GetFakeFileEntry("/pagefile.sys", b"pagefile")
+        md5_hashes = self._GetHashesOfProcessedFileEntry(extraction_worker, file_entry)
+        self.assertEqual(md5_hashes, [pagefile_md5])
+
+        configuration.hasher_skip_excluded_files = True
+
+        extraction_worker = worker.EventExtractionWorker()
+        extraction_worker.SetExtractionConfiguration(configuration)
+
+        file_entry = self._GetFakeFileEntry("/pagefile.sys", b"pagefile")
+        md5_hashes = self._GetHashesOfProcessedFileEntry(extraction_worker, file_entry)
+        self.assertEqual(md5_hashes, [None])
+
+        # A file that is not excluded from content extraction is still hashed.
+        file_entry = self._GetTestFileEntry(["empty_file"])
+        md5_hashes = self._GetHashesOfProcessedFileEntry(extraction_worker, file_entry)
+        self.assertEqual(md5_hashes, ["d41d8cd98f00b204e9800998ecf8427e"])
 
     def testExtractionWorkerYara(self):
         """Tests that the worker applies Yara matching code correctly."""

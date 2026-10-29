@@ -161,6 +161,7 @@ class EventExtractionWorker:
         )
         self._force_parser = force_parser
         self._hasher_file_size_limit = None
+        self._hasher_skip_excluded_files = False
         self._path_spec_extractor = extractors.PathSpecExtractor()
         self._process_compressed_streams = None
         self._processing_profiler = None
@@ -169,7 +170,12 @@ class EventExtractionWorker:
         self.processing_status = definitions.STATUS_INDICATOR_IDLE
 
     def _AnalyzeDataStream(
-        self, file_entry, data_stream_name, display_name, event_data_stream
+        self,
+        file_entry,
+        data_stream_name,
+        display_name,
+        event_data_stream,
+        skip_hashers=False,
     ):
         """Analyzes the contents of a specific data stream of a file entry.
 
@@ -185,6 +191,8 @@ class EventExtractionWorker:
               currently being analyzed.
           event_data_stream (EventDataStream): event data stream attribute
                container.
+          skip_hashers (Optional[bool]): True if hashers should not process
+              the data stream.
 
         Raises:
           RuntimeError: if the file-like object cannot be retrieved from
@@ -205,7 +213,12 @@ class EventExtractionWorker:
                     )
                 )
 
-            self._AnalyzeFileObject(file_object, display_name, event_data_stream)
+            self._AnalyzeFileObject(
+                file_object,
+                display_name,
+                event_data_stream,
+                skip_hashers=skip_hashers,
+            )
 
         finally:
             if self._processing_profiler:
@@ -213,7 +226,9 @@ class EventExtractionWorker:
 
         logger.debug(f"[AnalyzeDataStream] completed analyzing file: {display_name:s}")
 
-    def _AnalyzeFileObject(self, file_object, display_name, event_data_stream):
+    def _AnalyzeFileObject(
+        self, file_object, display_name, event_data_stream, skip_hashers=False
+    ):
         """Processes a file-like object with analyzers.
 
         Args:
@@ -222,6 +237,8 @@ class EventExtractionWorker:
               currently being analyzed.
           event_data_stream (EventDataStream): event data stream attribute
                container.
+          skip_hashers (Optional[bool]): True if hashers should not process
+              the file-like object.
         """
         maximum_read_size = max(
             analyzer_object.SIZE_LIMIT for analyzer_object in self._analyzers
@@ -234,11 +251,13 @@ class EventExtractionWorker:
 
         file_size = file_object.get_size()
 
-        if (
-            hashers_only
-            and self._hasher_file_size_limit
-            and file_size > self._hasher_file_size_limit
-        ):
+        if not skip_hashers:
+            skip_hashers = bool(
+                self._hasher_file_size_limit
+                and file_size > self._hasher_file_size_limit
+            )
+
+        if hashers_only and skip_hashers:
             return
 
         file_object.seek(0, os.SEEK_SET)
@@ -258,10 +277,8 @@ class EventExtractionWorker:
                 ):
                     continue
 
-                if (
-                    isinstance(analyzer_object, hashing_analyzer.HashingAnalyzer)
-                    and self._hasher_file_size_limit
-                    and file_size > self._hasher_file_size_limit
+                if skip_hashers and isinstance(
+                    analyzer_object, hashing_analyzer.HashingAnalyzer
                 ):
                     continue
 
@@ -859,6 +876,7 @@ class EventExtractionWorker:
             f'"{data_stream_name:s}" of file entry: {display_name:s}'
         )
         event_data_stream = None
+        skip_content_extraction = False
         if data_stream:
             display_name = parser_mediator.GetDisplayName()
 
@@ -869,11 +887,22 @@ class EventExtractionWorker:
             event_data_stream = events.EventDataStream()
             event_data_stream.path_spec = path_spec
 
+            # Determine if the content of the file entry should not be extracted.
+            skip_content_extraction = self._CanSkipContentExtraction(file_entry)
+
             if self._analyzers:
+                skip_hashers = (
+                    self._hasher_skip_excluded_files and skip_content_extraction
+                )
+
                 # Since AnalyzeDataStream generates event data stream attributes it
                 # needs to be called before producing events.
                 self._AnalyzeDataStream(
-                    file_entry, data_stream.name, display_name, event_data_stream
+                    file_entry,
+                    data_stream.name,
+                    display_name,
+                    event_data_stream,
+                    skip_hashers=skip_hashers,
                 )
 
         parser_mediator.ProduceEventDataStream(event_data_stream)
@@ -885,8 +914,6 @@ class EventExtractionWorker:
         if not data_stream:
             return
 
-        # Determine if the content of the file entry should not be extracted.
-        skip_content_extraction = self._CanSkipContentExtraction(file_entry)
         if skip_content_extraction:
             display_name = parser_mediator.GetDisplayName()
             logger.debug(f"Skipping content extraction of: {display_name:s}")
@@ -1098,6 +1125,7 @@ class EventExtractionWorker:
         """
         self._SetArchiveTypes(configuration.archive_types_string)
         self._hasher_file_size_limit = configuration.hasher_file_size_limit
+        self._hasher_skip_excluded_files = configuration.hasher_skip_excluded_files
         self._SetHashers(configuration.hasher_names_string)
         self._process_compressed_streams = configuration.process_compressed_streams
         self._SetYaraRules(configuration.yara_rules_string)

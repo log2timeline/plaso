@@ -73,6 +73,7 @@ class HashersOptions:
         super().__init__()
         self._hasher_file_size_limit = None
         self._hasher_names_string = None
+        self._hasher_skip_excluded_files = False
 
     def ListHashers(self):
         """Lists information about the available hashers."""
