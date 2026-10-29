@@ -3,6 +3,8 @@
 
 import unittest
 
+from acstore.containers import interface as containers_interface
+
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import posix_time as dfdatetime_posix_time
 from dfdatetime import semantic_time as dfdatetime_semantic_time
@@ -21,6 +23,57 @@ class TestFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
     """Field formatter helper for testing purposes."""
 
     _FIELD_FORMAT_CALLBACKS = {"zone": "_FormatTimeZone"}
+
+
+class CountingFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
+    """Field formatter helper that counts the formatted fields."""
+
+    _FIELD_FORMAT_CALLBACKS = {
+        "display_name": "_FormatDisplayName",
+        "zone": "_FormatTimeZone",
+    }
+
+    def __init__(self):
+        """Initializes a field formatter helper that counts the formatted fields."""
+        super().__init__()
+        self.number_of_formatted_display_names = 0
+        self.number_of_formatted_time_zones = 0
+
+    def _FormatDisplayName(self, output_mediator, event, event_data, event_data_stream):
+        """Formats the display name.
+
+        Args:
+          output_mediator (OutputMediator): mediates interactions between output
+              modules and other components, such as storage and dfVFS.
+          event (EventObject): event.
+          event_data (EventData): event data.
+          event_data_stream (EventDataStream): event data stream.
+
+        Returns:
+          str: display name field.
+        """
+        self.number_of_formatted_display_names += 1
+        return super()._FormatDisplayName(
+            output_mediator, event, event_data, event_data_stream
+        )
+
+    def _FormatTimeZone(self, output_mediator, event, event_data, event_data_stream):
+        """Formats a time zone field.
+
+        Args:
+          output_mediator (OutputMediator): mediates interactions between output
+              modules and other components, such as storage and dfVFS.
+          event (EventObject): event.
+          event_data (EventData): event data.
+          event_data_stream (EventDataStream): event data stream.
+
+        Returns:
+          str: time zone field.
+        """
+        self.number_of_formatted_time_zones += 1
+        return super()._FormatTimeZone(
+            output_mediator, event, event_data, event_data_stream
+        )
 
 
 class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
@@ -557,6 +610,96 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
             output_mediator, "zone", event, event_data, event_data_stream, None
         )
         self.assertEqual(zone_string, "UTC")
+
+    def testGetFormattedFieldWithCachedFieldValues(self):
+        """Tests the GetFormattedField function with cached field values."""
+        output_mediator = self._CreateOutputMediator()
+        test_helper = CountingFieldFormattingHelper()
+
+        event1, event_data1, event_data_stream1 = (
+            containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0])
+        )
+        event_data1.SetIdentifier(
+            containers_interface.AttributeContainerIdentifier(
+                name="event_data", sequence_number=1
+            )
+        )
+
+        test_event_values = dict(self._TEST_EVENTS[1])
+        test_event_values["path_spec"] = fake_path_spec.FakePathSpec(
+            location="log/syslog.2"
+        )
+        event2, event_data2, event_data_stream2 = (
+            containers_test_lib.CreateEventFromValues(test_event_values)
+        )
+        event_data2.SetIdentifier(
+            containers_interface.AttributeContainerIdentifier(
+                name="event_data", sequence_number=2
+            )
+        )
+
+        # A field that only depends on the event data is formatted once per
+        # event data.
+        for _ in range(2):
+            display_name_string = test_helper.GetFormattedField(
+                output_mediator,
+                "display_name",
+                event1,
+                event_data1,
+                event_data_stream1,
+                None,
+            )
+            self.assertEqual(display_name_string, "FAKE:log/syslog.1")
+
+        self.assertEqual(test_helper.number_of_formatted_display_names, 1)
+
+        display_name_string = test_helper.GetFormattedField(
+            output_mediator,
+            "display_name",
+            event2,
+            event_data2,
+            event_data_stream2,
+            None,
+        )
+        self.assertEqual(display_name_string, "FAKE:log/syslog.2")
+        self.assertEqual(test_helper.number_of_formatted_display_names, 2)
+
+        display_name_string = test_helper.GetFormattedField(
+            output_mediator,
+            "display_name",
+            event1,
+            event_data1,
+            event_data_stream1,
+            None,
+        )
+        self.assertEqual(display_name_string, "FAKE:log/syslog.1")
+        self.assertEqual(test_helper.number_of_formatted_display_names, 2)
+
+        # A field that depends on the event is not cached.
+        for _ in range(2):
+            zone_string = test_helper.GetFormattedField(
+                output_mediator, "zone", event1, event_data1, event_data_stream1, None
+            )
+            self.assertEqual(zone_string, "UTC")
+
+        self.assertEqual(test_helper.number_of_formatted_time_zones, 2)
+
+        # Event data without an identifier is not cached.
+        event3, event_data3, event_data_stream3 = (
+            containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0])
+        )
+        for _ in range(2):
+            display_name_string = test_helper.GetFormattedField(
+                output_mediator,
+                "display_name",
+                event3,
+                event_data3,
+                event_data_stream3,
+                None,
+            )
+            self.assertEqual(display_name_string, "FAKE:log/syslog.1")
+
+        self.assertEqual(test_helper.number_of_formatted_display_names, 4)
 
 
 if __name__ == "__main__":
