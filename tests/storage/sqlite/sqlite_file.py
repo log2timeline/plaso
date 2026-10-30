@@ -951,6 +951,27 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
             finally:
                 test_store.Close()
 
+    def testOpenWithUnsupportedStorage(self):
+        """Tests the Open function with a storage file without metadata."""
+        with shared_test_lib.TempDirectory() as temp_directory:
+            test_path = os.path.join(temp_directory, "unsupported.sqlite")
+            database_connection = sqlite3.connect(test_path)
+            database_connection.execute("CREATE TABLE test (value TEXT)")
+            database_connection.commit()
+            database_connection.close()
+
+            test_store = sqlite_file.SQLiteStorageFile()
+
+            with self.assertRaises(OSError):
+                test_store.Open(path=test_path, read_only=True)
+
+            self.assertFalse(test_store._is_open)
+            self.assertIsNone(test_store._connection)
+
+            # The storage file should not be in use after the failed open.
+            os.remove(test_path)
+            self.assertFalse(os.path.exists(test_path))
+
     def testVersionCompatibility(self):
         """Tests the version compatibility methods."""
         with shared_test_lib.TempDirectory() as temp_directory:
