@@ -16,7 +16,7 @@ The Plaso bodyfile parser supports timestamps with a fraction of a second since
 ## Optimizing log2timeline and psteal
 
 The options below are supported by both log2timeline.py and psteal.py, unless
-indicated otherwise. Also see [performance related issues](../Troubleshooting.md#performance-related-issues).
+indicated otherwise. Also see [troubleshooting](../Troubleshooting.md).
 
 ### Number of workers and memory
 
