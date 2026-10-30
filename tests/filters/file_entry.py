@@ -157,8 +157,8 @@ class DateTimeFileEntryFilterTest(shared_test_lib.BaseTestCase):
                 b"\tctime between 2012-05-25 15:59:20.000000 and "
                 b"2012-05-25 15:59:25.000000"
             ),
-            b"\tatime after 2012-05-25 15:59:25.000000",
-            b"\tmtime before 2012-05-25 15:59:20.000000",
+            b"\tatime before 2012-05-25 15:59:25.000000",
+            b"\tmtime after 2012-05-25 15:59:20.000000",
             b"",
         ]
 
