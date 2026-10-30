@@ -2,7 +2,6 @@
 """Tests for the multi-processing analysis process."""
 
 import os
-import time
 import unittest
 
 from plaso.analysis import interface as analysis_interface
@@ -53,6 +52,8 @@ class AnalysisProcessTest(test_lib.MultiProcessingTestCase):
 
     # pylint: disable=protected-access
 
+    _PROCESS_JOIN_TIMEOUT = 60
+
     _QUEUE_TIMEOUT = 5
 
     def testInitialization(self):
@@ -85,8 +86,10 @@ class AnalysisProcessTest(test_lib.MultiProcessingTestCase):
 
     def testMain(self):
         """Tests the _Main function."""
+        # The output event queue cannot push items before the analysis process
+        # has started and connected to it, which can take a while.
         output_event_queue = zeromq_queue.ZeroMQPushBindQueue(
-            name="test output event queue", timeout_seconds=self._QUEUE_TIMEOUT
+            name="test output event queue", timeout_seconds=self._PROCESS_JOIN_TIMEOUT
         )
         output_event_queue.Open()
 
@@ -118,13 +121,21 @@ class AnalysisProcessTest(test_lib.MultiProcessingTestCase):
             setattr(test_process, "_FOREMAN_STATUS_WAIT", 1)
 
             test_process.start()
+            try:
+                output_event_queue.PushItem(plaso_queue.QueueAbort())
 
-            output_event_queue.PushItem(plaso_queue.QueueAbort(), block=False)
-            output_event_queue.Close(abort=True)
+                # Wait for the process to exit, before the temporary directory
+                # is removed.
+                test_process.join(timeout=self._PROCESS_JOIN_TIMEOUT)
+                self.assertFalse(test_process.is_alive())
+                self.assertEqual(test_process.exitcode, 0)
 
-            # Sleep for 1 second to allow the analysis process to terminate.
-            # Before the temporary directory is removed.
-            time.sleep(1)
+            finally:
+                if test_process.is_alive():
+                    test_process.kill()
+                    test_process.join()
+
+                output_event_queue.Close(abort=True)
 
     # TODO: add test for _ProcessEvent.
 
