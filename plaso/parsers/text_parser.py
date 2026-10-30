@@ -308,10 +308,11 @@ class TextLogParser(interface.FileObjectParser):
                     ):
                         if not text_reader:
                             encoded_data_file_object.seek(0, os.SEEK_SET)
-                            text_reader = EncodedTextReader(
+                            encoded_text_reader = EncodedTextReader(
                                 encoded_data_file_object, encoding=encoding
                             )
-                            text_reader.ReadLines()
+                            encoded_text_reader.ReadLines()
+                            text_reader = encoded_text_reader
 
                             # TODO: check if this works with xchatscrollback log.
                             if self._ContainsBinary(text_reader.lines):
@@ -328,6 +329,11 @@ class TextLogParser(interface.FileObjectParser):
                         f"{encoding:s}"
                     )
                     result = False
+
+                    # The data cannot be decoded with this encoding, hence there
+                    # is no need to check the remaining plugins of this encoding.
+                    if not text_reader:
+                        break
 
                 finally:
                     parser_mediator.SampleFormatCheckStopTiming(profiling_name)
