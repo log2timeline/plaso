@@ -451,6 +451,33 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
             order_by="timestamp",
         )
 
+    # pylint: disable=arguments-differ
+    def Open(self, path=None, read_only=True, **unused_kwargs):
+        """Opens the storage file.
+
+        Args:
+          path (Optional[str]): path to the storage file.
+          read_only (Optional[bool]): True if the file should be opened in
+              read-only mode.
+
+        Raises:
+          OSError: if the storage file is already opened, if the database cannot
+              be connected or if the storage metadata is missing or not supported.
+          ValueError: if path is missing.
+        """
+        if self._is_open:
+            raise OSError("Storage file already opened.")
+
+        try:
+            super().Open(path=path, read_only=read_only)
+
+        except OSError:
+            # Close the database connection so that the storage file is not left
+            # in use when the storage metadata cannot be read.
+            if self._is_open:
+                self.Close()
+            raise
+
     def SetSerializersProfiler(self, serializers_profiler):
         """Sets the serializers profiler.
 
