@@ -155,7 +155,8 @@ class SingleProcessEngineTest(shared_test_lib.BaseTestCase):
                     "event_data_stream"
                 ):
                     location = event_data_stream.path_spec.location
-                    locations.add(location[len(source_path) :])
+                    location = location[len(source_path) :]
+                    locations.add(location.replace(os.path.sep, "/"))
 
             finally:
                 storage_writer.Close()

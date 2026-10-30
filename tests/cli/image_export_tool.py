@@ -1139,11 +1139,15 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
                 for path in self._RecursiveList(destination_path)
             ]
 
-        exported_directory = os.path.join(
-            source_path.lstrip(os.path.sep), "a_directory"
-        )
-        self.assertIn(os.path.join(exported_directory, "another_file"), extracted_files)
-        self.assertNotIn(os.path.join(exported_directory, "a_file"), extracted_files)
+        # The exported path of the source directory differs per operating system,
+        # for example "C:" is exported as "C_" on Windows.
+        exported_files = [
+            os.path.basename(path)
+            for path in extracted_files
+            if os.path.basename(os.path.dirname(path)) == "a_directory"
+        ]
+        self.assertIn("another_file", exported_files)
+        self.assertNotIn("a_file", exported_files)
 
     def testProcessSourceExtractWithArtifactsFilter(self):
         """Tests the ProcessSource function with a artifacts filter file."""
