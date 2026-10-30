@@ -8,6 +8,7 @@ import unittest
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import context
+from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.engine import configurations
 from plaso.single_process import extraction_engine
@@ -20,6 +21,51 @@ class SingleProcessEngineTest(shared_test_lib.BaseTestCase):
     """Tests for the single process engine object."""
 
     # pylint: disable=protected-access
+
+    def testInternalCheckExcludedPathSpec(self):
+        """Tests the _CheckExcludedPathSpec function."""
+        test_engine = extraction_engine.SingleProcessEngine()
+        resolver_context = context.Context()
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            source_path = os.path.join(temp_directory, "source")
+            os.makedirs(source_path)
+
+            for name in ("a_file", "another_file"):
+                with open(
+                    os.path.join(source_path, name), "w", encoding="utf-8"
+                ) as file_object:
+                    file_object.write("test")
+
+            filter_file_path = os.path.join(temp_directory, "filter_file.yaml")
+            with open(filter_file_path, "w", encoding="utf-8") as file_object:
+                file_object.write(
+                    "description: Exclude\ntype: exclude\npaths:\n- '/a_file'\n"
+                )
+
+            test_engine.BuildCollectionFilters(
+                [], [], filter_file_path=filter_file_path
+            )
+
+            source_path_spec = path_spec_factory.Factory.NewPathSpec(
+                dfvfs_definitions.TYPE_INDICATOR_OS, location=source_path
+            )
+            test_engine._mount_point_path_spec = source_path_spec
+
+            file_system = path_spec_resolver.Resolver.OpenFileSystem(
+                source_path_spec, resolver_context=resolver_context
+            )
+
+            for path, expected_result in (
+                (os.path.join(source_path, "a_file"), True),
+                (os.path.join(source_path, "another_file"), False),
+                (os.path.join(temp_directory, "a_file"), False),
+            ):
+                path_spec = path_spec_factory.Factory.NewPathSpec(
+                    dfvfs_definitions.TYPE_INDICATOR_OS, location=path
+                )
+                result = test_engine._CheckExcludedPathSpec(file_system, path_spec)
+                self.assertEqual(result, expected_result)
 
     def testProcessSource(self):
         """Tests the PreprocessSource and ProcessSource functions."""
@@ -155,7 +201,8 @@ class SingleProcessEngineTest(shared_test_lib.BaseTestCase):
                     "event_data_stream"
                 ):
                     location = event_data_stream.path_spec.location
-                    locations.add(location[len(source_path) :])
+                    location = location[len(source_path) :]
+                    locations.add(location.replace(os.path.sep, "/"))
 
             finally:
                 storage_writer.Close()
