@@ -8,6 +8,7 @@ from plaso.analysis import tagging
 from plaso.containers import events
 from plaso.containers import reports
 from plaso.lib import definitions
+from plaso.parsers import plist
 
 from tests.analysis import test_lib
 
@@ -110,6 +111,47 @@ class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
             "text_contains",
         ]
         self.assertEqual(sorted(labels), expected_labels)
+
+    def testExamineEventWithMacOSTaggingFile(self):
+        """Tests the ExamineEvent function with the MacOS tagging file."""
+        tag_file_path = self._GetDataFilePath(["tag_macos.txt"])
+        self._SkipIfPathNotExists(tag_file_path)
+
+        parser = plist.PlistParser()
+
+        plugin = tagging.TaggingAnalysisPlugin()
+        plugin.SetAndLoadTagFile(tag_file_path)
+
+        storage_writer = self._ParseAndAnalyzeFile(
+            ["plist", "InstallHistory.plist"], parser, plugin
+        )
+
+        analysis_report = storage_writer.GetAttributeContainerByIndex(
+            reports.AnalysisReport.CONTAINER_TYPE, 0
+        )
+        self.assertIsNotNone(analysis_report)
+
+        expected_analysis_counter = collections.Counter(
+            {"application_install": 7, "event_tags": 7}
+        )
+        self.assertEqual(analysis_report.analysis_counter, expected_analysis_counter)
+
+        plugin = tagging.TaggingAnalysisPlugin()
+        plugin.SetAndLoadTagFile(tag_file_path)
+
+        storage_writer = self._ParseAndAnalyzeFile(
+            ["plist", "com.apple.airport.preferences.plist"], parser, plugin
+        )
+
+        analysis_report = storage_writer.GetAttributeContainerByIndex(
+            reports.AnalysisReport.CONTAINER_TYPE, 0
+        )
+        self.assertIsNotNone(analysis_report)
+
+        expected_analysis_counter = collections.Counter(
+            {"device_connection": 4, "event_tags": 4}
+        )
+        self.assertEqual(analysis_report.analysis_counter, expected_analysis_counter)
 
 
 if __name__ == "__main__":

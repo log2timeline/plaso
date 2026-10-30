@@ -4,11 +4,12 @@
 import unittest
 
 from plaso.containers import events
-from plaso.containers import plist_event
 from plaso.engine import tagging_file
 from plaso.lib import definitions
 from plaso.parsers import filestat
 from plaso.parsers.olecf_plugins import summary
+from plaso.parsers.plist_plugins import airport
+from plaso.parsers.plist_plugins import install_history
 from plaso.parsers.plist_plugins import ipod
 from plaso.parsers.sqlite_plugins import chrome_history
 from plaso.parsers.sqlite_plugins import ls_quarantine
@@ -48,11 +49,10 @@ class MacOSTaggingFileTest(test_lib.TaggingFileTestCase):
 
     def testRuleApplicationInstall(self):
         """Tests the application_install tagging rule."""
-        # Test: data_type is 'plist:key' AND
-        #       plugin is 'plist_install_history'
-        attribute_values_per_name = {"plugin": ["plist_install_history"]}
+        # Test: data_type is 'macos:install_history:entry'
+        attribute_values_per_name = {}
         self._CheckTaggingRule(
-            plist_event.PlistTimeEventData,
+            install_history.MacOSInstallHistoryEventData,
             attribute_values_per_name,
             ["application_install"],
         )
@@ -124,11 +124,10 @@ class MacOSTaggingFileTest(test_lib.TaggingFileTestCase):
             ipod.IPodPlistEventData, attribute_values_per_name, ["device_connection"]
         )
 
-        # Test: data_type is 'plist:key' AND
-        #       plugin is 'plist_airport'
-        attribute_values_per_name = {"plugin": ["plist_airport"]}
+        # Test: data_type is 'macos:airport:entry'
+        attribute_values_per_name = {}
         self._CheckTaggingRule(
-            plist_event.PlistTimeEventData,
+            airport.MacOSAirportEventData,
             attribute_values_per_name,
             ["device_connection"],
         )
