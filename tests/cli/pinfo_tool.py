@@ -3,6 +3,8 @@
 
 import json
 import os
+import shutil
+import sqlite3
 import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -793,6 +795,36 @@ Storage files are different.
         # Compare the output as list of lines which makes it easier to spot
         # differences.
         self.assertEqual(output.split("\n"), expected_output.split("\n"))
+
+    def testPrintStorageInformationWithUnsupportedFormatVersion(self):
+        """Tests the PrintStorageInformation function with an old format version."""
+        test_file_path = self._GetTestFilePath(["pinfo_test.plaso"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+
+        options = test_lib.TestOptions()
+        options.output_format = "text"
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            options.storage_file = os.path.join(temp_directory, "pinfo_test.plaso")
+            shutil.copyfile(test_file_path, options.storage_file)
+
+            connection = sqlite3.connect(options.storage_file)
+            try:
+                connection.execute(
+                    "UPDATE metadata SET value = '20200101' "
+                    "WHERE key = 'format_version'"
+                )
+                connection.commit()
+            finally:
+                connection.close()
+
+            test_tool.ParseOptions(options)
+
+            with self.assertRaises(errors.BadConfigOption):
+                test_tool.PrintStorageInformation()
 
 
 if __name__ == "__main__":
