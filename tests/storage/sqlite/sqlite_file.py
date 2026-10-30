@@ -972,6 +972,25 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
             os.remove(test_path)
             self.assertFalse(os.path.exists(test_path))
 
+    def testOpenWithNonSQLiteFile(self):
+        """Tests the Open function with a file that is not a SQLite database."""
+        with shared_test_lib.TempDirectory() as temp_directory:
+            test_path = os.path.join(temp_directory, "non_sqlite.plaso")
+            with open(test_path, "wb") as file_object:
+                file_object.write(b"This is not a SQLite database file.\n" * 4)
+
+            test_store = sqlite_file.SQLiteStorageFile()
+
+            with self.assertRaises(OSError):
+                test_store.Open(path=test_path, read_only=True)
+
+            self.assertFalse(test_store._is_open)
+            self.assertIsNone(test_store._connection)
+
+            # The storage file should not be in use after the failed open.
+            os.remove(test_path)
+            self.assertFalse(os.path.exists(test_path))
+
     def testVersionCompatibility(self):
         """Tests the version compatibility methods."""
         with shared_test_lib.TempDirectory() as temp_directory:
