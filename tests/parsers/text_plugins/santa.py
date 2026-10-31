@@ -40,6 +40,49 @@ class SantaTextPluginTest(test_lib.TextPluginTestCase):
 
         self.assertFalse(plugin.CheckRequiredFormat(parser_mediator, text_reader))
 
+        # Check log file turned over by newsyslog.
+        file_object = io.BytesIO(
+            b"Mar 31 06:30:02 hostname newsyslog[10904]: logfile turned over due "
+            b"to size>25000K\n"
+            b"[2023-03-31T06:29:57.423Z] I santad: action=EXIT|pid=10897"
+            b"|pidversion=2243287|ppid=1|uid=262|gid=262\n"
+        )
+        text_reader = text_parser.EncodedTextReader(file_object)
+        text_reader.ReadLines()
+
+        self.assertTrue(plugin.CheckRequiredFormat(parser_mediator, text_reader))
+
+        # Check non-matching format with a line of another process.
+        file_object = io.BytesIO(
+            b"Mar 31 06:30:02 hostname sshd[10904]: logfile turned over\n"
+            b"[2023-03-31T06:29:57.423Z] I santad: action=EXIT|pid=10897"
+            b"|pidversion=2243287|ppid=1|uid=262|gid=262\n"
+        )
+        text_reader = text_parser.EncodedTextReader(file_object)
+        text_reader.ReadLines()
+
+        self.assertFalse(plugin.CheckRequiredFormat(parser_mediator, text_reader))
+
+        # Check non-matching format with another newsyslog message.
+        file_object = io.BytesIO(
+            b"Mar 31 06:30:02 hostname newsyslog[10904]: logfile first created\n"
+            b"[2023-03-31T06:29:57.423Z] I santad: action=EXIT|pid=10897"
+            b"|pidversion=2243287|ppid=1|uid=262|gid=262\n"
+        )
+        text_reader = text_parser.EncodedTextReader(file_object)
+        text_reader.ReadLines()
+
+        self.assertFalse(plugin.CheckRequiredFormat(parser_mediator, text_reader))
+
+        # Check non-matching format with only a newsyslog line.
+        file_object = io.BytesIO(
+            b"Mar 31 06:30:02 hostname newsyslog[10904]: logfile turned over\n"
+        )
+        text_reader = text_parser.EncodedTextReader(file_object)
+        text_reader.ReadLines()
+
+        self.assertFalse(plugin.CheckRequiredFormat(parser_mediator, text_reader))
+
     def testProcessWithLegacyFormat(self):
         """Tests the Process function with the legacy Santa log format."""
         plugin = santa.SantaTextPlugin()
@@ -220,6 +263,48 @@ class SantaTextPluginTest(test_lib.TextPluginTestCase):
             "username": "root",
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 6)
+        self.CheckEventData(event_data, expected_event_values)
+
+    def testProcessWithNewsyslogLines(self):
+        """Tests the Process function with a log file turned over by newsyslog."""
+        plugin = santa.SantaTextPlugin()
+        storage_writer = self._ParseTextFileWithPlugin(["santa_newsyslog.log"], plugin)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 3)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "recovery_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        expected_event_values = {
+            "action": "EXIT",
+            "data_type": "santa:process_exit",
+            "exit_time": "2023-03-31T06:29:57.423+00:00",
+            "gid": "262",
+            "pid": "10897",
+            "pid_version": "2243287",
+            "ppid": "1",
+            "uid": "262",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
+
+        expected_event_values = {
+            "action": "EXIT",
+            "data_type": "santa:process_exit",
+            "exit_time": "2023-04-01T06:30:01.588+00:00",
+            "pid": "10898",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 2)
         self.CheckEventData(event_data, expected_event_values)
 
 

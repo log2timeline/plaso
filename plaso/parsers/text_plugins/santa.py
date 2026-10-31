@@ -182,6 +182,10 @@ class SantaTextPlugin(interface.TextPlugin):
 
     ENCODING = "utf-8"
 
+    _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).set_parse_action(
+        lambda tokens: int(tokens[0], 10)
+    )
+
     _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
         lambda tokens: int(tokens[0], 10)
     )
@@ -427,16 +431,37 @@ class SantaTextPlugin(interface.TextPlugin):
         + _END_OF_LINE
     )
 
+    # Line added by newsyslog when it turns over the log file, at the start of
+    # the new log file and at the end of the turned over log file.
+    # Formatted as: Mar 31 06:30:02 hostname newsyslog[10904]: logfile turned over
+    _NEWSYSLOG_LINE = (
+        pyparsing.Word(pyparsing.alphas, exact=3)
+        + _ONE_OR_TWO_DIGITS
+        + _TWO_DIGITS
+        + pyparsing.Suppress(":")
+        + _TWO_DIGITS
+        + pyparsing.Suppress(":")
+        + _TWO_DIGITS
+        + pyparsing.Word(pyparsing.alphanums + "-._")
+        + pyparsing.Literal("newsyslog[")
+        + pyparsing.Word(pyparsing.nums)
+        + pyparsing.Literal("]:")
+        + pyparsing.Literal("logfile turned over")
+        + pyparsing.restOfLine()
+        + _END_OF_LINE
+    )
+
     _LINE_STRUCTURES = [
         ("execution_line", _EXECUTION_LINE),
         ("file_system_event_line", _FILE_OPERATION_LINE),
         ("mount_line", _DISK_MOUNT_LINE),
+        ("newsyslog_line", _NEWSYSLOG_LINE),
         ("process_exit_line", _PROCESS_EXIT_LINE),
         ("quota_exceeded_line", _QUOTA_EXCEEDED_LINE),
         ("unmount_line", _DISK_UNMOUNT_LINE),
     ]
 
-    VERIFICATION_GRAMMAR = (
+    VERIFICATION_GRAMMAR = pyparsing.Optional(pyparsing.Suppress(_NEWSYSLOG_LINE)) + (
         _DISK_MOUNT_LINE
         ^ _DISK_UNMOUNT_LINE
         ^ _EXECUTION_LINE
@@ -456,7 +481,7 @@ class SantaTextPlugin(interface.TextPlugin):
         Raises:
           ParseError: if the structure cannot be parsed.
         """
-        if key == "quota_exceeded_line":
+        if key in ("newsyslog_line", "quota_exceeded_line"):
             # skip this line
             return
 
