@@ -61,7 +61,9 @@ Test argument parser.
     def testParseOptions(self):
         """Tests the ParseOptions function."""
         options = cli_test_lib.TestOptions()
-        options.file_filter = self._GetTestFilePath(["testdir", "filter2.txt"])
+        options.file_filter = self._GetTestFilePath(
+            ["filter_files", "format_test.yaml"]
+        )
 
         test_tool = tools.CLITool()
         filter_file.FilterFileArgumentsHelper.ParseOptions(options, test_tool)
@@ -71,16 +73,24 @@ Test argument parser.
         with self.assertRaises(errors.BadConfigObject):
             filter_file.FilterFileArgumentsHelper.ParseOptions(options, None)
 
-        # A filter file that does not exist is looked up in the data location.
-        options.file_filter = os.path.join("bogus", "filter2.txt")
+        # Test with a filter file that is not a YAML-based filter file.
+        options.file_filter = self._GetTestFilePath(["testdir", "filter2.txt"])
 
         with self.assertRaises(errors.BadConfigOption):
             filter_file.FilterFileArgumentsHelper.ParseOptions(options, test_tool)
 
-        test_tool._data_location = self._GetTestFilePath(["testdir"])
+        # A filter file that does not exist is looked up in the data location.
+        options.file_filter = os.path.join("bogus", "format_test.yaml")
+
+        with self.assertRaises(errors.BadConfigOption):
+            filter_file.FilterFileArgumentsHelper.ParseOptions(options, test_tool)
+
+        test_tool._data_location = self._GetTestFilePath(["filter_files"])
         filter_file.FilterFileArgumentsHelper.ParseOptions(options, test_tool)
 
-        expected_filter_file = self._GetTestFilePath(["testdir", "filter2.txt"])
+        expected_filter_file = self._GetTestFilePath(
+            ["filter_files", "format_test.yaml"]
+        )
         self.assertEqual(test_tool._filter_file, expected_filter_file)
 
         options.file_filter = os.path.join("bogus", "bogus.txt")

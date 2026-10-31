@@ -41,6 +41,12 @@ class YAMLFilterFileTest(shared_test_lib.BaseTestCase):
         with self.assertRaises(errors.ParseError):
             test_filter_file._ReadFilterDefinition({"bogus": "error"})
 
+        with self.assertRaises(errors.ParseError):
+            test_filter_file._ReadFilterDefinition("bogus")
+
+        with self.assertRaises(errors.ParseError):
+            test_filter_file._ReadFilterDefinition([{"type": "include"}])
+
     def testReadFromFileObject(self):
         """Tests the _ReadFromFileObject function."""
         test_file_path = self._GetTestFilePath(["filter_files", "format_test.yaml"])
@@ -51,6 +57,10 @@ class YAMLFilterFileTest(shared_test_lib.BaseTestCase):
             path_filters = list(test_filter_file._ReadFromFileObject(file_object))
 
         self.assertEqual(len(path_filters), 3)
+
+        file_object = io.StringIO("type: include\npaths: [\n")
+        with self.assertRaises(errors.ParseError):
+            list(test_filter_file._ReadFromFileObject(file_object))
 
     def testReadFromFile(self):
         """Tests the ReadFromFile function."""

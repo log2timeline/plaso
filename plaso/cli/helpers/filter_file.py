@@ -5,6 +5,7 @@ import os
 from plaso.cli import tools
 from plaso.cli.helpers import interface
 from plaso.cli.helpers import manager
+from plaso.engine import yaml_filter_file
 from plaso.lib import errors
 
 
@@ -54,7 +55,8 @@ class FilterFileArgumentsHelper(interface.ArgumentsHelper):
 
         Raises:
           BadConfigObject: when the configuration object is of the wrong type.
-          BadConfigOption: if the collection file does not exist.
+          BadConfigOption: if the collection file does not exist or is not
+              a valid YAML-based filter file.
         """
         if not isinstance(configuration_object, tools.CLITool):
             raise errors.BadConfigObject(
@@ -77,6 +79,16 @@ class FilterFileArgumentsHelper(interface.ArgumentsHelper):
             raise errors.BadConfigOption(
                 f"No such collection filter file: {filter_file:s}"
             )
+
+        if filter_file:
+            filter_file_object = yaml_filter_file.YAMLFilterFile()
+            try:
+                filter_file_object.ReadFromFile(filter_file)
+            except (UnicodeDecodeError, errors.ParseError) as exception:
+                raise errors.BadConfigOption(
+                    f"Unable to read collection filter file: {filter_file:s} "
+                    f"with error: {exception!s}"
+                )
 
         setattr(configuration_object, "_filter_file", filter_file)
 
