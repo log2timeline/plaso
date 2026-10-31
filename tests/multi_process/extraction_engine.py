@@ -10,6 +10,7 @@ import unittest
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
+from plaso.containers import event_sources
 from plaso.containers import sessions
 from plaso.containers import warnings
 from plaso.lib import definitions
@@ -93,6 +94,52 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
         expected_parsers_counter = collections.Counter({"filestat": 15, "total": 15})
         self.assertEqual(parsers_counter, expected_parsers_counter)
+
+    def testInternalProcessEventSourcesWithoutPathSpecification(self):
+        """Tests the _ProcessEventSources function without a path specification."""
+        # pylint: disable=protected-access
+        session = sessions.Session()
+
+        test_engine = extraction_engine.ExtractionMultiProcessEngine()
+        test_engine._processing_configuration = configurations.ProcessingConfiguration()
+        test_engine._task_storage_format = definitions.STORAGE_FORMAT_SQLITE
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            test_engine._storage_file_path = os.path.join(
+                temp_directory, "storage.plaso"
+            )
+            test_engine._StartTaskStorage(definitions.STORAGE_FORMAT_SQLITE)
+
+            storage_writer = sqlite_writer.SQLiteStorageWriter()
+            storage_writer.Open(path=test_engine._storage_file_path)
+
+            try:
+                # An event source without a path specification causes the creation
+                # of the task to fail, which is handled by the catch all.
+                event_source = event_sources.EventSource()
+                storage_writer.AddAttributeContainer(event_source)
+
+                test_engine._ProcessEventSources(storage_writer, session.identifier)
+
+                extraction_warnings = list(
+                    storage_writer.GetAttributeContainers("extraction_warning")
+                )
+
+            finally:
+                storage_writer.Close()
+
+            test_engine._StopTaskStorage(
+                definitions.STORAGE_FORMAT_SQLITE, session.identifier
+            )
+
+        self.assertEqual(len(extraction_warnings), 1)
+        self.assertIsNone(extraction_warnings[0].path_spec)
+        self.assertTrue(
+            extraction_warnings[0].message.startswith(
+                "unable to process path specification with error: "
+            )
+        )
+        self.assertEqual(test_engine._processing_status.error_path_specs, [])
 
     def testInternalProcessEventSourcesWithFailedTask(self):
         """Tests the _ProcessEventSources function with a failed task."""
