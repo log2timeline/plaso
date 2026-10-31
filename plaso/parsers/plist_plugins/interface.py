@@ -42,12 +42,24 @@ class NSKeyedArchiverDecoder:
         "NSUUID": "_DecodeNSUUID",
     }
 
+    # Objects that are part of a cycle cannot be reused and are decoded again
+    # for every reference. To bound the processing time and memory of plists
+    # with many such references, the number of decoded objects is limited to
+    # a multiple of the number of objects in the plist, with a minimum.
+    _MAXIMUM_NUMBER_OF_DECODED_OBJECTS_PER_OBJECT = 32
+
+    _MINIMUM_MAXIMUM_NUMBER_OF_DECODED_OBJECTS = 100000
+
     def __init__(self):
         """Initializes a NSKeyedArchiver decoder."""
         super().__init__()
         # Number of skipped references back to an object that is still being
         # decoded (cycles); shared references are decoded once and reused.
         self._number_of_cyclic_references = 0
+        self._number_of_decoded_objects = 0
+        self._maximum_number_of_decoded_objects = (
+            self._MINIMUM_MAXIMUM_NUMBER_OF_DECODED_OBJECTS
+        )
         self._decoded_object_cache = {}
 
     def _DecodeCompositeObject(self, plist_property, objects_array, parent_objects):
@@ -508,8 +520,19 @@ class NSKeyedArchiverDecoder:
           object: decoded object.
 
         Raises:
-          RuntimeError: if the object cannot be decoded.
+          RuntimeError: if the object cannot be decoded or the maximum number of
+              decoded objects was exceeded.
         """
+        self._number_of_decoded_objects += 1
+        if (
+            self._number_of_decoded_objects + self._number_of_cyclic_references
+            > self._maximum_number_of_decoded_objects
+        ):
+            raise RuntimeError(
+                f"Unsupported plist: maximum number of decoded objects: "
+                f"{self._maximum_number_of_decoded_objects:d} exceeded."
+            )
+
         if isinstance(plist_property, dict) and "$class" in plist_property:
             return self._DecodeNSObject(plist_property, objects_array, parent_objects)
 
@@ -546,6 +569,7 @@ class NSKeyedArchiverDecoder:
           RuntimeError: if the object cannot be decoded.
         """
         if plist_uid in self._decoded_object_cache:
+            self._number_of_decoded_objects += 1
             return self._decoded_object_cache[plist_uid]
 
         number_of_cyclic_references = self._number_of_cyclic_references
@@ -627,7 +651,8 @@ class NSKeyedArchiverDecoder:
           dict[str, object]: root object of the decoded plist.
 
         Raises:
-          RuntimeError: if the plist cannot be decoded.
+          RuntimeError: if the plist cannot be decoded or the maximum number of
+              decoded objects was exceeded.
         """
         if not isinstance(root_item, dict):
             type_string = type(root_item)
@@ -648,6 +673,11 @@ class NSKeyedArchiverDecoder:
         # references so it does not leak between plists decoded by the same
         # decoder instance.
         self._number_of_cyclic_references = 0
+        self._number_of_decoded_objects = 0
+        self._maximum_number_of_decoded_objects = max(
+            self._MINIMUM_MAXIMUM_NUMBER_OF_DECODED_OBJECTS,
+            len(objects_array) * self._MAXIMUM_NUMBER_OF_DECODED_OBJECTS_PER_OBJECT,
+        )
         self._decoded_object_cache = {}
 
         try:
