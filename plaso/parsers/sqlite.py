@@ -156,30 +156,32 @@ class SQLiteDatabase:
             data = file_object.read(self._READ_BUFFER_SIZE)
 
     def Close(self):
-        """Closes the database connection and cleans up the temporary file."""
+        """Closes the database connection and cleans up the temporary files."""
         self.schema = {}
-        self._database = None
 
-        if os.path.exists(self._temp_db_file_path):
-            try:
-                os.remove(self._temp_db_file_path)
-            except OSError as exception:
-                logger.warning(
-                    f"Unable to remove temporary copy: {self._temp_db_file_path} of "
-                    f"SQLite database: {self._filename} with error: {exception!s}"
-                )
+        if self._database:
+            self._database.close()
+            self._database = None
+
+        if self._temp_db_file_path:
+            # SQLite creates "-wal" and "-shm" files next to a database in
+            # Write-Ahead Log (WAL) journal mode. Note that the "-wal" file is
+            # also the path of the temporary copy of the WAL file, if any.
+            for path in (
+                self._temp_db_file_path,
+                f"{self._temp_db_file_path}-wal",
+                f"{self._temp_db_file_path}-shm",
+            ):
+                if os.path.exists(path):
+                    try:
+                        os.remove(path)
+                    except OSError as exception:
+                        logger.warning(
+                            f"Unable to remove temporary file: {path} of SQLite "
+                            f"database: {self._filename} with error: {exception!s}"
+                        )
 
         self._temp_db_file_path = ""
-
-        if os.path.exists(self._temp_wal_file_path):
-            try:
-                os.remove(self._temp_wal_file_path)
-            except OSError as exception:
-                logger.warning(
-                    f"Unable to remove temporary copy: {self._temp_wal_file_path} of "
-                    f"SQLite database: {self._filename} with error: {exception!s}"
-                )
-
         self._temp_wal_file_path = ""
 
     def Open(self, file_object, wal_file_object=None):
@@ -272,14 +274,7 @@ class SQLiteDatabase:
                     self.columns_per_table[table_name].append(pragma_result["name"])
 
         except sqlite3.DatabaseError as exception:
-            self._database.close()
-            self._database = None
-
-            os.remove(self._temp_db_file_path)
-            self._temp_db_file_path = ""
-            if self._temp_wal_file_path:
-                os.remove(self._temp_wal_file_path)
-                self._temp_wal_file_path = ""
+            self.Close()
 
             logger.debug(
                 f"Unable to parse SQLite database: {self._filename} with error: "
