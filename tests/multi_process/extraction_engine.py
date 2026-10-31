@@ -15,6 +15,7 @@ from plaso.containers import warnings
 from plaso.lib import definitions
 from plaso.engine import configurations
 from plaso.multi_process import extraction_engine
+from plaso.multi_process import zeromq_queue
 from plaso.storage import factory as storage_factory
 from plaso.storage.sqlite import writer as sqlite_writer
 
@@ -93,6 +94,97 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
         expected_parsers_counter = collections.Counter({"filestat": 15, "total": 15})
         self.assertEqual(parsers_counter, expected_parsers_counter)
+
+    def testInternalCheckStatusWorkerProcessWithKilledWorker(self):
+        """Tests the _CheckStatusWorkerProcess function with a killed worker."""
+        # pylint: disable=protected-access
+
+        test_engine = extraction_engine.ExtractionMultiProcessEngine(
+            number_of_worker_processes=1
+        )
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            processing_configuration = configurations.ProcessingConfiguration()
+            processing_configuration.data_location = shared_test_lib.DATA_PATH
+            processing_configuration.task_storage_format = (
+                definitions.STORAGE_FORMAT_SQLITE
+            )
+            processing_configuration.task_storage_path = temp_directory
+
+            test_engine._processing_configuration = processing_configuration
+            test_engine._system_configurations = []
+            test_engine._windows_event_log_providers = []
+
+            test_engine._task_queue = zeromq_queue.ZeroMQBufferedReplyBindQueue(
+                delay_open=True,
+                linger_seconds=0,
+                maximum_items=1,
+                name="main_task_queue",
+                timeout_seconds=test_engine._ZEROMQ_NO_WORKER_REQUEST_TIME_SECONDS,
+            )
+            test_engine._task_queue.Open()
+            test_engine._task_queue_port = test_engine._task_queue.port
+
+            try:
+                process = test_engine._StartWorkerProcess("Worker_00")
+                self.assertIsNotNone(process)
+
+                pid = process.pid
+                self.assertIn(pid, test_engine._process_information_per_pid)
+
+                test_engine._KillProcess(pid)
+                # A SIGKILL cannot be handled, hence join returns once the worker
+                # process has been terminated.
+                process.join()
+                self.assertFalse(process.is_alive())
+
+                test_engine._CheckStatusWorkerProcess(pid)
+
+                # The killed worker process is no longer monitored and exactly one
+                # replacement worker process was started.
+                self.assertNotIn(pid, test_engine._process_information_per_pid)
+                self.assertNotIn(pid, test_engine._rpc_clients_per_pid)
+                self.assertEqual(len(test_engine._processes_per_pid), 2)
+                self.assertEqual(len(test_engine._process_information_per_pid), 1)
+                self.assertEqual(test_engine._last_worker_number, 2)
+
+                replacement_pid = next(iter(test_engine._process_information_per_pid))
+                replacement_process = test_engine._processes_per_pid[replacement_pid]
+                self.assertEqual(replacement_process.name, "Worker_01")
+
+                workers_status_per_pid = {
+                    worker_status.pid: worker_status
+                    for worker_status in test_engine._processing_status.workers_status
+                }
+                self.assertEqual(
+                    workers_status_per_pid[pid].status,
+                    definitions.STATUS_INDICATOR_KILLED,
+                )
+
+                # A next status update does not start another replacement worker
+                # process for the killed worker process.
+                test_engine._UpdateStatus()
+
+                self.assertEqual(len(test_engine._processes_per_pid), 2)
+                self.assertEqual(len(test_engine._process_information_per_pid), 1)
+                self.assertEqual(test_engine._last_worker_number, 2)
+
+                workers_status_per_pid = {
+                    worker_status.pid: worker_status
+                    for worker_status in test_engine._processing_status.workers_status
+                }
+                self.assertNotIn(
+                    workers_status_per_pid[replacement_pid].status,
+                    definitions.ERROR_STATUS_INDICATORS,
+                )
+
+            finally:
+                test_engine._StopMonitoringProcesses()
+                test_engine._AbortKill()
+                for process in test_engine._processes_per_pid.values():
+                    process.join()
+
+                test_engine._task_queue.Close(abort=True)
 
     def testInternalProcessEventSourcesWithFailedTask(self):
         """Tests the _ProcessEventSources function with a failed task."""
