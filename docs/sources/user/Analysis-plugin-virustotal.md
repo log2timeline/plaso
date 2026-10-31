@@ -32,6 +32,15 @@ but it hasn't been fully analyzed yet, it will be tagged with
 detected as malicious, it will be tagged with `virustotal_no_detections`. If
 the file isn't in Virustotal, it will be tagged as `virustotal_not_present`.
 
+### API key in logs
+
+The Virustotal API key is sent as the `apikey` parameter of the request URL.
+Errors about failed requests show only the first and last 4 characters of the
+API key, so you can tell which key was used, but when debug output
+is enabled (`--debug`) the request URLs logged by the underlying HTTP library
+contain the API key. Do not share debug logs of a psort run that uses the
+virustotal analysis plugin without removing the API key first.
+
 The last step would be to export a timeline with the tags:
 
 ```bash
