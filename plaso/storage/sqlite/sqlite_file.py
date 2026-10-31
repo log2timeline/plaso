@@ -2,6 +2,8 @@
 
 import ast
 import json
+import os
+import pathlib
 import sqlite3
 import zlib
 
@@ -450,6 +452,65 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
             filter_expression=filter_expression,
             order_by="timestamp",
         )
+
+    # pylint: disable=arguments-differ
+    def Open(self, path=None, read_only=True, **unused_kwargs):
+        """Opens the storage file.
+
+        Args:
+          path (Optional[str]): path to the storage file.
+          read_only (Optional[bool]): True if the file should be opened in
+              read-only mode.
+
+        Raises:
+          OSError: if the storage file is already opened, if the storage file is
+              not a SQLite database, if the database cannot be connected or if
+              the storage metadata is missing or not supported.
+          ValueError: if path is missing.
+        """
+        if self._is_open:
+            raise OSError("Storage file already opened.")
+
+        if path and os.path.isfile(path):
+            # Check that an existing file is a SQLite database before it is opened
+            # by the attribute container store, since a database connection that
+            # fails while being set up is not closed and keeps the file in use.
+            path_uri = pathlib.Path(os.path.abspath(path)).as_uri()
+
+            connection = None
+            try:
+                connection = sqlite3.connect(f"{path_uri:s}?mode=ro", uri=True)
+                connection.execute("SELECT COUNT(*) FROM sqlite_master")
+
+            except sqlite3.DatabaseError as exception:
+                raise OSError(
+                    f"Unable to open storage file: {path:s} with error: "
+                    f"{exception!s}"
+                )
+
+            finally:
+                if connection:
+                    connection.close()
+
+        try:
+            super().Open(path=path, read_only=read_only)
+
+        except (OSError, sqlite3.DatabaseError) as exception:
+            # Close the database connection so that the storage file is not left
+            # in use when the storage metadata cannot be read.
+            if self._connection:
+                self._connection.close()
+
+            self._connection = None
+            self._cursor = None
+            self._is_open = False
+
+            if isinstance(exception, OSError):
+                raise
+
+            raise OSError(
+                f"Unable to open storage file: {path!s} with error: {exception!s}"
+            )
 
     def SetSerializersProfiler(self, serializers_profiler):
         """Sets the serializers profiler.
