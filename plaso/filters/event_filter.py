@@ -1,10 +1,15 @@
 """The event filter."""
 
 from plaso.filters import expression_parser
+from plaso.storage import time_range as storage_time_range
 
 
 class EventObjectFilter:
     """Event filter."""
+
+    # The range of timestamps that can be stored.
+    _TIMESTAMP_MINIMUM = -(1 << 63)
+    _TIMESTAMP_MAXIMUM = (1 << 63) - 1
 
     def __init__(self):
         """Initializes an event filter."""
@@ -28,6 +33,36 @@ class EventObjectFilter:
 
         self._event_filter = expression.Compile()
         self._filter_expression = filter_expression
+
+    def GetTimestampRange(self):
+        """Retrieves the range of the timestamps of the events that can match.
+
+        The range is derived from the comparisons of the timestamp attribute,
+        such as "date > DATETIME('2020-01-01T00:00:00')", that must match for
+        the filter to match. Events outside the range cannot match the filter,
+        however events inside the range need to be matched against the filter.
+
+        Returns:
+          TimeRange: range of the timestamps of the events that can match the
+              filter or None if the filter does not limit the timestamps.
+        """
+        if not self._event_filter:
+            return None
+
+        lower_bound, upper_bound = self._event_filter.GetTimestampBounds()
+        if lower_bound is None and upper_bound is None:
+            return None
+
+        if lower_bound is None:
+            lower_bound = self._TIMESTAMP_MINIMUM
+
+        if upper_bound is None:
+            upper_bound = self._TIMESTAMP_MAXIMUM
+
+        # Note that no events can match if the bounds contradict each other.
+        upper_bound = max(lower_bound, upper_bound)
+
+        return storage_time_range.TimeRange(lower_bound, upper_bound)
 
     def Match(self, event, event_data, event_data_stream, event_tag):
         """Determines if an event matches the filter.

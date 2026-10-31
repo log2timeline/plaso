@@ -270,10 +270,20 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
         filter_limit = getattr(event_filter, "limit", None)
         forward_entries = 0
 
+        # Events with timestamps that cannot match the event filter are not read
+        # if there is no time slice, since a time slice buffer needs these events.
+        time_range = time_slice_range
+        if event_filter and not time_slice:
+            time_range = event_filter.GetTimestampRange()
+
+        number_of_events = 0
+
         self._events_status.number_of_filtered_events = 0
         self._events_status.number_of_events_from_time_slice = 0
 
-        for event in storage_reader.GetSortedEvents(time_range=time_slice_range):
+        for event in storage_reader.GetSortedEvents(time_range=time_range):
+            number_of_events += 1
+
             event_data_identifier = event.GetEventDataIdentifier()
             event_data = storage_reader.GetAttributeContainerByIdentifier(
                 events.EventData.CONTAINER_TYPE, event_data_identifier
@@ -384,6 +394,15 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
                     and filter_limit == self._number_of_consumed_events
                 ):
                     break
+
+        else:
+            if time_range and not time_slice:
+                # Count the events that were not read since they cannot match
+                # the event filter.
+                self._events_status.number_of_filtered_events += (
+                    storage_reader.GetNumberOfAttributeContainers("event")
+                    - number_of_events
+                )
 
         self._FlushExportBuffer(
             storage_reader, output_module, resolve_event_tag=resolve_event_tag

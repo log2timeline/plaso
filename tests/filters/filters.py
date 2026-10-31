@@ -6,6 +6,7 @@ import unittest
 from plaso.containers import artifacts
 from plaso.containers import events
 from plaso.filters import filters
+from plaso.filters import value_types
 from plaso.lib import definitions
 
 from tests import test_lib as shared_test_lib
@@ -201,6 +202,53 @@ class GenericBinaryOperatorTest(shared_test_lib.BaseTestCase):
         """Tests the __init__ function."""
         filter_object = filters.GenericBinaryOperator(arguments=["test_value", 1])
         self.assertIsNotNone(filter_object)
+
+    def testGetTimestampBounds(self):
+        """Tests the GetTimestampBounds function."""
+        date_time = value_types.DateTimeValueType(1608735600000000)
+
+        filter_object = filters.GreaterThanOperator(arguments=["timestamp", date_time])
+        bounds = filter_object.GetTimestampBounds()
+        self.assertEqual(bounds, (1608735599999999, None))
+
+        filter_object = filters.LessEqualOperator(arguments=["timestamp", date_time])
+        bounds = filter_object.GetTimestampBounds()
+        self.assertEqual(bounds, (None, 1608735600000001))
+
+        filter_object = filters.EqualsOperator(arguments=["timestamp", date_time])
+        bounds = filter_object.GetTimestampBounds()
+        self.assertEqual(bounds, (1608735599999999, 1608735600000001))
+
+        filter_object.FlipBool()
+        bounds = filter_object.GetTimestampBounds()
+        self.assertEqual(bounds, (None, None))
+
+        filter_object = filters.GreaterThanOperator(arguments=["test_value", date_time])
+        bounds = filter_object.GetTimestampBounds()
+        self.assertEqual(bounds, (None, None))
+
+        filter_object = filters.NotEqualsOperator(arguments=["timestamp", date_time])
+        bounds = filter_object.GetTimestampBounds()
+        self.assertEqual(bounds, (None, None))
+
+        lower_filter_object = filters.GreaterThanOperator(
+            arguments=["timestamp", date_time]
+        )
+        upper_filter_object = filters.LessThanOperator(
+            arguments=["timestamp", value_types.DateTimeValueType(1608822000000000)]
+        )
+
+        filter_object = filters.AndFilter(
+            arguments=[lower_filter_object, upper_filter_object]
+        )
+        bounds = filter_object.GetTimestampBounds()
+        self.assertEqual(bounds, (1608735599999999, 1608822000000001))
+
+        filter_object = filters.OrFilter(
+            arguments=[lower_filter_object, upper_filter_object]
+        )
+        bounds = filter_object.GetTimestampBounds()
+        self.assertEqual(bounds, (None, None))
 
     def testGetValue(self):
         """Tests the _GetValue function."""
