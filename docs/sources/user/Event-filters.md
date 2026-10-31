@@ -197,3 +197,7 @@ filename == PATH('/usr/local/bin/ls')
 
 Will match `/usr/local/bin/ls` and `/usr//local/bin/ls`.
 
+## References
+
+* [log2timeline filtering 101](http://blog.kiddaland.net/2012/12/log2timeline-filtering-101.html)
+
