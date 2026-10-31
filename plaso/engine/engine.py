@@ -399,6 +399,9 @@ class BaseEngine:
 
             operating_system = mediator.GetValue("operating_system")
             if not operating_system:
+                # Make sure values found on this volume do not carry over to
+                # the next volume.
+                mediator.Reset()
                 continue
 
             detected_operating_systems.append(operating_system)
@@ -437,7 +440,7 @@ class BaseEngine:
             self.knowledge_base.ReadSystemConfigurationArtifact(
                 system_configurations[0]
             )
-            for environment_variable in system_configuration.environment_variables:
+            for environment_variable in system_configurations[0].environment_variables:
                 self.knowledge_base.AddEnvironmentVariable(environment_variable)
 
         return system_configurations
