@@ -10,15 +10,33 @@ import unittest
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
+from plaso.containers import event_sources
 from plaso.containers import sessions
 from plaso.containers import warnings
 from plaso.lib import definitions
 from plaso.engine import configurations
 from plaso.multi_process import extraction_engine
 from plaso.storage import factory as storage_factory
+from plaso.storage.fake import writer as fake_writer
 from plaso.storage.sqlite import writer as sqlite_writer
 
 from tests import test_lib as shared_test_lib
+
+
+class TestExtractionMultiProcessEngineWithPathSpecsLimit(
+    extraction_engine.ExtractionMultiProcessEngine
+):
+    """Multi-process extraction engine with a small path specifications limit."""
+
+    _MAXIMUM_NUMBER_OF_PATH_SPECS_PER_TASK = 2
+
+
+class TestExtractionMultiProcessEngineWithDataSizeLimit(
+    extraction_engine.ExtractionMultiProcessEngine
+):
+    """Multi-process extraction engine with a small task data size limit."""
+
+    _MAXIMUM_TASK_DATA_SIZE = 1
 
 
 class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
@@ -93,6 +111,143 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
         expected_parsers_counter = collections.Counter({"filestat": 15, "total": 15})
         self.assertEqual(parsers_counter, expected_parsers_counter)
+
+    def _CreateEventSourceHeap(self):
+        """Creates an event source heap with a directory and 3 regular files.
+
+        Returns:
+          _EventSourceHeap: event source heap.
+        """
+        # pylint: disable=protected-access
+        event_source_heap = extraction_engine._EventSourceHeap()
+
+        test_directory_path = self._GetTestFilePath(["testdir"])
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_OS, location=test_directory_path
+        )
+        event_source = event_sources.EventSource(
+            file_entry_type=dfvfs_definitions.FILE_ENTRY_TYPE_DIRECTORY,
+            path_spec=path_spec,
+        )
+        event_source_heap.PushEventSource(event_source)
+
+        for filename in ("filter_1.txt", "filter2.txt", "filter_3.txt"):
+            test_file_path = self._GetTestFilePath(["testdir", filename])
+            path_spec = path_spec_factory.Factory.NewPathSpec(
+                dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
+            )
+            event_source = event_sources.EventSource(
+                file_entry_type=dfvfs_definitions.FILE_ENTRY_TYPE_FILE,
+                path_spec=path_spec,
+            )
+            event_source_heap.PushEventSource(event_source)
+
+        return event_source_heap
+
+    def testCreateTask(self):
+        """Tests the _CreateTask function."""
+        # pylint: disable=protected-access
+        test_directory_path = self._GetTestFilePath(["testdir"])
+        self._SkipIfPathNotExists(test_directory_path)
+
+        session = sessions.Session()
+        storage_writer = fake_writer.FakeStorageWriter()
+        storage_writer.Open()
+
+        test_engine = extraction_engine.ExtractionMultiProcessEngine(
+            number_of_worker_processes=1
+        )
+
+        # A directory event source is not combined with other event sources.
+        event_source_heap = self._CreateEventSourceHeap()
+        event_source = event_source_heap.PopEventSource()
+        task = test_engine._CreateTask(
+            storage_writer,
+            session.identifier,
+            event_source,
+            event_source_heap=event_source_heap,
+        )
+        self.assertIsNotNone(task)
+        self.assertEqual(task.GetPathSpecs(), [event_source.path_spec])
+        self.assertEqual(len(event_source_heap), 3)
+
+        # Regular file event sources are combined into a single task.
+        event_source = event_source_heap.PopEventSource()
+        task = test_engine._CreateTask(
+            storage_writer,
+            session.identifier,
+            event_source,
+            event_source_heap=event_source_heap,
+        )
+        self.assertIsNotNone(task)
+        self.assertEqual(task.path_spec, event_source.path_spec)
+        self.assertEqual(len(task.path_specs), 3)
+        self.assertEqual(len(event_source_heap), 0)
+
+        # Without an event source heap a task contains a single event source.
+        event_source_heap = self._CreateEventSourceHeap()
+        event_source_heap.PopEventSource()
+        event_source = event_source_heap.PopEventSource()
+        task = test_engine._CreateTask(storage_writer, session.identifier, event_source)
+        self.assertIsNotNone(task)
+        self.assertIsNone(task.path_specs)
+        self.assertEqual(len(event_source_heap), 2)
+
+        # The number of path specifications per task is limited.
+        test_engine = TestExtractionMultiProcessEngineWithPathSpecsLimit(
+            number_of_worker_processes=1
+        )
+
+        event_source_heap = self._CreateEventSourceHeap()
+        event_source_heap.PopEventSource()
+        event_source = event_source_heap.PopEventSource()
+        task = test_engine._CreateTask(
+            storage_writer,
+            session.identifier,
+            event_source,
+            event_source_heap=event_source_heap,
+        )
+        self.assertIsNotNone(task)
+        self.assertEqual(len(task.path_specs), 2)
+        self.assertEqual(len(event_source_heap), 1)
+
+        # The size of the data of the regular files per task is limited.
+        test_engine = TestExtractionMultiProcessEngineWithDataSizeLimit(
+            number_of_worker_processes=1
+        )
+
+        event_source_heap = self._CreateEventSourceHeap()
+        event_source_heap.PopEventSource()
+        event_source = event_source_heap.PopEventSource()
+        task = test_engine._CreateTask(
+            storage_writer,
+            session.identifier,
+            event_source,
+            event_source_heap=event_source_heap,
+        )
+        self.assertIsNotNone(task)
+        self.assertIsNone(task.path_specs)
+        self.assertEqual(len(event_source_heap), 2)
+
+        # Event sources are left in the heap for the other worker processes.
+        test_engine = extraction_engine.ExtractionMultiProcessEngine(
+            number_of_worker_processes=4
+        )
+
+        event_source_heap = self._CreateEventSourceHeap()
+        event_source_heap.PopEventSource()
+        event_source = event_source_heap.PopEventSource()
+        task = test_engine._CreateTask(
+            storage_writer,
+            session.identifier,
+            event_source,
+            event_source_heap=event_source_heap,
+        )
+        self.assertIsNotNone(task)
+        self.assertIsNone(task.path_specs)
+        self.assertEqual(len(event_source_heap), 2)
+
+        storage_writer.Close()
 
     def testInternalProcessEventSourcesWithFailedTask(self):
         """Tests the _ProcessEventSources function with a failed task."""

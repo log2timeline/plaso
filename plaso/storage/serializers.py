@@ -91,6 +91,42 @@ class JSONPathSpecAttributeSerializer(acstore_interface.AttributeSerializer):
         return json_dict
 
 
+class JSONPathSpecListAttributeSerializer(acstore_interface.AttributeSerializer):
+    """JSON path specification list attribute serializer."""
+
+    def __init__(self):
+        """Initializes a JSON path specification list attribute serializer."""
+        super().__init__()
+        self._path_spec_serializer = JSONPathSpecAttributeSerializer()
+
+    def DeserializeValue(self, value):
+        """Deserializes a value.
+
+        Args:
+          value (list[dict[str, object]]): serialized value.
+
+        Returns:
+          list[dfvfs.PathSpec]: runtime value.
+        """
+        return [
+            self._path_spec_serializer.DeserializeValue(path_spec_dict)
+            for path_spec_dict in value
+        ]
+
+    def SerializeValue(self, value):
+        """Serializes a value.
+
+        Args:
+          value (list[dfvfs.PathSpec]): runtime value.
+
+        Returns:
+          list[dict[str, object]]: serialized value.
+        """
+        return [
+            self._path_spec_serializer.SerializeValue(path_spec) for path_spec in value
+        ]
+
+
 class JSONValueListAttributeSerializer(acstore_interface.AttributeSerializer):
     """JSON value list attribute serializer."""
 

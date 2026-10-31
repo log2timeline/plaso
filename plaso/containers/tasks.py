@@ -30,7 +30,12 @@ class Task(interface.AttributeContainer):
           a lower value indicates a higher priority to merge.
       number_of_retries (int): number of retry tasks that were created for the original
           task before this one, where 0 indicates the original task.
-      path_spec (dfvfs.PathSpec): path specification.
+      path_spec (dfvfs.PathSpec): path specification, where for a task that
+          processes multiple path specifications this is the first path
+          specification.
+      path_specs (list[dfvfs.PathSpec]): path specifications of a task that
+          processes multiple path specifications, or None if the task only
+          processes path_spec.
       session_identifier (str): the identifier of the session the task is part of.
       start_time (int): time that the task was started. Contains the number
           of micro seconds since January 1, 1970, 00:00:00 UTC.
@@ -50,6 +55,7 @@ class Task(interface.AttributeContainer):
         "merge_priority": "int",
         "number_of_retries": "int",
         "path_spec": "dfvfs.PathSpec",
+        "path_specs": "List[dfvfs.PathSpec]",
         "session_identifier": "str",
         "start_time": "int",
         "storage_file_size": "int",
@@ -73,6 +79,7 @@ class Task(interface.AttributeContainer):
         self.merge_priority = None
         self.number_of_retries = 0
         self.path_spec = None
+        self.path_specs = None
         self.session_identifier = session_identifier
         self.start_time = int(time.time() * definitions.MICROSECONDS_PER_SECOND)
         self.storage_file_size = None
@@ -103,11 +110,46 @@ class Task(interface.AttributeContainer):
         retry_task.file_entry_type = self.file_entry_type
         retry_task.merge_priority = self.merge_priority
         retry_task.path_spec = self.path_spec
+        retry_task.path_specs = self.path_specs
         retry_task.number_of_retries = self.number_of_retries + 1
         retry_task.storage_file_size = self.storage_file_size
         retry_task.storage_format = self.storage_format
 
         return retry_task
+
+    def CreateRetryTasks(self):
+        """Creates new tasks to retry a previously abandoned task.
+
+        A task that processes multiple path specifications is split into one
+        retry task per path specification, so that a path specification that
+        causes the worker to fail does not cause the other path specifications
+        of the task to fail as well.
+
+        Returns:
+          list[Task]: tasks to retry a previously abandoned task.
+        """
+        if not self.path_specs:
+            return [self.CreateRetryTask()]
+
+        retry_tasks = []
+        for path_spec in self.path_specs:
+            retry_task = self.CreateRetryTask()
+            retry_task.path_spec = path_spec
+            retry_task.path_specs = None
+            retry_tasks.append(retry_task)
+
+        return retry_tasks
+
+    def GetPathSpecs(self):
+        """Retrieves the path specifications to process.
+
+        Returns:
+          list[dfvfs.PathSpec]: path specifications to process.
+        """
+        if self.path_specs:
+            return list(self.path_specs)
+
+        return [self.path_spec]
 
     def UpdateProcessingTime(self):
         """Updates the processing time to now."""
