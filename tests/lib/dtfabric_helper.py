@@ -106,6 +106,22 @@ members:
         yaml_definition=_DATA_TYPE_FABRIC_DEFINITION
     )
 
+    def _CreateTestHelper(self, path):
+        """Creates a dtFabric format definition helper for testing.
+
+        Args:
+          path (str): path of the dtFabric definition file.
+
+        Returns:
+          DtFabricHelper: dtFabric format definition helper.
+        """
+        helper_class = type(
+            "TestDtFabricHelper",
+            (dtfabric_helper.DtFabricHelper,),
+            {"_DEFINITION_FILE": path},
+        )
+        return helper_class()
+
     def testFormatPackedIPv4Address(self):
         """Tests the _FormatPackedIPv4Address function."""
         test_helper = dtfabric_helper.DtFabricHelper()
@@ -139,28 +155,54 @@ members:
         )
         self.assertEqual(ip_address, "2001:0db8:0000:0000:0000:ff00:0042:8329")
 
-    def testGetDataTypeMap(self):
-        """Tests the _GetDataTypeMap function."""
-        test_helper = dtfabric_helper.DtFabricHelper()
-
-        with test_lib.TempDirectory() as temporary_directory:
-            path = os.path.join(temporary_directory, "dtfabric.yaml")
+    def testInitialize(self):
+        """Tests the __init__ function."""
+        with test_lib.TempDirectory() as temp_directory:
+            path = os.path.join(temp_directory, "dtfabric.yaml")
             with open(path, "wb") as file_object:
                 file_object.write(self._DATA_TYPE_FABRIC_DEFINITION)
 
-            test_helper._fabric = test_helper._ReadDefinitionFile(path)
+            test_helper = self._CreateTestHelper(path)
+
+        self.assertEqual(test_helper._definition, self._DATA_TYPE_FABRIC_DEFINITION)
+        self.assertIsNone(test_helper._fabric)
+
+        # Test with missing definition file.
+        with test_lib.TempDirectory() as temp_directory:
+            path = os.path.join(temp_directory, "missing.yaml")
+
+            with self.assertRaises(OSError):
+                self._CreateTestHelper(path)
+
+    def testGetDataTypeMap(self):
+        """Tests the _GetDataTypeMap function."""
+        with test_lib.TempDirectory() as temp_directory:
+            path = os.path.join(temp_directory, "dtfabric.yaml")
+            with open(path, "wb") as file_object:
+                file_object.write(self._DATA_TYPE_FABRIC_DEFINITION)
+
+            test_helper = self._CreateTestHelper(path)
 
         data_type_map = test_helper._GetDataTypeMap("point3d")
-        self.assertIsInstance(data_type_map, dtfabric_data_maps.StructureMap)
+        self.assertIsNotNone(data_type_map)
+        self.assertIsNotNone(test_helper._fabric)
 
         point3d = data_type_map.MapByteStream(
             b"\x01\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00"
         )
-        self.assertEqual((point3d.x, point3d.y, point3d.z), (1, 2, 3))
+        self.assertEqual(point3d.x, 1)
+        self.assertEqual(point3d.y, 2)
+        self.assertEqual(point3d.z, 3)
 
-        # Test that the data type map is cached.
-        self.assertIs(test_helper._GetDataTypeMap("point3d"), data_type_map)
+        fabric = test_helper._fabric
+
+        cached_data_type_map = test_helper._GetDataTypeMap("point3d")
+        self.assertIs(cached_data_type_map, data_type_map)
         self.assertIs(test_helper._data_type_maps["point3d"], data_type_map)
+
+        data_type_map = test_helper._GetDataTypeMap("shape3d")
+        self.assertIsNotNone(data_type_map)
+        self.assertIs(test_helper._fabric, fabric)
 
         # Test with an undefined data type.
         data_type_map = test_helper._GetDataTypeMap("bogus")
@@ -194,23 +236,26 @@ members:
         """Tests the _ReadDefinitionFile function."""
         test_helper = dtfabric_helper.DtFabricHelper()
 
-        self.assertIsNone(test_helper._fabric)
-
-        with test_lib.TempDirectory() as temporary_directory:
-            path = os.path.join(temporary_directory, "dtfabric.yaml")
+        with test_lib.TempDirectory() as temp_directory:
+            path = os.path.join(temp_directory, "dtfabric.yaml")
             with open(path, "wb") as file_object:
                 file_object.write(self._DATA_TYPE_FABRIC_DEFINITION)
 
-            fabric = test_helper._ReadDefinitionFile(path)
+            definition = test_helper._ReadDefinitionFile(path)
+            self.assertEqual(definition, self._DATA_TYPE_FABRIC_DEFINITION)
 
-        self.assertIsInstance(fabric, dtfabric_fabric.DataTypeFabric)
+            # Test with missing definition file.
+            path = os.path.join(temp_directory, "missing.yaml")
 
-        data_type_map = fabric.CreateDataTypeMap("shape3d")
-        self.assertIsNotNone(data_type_map)
+            with self.assertRaises(OSError):
+                test_helper._ReadDefinitionFile(path)
 
         # Test without a path.
-        self.assertIsNone(test_helper._ReadDefinitionFile(None))
-        self.assertIsNone(test_helper._ReadDefinitionFile(""))
+        definition = test_helper._ReadDefinitionFile(None)
+        self.assertIsNone(definition)
+
+        definition = test_helper._ReadDefinitionFile("")
+        self.assertIsNone(definition)
 
     def testReadStructureFromByteStream(self):
         """Tests the _ReadStructureFromByteStream function."""
