@@ -1278,7 +1278,58 @@ class DSCFileTest(shared_test_lib.BaseTestCase):
         self.assertEqual(uuids[197].text_size, 36864)
         self.assertEqual(uuids[197].image_path, "/usr/lib/libIOReport.dylib")
 
-    # TODO: add test for GetImageValues
+    def testGetImageValues(self):
+        """Tests the GetImageValues function."""
+        test_file_path = "/private/var/db/uuidtext/dsc/BE7FE6AD45603AE2883E432F78B45062"
+
+        test_path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_APFS,
+            location=test_file_path,
+            parent=self._parent_path_spec,
+        )
+        file_entry = path_spec_resolver.Resolver.OpenFileEntry(test_path_spec)
+
+        test_file = unified_logging.DSCFile()
+        test_file.Open(file_entry)
+
+        try:
+            image_values = test_file.GetImageValues(0x001EBDB8, False)
+            self.assertIsNotNone(image_values)
+            self.assertEqual(
+                image_values.identifier,
+                uuid.UUID("5b14b45b-a15b-31ad-93fb-bac43c001a23"),
+            )
+            self.assertEqual(
+                image_values.path, "/usr/lib/system/libsystem_featureflags.dylib"
+            )
+            self.assertEqual(image_values.string, "FeatureFlags")
+            self.assertEqual(image_values.text_offset, 0x001E9000)
+
+            # Test with a string reference before the first range.
+            image_values = test_file.GetImageValues(0x00000000, False)
+            self.assertIsNotNone(image_values)
+            self.assertIsNone(image_values.identifier)
+            self.assertIsNone(image_values.path)
+            self.assertEqual(
+                image_values.string, "<Invalid shared cache format string offset>"
+            )
+
+            # Test with a string reference after the last range.
+            image_values = test_file.GetImageValues(0xFFFFFFFF, False)
+            self.assertIsNotNone(image_values)
+            self.assertEqual(
+                image_values.string, "<Invalid shared cache format string offset>"
+            )
+
+            # Test with a dynamic string reference after the last text range.
+            image_values = test_file.GetImageValues(0xFFFFFFFF, True)
+            self.assertIsNotNone(image_values)
+            self.assertEqual(
+                image_values.string, "<Invalid shared cache format string offset>"
+            )
+
+        finally:
+            test_file.Close()
 
     def testReadFileObject(self):
         """Tests the ReadFileObject function."""
