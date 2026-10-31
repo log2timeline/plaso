@@ -180,6 +180,30 @@ positional arguments:
         self.assertFalse(test_tool._use_time_slicer)
         self.assertFalse(hasattr(test_tool, "_time_slice"))
 
+    def testParseOptionsWithDateOnlyTimeSlice(self):
+        """Tests the ParseOptions function with a date only time slice."""
+        options = cli_test_lib.TestOptions()
+        options.slice = "2020-06-13"
+        options.slicer = False
+
+        test_tool = tools.CLITool()
+
+        with self.assertLogs("cli", level="WARNING") as log_context:
+            event_filters.EventFiltersArgumentsHelper.ParseOptions(options, test_tool)
+
+        self.assertEqual(len(log_context.output), 1)
+        self.assertIn("does not define a time of day", log_context.output[0])
+
+        # The date only time slice is interpreted as midnight.
+        self.assertEqual(test_tool._time_slice.start_timestamp, 1592006100000000)
+        self.assertEqual(test_tool._time_slice.end_timestamp, 1592006700000000)
+
+        # A date and time must not trigger the warning.
+        options.slice = "2020-06-13T00:00:00"
+
+        with self.assertNoLogs("cli", level="WARNING"):
+            event_filters.EventFiltersArgumentsHelper.ParseOptions(options, test_tool)
+
 
 if __name__ == "__main__":
     unittest.main()
