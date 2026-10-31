@@ -1095,6 +1095,52 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
 
         self.assertEqual(sorted(extracted_files), expected_extracted_files)
 
+    def testProcessSourceExtractWithDirectoryFilter(self):
+        """Tests the ProcessSource function with a filter file on a directory."""
+        test_artifacts_path = self._GetTestFilePath(["artifacts"])
+        self._SkipIfPathNotExists(test_artifacts_path)
+
+        test_file_path = self._GetTestFilePath(["image.qcow2"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
+
+        options = test_lib.TestOptions()
+        options.artifact_definitions_path = test_artifacts_path
+        options.image = test_file_path
+        options.quiet = True
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            filter_file = os.path.join(temp_directory, "filter_file.yaml")
+            with open(filter_file, "wt", encoding="utf-8") as file_object:
+                file_object.write(
+                    "description: Test filter.\n"
+                    "type: include\n"
+                    "paths: ['/a_directory']\n"
+                )
+
+            options.file_filter = filter_file
+            options.path = temp_directory
+
+            test_tool.ParseOptions(options)
+
+            test_tool.ProcessSource()
+
+            expected_extracted_files = sorted(
+                [
+                    os.path.join(temp_directory, "a_directory"),
+                    os.path.join(temp_directory, "a_directory", "another_file"),
+                    os.path.join(temp_directory, "a_directory", "a_file"),
+                    os.path.join(temp_directory, "filter_file.yaml"),
+                    os.path.join(temp_directory, "hashes.json"),
+                ]
+            )
+
+            extracted_files = self._RecursiveList(temp_directory)
+
+        self.assertEqual(sorted(extracted_files), expected_extracted_files)
+
     def testProcessSourceExtractWithArtifactsFilter(self):
         """Tests the ProcessSource function with a artifacts filter file."""
         test_artifacts_path = self._GetTestFilePath(["artifacts"])
