@@ -159,10 +159,13 @@ class EventExtractionWorker:
         self._event_data_extractor = extractors.EventDataExtractor(
             force_parser=force_parser, parser_filter_expression=parser_filter_expression
         )
+        self._excluded_find_specs = []
         self._force_parser = force_parser
         self._hasher_file_size_limit = None
+        self._local_directory_path_specs = []
         self._path_spec_extractor = extractors.PathSpecExtractor()
         self._process_compressed_streams = None
+        self._process_sub_directories_locally = False
         self._processing_profiler = None
 
         self.last_activity_timestamp = 0.0
@@ -791,6 +794,12 @@ class EventExtractionWorker:
                 if file_entry.IsRoot() and sub_file_entry.name == "$OrphanFiles":
                     continue
 
+            if self._ProcessSubDirectoryLocally(file_entry, sub_file_entry):
+                self._local_directory_path_specs.append(sub_file_entry.path_spec)
+
+                self.last_activity_timestamp = time.time()
+                continue
+
             event_source = event_sources.EventSource(
                 file_entry_type=sub_file_entry.entry_type,
                 path_spec=sub_file_entry.path_spec,
@@ -993,6 +1002,36 @@ class EventExtractionWorker:
                 parser_mediator, file_entry, data_stream.name
             )
 
+    def _ProcessSubDirectoryLocally(self, file_entry, sub_file_entry):
+        """Determines if a sub directory should be processed locally.
+
+        Args:
+          file_entry (dfvfs.FileEntry): file entry of the parent directory.
+          sub_file_entry (dfvfs.FileEntry): file entry of the sub directory.
+
+        Returns:
+          bool: True if the sub directory should be returned by
+              PopLocalDirectoryPathSpec instead of being produced as an event
+              source.
+        """
+        if not self._process_sub_directories_locally:
+            return False
+
+        if sub_file_entry.entry_type != dfvfs_definitions.FILE_ENTRY_TYPE_DIRECTORY:
+            return False
+
+        if self._excluded_find_specs:
+            # Excluded sub directories are produced as event sources, so that
+            # they are excluded from extraction in the same way as before.
+            file_system = file_entry.GetFileSystem()
+            for find_spec in self._excluded_find_specs:
+                if find_spec.ComparePathSpecLocation(
+                    sub_file_entry.path_spec, file_system
+                ):
+                    return False
+
+        return True
+
     def _SetArchiveTypes(self, archive_types_string):
         """Sets the archive types.
 
@@ -1045,6 +1084,21 @@ class EventExtractionWorker:
         """
         return [analyzer_instance.NAME for analyzer_instance in self._analyzers]
 
+    def PopLocalDirectoryPathSpec(self):
+        """Pops the path specification of a sub directory to process locally.
+
+        The sub directories are returned in reverse order of discovery, so that
+        a directory tree is processed depth-first.
+
+        Returns:
+          dfvfs.PathSpec: path specification of a sub directory or None if there
+              are no more sub directories to process locally.
+        """
+        if not self._local_directory_path_specs:
+            return None
+
+        return self._local_directory_path_specs.pop()
+
     def ProcessFileEntry(self, parser_mediator, file_entry):
         """Processes a file entry.
 
@@ -1089,6 +1143,22 @@ class EventExtractionWorker:
 
         self.ProcessFileEntry(parser_mediator, file_entry)
 
+    def ProduceLocalDirectoryEventSources(self, parser_mediator):
+        """Produces event sources of sub directories that were not processed.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+        """
+        for path_spec in self._local_directory_path_specs:
+            event_source = event_sources.EventSource(
+                file_entry_type=dfvfs_definitions.FILE_ENTRY_TYPE_DIRECTORY,
+                path_spec=path_spec,
+            )
+            parser_mediator.ProduceEventSource(event_source)
+
+        self._local_directory_path_specs = []
+
     # TODO: move the functionality of this method into the constructor.
     def SetExtractionConfiguration(self, configuration):
         """Sets the extraction configuration settings.
@@ -1109,6 +1179,27 @@ class EventExtractionWorker:
           analyzers_profiler (AnalyzersProfiler): analyzers profile.
         """
         self._analyzers_profiler = analyzers_profiler
+
+    def SetLocalDirectoryProcessing(
+        self, process_sub_directories_locally, excluded_find_specs=None
+    ):
+        """Sets the local processing of sub directories.
+
+        When enabled, the sub directories of a directory are not produced as
+        event sources, but returned by PopLocalDirectoryPathSpec, so that they can
+        be processed without a round trip via storage, and any that were not
+        processed are produced by ProduceLocalDirectoryEventSources.
+
+        Args:
+          process_sub_directories_locally (bool): True if sub directories should
+              be processed locally.
+          excluded_find_specs (Optional[list[dfvfs.FindSpec]]): find
+              specifications of file system paths that are excluded from
+              extraction, where matching sub directories are produced as event
+              sources.
+        """
+        self._excluded_find_specs = excluded_find_specs or []
+        self._process_sub_directories_locally = process_sub_directories_locally
 
     def SetProcessingProfiler(self, processing_profiler):
         """Sets the processing profiler.
