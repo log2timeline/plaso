@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for the PuTTY Windows Registry plugins."""
+"""Tests for the PuTTY Windows Registry plugin."""
 
 import unittest
 
@@ -130,7 +130,6 @@ class PuTTYSessionsPluginTest(test_lib.RegistryPluginTestCase):
 
         expected_event_values = {
             "data_type": "windows:registry:putty:session",
-            "remote_hostname": None,
             "key_path": (
                 "HKEY_CURRENT_USER\\Software\\SimonTatham\\PuTTY\\Sessions\\"
                 "Default%20Settings"
@@ -139,15 +138,16 @@ class PuTTYSessionsPluginTest(test_lib.RegistryPluginTestCase):
             "port_number": 22,
             "protocol": "ssh",
             "public_key_file": None,
+            "remote_hostname": None,
             "session_name": "Default Settings",
             "username": None,
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
+        self.assertFalse(getattr(event_data, "_corrupted"))
 
         expected_event_values = {
             "data_type": "windows:registry:putty:session",
-            "remote_hostname": "192.168.1.10",
             "key_path": (
                 "HKEY_CURRENT_USER\\Software\\SimonTatham\\PuTTY\\Sessions\\"
                 "web%20server"
@@ -156,59 +156,39 @@ class PuTTYSessionsPluginTest(test_lib.RegistryPluginTestCase):
             "port_number": 2222,
             "protocol": "ssh",
             "public_key_file": "C:\\Users\\john\\Documents\\web.ppk",
+            "remote_hostname": "192.168.1.10",
             "session_name": "web server",
             "username": "admin",
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
+        self.assertFalse(getattr(event_data, "_corrupted"))
 
-
-class PuTTYSSHHostKeysPluginTest(test_lib.RegistryPluginTestCase):
-    """Tests for the PuTTY SSH host keys Windows Registry plugin."""
-
-    def _CreateTestKey(self):
-        """Creates PuTTY SSH host keys Registry keys and values for testing.
-
-        Returns:
-          dfwinreg.WinRegistryKey: a Windows Registry key.
-        """
+    def testProcessWithUnsupportedValueDataType(self):
+        """Tests the Process function with values of an unsupported data type."""
         filetime = dfdatetime_filetime.Filetime()
-        filetime.CopyFromDateTimeString("2026-10-20 08:13:02.654321")
+        filetime.CopyFromDateTimeString("2026-10-20 08:12:44.123456")
         registry_key = dfwinreg_fake.FakeWinRegistryKey(
-            "SshHostKeys",
+            "Sessions",
             key_path_prefix="HKEY_CURRENT_USER",
             last_written_time=filetime.timestamp,
-            offset=4096,
-            relative_key_path="Software\\SimonTatham\\PuTTY\\SshHostKeys",
+            offset=1024,
+            relative_key_path="Software\\SimonTatham\\PuTTY\\Sessions",
         )
 
-        for value_name, value_string in (
-            ("ssh-ed25519@2222:192.168.1.10", "0x3b0a6e1d,0x5f2c9a4e"),
-            ("rsa2@22:git.example.com", "0x10001,0xc4b2e7f1"),
-        ):
-            registry_value = dfwinreg_fake.FakeWinRegistryValue(
-                value_name,
-                data=value_string.encode("utf_16_le"),
-                data_type=dfwinreg_definitions.REG_SZ,
-            )
-            registry_key.AddValue(registry_value)
-
-        return registry_key
-
-    def testFilters(self):
-        """Tests the FILTERS class attribute."""
-        plugin = putty.PuTTYSSHHostKeysPlugin()
-
-        self._AssertFiltersOnKeyPath(
-            plugin, "HKEY_CURRENT_USER", "Software\\SimonTatham\\PuTTY\\SshHostKeys"
+        subkey = self._CreateSessionSubkey(
+            "server",
+            "2026-10-20 08:12:44.123456",
+            2048,
+            [
+                ("HostName", dfwinreg_definitions.REG_DWORD_LITTLE_ENDIAN, 1),
+                ("PortNumber", dfwinreg_definitions.REG_SZ, "22"),
+                ("Protocol", dfwinreg_definitions.REG_SZ, "ssh"),
+            ],
         )
-        self._AssertNotFiltersOnKeyPath(plugin, "HKEY_LOCAL_MACHINE", "Bogus")
+        registry_key.AddSubkey(subkey.name, subkey)
 
-    def testProcess(self):
-        """Tests the Process function."""
-        registry_key = self._CreateTestKey()
-
-        plugin = putty.PuTTYSSHHostKeysPlugin()
+        plugin = putty.PuTTYSessionsPlugin()
         storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
@@ -216,24 +196,35 @@ class PuTTYSSHHostKeysPluginTest(test_lib.RegistryPluginTestCase):
         )
         self.assertEqual(number_of_event_data, 1)
 
-        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-            "extraction_warning"
+        extraction_warnings = list(
+            storage_writer.GetAttributeContainers("extraction_warning")
         )
-        self.assertEqual(number_of_warnings, 0)
+        self.assertEqual(len(extraction_warnings), 2)
 
-        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-            "recovery_warning"
+        expected_message = (
+            "unsupported data type of value: PortNumber in key: "
+            "HKEY_CURRENT_USER\\Software\\SimonTatham\\PuTTY\\Sessions\\server, "
+            "expected integer"
         )
-        self.assertEqual(number_of_warnings, 0)
+        self.assertEqual(extraction_warnings[0].message, expected_message)
+
+        expected_message = (
+            "unsupported data type of value: HostName in key: "
+            "HKEY_CURRENT_USER\\Software\\SimonTatham\\PuTTY\\Sessions\\server, "
+            "expected string"
+        )
+        self.assertEqual(extraction_warnings[1].message, expected_message)
 
         expected_event_values = {
-            "data_type": "windows:registry:putty:ssh_host_keys",
-            "entries": ("ssh-ed25519@2222:192.168.1.10 rsa2@22:git.example.com"),
-            "key_path": "HKEY_CURRENT_USER\\Software\\SimonTatham\\PuTTY\\SshHostKeys",
-            "last_written_time": "2026-10-20T08:13:02.6543210+00:00",
+            "data_type": "windows:registry:putty:session",
+            "port_number": None,
+            "protocol": "ssh",
+            "remote_hostname": None,
+            "session_name": "server",
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
+        self.assertTrue(getattr(event_data, "_corrupted"))
 
 
 if __name__ == "__main__":

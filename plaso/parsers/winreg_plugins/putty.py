@@ -1,4 +1,4 @@
-"""This file contains the PuTTY Windows Registry plugins."""
+"""This file contains the PuTTY Windows Registry plugin."""
 
 import urllib.parse
 
@@ -11,7 +11,6 @@ class PuTTYSessionEventData(events.EventData):
     """PuTTY saved session event data attribute container.
 
     Attributes:
-      remote_hostname (str): host name or IP address of the remote host.
       key_path (str): Windows Registry key path.
       last_written_time (dfdatetime.DateTimeValues): entry last written date and
           time.
@@ -19,6 +18,7 @@ class PuTTYSessionEventData(events.EventData):
       protocol (str): connection protocol, such as "ssh", "telnet" or "serial".
       public_key_file (str): path of the private key file used for
           authentication.
+      remote_hostname (str): host name or IP address of the remote host.
       session_name (str): name of the saved session.
       username (str): user name used to log in to the remote host.
     """
@@ -28,34 +28,14 @@ class PuTTYSessionEventData(events.EventData):
     def __init__(self):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
-        self.remote_hostname = None
         self.key_path = None
         self.last_written_time = None
         self.port_number = None
         self.protocol = None
         self.public_key_file = None
+        self.remote_hostname = None
         self.session_name = None
         self.username = None
-
-
-class PuTTYSSHHostKeysEventData(events.EventData):
-    """PuTTY SSH host keys event data attribute container.
-
-    Attributes:
-      entries (str): SSH host key entries, in the form "key_type@port:host".
-      key_path (str): Windows Registry key path.
-      last_written_time (dfdatetime.DateTimeValues): entry last written date and
-          time.
-    """
-
-    DATA_TYPE = "windows:registry:putty:ssh_host_keys"
-
-    def __init__(self):
-        """Initializes event data."""
-        super().__init__(data_type=self.DATA_TYPE)
-        self.entries = None
-        self.key_path = None
-        self.last_written_time = None
 
 
 class PuTTYSessionsPlugin(interface.WindowsRegistryPlugin):
@@ -72,25 +52,58 @@ class PuTTYSessionsPlugin(interface.WindowsRegistryPlugin):
         ]
     )
 
-    def _GetStringValueFromKey(self, registry_key, value_name):
-        """Retrieves a string value from the Windows Registry key.
+    def _GetIntegerValueFromKey(self, parser_mediator, registry_key, value_name):
+        """Retrieves an integer value from the Windows Registry key.
 
         Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
           registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
           value_name (str): name of the value to retrieve.
 
         Returns:
-          str: value string or None if not available or empty.
+          tuple[int, bool]: value integer or None if not available, and True if
+              the value is not an integer.
         """
         registry_value = registry_key.GetValueByName(value_name)
-        if (
-            not registry_value
-            or not registry_value.data
-            or not registry_value.DataIsString()
-        ):
-            return None
+        if not registry_value:
+            return None, False
 
-        return registry_value.GetDataAsObject() or None
+        if not registry_value.DataIsInteger():
+            parser_mediator.ProduceWarning(
+                f"unsupported data type of value: {value_name:s} in key: "
+                f"{registry_key.path:s}, expected integer"
+            )
+            return None, True
+
+        return registry_value.GetDataAsObject(), False
+
+    def _GetStringValueFromKey(self, parser_mediator, registry_key, value_name):
+        """Retrieves a string value from the Windows Registry key.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
+          value_name (str): name of the value to retrieve.
+
+        Returns:
+          tuple[str, bool]: value string or None if not available or empty, and
+              True if the value is not a string.
+        """
+        registry_value = registry_key.GetValueByName(value_name)
+        if not registry_value:
+            return None, False
+
+        if not registry_value.DataIsString():
+            parser_mediator.ProduceWarning(
+                f"unsupported data type of value: {value_name:s} in key: "
+                f"{registry_key.path:s}, expected string"
+            )
+            return None, True
+
+        # PuTTY stores values that are not set as an empty string.
+        return registry_value.GetDataAsObject() or None, False
 
     def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
         """Extracts events from a PuTTY saved sessions Windows Registry key.
@@ -101,66 +114,42 @@ class PuTTYSessionsPlugin(interface.WindowsRegistryPlugin):
           registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
         """
         for subkey in registry_key.GetSubkeys():
-            port_number = None
-            registry_value = subkey.GetValueByName("PortNumber")
-            if registry_value and registry_value.DataIsInteger():
-                port_number = registry_value.GetDataAsObject()
+            port_number, port_number_corrupted = self._GetIntegerValueFromKey(
+                parser_mediator, subkey, "PortNumber"
+            )
+            protocol, protocol_corrupted = self._GetStringValueFromKey(
+                parser_mediator, subkey, "Protocol"
+            )
+            public_key_file, public_key_file_corrupted = self._GetStringValueFromKey(
+                parser_mediator, subkey, "PublicKeyFile"
+            )
+            remote_hostname, remote_hostname_corrupted = self._GetStringValueFromKey(
+                parser_mediator, subkey, "HostName"
+            )
+            username, username_corrupted = self._GetStringValueFromKey(
+                parser_mediator, subkey, "UserName"
+            )
 
             event_data = PuTTYSessionEventData()
-            event_data.remote_hostname = self._GetStringValueFromKey(subkey, "HostName")
             event_data.key_path = subkey.path
             event_data.last_written_time = subkey.last_written_time
             event_data.port_number = port_number
-            event_data.protocol = self._GetStringValueFromKey(subkey, "Protocol")
-            event_data.public_key_file = self._GetStringValueFromKey(
-                subkey, "PublicKeyFile"
-            )
+            event_data.protocol = protocol
+            event_data.public_key_file = public_key_file
+            event_data.remote_hostname = remote_hostname
             # PuTTY stores the session name with special characters, such as
             # space, percent-encoded, for example "Default%20Settings".
             event_data.session_name = urllib.parse.unquote(subkey.name)
-            event_data.username = self._GetStringValueFromKey(subkey, "UserName")
+            event_data.username = username
 
-            parser_mediator.ProduceEventData(event_data)
-
-
-class PuTTYSSHHostKeysPlugin(interface.WindowsRegistryPlugin):
-    """Windows Registry plugin for PuTTY SSH host keys keys."""
-
-    NAME = "putty_ssh_host_keys"
-    DATA_FORMAT = "PuTTY SSH host keys Registry data"
-
-    FILTERS = frozenset(
-        [
-            interface.WindowsRegistryKeyPathFilter(
-                "HKEY_CURRENT_USER\\Software\\SimonTatham\\PuTTY\\SshHostKeys"
+            corrupted = (
+                port_number_corrupted
+                or protocol_corrupted
+                or public_key_file_corrupted
+                or remote_hostname_corrupted
+                or username_corrupted
             )
-        ]
-    )
-
-    def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
-        """Extracts events from a PuTTY SSH host keys Windows Registry key.
-
-        Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
-          registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
-        """
-        # The value name is in the form "key_type@port:host", for example
-        # "ssh-ed25519@22:192.168.1.10". The value data contains the host key
-        # itself and is not included.
-        entries = [
-            registry_value.name
-            for registry_value in registry_key.GetValues()
-            if registry_value.name
-        ]
-
-        event_data = PuTTYSSHHostKeysEventData()
-        event_data.entries = " ".join(entries) or None
-        event_data.key_path = registry_key.path
-        event_data.last_written_time = registry_key.last_written_time
-
-        parser_mediator.ProduceEventData(event_data)
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
 
 winreg_parser.WinRegistryParser.RegisterPlugin(PuTTYSessionsPlugin)
-winreg_parser.WinRegistryParser.RegisterPlugin(PuTTYSSHHostKeysPlugin)

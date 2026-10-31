@@ -681,13 +681,6 @@ short_message:
 short_source: 'REG'
 source: 'PuTTY Session Registry Key'
 ---
-type: 'basic'
-data_type: 'windows:registry:putty:ssh_host_keys'
-message: '[{key_path}] {entries}'
-short_message: '[{key_path}] {entries}'
-short_source: 'REG'
-source: 'PuTTY SSH Host Keys Registry Key'
----
 type: 'conditional'
 data_type: 'windows:registry:run'
 message:
