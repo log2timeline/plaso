@@ -56,7 +56,7 @@ Can you run the tests successfully?
 $ python run_tests.py
 ...
 ----------------------------------------------------------------------
-Ran 585 tests in 66.530s
+Ran ... tests in ...s
 
 OK
 ```
@@ -64,12 +64,17 @@ OK
 If an error occurs when processing a storage media image try to run with the
 storage image media file and/or the file system directly mounted. Mounting the
 storage image media file will bypass libraries (modules) supporting the storage
-image media format. Running [source_analyzer.py](https://github.com/open-source-dfir/dfvfs-snippets/blob/main/scripts/source_analyzer.py)
-can help pinpointing the issue, e.g.
+image media format. Running [source_analyzer.py](https://github.com/open-source-dfir/dfvfs-snippets/blob/main/scripts/source_analyzer.py),
+which is part of [dfvfs-snippets](https://github.com/open-source-dfir/dfvfs-snippets)
+and not of Plaso, can help pinpointing the issue. From a checkout of
+dfvfs-snippets run, e.g.
 
 ```bash
-PYTHONPATH=. python scripts/source_analyzer.py --no-auto-recurse
+PYTHONPATH=. python scripts/source_analyzer.py --no-auto-recurse image.raw
 ```
+
+Where image.raw is the source, such as a storage media image, a device or a
+directory.
 
 Try:
 
@@ -99,12 +104,8 @@ It sometimes happen that the tests fail with an import error e.g.
 ImportError: Failed to import test module:
 plaso.parsers.winreg_plugins.shutdown_test
 Traceback (most recent call last):
-  File "/usr/lib64/python3.7/unittest/loader.py", line 254, in _find_tests
-    module = self._get_module_from_name(name)
-  File "/usr/lib64/python3.7/unittest/loader.py", line 232, in
-_get_module_from_name
-    __import__(name)
-  File "./plaso/parsers/__init__.py", line 4, in <module>
+  ...
+  File "./plaso/parsers/__init__.py", line ..., in <module>
     from plaso.parsers import asl
 ImportError: cannot import name asl
 ```
@@ -137,8 +138,11 @@ worker segfault (SIGSEGV).
 
 As part of the 1.3 pre-release bug hunting a SIGSEGV signal handler was added
 however this process turned out, as expected, unreliable. However it added an
-interesting side effect that is very useful for debugging. If the SIGSEGV
-signal handler is enable the worker process typically remains in the "running"
+interesting side effect that is very useful for debugging. The SIGSEGV signal
+handler is disabled by default and can be enabled with
+`log2timeline.py --sigsegv_handler ...`. Note that this functionality is
+experimental and primarily intended for debugging purposes. If the SIGSEGV
+signal handler is enabled the worker process typically remains in the "running"
 state but stops producing event object. What happens under the hood is that the
 SIGSEGV signal is caught but the worker is unable to cleanly terminate. Because
 of this "frozen" state of the worker it is very easy to attach a debugger e.g.
@@ -216,7 +220,7 @@ First make sure you have the debug symbols installed.
 Then run Plaso as a single process with gdb:
 
 ```bash
-gdb --ex r --args log2timeline.py --single-process -d docs/sources/Troubleshooting.md --storage-file timeline.plaso file_that_crashes_the_tool
+gdb --ex r --args python3 $(which log2timeline.py) --single-process -d --storage-file timeline.plaso file_that_crashes_the_tool
 ```
 
 To generate a back trace:
@@ -266,9 +270,9 @@ instructional for [troubleshooting Plaso memory issues](http://blog.kiddaland.ne
 ### PyParsing errors
 
 MacOS bundles its own version of PyParsing that is older than the version
-required by Plaso. Fix this by using the special wrapper scripts
-(log2timeline**.sh**, et. al.), or if you don't want to do that, manipulate
-PYTHONPATH so that the newer version is loaded. This is detailed on the
+required by Plaso. Fix this by installing Plaso and its dependencies in a
+virtualenv, so that the newer version is loaded instead of the bundled one.
+This is detailed on the
 [MacOS development page](developer/Developing-MacOS.md).
 
 ### ImportError: cannot import name dependencies
@@ -276,7 +280,7 @@ PYTHONPATH so that the newer version is loaded. This is detailed on the
 There can be numerous reasons for imports to fail on MacOS here we describe
 some of the more common ones encountered:
 
-* clashing versions; you have multiple clashing versions installed on your system check the Python site-packages paths such as: `/Library/Python/2.7/site-packages/`, `/usr/local/lib/python2.7/site-packages/`.
+* clashing versions; you have multiple clashing versions installed on your system check the Python site-packages paths, which you can list with: `python3 -m site`.
 * you used `pip` without `virtualenv` and have messed up your site-packages
 
 ### You used `pip` without `virtualenv` and have messed up your site-packages
