@@ -3,13 +3,61 @@
 
 import unittest
 
+import pyparsing
+
 from dfvfs.file_io import fake_file_io
 from dfvfs.path import fake_path_spec
 from dfvfs.resolver import context as dfvfs_context
 
+from plaso.lib import errors
 from plaso.parsers import text_parser
+from plaso.parsers.text_plugins import interface as text_plugins_interface
 
 from tests.parsers import test_lib
+
+
+class TestTextPlugin(text_plugins_interface.TextPlugin):
+    """Text plugin that records the text it was asked to check."""
+
+    NAME = "test_text_plugin"
+    DATA_FORMAT = "Test text log file"
+
+    ENCODING = "utf-8"
+
+    _LINE_STRUCTURES = [("line", pyparsing.rest_of_line())]
+
+    checked_lines = []
+
+    def _ParseRecord(self, parser_mediator, key, structure):
+        """Parses a pyparsing structure.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          key (str): name of the parsed structure.
+          structure (pyparsing.ParseResults): tokens from a parsed log line.
+        """
+        return
+
+    def CheckRequiredFormat(self, parser_mediator, text_reader):
+        """Check if the log record has the minimal structure required by the plugin.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          text_reader (EncodedTextReader): text reader.
+
+        Returns:
+          bool: True if this is the correct plugin, False otherwise.
+        """
+        self.checked_lines.append((self.NAME, text_reader.lines))
+        return False
+
+
+class OtherTestTextPlugin(TestTextPlugin):
+    """Other text plugin that records the text it was asked to check."""
+
+    NAME = "other_test_text_plugin"
 
 
 class EncodedTextReaderTest(test_lib.ParserTestCase):
@@ -168,7 +216,44 @@ class TextLogParserTest(test_lib.ParserTestCase):
         parser.EnablePlugins(["apache_access"])
         self.assertEqual(len(parser._plugins_per_name), 1)
 
-    # TODO: add tests for ParseFileObject
+    def testParseFileObject(self):
+        """Tests the ParseFileObject function."""
+        text_parser.TextLogParser.RegisterPlugins([TestTextPlugin, OtherTestTextPlugin])
+
+        try:
+            parser = text_parser.TextLogParser()
+            parser.EnablePlugins([TestTextPlugin.NAME, OtherTestTextPlugin.NAME])
+
+            storage_writer = self._CreateStorageWriter()
+            parser_mediator = self._CreateParserMediator(storage_writer)
+
+            # Text that can be decoded is checked by every plugin.
+            TestTextPlugin.checked_lines = []
+            file_object = self._CreateFileObject("text.log", b"Text log line\n")
+
+            with self.assertRaises(errors.WrongParser):
+                parser.ParseFileObject(parser_mediator, file_object)
+
+            self.assertEqual(
+                TestTextPlugin.checked_lines,
+                [
+                    (TestTextPlugin.NAME, "Text log line\n"),
+                    (OtherTestTextPlugin.NAME, "Text log line\n"),
+                ],
+            )
+
+            # Data that cannot be decoded is not checked by any plugin.
+            TestTextPlugin.checked_lines = []
+            file_object = self._CreateFileObject("binary.log", b"Text\xff\xfelog\n")
+
+            with self.assertRaises(errors.WrongParser):
+                parser.ParseFileObject(parser_mediator, file_object)
+
+            self.assertEqual(TestTextPlugin.checked_lines, [])
+
+        finally:
+            text_parser.TextLogParser.DeregisterPlugin(OtherTestTextPlugin)
+            text_parser.TextLogParser.DeregisterPlugin(TestTextPlugin)
 
 
 if __name__ == "__main__":
