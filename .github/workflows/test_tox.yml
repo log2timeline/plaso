@@ -2,7 +2,7 @@
 name: test_tox
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 on:
   pull_request:
   push:
@@ -28,9 +28,9 @@ jobs:
         - python-version: '3.15'
           toxenv: 'py315'
     container:
-      image: ubuntu:26.04
+      image: ubuntu@sha256:6a06111c3b0a8600feadb270aec771dc239bf407b25625f93f44ab00e11f4d3c # 26.04
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         persist-credentials: false
     - name: Set up container
@@ -63,9 +63,9 @@ jobs:
       matrix:
         python-version: ['3.14']
     container:
-      image: ubuntu:26.04
+      image: ubuntu@sha256:6a06111c3b0a8600feadb270aec771dc239bf407b25625f93f44ab00e11f4d3c # 26.04
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         persist-credentials: false
     - name: Set up container
@@ -92,6 +92,6 @@ jobs:
       run: |
         tox -e coverage
     - name: Upload coverage report to Codecov
-      uses: codecov/codecov-action@v6
+      uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
