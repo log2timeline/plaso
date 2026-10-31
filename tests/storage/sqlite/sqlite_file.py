@@ -41,6 +41,12 @@ class _TestSQLiteStorageFileV20221023(sqlite_file.SQLiteStorageFile):
     _READ_COMPATIBLE_FORMAT_VERSION = 20211121
 
 
+class _TestSQLiteStorageFileWithoutInMemorySize(sqlite_file.SQLiteStorageFile):
+    """Test class for testing moving an in-memory database to file."""
+
+    _MAXIMUM_IN_MEMORY_SIZE = 0
+
+
 class _TestSQLiteStorageFileV20221023Upgrade(sqlite_file.SQLiteStorageFile):
     """Test class for testing format version upgrades."""
 
@@ -846,6 +852,74 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
             finally:
                 test_store.Close()
 
+    def testMoveInMemoryDatabaseToFile(self):
+        """Tests the _MoveInMemoryDatabaseToFile function."""
+        with shared_test_lib.TempDirectory() as temp_directory:
+            test_path = os.path.join(temp_directory, "plaso.sqlite")
+            test_store = _TestSQLiteStorageFileWithoutInMemorySize()
+            test_store.Open(path=test_path, read_only=False, in_memory=True)
+
+            try:
+                self.assertFalse(os.path.exists(test_path))
+
+                for md5_hash in ("8f0bf95a7959baad9666b21a7feed79d", None):
+                    event_data_stream = events.EventDataStream()
+                    event_data_stream.md5_hash = md5_hash
+                    test_store.AddAttributeContainer(event_data_stream)
+
+                # The in-memory database exceeds the maximum in-memory size when
+                # the cached attribute containers are written.
+                test_store._Flush()
+
+                self.assertIsNone(test_store._in_memory_path)
+                self.assertTrue(os.path.exists(test_path))
+
+                event_data_stream = events.EventDataStream()
+                test_store.AddAttributeContainer(event_data_stream)
+
+            finally:
+                test_store.Close()
+
+            test_store = sqlite_file.SQLiteStorageFile()
+            test_store.Open(path=test_path, read_only=True)
+
+            try:
+                containers = list(
+                    test_store.GetAttributeContainers(event_data_stream.CONTAINER_TYPE)
+                )
+                self.assertEqual(len(containers), 3)
+                self.assertEqual(
+                    containers[0].md5_hash, "8f0bf95a7959baad9666b21a7feed79d"
+                )
+
+            finally:
+                test_store.Close()
+
+            # The in-memory database exceeds the maximum in-memory size when the
+            # cached attribute containers are written on close.
+            test_path = os.path.join(temp_directory, "plaso2.sqlite")
+            test_store = _TestSQLiteStorageFileWithoutInMemorySize()
+            test_store.Open(path=test_path, read_only=False, in_memory=True)
+
+            try:
+                for _ in range(2):
+                    test_store.AddAttributeContainer(events.EventDataStream())
+
+            finally:
+                test_store.Close()
+
+            test_store = sqlite_file.SQLiteStorageFile()
+            test_store.Open(path=test_path, read_only=True)
+
+            try:
+                number_of_containers = test_store.GetNumberOfAttributeContainers(
+                    event_data_stream.CONTAINER_TYPE
+                )
+                self.assertEqual(number_of_containers, 2)
+
+            finally:
+                test_store.Close()
+
     def testGetSortedEvents(self):
         """Tests the GetSortedEvents function."""
         with shared_test_lib.TempDirectory() as temp_directory:
@@ -947,6 +1021,76 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
                     event_data_stream.CONTAINER_TYPE
                 )
                 self.assertEqual(number_of_containers, 1)
+
+            finally:
+                test_store.Close()
+
+    def testOpenCloseInMemory(self):
+        """Tests the Open and Close functions with an in-memory database."""
+        event_data_stream = events.EventDataStream()
+        event_data_stream.md5_hash = "8f0bf95a7959baad9666b21a7feed79d"
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            test_path = os.path.join(temp_directory, "plaso.sqlite")
+            test_store = sqlite_file.SQLiteStorageFile()
+            test_store.Open(path=test_path, read_only=False, in_memory=True)
+
+            try:
+                test_store.AddAttributeContainer(event_data_stream)
+
+                event_data_stream.sha256_hash = (
+                    "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                )
+                test_store.UpdateAttributeContainer(event_data_stream)
+
+                # The in-memory database is only written to the storage file on
+                # close.
+                self.assertFalse(os.path.exists(test_path))
+
+            finally:
+                test_store.Close()
+
+            self.assertTrue(os.path.exists(test_path))
+
+            test_store = sqlite_file.SQLiteStorageFile()
+            test_store.Open(path=test_path, read_only=True)
+
+            try:
+                containers = list(
+                    test_store.GetAttributeContainers(event_data_stream.CONTAINER_TYPE)
+                )
+                self.assertEqual(len(containers), 1)
+                self.assertEqual(
+                    containers[0].md5_hash, "8f0bf95a7959baad9666b21a7feed79d"
+                )
+                self.assertEqual(
+                    containers[0].sha256_hash,
+                    "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                )
+
+            finally:
+                test_store.Close()
+
+            # An existing storage file is opened instead of an in-memory database.
+            test_store = sqlite_file.SQLiteStorageFile()
+            test_store.Open(path=test_path, read_only=False, in_memory=True)
+
+            try:
+                self.assertIsNone(test_store._in_memory_path)
+
+                test_store.AddAttributeContainer(events.EventDataStream())
+
+            finally:
+                test_store.Close()
+
+            test_store = sqlite_file.SQLiteStorageFile()
+            test_store.Open(path=test_path, read_only=True)
+
+            try:
+                number_of_containers = test_store.GetNumberOfAttributeContainers(
+                    event_data_stream.CONTAINER_TYPE
+                )
+                self.assertEqual(number_of_containers, 2)
 
             finally:
                 test_store.Close()

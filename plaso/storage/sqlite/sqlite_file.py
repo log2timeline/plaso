@@ -2,6 +2,7 @@
 
 import ast
 import json
+import os
 import sqlite3
 import zlib
 
@@ -38,9 +39,14 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
     _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
     _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
 
+    # Maximum size, in bytes, of a database that is kept in memory, before it
+    # is moved to the storage file.
+    _MAXIMUM_IN_MEMORY_SIZE = 64 * 1024 * 1024
+
     def __init__(self):
         """Initializes a SQLite-based storage file."""
         super().__init__()
+        self._in_memory_path = None
         self._serializer = json_serializer.JSONAttributeContainerSerializer
         self._serializers_profiler = None
 
@@ -185,6 +191,58 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
 
         return container
 
+    def _FlushWriteCache(self, container_type, write_cache):
+        """Flushes attribute container values cached for writing.
+
+        Args:
+          container_type (str): attribute container type.
+          write_cache (list[tuple[str]]): cached attribute container values.
+
+        Raises:
+          IOError: when there is an error querying the attribute container store.
+          OSError: when there is an error querying the attribute container store.
+        """
+        super()._FlushWriteCache(container_type, write_cache)
+
+        if self._in_memory_path:
+            page_count = self._connection.execute("PRAGMA page_count").fetchone()[0]
+            page_size = self._connection.execute("PRAGMA page_size").fetchone()[0]
+
+            if page_count * page_size > self._MAXIMUM_IN_MEMORY_SIZE:
+                self._MoveInMemoryDatabaseToFile()
+
+    def _MoveInMemoryDatabaseToFile(self):
+        """Moves the in-memory database to the storage file.
+
+        Raises:
+          OSError: when there is an error querying the attribute container store.
+        """
+        self._connection.commit()
+
+        try:
+            connection = sqlite3.connect(
+                self._in_memory_path,
+                detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES,
+                isolation_level="DEFERRED",
+            )
+            # Use the same settings as for a store that is opened from file.
+            connection.execute("PRAGMA journal_mode=MEMORY")
+            connection.execute("PRAGMA synchronous=OFF")
+
+            self._connection.backup(connection)
+
+        except (sqlite3.InterfaceError, sqlite3.OperationalError) as exception:
+            raise OSError(
+                f"Unable to write in-memory database to: {self._in_memory_path:s} "
+                f"with error: {exception!s}"
+            )
+
+        self._connection.close()
+
+        self._connection = connection
+        self._cursor = connection.cursor()
+        self._in_memory_path = None
+
     def _ReadAndCheckStorageMetadata(self, check_readable_only=False):
         """Reads storage metadata and checks that the values are valid.
 
@@ -324,6 +382,43 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
             )
             self._CacheAttributeContainerByIndex(container, next_sequence_number - 1)
 
+    def Close(self):
+        """Closes the file.
+
+        An in-memory database is written to the storage file on close.
+
+        Raises:
+          IOError: if the attribute container store is already closed.
+          OSError: if the attribute container store is already closed or when
+              there is an error writing the in-memory database.
+        """
+        if self._is_open and self._connection and self._in_memory_path:
+            # Note that flushing can move the in-memory database to file.
+            self._Flush()
+
+        if self._in_memory_path:
+            serialize = getattr(self._connection, "serialize", None)
+            if serialize:
+                # Writing the serialized in-memory database is faster than
+                # sqlite3.Connection.backup(), which is available before Python
+                # 3.11.
+                try:
+                    with open(self._in_memory_path, "wb") as file_object:
+                        file_object.write(serialize())
+
+                except (OSError, sqlite3.OperationalError) as exception:
+                    raise OSError(
+                        f"Unable to write in-memory database to: "
+                        f"{self._in_memory_path:s} with error: {exception!s}"
+                    )
+
+                self._in_memory_path = None
+
+            else:
+                self._MoveInMemoryDatabaseToFile()
+
+        super().Close()
+
     def GetAttributeContainerByIndex(self, container_type, index):
         """Retrieves a specific attribute container.
 
@@ -450,6 +545,53 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
             filter_expression=filter_expression,
             order_by="timestamp",
         )
+
+    # pylint: disable=arguments-differ
+    def Open(self, path=None, read_only=True, in_memory=False, **kwargs):
+        """Opens the store.
+
+        Args:
+          path (Optional[str]): path to the attribute container store.
+          read_only (Optional[bool]): True if the file should be opened in
+              read-only mode.
+          in_memory (Optional[bool]): True if a new store should be kept in memory
+              and only be written to the storage file on close, or when it
+              exceeds the maximum in-memory size. This is ignored when the store
+              is opened in read-only mode or the storage file already exists.
+
+        Raises:
+          IOError: if the attribute container store is already opened or if
+              the database cannot be connected.
+          OSError: if the attribute container store is already opened or if
+              the database cannot be connected.
+          ValueError: if path is missing.
+        """
+        if read_only or not in_memory or not path or os.path.exists(path):
+            super().Open(path=path, read_only=read_only, **kwargs)
+            return
+
+        if self._is_open:
+            raise IOError("Attribute container store already opened.")
+
+        try:
+            connection = sqlite3.connect(
+                ":memory:",
+                detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES,
+                isolation_level="DEFERRED",
+            )
+        except (sqlite3.InterfaceError, sqlite3.OperationalError) as exception:
+            raise IOError(
+                f"Unable to create in-memory database with error: {exception!s}"
+            )
+
+        self._connection = connection
+        self._cursor = connection.cursor()
+        self._in_memory_path = os.path.abspath(path)
+        self._is_open = True
+        self._read_only = False
+
+        self._WriteMetadata()
+        self._connection.commit()
 
     def SetSerializersProfiler(self, serializers_profiler):
         """Sets the serializers profiler.
