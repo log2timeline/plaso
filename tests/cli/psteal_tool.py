@@ -2,6 +2,7 @@
 """Tests for the psteal CLI tool."""
 
 import os
+import sys
 import unittest
 
 from dfvfs.resolver import resolver as dfvfs_resolver
@@ -119,6 +120,33 @@ class PstealToolTest(test_lib.CLIToolTestCase):
         self.assertFalse(result)
         output = output_writer.ReadOutput()
         expected_error = "ERROR: Missing source path."
+        self.assertIn(expected_error, output)
+
+        # Test ParseArguments with multiple output formats. The output modules
+        # arguments helper reads the output format from sys.argv.
+        test_file_path = self._GetTestFilePath(["syslog"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            arguments = [
+                "--source",
+                test_file_path,
+                "-o",
+                "dynamic,xlsx",
+                "-w",
+                os.path.join(temp_directory, "output.txt"),
+            ]
+
+            original_argv = sys.argv
+            sys.argv = ["psteal.py"] + arguments
+            try:
+                result = test_tool.ParseArguments(arguments)
+            finally:
+                sys.argv = original_argv
+
+        self.assertFalse(result)
+        output = output_writer.ReadOutput()
+        expected_error = "ERROR: Unsupported output format: dynamic,xlsx."
         self.assertIn(expected_error, output)
 
     def testExtractEventsFromSourceDirectory(self):
