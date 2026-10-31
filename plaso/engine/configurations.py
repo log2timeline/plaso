@@ -62,6 +62,8 @@ class ExtractionConfiguration(interface.AttributeContainer):
           should process, where 0 or None represents unlimited.
       hasher_names_string (str): comma separated names of hashers to use during
           processing.
+      hasher_skip_excluded_files (bool): True if hashers should not process
+          files that are excluded from content extraction.
       process_compressed_streams (bool): True if file content in compressed
           streams should be processed.
       yara_rules_string (str): Yara rule definitions.
@@ -77,6 +79,7 @@ class ExtractionConfiguration(interface.AttributeContainer):
         self.extract_winreg_binary = False
         self.hasher_file_size_limit = None
         self.hasher_names_string = None
+        self.hasher_skip_excluded_files = False
         self.process_compressed_streams = True
         self.yara_rules_string = None
 
