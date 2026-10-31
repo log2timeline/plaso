@@ -403,6 +403,12 @@ class PstealTool(
             storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
                 self._storage_file_path
             )
+            if not storage_reader:
+                raise errors.BadConfigOption(
+                    f"Format of storage file: {self._storage_file_path:s} not "
+                    f"supported"
+                )
+
             # TODO: add single process output and formatting engine support.
             output_engine = multi_output_engine.OutputAndFormattingMultiProcessEngine()
 

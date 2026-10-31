@@ -3,6 +3,7 @@
 
 import io
 import os
+import shutil
 import sys
 import unittest
 
@@ -299,6 +300,31 @@ Test argument parser.
             test_tool.ParseOptions(options)
 
         # TODO: improve test coverage.
+
+    def testProcessStorageWithUnsupportedStorageFile(self):
+        """Tests the ProcessStorage function with an unsupported storage file."""
+        test_file_path = self._GetTestFilePath(["psort_test.plaso"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = psort_tool.PsortTool(output_writer=output_writer)
+
+        options = test_lib.TestOptions()
+        options.data_location = shared_test_lib.DATA_PATH
+        options.output_format = "null"
+        options.status_view_interval = 0.5
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            options.storage_file = os.path.join(temp_directory, "psort_test.plaso")
+            shutil.copyfile(test_file_path, options.storage_file)
+
+            test_tool.ParseOptions(options)
+
+            with open(options.storage_file, "wb") as file_object:
+                file_object.write(b"This is not a storage file.")
+
+            with self.assertRaises(errors.BadConfigOption):
+                test_tool.ProcessStorage()
 
     def testProcessStorageWithMissingParameters(self):
         """Tests the ProcessStorage function with parameters missing."""
