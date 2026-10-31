@@ -6,6 +6,7 @@ from artifacts import errors as artifacts_errors
 from artifacts import reader as artifacts_reader
 from artifacts import registry as artifacts_registry
 
+from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
@@ -441,6 +442,59 @@ class BaseEngine:
                 self.knowledge_base.AddEnvironmentVariable(environment_variable)
 
         return system_configurations
+
+    @classmethod
+    def SetPreferredVFSBackEnd(cls, vfs_back_end):
+        """Sets the preferred dfVFS back-end.
+
+        The preferred back-ends are stored as module-level values in dfVFS and
+        therefore need to be set in every process that uses dfVFS.
+
+        Args:
+          vfs_back_end (str): preferred dfVFS back-end, such as "auto", "fsext",
+              "fsfat", "fshfs", "fsntfs", "tsk" or "vsgpt".
+        """
+        if vfs_back_end == "fsext":
+            dfvfs_definitions.PREFERRED_EXT_BACK_END = (
+                dfvfs_definitions.TYPE_INDICATOR_EXT
+            )
+
+        elif vfs_back_end == "fsfat":
+            dfvfs_definitions.PREFERRED_FAT_BACK_END = (
+                dfvfs_definitions.TYPE_INDICATOR_FAT
+            )
+
+        elif vfs_back_end == "fshfs":
+            dfvfs_definitions.PREFERRED_HFS_BACK_END = (
+                dfvfs_definitions.TYPE_INDICATOR_HFS
+            )
+
+        elif vfs_back_end == "fsntfs":
+            dfvfs_definitions.PREFERRED_NTFS_BACK_END = (
+                dfvfs_definitions.TYPE_INDICATOR_NTFS
+            )
+
+        elif vfs_back_end == "tsk":
+            dfvfs_definitions.PREFERRED_EXT_BACK_END = (
+                dfvfs_definitions.TYPE_INDICATOR_TSK
+            )
+            dfvfs_definitions.PREFERRED_FAT_BACK_END = (
+                dfvfs_definitions.TYPE_INDICATOR_TSK
+            )
+            dfvfs_definitions.PREFERRED_GPT_BACK_END = (
+                dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION
+            )
+            dfvfs_definitions.PREFERRED_HFS_BACK_END = (
+                dfvfs_definitions.TYPE_INDICATOR_TSK
+            )
+            dfvfs_definitions.PREFERRED_NTFS_BACK_END = (
+                dfvfs_definitions.TYPE_INDICATOR_TSK
+            )
+
+        elif vfs_back_end == "vsgpt":
+            dfvfs_definitions.PREFERRED_GPT_BACK_END = (
+                dfvfs_definitions.TYPE_INDICATOR_GPT
+            )
 
     def SetStatusUpdateInterval(self, status_update_interval):
         """Sets the status update interval.

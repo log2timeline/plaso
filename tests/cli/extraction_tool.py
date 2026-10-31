@@ -274,7 +274,14 @@ Test argument parser.
 
     _STORAGE_FILENAME_TEMPLATE = r"\d{{8}}T\d{{6}}-{filename}.plaso"
 
-    # TODO: add test for _CreateProcessingConfiguration
+    def testCreateExtractionProcessingConfiguration(self):
+        """Tests the _CreateExtractionProcessingConfiguration function."""
+        test_tool = extraction_tool.ExtractionTool()
+        test_tool._vfs_back_end = "tsk"
+
+        configuration = test_tool._CreateExtractionProcessingConfiguration()
+        self.assertIsNotNone(configuration)
+        self.assertEqual(configuration.vfs_back_end, "tsk")
 
     def testGenerateStorageFileName(self):
         """Tests the _GenerateStorageFileName function."""
