@@ -3792,6 +3792,35 @@ class TraceV3FileTest(shared_test_lib.BaseTestCase):
 
         # TODO: improve tests
 
+    def testCalculatePrivateDataRangeOffset(self):
+        """Tests the _CalculatePrivateDataRangeOffset function."""
+        test_file = unified_logging.TraceV3File()
+
+        data_type_map = test_file._GetDataTypeMap(
+            "tracev3_firehose_tracepoint_data_range"
+        )
+
+        private_data_offset = test_file._CalculatePrivateDataRangeOffset(0x0F00, None)
+        self.assertEqual(private_data_offset, 0)
+
+        private_data_range = data_type_map.MapByteStream(b"\x10\x0f\x08\x00")
+        private_data_offset = test_file._CalculatePrivateDataRangeOffset(
+            0x0F00, private_data_range
+        )
+        self.assertEqual(private_data_offset, 0x0010)
+
+        private_data_range = data_type_map.MapByteStream(b"\x00\x0f\x08\x00")
+        private_data_offset = test_file._CalculatePrivateDataRangeOffset(
+            0x0F00, private_data_range
+        )
+        self.assertEqual(private_data_offset, 0)
+
+        # Test with a private data range offset before the private data virtual
+        # offset.
+        private_data_range = data_type_map.MapByteStream(b"\xff\x0e\x08\x00")
+        with self.assertRaises(errors.ParseError):
+            test_file._CalculatePrivateDataRangeOffset(0x0F00, private_data_range)
+
     def testCalculateProgramCounter(self):
         """Tests the _CalculateProgramCounter function."""
         test_file = unified_logging.TraceV3File()
