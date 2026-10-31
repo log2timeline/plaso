@@ -50,6 +50,20 @@ class UniqueDomainsPluginTest(test_lib.AnalysisPluginTestCase):
             "timestamp_desc": definitions.TIME_DESCRIPTION_UNKNOWN,
             "url": "https://fourthevent.co/4/index.html",
         },
+        {
+            "_parser_chain": "sqlite/ls_quarantine",
+            "data_type": "macos:lsquarantine:entry",
+            "timestamp": "2015-05-05 05:00:00",
+            "timestamp_desc": definitions.TIME_DESCRIPTION_UNKNOWN,
+            "url": "https://fifthevent.com/5/file.dmg",
+        },
+        {
+            "_parser_chain": "opera_global",
+            "data_type": "opera:history:entry",
+            "timestamp": "2015-06-06 06:00:00",
+            "timestamp_desc": definitions.TIME_DESCRIPTION_UNKNOWN,
+            "url": "https://sixthevent.net/6/index.html",
+        },
     ]
 
     def testExamineEventAndCompileReport(self):
@@ -70,6 +84,8 @@ class UniqueDomainsPluginTest(test_lib.AnalysisPluginTestCase):
         self.assertEqual(analysis_report.analysis_counter["secondevent.net"], 1)
         self.assertEqual(analysis_report.analysis_counter["thirdevent.org"], 1)
         self.assertEqual(analysis_report.analysis_counter["fourthevent.co"], 1)
+        self.assertEqual(analysis_report.analysis_counter["fifthevent.com"], 1)
+        self.assertEqual(analysis_report.analysis_counter["sixthevent.net"], 1)
 
 
 if __name__ == "__main__":

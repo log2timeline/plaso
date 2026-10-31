@@ -17,11 +17,11 @@ history data such as events with data type:
 * chrome:history:page_visited
 * firefox:downloads:download
 * firefox:places:page_visited
-* macos:lsquarantine
+* macos:lsquarantine:entry
 * msiecf:redirected
 * msiecf:url
 * msie:webcache:container
-* opera:history
+* opera:history:entry
 * safari:history:visit
 
 Next run psort to determine the unique domains visited:
