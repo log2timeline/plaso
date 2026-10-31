@@ -1095,6 +1095,60 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
 
         self.assertEqual(sorted(extracted_files), expected_extracted_files)
 
+    def testProcessSourceExtractDirectoryWithExcludeFilter(self):
+        """Tests the ProcessSource function on a directory with an exclude filter."""
+        test_artifacts_path = self._GetTestFilePath(["artifacts"])
+        self._SkipIfPathNotExists(test_artifacts_path)
+
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            source_path = os.path.join(temp_directory, "source")
+            os.makedirs(os.path.join(source_path, "a_directory"))
+
+            for filename in ("a_file", "another_file"):
+                path = os.path.join(source_path, "a_directory", filename)
+                with open(path, "wt", encoding="utf-8") as file_object:
+                    file_object.write(filename)
+
+            filter_file = os.path.join(temp_directory, "filter_file.yaml")
+            with open(filter_file, "wt", encoding="utf-8") as file_object:
+                file_object.write(
+                    "description: Exclude\n"
+                    "type: exclude\n"
+                    "paths:\n"
+                    "- '/a_directory/a_file'\n"
+                )
+
+            destination_path = os.path.join(temp_directory, "export")
+
+            options = test_lib.TestOptions()
+            options.artifact_definitions_path = test_artifacts_path
+            options.file_filter = filter_file
+            options.image = source_path
+            options.path = destination_path
+            options.quiet = True
+
+            test_tool.ParseOptions(options)
+
+            test_tool.ProcessSource()
+
+            extracted_files = [
+                os.path.relpath(path, destination_path)
+                for path in self._RecursiveList(destination_path)
+            ]
+
+        # The exported path of the source directory differs per operating system,
+        # for example "C:" is exported as "C_" on Windows.
+        exported_files = [
+            os.path.basename(path)
+            for path in extracted_files
+            if os.path.basename(os.path.dirname(path)) == "a_directory"
+        ]
+        self.assertIn("another_file", exported_files)
+        self.assertNotIn("a_file", exported_files)
+
     def testProcessSourceExtractWithArtifactsFilter(self):
         """Tests the ProcessSource function with a artifacts filter file."""
         test_artifacts_path = self._GetTestFilePath(["artifacts"])
