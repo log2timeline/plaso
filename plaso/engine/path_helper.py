@@ -273,7 +273,7 @@ class PathHelper:
                 )
 
             if recursion_depth is not None:
-                if recursion_depth <= 1 or recursion_depth > cls._RECURSIVE_GLOB_LIMIT:
+                if recursion_depth < 1 or recursion_depth > cls._RECURSIVE_GLOB_LIMIT:
                     logger.warning(
                         f'Globstar "{path_segment:s}" in path "{path:s}" exceed '
                         f"recursion maximum recursion depth, limiting to: "
