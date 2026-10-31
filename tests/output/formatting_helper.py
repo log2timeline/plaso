@@ -10,11 +10,34 @@ from dfdatetime import semantic_time as dfdatetime_semantic_time
 from dfvfs.path import fake_path_spec
 
 from plaso.containers import events
+from plaso.formatters import interface as formatters_interface
 from plaso.lib import definitions
 from plaso.output import formatting_helper
 
 from tests.containers import test_lib as containers_test_lib
 from tests.output import test_lib
+
+
+class CountingEventFormatterHelper(formatters_interface.EventFormatterHelper):
+    """Event formatter helper that counts its invocations for testing purposes.
+
+    Attributes:
+      number_of_calls (int): number of times FormatEventValues was called.
+    """
+
+    def __init__(self):
+        """Initializes a counting event formatter helper."""
+        super().__init__()
+        self.number_of_calls = 0
+
+    def FormatEventValues(self, output_mediator, event_values):
+        """Formats event values using the helper.
+
+        Args:
+          output_mediator (OutputMediator): output mediator.
+          event_values (dict[str, object]): event values.
+        """
+        self.number_of_calls += 1
 
 
 class TestFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
@@ -361,6 +384,50 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
             "for user root)"
         )
         self.assertEqual(message_short_string, expected_message_short_string)
+
+    def testFormatMessageAndMessageShortFormatEventValuesOnce(self):
+        """Tests that the message fields format the event values once."""
+        output_mediator = self._CreateOutputMediator()
+
+        formatters_directory_path = self._GetTestFilePath(["formatters"])
+        output_mediator.ReadMessageFormattersFromDirectory(formatters_directory_path)
+
+        counting_helper = CountingEventFormatterHelper()
+        message_formatter = output_mediator.GetMessageFormatter("test:event")
+        message_formatter.AddHelper(counting_helper)
+
+        test_helper = formatting_helper.FieldFormattingHelper()
+
+        event, event_data, event_data_stream = (
+            containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0])
+        )
+
+        message_string = test_helper._FormatMessage(
+            output_mediator, event, event_data, event_data_stream
+        )
+        message_short_string = test_helper._FormatMessageShort(
+            output_mediator, event, event_data, event_data_stream
+        )
+
+        expected_message_string = (
+            "Reporter <CRON> PID: 8442 (pam_unix(cron:session): session closed "
+            "for user root)"
+        )
+        self.assertEqual(message_string, expected_message_string)
+        self.assertEqual(message_short_string, expected_message_string)
+        self.assertEqual(counting_helper.number_of_calls, 1)
+
+        event, event_data, event_data_stream = (
+            containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[1])
+        )
+
+        test_helper._FormatMessage(
+            output_mediator, event, event_data, event_data_stream
+        )
+        test_helper._FormatMessageShort(
+            output_mediator, event, event_data, event_data_stream
+        )
+        self.assertEqual(counting_helper.number_of_calls, 2)
 
     def testFormatSource(self):
         """Tests the _FormatSource function."""
