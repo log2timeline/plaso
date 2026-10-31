@@ -4,6 +4,7 @@
 import datetime
 import plistlib
 import unittest
+from unittest import mock
 
 from plaso.parsers.plist_plugins import default
 
@@ -160,6 +161,52 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
             event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
             self.CheckEventData(event_data, expected_event_values)
             self.assertFalse(event_data.written_time.is_local_time)
+
+    def testProcessAwareNonUTC(self):
+        """Tests Process with an aware non-UTC datetime value.
+
+        An existing time zone must not be overwritten: 03:21:38+02:00 is
+        01:21:38 UTC.
+        """
+        time_zone = datetime.timezone(datetime.timedelta(hours=2))
+        top_level = {
+            "Device": {
+                "LastUsed": datetime.datetime(2012, 11, 2, 3, 21, 38, tzinfo=time_zone)
+            }
+        }
+
+        plugin = default.DefaultPlugin()
+        storage_writer = self._ParsePlistWithPlugin(plugin, "aware", top_level)
+
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.assertEqual(
+            event_data.written_time.CopyToDateTimeStringISO8601(),
+            "2012-11-02T01:21:38.000000+00:00",
+        )
+
+    def testParsePlistWithMockedMediator(self):
+        """Tests that _ParsePlist produces event data only for datetime values."""
+        top_level = {
+            "Device": {
+                "Name": "test",
+                "LastUsed": datetime.datetime(2012, 11, 2, 1, 21, 38),
+                "Count": 3,
+            }
+        }
+
+        mock_mediator = mock.MagicMock()
+        plugin = default.DefaultPlugin()
+        plugin._ParsePlist(mock_mediator, top_level=top_level)
+
+        mock_mediator.ProduceEventData.assert_called_once()
+        event_data = mock_mediator.ProduceEventData.call_args.args[0]
+        self.assertEqual(event_data.key, "LastUsed")
+        self.assertEqual(event_data.root, "/Device")
+        self.assertEqual(
+            event_data.written_time.CopyToDateTimeStringISO8601(),
+            "2012-11-02T01:21:38.000000+00:00",
+        )
+        mock_mediator.ProduceWarning.assert_not_called()
 
 
 if __name__ == "__main__":

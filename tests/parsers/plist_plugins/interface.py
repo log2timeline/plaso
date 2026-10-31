@@ -4,6 +4,7 @@
 import datetime
 import plistlib
 import unittest
+from unittest import mock
 
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 from dfdatetime import posix_time as dfdatetime_posix_time
@@ -818,6 +819,86 @@ class TestPlistPlugin(test_lib.PlistPluginTestCase):
 
             date_time = plugin._GetDateTimeValueFromPlistKey(plist_key, "Bogus")
             self.assertIsNone(date_time)
+
+    def testGetDateTimeValueFromPlistKeyMicroseconds(self):
+        """Tests that _GetDateTimeValueFromPlistKey preserves microseconds."""
+        plugin = MockPlugin()
+
+        # Stub of a plist key as returned by plistlib.
+        plist_key = {"LastUsed": datetime.datetime(2012, 11, 2, 1, 21, 38, 997672)}
+
+        date_time = plugin._GetDateTimeValueFromPlistKey(plist_key, "LastUsed")
+        self.assertEqual(
+            date_time.CopyToDateTimeStringISO8601(), "2012-11-02T01:21:38.997672+00:00"
+        )
+
+    def testGetDateTimeValueFromPlistKeyAwareUTC(self):
+        """Tests _GetDateTimeValueFromPlistKey with an aware UTC datetime value."""
+        plugin = MockPlugin()
+
+        plist_key = {
+            "LastUsed": datetime.datetime(
+                2012, 11, 2, 1, 21, 38, tzinfo=datetime.timezone.utc
+            )
+        }
+
+        date_time = plugin._GetDateTimeValueFromPlistKey(plist_key, "LastUsed")
+        self.assertFalse(date_time.is_local_time)
+        self.assertEqual(
+            date_time.CopyToDateTimeStringISO8601(), "2012-11-02T01:21:38.000000+00:00"
+        )
+
+    def testGetDateTimeValueFromPlistKeyAwareNonUTC(self):
+        """Tests _GetDateTimeValueFromPlistKey with an aware non-UTC datetime value.
+
+        An existing time zone must not be overwritten: 03:21:38+02:00 is
+        01:21:38 UTC, not 03:21:38 UTC.
+        """
+        plugin = MockPlugin()
+
+        time_zone = datetime.timezone(datetime.timedelta(hours=2))
+        plist_key = {
+            "LastUsed": datetime.datetime(2012, 11, 2, 3, 21, 38, tzinfo=time_zone)
+        }
+
+        date_time = plugin._GetDateTimeValueFromPlistKey(plist_key, "LastUsed")
+        self.assertEqual(
+            date_time.CopyToDateTimeStringISO8601(), "2012-11-02T01:21:38.000000+00:00"
+        )
+
+    @unittest.skipUnless(
+        "aware_datetime" in plistlib.loads.__code__.co_varnames,
+        "plistlib does not support aware_datetime",
+    )
+    def testGetDateTimeValueFromPlistKeyPlistlibAwareDatetime(self):
+        """Tests _GetDateTimeValueFromPlistKey with plistlib aware_datetime=True."""
+        plugin = MockPlugin()
+
+        xml_plist = (
+            b'<?xml version="1.0" encoding="UTF-8"?>\n'
+            b'<plist version="1.0"><dict><key>Device</key><dict>'
+            b"<key>LastUsed</key><date>2012-11-02T01:21:38Z</date>"
+            b"</dict></dict></plist>\n"
+        )
+        top_level = plistlib.loads(xml_plist, aware_datetime=True)
+        plist_key = top_level["Device"]
+        self.assertIsNotNone(plist_key["LastUsed"].tzinfo)
+
+        date_time = plugin._GetDateTimeValueFromPlistKey(plist_key, "LastUsed")
+        self.assertEqual(
+            date_time.CopyToDateTimeStringISO8601(), "2012-11-02T01:21:38.000000+00:00"
+        )
+
+    def testGetDateTimeValueFromPlistKeyMockedKey(self):
+        """Tests that _GetDateTimeValueFromPlistKey reads the value only once."""
+        plugin = MockPlugin()
+
+        mock_plist_key = mock.MagicMock()
+        mock_plist_key.get.return_value = None
+
+        date_time = plugin._GetDateTimeValueFromPlistKey(mock_plist_key, "LastUsed")
+        self.assertIsNone(date_time)
+        mock_plist_key.get.assert_called_once_with("LastUsed")
 
     def testGetKeys(self):
         """Tests the _GetKeys function."""
