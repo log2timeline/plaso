@@ -9,6 +9,7 @@ import unittest
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
+from plaso.containers import events
 from plaso.lib import definitions
 from plaso.output import rawpy
 
@@ -64,6 +65,7 @@ class NativePythonOutputTest(test_lib.OutputModuleTestCase):
 
         expected_field_values = {
             "_event_identifier": event_identifier_string,
+            "_event_tag_labels": ["Malware", "Printed"],
             "_timestamp": "2012-06-27T18:17:01.000000+00:00",
             "data_type": "test:output",
             "display_name": "TSK:/var/log/syslog.1",
@@ -75,9 +77,11 @@ class NativePythonOutputTest(test_lib.OutputModuleTestCase):
             ),
             "username": "root",
         }
-        # TODO: add test for event_tag.
+        event_tag = events.EventTag()
+        event_tag.AddLabels(["Malware", "Printed"])
+
         field_values = output_module.GetFieldValues(
-            output_mediator, event, event_data, event_data_stream, None
+            output_mediator, event, event_data, event_data_stream, event_tag
         )
         self.assertEqual(field_values, expected_field_values)
 
@@ -92,9 +96,11 @@ class NativePythonOutputTest(test_lib.OutputModuleTestCase):
         event, event_data, event_data_stream = (
             containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0])
         )
-        # TODO: add test for event_tag.
+        event_tag = events.EventTag()
+        event_tag.AddLabels(["Malware", "Printed"])
+
         field_values = output_module.GetFieldValues(
-            output_mediator, event, event_data, event_data_stream, None
+            output_mediator, event, event_data, event_data_stream, event_tag
         )
         output_module.WriteFieldValues(output_mediator, field_values)
 
@@ -128,6 +134,9 @@ class NativePythonOutputTest(test_lib.OutputModuleTestCase):
                 "session"
             ),
             " closed for user root)",
+            "",
+            "[Tag]:",
+            "  {labels} ['Malware', 'Printed']",
             "",
             "",
         ]

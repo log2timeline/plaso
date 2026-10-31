@@ -97,8 +97,25 @@ class EventFormatterTest(test_lib.EventFormatterTestCase):
         )
         self.assertIsNotNone(event_formatter)
 
-    # TODO: add tests for _FormatMessage
-    # TODO: add tests for _FormatMessages
+    def testFormatMessage(self):
+        """Tests the message formatting with GetMessage."""
+        event_formatter = interface.BasicEventFormatter(
+            data_type="test", format_string="{text}"
+        )
+
+        message = event_formatter.GetMessage({"text": "line1\r\nline2\n"})
+        self.assertEqual(message, "line1line2")
+
+        event_values = {"data_type": "test:event", "numeric": 12}
+        with self.assertLogs("formatters", level="ERROR") as context_manager:
+            message = event_formatter.GetMessage(event_values)
+
+        self.assertEqual(message, "data_type: test:event numeric: 12")
+        self.assertEqual(len(context_manager.records), 1)
+        self.assertIn(
+            'unable to format string: "{text}" with error: ',
+            context_manager.records[0].getMessage(),
+        )
 
     def testGetFormatStringAttributeNames(self):
         """Tests the GetFormatStringAttributeNames function."""
