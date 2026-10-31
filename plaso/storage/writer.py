@@ -118,6 +118,27 @@ class StorageWriter(reader.StorageReader):
 
         self._attribute_containers_counter[container.CONTAINER_TYPE] += 1
 
+    # pylint: disable=unused-argument
+    def AddAttributeContainerWithStoredData(
+        self, container, stored_data, compression_format
+    ):
+        """Adds an attribute container with the data as stored in another store.
+
+        Storage writers that cannot add stored data as-is, add the attribute
+        container instead.
+
+        Args:
+          container (AttributeContainer): attribute container.
+          stored_data (object): data of the attribute container as stored in
+              another store, see StorageReader.GetAttributeContainersWithStoredData(),
+              or None if not available.
+          compression_format (str): compression format of the stored data.
+
+        Raises:
+          OSError: when the storage writer is closed.
+        """
+        self.AddAttributeContainer(container)
+
     def AddOrUpdateEventTag(self, event_tag):
         """Adds a new or updates an existing event tag.
 

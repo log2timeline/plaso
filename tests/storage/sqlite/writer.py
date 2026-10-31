@@ -75,6 +75,33 @@ class SQLiteStorageWriterTest(test_lib.StorageTestCase):
             with self.assertRaises(OSError):
                 storage_writer.AddAttributeContainer(event_data_stream)
 
+    def testAddAttributeContainerWithStoredData(self):
+        """Tests the AddAttributeContainerWithStoredData function."""
+        event_data = events.EventData(data_type="test:event")
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            test_path = os.path.join(temp_directory, "plaso.sqlite")
+            storage_writer = sqlite_writer.SQLiteStorageWriter()
+            storage_writer.Open(path=test_path)
+
+            try:
+                storage_writer.AddAttributeContainerWithStoredData(
+                    event_data, None, definitions.COMPRESSION_FORMAT_ZLIB
+                )
+
+                number_of_containers = storage_writer.GetNumberOfAttributeContainers(
+                    event_data.CONTAINER_TYPE
+                )
+                self.assertEqual(number_of_containers, 1)
+
+            finally:
+                storage_writer.Close()
+
+            with self.assertRaises(OSError):
+                storage_writer.AddAttributeContainerWithStoredData(
+                    event_data, None, definitions.COMPRESSION_FORMAT_ZLIB
+                )
+
     def testAddOrUpdateEventTag(self):
         """Tests the AddOrUpdateEventTag function."""
         with shared_test_lib.TempDirectory() as temp_directory:
