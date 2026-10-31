@@ -797,8 +797,7 @@ class ExtractionTool(
 
         Raises:
           BadConfigOption: if the storage file path is invalid, or the storage
-              format not supported, or there was a failure to writing to the
-              storage.
+              format not supported, or the storage file could not be opened.
           OSError: if the extraction engine could not write to the storage.
           SourceScannerError: if the source scanner could not find a supported
               file system.
@@ -846,7 +845,10 @@ class ExtractionTool(
         try:
             storage_writer.Open(path=self._storage_file_path)
         except OSError as exception:
-            raise OSError(f"Unable to open storage with error: {exception!s}")
+            raise errors.BadConfigOption(
+                f"Unable to open storage file: {self._storage_file_path:s} with "
+                f"error: {exception!s}"
+            )
 
         processing_status = None
         number_of_extraction_warnings = 0

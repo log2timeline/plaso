@@ -2,6 +2,8 @@
 """Tests for the psteal CLI tool."""
 
 import os
+import shutil
+import sqlite3
 import unittest
 
 from dfvfs.resolver import resolver as dfvfs_resolver
@@ -386,6 +388,49 @@ class PstealToolTest(test_lib.CLIToolTestCase):
 
             output = output_writer.ReadOutput()
             self._CheckOutput(output, expected_output)
+
+    def testExtractEventsFromSourcesWithUnsupportedStorageFormatVersion(self):
+        """Tests ExtractEventsFromSources with an unsupported storage file."""
+        test_artifacts_path = self._GetTestFilePath(["artifacts"])
+        self._SkipIfPathNotExists(test_artifacts_path)
+
+        test_file_path = self._GetTestFilePath(["syslog"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        test_storage_file_path = self._GetTestFilePath(["psort_test.plaso"])
+        self._SkipIfPathNotExists(test_storage_file_path)
+
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = psteal_tool.PstealTool(output_writer=output_writer)
+
+        options = test_lib.TestOptions()
+        options.artifact_definitions_path = test_artifacts_path
+        options.quiet = True
+        options.status_view_interval = 0.5
+        options.status_view_mode = "none"
+        options.source = test_file_path
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            options.log_file = os.path.join(temp_directory, "output.log")
+            options.storage_file = os.path.join(temp_directory, "storage.plaso")
+            options.write = os.path.join(temp_directory, "output.txt")
+
+            shutil.copyfile(test_storage_file_path, options.storage_file)
+
+            database_connection = sqlite3.connect(options.storage_file)
+            try:
+                database_connection.execute(
+                    "UPDATE metadata SET value = '20200101' "
+                    "WHERE key = 'format_version'"
+                )
+                database_connection.commit()
+            finally:
+                database_connection.close()
+
+            test_tool.ParseOptions(options)
+
+            with self.assertRaisesRegex(errors.BadConfigOption, "too old"):
+                test_tool.ExtractEventsFromSources()
 
     def testProcessStorage(self):
         """Test the ProcessStorage function."""
