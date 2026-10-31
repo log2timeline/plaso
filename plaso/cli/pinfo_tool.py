@@ -1328,7 +1328,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
                 json_string = (
                     json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
-                        configuration.system_configuration
+                        configuration
                     )
                 )
                 self._output_writer.Write(f'"system_configuration": {json_string:s}')
