@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """Tests for Firefox cache files parser."""
 
+import struct
 import unittest
+
+from dfvfs.helpers import fake_file_system_builder
 
 from plaso.lib import errors
 from plaso.parsers import firefox_cache
@@ -323,6 +326,165 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
 
 class FirefoxCache2ParserTest(test_lib.ParserTestCase):
     """Tests for the Firefox cache version 2 file parser."""
+
+    _TEST_FILENAME = "0123456789ABCDEF0123456789ABCDEF01234567"
+
+    def _ParseCache2Data(self, http_headers_data):
+        """Parses a synthetic Firefox cache2 file with specific HTTP headers data.
+
+        Args:
+          http_headers_data (bytes): HTTP headers data.
+
+        Returns:
+          FakeStorageWriter: storage writer.
+        """
+        url = b":https://example.com/"
+
+        # Cache2 file without content: hash, version 1 metadata header, key,
+        # elements and metadata offset.
+        file_data = b"".join(
+            [
+                b"\x00\x00\x00\x00",
+                struct.pack(">7I", 1, 1, 1430580931, 1430580931, 0, 0, len(url)),
+                url,
+                http_headers_data,
+                b"\x00\x00\x00\x00",
+            ]
+        )
+
+        file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+        file_system_builder.AddFile(f"/{self._TEST_FILENAME:s}", file_data)
+        file_entry = file_system_builder.file_system.GetFileEntryByPath(
+            f"/{self._TEST_FILENAME:s}"
+        )
+
+        storage_writer = self._CreateStorageWriter()
+        parser_mediator = self._CreateParserMediator(
+            storage_writer, file_entry=file_entry
+        )
+
+        parser = firefox_cache.FirefoxCache2Parser()
+        file_object = file_entry.GetFileObject()
+        parser.ParseFileObject(parser_mediator, file_object)
+
+        return storage_writer
+
+    def testParseHTTPHeadersWithUnknownRequestMethod(self):
+        """Tests parsing HTTP headers with an unknown request method."""
+        storage_writer = self._ParseCache2Data(b"request-method\x00PROPFIND\x00")
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 1)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        expected_event_values = {
+            "data_type": "firefox:cache:record",
+            "request_method": "PROPFIND",
+            "response_code": None,
+        }
+
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
+
+    def testParseHTTPHeadersWithMissingRequestMethod(self):
+        """Tests parsing HTTP headers without a request method value."""
+        storage_writer = self._ParseCache2Data(b"request-method")
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 1)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 1)
+
+        expected_event_values = {
+            "data_type": "firefox:cache:record",
+            "request_method": None,
+            "response_code": None,
+        }
+
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
+
+    def testParseHTTPHeadersWithMissingResponseHead(self):
+        """Tests parsing HTTP headers without a response head value."""
+        storage_writer = self._ParseCache2Data(
+            b"request-method\x00GET\x00response-head"
+        )
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 1)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 1)
+
+        expected_event_values = {
+            "data_type": "firefox:cache:record",
+            "request_method": "GET",
+            "response_code": None,
+        }
+
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
+
+    def testParseHTTPHeadersWithEmptyResponseHead(self):
+        """Tests parsing HTTP headers with an empty response head."""
+        storage_writer = self._ParseCache2Data(
+            b"request-method\x00GET\x00response-head\x00\x00"
+        )
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 1)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 1)
+
+        expected_event_values = {
+            "data_type": "firefox:cache:record",
+            "request_method": "GET",
+            "response_code": None,
+        }
+
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
+
+    def testParseHTTPHeadersWithValidResponseHead(self):
+        """Tests parsing well-formed HTTP headers, a near-miss of the above."""
+        storage_writer = self._ParseCache2Data(
+            b"request-method\x00GET\x00response-head\x00HTTP/1.1 200 OK\r\n\x00"
+        )
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        expected_event_values = {
+            "data_type": "firefox:cache:record",
+            "request_method": "GET",
+            "response_code": "HTTP/1.1 200 OK",
+            "url": ":https://example.com/",
+        }
+
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
 
     def testParseCache2Entry(self):
         """Test Firefox cache2 file parsing."""
