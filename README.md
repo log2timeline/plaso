@@ -33,6 +33,7 @@ And is moving to support:
 * [Homepage](https://github.com/log2timeline/plaso)
 * [Downloads](https://github.com/log2timeline/plaso/releases)
 * [Documentation](https://plaso.readthedocs.io)
+* [Installation](https://plaso.readthedocs.io/en/latest/sources/user/Users-Guide.html#installing-the-packaged-release)
 * Contact information:
   * Plaso channel on [Open Source DFIR Slack community](https://github.com/open-source-dfir/slack)
   * Mailing list for general discussions: [log2timeline-discuss](https://groups.google.com/forum/#%21forum/log2timeline-discuss)

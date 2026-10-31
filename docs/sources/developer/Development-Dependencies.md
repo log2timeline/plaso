@@ -13,7 +13,7 @@ There are multiple ways to install the dependencies:
 
 ### Fedora
 
-**Note that these instructions assume you are running on Fedora 43.
+**Note that these instructions assume you are running on Fedora 44.
 Installing packages from the copr on other versions and/or distributions
 is not recommended.**
 
@@ -95,14 +95,14 @@ sudo add-apt-repository ppa:gift/dev
 To install the dependencies run:
 
 ```bash
-./config/linux/gift_ppa_install.sh include-development include-test
+./config/linux/ubuntu_install_plaso.sh include-development include-test
 ```
 
 For troubleshooting crashes it is recommended to install the following debug
 symbol packages as well:
 
 ```bash
-./config/linux/gift_ppa_install.sh include-debug
+./config/linux/ubuntu_install_plaso.sh include-debug
 ```
 
 ### Windows
