@@ -1280,42 +1280,29 @@ class DSCFileTest(shared_test_lib.BaseTestCase):
 
     def testGetImageValues(self):
         """Tests the GetImageValues function."""
-        dsc_range_tuple = collections.namedtuple(
-            "dsc_range",
-            [
-                "data_offset",
-                "image_identifier",
-                "image_path",
-                "range_offset",
-                "range_size",
-                "text_offset",
-                "text_size",
-            ],
-        )
         first_image_identifier = uuid.UUID("5b14b45b-a15b-31ad-93fb-bac43c001a23")
         second_image_identifier = uuid.UUID("081b5e9e-59ea-39cd-83c9-eedb68a84076")
 
+        first_range = unified_logging.DSCRange()
+        first_range.data_offset = 8
+        first_range.image_identifier = first_image_identifier
+        first_range.image_path = "/usr/lib/first.dylib"
+        first_range.range_offset = 0x1000
+        first_range.range_size = 0x20
+        first_range.text_offset = 0x8000
+        first_range.text_size = 0x100
+
+        second_range = unified_logging.DSCRange()
+        second_range.data_offset = 24
+        second_range.image_identifier = second_image_identifier
+        second_range.image_path = "/usr/lib/second.dylib"
+        second_range.range_offset = 0x2000
+        second_range.range_size = 0x20
+        second_range.text_offset = 0x9000
+        second_range.text_size = 0x100
+
         test_file = unified_logging.DSCFile()
-        test_file.ranges = [
-            dsc_range_tuple(
-                data_offset=8,
-                image_identifier=first_image_identifier,
-                image_path="/usr/lib/first.dylib",
-                range_offset=0x1000,
-                range_size=0x20,
-                text_offset=0x8000,
-                text_size=0x100,
-            ),
-            dsc_range_tuple(
-                data_offset=24,
-                image_identifier=second_image_identifier,
-                image_path="/usr/lib/second.dylib",
-                range_offset=0x2000,
-                range_size=0x20,
-                text_offset=0x9000,
-                text_size=0x100,
-            ),
-        ]
+        test_file.ranges = [first_range, second_range]
         test_file._file_object = io.BytesIO(
             b"".join([b"\x00" * 8, b"first string\x00\x00\x00\x00", b"second\x00"])
         )
