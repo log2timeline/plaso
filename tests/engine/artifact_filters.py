@@ -356,7 +356,60 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
         find_specs = test_filters_helper._BuildFindSpecsFromGroupName(
             "Bogus", environment_variables, []
         )
-        self.assertIsNone(find_specs)
+        self.assertEqual(find_specs, [])
+
+        # Test with an artifact group with an undefined member.
+        registry = artifacts_registry.ArtifactDefinitionsRegistry()
+        reader = artifacts_reader.YamlArtifactsReader()
+
+        artifact_definition_values = [
+            {
+                "name": "TestFile",
+                "doc": "Test file artifact definition.",
+                "sources": [
+                    {
+                        "type": "FILE",
+                        "attributes": {
+                            "paths": ["\\Windows\\test.txt"],
+                            "separator": "\\",
+                        },
+                    }
+                ],
+            },
+            {
+                "name": "TestGroupWithUndefined",
+                "doc": "Test group with an undefined artifact definition.",
+                "sources": [
+                    {
+                        "type": "ARTIFACT_GROUP",
+                        "attributes": {"names": ["DoesNotExist", "TestFile"]},
+                    }
+                ],
+            },
+        ]
+        for values in artifact_definition_values:
+            definition = reader.ReadArtifactDefinitionValues(values)
+            registry.RegisterDefinition(definition)
+
+        test_filters_helper = artifact_filters.ArtifactDefinitionsFiltersHelper(
+            registry
+        )
+
+        # The undefined group member should be skipped.
+        test_filters_helper.BuildFindSpecs(["TestGroupWithUndefined"])
+
+        self.assertEqual(len(test_filters_helper.file_system_find_specs), 1)
+        self.assertEqual(len(test_filters_helper.registry_find_specs), 0)
+
+        find_specs = test_filters_helper._BuildFindSpecsFromGroupName(
+            "DoesNotExist", [], []
+        )
+        self.assertEqual(find_specs, [])
+
+        find_specs = test_filters_helper._BuildFindSpecsFromGroupName(
+            "TestFile", [], []
+        )
+        self.assertEqual(len(find_specs), 1)
 
     def testBuildFindSpecsFromFileSourcePath(self):
         """Tests the _BuildFindSpecsFromFileSourcePath function on file sources."""
