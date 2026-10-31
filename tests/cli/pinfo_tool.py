@@ -57,7 +57,7 @@ text/syslog_traditional : 0 (2)
 ******************* Pathspecs with most extraction warnings ********************
 Number of warnings : Pathspec
 --------------------------------------------------------------------------------
-             0 (2) : type: OS, location: /tmp/test/test_data/syslog/syslog\\x0a
+             0 (2) : type: OS, location: /tmp/test/test_data/syslog/syslog
 --------------------------------------------------------------------------------
 
 
@@ -104,7 +104,7 @@ text/syslog_traditional : 2 (0)
 ******************* Pathspecs with most extraction warnings ********************
 Number of warnings : Pathspec
 --------------------------------------------------------------------------------
-             2 (0) : type: OS, location: /tmp/test/test_data/syslog/syslog\\x0a
+             2 (0) : type: OS, location: /tmp/test/test_data/syslog/syslog
 --------------------------------------------------------------------------------
 
 
@@ -657,6 +657,43 @@ Storage files are different.
 
         with self.assertRaises(errors.BadConfigOption):
             test_tool._GetStorageReader("bogus.plaso")
+
+    def testPrintCounterDifferences(self):
+        """Tests the _PrintCounterDifferences function."""
+        path_spec_key = (
+            "type: OS, location: /cases/image.raw\ntype: TSK, location: /etc/passwd\n"
+        )
+        differences = {path_spec_key: (1, 3)}
+
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+
+        test_tool._PrintCounterDifferences(
+            differences,
+            column_names=["Number of warnings", "Pathspec"],
+            reverse=True,
+            title="Pathspecs with most extraction warnings",
+        )
+
+        expected_output = "\n".join(
+            [
+                "",
+                (
+                    "******************* Pathspecs with most extraction warnings "
+                    "********************"
+                ),
+                "Number of warnings : Pathspec",
+                "-" * 80,
+                "             1 (3) : type: OS, location: /cases/image.raw",
+                "                   : type: TSK, location: /etc/passwd",
+                "-" * 80,
+                "",
+                "",
+            ]
+        )
+
+        output = output_writer.ReadOutput()
+        self.assertEqual(output, expected_output)
 
     # TODO: add test for _PrintAnalysisReportCounter.
     # TODO: add test for _PrintAnalysisReportsDetails.

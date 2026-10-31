@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """Tests for the data location CLI arguments helper."""
 
+import os
 import unittest
+
+import plaso
 
 from plaso.cli import tools
 from plaso.cli.helpers import data_location
@@ -46,7 +49,22 @@ Test argument parser.
         with self.assertRaises(errors.BadConfigObject):
             data_location.DataLocationArgumentsHelper.ParseOptions(options, None)
 
-        # TODO: improve test coverage.
+        # A data location that does not exist falls back to the data files
+        # included with plaso.
+        expected_data_location = os.path.join(os.path.dirname(plaso.__file__), "data")
+
+        options.data_location = self._GetTestFilePath(["bogus"])
+
+        data_location.DataLocationArgumentsHelper.ParseOptions(options, test_tool)
+
+        self.assertEqual(test_tool._data_location, expected_data_location)
+
+        options = cli_test_lib.TestOptions()
+        test_tool = tools.CLITool()
+
+        data_location.DataLocationArgumentsHelper.ParseOptions(options, test_tool)
+
+        self.assertEqual(test_tool._data_location, expected_data_location)
 
 
 if __name__ == "__main__":

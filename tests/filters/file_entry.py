@@ -446,8 +446,86 @@ class FileEntryFilterCollectionTest(shared_test_lib.BaseTestCase):
         )
         self.assertEqual(matches, [])
 
-    # TODO: add test for Matches.
-    # TODO: add test for Print.
+    def testMatches(self):
+        """Tests the Matches function."""
+        test_file_path = self._GetTestFilePath(["ímynd.dd"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        os_path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
+        )
+        tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_TSK,
+            inode=15,
+            location="/passwords.txt",
+            parent=os_path_spec,
+        )
+        file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
+
+        matching_filter = file_entry_filters.ExtensionsFileEntryFilter(["txt"])
+        non_matching_filter = file_entry_filters.ExtensionsFileEntryFilter(["exe"])
+
+        # Test a collection without filters.
+        test_filter_collection = file_entry_filters.FileEntryFilterCollection()
+        self.assertTrue(test_filter_collection.Matches(file_entry))
+
+        # Test a collection with a matching filter.
+        test_filter_collection = file_entry_filters.FileEntryFilterCollection()
+        test_filter_collection.AddFilter(matching_filter)
+        self.assertTrue(test_filter_collection.Matches(file_entry))
+
+        # Test a collection with a non-matching filter.
+        test_filter_collection = file_entry_filters.FileEntryFilterCollection()
+        test_filter_collection.AddFilter(non_matching_filter)
+        self.assertFalse(test_filter_collection.Matches(file_entry))
+
+        # Test a collection where one of the filters matches.
+        test_filter_collection = file_entry_filters.FileEntryFilterCollection()
+        test_filter_collection.AddFilter(non_matching_filter)
+        test_filter_collection.AddFilter(matching_filter)
+        self.assertTrue(test_filter_collection.Matches(file_entry))
+
+        # Test a collection where the filter does not apply, since no date and
+        # time ranges are defined.
+        not_applicable_filter = file_entry_filters.DateTimeFileEntryFilter()
+        self.assertIsNone(not_applicable_filter.Matches(file_entry))
+
+        test_filter_collection = file_entry_filters.FileEntryFilterCollection()
+        test_filter_collection.AddFilter(not_applicable_filter)
+        self.assertTrue(test_filter_collection.Matches(file_entry))
+
+        # Test a collection where one filter does not apply and another does
+        # not match.
+        test_filter_collection.AddFilter(non_matching_filter)
+        self.assertFalse(test_filter_collection.Matches(file_entry))
+
+    def testPrint(self):
+        """Tests the Print function."""
+        output_writer = cli_test_lib.TestBinaryOutputWriter(encoding="utf-8")
+        test_filter_collection = file_entry_filters.FileEntryFilterCollection()
+
+        # Test a collection without filters.
+        test_filter_collection.Print(output_writer)
+
+        output = output_writer.ReadOutput()
+        self.assertEqual(output, b"")
+
+        test_filter_collection.AddFilter(
+            file_entry_filters.ExtensionsFileEntryFilter(["txt"])
+        )
+        test_filter_collection.AddFilter(
+            file_entry_filters.NamesFileEntryFilter(["myfile"])
+        )
+
+        test_filter_collection.Print(output_writer)
+
+        expected_output = [b"Filters:", b"\textensions: txt", b"\tnames: myfile", b""]
+
+        output = output_writer.ReadOutput()
+
+        # Compare the output as list of lines which makes it easier to spot
+        # differences.
+        self.assertEqual(output.split(b"\n"), expected_output)
 
 
 if __name__ == "__main__":
