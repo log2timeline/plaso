@@ -4,8 +4,10 @@
 import os
 import unittest
 
+from plaso.containers import event_sources
 from plaso.containers import events
 from plaso.lib import definitions
+from plaso.storage import time_range as storage_time_range
 from plaso.storage.sqlite import writer as sqlite_writer
 
 from tests import test_lib as shared_test_lib
@@ -136,8 +138,93 @@ class SQLiteStorageWriterTest(test_lib.StorageTestCase):
             finally:
                 storage_writer.Close()
 
-    # TODO: add tests for GetFirstWrittenEventSource
-    # TODO: add tests for GetNextWrittenEventSource
+    def testGetFirstWrittenEventSource(self):
+        """Tests the GetFirstWrittenEventSource function."""
+        storage_writer = sqlite_writer.SQLiteStorageWriter()
+
+        with self.assertRaises(OSError):
+            storage_writer.GetFirstWrittenEventSource()
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            test_path = os.path.join(temp_directory, "plaso.sqlite")
+            storage_writer.Open(path=test_path)
+
+            try:
+                event_source = storage_writer.GetFirstWrittenEventSource()
+                self.assertIsNone(event_source)
+
+                event_source = event_sources.EventSource(file_entry_type="file")
+                storage_writer.AddAttributeContainer(event_source)
+
+                event_source = storage_writer.GetFirstWrittenEventSource()
+                self.assertIsNotNone(event_source)
+                self.assertEqual(event_source.file_entry_type, "file")
+
+            finally:
+                storage_writer.Close()
+
+            # Only event sources written after the storage was (re)opened are
+            # returned.
+            storage_writer.Open(path=test_path)
+
+            try:
+                event_source = storage_writer.GetFirstWrittenEventSource()
+                self.assertIsNone(event_source)
+
+                event_source = event_sources.EventSource(file_entry_type="directory")
+                storage_writer.AddAttributeContainer(event_source)
+
+                event_source = storage_writer.GetFirstWrittenEventSource()
+                self.assertIsNotNone(event_source)
+                self.assertEqual(event_source.file_entry_type, "directory")
+
+                number_of_containers = storage_writer.GetNumberOfAttributeContainers(
+                    event_source.CONTAINER_TYPE
+                )
+                self.assertEqual(number_of_containers, 2)
+
+            finally:
+                storage_writer.Close()
+
+    def testGetNextWrittenEventSource(self):
+        """Tests the GetNextWrittenEventSource function."""
+        storage_writer = sqlite_writer.SQLiteStorageWriter()
+
+        with self.assertRaises(OSError):
+            storage_writer.GetNextWrittenEventSource()
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            test_path = os.path.join(temp_directory, "plaso.sqlite")
+            storage_writer.Open(path=test_path)
+
+            try:
+                event_source = event_sources.EventSource(file_entry_type="file")
+                storage_writer.AddAttributeContainer(event_source)
+
+                event_source = event_sources.EventSource(file_entry_type="directory")
+                storage_writer.AddAttributeContainer(event_source)
+
+                event_source = storage_writer.GetFirstWrittenEventSource()
+                self.assertEqual(event_source.file_entry_type, "file")
+
+                event_source = storage_writer.GetNextWrittenEventSource()
+                self.assertIsNotNone(event_source)
+                self.assertEqual(event_source.file_entry_type, "directory")
+
+                event_source = storage_writer.GetNextWrittenEventSource()
+                self.assertIsNone(event_source)
+
+                # An event source written after the last one was read is returned
+                # by the next call.
+                event_source = event_sources.EventSource(file_entry_type="link")
+                storage_writer.AddAttributeContainer(event_source)
+
+                event_source = storage_writer.GetNextWrittenEventSource()
+                self.assertIsNotNone(event_source)
+                self.assertEqual(event_source.file_entry_type, "link")
+
+            finally:
+                storage_writer.Close()
 
     def testGetSortedEvents(self):
         """Tests the GetSortedEvents function."""
@@ -152,10 +239,17 @@ class SQLiteStorageWriterTest(test_lib.StorageTestCase):
                 test_events = list(storage_writer.GetSortedEvents())
                 self.assertEqual(len(test_events), 4)
 
+                time_range = storage_time_range.TimeRange(
+                    1334940286000000, 1334961526929596
+                )
+                test_events = list(
+                    storage_writer.GetSortedEvents(time_range=time_range)
+                )
+                timestamps = [event.timestamp for event in test_events]
+                self.assertEqual(timestamps, [1334940286000000, 1334961526929596])
+
             finally:
                 storage_writer.Close()
-
-        # TODO: add test with time range.
 
     def testOpenClose(self):
         """Tests the Open and Close functions."""

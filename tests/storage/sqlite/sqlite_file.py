@@ -3,13 +3,19 @@
 
 import csv
 import gzip
+import json
 import os
+import sqlite3
 import unittest
+import zlib
+
+from acstore.containers import interface as containers_interface
 
 from plaso.containers import events
 from plaso.engine import configurations
 from plaso.engine import profilers
 from plaso.lib import definitions
+from plaso.storage import time_range as storage_time_range
 from plaso.storage.sqlite import sqlite_file
 
 from tests import test_lib as shared_test_lib
@@ -32,6 +38,15 @@ class _TestSQLiteStorageFileV20221023(sqlite_file.SQLiteStorageFile):
     _FORMAT_VERSION = 20221023
     _APPEND_COMPATIBLE_FORMAT_VERSION = 20221023
     _UPGRADE_COMPATIBLE_FORMAT_VERSION = 20221023
+    _READ_COMPATIBLE_FORMAT_VERSION = 20211121
+
+
+class _TestSQLiteStorageFileV20221023Upgrade(sqlite_file.SQLiteStorageFile):
+    """Test class for testing format version upgrades."""
+
+    _FORMAT_VERSION = 20221023
+    _APPEND_COMPATIBLE_FORMAT_VERSION = 20220716
+    _UPGRADE_COMPATIBLE_FORMAT_VERSION = 20220716
     _READ_COMPATIBLE_FORMAT_VERSION = 20211121
 
 
@@ -113,8 +128,93 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
             finally:
                 test_store.Close()
 
-    # TODO: add tests for _CreateAttributeContainerFromRow
-    # TODO: add tests for _DeserializeAttributeContainer
+    def testCreateAttributeContainerFromRow(self):
+        """Tests the _CreateAttributeContainerFromRow function."""
+        event_data = events.EventData(data_type="test:event")
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            test_path = os.path.join(temp_directory, "plaso.sqlite")
+            test_store = sqlite_file.SQLiteStorageFile()
+            test_store.Open(path=test_path, read_only=False)
+
+            try:
+                test_store.AddAttributeContainer(event_data)
+                test_store._CommitWriteCache(event_data.CONTAINER_TYPE)
+
+                test_store._cursor.execute(
+                    f"SELECT _data FROM {event_data.CONTAINER_TYPE:s} WHERE rowid = 1"
+                )
+                row = test_store._cursor.fetchone()
+
+                container = test_store._CreateAttributeContainerFromRow(
+                    event_data.CONTAINER_TYPE, ["_data"], row, 0
+                )
+                self.assertIsNotNone(container)
+                self.assertEqual(container.CONTAINER_TYPE, event_data.CONTAINER_TYPE)
+                self.assertEqual(container.data_type, "test:event")
+
+                # Data that is not compressed.
+                test_store.compression_format = definitions.COMPRESSION_FORMAT_NONE
+                serialized_data = test_store._SerializeAttributeContainer(event_data)
+
+                container = test_store._CreateAttributeContainerFromRow(
+                    event_data.CONTAINER_TYPE, ["_data"], [serialized_data], 0
+                )
+                self.assertIsNotNone(container)
+                self.assertEqual(container.data_type, "test:event")
+
+                # Compressed data read as if it was not compressed.
+                compressed_data = zlib.compress(serialized_data)
+                with self.assertRaises(OSError):
+                    test_store._CreateAttributeContainerFromRow(
+                        event_data.CONTAINER_TYPE, ["_data"], [compressed_data], 0
+                    )
+
+            finally:
+                test_store.compression_format = definitions.COMPRESSION_FORMAT_ZLIB
+                test_store.Close()
+
+    def testDeserializeAttributeContainer(self):
+        """Tests the _DeserializeAttributeContainer function."""
+        event_data_stream_identifier = (
+            containers_interface.AttributeContainerIdentifier(
+                name=events.EventDataStream.CONTAINER_TYPE, sequence_number=5
+            )
+        )
+
+        event_data = events.EventData(data_type="test:event")
+        event_data.SetEventDataStreamIdentifier(event_data_stream_identifier)
+
+        test_store = sqlite_file.SQLiteStorageFile()
+
+        serialized_data = test_store._SerializeAttributeContainer(event_data)
+
+        container = test_store._DeserializeAttributeContainer(
+            event_data.CONTAINER_TYPE, serialized_data
+        )
+        self.assertIsNotNone(container)
+        self.assertEqual(container.data_type, "test:event")
+
+        identifier = container.GetEventDataStreamIdentifier()
+        self.assertIsNotNone(identifier)
+        self.assertEqual(
+            identifier.CopyToString(), event_data_stream_identifier.CopyToString()
+        )
+
+        container = test_store._DeserializeAttributeContainer(
+            event_data.CONTAINER_TYPE, b""
+        )
+        self.assertIsNone(container)
+
+        with self.assertRaises(OSError):
+            test_store._DeserializeAttributeContainer(
+                event_data.CONTAINER_TYPE, b"\xff\xfe"
+            )
+
+        with self.assertRaises(OSError):
+            test_store._DeserializeAttributeContainer(
+                event_data.CONTAINER_TYPE, b"{bogus"
+            )
 
     def testGetAttributeContainersWithFilter(self):
         """Tests the _GetAttributeContainersWithFilter function."""
@@ -215,17 +315,163 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
             finally:
                 test_store.Close()
 
-    # TODO: add tests for _RaiseIfNotReadable
-    # TODO: add tests for _RaiseIfNotWritable
-    # TODO: add tests for _ReadAndCheckStorageMetadata
-    # TODO: add tests for _SerializeAttributeContainer
-    # TODO: add tests for _UpdateEventAfterDeserialize
-    # TODO: add tests for _UpdateEventBeforeSerialize
-    # TODO: add tests for _UpdateEventDataAfterDeserialize
-    # TODO: add tests for _UpdateEventDataBeforeSerialize
-    # TODO: add tests for _UpdateEventTagAfterDeserialize
-    # TODO: add tests for _UpdateEventTagBeforeSerialize
-    # TODO: add tests for _UpdateStorageMetadataFormatVersion
+    def testRaiseIfNotReadable(self):
+        """Tests the _RaiseIfNotReadable function."""
+        with shared_test_lib.TempDirectory() as temp_directory:
+            test_path = os.path.join(temp_directory, "plaso.sqlite")
+            test_store = sqlite_file.SQLiteStorageFile()
+
+            with self.assertRaises(OSError):
+                test_store._RaiseIfNotReadable()
+
+            test_store.Open(path=test_path, read_only=False)
+            test_store.Close()
+
+            test_store = sqlite_file.SQLiteStorageFile()
+            test_store.Open(path=test_path)
+
+            try:
+                test_store._RaiseIfNotReadable()
+            finally:
+                test_store.Close()
+
+            with self.assertRaises(OSError):
+                test_store._RaiseIfNotReadable()
+
+    def testRaiseIfNotWritable(self):
+        """Tests the _RaiseIfNotWritable function."""
+        with shared_test_lib.TempDirectory() as temp_directory:
+            test_path = os.path.join(temp_directory, "plaso.sqlite")
+            test_store = sqlite_file.SQLiteStorageFile()
+
+            with self.assertRaises(OSError):
+                test_store._RaiseIfNotWritable()
+
+            test_store.Open(path=test_path, read_only=False)
+
+            try:
+                test_store._RaiseIfNotWritable()
+            finally:
+                test_store.Close()
+
+            with self.assertRaises(OSError):
+                test_store._RaiseIfNotWritable()
+
+            test_store = sqlite_file.SQLiteStorageFile()
+            test_store.Open(path=test_path)
+
+            try:
+                with self.assertRaises(OSError):
+                    test_store._RaiseIfNotWritable()
+            finally:
+                test_store.Close()
+
+    def testReadAndCheckStorageMetadata(self):
+        """Tests the _ReadAndCheckStorageMetadata function."""
+        with shared_test_lib.TempDirectory() as temp_directory:
+            test_path = os.path.join(temp_directory, "plaso.sqlite")
+            test_store = sqlite_file.SQLiteStorageFile()
+            test_store.Open(path=test_path, read_only=False)
+
+            try:
+                test_store.format_version = None
+                test_store.compression_format = None
+                test_store.serialization_format = None
+
+                test_store._ReadAndCheckStorageMetadata()
+
+                self.assertEqual(test_store.format_version, test_store._FORMAT_VERSION)
+                self.assertEqual(
+                    test_store.compression_format, definitions.COMPRESSION_FORMAT_ZLIB
+                )
+                self.assertEqual(
+                    test_store.serialization_format, definitions.SERIALIZER_FORMAT_JSON
+                )
+
+                test_store._cursor.execute(
+                    'UPDATE metadata SET value = "bogus" '
+                    'WHERE key = "compression_format"'
+                )
+
+                with self.assertRaises(OSError):
+                    test_store._ReadAndCheckStorageMetadata()
+
+            finally:
+                test_store.Close()
+
+    def testSerializeAttributeContainer(self):
+        """Tests the _SerializeAttributeContainer function."""
+        event_data_stream_identifier = (
+            containers_interface.AttributeContainerIdentifier(
+                name=events.EventDataStream.CONTAINER_TYPE, sequence_number=5
+            )
+        )
+
+        event_data = events.EventData(data_type="test:event")
+
+        test_store = sqlite_file.SQLiteStorageFile()
+
+        serialized_data = test_store._SerializeAttributeContainer(event_data)
+        self.assertIsInstance(serialized_data, bytes)
+
+        json_dict = json.loads(serialized_data.decode("utf-8"))
+        self.assertEqual(json_dict["__container_type__"], event_data.CONTAINER_TYPE)
+        self.assertEqual(json_dict["data_type"], "test:event")
+        self.assertNotIn("_event_data_stream_identifier", json_dict)
+
+        event_data.SetEventDataStreamIdentifier(event_data_stream_identifier)
+
+        serialized_data = test_store._SerializeAttributeContainer(event_data)
+
+        json_dict = json.loads(serialized_data.decode("utf-8"))
+        self.assertEqual(
+            json_dict["_event_data_stream_identifier"],
+            event_data_stream_identifier.CopyToString(),
+        )
+
+        # An attribute value that cannot be serialized to JSON.
+        event_data.unsupported = object()
+
+        with self.assertRaises(OSError):
+            test_store._SerializeAttributeContainer(event_data)
+
+    def testUpdateStorageMetadataFormatVersion(self):
+        """Tests the _UpdateStorageMetadataFormatVersion function."""
+        with shared_test_lib.TempDirectory() as temp_directory:
+            test_path = os.path.join(temp_directory, "v20220716.sqlite")
+            test_store = _TestSQLiteStorageFileV20220716()
+            test_store.Open(path=test_path, read_only=False)
+            test_store.Close()
+
+            # Opening the store for writing upgrades the format version.
+            test_store = _TestSQLiteStorageFileV20221023Upgrade()
+            test_store.Open(path=test_path, read_only=False)
+
+            try:
+                metadata_values = test_store._ReadMetadata()
+                self.assertEqual(metadata_values["format_version"], "20221023")
+
+                # The stored format version is not updated when the format version
+                # of the store is not upgrade compatible.
+                test_store._cursor.execute(
+                    'UPDATE metadata SET value = "20220716" '
+                    'WHERE key = "format_version"'
+                )
+
+                test_store.format_version = 20211121
+                test_store._UpdateStorageMetadataFormatVersion()
+
+                metadata_values = test_store._ReadMetadata()
+                self.assertEqual(metadata_values["format_version"], "20220716")
+
+                test_store.format_version = 20220716
+                test_store._UpdateStorageMetadataFormatVersion()
+
+                metadata_values = test_store._ReadMetadata()
+                self.assertEqual(metadata_values["format_version"], "20221023")
+
+            finally:
+                test_store.Close()
 
     def testWriteExistingAttributeContainer(self):
         """Tests the _WriteExistingAttributeContainer function."""
@@ -259,8 +505,59 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
             finally:
                 test_store.Close()
 
-    # TODO: add tests for _WriteMetadata
-    # TODO: add tests for _WriteMetadataValue
+    def testWriteMetadata(self):
+        """Tests the _WriteMetadata function."""
+        with shared_test_lib.TempDirectory() as temp_directory:
+            test_path = os.path.join(temp_directory, "plaso.sqlite")
+            test_store = sqlite_file.SQLiteStorageFile()
+            test_store.Open(path=test_path, read_only=False)
+
+            try:
+                test_store._cursor.execute("DROP TABLE metadata")
+
+                test_store.compression_format = definitions.COMPRESSION_FORMAT_NONE
+                test_store._WriteMetadata()
+
+                metadata_values = test_store._ReadMetadata()
+                self.assertEqual(
+                    metadata_values,
+                    {
+                        "compression_format": definitions.COMPRESSION_FORMAT_NONE,
+                        "format_version": f"{test_store._FORMAT_VERSION:d}",
+                        "serialization_format": definitions.SERIALIZER_FORMAT_JSON,
+                    },
+                )
+
+                # The metadata table already exists.
+                with self.assertRaises(OSError):
+                    test_store._WriteMetadata()
+
+            finally:
+                test_store.Close()
+
+    def testWriteMetadataValue(self):
+        """Tests the _WriteMetadataValue function."""
+        with shared_test_lib.TempDirectory() as temp_directory:
+            test_path = os.path.join(temp_directory, "plaso.sqlite")
+            test_store = sqlite_file.SQLiteStorageFile()
+            test_store.Open(path=test_path, read_only=False)
+
+            try:
+                metadata_values = test_store._ReadMetadata()
+                self.assertNotIn("test_key", metadata_values)
+
+                test_store._WriteMetadataValue("test_key", "test_value")
+
+                metadata_values = test_store._ReadMetadata()
+                self.assertEqual(metadata_values.get("test_key"), "test_value")
+
+                test_store._cursor.execute("DROP TABLE metadata")
+
+                with self.assertRaises(OSError):
+                    test_store._WriteMetadataValue("test_key", "test_value")
+
+            finally:
+                test_store.Close()
 
     def testWriteNewAttributeContainer(self):
         """Tests the _WriteNewAttributeContainer function."""
@@ -352,7 +649,38 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
             with self.assertRaises(OSError):
                 test_store.AddAttributeContainer(event_data_stream)
 
-    # TODO: add tests for CheckSupportedFormat
+    def testCheckSupportedFormat(self):
+        """Tests the CheckSupportedFormat function."""
+        with shared_test_lib.TempDirectory() as temp_directory:
+            test_path = os.path.join(temp_directory, "plaso.sqlite")
+
+            result = sqlite_file.SQLiteStorageFile.CheckSupportedFormat(test_path)
+            self.assertFalse(result)
+            self.assertFalse(os.path.exists(test_path))
+
+            test_store = sqlite_file.SQLiteStorageFile()
+            test_store.Open(path=test_path, read_only=False)
+            test_store.Close()
+
+            result = sqlite_file.SQLiteStorageFile.CheckSupportedFormat(test_path)
+            self.assertTrue(result)
+
+            test_path = os.path.join(temp_directory, "bogus.sqlite")
+            with open(test_path, "wb") as file_object:
+                file_object.write(b"bogus")
+
+            result = sqlite_file.SQLiteStorageFile.CheckSupportedFormat(test_path)
+            self.assertFalse(result)
+
+            # A SQLite database without a metadata table.
+            test_path = os.path.join(temp_directory, "other.sqlite")
+            connection = sqlite3.connect(test_path)
+            connection.execute("CREATE TABLE other (value TEXT)")
+            connection.commit()
+            connection.close()
+
+            result = sqlite_file.SQLiteStorageFile.CheckSupportedFormat(test_path)
+            self.assertFalse(result)
 
     def testGetAttributeContainers(self):
         """Tests the GetAttributeContainers function."""
@@ -551,10 +879,15 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
                 test_events = list(test_store.GetSortedEvents())
                 self.assertEqual(len(test_events), 4)
 
+                time_range = storage_time_range.TimeRange(
+                    1334940286000000, 1334961526929596
+                )
+                test_events = list(test_store.GetSortedEvents(time_range=time_range))
+                timestamps = [event.timestamp for event in test_events]
+                self.assertEqual(timestamps, [1334940286000000, 1334961526929596])
+
             finally:
                 test_store.Close()
-
-        # TODO: add test with time range.
 
     def testHasAttributeContainers(self):
         """Tests the HasAttributeContainers function."""
