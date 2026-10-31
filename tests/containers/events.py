@@ -3,6 +3,8 @@
 
 import unittest
 
+from dfdatetime import posix_time as dfdatetime_posix_time
+
 from plaso.containers import events
 
 from tests import test_lib as shared_test_lib
@@ -61,6 +63,33 @@ class EventValuesHelperTest(shared_test_lib.BaseTestCase):
         )
 
         self.assertEqual(content_identifier, "31aac7b1f8c1446f4b638c0dc5f92981")
+
+    def testCalculateEventValuesHashAttributeTypes(self):
+        """Tests the CalculateEventValuesHash function with attribute types."""
+        event_data = events.EventData()
+        event_data.data_type = "test"
+        event_data.attribute_bool = True
+        event_data.attribute_float = 1.5
+        event_data.attribute_integer = 10
+        event_data.attribute_list = ["value1", 2]
+        event_data.attribute_string = "string"
+        event_data.date_time = dfdatetime_posix_time.PosixTime(timestamp=1281643591)
+        event_data.date_time_list = [
+            dfdatetime_posix_time.PosixTime(timestamp=1281643591)
+        ]
+
+        # Protected attributes are not part of the event values hash.
+        setattr(event_data, "_corrupted", True)
+        setattr(event_data, "_parser_chain", "test_parser")
+
+        content_identifier = events.CalculateEventValuesHash(event_data, None)
+
+        self.assertEqual(content_identifier, "34be9d3899f20ab52814b386173f6b1f")
+
+        event_data.attribute_dict = {"key": "value"}
+
+        with self.assertRaises(RuntimeError):
+            events.CalculateEventValuesHash(event_data, None)
 
 
 class EventDataTest(shared_test_lib.BaseTestCase):
