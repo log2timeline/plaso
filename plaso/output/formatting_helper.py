@@ -495,14 +495,13 @@ class FieldFormattingHelper:
             date_time.GetDateWithTimeOfDay()
         )
         try:
-            # For tzname to work the datetime object must be naive (without
-            # a time zone).
             datetime_object = datetime.datetime(
-                year, month, day_of_month, hours, minutes, seconds
+                year, month, day_of_month, hours, minutes, seconds, tzinfo=pytz.UTC
             )
-            return output_mediator.time_zone.tzname(datetime_object)
+            datetime_object = datetime_object.astimezone(output_mediator.time_zone)
+            return datetime_object.tzname()
 
-        except (OverflowError, TypeError, ValueError):
+        except (OSError, OverflowError, TypeError, ValueError):
             message = (
                 f"unable to copy timestamp: {event.timestamp!s} to a human readable "
                 f'time zone. Defaulting to: "-"'
