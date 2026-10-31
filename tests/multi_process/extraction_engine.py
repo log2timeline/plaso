@@ -10,11 +10,14 @@ import unittest
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
+from plaso.containers import artifacts
 from plaso.containers import sessions
+from plaso.containers import tasks
 from plaso.containers import warnings
 from plaso.lib import definitions
 from plaso.engine import configurations
 from plaso.multi_process import extraction_engine
+from plaso.multi_process import merge_helpers
 from plaso.storage import factory as storage_factory
 from plaso.storage.sqlite import writer as sqlite_writer
 
@@ -93,6 +96,112 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
         expected_parsers_counter = collections.Counter({"filestat": 15, "total": 15})
         self.assertEqual(parsers_counter, expected_parsers_counter)
+
+    def testInternalMergeAttributeContainers(self):
+        """Tests the _MergeAttributeContainers function."""
+        # pylint: disable=protected-access
+        session = sessions.Session()
+        task = tasks.Task(session_identifier=session.identifier)
+
+        test_engine = extraction_engine.ExtractionMultiProcessEngine()
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            task_storage_path = os.path.join(temp_directory, "task.plaso")
+            task_storage_writer = (
+                storage_factory.StorageFactory.CreateTaskStorageWriter(
+                    definitions.STORAGE_FORMAT_SQLITE
+                )
+            )
+            task_storage_writer.Open(path=task_storage_path)
+
+            try:
+                message_file = artifacts.WindowsEventLogMessageFileArtifact(
+                    path="\\Windows\\System32\\test.dll"
+                )
+                task_storage_writer.AddAttributeContainer(message_file)
+
+                message_table = artifacts.WindowsEventLogMessageTableArtifact(
+                    language_identifier=0x00000409
+                )
+                message_table.SetMessageFileIdentifier(message_file.GetIdentifier())
+                task_storage_writer.AddAttributeContainer(message_table)
+
+                message_string = artifacts.WindowsEventLogMessageStringArtifact(
+                    message_identifier=0xB0010001, string="A test value"
+                )
+                message_string.SetMessageTableIdentifier(message_table.GetIdentifier())
+                task_storage_writer.AddAttributeContainer(message_string)
+
+            finally:
+                task_storage_writer.Close()
+
+            storage_path = os.path.join(temp_directory, "storage.plaso")
+            storage_writer = sqlite_writer.SQLiteStorageWriter()
+            storage_writer.Open(path=storage_path)
+
+            try:
+                # Add a message file and table to the session store so that the
+                # identifiers of the merged containers differ from those in the
+                # task store.
+                storage_writer.AddAttributeContainer(
+                    artifacts.WindowsEventLogMessageFileArtifact(
+                        path="\\Windows\\System32\\other.dll"
+                    )
+                )
+                storage_writer.AddAttributeContainer(
+                    artifacts.WindowsEventLogMessageTableArtifact(
+                        language_identifier=0x00000409
+                    )
+                )
+
+                task_storage_reader = (
+                    storage_factory.StorageFactory.CreateTaskStorageReader(
+                        definitions.STORAGE_FORMAT_SQLITE, task, task_storage_path
+                    )
+                )
+                merge_helper = merge_helpers.ExtractionTaskMergeHelper(
+                    task_storage_reader, task.identifier
+                )
+
+                try:
+                    test_engine._MergeAttributeContainers(storage_writer, merge_helper)
+                finally:
+                    merge_helper.Close()
+
+                self.assertTrue(merge_helper.fully_merged)
+
+                number_of_message_tables = (
+                    storage_writer.GetNumberOfAttributeContainers(
+                        "windows_eventlog_message_table"
+                    )
+                )
+                self.assertEqual(number_of_message_tables, 2)
+
+                number_of_message_strings = (
+                    storage_writer.GetNumberOfAttributeContainers(
+                        "windows_eventlog_message_string"
+                    )
+                )
+                self.assertEqual(number_of_message_strings, 1)
+
+                message_string = storage_writer.GetAttributeContainerByIndex(
+                    "windows_eventlog_message_string", 0
+                )
+                message_table = storage_writer.GetAttributeContainerByIdentifier(
+                    "windows_eventlog_message_table",
+                    message_string.GetMessageTableIdentifier(),
+                )
+                self.assertIsNotNone(message_table)
+
+                message_file = storage_writer.GetAttributeContainerByIdentifier(
+                    "windows_eventlog_message_file",
+                    message_table.GetMessageFileIdentifier(),
+                )
+                self.assertIsNotNone(message_file)
+                self.assertEqual(message_file.path, "\\Windows\\System32\\test.dll")
+
+            finally:
+                storage_writer.Close()
 
     def testInternalProcessEventSourcesWithFailedTask(self):
         """Tests the _ProcessEventSources function with a failed task."""
