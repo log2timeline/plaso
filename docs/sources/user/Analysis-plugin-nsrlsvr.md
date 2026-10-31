@@ -42,6 +42,11 @@ Next run psort to tag events:
 psort.py --analysis nsrlsvr --nsrlsvr-hash md5 --nsrlsvr-host localhost --nsrlsvr-port 9120 -o null timeline.plaso
 ```
 
+The `--nsrlsvr-hash` option supports `md5` and `sha1`, the default is `md5`.
+
+Events of files that are present in nsrlsvr are tagged with `nsrl_present`.
+Use `--nsrlsvr-label` to apply a different label.
+
 The last step would be to export a timeline with the tags:
 
 ```bash

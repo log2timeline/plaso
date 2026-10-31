@@ -16,7 +16,10 @@ Next run psort to determine sessions:
 psort.py --analysis sessionize -o null timeline.plaso
 ```
 
-This will tag with a label to indicate which session they belong to.
+This will tag events with a `session_N` label to indicate which session they
+belong to, where N starts at 0. A new session starts when the time between
+consecutive events is larger than the maximum pause. Use `--maximum-pause` to
+set the maximum pause in minutes, the default is 10.
 
 The last step would be to export a timeline with the tags:
 
