@@ -757,7 +757,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
             metavar="EXTENSIONS",
             help=(
                 "Filter on file name extensions. This option accepts multiple "
-                'multiple comma separated values e.g. "csv,docx,pst".'
+                'comma separated values e.g. "csv,docx,pst".'
             ),
         )
         argument_group.add_argument(
@@ -768,7 +768,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
             metavar="NAMES",
             help=(
                 "Filter on file names.  This option accepts a comma separated "
-                "string denoting all file names, e.g. -x "
+                "string denoting all file names, e.g. --names "
                 '"NTUSER.DAT,UsrClass.dat".'
             ),
         )
