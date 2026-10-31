@@ -218,6 +218,37 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
         finally:
             storage_writer.Close()
 
+    def testUpdateDataTypesCounter(self):
+        """Tests the UpdateDataTypesCounter function."""
+        storage_writer = fake_writer.FakeStorageWriter()
+        storage_writer.Open()
+
+        try:
+            stored_data_types_counter = storage_writer.GetDataTypesCounter()
+            self.assertEqual(len(stored_data_types_counter), 0)
+
+            data_types_counter = collections.Counter({"fs:stat": 5, "total": 5})
+            storage_writer.UpdateDataTypesCounter(
+                stored_data_types_counter, data_types_counter
+            )
+            self.assertEqual(data_types_counter["fs:stat"], 5)
+
+            data_types_counter = collections.Counter({"fs:stat": 3, "total": 3})
+            storage_writer.UpdateDataTypesCounter(
+                stored_data_types_counter, data_types_counter
+            )
+            number_of_containers = storage_writer.GetNumberOfAttributeContainers(
+                "data_type_count"
+            )
+            self.assertEqual(number_of_containers, 2)
+
+            stored_data_types_counter = storage_writer.GetDataTypesCounter()
+            self.assertEqual(stored_data_types_counter["fs:stat"].number_of_events, 8)
+            self.assertEqual(stored_data_types_counter["total"].number_of_events, 8)
+
+        finally:
+            storage_writer.Close()
+
     def testUpdateEventLabelsCounter(self):
         """Tests the UpdateEventLabelsCounter function."""
         storage_writer = fake_writer.FakeStorageWriter()
@@ -260,6 +291,54 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
                 stored_event_labels_counter["corrupted"].number_of_events, 8
             )
             self.assertEqual(stored_event_labels_counter["total"].number_of_events, 8)
+
+            event_labels_counter = collections.Counter({"recovered": 2, "total": 2})
+            storage_writer.UpdateEventLabelsCounter(
+                stored_event_labels_counter, event_labels_counter
+            )
+            self.assertEqual(event_labels_counter["recovered"], 2)
+
+            event_labels_counter = collections.Counter({"recovered": 1, "total": 1})
+            storage_writer.UpdateEventLabelsCounter(
+                stored_event_labels_counter, event_labels_counter
+            )
+            number_of_containers = storage_writer.GetNumberOfAttributeContainers(
+                "event_label_count"
+            )
+            self.assertEqual(number_of_containers, 3)
+
+            stored_event_labels_counter = storage_writer.GetEventLabelsCounter()
+            self.assertEqual(
+                stored_event_labels_counter["recovered"].number_of_events, 3
+            )
+            self.assertEqual(stored_event_labels_counter["total"].number_of_events, 11)
+
+        finally:
+            storage_writer.Close()
+
+    def testUpdateParsersCounter(self):
+        """Tests the UpdateParsersCounter function."""
+        storage_writer = fake_writer.FakeStorageWriter()
+        storage_writer.Open()
+
+        try:
+            stored_parsers_counter = storage_writer.GetParsersCounter()
+            self.assertEqual(len(stored_parsers_counter), 0)
+
+            parsers_counter = collections.Counter({"filestat": 5, "total": 5})
+            storage_writer.UpdateParsersCounter(stored_parsers_counter, parsers_counter)
+            self.assertEqual(parsers_counter["filestat"], 5)
+
+            parsers_counter = collections.Counter({"filestat": 3, "total": 3})
+            storage_writer.UpdateParsersCounter(stored_parsers_counter, parsers_counter)
+            number_of_containers = storage_writer.GetNumberOfAttributeContainers(
+                "parser_count"
+            )
+            self.assertEqual(number_of_containers, 2)
+
+            stored_parsers_counter = storage_writer.GetParsersCounter()
+            self.assertEqual(stored_parsers_counter["filestat"].number_of_events, 8)
+            self.assertEqual(stored_parsers_counter["total"].number_of_events, 8)
 
         finally:
             storage_writer.Close()

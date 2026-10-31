@@ -228,7 +228,7 @@ class StorageWriter(reader.StorageReader):
                 self.UpdateAttributeContainer(data_type_count)
             else:
                 data_type_count = counts.DataTypeCount(name=key, number_of_events=value)
-                data_types_counter[key] = data_type_count
+                stored_data_types_counter[key] = data_type_count
                 self.AddAttributeContainer(data_type_count)
 
     def UpdateEventLabelsCounter(
@@ -251,7 +251,7 @@ class StorageWriter(reader.StorageReader):
                 event_label_count = counts.EventLabelCount(
                     label=key, number_of_events=value
                 )
-                event_labels_counter[key] = event_label_count
+                stored_event_labels_counter[key] = event_label_count
                 self.AddAttributeContainer(event_label_count)
 
     def UpdateParsersCounter(self, stored_parsers_counter, parsers_counter):
@@ -269,5 +269,5 @@ class StorageWriter(reader.StorageReader):
                 self.UpdateAttributeContainer(parser_count)
             else:
                 parser_count = counts.ParserCount(name=key, number_of_events=value)
-                parsers_counter[key] = parser_count
+                stored_parsers_counter[key] = parser_count
                 self.AddAttributeContainer(parser_count)
