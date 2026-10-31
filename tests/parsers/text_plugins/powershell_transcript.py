@@ -90,18 +90,16 @@ class PowerShellTranscriptLogTextPluginTest(test_lib.TextPluginTestCase):
             ["powershell_transcript_ger.txt"], plugin
         )
 
-        # actually 3 Events, but as per l.297 (powershell_transcript.py)
-        # currently only the first 2 will be parsed correctly
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
-        self.assertEqual(number_of_event_data, 2)
+        self.assertEqual(number_of_event_data, 3)
 
+        # The transcript has no footer.
         number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
             "extraction_warning"
         )
-        self.assertEqual(number_of_warnings, 0)
+        self.assertEqual(number_of_warnings, 1)
 
         number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
             "recovery_warning"
@@ -177,6 +175,67 @@ class PowerShellTranscriptLogTextPluginTest(test_lib.TextPluginTestCase):
             "username": "DE\\User",
             "version": "5.1.19041.1682",
             "ws_man_stack_version": "3.0",
+        }
+
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
+        self.CheckEventData(event_data, expected_event_values)
+
+        expected_event_values = {
+            "commands": "PS C:\\Users\\User> rm .\\filename",
+            "data_type": "powershell:transcript_log:entry",
+            "start_time": "2022-08-24T12:42:37",
+        }
+
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 2)
+        self.CheckEventData(event_data, expected_event_values)
+
+    def testProcessIncomplete(self):
+        """Tests the Process function on a file without footer."""
+        plugin = powershell_transcript.PowerShellTranscriptLogTextPlugin()
+        storage_writer = self._ParseTextFileWithPlugin(
+            ["powershell_transcript_incomplete.txt"], plugin
+        )
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 2)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 1)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "recovery_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        generator = storage_writer.GetAttributeContainers("extraction_warning")
+        test_warnings = list(generator)
+        test_warning = test_warnings[0]
+        self.assertIsNotNone(test_warning)
+        self.assertEqual(
+            test_warning.message,
+            "missing PowerShell transcript footer, file is likely incomplete.",
+        )
+
+        # Command output that contains "Windows PowerShell" is not a footer.
+        expected_event_values = {
+            "commands": (
+                "PS C:\\Users\\user> (Get-Host).Name; Windows PowerShell ISE Host"
+            ),
+            "data_type": "powershell:transcript_log:entry",
+            "start_time": "2023-04-02T10:15:00",
+        }
+
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
+
+        expected_event_values = {
+            "commands": "PS C:\\Users\\user> whoami; host\\user",
+            "data_type": "powershell:transcript_log:entry",
+            "start_time": "2023-04-02T10:15:30",
         }
 
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
