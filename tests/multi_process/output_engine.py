@@ -454,7 +454,93 @@ class OutputAndFormattingMultiProcessEngineTest(test_lib.MultiProcessingTestCase
         ]
         self.assertEqual(output_module.events, expected_events)
 
-    # TODO: add test for _FlushExportBuffer.
+    def testInternalFlushExportBuffer(self):
+        """Tests the _FlushExportBuffer function."""
+        test_events = [
+            {
+                "data_type": "test:event",
+                "md5_hash": "11111111111111111111111111111111",
+                "timestamp": 5134324321,
+                "timestamp_desc": definitions.TIME_DESCRIPTION_UNKNOWN,
+            },
+            {
+                "data_type": "test:event",
+                "md5_hash": "11111111111111111111111111111111",
+                "timestamp": 5134324321,
+                "timestamp_desc": definitions.TIME_DESCRIPTION_UNKNOWN,
+            },
+            {
+                "data_type": "test:event",
+                "md5_hash": "22222222222222222222222222222222",
+                "timestamp": 5134324321,
+                "timestamp_desc": definitions.TIME_DESCRIPTION_CREATION,
+            },
+            {
+                "data_type": "test:event",
+                "md5_hash": "22222222222222222222222222222222",
+                "timestamp": 5134324321,
+                "timestamp_desc": definitions.TIME_DESCRIPTION_LAST_ACCESS,
+            },
+        ]
+
+        for deduplicate_events, expected_number_of_written_events in (
+            (True, 1),
+            (False, 2),
+        ):
+            output_module = TestOutputModule()
+
+            test_engine = output_engine.OutputAndFormattingMultiProcessEngine()
+
+            for (
+                event,
+                event_data,
+                event_data_stream,
+            ) in containers_test_lib.CreateEventsFromValues(test_events):
+                test_engine._export_event_heap.PushEvent(
+                    event, event_data, event_data_stream
+                )
+
+            test_engine._FlushExportBuffer(
+                None,
+                output_module,
+                deduplicate_events=deduplicate_events,
+                resolve_event_tag=False,
+            )
+
+            self.assertEqual(test_engine._export_event_heap.number_of_events, 0)
+
+            written_events = [
+                field_values
+                for field_values in output_module.events
+                if isinstance(field_values, dict)
+            ]
+            expected_written_events = [
+                {"md5_hash": "11111111111111111111111111111111"}
+            ] * expected_number_of_written_events
+            self.assertEqual(written_events, expected_written_events)
+
+            self.assertEqual(len(output_module.macb_groups), 1)
+
+            macb_group = output_module.macb_groups[0]
+            self.assertEqual(len(macb_group), 2)
+
+            timestamp_descriptions = sorted(
+                macb_event.timestamp_desc for macb_event, _, _, _ in macb_group
+            )
+            self.assertEqual(
+                timestamp_descriptions,
+                [
+                    definitions.TIME_DESCRIPTION_CREATION,
+                    definitions.TIME_DESCRIPTION_LAST_ACCESS,
+                ],
+            )
+
+            events_status = test_engine._events_status
+            self.assertEqual(
+                events_status.number_of_duplicate_events,
+                2 - expected_number_of_written_events,
+            )
+            self.assertEqual(events_status.number_of_macb_grouped_events, 2)
 
     def testExportEvents(self):
         """Tests the ExportEvents function."""
