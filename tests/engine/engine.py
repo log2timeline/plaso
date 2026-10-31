@@ -103,7 +103,36 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
 
         self.assertIsNotNone(test_engine._artifacts_registry)
 
-        # TODO: add test that raises BadConfigOption
+        # Test with a missing artifact definitions path.
+        test_engine = TestEngine()
+
+        with self.assertRaises(errors.BadConfigOption):
+            test_engine.BuildArtifactsRegistry(None, None)
+
+        self.assertIsNone(test_engine._artifacts_registry)
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            invalid_artifacts_path = os.path.join(temp_directory, "invalid.yaml")
+            with open(invalid_artifacts_path, "w", encoding="utf-8") as file_object:
+                file_object.write("name: Invalid\ndoc: Missing sources.\n")
+
+            # Test with artifact definitions that cannot be read.
+            with self.assertRaises(errors.BadConfigOption):
+                test_engine.BuildArtifactsRegistry(invalid_artifacts_path, None)
+
+            # Test with custom artifact definitions that cannot be read.
+            with self.assertRaises(errors.BadConfigOption):
+                test_engine.BuildArtifactsRegistry(
+                    test_artifacts_path, invalid_artifacts_path
+                )
+
+        self.assertIsNone(test_engine._artifacts_registry)
+
+        # Test with custom artifact definitions that redefine existing ones.
+        with self.assertRaises(errors.BadConfigOption):
+            test_engine.BuildArtifactsRegistry(test_artifacts_path, test_artifacts_path)
+
+        self.assertIsNone(test_engine._artifacts_registry)
 
     def testBuildCollectionFilters(self):
         """Tests the BuildCollectionFilters function."""

@@ -225,8 +225,138 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
         compatible_key = test_filter_file.CheckKeyCompatibility(key_path)
         self.assertTrue(compatible_key)
 
-    # TODO: add tests for _BuildFindSpecsFromArtifact
-    # TODO: add tests for _BuildFindSpecsFromGroupName
+    def testBuildFindSpecsFromArtifact(self):
+        """Tests the _BuildFindSpecsFromArtifact function."""
+        test_filters_helper = self._CreateTestArtifactDefinitionsFiltersHelper()
+
+        environment_variables = [
+            artifacts.EnvironmentVariableArtifact(
+                case_sensitive=False, name="SystemDrive", value="C:"
+            )
+        ]
+
+        # Test a file source artifact definition.
+        definition = test_filters_helper._artifacts_registry.GetDefinitionByName(
+            "TestFiles3"
+        )
+        find_specs = test_filters_helper._BuildFindSpecsFromArtifact(
+            definition, environment_variables, []
+        )
+        self.assertEqual(len(find_specs), 2)
+
+        location_segments = sorted(
+            [find_spec._location_segments for find_spec in find_specs]
+        )
+        self.assertEqual(
+            location_segments, [["a_directory"], ["a_directory", "a_file"]]
+        )
+
+        self.assertEqual(test_filters_helper.file_system_artifact_names, {"TestFiles3"})
+        self.assertEqual(test_filters_helper.registry_artifact_names, set())
+
+        # Test a Windows Registry key source artifact definition.
+        definition = test_filters_helper._artifacts_registry.GetDefinitionByName(
+            "TestRegistry"
+        )
+        find_specs = test_filters_helper._BuildFindSpecsFromArtifact(
+            definition, environment_variables, []
+        )
+        self.assertEqual(len(find_specs), 1)
+
+        expected_key_path_segments = [
+            "HKEY_LOCAL_MACHINE",
+            "System",
+            "ControlSet.*",
+            "Control",
+            "SecurityProviders",
+            ".*",
+        ]
+        self.assertEqual(find_specs[0]._key_path_segments, expected_key_path_segments)
+        self.assertEqual(test_filters_helper.registry_artifact_names, {"TestRegistry"})
+
+        # Test a Windows Registry value source artifact definition, of which only
+        # the keys are extracted.
+        definition = test_filters_helper._artifacts_registry.GetDefinitionByName(
+            "TestRegistryValue"
+        )
+        find_specs = test_filters_helper._BuildFindSpecsFromArtifact(
+            definition, environment_variables, []
+        )
+        self.assertEqual(len(find_specs), 2)
+
+        key_path_segments = sorted(
+            [find_spec._key_path_segments for find_spec in find_specs]
+        )
+        expected_key_path_segments = [
+            "HKEY_LOCAL_MACHINE",
+            "System",
+            "ControlSet001",
+            "Control",
+            "Session\\ Manager",
+        ]
+        self.assertEqual(key_path_segments[0], expected_key_path_segments)
+
+        self.assertEqual(
+            test_filters_helper.registry_artifact_names,
+            {"TestRegistry", "TestRegistryValue"},
+        )
+
+        # Test an artifact group source artifact definition.
+        definition = test_filters_helper._artifacts_registry.GetDefinitionByName(
+            "TestGroupExport"
+        )
+        find_specs = test_filters_helper._BuildFindSpecsFromArtifact(
+            definition, environment_variables, []
+        )
+        self.assertEqual(len(find_specs), 4)
+
+        location_segments = sorted(
+            [find_spec._location_segments for find_spec in find_specs]
+        )
+        expected_location_segments = [
+            ["a_directory"],
+            ["a_directory", "a_file"],
+            ["a_directory", "another_file"],
+            ["passwords\\.txt"],
+        ]
+        self.assertEqual(location_segments, expected_location_segments)
+
+        self.assertEqual(
+            test_filters_helper.file_system_artifact_names,
+            {"TestFiles3", "TestFiles4"},
+        )
+
+    def testBuildFindSpecsFromGroupName(self):
+        """Tests the _BuildFindSpecsFromGroupName function."""
+        test_filters_helper = self._CreateTestArtifactDefinitionsFiltersHelper()
+
+        environment_variables = [
+            artifacts.EnvironmentVariableArtifact(
+                case_sensitive=False, name="SystemDrive", value="C:"
+            )
+        ]
+
+        find_specs = test_filters_helper._BuildFindSpecsFromGroupName(
+            "TestFiles4", environment_variables, []
+        )
+        self.assertEqual(len(find_specs), 2)
+
+        location_segments = sorted(
+            [find_spec._location_segments for find_spec in find_specs]
+        )
+        expected_location_segments = [
+            ["a_directory", "another_file"],
+            ["passwords\\.txt"],
+        ]
+        self.assertEqual(location_segments, expected_location_segments)
+
+        self.assertEqual(test_filters_helper.file_system_artifact_names, {"TestFiles4"})
+
+        # Test with a name that does not match an artifact definition.
+        find_specs = test_filters_helper._BuildFindSpecsFromGroupName(
+            "Bogus", environment_variables, []
+        )
+        self.assertIsNone(find_specs)
 
     def testBuildFindSpecsFromFileSourcePath(self):
         """Tests the _BuildFindSpecsFromFileSourcePath function on file sources."""

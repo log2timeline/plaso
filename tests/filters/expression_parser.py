@@ -4,8 +4,12 @@
 import re
 import unittest
 
+from dfdatetime import posix_time as dfdatetime_posix_time
+from dfdatetime import time_elements as dfdatetime_time_elements
+
 from plaso.containers import events
 from plaso.filters import expression_parser
+from plaso.filters import expressions
 from plaso.filters import filters
 from plaso.lib import errors
 
@@ -100,11 +104,139 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
         result = event_filter.Matches(event, event_data, event_data_stream, event_tag)
         self.assertEqual(expected_result, result)
 
-    # TODO: add tests for _AddArgument
-    # TODO: add tests for _AddArgumentDateTime
-    # TODO: add tests for _AddArgumentDecimalInteger
-    # TODO: add tests for _AddArgumentFloatingPoint
-    # TODO: add tests for _AddArgumentHexadecimalInteger
+    def testAddArgument(self):
+        """Tests the _AddArgument function."""
+        parser = expression_parser.EventFilterExpressionParser()
+        parser._Reset()
+
+        parser._SetAttribute(string="attribute")
+        parser._SetOperator(string="is")
+        current_expression = parser._current_expression
+
+        next_state = parser._AddArgument(1)
+        self.assertEqual(next_state, "BINARY")
+        self.assertEqual(len(parser._stack), 1)
+        self.assertIs(parser._stack[0], current_expression)
+        self.assertEqual(parser._stack[0].args, [1])
+        self.assertIsNot(parser._current_expression, current_expression)
+        self.assertEqual(parser._current_expression.args, [])
+
+        # Test an operator that supports negation.
+        parser._Reset()
+        parser._SetAttribute(string="attribute")
+        parser._SetOperator(string="is")
+        parser._have_negate_keyword = True
+
+        next_state = parser._AddArgument(1)
+        self.assertEqual(next_state, "BINARY")
+
+        # Test an operator that does not support negation.
+        parser._Reset()
+        parser._SetAttribute(string="attribute")
+        parser._SetOperator(string="<")
+        parser._have_negate_keyword = True
+
+        with self.assertRaises(errors.ParseError):
+            parser._AddArgument(1)
+
+    def testAddArgumentDateTime(self):
+        """Tests the _AddArgumentDateTime function."""
+        parser = expression_parser.EventFilterExpressionParser()
+
+        # Test a POSIX timestamp in microseconds.
+        parser._Reset()
+        parser._datetime_value = 1447809343000000
+
+        next_state = parser._AddArgumentDateTime()
+        self.assertEqual(next_state, "BINARY")
+        self.assertIsNone(parser._datetime_value)
+
+        date_time = parser._stack[0].args[0]
+        self.assertIsInstance(date_time, dfdatetime_posix_time.PosixTimeInMicroseconds)
+        self.assertEqual(date_time.timestamp, 1447809343000000)
+
+        # Test an ISO 8601 date and time string.
+        parser._Reset()
+        parser._datetime_value = "2015-11-18T01:15:43.123456"
+
+        next_state = parser._AddArgumentDateTime()
+        self.assertEqual(next_state, "BINARY")
+
+        date_time = parser._stack[0].args[0]
+        self.assertIsInstance(
+            date_time, dfdatetime_time_elements.TimeElementsInMicroseconds
+        )
+        self.assertEqual(date_time.CopyToDateTimeString(), "2015-11-18 01:15:43.123456")
+
+        # Test an unsupported ISO 8601 date and time string.
+        parser._Reset()
+        parser._datetime_value = "bogus"
+
+        with self.assertRaises(errors.ParseError):
+            parser._AddArgumentDateTime()
+
+        # Test an unsupported date and time value.
+        parser._Reset()
+        parser._datetime_value = None
+
+        with self.assertRaises(errors.ParseError):
+            parser._AddArgumentDateTime()
+
+    def testAddArgumentDecimalInteger(self):
+        """Tests the _AddArgumentDecimalInteger function."""
+        parser = expression_parser.EventFilterExpressionParser()
+        parser._Reset()
+
+        next_state = parser._AddArgumentDecimalInteger(string="10")
+        self.assertEqual(next_state, "BINARY")
+        self.assertEqual(parser._stack[0].args, [10])
+        self.assertIsInstance(parser._stack[0].args[0], int)
+
+        parser._Reset()
+
+        with self.assertRaises(errors.ParseError):
+            parser._AddArgumentDecimalInteger(string="1a")
+
+        self.assertEqual(parser._stack, [])
+
+    def testAddArgumentFloatingPoint(self):
+        """Tests the _AddArgumentFloatingPoint function."""
+        parser = expression_parser.EventFilterExpressionParser()
+        parser._Reset()
+
+        next_state = parser._AddArgumentFloatingPoint(string="1.5")
+        self.assertEqual(next_state, "BINARY")
+        self.assertEqual(parser._stack[0].args, [1.5])
+        self.assertIsInstance(parser._stack[0].args[0], float)
+
+        parser._Reset()
+
+        with self.assertRaises(errors.ParseError):
+            parser._AddArgumentFloatingPoint(string="x")
+
+        self.assertEqual(parser._stack, [])
+
+    def testAddArgumentHexadecimalInteger(self):
+        """Tests the _AddArgumentHexadecimalInteger function."""
+        parser = expression_parser.EventFilterExpressionParser()
+        parser._Reset()
+
+        next_state = parser._AddArgumentHexadecimalInteger(string="0x10")
+        self.assertEqual(next_state, "BINARY")
+        self.assertEqual(parser._stack[0].args, [16])
+
+        parser._Reset()
+
+        next_state = parser._AddArgumentHexadecimalInteger(string="0xff")
+        self.assertEqual(next_state, "BINARY")
+        self.assertEqual(parser._stack[0].args, [255])
+
+        parser._Reset()
+
+        with self.assertRaises(errors.ParseError):
+            parser._AddArgumentHexadecimalInteger(string="0xzz")
+
+        self.assertEqual(parser._stack, [])
 
     def testAddBinaryOperator(self):
         """Tests the _AddBinaryOperator function."""
@@ -133,7 +265,34 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
         self.assertIsNone(next_state)
         self.assertEqual(parser._stack[0], "(")
 
-    # TODO: add tests for _CombineBinaryExpressions
+    def testCombineBinaryExpressions(self):
+        """Tests the _CombineBinaryExpressions function."""
+        parser = expression_parser.EventFilterExpressionParser()
+        parser._Reset()
+
+        left_expression = expressions.EventExpression()
+        right_expression = expressions.EventExpression()
+        binary_expression = expressions.BinaryExpression(operator="and")
+        parser._stack = [left_expression, binary_expression, right_expression]
+
+        # Test an operator that is not on the stack.
+        parser._CombineBinaryExpressions("or")
+        self.assertEqual(len(parser._stack), 3)
+        self.assertEqual(binary_expression.args, [])
+
+        # Test an operator that is on the stack, compared case insensitive.
+        parser._CombineBinaryExpressions("AND")
+        self.assertEqual(len(parser._stack), 1)
+        self.assertIs(parser._stack[0], binary_expression)
+        self.assertEqual(binary_expression.args, [left_expression, right_expression])
+
+        # Test an operator without an expression on both sides.
+        binary_expression = expressions.BinaryExpression(operator="and")
+        parser._stack = ["(", binary_expression, right_expression]
+
+        parser._CombineBinaryExpressions("and")
+        self.assertEqual(len(parser._stack), 3)
+        self.assertEqual(binary_expression.args, [])
 
     def testCombineParenthesis(self):
         """Tests the _CombineParenthesis function."""
@@ -165,7 +324,37 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
         self.assertEqual(parser._buffer, "")
         self.assertEqual(parser._processed_buffer, "(")
 
-    # TODO: add tests for _NegateExpression
+    def testNegateExpression(self):
+        """Tests the _NegateExpression function."""
+        parser = expression_parser.EventFilterExpressionParser()
+        parser._Reset()
+
+        parser._SetOperator(string="is")
+        self.assertTrue(parser._current_expression._bool_value)
+
+        parser._NegateExpression()
+        self.assertTrue(parser._have_negate_keyword)
+        self.assertFalse(parser._current_expression._bool_value)
+
+        # Test negation that is expressed more than once.
+        with self.assertRaises(errors.ParseError):
+            parser._NegateExpression()
+
+        # Test an operator that does not support negation.
+        parser._Reset()
+        parser._SetOperator(string="<")
+
+        with self.assertRaises(errors.ParseError):
+            parser._NegateExpression()
+
+        self.assertFalse(parser._have_negate_keyword)
+
+        # Test negation after an argument.
+        parser._Reset()
+        parser._current_expression.args.append(1)
+
+        with self.assertRaises(errors.ParseError):
+            parser._NegateExpression()
 
     def testNoOperation(self):
         """Tests the _NoOperation function."""
@@ -215,7 +404,44 @@ class EventFilterExpressionParserTest(shared_test_lib.BaseTestCase):
         self.assertEqual(parser._state_stack[0], "INITIAL")
         self.assertEqual(parser._state, "INITIAL")
 
-    # TODO: add tests for _Reduce
+    def testReduce(self):
+        """Tests the _Reduce function."""
+        parser = expression_parser.EventFilterExpressionParser()
+        parser._Reset()
+
+        left_expression = expressions.EventExpression()
+        right_expression = expressions.EventExpression()
+        binary_expression = expressions.BinaryExpression(operator="or")
+        parser._stack = [
+            "(",
+            left_expression,
+            binary_expression,
+            right_expression,
+            ")",
+        ]
+        parser._state = "BINARY"
+
+        expression = parser._Reduce()
+        self.assertIs(expression, binary_expression)
+        self.assertEqual(expression.args, [left_expression, right_expression])
+
+        # Test an unsupported state.
+        parser._Reset()
+        parser._stack = [expressions.EventExpression()]
+        parser._state = "ARGUMENT"
+
+        with self.assertRaises(errors.ParseError):
+            parser._Reduce()
+
+        # Test a stack that cannot be reduced to a single expression.
+        parser._Reset()
+        parser._stack = [
+            expressions.EventExpression(),
+            expressions.EventExpression(),
+        ]
+
+        with self.assertRaises(errors.ParseError):
+            parser._Reduce()
 
     def testReset(self):
         """Tests the _Reset function."""

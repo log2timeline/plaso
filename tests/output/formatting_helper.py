@@ -543,7 +543,27 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
         )
         self.assertEqual(username_string, "-")
 
-    # TODO: add coverage for _ReportEventError
+    def testReportEventError(self):
+        """Tests the _ReportEventError function."""
+        test_helper = formatting_helper.FieldFormattingHelper()
+
+        event, event_data, _ = containers_test_lib.CreateEventFromValues(
+            self._TEST_EVENTS[0]
+        )
+        event_identifier = event.GetIdentifier()
+        event_identifier_string = event_identifier.CopyToString()
+        event_data._parser_chain = "test_parser"
+
+        with self.assertLogs("output", level="ERROR") as context_manager:
+            test_helper._ReportEventError(event, event_data, "test error")
+
+        expected_message = (
+            f"Event: {event_identifier_string:s} description: Metadata "
+            f"Modification Time data type: test:event display name: N/A "
+            f"parser chain: test_parser with error: test error"
+        )
+        self.assertEqual(len(context_manager.records), 1)
+        self.assertEqual(context_manager.records[0].getMessage(), expected_message)
 
     def testGetFormattedField(self):
         """Tests the GetFormattedField function."""
