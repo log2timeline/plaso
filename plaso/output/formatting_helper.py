@@ -42,6 +42,26 @@ class FieldFormattingHelper:
     # Maps the name of a field to callback function that formats the field value.
     _FIELD_FORMAT_CALLBACKS = {}
 
+    # Names of the callback functions that format a field value only from
+    # the event data and event data stream, so that the field value can be
+    # cached per event data.
+    _EVENT_DATA_FIELD_FORMAT_CALLBACKS = frozenset(
+        [
+            "_FormatDisplayName",
+            "_FormatFilename",
+            "_FormatHostname",
+            "_FormatMessage",
+            "_FormatMessageShort",
+            "_FormatParser",
+            "_FormatSource",
+            "_FormatSourceShort",
+            "_FormatUsername",
+        ]
+    )
+
+    # Maximum number of event data for which field values are cached.
+    _MAXIMUM_NUMBER_OF_CACHED_EVENT_DATA = 16384
+
     def __init__(self):
         """Initializes a field formatting helper."""
         event_data_stream = events.EventDataStream()
@@ -58,6 +78,16 @@ class FieldFormattingHelper:
                 self._callback_functions[field_name] = getattr(
                     self, callback_name, None
                 )
+
+        self._cached_event_data = None
+        self._cached_field_values = None
+        self._cached_field_values_per_event_data = {}
+        self._cached_output_mediator = None
+        self._event_data_field_names = {
+            field_name
+            for field_name, callback_name in self._FIELD_FORMAT_CALLBACKS.items()
+            if callback_name in self._EVENT_DATA_FIELD_FORMAT_CALLBACKS
+        }
 
     # The field format callback methods require specific arguments hence
     # the check for unused arguments is disabled here.
@@ -605,6 +635,45 @@ class FieldFormattingHelper:
         if field_name in self._event_tag_field_names:
             return self._FormatTag(output_mediator, event_tag)
 
+        field_values = None
+        if field_name in self._event_data_field_names:
+            if output_mediator is not self._cached_output_mediator:
+                self._cached_event_data = None
+                self._cached_field_values_per_event_data = {}
+                self._cached_output_mediator = output_mediator
+
+            # Field values are only cached for event data read from storage. The
+            # identifier of event data that was not stored is based on id(), which
+            # can be reused after the event data has been freed.
+            if event_data is not self._cached_event_data:
+                self._cached_event_data = event_data
+                self._cached_field_values = None
+
+                event_data_identifier = event_data.GetIdentifier()
+                if (
+                    event_data_identifier
+                    and event_data_identifier.sequence_number != id(event_data)
+                ):
+                    lookup_key = event_data_identifier.CopyToString()
+                    self._cached_field_values = (
+                        self._cached_field_values_per_event_data.get(lookup_key)
+                    )
+                    if self._cached_field_values is None:
+                        if (
+                            len(self._cached_field_values_per_event_data)
+                            >= self._MAXIMUM_NUMBER_OF_CACHED_EVENT_DATA
+                        ):
+                            self._cached_field_values_per_event_data = {}
+
+                        self._cached_field_values = {}
+                        self._cached_field_values_per_event_data[lookup_key] = (
+                            self._cached_field_values
+                        )
+
+            field_values = self._cached_field_values
+            if field_values is not None and field_name in field_values:
+                return field_values[field_name]
+
         callback_function = self._callback_functions.get(field_name)
         if callback_function:
             output_value = callback_function(
@@ -617,5 +686,8 @@ class FieldFormattingHelper:
 
         if output_value is not None and not isinstance(output_value, str):
             output_value = f"{output_value!s}"
+
+        if field_values is not None:
+            field_values[field_name] = output_value
 
         return output_value
