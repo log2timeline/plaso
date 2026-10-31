@@ -559,16 +559,40 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
             file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
             test_tool._ExtractFileEntry(file_entry, temp_directory, output_writer)
 
-    # TODO: add tests for _ExtractWithFilter.
-    # TODO: add tests for _GetSourceFileSystem.
-
     def testParseExtensionsString(self):
         """Tests the _ParseExtensionsString function."""
         test_tool = image_export_tool.ImageExportTool()
 
         test_tool._ParseExtensionsString("txt")
 
-    # TODO: add tests for _ParseFilterOptions.
+    def testParseFilterOptions(self):
+        """Tests the _ParseFilterOptions function."""
+        test_tool = image_export_tool.ImageExportTool()
+
+        options = test_lib.TestOptions()
+
+        test_tool._ParseFilterOptions(options)
+        self.assertFalse(test_tool.has_filters)
+
+        options.extensions_string = "txt, CSV"
+        options.names_string = "another_file"
+
+        test_tool._ParseFilterOptions(options)
+        self.assertTrue(test_tool.has_filters)
+
+        test_tool = image_export_tool.ImageExportTool()
+
+        options = test_lib.TestOptions()
+        options.signature_identifiers = "gzip"
+
+        # The signature identifiers require a data location.
+        with self.assertRaises(errors.BadConfigOption):
+            test_tool._ParseFilterOptions(options)
+
+        test_tool._data_location = shared_test_lib.DATA_PATH
+
+        test_tool._ParseFilterOptions(options)
+        self.assertTrue(test_tool.has_filters)
 
     def testParseNamesString(self):
         """Tests the _ParseNamesString function."""
@@ -589,8 +613,40 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
             test_path = os.path.join(os.sep, "bogus")
             test_tool._ParseSignatureIdentifiers(test_path, "gzip")
 
-    # TODO: add tests for _Preprocess.
-    # TODO: add tests for _ReadSpecificationFile.
+    def testReadSpecificationFile(self):
+        """Tests the _ReadSpecificationFile function."""
+        test_tool = image_export_tool.ImageExportTool()
+
+        specification_data = "\n".join(
+            [
+                "# Comment line",
+                "",
+                "gzip 0 \\x1f\\x8b",
+                "missing_pattern 0",
+                "bad_offset first \\x1f",
+                "bad_pattern 0 \\xg1",
+                "",
+            ]
+        )
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            path = os.path.join(temp_directory, "signatures.conf")
+            with open(path, "w", encoding="utf-8") as file_object:
+                file_object.write(specification_data)
+
+            with self.assertLogs("cli", level="ERROR") as log_context:
+                specification_store = test_tool._ReadSpecificationFile(path)
+
+        # The invalid lines are skipped.
+        self.assertEqual(len(log_context.output), 3)
+
+        format_specifications = list(specification_store.specifications)
+        self.assertEqual(len(format_specifications), 1)
+
+        format_specification = format_specifications[0]
+        self.assertEqual(format_specification.identifier, "gzip")
+        self.assertEqual(format_specification.signatures[0].offset, 0)
+        self.assertEqual(format_specification.signatures[0].pattern, b"\x1f\x8b")
 
     def testWriteFileEntry(self):
         """Tests the _WriteFileEntry function."""
@@ -703,7 +759,9 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
         result = test_tool.ParseArguments([])
         self.assertFalse(result)
 
-        # TODO: check output.
+        output = output_writer.ReadOutput()
+        self.assertTrue(output.startswith("ERROR: Missing source path.\n\nusage: "))
+
         # TODO: improve test coverage.
 
     def testParseOptions(self):
@@ -728,7 +786,21 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
         with self.assertRaises(errors.BadConfigOption):
             test_tool.ParseOptions(options)
 
-        # TODO: improve test coverage.
+        options = test_lib.TestOptions()
+        options.signature_identifiers = "list"
+
+        test_tool.ParseOptions(options)
+        self.assertTrue(test_tool.list_signature_identifiers)
+
+        test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
+
+        options = test_lib.TestOptions()
+        options.artifact_definitions_path = test_artifacts_path
+        options.image = test_file_path
+        options.partitions = "bogus"
+
+        with self.assertRaises(errors.BadConfigOption):
+            test_tool.ParseOptions(options)
 
     def testPrintFilterCollection(self):
         """Tests the PrintFilterCollection function."""

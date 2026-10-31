@@ -215,15 +215,92 @@ Test argument parser.
                         (foreman) process.
 """
 
-    # TODO: add test for _CreateOutputModule.
-    # TODO: add test for _FormatStatusTableRow.
-    # TODO: add test for _GetAnalysisPlugins.
+    def testCreateOutputModule(self):
+        """Tests the _CreateOutputModule function."""
+        test_tool = psort_tool.PsortTool()
+
+        options = test_lib.TestOptions()
+
+        test_tool._output_format = "null"
+        output_module = test_tool._CreateOutputModule(options)
+        self.assertIsNotNone(output_module)
+        self.assertEqual(output_module.NAME, "null")
+
+        test_tool._output_format = "bogus"
+        with self.assertRaises(RuntimeError):
+            test_tool._CreateOutputModule(options)
+
+        test_tool._output_format = "dynamic"
+        with self.assertRaises(errors.BadConfigOption):
+            test_tool._CreateOutputModule(options)
+
+        test_tool._output_filename = self._GetTestFilePath(["psort_test.plaso"])
+        with self.assertRaises(errors.BadConfigOption):
+            test_tool._CreateOutputModule(options)
+
+    def testGetAnalysisPlugins(self):
+        """Tests the _GetAnalysisPlugins function."""
+        test_tool = psort_tool.PsortTool()
+
+        analysis_plugins = test_tool._GetAnalysisPlugins("")
+        self.assertEqual(analysis_plugins, [])
+
+        analysis_plugins = test_tool._GetAnalysisPlugins(
+            "browser_search, unique_domains_visited"
+        )
+        analysis_plugin_names = sorted(plugin.NAME for plugin in analysis_plugins)
+        self.assertEqual(
+            analysis_plugin_names, ["browser_search", "unique_domains_visited"]
+        )
+
     # TODO: add test for _ParseAnalysisPluginOptions.
-    # TODO: add test for _ParseInformationalOptions.
-    # TODO: add test for _ParseProcessingOptions.
-    # TODO: add test for _PrintStatusHeader.
-    # TODO: add test for _PrintStatusUpdate.
-    # TODO: add test for _PrintStatusUpdateStream.
+
+    def testParseInformationalOptions(self):
+        """Tests the _ParseInformationalOptions function."""
+        test_tool = psort_tool.PsortTool()
+
+        options = test_lib.TestOptions()
+        options.quiet = True
+        options.status_view_interval = 2.0
+        options.status_view_mode = "linear"
+
+        test_tool._ParseInformationalOptions(options)
+        self.assertTrue(test_tool._quiet_mode)
+        self.assertEqual(test_tool._status_view_interval, 2.0)
+        self.assertEqual(test_tool._status_view_mode, "linear")
+
+        options.status_view_interval = 0.0
+
+        with self.assertRaises(errors.BadConfigOption):
+            test_tool._ParseInformationalOptions(options)
+
+    def testParseProcessingOptions(self):
+        """Tests the _ParseProcessingOptions function."""
+        test_tool = psort_tool.PsortTool()
+
+        options = test_lib.TestOptions()
+
+        test_tool._ParseProcessingOptions(options)
+        self.assertIsNone(test_tool._worker_memory_limit)
+        self.assertIsNone(test_tool._worker_timeout)
+
+        options.worker_memory_limit = 1024
+        options.worker_timeout = 2.5
+
+        test_tool._ParseProcessingOptions(options)
+        self.assertEqual(test_tool._worker_memory_limit, 1024)
+        self.assertEqual(test_tool._worker_timeout, 2.5)
+
+        options.worker_memory_limit = -1
+
+        with self.assertRaises(errors.BadConfigOption):
+            test_tool._ParseProcessingOptions(options)
+
+        options.worker_memory_limit = 0
+        options.worker_timeout = 0.0
+
+        with self.assertRaises(errors.BadConfigOption):
+            test_tool._ParseProcessingOptions(options)
 
     def testAddProcessingOptions(self):
         """Tests the AddProcessingOptions function."""
@@ -270,8 +347,27 @@ Test argument parser.
         result = test_tool.ParseArguments([])
         self.assertFalse(result)
 
-        # TODO: check output.
-        # TODO: improve test coverage.
+        output = output_writer.ReadOutput()
+        self.assertTrue(
+            output.startswith(
+                "ERROR: Output format: dynamic requires an output file\n\nusage: "
+            )
+        )
+
+        result = test_tool.ParseArguments(["-o", "null"])
+        self.assertFalse(result)
+
+        output = output_writer.ReadOutput()
+        self.assertTrue(output.startswith("ERROR: Missing storage file option.\n"))
+
+        test_file_path = self._GetTestFilePath(["psort_test.plaso"])
+        result = test_tool.ParseArguments(
+            ["-o", "null", "--worker_timeout", "0", test_file_path]
+        )
+        self.assertFalse(result)
+
+        output = output_writer.ReadOutput()
+        self.assertTrue(output.startswith("ERROR: Invalid worker timeout: 0.000000"))
 
     def testParseOptions(self):
         """Tests the ParseOptions function."""
@@ -298,7 +394,27 @@ Test argument parser.
         with self.assertRaises(errors.BadConfigOption):
             test_tool.ParseOptions(options)
 
-        # TODO: improve test coverage.
+        options = test_lib.TestOptions()
+        options.analysis_plugins = "list"
+
+        test_tool.ParseOptions(options)
+        self.assertTrue(test_tool.list_analysis_plugins)
+        self.assertFalse(test_tool.list_output_modules)
+
+        options = test_lib.TestOptions()
+        options.output_format = "list"
+
+        test_tool.ParseOptions(options)
+        self.assertFalse(test_tool.list_analysis_plugins)
+        self.assertTrue(test_tool.list_output_modules)
+
+        options = test_lib.TestOptions()
+        options.output_format = "null"
+        options.status_view_interval = 0.5
+        options.storage_file = self._GetTestFilePath(["bogus.plaso"])
+
+        with self.assertRaises(errors.BadConfigOption):
+            test_tool.ParseOptions(options)
 
     def testProcessStorageWithMissingParameters(self):
         """Tests the ProcessStorage function with parameters missing."""
