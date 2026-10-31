@@ -7,6 +7,9 @@ import zlib
 
 from acstore import sqlite_store
 from acstore.containers import interface as containers_interface
+from acstore.helpers import schema as schema_helper
+
+from dfdatetime import factory as dfdatetime_factory
 
 from plaso.containers import events
 from plaso.lib import definitions
@@ -20,7 +23,7 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       compression_format (str): compression format.
     """
 
-    _FORMAT_VERSION = 20260516
+    _FORMAT_VERSION = 20261029
 
     # The earliest format version, stored in-file, that this class
     # is able to append (write).
@@ -28,7 +31,7 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
 
     # The earliest format version, stored in-file, that this class
     # is able to upgrade (write new format features).
-    _UPGRADE_COMPATIBLE_FORMAT_VERSION = 20260516
+    _UPGRADE_COMPATIBLE_FORMAT_VERSION = 20261029
 
     # The earliest format version, stored in-file, that this class
     # is able to read.
@@ -38,9 +41,19 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
     _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
     _CONTAINER_TYPE_EVENT_TAG = events.EventTag.CONTAINER_TYPE
 
+    # The earliest format version that stores the event data identifier of an event
+    # as an integer and the date and time values of an event in a compact form.
+    _TYPED_EVENT_COLUMNS_FORMAT_VERSION = 20261029
+
+    # Keys of serialized date and time values that are stored in a compact form.
+    _COMPACT_DATE_TIME_KEYS = frozenset(["__class_name__", "__type__", "timestamp"])
+
     def __init__(self):
         """Initializes a SQLite-based storage file."""
         super().__init__()
+        self._date_time_serializer = schema_helper.SchemaHelper.GetAttributeSerializer(
+            "dfdatetime.DateTimeValues", "json"
+        )
         self._serializer = json_serializer.JSONAttributeContainerSerializer
         self._serializers_profiler = None
 
@@ -79,6 +92,9 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
         Returns:
           AttributeContainer: attribute container.
         """
+        if container_type == self._CONTAINER_TYPE_EVENT:
+            return self._CreateEventFromRow(column_names, row, first_column_index)
+
         schema = self._GetAttributeContainerSchema(container_type)
         if schema and container_type != self._CONTAINER_TYPE_EVENT_DATA:
             return super()._CreateAttributeContainerFromRow(
@@ -103,6 +119,67 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
 
         return self._DeserializeAttributeContainer(container_type, serialized_data)
 
+    def _CreateEventFromRow(self, column_names, row, first_column_index):
+        """Creates an event of a row in the database.
+
+        Supports the integer event data identifier and compact date and time values
+        of typed event columns, and the string and JSON values of earlier format
+        versions.
+
+        Args:
+          column_names (list[str]): names of the columns selected.
+          row (sqlite.Row): row as a result from a SELECT query.
+          first_column_index (int): index of the first column in row.
+
+        Returns:
+          EventObject: event.
+
+        Raises:
+          OSError: if a column value cannot be deserialized.
+        """
+        schema = self._GetAttributeContainerSchema(self._CONTAINER_TYPE_EVENT)
+
+        event = events.EventObject()
+
+        for column_index, name in enumerate(column_names, start=first_column_index):
+            row_value = row[column_index]
+            if row_value is None:
+                continue
+
+            if name == "_event_data_identifier" and isinstance(row_value, int):
+                attribute_value = containers_interface.AttributeContainerIdentifier(
+                    name=self._CONTAINER_TYPE_EVENT_DATA, sequence_number=row_value
+                )
+
+            elif name == "date_time" and not row_value.startswith("{"):
+                class_name, _, timestamp = row_value.partition(":")
+                try:
+                    attribute_value = dfdatetime_factory.Factory.NewDateTimeValues(
+                        class_name, timestamp=int(timestamp, 10)
+                    )
+                except (KeyError, TypeError, ValueError) as exception:
+                    raise OSError(
+                        f"Unable to deserialize date and time values: {row_value:s} "
+                        f"with error: {exception!s}"
+                    )
+
+            else:
+                data_type = schema[name]
+                try:
+                    attribute_value = self._schema_helper.DeserializeValue(
+                        data_type, row_value
+                    )
+                except OSError:
+                    raise OSError(
+                        f"Unsupported attribute container type: "
+                        f"{self._CONTAINER_TYPE_EVENT:s} attribute: {name:s} data "
+                        f"type: {data_type:s}"
+                    )
+
+            setattr(event, name, attribute_value)
+
+        return event
+
     def _CreateAttributeContainerTable(self, container_type):
         """Creates a table for a specific attribute container type.
 
@@ -114,7 +191,26 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
               attribute container is provided.
         """
         schema = self._GetAttributeContainerSchema(container_type)
-        if schema and container_type != self._CONTAINER_TYPE_EVENT_DATA:
+        if (
+            container_type == self._CONTAINER_TYPE_EVENT
+            and self.format_version >= self._TYPED_EVENT_COLUMNS_FORMAT_VERSION
+        ):
+            column_definitions = ["_identifier INTEGER PRIMARY KEY AUTOINCREMENT"]
+            for name, data_type in sorted(schema.items()):
+                if name == "_event_data_identifier":
+                    column_type = "INTEGER"
+                else:
+                    column_type = self._schema_helper.GetStorageDataType(data_type)
+                column_definitions.append(f"{name:s} {column_type:s}")
+
+            column_definitions = ", ".join(column_definitions)
+            query = f"CREATE TABLE {container_type:s} ({column_definitions:s});"
+            try:
+                self._cursor.execute(query)
+            except (sqlite3.InterfaceError, sqlite3.OperationalError) as exception:
+                raise OSError(f"Unable to query storage file with error: {exception!s}")
+
+        elif schema and container_type != self._CONTAINER_TYPE_EVENT_DATA:
             super()._CreateAttributeContainerTable(container_type)
         else:
             if self.compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
@@ -252,6 +348,47 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
 
         return serialized_string
 
+    def _SerializeEventColumnValue(self, name, data_type, value):
+        """Serializes an event attribute value into a typed event column value.
+
+        Args:
+          name (str): name of the attribute.
+          data_type (str): schema data type of the attribute.
+          value (object): runtime value of the attribute.
+
+        Returns:
+          object: column value.
+
+        Raises:
+          OSError: if the attribute value cannot be serialized.
+        """
+        if value is None:
+            return None
+
+        if name == "_event_data_identifier":
+            if value.name == self._CONTAINER_TYPE_EVENT_DATA:
+                return value.sequence_number
+
+        elif name == "date_time":
+            json_dict = self._date_time_serializer.SerializeValue(value)
+            timestamp = json_dict.get("timestamp")
+            if json_dict.keys() == self._COMPACT_DATE_TIME_KEYS and isinstance(
+                timestamp, int
+            ):
+                class_name = json_dict["__class_name__"]
+                return f"{class_name:s}:{timestamp:d}"
+
+            return json.dumps(json_dict)
+
+        try:
+            return self._schema_helper.SerializeValue(data_type, value)
+        except OSError:
+            raise OSError(
+                f"Unsupported attribute container type: "
+                f"{self._CONTAINER_TYPE_EVENT:s} attribute: {name:s} data type: "
+                f"{data_type:s}"
+            )
+
     def _WriteMetadata(self):
         """Writes metadata.
 
@@ -282,7 +419,13 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
           OSError: when there is an error querying the storage file.
         """
         schema = self._GetAttributeContainerSchema(container.CONTAINER_TYPE)
-        if schema and container.CONTAINER_TYPE != self._CONTAINER_TYPE_EVENT_DATA:
+        if (
+            container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT
+            and self.format_version >= self._TYPED_EVENT_COLUMNS_FORMAT_VERSION
+        ):
+            self._WriteNewEvent(container, schema)
+
+        elif schema and container.CONTAINER_TYPE != self._CONTAINER_TYPE_EVENT_DATA:
             super()._WriteNewAttributeContainer(container)
         else:
             next_sequence_number = self._GetAttributeContainerNextSequenceNumber(
@@ -323,6 +466,43 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
                 container.CONTAINER_TYPE, column_names, values
             )
             self._CacheAttributeContainerByIndex(container, next_sequence_number - 1)
+
+    def _WriteNewEvent(self, event, schema):
+        """Writes a new event to the store with typed event columns.
+
+        The table for the event container type is created if needed.
+
+        Args:
+          event (EventObject): event.
+          schema (dict[str, str]): schema of the event container type.
+
+        Raises:
+          OSError: when there is an error querying the storage file.
+        """
+        next_sequence_number = self._GetAttributeContainerNextSequenceNumber(
+            event.CONTAINER_TYPE
+        )
+        if next_sequence_number == 1 and not self._HasTable(event.CONTAINER_TYPE):
+            self._CreateAttributeContainerTable(event.CONTAINER_TYPE)
+
+        identifier = containers_interface.AttributeContainerIdentifier(
+            name=event.CONTAINER_TYPE, sequence_number=next_sequence_number
+        )
+        event.SetIdentifier(identifier)
+
+        column_names = []
+        values = []
+        for name, data_type in sorted(schema.items()):
+            attribute_value = getattr(event, name, None)
+            column_names.append(name)
+            values.append(
+                self._SerializeEventColumnValue(name, data_type, attribute_value)
+            )
+
+        self._CacheAttributeContainerForWrite(
+            event.CONTAINER_TYPE, column_names, values
+        )
+        self._CacheAttributeContainerByIndex(event, next_sequence_number - 1)
 
     def GetAttributeContainerByIndex(self, container_type, index):
         """Retrieves a specific attribute container.
