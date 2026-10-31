@@ -7,6 +7,7 @@ from dfvfs.helpers import fake_file_system_builder
 from dfvfs.helpers import file_system_searcher
 from dfvfs.path import fake_path_spec
 
+from plaso.lib import errors
 from plaso.preprocessors import linux
 from plaso.preprocessors import mediator
 
@@ -148,6 +149,36 @@ class LinuxSystemdOperatingSystemPluginTest(
 
         system_product = test_mediator.GetValue("operating_system_product")
         self.assertEqual(system_product, "Fedora 26 (Workstation Edition)")
+
+    def testCollectWithFailingSecondSource(self):
+        """Tests the Collect function with a second source that fails."""
+        file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+        file_system_builder.AddFile("/etc/os-release", self._FILE_DATA)
+        file_system_builder.AddDirectory("/usr/lib/os-release")
+
+        mount_point = fake_path_spec.FakePathSpec(location="/")
+
+        plugin = linux.LinuxSystemdOperatingSystemPlugin()
+        test_mediator = self._RunPreprocessorPluginOnFileSystem(
+            file_system_builder.file_system, mount_point, None, plugin
+        )
+
+        system_product = test_mediator.GetValue("operating_system_product")
+        self.assertEqual(system_product, "Fedora 26 (Workstation Edition)")
+
+    def testCollectWithAllSourcesFailing(self):
+        """Tests the Collect function with all sources failing."""
+        file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+        file_system_builder.AddDirectory("/etc/os-release")
+        file_system_builder.AddDirectory("/usr/lib/os-release")
+
+        mount_point = fake_path_spec.FakePathSpec(location="/")
+
+        plugin = linux.LinuxSystemdOperatingSystemPlugin()
+        with self.assertRaises(errors.PreProcessFail):
+            self._RunPreprocessorPluginOnFileSystem(
+                file_system_builder.file_system, mount_point, None, plugin
+            )
 
 
 class LinuxTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):

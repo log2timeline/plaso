@@ -63,6 +63,7 @@ class FileSystemArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
           PreProcessFail: if the preprocessing fails.
         """
         last_exception = None
+        has_succeeded = False
 
         for source in artifact_definition.sources:
             if source.type_indicator not in (
@@ -86,12 +87,12 @@ class FileSystemArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
                             path_specification,
                             source.separator,
                         )
-                        last_exception = None
+                        has_succeeded = True
 
                     except errors.PreProcessFail as exception:
                         last_exception = exception
 
-        if last_exception:
+        if last_exception and not has_succeeded:
             # Only raise an exception if none of the sources were successfully
             # pre-processed.
             raise last_exception
