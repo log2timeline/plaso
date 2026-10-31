@@ -692,6 +692,43 @@ class SyslogTextPluginTest(test_lib.TextPluginTestCase):
         self.assertEqual(arguments[200], "arg0199")
 
 
+class TestTraditionalSyslogTextPlugin(syslog.TraditionalSyslogTextPlugin):
+    """Traditional syslog text parser plugin that records fast path results.
+
+    Attributes:
+      number_of_fast_path_matches (int): number of strings parsed by the fast
+          path.
+    """
+
+    def __init__(self):
+        """Initializes a traditional syslog text parser plugin for testing."""
+        super().__init__()
+        self.number_of_fast_path_matches = 0
+
+    def _ParseFastPathMatch(self, string, match):
+        """Parses a match of the fast path regular expression.
+
+        Args:
+          string (str): string.
+          match (re.Match): match of the fast path regular expression at the start
+              of the string.
+
+        Returns:
+          tuple[str, dict[str, object], int, int]: key, parsed tokens, start and
+              end offset or None if the match cannot be parsed by the fast path.
+        """
+        result = super()._ParseFastPathMatch(string, match)
+        if result:
+            self.number_of_fast_path_matches += 1
+        return result
+
+
+class TraditionalSyslogTextPluginWithoutFastPath(syslog.TraditionalSyslogTextPlugin):
+    """Traditional syslog text parser plugin that only uses the grammar."""
+
+    _FAST_PATH_REGEX = None
+
+
 class TraditionalSyslogTextPluginTest(test_lib.TextPluginTestCase):
     """Tests for the traditional syslog text parser plugin."""
 
@@ -830,6 +867,96 @@ class TraditionalSyslogTextPluginTest(test_lib.TextPluginTestCase):
 
         result = plugin.CheckRequiredFormat(parser_mediator, text_reader)
         self.assertFalse(result)
+
+    def _ProcessString(self, plugin, string):
+        """Processes a string with a plugin.
+
+        Args:
+          plugin (TraditionalSyslogTextPlugin): traditional syslog plugin.
+          string (str): string.
+
+        Returns:
+          tuple[list[dict[str, object]], list[str]]: values of the event data and
+              messages of the extraction warnings.
+        """
+        file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+        file_system_builder.AddFile("/file.txt", string.encode("utf-8"))
+
+        file_entry = file_system_builder.file_system.GetFileEntryByPath("/file.txt")
+
+        storage_writer = self._CreateStorageWriter()
+        parser_mediator = self._CreateParserMediator(
+            storage_writer, file_entry=file_entry
+        )
+
+        file_object = file_entry.GetFileObject()
+        plugin.UpdateChainAndProcess(parser_mediator, file_object=file_object)
+
+        event_values = [
+            event_data.CopyToDict()
+            for event_data in storage_writer.GetAttributeContainers("event_data")
+        ]
+        warning_messages = [
+            warning.message
+            for warning in storage_writer.GetAttributeContainers("extraction_warning")
+        ]
+        return event_values, warning_messages
+
+    def testProcessWithFastPath(self):
+        """Tests that the Process function gives the same results as the grammar."""
+        # Strings that are parsed by the fast path.
+        fast_path_strings = [
+            "Jan 22 07:52:33 myhostname.myhost.com client[30840]: INFO No new "
+            "content in \u00edmynd.dd.\n",
+            "Jan  1 00:00:00 host CRON[31051]: (root) CMD (touch /x)\n",
+            "Dec 31 23:59:59.123456 host sshd[1234]<auth>: Accepted publickey\n",
+            "Feb 29 01:02:03 host kernel: [  123.456789] usb 1-1: new device",
+            "Mar  3 01:02:03 host r: x  \ncontinued\nMar  3 01:02:04 host r: y\n",
+            "Apr  4 01:02:03 host r:x\n",
+            "Foo 99 99:99:99 host r: invalid date and time\n",
+            "May  5 01:02:03 host r[123]]\n",
+        ]
+
+        # Near-miss strings that are left to the grammar.
+        grammar_strings = [
+            "Jan 22 07:52:33 kernel: [  123.456789] no host name\n",
+            "Jan 22 07:52:33 : --- comment ---\n",
+            "Jan 22 07:52:33 .5 host r: fraction of second after a space\n",
+            "Jan 22\t07:52:33 host r: tab separator\n",
+            "Jan 22 07:52:33\nhost r: newline separator\n",
+            "Jan 22 07:52:33 host r: \nJan 22 07:52:34 host r: empty body\n",
+            "Jan 22 07:52:33 host r [123]: space before the PID\n",
+            "Jan 22 07:52:33 host r[123456]: PID out of bounds\n",
+            "Jan 22 07:52:33 host r[123] <auth>: space before the facility\n",
+            "Jan 22 07:52:33 host r :space before the colon\n",
+            "Janu 22 07:52:33 host r: month of 4 letters\n",
+            "Jan 222 07:52:33 host r: day of month of 3 digits\n",
+            "XJan 22 07:52:33 host r: leading character\n",
+            " Jan 22 07:52:33 host r: leading space\n",
+            "Jan 22 07:52:33 h\u00e9st r: non-ASCII host name\n",
+            "bogus\nJan 22 07:52:33 host r: preceding line\n",
+        ]
+
+        for string in fast_path_strings:
+            plugin = TestTraditionalSyslogTextPlugin()
+            results = self._ProcessString(plugin, string)
+            self.assertGreater(plugin.number_of_fast_path_matches, 0)
+
+            expected_results = self._ProcessString(
+                TraditionalSyslogTextPluginWithoutFastPath(), string
+            )
+            self.assertEqual(results, expected_results)
+
+        for string in grammar_strings:
+            plugin = TestTraditionalSyslogTextPlugin()
+            results = self._ProcessString(plugin, string)
+            if string.count("\n") <= 1:
+                self.assertEqual(plugin.number_of_fast_path_matches, 0)
+
+            expected_results = self._ProcessString(
+                TraditionalSyslogTextPluginWithoutFastPath(), string
+            )
+            self.assertEqual(results, expected_results)
 
     def testProcess(self):
         """Tests the Process function."""

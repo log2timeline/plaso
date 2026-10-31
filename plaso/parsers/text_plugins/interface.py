@@ -29,6 +29,12 @@ class TextPlugin(plugins.BasePlugin):
     VERIFICATION_GRAMMAR = None
     VERIFICATION_LITERALS = None
 
+    # Optional precompiled regular expression of a fast path that parses common
+    # lines without pyparsing. The fast path is only tried at the start of the
+    # lines buffer and a match is converted by _ParseFastPathMatch(). Lines that
+    # do not match are parsed with the pyparsing grammar.
+    _FAST_PATH_REGEX = None
+
     # The maximum number of consecutive lines that do not match the grammar before
     # aborting parsing.
     _MAXIMUM_CONSECUTIVE_LINE_FAILURES = 20
@@ -78,7 +84,8 @@ class TextPlugin(plugins.BasePlugin):
         """Retrieves a decimal integer value from a Pyparsing structure.
 
         Args:
-          structure (pyparsing.ParseResults): tokens from a parsed log line.
+          structure (pyparsing.ParseResults|dict[str, object]): tokens from a
+              parsed log line.
           name (str): name of the token.
 
         Returns:
@@ -97,7 +104,8 @@ class TextPlugin(plugins.BasePlugin):
         """Retrieves a string value from a Pyparsing structure.
 
         Args:
-          structure (pyparsing.ParseResults): tokens from a parsed log line.
+          structure (pyparsing.ParseResults|dict[str, object]): tokens from a
+              parsed log line.
           name (str): name of the token.
 
         Returns:
@@ -114,7 +122,8 @@ class TextPlugin(plugins.BasePlugin):
         the Pyparsing default value of an empty byte stream (b'').
 
         Args:
-          structure (pyparsing.ParseResults): tokens from a parsed log line.
+          structure (pyparsing.ParseResults|dict[str, object]): tokens from a
+              parsed log line.
           name (str): name of the token.
           default_value (Optional[object]): default value.
 
@@ -129,6 +138,24 @@ class TextPlugin(plugins.BasePlugin):
             return None
 
         return value
+
+    def _ParseFastPathMatch(self, string, match):  # pylint: disable=unused-argument
+        """Parses a match of the fast path regular expression.
+
+        A plugin that defines _FAST_PATH_REGEX must override this method. The
+        result must be identical to what the pyparsing grammar produces for the
+        same string, otherwise None must be returned to use the grammar instead.
+
+        Args:
+          string (str): string.
+          match (re.Match): match of the fast path regular expression at the start
+              of the string.
+
+        Returns:
+          tuple[str, dict[str, object], int, int]: key, parsed tokens, start and
+              end offset or None if the match cannot be parsed by the fast path.
+        """
+        return None
 
     def _ParseFinalize(self, parser_mediator):  # pylint: disable=unused-argument
         """Finalizes parsing.
@@ -240,7 +267,8 @@ class TextPlugin(plugins.BasePlugin):
           parser_mediator (ParserMediator): mediates interactions between parsers and
               other components, such as storage and dfVFS.
           key (str): name of the parsed structure.
-          structure (pyparsing.ParseResults): tokens from a parsed log line.
+          structure (pyparsing.ParseResults|dict[str, object]): tokens from a
+              parsed log line.
 
         Raises:
           ParseError: when the structure type is unknown.
@@ -300,12 +328,19 @@ class TextPlugin(plugins.BasePlugin):
           string (str): string.
 
         Returns:
-          tuple[str, pyparsing.ParseResults, int, int]: key, parsed tokens, start
-              and end offset.
+          tuple[str, pyparsing.ParseResults|dict[str, object], int, int]: key,
+              parsed tokens, start and end offset.
 
         Raises:
           ParseError: when the string cannot be parsed by the grammar.
         """
+        if self._FAST_PATH_REGEX:
+            match = self._FAST_PATH_REGEX.match(string)
+            if match:
+                result = self._ParseFastPathMatch(string, match)
+                if result:
+                    return result
+
         first_newline_offset = string.find("\n")
 
         structure = None
