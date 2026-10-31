@@ -21,35 +21,6 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
 
     _PYTHON3_13_OR_LATER = sys.version_info[0:2] >= (3, 13)
 
-    if _PYTHON3_13_OR_LATER:
-        _EXPECTED_PERFORMANCE_OPTIONS = f"""\
-usage: extraction_tool_test.py [--buffer_size BUFFER_SIZE]
-                               [--queue_size QUEUE_SIZE]
-
-Test argument parser.
-
-{test_lib.ARGPARSE_OPTIONS}:
-  --buffer_size, --buffer-size, --bs BUFFER_SIZE
-                        The buffer size for the output (defaults to 196MiB).
-  --queue_size, --queue-size QUEUE_SIZE
-                        The maximum number of queued items per worker
-                        (defaults to 125000)
-"""
-    else:
-        _EXPECTED_PERFORMANCE_OPTIONS = f"""\
-usage: extraction_tool_test.py [--buffer_size BUFFER_SIZE]
-                               [--queue_size QUEUE_SIZE]
-
-Test argument parser.
-
-{test_lib.ARGPARSE_OPTIONS}:
-  --buffer_size BUFFER_SIZE, --buffer-size BUFFER_SIZE, --bs BUFFER_SIZE
-                        The buffer size for the output (defaults to 196MiB).
-  --queue_size QUEUE_SIZE, --queue-size QUEUE_SIZE
-                        The maximum number of queued items per worker
-                        (defaults to 125000)
-"""
-
     if resource is None:
         if _PYTHON3_13_OR_LATER:
             _EXPECTED_PROCESSING_OPTIONS = f"""\
@@ -332,14 +303,6 @@ Test argument parser.
         test_tool._ParseExtractionOptions(options)
         self.assertEqual(test_tool._preferred_time_zone, "CET")
 
-    def testParsePerformanceOptions(self):
-        """Tests the _ParsePerformanceOptions function."""
-        test_tool = extraction_tool.ExtractionTool()
-
-        options = test_lib.TestOptions()
-
-        test_tool._ParsePerformanceOptions(options)
-
     def testParseProcessingOptions(self):
         """Tests the _ParseProcessingOptions function."""
         test_tool = extraction_tool.ExtractionTool()
@@ -360,16 +323,6 @@ Test argument parser.
 
         output = self._RunArgparseFormatHelp(argument_parser)
         self.assertEqual(output, self._EXPECTED_TIME_ZONE_OPTION)
-
-    def testAddPerformanceOptions(self):
-        """Tests the AddPerformanceOptions function."""
-        argument_parser = self._GetTestArgumentParser("extraction_tool_test.py")
-
-        test_tool = extraction_tool.ExtractionTool()
-        test_tool.AddPerformanceOptions(argument_parser)
-
-        output = self._RunArgparseFormatHelp(argument_parser)
-        self.assertEqual(output, self._EXPECTED_PERFORMANCE_OPTIONS)
 
     def testAddProcessingOptions(self):
         """Tests the AddProcessingOptions function."""

@@ -51,11 +51,6 @@ class ExtractionTool(
       list_time_zones (bool): True if the time zones should be listed.
     """
 
-    _BYTES_IN_A_MIB = 1024 * 1024
-
-    # Approximately 250 MB of queued items per worker.
-    _DEFAULT_QUEUE_SIZE = 125000
-
     _PRESETS_FILE_NAME = "presets.yaml"
 
     _SOURCE_TYPES_TO_PREPROCESS = frozenset(
@@ -86,7 +81,6 @@ class ExtractionTool(
         super().__init__(input_reader=input_reader, output_writer=output_writer)
         self._archive_types_string = "none"
         self._artifacts_registry = None
-        self._buffer_size = 0
         self._command_line_arguments = None
         self._enable_sigsegv_handler = False
         self._expanded_parser_filter_expression = None
@@ -102,7 +96,6 @@ class ExtractionTool(
         self._presets_manager = parsers_presets.ParserPresetsManager()
         self._process_compressed_streams = True
         self._process_memory_limit = None
-        self._queue_size = self._DEFAULT_QUEUE_SIZE
         self._resolver_context = dfvfs_context.Context()
         self._single_process_mode = False
         self._status_view = status_view.StatusView(self._output_writer, self.NAME)
@@ -355,33 +348,6 @@ class ExtractionTool(
                     )
 
                 self._preferred_time_zone = time_zone_string
-
-    def _ParsePerformanceOptions(self, options):
-        """Parses the performance options.
-
-        Args:
-          options (argparse.Namespace): command line arguments.
-
-        Raises:
-          BadConfigOption: if the options are invalid.
-        """
-        self._buffer_size = getattr(options, "buffer_size", 0)
-        if self._buffer_size:
-            # TODO: turn this into a generic function that supports more size
-            # suffixes both MB and MiB and also that does not allow m as a valid
-            # indicator for MiB since m represents milli not Mega.
-            try:
-                if self._buffer_size[-1].lower() == "m":
-                    self._buffer_size = int(self._buffer_size[:-1], 10)
-                    self._buffer_size *= self._BYTES_IN_A_MIB
-                else:
-                    self._buffer_size = int(self._buffer_size, 10)
-            except ValueError:
-                raise errors.BadConfigOption(
-                    f"Invalid buffer size: {self._buffer_size!s}."
-                )
-
-        self._queue_size = self.ParseNumericOption(options, "queue_size")
 
     def _ParseProcessingOptions(self, options):
         """Parses the processing options.
@@ -734,34 +700,6 @@ class ExtractionTool(
                 "stored without a time zone indicator. The time zone is determined "
                 "based on the source data where possible otherwise it will default "
                 'to UTC. Use "list" to see a list of available time zones.'
-            ),
-        )
-
-    def AddPerformanceOptions(self, argument_group):
-        """Adds the performance options to the argument group.
-
-        Args:
-          argument_group (argparse._ArgumentGroup): argparse argument group.
-        """
-        argument_group.add_argument(
-            "--buffer_size",
-            "--buffer-size",
-            "--bs",
-            dest="buffer_size",
-            action="store",
-            default=0,
-            help=("The buffer size for the output (defaults to 196MiB)."),
-        )
-
-        argument_group.add_argument(
-            "--queue_size",
-            "--queue-size",
-            dest="queue_size",
-            action="store",
-            default=0,
-            help=(
-                f"The maximum number of queued items per worker (defaults to "
-                f"{self._DEFAULT_QUEUE_SIZE:d})"
             ),
         )
 
