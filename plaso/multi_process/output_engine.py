@@ -115,6 +115,9 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
     # TODO: move this to a single process engine.
     # pylint: disable=abstract-method
 
+    # Number of sorted events of which the event data is prefetched at once.
+    _EVENT_DATA_PREFETCH_SIZE = 256
+
     _HEAP_MAXIMUM_EVENTS = 100000
 
     _MESSAGE_FORMATTERS_DIRECTORY_NAME = "formatters"
@@ -179,6 +182,46 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
             processing_configuration.custom_formatters_path,
         )
         return mediator
+
+    def _GetSortedEvents(self, storage_reader, time_range=None):
+        """Retrieves the events in increasing chronological order.
+
+        The event data of the events is prefetched in batches, which is faster
+        than reading the event data of each event individually.
+
+        Args:
+          storage_reader (StorageReader): storage reader.
+          time_range (Optional[TimeRange]): time range used to filter events that
+              fall in a specific period.
+
+        Yields:
+          EventObject: event.
+        """
+        events_batch = []
+        for event in storage_reader.GetSortedEvents(time_range=time_range):
+            events_batch.append(event)
+            if len(events_batch) >= self._EVENT_DATA_PREFETCH_SIZE:
+                self._PrefetchEventData(storage_reader, events_batch)
+                yield from events_batch
+                events_batch = []
+
+        if events_batch:
+            self._PrefetchEventData(storage_reader, events_batch)
+            yield from events_batch
+
+    def _PrefetchEventData(self, storage_reader, events_batch):
+        """Prefetches the event data of events.
+
+        Args:
+          storage_reader (StorageReader): storage reader.
+          events_batch (list[EventObject]): events.
+        """
+        event_data_identifiers = [
+            event.GetEventDataIdentifier() for event in events_batch
+        ]
+        storage_reader.PrefetchAttributeContainers(
+            events.EventData.CONTAINER_TYPE, event_data_identifiers
+        )
 
     def _ExportEvent(
         self,
@@ -273,7 +316,7 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
         self._events_status.number_of_filtered_events = 0
         self._events_status.number_of_events_from_time_slice = 0
 
-        for event in storage_reader.GetSortedEvents(time_range=time_slice_range):
+        for event in self._GetSortedEvents(storage_reader, time_range=time_slice_range):
             event_data_identifier = event.GetEventDataIdentifier()
             event_data = storage_reader.GetAttributeContainerByIdentifier(
                 events.EventData.CONTAINER_TYPE, event_data_identifier
