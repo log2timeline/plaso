@@ -266,8 +266,7 @@ class SQLitePlugin(plugins.BasePlugin):
                     f"unable to parse row: {index:d} with callback: "
                     f"{callback.__name__:s} on database with error: {exception!s}"
                 )
-                # TODO: consider removing return.
-                return
+                continue
 
             row_cache.add(row_hash)
 
