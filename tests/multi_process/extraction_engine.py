@@ -7,15 +7,20 @@ import os
 import time
 import unittest
 
+from acstore.containers import interface as containers_interface
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
+from plaso.containers import artifacts
+from plaso.containers import events
 from plaso.containers import sessions
 from plaso.containers import warnings
 from plaso.lib import definitions
 from plaso.engine import configurations
 from plaso.multi_process import extraction_engine
+from plaso.multi_process import merge_helpers
 from plaso.storage import factory as storage_factory
+from plaso.storage.fake import writer as fake_writer
 from plaso.storage.sqlite import writer as sqlite_writer
 
 from tests import test_lib as shared_test_lib
@@ -93,6 +98,84 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
         expected_parsers_counter = collections.Counter({"filestat": 15, "total": 15})
         self.assertEqual(parsers_counter, expected_parsers_counter)
+
+    def testInternalMergeAttributeContainerWithMissingReference(self):
+        """Tests the _MergeAttributeContainer function with a missing reference."""
+        # pylint: disable=protected-access
+
+        test_engine = extraction_engine.ExtractionMultiProcessEngine()
+
+        task_storage_writer = fake_writer.FakeStorageWriter()
+        task_storage_writer.Open()
+
+        merge_helper = merge_helpers.ExtractionTaskMergeHelper(
+            task_storage_writer, "task"
+        )
+
+        storage_writer = fake_writer.FakeStorageWriter()
+        storage_writer.Open()
+
+        try:
+            event_data = events.EventData()
+            event_data.SetIdentifier(
+                containers_interface.AttributeContainerIdentifier(
+                    name="event_data", sequence_number=1
+                )
+            )
+            event_data.SetEventDataStreamIdentifier(
+                containers_interface.AttributeContainerIdentifier(
+                    name="event_data_stream", sequence_number=1
+                )
+            )
+            test_engine._MergeAttributeContainer(
+                storage_writer, merge_helper, event_data
+            )
+
+            event_definition = artifacts.WindowsWevtTemplateEvent()
+            event_definition.SetIdentifier(
+                containers_interface.AttributeContainerIdentifier(
+                    name="windows_wevt_template_event", sequence_number=1
+                )
+            )
+            event_definition.SetMessageFileIdentifier(
+                containers_interface.AttributeContainerIdentifier(
+                    name="windows_eventlog_message_file", sequence_number=1
+                )
+            )
+            test_engine._MergeAttributeContainer(
+                storage_writer, merge_helper, event_definition
+            )
+
+            number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+                "event_data"
+            )
+            number_of_event_definitions = storage_writer.GetNumberOfAttributeContainers(
+                "windows_wevt_template_event"
+            )
+            extraction_warnings = list(
+                storage_writer.GetAttributeContainers("extraction_warning")
+            )
+
+        finally:
+            storage_writer.Close()
+            task_storage_writer.Close()
+
+        self.assertEqual(number_of_event_data, 0)
+        self.assertEqual(number_of_event_definitions, 0)
+        self.assertEqual(len(extraction_warnings), 2)
+
+        expected_message = (
+            "Unable to merge event_data attribute container: event_data.1 since "
+            "corresponding event data stream: event_data_stream.1 could not be found."
+        )
+        self.assertEqual(extraction_warnings[0].message, expected_message)
+
+        expected_message = (
+            "Unable to merge WEVT_TEMPLATE event definition attribute container: "
+            "windows_wevt_template_event.1 since corresponding Windows EventLog "
+            "message file: windows_eventlog_message_file.1 could not be found."
+        )
+        self.assertEqual(extraction_warnings[1].message, expected_message)
 
     def testInternalProcessEventSourcesWithFailedTask(self):
         """Tests the _ProcessEventSources function with a failed task."""
