@@ -47,6 +47,16 @@ class SQLiteStorageWriterTest(test_lib.StorageTestCase):
 
         return test_events
 
+    def testInitialize(self):
+        """Tests the __init__ function."""
+        storage_writer = sqlite_writer.SQLiteStorageWriter()
+        self.assertEqual(storage_writer._storage_type, definitions.STORAGE_TYPE_SESSION)
+
+        storage_writer = sqlite_writer.SQLiteStorageWriter(
+            storage_type=definitions.STORAGE_TYPE_TASK
+        )
+        self.assertEqual(storage_writer._storage_type, definitions.STORAGE_TYPE_TASK)
+
     def testAddAttributeContainer(self):
         """Tests the AddAttributeContainer function."""
         event_data_stream = events.EventDataStream()
