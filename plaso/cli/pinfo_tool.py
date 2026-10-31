@@ -683,9 +683,18 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
               is not supported.
 
         Raises:
-          BadConfigOption: if the storage file format is not supported.
+          BadConfigOption: if the storage file format is not supported or
+              the storage file cannot be opened.
         """
-        storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(path)
+        try:
+            storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
+                path
+            )
+        except OSError as exception:
+            raise errors.BadConfigOption(
+                f"Unable to open storage file: {path:s} with error: {exception!s}"
+            )
+
         if not storage_reader:
             raise errors.BadConfigOption(
                 f"Format of storage file: {path:s} not supported."
