@@ -4,6 +4,8 @@
 import os
 import unittest
 
+from artifacts import registry as artifacts_registry
+
 from dfvfs.helpers import fake_file_system_builder
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
@@ -133,6 +135,17 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
             test_engine.BuildArtifactsRegistry(test_artifacts_path, test_artifacts_path)
 
         self.assertIsNone(test_engine._artifacts_registry)
+
+    def testSetArtifactsRegistry(self):
+        """Tests the SetArtifactsRegistry function."""
+        test_engine = TestEngine()
+
+        self.assertIsNone(test_engine._artifacts_registry)
+
+        registry = artifacts_registry.ArtifactDefinitionsRegistry()
+        test_engine.SetArtifactsRegistry(registry)
+
+        self.assertIs(test_engine._artifacts_registry, registry)
 
     def testBuildCollectionFilters(self):
         """Tests the BuildCollectionFilters function."""

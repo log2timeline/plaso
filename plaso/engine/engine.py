@@ -176,6 +176,15 @@ class BaseEngine:
 
         self._artifacts_registry = registry
 
+    def SetArtifactsRegistry(self, registry):
+        """Sets an artifacts definition registry that was read previously.
+
+        Args:
+          registry (artifacts.ArtifactDefinitionsRegistry): artifacts definition
+              registry.
+        """
+        self._artifacts_registry = registry
+
     def BuildCollectionFilters(
         self,
         environment_variables,

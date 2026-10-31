@@ -177,6 +177,7 @@ class ArtifactDefinitionsArgumentsHelper(interface.ArgumentsHelper):
                 )
 
         setattr(configuration_object, "_artifact_definitions_path", artifacts_path)
+        setattr(configuration_object, "_artifacts_registry", registry)
         setattr(configuration_object, "_custom_artifacts_path", custom_artifacts_path)
 
 
