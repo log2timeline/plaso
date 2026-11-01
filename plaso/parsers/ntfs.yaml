@@ -68,3 +68,79 @@ members:
   type: stream
   element_data_type: byte
   elements_data_size: usn_record_v2.size - 60
+---
+name: usn_record_v3
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+- name: size
+  data_type: uint32
+- name: major_version
+  data_type: uint16
+- name: minor_version
+  data_type: uint16
+- name: file_reference
+  type: stream
+  element_data_type: byte
+  elements_data_size: 16
+- name: parent_file_reference
+  type: stream
+  element_data_type: byte
+  elements_data_size: 16
+- name: update_sequence_number
+  data_type: uint64
+- name: update_date_time
+  data_type: uint64
+- name: update_reason_flags
+  data_type: uint32
+- name: update_source_flags
+  data_type: uint32
+- name: security_descriptor_identifier
+  data_type: uint32
+- name: file_attribute_flags
+  data_type: uint32
+- name: name_size
+  data_type: uint16
+- name: name_offset
+  data_type: uint16
+- name: name
+  type: stream
+  element_data_type: byte
+  elements_data_size: usn_record_v3.size - 76
+---
+name: usn_record_v4
+type: structure
+attributes:
+  byte_order: little-endian
+members:
+- name: size
+  data_type: uint32
+- name: major_version
+  data_type: uint16
+- name: minor_version
+  data_type: uint16
+- name: file_reference
+  type: stream
+  element_data_type: byte
+  elements_data_size: 16
+- name: parent_file_reference
+  type: stream
+  element_data_type: byte
+  elements_data_size: 16
+- name: update_sequence_number
+  data_type: uint64
+- name: update_reason_flags
+  data_type: uint32
+- name: update_source_flags
+  data_type: uint32
+- name: remaining_extents
+  data_type: uint32
+- name: number_of_extents
+  data_type: uint16
+- name: extent_size
+  data_type: uint16
+- name: extents
+  type: stream
+  element_data_type: byte
+  elements_data_size: usn_record_v4.size - 64
