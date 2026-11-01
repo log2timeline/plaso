@@ -387,6 +387,16 @@ class NTFSUsnJrnlParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelp
 
     _INITIAL_FILE_OFFSET = None
 
+    # Block size used to resynchronize after an unsupported USN record in
+    # an exported $UsnJrnl:$J data stream.
+    _JOURNAL_BLOCK_SIZE = 4096
+
+    # Size of the data read at once when skipping sparse ranges in an exported
+    # $UsnJrnl:$J data stream.
+    _SPARSE_RANGE_READ_SIZE = 65536
+
+    _USN_RECORD_V2_HEADER_SIZE = 60
+
     # TODO: add support for USN_RECORD_V3 and USN_RECORD_V4 when actually
     # seen to be used.
 
@@ -403,6 +413,110 @@ class NTFSUsnJrnlParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelp
             return None
 
         return dfdatetime_filetime.Filetime(timestamp=filetime)
+
+    def _GetNextNonZeroOffset(self, file_object, file_offset, file_size):
+        """Retrieves the offset of the next 8-byte aligned non-zero data.
+
+        This is used to skip sparse ranges in an exported $UsnJrnl:$J data stream,
+        which are stored as zero-byte filled ranges.
+
+        Args:
+          file_object (dfvfs.FileIO): file-like object.
+          file_offset (int): 8-byte aligned offset to start the search.
+          file_size (int): size of the file-like object.
+
+        Returns:
+          int: 8-byte aligned offset of the next non-zero data or the size of
+              the file-like object if no non-zero data was found.
+        """
+        file_object.seek(file_offset, os.SEEK_SET)
+
+        while file_offset < file_size:
+            read_size = min(self._SPARSE_RANGE_READ_SIZE, file_size - file_offset)
+            data = file_object.read(read_size)
+            if not data:
+                break
+
+            data_size = len(data)
+            non_zero_data_size = len(data.lstrip(b"\x00"))
+            if non_zero_data_size:
+                zero_data_size = data_size - non_zero_data_size
+                return file_offset + (zero_data_size & ~7)
+
+            file_offset += data_size
+
+        return file_size
+
+    def _ParseExportedUSNChangeJournal(self, parser_mediator, file_object):
+        """Parses an exported USN change journal ($UsnJrnl:$J) data stream.
+
+        The exported data stream is expected to be a 1-to-1 copy of the data
+        stream, where sparse ranges are stored as zero-byte filled ranges.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          file_object (dfvfs.FileIO): file-like object.
+
+        Raises:
+          ParseError: if an USN change journal record cannot be read.
+          WrongParser: when the file cannot be parsed.
+        """
+        usn_record_map = self._GetDataTypeMap("usn_record_v2")
+
+        file_size = file_object.get_size()
+        file_offset = 0
+        has_usn_records = False
+
+        while file_offset + self._USN_RECORD_V2_HEADER_SIZE <= file_size:
+            usn_record_header_data = self._ReadData(file_object, file_offset, 8)
+            if usn_record_header_data == bytes(8):
+                file_offset = self._GetNextNonZeroOffset(
+                    file_object, file_offset, file_size
+                )
+                continue
+
+            usn_record_size = int.from_bytes(usn_record_header_data[0:4], "little")
+            major_version = int.from_bytes(usn_record_header_data[4:6], "little")
+            minor_version = int.from_bytes(usn_record_header_data[6:8], "little")
+
+            is_supported = (
+                major_version == 2
+                and minor_version == 0
+                and usn_record_size >= self._USN_RECORD_V2_HEADER_SIZE
+                and usn_record_size % 8 == 0
+                and file_offset + usn_record_size <= file_size
+            )
+            if is_supported:
+                usn_record_data = self._ReadData(
+                    file_object, file_offset, usn_record_size
+                )
+                usn_record = self._ReadStructureFromByteStream(
+                    usn_record_data, file_offset, usn_record_map
+                )
+                is_supported = (
+                    usn_record.name_offset >= self._USN_RECORD_V2_HEADER_SIZE
+                    and usn_record.name_offset + usn_record.name_size <= usn_record_size
+                )
+
+            if not is_supported:
+                if not has_usn_records:
+                    raise errors.WrongParser(
+                        f"Unsupported USN record at offset: 0x{file_offset:08x}"
+                    )
+
+                parser_mediator.ProduceWarning(
+                    f"unsupported USN record at offset: 0x{file_offset:08x}"
+                )
+                file_offset += self._JOURNAL_BLOCK_SIZE - (
+                    file_offset % self._JOURNAL_BLOCK_SIZE
+                )
+                continue
+
+            self._ProduceUSNChangeEventData(parser_mediator, usn_record, file_offset)
+
+            has_usn_records = True
+            file_offset += usn_record_size
 
     def _ParseUSNChangeJournal(self, parser_mediator, usn_change_journal):
         """Parses an USN change journal.
@@ -434,46 +548,77 @@ class NTFSUsnJrnlParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelp
                     f"with error: {exception!s}"
                 )
 
-            # Per MSDN we need to use name offset for forward compatibility.
-            name_offset = usn_record.name_offset - 60
-            ucs2_stream = usn_record.name[name_offset : usn_record.name_size]
-
-            corrupted = False
-
-            try:
-                name_string = ucs2_stream.decode("utf-16-le")
-            except (UnicodeDecodeError, UnicodeEncodeError) as exception:
-                name_string = ucs2_stream.decode("utf-16-le", errors="backslashreplace")
-                parser_mediator.ProduceWarning(
-                    f"unable to decode USN record name string with error: "
-                    f"{exception!s}. Unsupported code points are escaped."
-                )
-                # Note that valid UCS-2 strings can be tagged as corrupted.
-                corrupted = True
-
-            event_data = NTFSUSNChangeEventData()
-            event_data.file_attribute_flags = usn_record.file_attribute_flags
-            event_data.file_reference = usn_record.file_reference
-            event_data.filename = name_string
-            event_data.offset = current_offset
-            event_data.parent_file_reference = usn_record.parent_file_reference
-            event_data.update_time = self._GetDateTime(usn_record.update_date_time)
-            event_data.update_reason_flags = usn_record.update_reason_flags
-            event_data.update_sequence_number = usn_record.update_sequence_number
-            event_data.update_source_flags = usn_record.update_source_flags
-
-            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
+            self._ProduceUSNChangeEventData(parser_mediator, usn_record, current_offset)
 
             usn_record_data = usn_change_journal.read_usn_record()
 
+    def _ProduceUSNChangeEventData(self, parser_mediator, usn_record, offset):
+        """Produces event data from an USN record.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          usn_record (usn_record_v2): USN record.
+          offset (int): offset of the USN record.
+        """
+        # Per MSDN we need to use name offset for forward compatibility.
+        name_offset = usn_record.name_offset - self._USN_RECORD_V2_HEADER_SIZE
+        ucs2_stream = usn_record.name[name_offset : usn_record.name_size]
+
+        corrupted = False
+
+        try:
+            name_string = ucs2_stream.decode("utf-16-le")
+        except (UnicodeDecodeError, UnicodeEncodeError) as exception:
+            name_string = ucs2_stream.decode("utf-16-le", errors="backslashreplace")
+            parser_mediator.ProduceWarning(
+                f"unable to decode USN record name string with error: "
+                f"{exception!s}. Unsupported code points are escaped."
+            )
+            # Note that valid UCS-2 strings can be tagged as corrupted.
+            corrupted = True
+
+        event_data = NTFSUSNChangeEventData()
+        event_data.file_attribute_flags = usn_record.file_attribute_flags
+        event_data.file_reference = usn_record.file_reference
+        event_data.filename = name_string
+        event_data.offset = offset
+        event_data.parent_file_reference = usn_record.parent_file_reference
+        event_data.update_time = self._GetDateTime(usn_record.update_date_time)
+        event_data.update_reason_flags = usn_record.update_reason_flags
+        event_data.update_sequence_number = usn_record.update_sequence_number
+        event_data.update_source_flags = usn_record.update_source_flags
+
+        parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
+
     def ParseFileObject(self, parser_mediator, file_object):
         """Parses a NTFS $UsnJrnl metadata file-like object.
+
+        The file-like object is either that of a NTFS volume or that of
+        an exported $UsnJrnl:$J data stream.
 
         Args:
           parser_mediator (ParserMediator): mediates interactions between parsers
               and other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): file-like object.
+
+        Raises:
+          WrongParser: when the file cannot be parsed.
         """
+        try:
+            is_ntfs_volume = pyfsntfs.check_volume_signature_file_object(file_object)
+        except OSError:
+            is_ntfs_volume = False
+
+        if not is_ntfs_volume:
+            try:
+                self._ParseExportedUSNChangeJournal(parser_mediator, file_object)
+            except errors.ParseError as exception:
+                parser_mediator.ProduceWarning(
+                    f"unable to parse USN change journal with error: {exception!s}"
+                )
+            return
+
         fsntfs_volume = pyfsntfs.volume()
         try:
             fsntfs_volume.open_file_object(file_object)
