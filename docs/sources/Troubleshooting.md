@@ -50,13 +50,13 @@ Also see the sections below on how to troubleshoot issues of a specific nature.
 
 The most important part of troubleshooting is isolating the error.
 
-Can you run the tests successfully?
+Can you run the tests successfully? For example:
 
 ```bash
-$ python run_tests.py
+$ python3 run_tests.py
 ...
 ----------------------------------------------------------------------
-Ran ... tests in ...s
+Ran 585 tests in 66.530s
 
 OK
 ```
