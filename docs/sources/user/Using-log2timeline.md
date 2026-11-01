@@ -43,6 +43,15 @@ Source path     : /PATH/image.E01
 Source type     : storage media image
 Processing time : 00:00:00
 
+
+***************************** Processing settings ******************************
+            Storage file : timeline.plaso
+          Storage format : sqlite
+         Processing mode : multi process
+Parser filter expression : N/A
+                 Hashers : sha256
+--------------------------------------------------------------------------------
+
 Processing started.
 ```
 
