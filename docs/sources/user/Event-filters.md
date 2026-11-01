@@ -195,7 +195,8 @@ and `filename contains PATH('/usr/local')` both match `/usr/local/bin/ls`, but
 filename == PATH('/usr/local/bin/ls')
 ```
 
-Will match `/usr/local/bin/ls` and `/usr//local/bin/ls`.
+Will match `/usr/local/bin/ls`. Empty path segments, caused by consecutive `/`,
+are ignored, so it also matches `/usr//local/bin/ls`.
 
 ## References
 
