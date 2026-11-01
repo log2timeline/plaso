@@ -1302,11 +1302,33 @@ source: 'viminfo'
 type: 'conditional'
 data_type: 'vsftpd:log'
 message:
+- '[pid {process_identifier}]'
+- '[{username}]'
 - '{text}'
 short_message:
+- '[pid {process_identifier}]'
+- '[{username}]'
 - '{text}'
 short_source: 'LOG'
 source: 'vsftpd log'
+---
+type: 'conditional'
+data_type: 'vsftpd:xferlog'
+message:
+- 'Remote host: {remote_host}'
+- 'Filename: {filename}'
+- 'File size: {file_size}'
+- 'Direction: {direction}'
+- 'Transfer type: {transfer_type}'
+- 'Access mode: {access_mode}'
+- 'Username: {username}'
+- 'Completion status: {completion_status}'
+short_message:
+- 'Remote host: {remote_host}'
+- 'Filename: {filename}'
+- 'Direction: {direction}'
+short_source: 'LOG'
+source: 'vsftpd transfer log'
 ---
 type: 'conditional'
 data_type: 'xchat:log:line'
