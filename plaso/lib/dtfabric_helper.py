@@ -60,6 +60,7 @@ class DtFabricHelper:
         super().__init__()
         self._data_type_maps = {}
         self._definition = self._ReadDefinitionFile(self._DEFINITION_FILE)
+        self._definition_error = None
         self._fabric = None
 
     def _FormatPackedIPv4Address(self, packed_ip_address):
@@ -100,13 +101,26 @@ class DtFabricHelper:
         Returns:
           dtfabric.DataTypeMap: data type map which contains a data type definition,
               such as a structure, that can be mapped onto binary data.
+
+        Raises:
+          MalformedDefinitionFileError: if the definition file is malformed.
         """
         data_type_map = self._data_type_maps.get(name)
         if not data_type_map:
             if self._fabric is None and self._definition is not None:
-                self._fabric = dtfabric_fabric.DataTypeFabric(
-                    yaml_definition=self._definition
-                )
+                if self._definition_error is None:
+                    try:
+                        self._fabric = dtfabric_fabric.DataTypeFabric(
+                            yaml_definition=self._definition
+                        )
+                    except dtfabric_errors.Error as exception:
+                        self._definition_error = (
+                            f"Unable to read dtFabric definition file: "
+                            f"{self._DEFINITION_FILE!s} with error: {exception!s}"
+                        )
+
+                if self._definition_error is not None:
+                    raise errors.MalformedDefinitionFileError(self._definition_error)
 
             data_type_map = self._fabric.CreateDataTypeMap(name)
             self._data_type_maps[name] = data_type_map

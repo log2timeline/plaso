@@ -208,6 +208,36 @@ members:
         data_type_map = test_helper._GetDataTypeMap("bogus")
         self.assertIsNone(data_type_map)
 
+        # Test with a malformed definition file.
+        with test_lib.TempDirectory() as temp_directory:
+            path = os.path.join(temp_directory, "malformed.yaml")
+            with open(path, "wb") as file_object:
+                file_object.write(self._DATA_TYPE_FABRIC_DEFINITION)
+                file_object.write(
+                    b"---\n"
+                    b"name: malformed\n"
+                    b"type: structure\n"
+                    b"attributes:\n"
+                    b"  byte_order: little-endian\n"
+                    b"members:\n"
+                    b"- name: x\n"
+                    b"  data_type: undefined\n"
+                )
+
+            test_helper = self._CreateTestHelper(path)
+
+        with self.assertRaises(errors.MalformedDefinitionFileError) as context:
+            test_helper._GetDataTypeMap("point3d")
+
+        self.assertIn(path, str(context.exception))
+        self.assertIsNone(test_helper._fabric)
+
+        # Test that the error is reported again for the next data type map.
+        self.assertIsNotNone(test_helper._definition_error)
+
+        with self.assertRaises(errors.MalformedDefinitionFileError):
+            test_helper._GetDataTypeMap("shape3d")
+
     def testReadData(self):
         """Tests the _ReadData function."""
         test_helper = dtfabric_helper.DtFabricHelper()
