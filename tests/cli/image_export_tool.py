@@ -753,6 +753,9 @@ class ImageExportToolTest(test_lib.CLIToolTestCase):
 
     def testParseArguments(self):
         """Tests the ParseArguments function."""
+        # Disable terminal colors otherwise the test fails due argparse using colors.
+        os.environ["NO_COLOR"] = "1"
+
         output_writer = test_lib.TestOutputWriter(encoding="utf-8")
         test_tool = image_export_tool.ImageExportTool(output_writer=output_writer)
 

@@ -131,6 +131,9 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
     def testParseArguments(self):
         """Tests the ParseArguments function."""
+        # Disable terminal colors otherwise the test fails due argparse using colors.
+        os.environ["NO_COLOR"] = "1"
+
         output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
         test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 

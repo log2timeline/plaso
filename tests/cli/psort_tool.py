@@ -341,6 +341,9 @@ Test argument parser.
 
     def testParseArguments(self):
         """Tests the ParseArguments function."""
+        # Disable terminal colors otherwise the test fails due argparse using colors.
+        os.environ["NO_COLOR"] = "1"
+
         output_writer = test_lib.TestOutputWriter(encoding="utf-8")
         test_tool = psort_tool.PsortTool(output_writer=output_writer)
 
@@ -353,7 +356,6 @@ Test argument parser.
                 "ERROR: Output format: dynamic requires an output file\n\nusage: "
             )
         )
-
         result = test_tool.ParseArguments(["-o", "null"])
         self.assertFalse(result)
 

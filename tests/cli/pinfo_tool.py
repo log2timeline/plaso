@@ -1035,6 +1035,9 @@ Storage files are different.
 
     def testParseArguments(self):
         """Tests the ParseArguments function."""
+        # Disable terminal colors otherwise the test fails due argparse using colors.
+        os.environ["NO_COLOR"] = "1"
+
         output_writer = test_lib.TestBinaryOutputWriter(encoding="utf-8")
         test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
 
@@ -1045,7 +1048,6 @@ Storage files are different.
         self.assertTrue(
             output.startswith(b"ERROR: Missing storage file option.\n\nusage: ")
         )
-
         test_file_path = self._GetTestFilePath(["bogus.plaso"])
         result = test_tool.ParseArguments([test_file_path])
         self.assertFalse(result)
