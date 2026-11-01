@@ -14,6 +14,15 @@ from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.parsers import interface as parsers_interface
 from plaso.parsers import manager as parsers_manager
+from plaso.parsers import mediator as parsers_mediator
+
+
+class _DiscardingStorageWriter:
+    """Storage writer that discards everything that is written to it."""
+
+    def AddAttributeContainer(self, unused_attribute_container):
+        """Discards an attribute container."""
+        return
 
 
 class EventDataExtractor:
@@ -91,6 +100,56 @@ class EventDataExtractor:
 
         return parser_names
 
+    def _IsFormatOfDisabledParsers(
+        self, parser_mediator, parser_names, file_entry, file_object
+    ):
+        """Determines if a file-like object is of the format of a disabled parser.
+
+        A signature match alone is not enough since a file can consist of multiple
+        formats (polyglot) or only contain the signature of a format by chance. The
+        disabled parsers are therefore run with a separate parser mediator that
+        discards what they produce, and the file-like object is considered to be
+        of their format when one of them extracts event data from it. Parsers do
+        not necessarily raise WrongParser for data they cannot parse.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          parser_names (list[str]): names of the disabled parsers that match the
+              signatures of the file-like object.
+          file_entry (dfvfs.FileEntry): file entry.
+          file_object (file): file-like object.
+
+        Returns:
+          bool: True if the file-like object is of the format of one of the
+              disabled parsers.
+        """
+        scratch_mediator = parsers_mediator.ParserMediator(
+            registry_find_specs=parser_mediator.registry_find_specs,
+            resolver_context=parser_mediator.resolver_context,
+        )
+        scratch_mediator.SetStorageWriter(_DiscardingStorageWriter())
+        scratch_mediator.SetFileEntry(file_entry)
+
+        for parser_name in parser_names:
+            parser = self._disabled_parsers.get(parser_name, None)
+            if not parser:
+                parser = parsers_manager.ParsersManager.GetParserObjects(
+                    parser_filter_expression=parser_name
+                ).get(parser_name, None)
+                self._disabled_parsers[parser_name] = parser
+
+            if not parser:
+                continue
+
+            self._ParseFileEntryWithParser(
+                scratch_mediator, parser, file_entry, file_object=file_object
+            )
+            if scratch_mediator.number_of_produced_event_data > 0:
+                return True
+
+        return False
+
     def _InitializeParserObjects(self, parser_filter_expression=None):
         """Initializes the parser objects.
 
@@ -102,7 +161,14 @@ class EventDataExtractor:
               denotes which parsers and plugins should be used. See
               filters/parser_filter.py for details of the expression syntax.
         """
-        self._formats_with_signatures, non_sigscan_parser_names = (
+        # The signature scanner contains the format specifications of all parsers,
+        # including disabled parsers, so that data streams that match the format
+        # of a disabled parser are not parsed by the non-signature parsers.
+        self._formats_with_signatures, _ = (
+            parsers_manager.ParsersManager.GetFormatsWithSignatures()
+        )
+
+        _, non_sigscan_parser_names = (
             parsers_manager.ParsersManager.GetFormatsWithSignatures(
                 parser_filter_expression=parser_filter_expression
             )
@@ -116,6 +182,8 @@ class EventDataExtractor:
         self._format_scanner = parsers_manager.ParsersManager.CreateSignatureScanner(
             self._formats_with_signatures
         )
+
+        self._disabled_parsers = {}
 
         self._parsers = parsers_manager.ParsersManager.GetParserObjects(
             parser_filter_expression=parser_filter_expression
@@ -292,13 +360,36 @@ class EventDataExtractor:
         finally:
             parser_mediator.SampleFormatCheckStopTiming("format_scanner")
 
+        enabled_parser_names = [
+            parser_name for parser_name in parser_names if parser_name in self._parsers
+        ]
+
         parse_with_non_sigscan_parsers = True
-        if parser_names:
+        if enabled_parser_names:
             parse_result = self._ParseFileEntryWithParsers(
-                parser_mediator, parser_names, file_entry, file_object=file_object
+                parser_mediator,
+                enabled_parser_names,
+                file_entry,
+                file_object=file_object,
             )
             if parse_result in (self._PARSE_RESULT_FAILURE, self._PARSE_RESULT_SUCCESS):
                 parse_with_non_sigscan_parsers = False
+
+        elif parser_names and self._IsFormatOfDisabledParsers(
+            parser_mediator, parser_names, file_entry, file_object
+        ):
+            # A data stream that is of the format of a disabled parser is not
+            # parsed by the non-signature parsers.
+            parse_with_non_sigscan_parsers = False
+
+            display_name = parser_mediator.GetDisplayName(file_entry=file_entry)
+            disabled_parser_names = ", ".join(parser_names)
+            logger.debug(
+                (
+                    f"[ParseDataStream] skipped file: {display_name:s} that is of "
+                    f"the format of disabled parsers: {disabled_parser_names:s}"
+                )
+            )
 
         if parse_with_non_sigscan_parsers:
             self._ParseFileEntryWithParsers(
