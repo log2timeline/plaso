@@ -595,27 +595,26 @@ class FieldFormattingHelper:
           tuple[EventFormatter, dict[str, object]]: message formatter and
               formatted event values.
         """
-        if (
-            event_data is not self._cached_event_data
-            or output_mediator is not self._cached_output_mediator
-        ):
-            message_formatter = output_mediator.GetMessageFormatter(
-                event_data.data_type
+        # TODO: fix cache criteria https://github.com/log2timeline/plaso/issues/5541
+        # if (
+        #     event_data is not self._cached_event_data
+        #     or output_mediator is not self._cached_output_mediator
+        # ):
+        message_formatter = output_mediator.GetMessageFormatter(event_data.data_type)
+        if not message_formatter:
+            logger.warning(
+                f"Using default message formatter for data type: "
+                f"{event_data.data_type:s}"
             )
-            if not message_formatter:
-                logger.warning(
-                    f"Using default message formatter for data type: "
-                    f"{event_data.data_type:s}"
-                )
-                message_formatter = self._DEFAULT_MESSAGE_FORMATTER
+            message_formatter = self._DEFAULT_MESSAGE_FORMATTER
 
-            event_values = event_data.CopyToDict()
-            message_formatter.FormatEventValues(output_mediator, event_values)
+        event_values = event_data.CopyToDict()
+        message_formatter.FormatEventValues(output_mediator, event_values)
 
-            self._cached_event_data = event_data
-            self._cached_event_values = event_values
-            self._cached_message_formatter = message_formatter
-            self._cached_output_mediator = output_mediator
+        self._cached_event_data = event_data
+        self._cached_event_values = event_values
+        self._cached_message_formatter = message_formatter
+        self._cached_output_mediator = output_mediator
 
         return self._cached_message_formatter, self._cached_event_values
 
