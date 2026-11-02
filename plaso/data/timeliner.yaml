@@ -1894,6 +1894,12 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: true
 ---
+data_type: 'windows:registry:putty:session'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+place_holder_event: true
+---
 data_type: 'windows:registry:run'
 attribute_mappings:
 - name: 'last_written_time'
