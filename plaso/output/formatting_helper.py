@@ -600,9 +600,7 @@ class FieldFormattingHelper:
         #     event_data is not self._cached_event_data
         #     or output_mediator is not self._cached_output_mediator
         # ):
-        message_formatter = output_mediator.GetMessageFormatter(
-            event_data.data_type
-        )
+        message_formatter = output_mediator.GetMessageFormatter(event_data.data_type)
         if not message_formatter:
             logger.warning(
                 f"Using default message formatter for data type: "
