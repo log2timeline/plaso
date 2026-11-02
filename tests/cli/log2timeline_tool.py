@@ -222,6 +222,63 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
             output = output_writer.ReadOutput()
             self._CheckOutput(output, expected_output)
 
+    def testExtractEventsFromSourcesWithProcessingSettings(self):
+        """Tests the ExtractEventsFromSources function prints processing settings."""
+        test_file_path = self._GetTestFilePath(["testdir"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        options = self._CreateExtractionOptions(test_file_path)
+        options.quiet = False
+
+        output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
+        test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            options.storage_file = os.path.join(temp_directory, "storage.plaso")
+            options.storage_format = definitions.STORAGE_FORMAT_SQLITE
+            options.task_storage_format = definitions.STORAGE_FORMAT_SQLITE
+
+            test_tool.ParseOptions(options)
+
+            test_tool.ExtractEventsFromSources()
+
+            expected_output = [
+                "",
+                f"Source path\t\t: {options.source:s}",
+                "Source type\t\t: directory",
+                "Processing time\t\t: 00:00:00",
+                "",
+                "",
+                (
+                    "***************************** Processing settings "
+                    "******************************"
+                ),
+                f"            Storage file : {options.storage_file:s}",
+                "          Storage format : sqlite",
+                "         Processing mode : single process",
+                "Parser filter expression : N/A",
+                "                 Hashers : sha256",
+                "-" * 80,
+                "",
+                "Processing started.",
+                "Processing completed.",
+                "",
+                "",
+            ]
+
+            output = output_writer.ReadOutput()
+
+            # The table view puts a storage file path that does not fit on the
+            # line on a line of its own, which depends on the temporary directory.
+            wrapped_line = (
+                f"            Storage file : \n{' ' * 27:s}{options.storage_file:s}"
+            )
+            output = output.replace(
+                wrapped_line, f"            Storage file : {options.storage_file:s}"
+            )
+
+            self._CheckOutput(output, expected_output)
+
     def testExtractEventsFromSourcesOnAPFSImage(self):
         """Tests the ExtractEventsFromSources function on APFS image."""
         test_file_path = self._GetTestFilePath(["apfs.dmg"])
