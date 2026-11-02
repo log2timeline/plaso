@@ -6,6 +6,7 @@ import unittest
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
+from plaso.lib import errors
 from plaso.parsers import ntfs
 
 from tests.parsers import test_lib
@@ -359,6 +360,171 @@ class NTFSUsnJrnlParser(test_lib.ParserTestCase):
 
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
+
+    def _ReadTestFileData(self, path_segments):
+        """Reads the data of a test file.
+
+        Args:
+          path_segments (list[str]): path segments inside the test data directory.
+
+        Returns:
+          bytes: data of the test file.
+        """
+        test_file_path = self._GetTestFilePath(path_segments)
+        self._SkipIfPathNotExists(test_file_path)
+
+        with open(test_file_path, "rb") as file_object:
+            return file_object.read()
+
+    def testParseExportedDataStream(self):
+        """Tests the Parse function on an exported $UsnJrnl:$J data stream."""
+        parser = ntfs.NTFSUsnJrnlParser()
+        storage_writer = self._ParseFile(["UsnJrnl.raw"], parser)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 19)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "recovery_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        expected_event_values = {
+            "data_type": "fs:ntfs:usn_change",
+            "filename": "Nieuw - Tekstdocument.txt",
+            "file_reference": 0x100000000001E,
+            "offset": 0,
+            "parent_file_reference": 0x5000000000005,
+            "update_reason_flags": 0x00000100,
+            "update_time": "2015-11-30T21:15:27.2031250+00:00",
+        }
+
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
+
+    def testParseExportedDataStreamWithSparseRanges(self):
+        """Tests the Parse function on an exported data stream with sparse ranges."""
+        parser = ntfs.NTFSUsnJrnlParser()
+
+        usn_records_data = self._ReadTestFileData(["UsnJrnl.raw"])
+
+        # A sparse range of an exported $UsnJrnl:$J data stream is stored as
+        # a zero-byte filled range.
+        test_data = b"".join(
+            [bytes(0x22000), usn_records_data, bytes(0x1000 - len(usn_records_data))]
+        )
+        file_object = self._CreateFileObject("UsnJrnl.raw", test_data)
+
+        storage_writer = self._CreateStorageWriter()
+        parser_mediator = self._CreateParserMediator(storage_writer)
+
+        parser.Parse(parser_mediator, file_object)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 19)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, {"offset": 0x22000})
+
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 18)
+        self.CheckEventData(event_data, {"offset": 0x22680})
+
+        # Test with an unsupported USN record after the supported USN records.
+        unsupported_usn_record_data = b"".join(
+            [b"\x40\x00\x00\x00\x03\x00\x00\x00", bytes(56)]
+        )
+        test_data = b"".join([usn_records_data, unsupported_usn_record_data])
+        file_object = self._CreateFileObject("UsnJrnl.raw", test_data)
+
+        storage_writer = self._CreateStorageWriter()
+        parser_mediator = self._CreateParserMediator(storage_writer)
+
+        parser.Parse(parser_mediator, file_object)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 19)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 1)
+
+    def testParseExportedDataStreamWithNearMisses(self):
+        """Tests the Parse function on data that is not a $UsnJrnl:$J data stream."""
+        parser = ntfs.NTFSUsnJrnlParser()
+
+        storage_writer = self._CreateStorageWriter()
+        parser_mediator = self._CreateParserMediator(storage_writer)
+
+        # Test with a NTFS $MFT metadata file.
+        test_data = self._ReadTestFileData(["MFT"])
+        file_object = self._CreateFileObject("MFT", test_data)
+
+        with self.assertRaises(errors.WrongParser):
+            parser.Parse(parser_mediator, file_object)
+
+        # Test with text data.
+        test_data = b"".join([b"This is not an USN change journal.\n", bytes(64)])
+        file_object = self._CreateFileObject("UsnJrnl.raw", test_data)
+
+        with self.assertRaises(errors.WrongParser):
+            parser.Parse(parser_mediator, file_object)
+
+        usn_records_data = self._ReadTestFileData(["UsnJrnl.raw"])
+
+        # Test with an unsupported major version.
+        test_data = b"".join([usn_records_data[:4], b"\x03\x00", usn_records_data[6:]])
+        file_object = self._CreateFileObject("UsnJrnl.raw", test_data)
+
+        with self.assertRaises(errors.WrongParser):
+            parser.Parse(parser_mediator, file_object)
+
+        # Test with a record size that is not a multiple of 8.
+        test_data = b"".join([b"\x71\x00\x00\x00", usn_records_data[4:]])
+        file_object = self._CreateFileObject("UsnJrnl.raw", test_data)
+
+        with self.assertRaises(errors.WrongParser):
+            parser.Parse(parser_mediator, file_object)
+
+        # Test with a record size that exceeds the data.
+        test_data = usn_records_data[:100]
+        file_object = self._CreateFileObject("UsnJrnl.raw", test_data)
+
+        with self.assertRaises(errors.WrongParser):
+            parser.Parse(parser_mediator, file_object)
+
+        # Test with a zero record size and a non-zero major version.
+        test_data = b"".join([bytes(8), b"\x00\x00\x00\x00\x02\x00\x00\x00", bytes(56)])
+        file_object = self._CreateFileObject("UsnJrnl.raw", test_data)
+
+        with self.assertRaises(errors.WrongParser):
+            parser.Parse(parser_mediator, file_object)
+
+        # Test with zero-byte filled data only.
+        file_object = self._CreateFileObject("UsnJrnl.raw", bytes(0x1000))
+
+        parser.Parse(parser_mediator, file_object)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 0)
 
 
 if __name__ == "__main__":
