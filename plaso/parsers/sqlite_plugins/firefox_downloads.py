@@ -12,68 +12,45 @@ from plaso.parsers.sqlite_plugins import interface
 class FirefoxDownloadEventData(events.EventData):
     """Firefox download event data.
 
+    Firefox stored downloads in downloads.sqlite up to version 25, and stores them
+    in places.sqlite since version 26. Some attributes are only available in one
+    of these formats.
+
     Attributes:
+      deleted (int): deleted state, only available in places.sqlite (Firefox 26
+          and later).
+      download_state (int): state of the download, only available in
+          places.sqlite (Firefox 26 and later).
       end_time (dfdatetime.DateTimeValues): date and time the download was
           finished.
+      expiration (int): expiration, only available in places.sqlite (Firefox 26
+          and later).
+      flags (int): flags associated with the download, only available in
+          places.sqlite (Firefox 26 and later).
       full_path (str): full path of the target of the download.
-      mime_type (str): mime type of the download.
+      mime_type (str): mime type of the download, only available in
+          downloads.sqlite (Firefox 25 and earlier).
       name (str): name of the download.
       offset (str): identifier of the row, from which the event data was
-          extracted.
+          extracted, only available in downloads.sqlite (Firefox 25 and
+          earlier).
       query (str): SQL query that was used to obtain the event data.
       received_bytes (int): number of bytes received.
-      referrer (str): referrer URL of the download.
+      referrer (str): referrer URL of the download, only available in
+          downloads.sqlite (Firefox 25 and earlier).
       start_time (dfdatetime.DateTimeValues): date and time the download was
           started.
-      temporary_location (str): temporary location of the download.
+      temporary_location (str): temporary location of the download, only
+          available in downloads.sqlite (Firefox 25 and earlier).
       total_bytes (int): total number of bytes of the download.
       url (str): source URL of the download.
     """
 
-    DATA_TYPE = "firefox:downloads:download"
-
-    def __init__(self):
-        """Initializes event data."""
-        super().__init__(data_type=self.DATA_TYPE)
-        self.end_time = None
-        self.full_path = None
-        self.mime_type = None
-        self.name = None
-        self.offset = None
-        self.query = None
-        self.received_bytes = None
-        self.referrer = None
-        self.start_time = None
-        self.temporary_location = None
-        self.total_bytes = None
-        self.url = None
-
-
-class Firefox118DownloadEventData(events.EventData):
-    """Firefox download event data.
-
-    Attributes:
-      deleted (int): deleted state.
-      download_state (int): state of the download.
-      end_time (dfdatetime.DateTimeValues): date and time the download was
-          finished.
-      expiration (int): expiration.
-      flags (int): flags associated with this download
-      full_path (str): full path of the target of the download.
-      mime_type (str): mime type of the download.
-      name (str): name of the download.
-      offset (str): identifier of the row, from which the event data was
-          extracted.
-      query (str): SQL query that was used to obtain the event data.
-      received_bytes (int): number of bytes received.
-      referrer (str): referrer URL of the download.
-      start_time (dfdatetime.DateTimeValues): date and time the download was
-          started.
-      temporary_location (str): temporary location of the download.
-      total_bytes (int): total number of bytes of the download.
-      url (str): source URL of the download.
-    """
-
+    # TODO: consider a separate data type, such as firefox:places:download, for
+    # downloads stored in places.sqlite. This would give each format an exact
+    # schema, consistent with the other places.sqlite data types, but it changes
+    # the data type of existing event data, which affects event filters and the
+    # analysis plugins that use firefox:downloads:download.
     DATA_TYPE = "firefox:downloads:download"
 
     def __init__(self):
@@ -85,10 +62,14 @@ class Firefox118DownloadEventData(events.EventData):
         self.expiration = None
         self.flags = None
         self.full_path = None
+        self.mime_type = None
         self.name = None
+        self.offset = None
         self.query = None
         self.received_bytes = None
+        self.referrer = None
         self.start_time = None
+        self.temporary_location = None
         self.total_bytes = None
         self.url = None
 
@@ -268,7 +249,7 @@ class Firefox118DownloadsPlugin(interface.SQLitePlugin):
         # }
         content_data = json.loads(content)
 
-        event_data = Firefox118DownloadEventData()
+        event_data = FirefoxDownloadEventData()
 
         event_data.deleted = content_data.get("deleted")
         event_data.download_state = content_data.get("state")
@@ -283,6 +264,8 @@ class Firefox118DownloadsPlugin(interface.SQLitePlugin):
         event_data.flags = self._GetRowValue(query_hash, row, "flags")
         event_data.full_path = self._GetRowValue(query_hash, row, "dest_fpath")
         event_data.name = self._GetRowValue(query_hash, row, "title")
+        # TODO: add the identifier of the annotation row to the query and set
+        # offset, like for downloads.sqlite.
         event_data.query = query
         event_data.received_bytes = content_data.get("fileSize", 0)
         event_data.start_time = self._GetPosixTimeInMicrosecondsRowValue(
