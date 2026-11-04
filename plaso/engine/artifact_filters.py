@@ -190,14 +190,15 @@ class ArtifactDefinitionsFiltersHelper:
               are being requested as a result of a previous filter.
 
         Returns:
-          list[dfwinreg.FindSpec|dfvfs.FindSpec]: find specifications or None if no
-              artifact with the given name can be retrieved.
+          list[dfwinreg.FindSpec|dfvfs.FindSpec]: find specifications, which is
+              empty if no artifact with the given name can be retrieved.
         """
         definition = self._artifacts_registry.GetDefinitionByName(group_name)
         if not definition:
             definition = self._artifacts_registry.GetDefinitionByAlias(group_name)
         if not definition:
-            return None
+            logger.debug(f"undefined artifact definition: {group_name:s}")
+            return []
 
         return self._BuildFindSpecsFromArtifact(
             definition,
