@@ -26,7 +26,7 @@ To test your Plaso Docker image:
 
 ```bash
 $ docker run log2timeline/plaso log2timeline.py --version
-plaso - log2timeline version 20200717
+plaso - log2timeline version 20261025
 ```
 
 ## Copying the Plaso Docker image to a non-Internet connected system
@@ -77,7 +77,7 @@ Next step is to run analysis with psort:
 
 ```bash
 $ docker run -v /data/:/data log2timeline/plaso psort -w /data/timeline.log /data/evidences.plaso
-Datetime,timestamp_desc,source,source_long,message,parser,display_name,tag,store_number,store_index
+datetime,timestamp_desc,source,source_long,message,parser,display_name,tag
 ....
 Processing completed.
 
@@ -93,10 +93,11 @@ Last step, forensication, is left to the reader.
 The entry_point of the Docker container is [plaso-switch.sh](https://github.com/log2timeline/plaso/blob/main/config/docker/plaso-switch.sh).
 It understands the following commands, and runs the appropriate programs:
 
+* image_export or image_export.py
 * log2timeline or log2timeline.py
 * pinfo or pinfo.py
 * psort or psort.py
-* psteal  or psteal.py
+* psteal or psteal.py
 
 If you're not interested in running any of these, and just want to drop to a
 prompt inside your Plaso container, you can run:

@@ -428,9 +428,12 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         """
         extraction_engine = engine.BaseEngine()
 
-        extraction_engine.BuildArtifactsRegistry(
-            artifact_definitions_path, custom_artifacts_path
-        )
+        if self._artifacts_registry:
+            extraction_engine.SetArtifactsRegistry(self._artifacts_registry)
+        else:
+            extraction_engine.BuildArtifactsRegistry(
+                artifact_definitions_path, custom_artifacts_path
+            )
         storage_writer = fake_writer.FakeStorageWriter()
         storage_writer.Open()
 
