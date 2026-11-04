@@ -50,6 +50,33 @@ class TestSQLitePlugin(interface.SQLitePlugin):
         self.results.append((field1, field2, field3))
 
 
+class TestSQLitePluginWithFailingRow(TestSQLitePlugin):
+    """SQLite plugin for testing purposes that fails to parse a specific row."""
+
+    NAME = "test_with_failing_row"
+
+    # pylint: disable=unused-argument
+    def ParseMyTableRow(self, parser_mediator, query, row, **unused_kwargs):
+        """Parses a MyTable row.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          query (str): query that created the row.
+          row (sqlite3.Row): row.
+
+        Raises:
+          ValueError: if the row is the row that is expected to fail.
+        """
+        query_hash = hash(query)
+
+        field2 = self._GetRowValue(query_hash, row, "Field2")
+        if field2 == 3:
+            raise ValueError("Unsupported row.")
+
+        super().ParseMyTableRow(parser_mediator, query, row)
+
+
 class SQLiteInterfaceTest(test_lib.SQLitePluginTestCase):
     """Tests for the SQLite plugin interface."""
 
@@ -85,6 +112,30 @@ class SQLiteInterfaceTest(test_lib.SQLitePluginTestCase):
             ("Committed Text 1", 1, None),
             ("Committed Text 2", 2, None),
             ("Deleted Text 1", 3, None),
+            ("Committed Text 3", 4, None),
+            ("Committed Text 4", 5, None),
+            ("Deleted Text 2", 6, None),
+            ("Committed Text 5", 7, None),
+            ("Committed Text 6", 8, None),
+            ("Committed Text 7", 9, None),
+            ("Unhashable Row 1", 10, b"Binary Text!\x01\x02\x03"),
+        ]
+
+        self.assertEqual(plugin.results, expected_results)
+
+    def testProcessWithFailingRow(self):
+        """Tests the Process function on a database with a row that fails."""
+        plugin = TestSQLitePluginWithFailingRow()
+        storage_writer = self._ParseDatabaseFileWithPlugin(["wal_database.db"], plugin)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 1)
+
+        expected_results = [
+            ("Committed Text 1", 1, None),
+            ("Committed Text 2", 2, None),
             ("Committed Text 3", 4, None),
             ("Committed Text 4", 5, None),
             ("Deleted Text 2", 6, None),
