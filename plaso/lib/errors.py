@@ -29,6 +29,10 @@ class InvalidNumberOfOperands(Error):
     """The number of operands provided to an objectfilter operator is wrong."""
 
 
+class MalformedDefinitionFileError(Error):
+    """Raised when a dtFabric definition file is malformed."""
+
+
 class MalformedPresetError(Error):
     """Raised when a parser preset definition is malformed."""
 
