@@ -321,9 +321,8 @@ class SignaturesFileEntryFilterTest(shared_test_lib.BaseTestCase):
         format_specification.AddNewSignature(b"test3", offset=4)
         specification_store.AddSpecification(format_specification)
 
-        with self.assertRaises(TypeError):
-            # Currently pysigscan does not support patterns without an offset.
-            test_filter._GetScanner(specification_store, ["no_offset"])
+        file_scanner = test_filter._GetScanner(specification_store, ["no_offset"])
+        self.assertIsNotNone(file_scanner)
 
         file_scanner = test_filter._GetScanner(specification_store, ["negative_offset"])
         self.assertIsNotNone(file_scanner)
