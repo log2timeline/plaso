@@ -20,8 +20,32 @@ from tests.parsers import test_lib
 class SQLiteDatabaseTest(test_lib.ParserTestCase):
     """Tests for the SQLite database."""
 
+    # pylint: disable=protected-access
+
     # TODO: add tests for tables property
-    # TODO: add tests for _CopyFileObjectToTemporaryFile
+
+    def testCopyFileObjectToTemporaryFile(self):
+        """Tests the _CopyFileObjectToTemporaryFile function."""
+        database = sqlite.SQLiteDatabase("test.db")
+
+        # Use data larger than the read buffer to test multiple reads.
+        test_data = bytes(range(256)) * 300
+        self.assertGreater(len(test_data), database._READ_BUFFER_SIZE)
+
+        file_object = io.BytesIO(test_data)
+
+        # The copy should start at the beginning of the file-like object.
+        file_object.seek(1024, os.SEEK_SET)
+
+        temporary_file = io.BytesIO()
+        database._CopyFileObjectToTemporaryFile(file_object, temporary_file)
+        self.assertEqual(temporary_file.getvalue(), test_data)
+
+        file_object = io.BytesIO(b"")
+        temporary_file = io.BytesIO()
+        database._CopyFileObjectToTemporaryFile(file_object, temporary_file)
+        self.assertEqual(temporary_file.getvalue(), b"")
+
     # TODO: add tests for Open and Close
 
     def testOpenClose(self):
@@ -162,7 +186,52 @@ class SQLiteParserTest(test_lib.ParserTestCase):
 
     # pylint: disable=protected-access
 
-    # TODO: add tests for _OpenDatabaseWithWAL
+    def testOpenDatabaseWithWAL(self):
+        """Tests the _OpenDatabaseWithWAL function."""
+        parser = sqlite.SQLiteParser()
+
+        storage_writer = self._CreateStorageWriter()
+        parser_mediator = self._CreateParserMediator(storage_writer)
+
+        test_file_path = self._GetTestFilePath(["wal_database.db-wal"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        file_entry = self._GetTestFileEntry(["wal_database.db"])
+        file_object = file_entry.GetFileObject()
+
+        database, wal_file_entry = parser._OpenDatabaseWithWAL(
+            parser_mediator, file_entry, file_object, "wal_database.db"
+        )
+        self.assertIsNotNone(database)
+        self.assertIsNotNone(wal_file_entry)
+
+        try:
+            self.assertEqual(wal_file_entry.name, "wal_database.db-wal")
+
+            row_results = [
+                row["Field1"] for row in database.Query("SELECT Field1 FROM MyTable")
+            ]
+            self.assertIn("New Text 1", row_results)
+            self.assertIn("Modified Committed Text 3", row_results)
+            self.assertNotIn("Deleted Text 1", row_results)
+
+        finally:
+            database.Close()
+
+        # Test with a database without a WAL file.
+        file_entry = self._GetTestFileEntry(["android", "contacts2.db"])
+        file_object = file_entry.GetFileObject()
+
+        database, wal_file_entry = parser._OpenDatabaseWithWAL(
+            parser_mediator, file_entry, file_object, "contacts2.db"
+        )
+        self.assertIsNone(database)
+        self.assertIsNone(wal_file_entry)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
 
     def testEnablePlugins(self):
         """Tests the EnablePlugins function."""

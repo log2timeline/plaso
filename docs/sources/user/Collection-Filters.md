@@ -25,15 +25,13 @@ doc: System Windows Event Log.
 sources:
 - type: FILE
   attributes:
-    paths: ['%%environ_systemroot%%\System32\winevt\Logs\SysEvent.evt']
+    paths: ['%%environ_systemroot%%\System32\config\SysEvent.evt']
     separator: '\'
-conditions: [os_major_version < 6]
-labels: [Logs]
 supported_os: [Windows]
-urls: ['https://forensics.wiki/windows_event_log_(evt)']
+urls: ['https://artifacts-kb.readthedocs.io/en/latest/sources/windows/EventLog.html']
 ```
 
-'WindowsEventLogSystem' refers to the path '%SystemRoot%\System32\winevt\Logs\SysEvent.evt'.
+'WindowsEventLogSystem' refers to the path '%SystemRoot%\System32\config\SysEvent.evt'.
 
 To use:
 
@@ -41,8 +39,18 @@ To use:
 log2timeline.py --artifact-filters WindowsEventLogSystem --storage-file timeline.plaso source.raw
 ```
 
+Multiple names can be provided as a comma separated list.
+
 **Note that for convenience the Forensic Artifacts definition names can also
-be stored in a file.**
+be stored in a file, with one name per line, which is passed with
+`--artifact_filters_file`. This option cannot be combined with
+`--artifact-filters`.**
+
+To use your own artifact definitions in addition to the ones that are shipped
+with the artifacts project, pass a file or directory with definitions in the
+[Forensic Artifacts format](https://artifacts.readthedocs.io/en/latest/sources/Format-specification.html)
+with `--custom-artifact-definitions`. The names of these definitions can then
+be used with `--artifact-filters`.
 
 ## Using filter files
 
@@ -52,8 +60,8 @@ directory Plaso should include or exclude from parsing.
 * Inclusion filters are applied before exclusion filters.
 * Specifying the path of a directory will include or exclude its files and subdirectories.
 
-Path filters are case sensitive when compared to a case sensitive file system
-and case insensitive when compared to a case insensitive file system.
+Path filters are case insensitive, regardless of whether the file system is
+case sensitive.
 
 To use:
 
@@ -69,7 +77,7 @@ filters do not apply to archives or other composite files inside the source.**
 A path filter is defined as a set of attributes:
 
 * "description"; optional description of the purpose of the path filter;
-* "paths": one or more paths to filter defined as a regular expression;
+* "paths": one or more absolute paths to filter defined as a regular expression;
 * "path_separator"; optional path segment separator, which is '/' by default;
 * "type"; required filter type either "include" or "exclude";
 
@@ -88,6 +96,17 @@ paths:
 - '/usr/bin'
 ```
 
+The regular expression is applied per path segment, which means a regular
+expression cannot match the path segment separator. For example
+`/usr/(bin|sbin)/echo` matches both `/usr/bin/echo` and `/usr/sbin/echo`, and
+`/usr/.+/echo` matches `/usr/bin/echo` but not `/usr/local/bin/echo`.
+
+A path segment of the form `%Name%`, such as `%SystemRoot%`, is replaced by the
+value of the corresponding Windows environment variable that was determined
+during preprocessing. If the resulting path is not absolute, for example
+because the environment variable could not be determined, the path is ignored
+and a warning is logged.
+
 **Note that if you use `\` as a path segment separator it must be escaped as part
 of the regular expression of the paths attribute. Also make sure to escape any
 special regular expression characters such as `$`.**
@@ -97,7 +116,7 @@ description: Exclude NTFS $BadClus metadata file.
 type: exclude
 path_separator: '\'
 paths:
-- '\\[$]BadClus
+- '\\[$]BadClus'
 ```
 
 ## References
