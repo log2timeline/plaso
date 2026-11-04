@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Tests the plist parser."""
 
+import plistlib
 import unittest
+from unittest import mock
 
 from plaso.lib import errors
 from plaso.parsers import plist
@@ -282,6 +284,22 @@ class PlistParserTest(test_lib.ParserTestCase):
             "recovery_warning"
         )
         self.assertEqual(number_of_warnings, 0)
+
+    def testParseFileObjectReturnsNaiveDatetimeValues(self):
+        """Tests that the parser loads plists with naive (UTC) datetime values.
+
+        The plist plugins rely on plistlib returning naive datetime values that
+        represent UTC, the parser must therefore not request aware values.
+        """
+        parser = plist.PlistParser()
+
+        with mock.patch.object(
+            plist.plistlib, "loads", wraps=plistlib.loads
+        ) as mock_loads:
+            self._ParseFile(["plist", "com.apple.bluetooth.plist"], parser)
+
+        mock_loads.assert_called_once()
+        self.assertFalse(mock_loads.call_args.kwargs.get("aware_datetime", False))
 
 
 if __name__ == "__main__":

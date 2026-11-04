@@ -786,8 +786,12 @@ class PlistPlugin(plugins.BasePlugin):
         if not datetime_value:
             return None
 
-        # dfDateTime relies on the time zone but since plistlib does not set one.
-        datetime_value = datetime_value.replace(tzinfo=pytz.UTC)
+        # plistlib returns naive date and time values that represent UTC.
+        # Convert aware values to UTC instead of overwriting their time zone.
+        if datetime_value.tzinfo is None:
+            datetime_value = datetime_value.replace(tzinfo=pytz.UTC)
+        else:
+            datetime_value = datetime_value.astimezone(pytz.UTC)
 
         date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
         date_time.CopyFromDatetime(datetime_value)
