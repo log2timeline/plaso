@@ -935,6 +935,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
             self._system_configurations,
             self._windows_event_log_providers,
             self._registry_find_specs,
+            excluded_find_specs=self._excluded_file_system_find_specs,
             enable_sigsegv_handler=self._enable_sigsegv_handler,
             name=process_name,
         )
