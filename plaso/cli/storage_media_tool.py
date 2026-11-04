@@ -433,7 +433,7 @@ class StorageMediaTool(tools.CLITool):
             if credential_type in self._BINARY_DATA_CREDENTIAL_TYPES:
                 try:
                     credential_data = codecs.decode(credential_data, "hex")
-                except TypeError:
+                except (TypeError, ValueError):
                     raise errors.BadConfigOption(
                         f"Unsupported credential data for: {credential_string:s}."
                     )
