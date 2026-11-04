@@ -133,6 +133,7 @@ class TLNOutputModule(shared_dsv.DSVOutputModule):
             self._FIELD_NAMES,
             delimiter="|",
             header=self._HEADER,
+            quote_fields=False,
         )
 
 
@@ -166,6 +167,7 @@ class L2TTLNOutputModule(shared_dsv.DSVOutputModule):
             self._FIELD_NAMES,
             delimiter="|",
             header=self._HEADER,
+            quote_fields=False,
         )
 
 
