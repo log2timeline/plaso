@@ -17,3 +17,14 @@ class SQLiteStorageReader(reader.StorageReader):
         self._path = path
         self._store = sqlite_file.SQLiteStorageFile()
         self._store.Open(path=path)
+
+    def PrefetchAttributeContainers(self, container_type, identifiers):
+        """Reads specific attribute containers into the read cache.
+
+        Args:
+          container_type (str): attribute container type.
+          identifiers (list[AttributeContainerIdentifier]): attribute container
+              identifiers.
+        """
+        indexes = [identifier.sequence_number - 1 for identifier in identifiers]
+        self._store.PrefetchAttributeContainers(container_type, indexes)

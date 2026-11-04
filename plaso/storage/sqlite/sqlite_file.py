@@ -451,6 +451,68 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
             order_by="timestamp",
         )
 
+    def PrefetchAttributeContainers(self, container_type, indexes):
+        """Reads specific attribute containers into the read cache.
+
+        Only event data attribute containers are prefetched, other attribute
+        container types are ignored.
+
+        Args:
+          container_type (str): attribute container type.
+          indexes (list[int]): attribute container indexes.
+
+        Raises:
+          OSError: when there is an error querying the storage file.
+        """
+        if container_type != self._CONTAINER_TYPE_EVENT_DATA:
+            return
+
+        row_numbers = sorted(
+            {
+                index + 1
+                for index in indexes
+                if not self._GetCachedAttributeContainer(container_type, index)
+            }
+        )
+        if not row_numbers:
+            return
+
+        self._CommitWriteCache(container_type)
+
+        if not self._attribute_container_sequence_numbers[container_type]:
+            return
+
+        row_numbers_string = ", ".join(f"{row_number:d}" for row_number in row_numbers)
+        query = (
+            f"SELECT rowid, _data FROM {container_type:s} "
+            f"WHERE rowid IN ({row_numbers_string:s})"
+        )
+        try:
+            self._cursor.execute(query)
+        except (sqlite3.InterfaceError, sqlite3.OperationalError) as exception:
+            raise OSError(f"Unable to query storage file with error: {exception!s}")
+
+        if self._storage_profiler:
+            self._storage_profiler.StartTiming("prefetch_containers")
+
+        try:
+            rows = self._cursor.fetchall()
+
+        finally:
+            if self._storage_profiler:
+                self._storage_profiler.StopTiming("prefetch_containers")
+
+        for row in rows:
+            container = self._CreateAttributeContainerFromRow(
+                container_type, ["_data"], row, 1
+            )
+            identifier = containers_interface.AttributeContainerIdentifier(
+                name=container_type, sequence_number=row[0]
+            )
+            container.SetIdentifier(identifier)
+
+            self._CacheAttributeContainerByIndex(container, row[0] - 1)
+
     def SetSerializersProfiler(self, serializers_profiler):
         """Sets the serializers profiler.
 
