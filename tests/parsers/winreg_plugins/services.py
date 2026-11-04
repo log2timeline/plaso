@@ -92,8 +92,68 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
         return registry_key
 
-    # TODO: add test for _GetServiceDll
-    # TODO: add test for _GetValuesFromKey
+    # pylint: disable=protected-access
+
+    def testGetServiceDll(self):
+        """Tests the _GetServiceDll function."""
+        plugin = services.ServicesPlugin()
+
+        registry_key = self._CreateTestKey()
+
+        service_dll = plugin._GetServiceDll(registry_key)
+        self.assertIsNone(service_dll)
+
+        parameters_key = dfwinreg_fake.FakeWinRegistryKey("Parameters")
+        registry_key.AddSubkey("Parameters", parameters_key)
+
+        service_dll = plugin._GetServiceDll(registry_key)
+        self.assertIsNone(service_dll)
+
+        value_data = "%SystemRoot%\\System32\\testdriver.dll".encode("utf_16_le")
+        registry_value = dfwinreg_fake.FakeWinRegistryValue(
+            "ServiceDll", data=value_data, data_type=dfwinreg_definitions.REG_EXPAND_SZ
+        )
+        parameters_key.AddValue(registry_value)
+
+        service_dll = plugin._GetServiceDll(registry_key)
+        self.assertEqual(service_dll, "%SystemRoot%\\System32\\testdriver.dll")
+
+    def testGetValuesFromKey(self):
+        """Tests the _GetValuesFromKey function."""
+        storage_writer = self._CreateStorageWriter()
+        parser_mediator = self._CreateParserMediator(storage_writer)
+
+        plugin = services.ServicesPlugin()
+
+        registry_key = self._CreateTestKey()
+
+        registry_value = dfwinreg_fake.FakeWinRegistryValue(
+            "ObjectName", data=b"", data_type=dfwinreg_definitions.REG_SZ
+        )
+        registry_key.AddValue(registry_value)
+
+        # Names of values to skip are case insensitive.
+        value_tuples = plugin._GetValuesFromKey(
+            parser_mediator,
+            registry_key,
+            names_to_skip=["errorcontrol", "IMAGEPATH", "ObjectName", "Start", "Type"],
+        )
+        self.assertEqual(
+            value_tuples,
+            [
+                ("Group", "REG_SZ", "Pnp Filter"),
+                ("DisplayName", "REG_SZ", "Test Driver"),
+                (
+                    "DriverPackageId",
+                    "REG_SZ",
+                    "testdriver.inf_x86_neutral_dd39b6b0a45226c4",
+                ),
+            ],
+        )
+
+        value_tuples = plugin._GetValuesFromKey(parser_mediator, registry_key)
+        self.assertEqual(len(value_tuples), 8)
+        self.assertIn(("Start", "REG_DWORD_LE", "2"), value_tuples)
 
     def testFilters(self):
         """Tests the FILTERS class attribute."""

@@ -817,10 +817,16 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
         )
         for key, numbers_of_events in sorted(differences.items()):
             value_string = f"{numbers_of_events[0]:d} ({numbers_of_events[1]:d})"
-            if reverse:
-                table_view.AddRow([value_string, key])
-            else:
-                table_view.AddRow([key, value_string])
+
+            # A key, such as a path specification, can consist of multiple lines.
+            lines = [line for line in key.split("\n") if line] or [key]
+            for line in lines:
+                if reverse:
+                    table_view.AddRow([value_string, line])
+                else:
+                    table_view.AddRow([line, value_string])
+
+                value_string = ""
 
         table_view.Write(self._output_writer)
         self._output_writer.Write("\n")

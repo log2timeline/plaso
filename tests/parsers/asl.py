@@ -49,7 +49,19 @@ class ASLParserTest(test_lib.ParserTestCase):
         with self.assertRaises(errors.ParseError):
             parser._ParseRecord(parser_mediator, file_object, 362)
 
-        # TODO: test with invalid additional data size.
+        # Test with invalid additional data size, which is not a multiple of 8.
+        test_record = bytearray(self._TEST_RECORD)
+
+        # The data size is stored at offset 2 of the record.
+        data_size = int.from_bytes(test_record[364:368], "big")
+        test_record[364:368] = (data_size + 1).to_bytes(4, "big")
+
+        file_object = self._CreateFileObject("asl", bytes(test_record))
+
+        with self.assertRaisesRegex(
+            errors.ParseError, "Unsupported record additional data size"
+        ):
+            parser._ParseRecord(parser_mediator, file_object, 362)
 
     def testParseRecordExtraField(self):
         """Tests the _ParseRecordExtraField function."""

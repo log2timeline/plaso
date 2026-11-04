@@ -80,7 +80,22 @@ Test argument parser.
         with self.assertRaises(errors.BadConfigObject):
             extraction.ExtractionArgumentsHelper.ParseOptions(options, None)
 
-        # TODO: improve test coverage.
+        self.assertFalse(test_tool._extract_winreg_binary)
+
+        options.extract_winreg_binary = True
+        options.preferred_year = 2012
+        options.process_compressed_streams = False
+
+        extraction.ExtractionArgumentsHelper.ParseOptions(options, test_tool)
+
+        self.assertTrue(test_tool._extract_winreg_binary)
+        self.assertEqual(test_tool._preferred_year, 2012)
+        self.assertFalse(test_tool._process_compressed_streams)
+
+        options.preferred_year = "2012"
+
+        with self.assertRaises(errors.BadConfigOption):
+            extraction.ExtractionArgumentsHelper.ParseOptions(options, test_tool)
 
 
 if __name__ == "__main__":

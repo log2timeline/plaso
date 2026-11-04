@@ -76,10 +76,59 @@ class AnalysisEngineMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
         self.assertEqual(events_counter["Events processed"], 38)
 
     # TODO: add test for _CheckStatusAnalysisProcess.
+
+    def testInternalCheckStatusAnalysisProcessCompleted(self):
+        """Tests the _CheckStatusAnalysisProcess function on a completed process."""
+        test_engine = analysis_engine.AnalysisMultiProcessEngine()
+
+        with self.assertRaises(KeyError):
+            test_engine._CheckStatusAnalysisProcess(1)
+
+        process = multiprocessing.Process(name="Worker_00")
+        test_engine._processes_per_pid[1] = process
+        test_engine._process_information_per_pid[1] = None
+        test_engine._completed_analysis_processes.add(1)
+
+        test_engine._CheckStatusAnalysisProcess(1)
+
+        worker_status = test_engine._processing_status.workers_status[0]
+        self.assertEqual(worker_status.identifier, "Worker_00")
+        self.assertEqual(worker_status.pid, 1)
+        self.assertEqual(worker_status.status, definitions.STATUS_INDICATOR_COMPLETED)
+        self.assertEqual(worker_status.used_memory, 0)
+
+        self.assertIn(1, test_engine._process_information_per_pid)
+
     # TODO: add test for _StartAnalysisProcesses.
-    # TODO: add test for _StatusUpdateThreadMain.
+
+    def testInternalStatusUpdateThreadMain(self):
+        """Tests the _StatusUpdateThreadMain function."""
+        processing_status_updates = []
+
+        def _StatusUpdateCallback(processing_status):
+            """Records the processing status and stops the status updates.
+
+            Args:
+              processing_status (ProcessingStatus): processing status.
+            """
+            processing_status_updates.append(processing_status)
+            test_engine._status_update_active = False
+
+        test_engine = analysis_engine.AnalysisMultiProcessEngine()
+        test_engine._status_update_active = True
+        test_engine._status_update_callback = _StatusUpdateCallback
+        test_engine._status_update_interval = 0.01
+
+        test_engine._StatusUpdateThreadMain()
+
+        self.assertEqual(len(processing_status_updates), 1)
+
+        foreman_status = processing_status_updates[0].foreman_status
+        self.assertIsNotNone(foreman_status)
+        self.assertEqual(foreman_status.identifier, "Main")
+        self.assertEqual(foreman_status.status, definitions.STATUS_INDICATOR_IDLE)
+
     # TODO: add test for _StopAnalysisProcesses.
-    # TODO: add test for _UpdateProcessingStatus.
 
     def testAnalyzeEvents(self):
         """Tests the AnalyzeEvents function."""
