@@ -4,6 +4,7 @@ import abc
 import codecs
 import datetime
 import locale
+import os
 import sys
 import time
 import textwrap
@@ -184,6 +185,9 @@ class CLITool:
 
         Args:
           options (argparse.Namespace): command line arguments.
+
+        Raises:
+          BadConfigOption: if the log file cannot be written.
         """
         self._log_file = self.ParseStringOption(options, "log_file")
         if not self._log_file:
@@ -192,6 +196,27 @@ class CLITool:
                 f"{self.NAME:s}-{local_date_time.year:04d}{local_date_time.month:02d}"
                 f"{local_date_time.day:02d}T{local_date_time.hour:02d}"
                 f"{local_date_time.minute:02d}{local_date_time.second:02d}.log.gz"
+            )
+
+        # Note that the log file is only opened after the options have been
+        # parsed, hence check upfront that it can be written.
+        log_file_directory = os.path.dirname(os.path.abspath(self._log_file))
+        if not os.path.isdir(log_file_directory):
+            raise errors.BadConfigOption(
+                f"Unable to write log file: {self._log_file:s}, no such "
+                f"directory: {log_file_directory:s}."
+            )
+
+        if os.path.exists(self._log_file):
+            is_writable = os.access(self._log_file, os.W_OK)
+        else:
+            is_writable = os.access(log_file_directory, os.W_OK)
+
+        if not is_writable:
+            raise errors.BadConfigOption(
+                f"Unable to write log file: {self._log_file:s}, permission "
+                f"denied or read-only file system. Use --logfile to specify "
+                f"another location."
             )
 
     def _PrintUserWarning(self, warning_text):
