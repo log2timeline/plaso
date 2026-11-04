@@ -576,7 +576,7 @@ class UserAccountArtifact(ArtifactAttributeContainer):
         full_name=None,
         group_identifier=None,
         identifier=None,
-        path_separator="/",
+        path_separator=None,
         user_directory=None,
         username=None,
     ):
@@ -587,7 +587,9 @@ class UserAccountArtifact(ArtifactAttributeContainer):
           group_identifier (Optional[str]): identifier of the primary group
               the user is part of.
           identifier (Optional[str]): user identifier.
-          path_separator (Optional[str]): path segment separator.
+          path_separator (Optional[str]): path segment separator of the user
+              directory, where None represents that the path segment separator
+              is determined from the user directory.
           user_directory (Optional[str]): path of the user (or home or profile)
               directory.
           username (Optional[str]): name uniquely identifying the user.
@@ -610,7 +612,18 @@ class UserAccountArtifact(ArtifactAttributeContainer):
         """
         if not self.user_directory:
             return []
-        return self.user_directory.split(self._path_separator)
+
+        path_separator = self._path_separator
+        if not path_separator:
+            # The path segment separator is not preserved by the storage, hence
+            # a user directory that contains a backslash, such as a Windows
+            # profile path, is considered to use backslash as separator.
+            if "\\" in self.user_directory:
+                path_separator = "\\"
+            else:
+                path_separator = "/"
+
+        return self.user_directory.split(path_separator)
 
 
 class WindowsEventLogMessageFileArtifact(ArtifactAttributeContainer):

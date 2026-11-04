@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 """Tests for the artifacts file filter functions."""
 
+import io
 import os
 import unittest
 
 from artifacts import reader as artifacts_reader
 from artifacts import registry as artifacts_registry
 
+from dfvfs.helpers import fake_file_system_builder
 from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
+from dfvfs.path import fake_path_spec
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from dfwinreg import regf as dfwinreg_regf
@@ -18,6 +21,7 @@ from dfwinreg import registry_searcher as dfwinreg_registry_searcher
 
 from plaso.containers import artifacts
 from plaso.engine import artifact_filters
+from plaso.serializer import json_serializer
 
 from tests import test_lib as shared_test_lib
 
@@ -180,6 +184,76 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
         # Two evtx, one symbolic link to evtx, one AUTHORS, two filter_*.txt
         # files, which total 6 path specifications.
         self.assertEqual(len(path_specs), 6)
+
+    def testBuildFindSpecsWithStoredUserAccounts(self):
+        """Tests the BuildFindSpecs function with user accounts from storage."""
+        registry = artifacts_registry.ArtifactDefinitionsRegistry()
+        reader = artifacts_reader.YamlArtifactsReader()
+
+        file_object = io.StringIO(
+            "name: TestWebCache\n"
+            "doc: Test Doc\n"
+            "sources:\n"
+            "- type: FILE\n"
+            "  attributes:\n"
+            "    paths:\n"
+            "    - '%%users.localappdata%%\\Microsoft\\Windows\\WebCache\\"
+            "WebCacheV*.dat'\n"
+            "    separator: '\\'\n"
+            "supported_os: [Windows]\n"
+        )
+        registry.ReadFileObject(reader, file_object)
+
+        # User accounts read back from storage do not preserve the path segment
+        # separator.
+        serializer = json_serializer.JSONAttributeContainerSerializer
+        test_user_accounts = [
+            serializer.ReadSerializedDict(serializer.WriteSerializedDict(user_account))
+            for user_account in self._CreateTestUserAccounts()
+        ]
+
+        test_filters_helper = artifact_filters.ArtifactDefinitionsFiltersHelper(
+            registry
+        )
+        test_filters_helper.BuildFindSpecs(
+            ["TestWebCache"], user_accounts=test_user_accounts
+        )
+
+        self.assertEqual(len(test_filters_helper.file_system_find_specs), 4)
+
+        file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+        for path in (
+            "/Users/testuser1/AppData/Local/Microsoft/Windows/WebCache/WebCacheV01.dat",
+            (
+                "/Users/testuser2/Local Settings/Application Data/Microsoft/Windows/"
+                "WebCache/WebCacheV24.dat"
+            ),
+            # Near-misses: a user that is not a known user account and a file
+            # name that does not match the path filter.
+            "/Users/testuser3/AppData/Local/Microsoft/Windows/WebCache/WebCacheV01.dat",
+            "/Users/testuser1/AppData/Local/Microsoft/Windows/WebCache/V01.log",
+        ):
+            file_system_builder.AddFile(path, b"")
+
+        mount_point = fake_path_spec.FakePathSpec(location="/")
+        searcher = file_system_searcher.FileSystemSearcher(
+            file_system_builder.file_system, mount_point
+        )
+
+        locations = sorted(
+            path_spec.location
+            for path_spec in searcher.Find(
+                find_specs=test_filters_helper.file_system_find_specs
+            )
+        )
+        expected_locations = [
+            "/Users/testuser1/AppData/Local/Microsoft/Windows/WebCache/WebCacheV01.dat",
+            (
+                "/Users/testuser2/Local Settings/Application Data/Microsoft/Windows/"
+                "WebCache/WebCacheV24.dat"
+            ),
+        ]
+        self.assertEqual(locations, expected_locations)
 
     def testBuildFindSpecsWithRegistry(self):
         """Tests the BuildFindSpecs function on Windows Registry sources."""
