@@ -3,6 +3,7 @@
 
 import unittest
 
+from plaso.lib import errors
 from plaso.parsers import utmp
 
 from tests.parsers import test_lib
@@ -299,6 +300,18 @@ class UtmpParserTest(test_lib.ParserTestCase):
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 2)
         self.CheckEventData(event_data, expected_event_values)
+
+    def testParseWindowsShimDatabaseFile(self):
+        """Tests the Parse function on a Windows shim database (SDB) file.
+
+        The test file is a synthetic SDB file, with a format version 3.0 header,
+        an index, a database with executable entries and a string table, that is
+        laid out such that its first two 384-byte blocks resemble utmp records.
+        """
+        parser = utmp.UtmpParser()
+
+        with self.assertRaises(errors.WrongParser):
+            self._ParseFile(["utmp", "shim_database.sdb"], parser)
 
 
 if __name__ == "__main__":
