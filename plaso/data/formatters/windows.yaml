@@ -468,7 +468,8 @@ message:
 - 'Process Name: {process_name}'
 - 'Last Detection Time: {last_detection_time}'
 - 'Origin: {key_path}'
-short_message: 'Process Name: {process_name}'
+short_message:
+- 'Process Name: {process_name}'
 short_source: 'REG'
 source: 'Registry Key'
 ---
