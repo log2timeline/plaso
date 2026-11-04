@@ -804,6 +804,44 @@ class BSMParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         """
         return {"name": token_data.name.rstrip("\x00")}
 
+    def _GetNextRecordOffset(self, file_object, record_offset, file_size):
+        """Determines the offset of the event record after a corrupted one.
+
+        Args:
+          file_object (dfvfs.FileIO): file-like object.
+          record_offset (int): offset of the corrupted event record relative to
+              the start of the file-like object.
+          file_size (int): size of the file-like object.
+
+        Returns:
+          int: offset of the next event record relative to the start of the
+              file-like object or None if the offset cannot be determined from
+              the record size in the header token of the corrupted event record.
+        """
+        try:
+            token_type = self._ParseTokenType(file_object, record_offset)
+            if token_type not in self._HEADER_TOKEN_TYPES:
+                return None
+
+            _, token_data = self._ParseToken(file_object, record_offset)
+
+            next_record_offset = record_offset + token_data.record_size
+            if next_record_offset <= record_offset or next_record_offset > file_size:
+                return None
+
+            if next_record_offset == file_size:
+                return next_record_offset
+
+            token_type = self._ParseTokenType(file_object, next_record_offset)
+
+        except errors.ParseError:
+            return None
+
+        if token_type not in self._HEADER_TOKEN_TYPES:
+            return None
+
+        return next_record_offset
+
     def _ParseRecord(self, parser_mediator, file_object):
         """Parses an event record.
 
@@ -944,16 +982,34 @@ class BSMParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         """
         file_offset = file_object.get_offset()
         file_size = file_object.get_size()
+        is_scanning = False
         while file_offset < file_size:
             try:
                 self._ParseRecord(parser_mediator, file_object)
+                is_scanning = False
+
             except errors.ParseError as exception:
                 if file_offset == 0:
                     raise errors.WrongParser(
                         f"Unable to parse first event record with error: {exception!s}"
                     )
 
-                # TODO: skip to next event record.
+                if not is_scanning:
+                    parser_mediator.ProduceWarning(
+                        f"unable to parse event record at offset: "
+                        f"0x{file_offset:08x} with error: {exception!s}"
+                    )
+
+                next_record_offset = self._GetNextRecordOffset(
+                    file_object, file_offset, file_size
+                )
+                is_scanning = next_record_offset is None
+                if is_scanning:
+                    # Scan byte by byte for the header token of the next event
+                    # record.
+                    next_record_offset = file_offset + 1
+
+                file_object.seek(next_record_offset, os.SEEK_SET)
 
             file_offset = file_object.get_offset()
 
