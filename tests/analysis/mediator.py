@@ -11,6 +11,7 @@ from plaso.analysis import mediator
 from plaso.containers import artifacts
 from plaso.containers import events
 from plaso.containers import reports
+from plaso.containers import warnings
 from plaso.storage.fake import writer as fake_writer
 
 from tests.analysis import test_lib
@@ -114,7 +115,13 @@ class AnalysisMediatorTest(test_lib.AnalysisPluginTestCase):
             )
             self.assertEqual(analysis_report.plugin_name, "test_plugin")
 
-            # A plugin that does not compile a report should not produce one.
+            number_of_containers = storage_writer.GetNumberOfAttributeContainers(
+                warnings.AnalysisWarning.CONTAINER_TYPE
+            )
+            self.assertEqual(number_of_containers, 0)
+
+            # A plugin that does not compile a report should not produce one,
+            # but a warning instead.
             analysis_mediator.ProduceAnalysisReport(TestNoReportAnalysisPlugin())
 
             self.assertEqual(analysis_mediator.number_of_produced_analysis_reports, 1)
@@ -126,6 +133,19 @@ class AnalysisMediatorTest(test_lib.AnalysisPluginTestCase):
                 reports.AnalysisReport.CONTAINER_TYPE
             )
             self.assertEqual(number_of_containers, 1)
+
+            number_of_containers = storage_writer.GetNumberOfAttributeContainers(
+                warnings.AnalysisWarning.CONTAINER_TYPE
+            )
+            self.assertEqual(number_of_containers, 1)
+
+            analysis_warning = storage_writer.GetAttributeContainerByIndex(
+                warnings.AnalysisWarning.CONTAINER_TYPE, 0
+            )
+            self.assertEqual(
+                analysis_warning.message, "Unable to generate analysis report."
+            )
+            self.assertEqual(analysis_warning.plugin_name, "test_no_report_plugin")
 
         finally:
             storage_writer.Close()
