@@ -160,6 +160,25 @@ class PsortTool(analysis_tool.AnalysisTool, tool_options.OutputModuleOptions):
         )
         return analysis_plugins.values()
 
+    def _GetStorageReader(self):
+        """Retrieves a storage reader.
+
+        Returns:
+          StorageReader: storage reader.
+
+        Raises:
+          BadConfigOption: if the storage file format is not supported.
+        """
+        storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
+            self._storage_file_path
+        )
+        if not storage_reader:
+            raise errors.BadConfigOption(
+                f"Format of storage file: {self._storage_file_path:s} not supported"
+            )
+
+        return storage_reader
+
     def _ParseAnalysisPluginOptions(self, options):
         """Parses the analysis plugin options.
 
@@ -511,11 +530,7 @@ class PsortTool(analysis_tool.AnalysisTool, tool_options.OutputModuleOptions):
 
         status_update_callback = self._status_view.GetAnalysisStatusUpdateCallback()
 
-        storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
-            self._storage_file_path
-        )
-        if not storage_reader:
-            raise RuntimeError("Unable to create storage reader.")
+        storage_reader = self._GetStorageReader()
 
         try:
             self._number_of_stored_analysis_reports = (
@@ -540,9 +555,8 @@ class PsortTool(analysis_tool.AnalysisTool, tool_options.OutputModuleOptions):
         # TODO: abort if session.aborted is True
 
         if self._output_format != "null":
-            storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
-                self._storage_file_path
-            )
+            storage_reader = self._GetStorageReader()
+
             # TODO: add single process output and formatting engine support.
             output_engine = multi_output_engine.OutputAndFormattingMultiProcessEngine()
 
@@ -566,7 +580,5 @@ class PsortTool(analysis_tool.AnalysisTool, tool_options.OutputModuleOptions):
 
         self._output_writer.Write("Processing completed.\n")
 
-        storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
-            self._storage_file_path
-        )
+        storage_reader = self._GetStorageReader()
         self._PrintAnalysisReportsDetails(storage_reader)
