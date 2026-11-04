@@ -41,6 +41,21 @@ class CLITool:
     # The fall back preferred encoding.
     _PREFERRED_ENCODING = "utf-8"
 
+    # Value used to replace a redacted secret in the command line arguments.
+    _REDACTED_VALUE = "<redacted>"
+
+    # Command line options of which the value is a secret, such as a password,
+    # that should be redacted when the command line arguments are stored.
+    _SECRET_OPTIONS = frozenset(
+        [
+            "--credential",
+            "--opensearch-password",
+            "--opensearch_password",
+            "--virustotal-api-key",
+            "--virustotal_api_key",
+        ]
+    )
+
     def __init__(self, input_reader=None, output_writer=None):
         """Initializes a command line interface tool.
 
@@ -71,6 +86,7 @@ class CLITool:
         self._log_file = None
         self._output_writer = output_writer
         self._quiet_mode = False
+        self._redact_secrets = False
         self._unattended_mode = False
         self._views_format_type = views.ViewsFactory.FORMAT_TYPE_CLI
         self._vfs_back_end = "auto"
@@ -171,6 +187,7 @@ class CLITool:
         """
         self._debug_mode = getattr(options, "debug", False)
         self._quiet_mode = getattr(options, "quiet", False)
+        self._redact_secrets = getattr(options, "redact_secrets", False)
         self._unattended_mode = getattr(options, "unattended", False)
 
         if self._debug_mode and self._quiet_mode:
@@ -217,6 +234,64 @@ class CLITool:
         """
         self._output_writer.Write(f"{input_text:s}: ")
         return self._input_reader.Read()
+
+    def _RedactSecretValue(self, option, value):
+        """Redacts the value of a secret option.
+
+        Args:
+          option (str): name of the secret option.
+          value (str): value of the secret option.
+
+        Returns:
+          str: redacted value, where the type of a credential, such as "password"
+              in "password:DATA", is preserved.
+        """
+        if option == "--credential":
+            credential_type, separator, _ = value.partition(":")
+            if separator:
+                return f"{credential_type:s}:{self._REDACTED_VALUE:s}"
+
+        return self._REDACTED_VALUE
+
+    def _RedactSecrets(self, command_line_arguments):
+        """Redacts the values of secret options in command line arguments.
+
+        Both the "--option value" and "--option=value" forms are supported, as
+        well as option names abbreviated as supported by argparse.
+
+        Args:
+          command_line_arguments (list[str]): command line arguments.
+
+        Returns:
+          tuple[list[str], list[str]]: command line arguments with the secret
+              values redacted and the names of the options, as specified on the
+              command line, of which the values were redacted.
+        """
+        redacted_arguments = []
+        redacted_options = []
+        secret_option = None
+        for argument in command_line_arguments:
+            if secret_option:
+                argument = self._RedactSecretValue(secret_option, argument)
+                secret_option = None
+
+            elif argument.startswith("--") and len(argument) > 2:
+                name, separator, value = argument.partition("=")
+                for option in self._SECRET_OPTIONS:
+                    if option.startswith(name):
+                        if separator:
+                            value = self._RedactSecretValue(option, value)
+                            argument = f"{name:s}={value:s}"
+                        else:
+                            secret_option = option
+
+                        if name not in redacted_options:
+                            redacted_options.append(name)
+                        break
+
+            redacted_arguments.append(argument)
+
+        return redacted_arguments, redacted_options
 
     def _WaitUserWarning(self):
         """Waits 15 seconds after printing warnings to the user."""
@@ -310,6 +385,27 @@ class CLITool:
             ),
         )
 
+    def AddRedactionOptions(self, argument_group):
+        """Adds the redaction options to the argument group.
+
+        Args:
+          argument_group (argparse._ArgumentGroup): argparse argument group.
+        """
+        argument_group.add_argument(
+            "--redact_secrets",
+            "--redact-secrets",
+            dest="redact_secrets",
+            action="store_true",
+            default=False,
+            help=(
+                "Redact secrets, such as credentials, the OpenSearch password "
+                "and the VirusTotal API key, in the command line arguments that "
+                "are stored in the storage file, by replacing them with "
+                '"<redacted>". The names of the redacted options are logged. By '
+                "default the command line arguments are stored as-is."
+            ),
+        )
+
     def CheckOutDated(self):
         """Checks if the version of plaso is outdated and warns the user."""
         version_date_time = datetime.datetime(
@@ -331,6 +427,10 @@ class CLITool:
 
     def GetCommandLineArguments(self):
         """Retrieves the command line arguments.
+
+        The values of secret options are only redacted when redaction was
+        explicitly requested, in which case the names of the redacted options
+        are logged.
 
         Returns:
           str: command line arguments.
@@ -359,6 +459,18 @@ class CLITool:
                     argument.decode(encoding, errors="backslashreplace")
                     for argument in command_line_arguments
                 ]
+
+        if self._redact_secrets:
+            command_line_arguments, redacted_options = self._RedactSecrets(
+                command_line_arguments
+            )
+            if redacted_options:
+                redacted_options_string = ", ".join(redacted_options)
+                logger.info(
+                    f"Redacted the values of the options: "
+                    f"{redacted_options_string:s} in the command line arguments "
+                    f"stored in the storage file."
+                )
 
         return " ".join(command_line_arguments)
 
