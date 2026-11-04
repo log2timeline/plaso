@@ -14,7 +14,9 @@ class AndroidWebViewCache(test_lib.SQLitePluginTestCase):
     def testProcess(self):
         """Test the Process function on a WebViewCache file."""
         plugin = android_webviewcache.AndroidWebViewCachePlugin()
-        storage_writer = self._ParseDatabaseFileWithPlugin(["webviewCache.db"], plugin)
+        storage_writer = self._ParseDatabaseFileWithPlugin(
+            ["android", "webviewCache.db"], plugin
+        )
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
@@ -41,7 +43,6 @@ class AndroidWebViewCache(test_lib.SQLitePluginTestCase):
                 "print.css?_version=1.15"
             ),
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

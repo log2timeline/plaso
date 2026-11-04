@@ -15,15 +15,14 @@ class AndroidWebViewCookieEventData(events.EventData):
     Attributes:
       cookie_name (str): name of the cookie.
       data (str): data stored in the cookie.
-      expiration_time (dfdatetime.DateTimeValues): date and time the cache
-          entry expires.
-      host (str): host that set the cookie.
-      offset (str): identifier of the row, from which the event data was
-          extracted.
+      expiration_time (dfdatetime.DateTimeValues): date and time the cache entry
+          expires.
+      hostname (str): name of the host that set the cookie.
+      offset (str): identifier of the row, from which the event data was extracted.
       path (str): path for which the cookie was set.
       query (str): SQL query that was used to obtain the event data.
-      secure (bool): True if the cookie should only be transmitted over
-          a secure channel.
+      secure (bool): True if the cookie should only be transmitted over a secure
+          channel.
       url (str): URL of the cookie.
     """
 
@@ -35,7 +34,7 @@ class AndroidWebViewCookieEventData(events.EventData):
         self.cookie_name = None
         self.data = None
         self.expiration_time = None
-        self.host = None
+        self.hostname = None
         self.offset = None
         self.path = None
         self.query = None
@@ -134,7 +133,7 @@ class AndroidWebViewPlugin(
         event_data.cookie_name = cookie_name
         event_data.data = cookie_data
         event_data.expiration_time = date_time
-        event_data.host = hostname
+        event_data.hostname = hostname
         event_data.offset = self._GetRowValue(query_hash, row, "_id")
         event_data.path = path
         event_data.query = query

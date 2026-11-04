@@ -16,6 +16,13 @@ sources:
 labels: [System]
 supported_os: [Linux]
 ---
+name: LinuxTimezoneFile
+doc: Linux timezone file.
+sources:
+- type: FILE
+  attributes: {paths: ['/etc/timezone']}
+supported_os: [Linux]
+---
 name: LinuxPasswdFile
 doc: |
   Linux passwd file.
@@ -230,14 +237,6 @@ urls: ['http://environmentvariables.org/ProgramFiles']
 name: WindowsEnvironmentVariableSystemRoot
 doc: The system root directory path, defined by %SystemRoot%, typically "C:\Windows".
 sources:
-- type: PATH
-  attributes:
-    paths:
-    - '\Windows'
-    - '\WinNT'
-    - '\WINNT35'
-    - '\WTSRV'
-    separator: '\'
 - type: REGISTRY_VALUE
   attributes:
     key_value_pairs:
@@ -249,14 +248,6 @@ urls: ['http://environmentvariables.org/SystemRoot']
 name: WindowsEnvironmentVariableWinDir
 doc: The %WinDir% environment variable.
 sources:
-- type: PATH
-  attributes:
-    paths:
-    - '\Windows'
-    - '\WinNT'
-    - '\WINNT35'
-    - '\WTSRV'
-    separator: '\'
 - type: REGISTRY_VALUE
   attributes:
     key_value_pairs:

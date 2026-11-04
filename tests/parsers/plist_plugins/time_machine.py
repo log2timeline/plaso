@@ -17,9 +17,8 @@ class MacOSTimeMachinePlistPluginTest(test_lib.PlistPluginTestCase):
 
         plugin = time_machine.MacOSTimeMachinePlistPlugin()
         storage_writer = self._ParsePlistFileWithPlugin(
-            plugin, [plist_name], plist_name
+            plugin, ["plist", plist_name], plist_name
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -55,7 +54,6 @@ class MacOSTimeMachinePlistPluginTest(test_lib.PlistPluginTestCase):
                 "2014-01-04T13:38:38.000000+00:00",
             ],
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

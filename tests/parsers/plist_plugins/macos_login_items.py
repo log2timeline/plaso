@@ -17,9 +17,8 @@ class MacOSLoginItemsPlistPluginTest(test_lib.PlistPluginTestCase):
 
         plugin = macos_login_items.MacOSLoginItemsPlistPlugin()
         storage_writer = self._ParsePlistFileWithPlugin(
-            plugin, [plist_name], plist_name
+            plugin, ["plist", plist_name], plist_name
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -40,13 +39,12 @@ class MacOSLoginItemsPlistPluginTest(test_lib.PlistPluginTestCase):
             "name": "iTunesHelper",
             "hidden": True,
             "target_creation_time": "2018-03-26T04:33:05+00:00",
-            "target_path": ("/Applications/iTunes.app/Contents/MacOS/iTunesHelper.app"),
+            "target_path": "/Applications/iTunes.app/Contents/MacOS/iTunesHelper.app",
             "volume_creation_time": "2016-10-08T17:34:06+00:00",
             "volume_flags": 0x920,
             "volume_mount_point": "/",
             "volume_name": "Macintosh HD",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

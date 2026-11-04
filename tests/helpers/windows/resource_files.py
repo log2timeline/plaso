@@ -22,11 +22,17 @@ class WindowsResourceFileHelperTest(shared_test_lib.BaseTestCase):
         message_string = test_helper.FormatMessageStringInPEP3101(
             original_message_string
         )
-
         expected_message_string = (
             "Sync info for {0:s}\\nServer copy exists, client copy replaced then "
             "deleted.\\n{9:s}\\\\nSee details for more information."
         )
+        self.assertEqual(message_string, expected_message_string)
+
+        original_message_string = "User %1 logged in from host %2%0 at %3."
+        message_string = test_helper.FormatMessageStringInPEP3101(
+            original_message_string
+        )
+        expected_message_string = "User {0:s} logged in from host {1:s}"
         self.assertEqual(message_string, expected_message_string)
 
 

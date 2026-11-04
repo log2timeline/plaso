@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Tests for the Systemd Journal parser."""
 
+import io
 import unittest
 
 from plaso.containers import warnings
+from plaso.lib import errors
 from plaso.parsers import systemd_journal
 
 from tests.parsers import test_lib
@@ -12,13 +14,139 @@ from tests.parsers import test_lib
 class SystemdJournalParserTest(test_lib.ParserTestCase):
     """Tests for the Systemd Journal parser."""
 
+    # pylint: disable=protected-access
+
+    def testParseDataObjectWithCorruptCompressedData(self):
+        """Tests _ParseDataObject raises ParseError on corrupt compressed data."""
+        parser = systemd_journal.SystemdJournalParser()
+
+        def _data_object(flags, payload):
+            # A 64-byte DATA object header (object_type=1, object_flags=flags,
+            # 6 reserved bytes, data_size, then 6 unused uint64 fields) followed
+            # by a corrupt compressed payload.
+            header = (
+                bytes([1, flags])
+                + b"\x00" * 6
+                + (64 + len(payload)).to_bytes(8, "little")
+                + b"\x00" * 48
+            )
+            return io.BytesIO(header + payload)
+
+        file_object = _data_object(parser._OBJECT_COMPRESSED_FLAG_XZ, b"corrupt-xz")
+        with self.assertRaises(errors.ParseError):
+            parser._ParseDataObject(file_object, 0)
+
+        file_object = _data_object(
+            parser._OBJECT_COMPRESSED_FLAG_LZ4,
+            b"\x10\x00\x00\x00\x00\x00\x00\x00corrupt-lz4",
+        )
+        with self.assertRaises(errors.ParseError):
+            parser._ParseDataObject(file_object, 0)
+
+    def testParseEntryObjectOffsetsWithSelfReferencingObject(self):
+        """Tests _ParseEntryObjectOffsets stops on a self-referencing object.
+
+        An entry array object whose next entry array offset refers back to the
+        same object previously caused _ParseEntryObjectOffsets to loop without
+        terminating.
+        """
+        # Entry array object at offset 208: object_type=6 (entry array),
+        # object_flags=0, 6 reserved bytes, data_size=24 and a next entry array
+        # offset that refers back to offset 208 (the object itself).
+        entry_array_object_data = (
+            bytes([6, 0])
+            + b"\x00" * 6
+            + (24).to_bytes(8, "little")
+            + (208).to_bytes(8, "little")
+        )
+
+        file_object = io.BytesIO(b"\x00" * 208 + entry_array_object_data)
+
+        parser = systemd_journal.SystemdJournalParser()
+
+        with self.assertRaises(errors.ParseError):
+            parser._ParseEntryObjectOffsets(file_object, 208)
+
+    def testParseFileObjectWithSelfReferencingEntryArray(self):
+        """Tests ParseFileObject terminates on a self-referencing entry array.
+
+        A full parse of a journal whose entry array object refers back to itself
+        terminates with an extraction warning and produces no events instead of
+        looping without terminating.
+        """
+        # File header (208 bytes): signature "LPKSHHRH", header_size=208 at
+        # offset 88 and entry_array_offset=208 at offset 176, with every other
+        # field left zero (incompatible_flags=0 so compact mode is not used).
+        file_header_data = bytearray(208)
+        file_header_data[0:8] = b"LPKSHHRH"
+        file_header_data[88:96] = (208).to_bytes(8, "little")
+        file_header_data[176:184] = (208).to_bytes(8, "little")
+
+        # Entry array object at offset 208 whose next entry array offset refers
+        # back to offset 208 (the object itself).
+        entry_array_object_data = (
+            bytes([6, 0])
+            + b"\x00" * 6
+            + (24).to_bytes(8, "little")
+            + (208).to_bytes(8, "little")
+        )
+
+        file_object = io.BytesIO(bytes(file_header_data) + entry_array_object_data)
+
+        parser = systemd_journal.SystemdJournalParser()
+        storage_writer = self._CreateStorageWriter()
+        parser_mediator = self._CreateParserMediator(storage_writer)
+
+        parser.ParseFileObject(parser_mediator, file_object)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 0)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 1)
+
+    def testParseKeyValuePair(self):
+        """Tests the _ParseKeyValuePair function with text and binary values."""
+        parser = systemd_journal.SystemdJournalParser()
+        storage_writer = self._CreateStorageWriter()
+        parser_mediator = self._CreateParserMediator(storage_writer)
+
+        key, value, corrupted = parser._ParseKeyValuePair(
+            parser_mediator, b"MESSAGE=hello world"
+        )
+        self.assertEqual(key, "MESSAGE")
+        self.assertEqual(value, "hello world")
+        self.assertFalse(corrupted)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        # A key value pair containing invalid UTF-8 code points must decode with them
+        # escaped and produce an extraction warning.
+        key, value, corrupted = parser._ParseKeyValuePair(
+            parser_mediator, b"MESSAGE=abc\xff\xfexyz"
+        )
+        self.assertEqual(key, "MESSAGE")
+        self.assertEqual(value, "abc\\xff\\xfexyz")
+        self.assertTrue(corrupted)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 1)
+
     def testParse(self):
         """Tests the Parse function."""
         parser = systemd_journal.SystemdJournalParser()
         storage_writer = self._ParseFile(
             ["systemd", "journal", "system.journal"], parser
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -35,27 +163,67 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
         self.assertEqual(number_of_warnings, 0)
 
         expected_event_values = {
-            "body": "Started User Manager for UID 1000.",
             "data_type": "systemd:journal",
+            "boot_identifier": "493676ee7ee04cff9afb308244ef893c",
+            "command_line": "/sbin/init splash",
+            "control_group": "/init.scope",
+            "effective_capabilities": "3fffffffff",
+            "executable": "/lib/systemd/systemd",
+            "facility": "system daemons",
+            "group_identifier": 0,
             "hostname": "test-VirtualBox",
-            "pid": "1",
+            "machine_identifier": "a447b9eff9fe40a890e8e376e92a4ede",
+            "message_body": "Started User Manager for UID 1000.",
+            "message_type_identifier": "39f53479d3a045ac8e11786248231fbf",
+            "pid": 1,
+            "process_name": "systemd",
+            "recorded_time": "2017-01-27T09:40:55.855726+00:00",
             "reporter": "systemd",
+            "severity": 6,
+            "systemd_slice": "-.slice",
+            "systemd_unit": "init.scope",
+            "transport": "journal",
+            "user_identifier": 0,
             "written_time": "2017-01-27T09:40:55.913258+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # Session-scoped entry: exercises the integer _AUDIT_SESSION and
+        # _SYSTEMD_OWNER_UID fields alongside the string _SYSTEMD_SESSION. All
+        # three carry the value 281 here, so this also pins down that the session
+        # identifier is preserved as a string while the audit session and owner
+        # user identifiers are stored as integers.
+        expected_event_values = {
+            "data_type": "systemd:journal",
+            "audit_session_identifier": 281,
+            "control_group": "/user.slice/user-1000.slice/session-281.scope",
+            "effective_capabilities": "3fffffffff",
+            "owner_user_identifier": 1000,
+            "systemd_session_identifier": "281",
+            "systemd_slice": "user-1000.slice",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1929)
         self.CheckEventData(event_data, expected_event_values)
 
         # Test a XZ compressed data log entry.
         expected_event_values = {
-            "body": "a" * 692,
             "data_type": "systemd:journal",
+            "boot_identifier": "493676ee7ee04cff9afb308244ef893c",
+            "facility": "user-level message",
+            "group_identifier": 0,
             "hostname": "test-VirtualBox",
-            "pid": "22921",
+            "machine_identifier": "a447b9eff9fe40a890e8e376e92a4ede",
+            "message_body": "a" * 692,
+            "pid": 22921,
+            "process_name": "logger",
+            "recorded_time": "2017-02-06T16:24:32.562231+00:00",
             "reporter": "root",
+            "severity": 5,
+            "transport": "syslog",
+            "user_identifier": 0,
             "written_time": "2017-02-06T16:24:32.564585+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 2098)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -65,7 +233,6 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
         storage_writer = self._ParseFile(
             ["systemd", "journal", "system.journal.lz4"], parser
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -82,23 +249,63 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
         self.assertEqual(number_of_warnings, 0)
 
         expected_event_values = {
-            "body": "Reached target Paths.",
             "data_type": "systemd:journal",
+            "audit_login_identifier": "1000",
+            "audit_session_identifier": 1,
+            "boot_identifier": "02e8c96371d240b7b3934b11b08a120e",
+            "command_line": "/lib/systemd/systemd --user",
+            "control_group": "/user.slice/user-1000.slice/user@1000.service/init.scope",
+            "effective_capabilities": "0",
+            "executable": "/lib/systemd/systemd",
+            "facility": "system daemons",
+            "group_identifier": 1000,
             "hostname": "testlol",
-            "pid": "822",
+            "machine_identifier": "cf624987d3b145a79c35ae3874368fc7",
+            "message_body": "Reached target Paths.",
+            "message_type_identifier": "39f53479d3a045ac8e11786248231fbf",
+            "owner_user_identifier": 1000,
+            "pid": 822,
+            "process_name": "systemd",
+            "recorded_time": "2018-07-03T15:00:16.679635+00:00",
             "reporter": "systemd",
+            "severity": 6,
+            "systemd_invocation_identifier": "11269c62e8cd4dab83bf0f7dad422778",
+            "systemd_slice": "user-1000.slice",
+            "systemd_unit": "user@1000.service",
+            "transport": "journal",
+            "user_identifier": 1000,
             "written_time": "2018-07-03T15:00:16.682340+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
+        # Test the reporter fallback to _COMM when SYSLOG_IDENTIFIER is absent.
+        # This entry has no SYSLOG_IDENTIFIER, so reporter (and the pid, which is
+        # only set for non-kernel reporters) are derived from the trusted _COMM.
+        expected_event_values = {
+            "data_type": "systemd:journal",
+            "audit_login_identifier": "1000",
+            "facility": None,
+            "hostname": "testlol",
+            "pid": 1485,
+            "process_name": "indicator-sound",
+            "recorded_time": "2018-07-03T15:00:21.873337+00:00",
+            "reporter": "indicator-sound",
+            "severity": 4,
+            "systemd_unit": "user@1000.service",
+            "transport": "journal",
+            "user_identifier": 1000,
+            "written_time": "2018-07-03T15:00:21.875704+00:00",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 39)
+        self.CheckEventData(event_data, expected_event_values)
+
         # Test a LZ4 compressed data log entry.
-        # The text used in the test message was triplicated to make it long enough
-        # to trigger the LZ4 compression.
-        # Source: https://github.com/systemd/systemd/issues/6237
-        expected_body_parts = [" textual user names."]
-        expected_body_parts.extend(
+        # The text used in the test message was tripled to make it long enough to
+        # trigger the LZ4 compression. Also see:
+        # https://github.com/systemd/systemd/issues/6237
+        expected_message_body_parts = [" textual user names."]
+        expected_message_body_parts.extend(
             (
                 "  Yes, as you found out 0day is not a valid username. I wonder which "
                 "tool permitted you to create it in the first place. Note that not "
@@ -107,17 +314,24 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
             )
             * 3
         )
-        expected_body = "".join(expected_body_parts)
+        expected_message_body = "".join(expected_message_body_parts)
 
         expected_event_values = {
-            "body": expected_body,
             "data_type": "systemd:journal",
+            "boot_identifier": "02e8c96371d240b7b3934b11b08a120e",
+            "facility": "user-level message",
+            "group_identifier": 1000,
             "hostname": "testlol",
-            "pid": "34757",
+            "machine_identifier": "cf624987d3b145a79c35ae3874368fc7",
+            "message_body": expected_message_body,
+            "pid": 34757,
+            "recorded_time": "2018-07-03T15:19:04.664754+00:00",
             "reporter": "test",
+            "severity": 5,
+            "transport": "syslog",
+            "user_identifier": 1000,
             "written_time": "2018-07-03T15:19:04.667807+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 84)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -127,7 +341,6 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
         storage_writer = self._ParseFile(
             ["systemd", "journal", "user-1000.journal"], parser
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -145,15 +358,26 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
 
         large_string = "A" * 512
 
+        # This journal was generated on stdout transport: it has no
+        # SYSLOG_FACILITY (facility stays None) and no _SOURCE_REALTIME_TIMESTAMP
+        # (recorded_time stays None).
         expected_event_values = {
-            "body": f"Some large string: {large_string:s}",
             "data_type": "systemd:journal",
+            "boot_identifier": "7dd8f8967ea94fec9efa46beed3d2a71",
+            "facility": None,
+            "group_identifier": 1000,
             "hostname": "DESKTOP-QCDE2BT",
-            "pid": "197",
+            "machine_identifier": "9e4a892d275848e797b10057152ae1bf",
+            "message_body": f"Some large string: {large_string:s}",
+            "pid": 197,
+            "process_name": "cat",
+            "recorded_time": None,
             "reporter": "testapp",
+            "severity": 6,
+            "transport": "stdout",
+            "user_identifier": 1000,
             "written_time": "2023-09-26T07:42:46.445209+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -169,7 +393,6 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
             ],
             parser,
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -178,7 +401,7 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
         number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
             "extraction_warning"
         )
-        self.assertEqual(number_of_warnings, 1)
+        self.assertEqual(number_of_warnings, 46)
 
         number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
             "recovery_warning"
@@ -186,23 +409,32 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
         self.assertEqual(number_of_warnings, 0)
 
         expected_event_values = {
-            "body": (
-                "Runtime journal (/run/log/journal/) is 1.2M, max 9.9M, 8.6M " "free."
-            ),
             "data_type": "systemd:journal",
+            "boot_identifier": "978fdbbbe8ab4f1d834efb2899083415",
+            "command_line": "/lib/systemd/systemd-journald",
+            "executable": "/lib/systemd/systemd-journald",
+            "facility": "system daemons",
+            "group_identifier": 0,
             "hostname": "test-VirtualBox",
-            "pid": "569",
+            "machine_identifier": "49cd46492584496585e147de34ed5816",
+            "message_body": (
+                "Runtime journal (/run/log/journal/) is 1.2M, max 9.9M, 8.6M free."
+            ),
+            "pid": 569,
+            "process_name": "systemd-journal",
             "reporter": "systemd-journald",
+            "severity": 6,
+            "systemd_unit": "systemd-journald.service",
+            "transport": "driver",
+            "user_identifier": 0,
             "written_time": "2016-10-24T13:20:01.063423+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
         generator = storage_writer.GetAttributeContainers(
             warnings.ExtractionWarning.CONTAINER_TYPE
         )
-
         test_warnings = list(generator)
         test_warning = test_warnings[0]
         self.assertIsNotNone(test_warning)
@@ -212,6 +444,21 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
             "object offset should be after hash tables (0 < 2527472)"
         )
         self.assertEqual(test_warning.message, expected_message)
+
+        # The 46 warnings are 1 corrupt entry pointer plus 45 unused/zeroed objects in
+        # the unclean tail.
+        unsupported_warnings = [
+            warning
+            for warning in test_warnings
+            if "Unsupported object type: 0" in warning.message
+        ]
+        self.assertEqual(len(unsupported_warnings), 45)
+
+        expected_message = (
+            "Unable to parse journal entry at offset: 0x004287a0 with error: "
+            "Unsupported object type: 0"
+        )
+        self.assertEqual(test_warnings[-1].message, expected_message)
 
 
 if __name__ == "__main__":

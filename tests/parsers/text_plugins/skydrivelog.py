@@ -136,7 +136,6 @@ class SkyDriveLog2TextPluginTest(test_lib.TextPluginTestCase):
             "module": "WNS",
             "source_code": "absconn.cpp(177)",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 11)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -169,7 +168,6 @@ class SkyDriveLog2TextPluginTest(test_lib.TextPluginTestCase):
                 "2013-07-25-180323.291 PID=0x8f4 TID=0x718 ContinuedFrom="
             ),
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -182,7 +180,6 @@ class SkyDriveLog2TextPluginTest(test_lib.TextPluginTestCase):
             "module": "AUTH",
             "source_code": "authapi.cpp(280)",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -192,7 +189,6 @@ class SkyDriveLog2TextPluginTest(test_lib.TextPluginTestCase):
         storage_writer = self._ParseTextFileWithPlugin(
             ["skydriveerr-unicode.log"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -212,10 +208,9 @@ class SkyDriveLog2TextPluginTest(test_lib.TextPluginTestCase):
             "added_time": "2013-07-25T16:04:02.669+00:00",
             "data_type": "skydrive:log:entry",
             "detail": (
-                "No node found named Passport-Jméno-člena, no user name " "available,"
+                "No node found named Passport-Jméno-člena, no user name available,"
             ),
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 3)
         self.CheckEventData(event_data, expected_event_values)
 

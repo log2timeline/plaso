@@ -19,7 +19,6 @@ class MacOSBackgroundItemsPlistPluginTest(test_lib.PlistPluginTestCase):
         storage_writer = self._ParsePlistFileWithPlugin(
             plugin, [plist_name], plist_name
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -39,13 +38,12 @@ class MacOSBackgroundItemsPlistPluginTest(test_lib.PlistPluginTestCase):
             "data_type": "macos:background_items:entry",
             "name": "iTunesHelper",
             "target_creation_time": "2017-07-12T18:29:32.000000+00:00",
-            "target_path": ("/Applications/iTunes.app/Contents/MacOS/iTunesHelper.app"),
+            "target_path": "/Applications/iTunes.app/Contents/MacOS/iTunesHelper.app",
             "volume_creation_time": "2017-10-20T07:52:27.000000+00:00",
             "volume_flags": 0x100000081,
             "volume_mount_point": "/",
             "volume_name": "Macintosh HD",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

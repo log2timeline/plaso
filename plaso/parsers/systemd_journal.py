@@ -20,12 +20,44 @@ class SystemdJournalEventData(events.EventData):
     """Systemd journal event data.
 
     Attributes:
-      body (str): message body.
+      audit_login_identifier (str): login user identifier (audit loginuid) of the
+          process that logged the entry.
+      audit_session_identifier (int): audit session identifier of the process that
+          logged the entry.
+      boot_identifier (str): identifier of the boot the entry was logged in.
+      command_line (str): command line of the process that logged the entry.
+      control_group (str): systemd control group path of the process that logged
+          the entry.
+      effective_capabilities (str): effective capabilities (hexadecimal bitmask) of
+          the process that logged the entry.
+      executable (str): path of the executable of the process that logged the entry.
+      facility (str): syslog facility.
+      group_identifier (int): group identifier (GID) of the process that logged the
+          entry.
       hostname (str): hostname.
+      machine_identifier (str): identifier of the machine the entry was logged on.
+      message_body (str): message body.
+      message_type_identifier (str): message catalog identifier that classifies the
+          type of the message.
+      owner_user_identifier (int): user identifier (UID) of the owner of the systemd
+          user unit or systemd session.
       pid (int): process identifier (PID).
+      process_name (str): name of the process that logged the entry.
+      recorded_time (dfdatetime.DateTimeValues): date and time the log entry was
+          recorded (received) by journald on the originating host.
       reporter (str): reporter.
-      written_time (dfdatetime.DateTimeValues): date and time the log entry
-          was written.
+      selinux_context (str): SELinux security context of the process that logged the
+          entry.
+      severity (int): syslog severity.
+      systemd_invocation_identifier (str): systemd invocation identifier for the
+          runtime cycle of the unit.
+      systemd_session_identifier (str): systemd (logind) session identifier of the
+          process that logged the entry.
+      systemd_slice (str): systemd slice unit of the process that logged the entry.
+      systemd_unit (str): systemd unit of the process that logged the entry.
+      transport (str): how the entry was received by the journal.
+      user_identifier (int): user identifier (UID) of the process that logged the entry.
+      written_time (dfdatetime.DateTimeValues): date and time the log entry was written.
     """
 
     DATA_TYPE = "systemd:journal"
@@ -33,10 +65,32 @@ class SystemdJournalEventData(events.EventData):
     def __init__(self):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
-        self.body = None
+        self.audit_login_identifier = None
+        self.audit_session_identifier = None
+        self.boot_identifier = None
+        self.command_line = None
+        self.control_group = None
+        self.effective_capabilities = None
+        self.executable = None
+        self.facility = None
+        self.group_identifier = None
         self.hostname = None
+        self.machine_identifier = None
+        self.message_body = None
+        self.message_type_identifier = None
+        self.owner_user_identifier = None
         self.pid = None
+        self.process_name = None
+        self.recorded_time = None
         self.reporter = None
+        self.selinux_context = None
+        self.severity = None
+        self.systemd_invocation_identifier = None
+        self.systemd_session_identifier = None
+        self.systemd_slice = None
+        self.systemd_unit = None
+        self.transport = None
+        self.user_identifier = None
         self.written_time = None
 
 
@@ -80,6 +134,44 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
     )
 
     _HEADER_INCOMPATIBLE_COMPACT = 16
+
+    _INTEGER_FIELDS = (
+        "_AUDIT_SESSION",
+        "_GID",
+        "_PID",
+        "_SOURCE_REALTIME_TIMESTAMP",
+        "_SYSTEMD_OWNER_UID",
+        "_UID",
+        "PRIORITY",
+        "SYSLOG_PID",
+    )
+
+    _SYSLOG_FACILITIES = {
+        0: "kernel message",
+        1: "user-level message",
+        2: "mail system",
+        3: "system daemons",
+        4: "security/authorization messages",
+        5: "messages generated internally by syslogd",
+        6: "line printer subsystem",
+        7: "network news subsystem",
+        8: "UUCP subsystem",
+        9: "clock daemon",
+        10: "security/authorization messages",
+        11: "FTP daemon",
+        12: "NTP subsystem",
+        13: "log audit",
+        14: "log alert",
+        15: "clock daemon",
+        16: "local use 0",
+        17: "local use 1",
+        18: "local use 2",
+        19: "local use 3",
+        20: "local use 4",
+        21: "local use 5",
+        22: "local use 6",
+        23: "local use 7",
+    }
 
     def __init__(self):
         """Initializes a parser."""
@@ -139,7 +231,13 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
         data = file_object.read(data_size)
 
         if data_object.object_flags & self._OBJECT_COMPRESSED_FLAG_XZ:
-            data = lzma.decompress(data)
+            try:
+                data = lzma.decompress(data)
+            except (EOFError, lzma.LZMAError) as exception:
+                raise errors.ParseError(
+                    f"Unable to decompress XZ at offset: 0x{data_offset:08x} with "
+                    f"error: {exception!s}"
+                )
 
         elif data_object.object_flags & self._OBJECT_COMPRESSED_FLAG_LZ4:
             uncompressed_size_map = self._GetDataTypeMap("uint32le")
@@ -154,7 +252,15 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
                     f"0x{data_offset:08x} with error: {exception!s}"
                 )
 
-            data = lz4_block.decompress(data[8:], uncompressed_size=uncompressed_size)
+            try:
+                data = lz4_block.decompress(
+                    data[8:], uncompressed_size=uncompressed_size
+                )
+            except (ValueError, lz4_block.LZ4BlockError) as exception:
+                raise errors.ParseError(
+                    f"Unable to decompress LZ4 at offset: 0x{data_offset:08x} with "
+                    f"error: {exception!s}"
+                )
 
         elif data_object.object_flags & self._OBJECT_COMPRESSED_FLAG_ZSTD:
             try:
@@ -263,27 +369,98 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
         """
         entry_array_object = self._ParseEntryArrayObject(file_object, file_offset)
 
+        visited_offsets = {file_offset}
         entry_object_offsets = list(entry_array_object.entry_object_offsets)
         while entry_array_object.next_entry_array_offset != 0:
+            next_entry_array_offset = entry_array_object.next_entry_array_offset
+
+            # An entry array object that refers back to an offset that was already
+            # read would prevent the entry array objects from being read to
+            # completion.
+            if next_entry_array_offset in visited_offsets:
+                raise errors.ParseError(
+                    f"Invalid entry array offset: 0x{next_entry_array_offset:08x} "
+                    f"already read"
+                )
+            visited_offsets.add(next_entry_array_offset)
+
             entry_array_object = self._ParseEntryArrayObject(
-                file_object, entry_array_object.next_entry_array_offset
+                file_object, next_entry_array_offset
             )
             entry_object_offsets.extend(entry_array_object.entry_object_offsets)
 
         return entry_object_offsets
 
-    def _ParseJournalEntry(self, file_object, file_offset):
+    def _ParseKeyValuePair(self, parser_mediator, field_data):
+        """Parses a key value pair.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
+          field_data (bytes): journal field data, which is "key=value" where the
+              value can contain arbitrary binary (non-UTF-8) data.
+
+        Returns:
+          tuple: containing:
+
+              str: key decoded as UTF-8.
+              object: value decoded as UTF-8.
+              bool: value to indicate the key value pair was corrupted.
+        """
+        key_data, _, value_data = field_data.partition(b"=")
+        corrupted = False
+
+        try:
+            key = key_data.decode("utf-8")
+        except UnicodeDecodeError:
+            parser_mediator.ProduceWarning(
+                "Unable to decode journal field key as UTF-8. Unsupported code points "
+                "are escaped."
+            )
+            key = key_data.decode("utf-8", errors="backslashreplace")
+            corrupted = True
+
+        if not value_data:
+            value = None
+        else:
+            try:
+                value = value_data.decode("utf-8")
+            except UnicodeDecodeError:
+                parser_mediator.ProduceWarning(
+                    f"Unable to decode journal field with key: {key:s} value as UTF-8. "
+                    f"Unsupported code points are escaped."
+                )
+                value = value_data.decode("utf-8", errors="backslashreplace")
+                corrupted = True
+
+        if value is not None and not corrupted and key in self._INTEGER_FIELDS:
+            try:
+                value = int(value, 10)
+            except ValueError:
+                parser_mediator.ProduceWarning(
+                    f"Unsupported {key:s} integer value: '{value:s}'"
+                )
+                corrupted = True
+
+        return key, value, corrupted
+
+    def _ParseJournalEntry(self, parser_mediator, file_object, file_offset):
         """Parses a journal entry.
 
         This method will generate an event per ENTRY object.
 
         Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): a file-like object.
           file_offset (int): offset of the entry object relative to the start
               of the file-like object.
 
         Returns:
-          dict[str, objects]: entry items per key.
+          tuple: containing:
+
+              dict[str, objects]: fields in the journal entry.
+              bool: True if the journal entry was corrupted.
 
         Raises:
           ParseError: when an object offset is out of bounds.
@@ -300,6 +477,7 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
         data_end_offset = file_offset + entry_object.data_size - 64
 
         fields = {"real_time": entry_object.real_time}
+        corrupted = False
 
         while file_offset < data_end_offset:
             try:
@@ -308,8 +486,8 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
                 )
             except (ValueError, errors.ParseError) as exception:
                 raise errors.ParseError(
-                    f"Unable to parse entry item at offset: 0x{file_offset:08x} "
-                    f"with error: {exception!s}"
+                    f"Unable to parse entry item at offset: 0x{file_offset:08x} with "
+                    f"error: {exception!s}"
                 )
 
             file_offset += entry_item_data_size
@@ -321,12 +499,14 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
                     f"{self._maximum_journal_file_offset:d})"
                 )
 
-            event_data = self._ParseDataObject(file_object, entry_item.object_offset)
-            event_string = event_data.decode("utf-8")
-            key, value = event_string.split("=", 1)
+            field_data = self._ParseDataObject(file_object, entry_item.object_offset)
+            key, value, value_corrupted = self._ParseKeyValuePair(
+                parser_mediator, field_data
+            )
             fields[key] = value
+            corrupted = corrupted or value_corrupted
 
-        return fields
+        return fields, corrupted
 
     @classmethod
     def GetFormatSpecification(cls):
@@ -343,7 +523,8 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
         """Parses a Systemd journal file-like object.
 
         Args:
-          parser_mediator (ParserMediator): parser mediator.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): a file-like object.
 
         Raises:
@@ -377,36 +558,94 @@ class SystemdJournalParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
         self._maximum_journal_file_offset = max(
             data_hash_table_end_offset, field_hash_table_end_offset
         )
-        entry_object_offsets = self._ParseEntryObjectOffsets(
-            file_object, file_header.entry_array_offset
-        )
+        try:
+            entry_object_offsets = self._ParseEntryObjectOffsets(
+                file_object, file_header.entry_array_offset
+            )
+        except errors.ParseError as exception:
+            parser_mediator.ProduceWarning(
+                f"unable to read entry array objects with error: {exception!s}"
+            )
+            return
+
         for entry_object_offset in entry_object_offsets:
             if entry_object_offset == 0:
                 continue
 
             try:
-                fields = self._ParseJournalEntry(file_object, entry_object_offset)
+                fields, corrupted = self._ParseJournalEntry(
+                    parser_mediator, file_object, entry_object_offset
+                )
             except errors.ParseError as exception:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"Unable to parse journal entry at offset: "
                     f"0x{entry_object_offset:08x} with error: {exception!s}"
                 )
-                return
+                continue
 
             date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
                 timestamp=fields["real_time"]
             )
             event_data = SystemdJournalEventData()
 
-            event_data.body = fields.get("MESSAGE")
+            # The SYSLOG_FACILITY values can contain either a string e.g. "DHCP4" or an
+            # integer that maps to a predefined facility.
+            facility = fields.get("SYSLOG_FACILITY")
+            if facility is not None:
+                try:
+                    facility_numeric = int(facility, 10)
+                    facility = self._SYSLOG_FACILITIES.get(facility_numeric, facility)
+                except ValueError:
+                    pass
+
+            event_data.audit_login_identifier = fields.get("_AUDIT_LOGINUID")
+            event_data.audit_session_identifier = fields.get("_AUDIT_SESSION")
+            event_data.boot_identifier = fields.get("_BOOT_ID")
+            event_data.command_line = fields.get("_CMDLINE")
+            event_data.control_group = fields.get("_SYSTEMD_CGROUP")
+            event_data.effective_capabilities = fields.get("_CAP_EFFECTIVE")
+            event_data.executable = fields.get("_EXE")
+            event_data.facility = facility
+            event_data.group_identifier = fields.get("_GID")
             event_data.hostname = fields.get("_HOSTNAME")
-            event_data.reporter = fields.get("SYSLOG_IDENTIFIER")
+            event_data.machine_identifier = fields.get("_MACHINE_ID")
+            event_data.message_body = fields.get("MESSAGE")
+            event_data.message_type_identifier = fields.get("MESSAGE_ID")
+            event_data.owner_user_identifier = fields.get("_SYSTEMD_OWNER_UID")
+            event_data.process_name = fields.get("_COMM")
+            # Fall back to the _COMM when SYSLOG_IDENTIFIER is absent.
+            event_data.reporter = fields.get("SYSLOG_IDENTIFIER") or fields.get("_COMM")
+            event_data.selinux_context = fields.get("_SELINUX_CONTEXT")
+            event_data.severity = fields.get("PRIORITY")
+            event_data.systemd_invocation_identifier = fields.get(
+                "_SYSTEMD_INVOCATION_ID"
+            )
+            event_data.systemd_session_identifier = fields.get("_SYSTEMD_SESSION")
+            event_data.systemd_slice = fields.get("_SYSTEMD_SLICE")
+            event_data.systemd_unit = fields.get("_SYSTEMD_UNIT")
+            event_data.transport = fields.get("_TRANSPORT")
+            event_data.user_identifier = fields.get("_UID")
             event_data.written_time = date_time
+
+            # _SOURCE_REALTIME_TIMESTAMP is the earliest trusted (event) time of
+            # the message on the originating host, whereas written_time
+            # (__REALTIME_TIMESTAMP) is journald's reception time; for journals
+            # relayed via systemd-journal-remote the latter is the collection
+            # time on the central host, so the two diverge. It is a trusted
+            # field and should be numeric microseconds, so a malformed value is
+            # surfaced rather than dropped.
+            source_realtime = fields.get("_SOURCE_REALTIME_TIMESTAMP")
+            if source_realtime is not None:
+                event_data.recorded_time = (
+                    dfdatetime_posix_time.PosixTimeInMicroseconds(
+                        timestamp=source_realtime
+                    )
+                )
 
             if event_data.reporter and event_data.reporter != "kernel":
                 event_data.pid = fields.get("_PID", fields.get("SYSLOG_PID"))
 
-            parser_mediator.ProduceEventData(event_data)
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
 
 manager.ParsersManager.RegisterParser(SystemdJournalParser)

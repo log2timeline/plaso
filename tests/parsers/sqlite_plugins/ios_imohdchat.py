@@ -17,7 +17,6 @@ class IMOHDChatMessagePluginTest(test_lib.SQLitePluginTestCase):
         storage_writer = self._ParseDatabaseFileWithPlugin(
             ["ios", "IMODb2.sqlite"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -40,7 +39,6 @@ class IMOHDChatMessagePluginTest(test_lib.SQLitePluginTestCase):
             "status": 0,
             "text": "Are you on imo?",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

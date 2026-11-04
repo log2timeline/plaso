@@ -65,19 +65,18 @@ class BackgroundActivityModeratorWindowsRegistryPluginTest(
             last_written_time=filetime.timestamp,
             relative_key_path="\\ControlSet001\\Services\\bam\\State",
         )
-
         filetime.CopyFromDateTimeString("2019-03-19 13:29:56.008214")
 
         sid_key_name = "S-1-5-21-321011808-3761883066-353627080-1000"
         sid_key = dfwinreg_fake.FakeWinRegistryKey(
             sid_key_name, last_written_time=filetime.timestamp
         )
-
+        value_name = (
+            "\\Device\\HarddiskVolume1\\Windows\\System32\\WindowsPowerShell\\v1.0\\"
+            "powershell.exe"
+        )
         registry_value = dfwinreg_fake.FakeWinRegistryValue(
-            (
-                "\\Device\\HarddiskVolume1\\Windows\\System32\\WindowsPowerShell"
-                "\\v1.0\\powershell.exe"
-            ),
+            value_name,
             data=binary_data,
             data_type=dfwinreg_definitions.REG_BINARY,
         )
@@ -94,15 +93,13 @@ class BackgroundActivityModeratorWindowsRegistryPluginTest(
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_LOCAL_MACHINE\\System",
-            ("CurrentControlSet\\Services\\bam\\UserSettings"),
+            "CurrentControlSet\\Services\\bam\\UserSettings",
         )
-
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_LOCAL_MACHINE\\System",
-            ("CurrentControlSet\\Services\\bam\\State\\UserSettings"),
+            "CurrentControlSet\\Services\\bam\\State\\UserSettings",
         )
-
         self._AssertNotFiltersOnKeyPath(plugin, "HKEY_LOCAL_MACHINE\\System", "Bogus")
 
     def testProcessValue(self):
@@ -113,7 +110,6 @@ class BackgroundActivityModeratorWindowsRegistryPluginTest(
         storage_writer = self._ParseKeyWithPlugin(
             registry_key, plugin, file_entry=test_file_entry
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -138,7 +134,6 @@ class BackgroundActivityModeratorWindowsRegistryPluginTest(
             ),
             "user_identifier": "S-1-5-21-321011808-3761883066-353627080-1000",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

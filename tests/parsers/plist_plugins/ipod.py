@@ -17,9 +17,8 @@ class TestIPodPlugin(test_lib.PlistPluginTestCase):
 
         plugin = ipod.IPodPlugin()
         storage_writer = self._ParsePlistFileWithPlugin(
-            plugin, [plist_name], plist_name
+            plugin, ["plist", plist_name], plist_name
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -46,7 +45,6 @@ class TestIPodPlugin(test_lib.PlistPluginTestCase):
             "serial_number": "526F676572",
             "use_count": 1,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 3)
         self.CheckEventData(event_data, expected_event_values)
 

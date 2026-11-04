@@ -84,6 +84,7 @@ class GoogleAnalyticsUtmzEventData(events.EventData):
 
     Attributes:
       cookie_name (str): name of cookie.
+      cookie_values (list[str]): cookie values.
       domain_hash (str): domain hash.
       last_visited_time (dfdatetime.DateTimeValues): date and time the URL was
           last visited.
@@ -98,6 +99,7 @@ class GoogleAnalyticsUtmzEventData(events.EventData):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
         self.cookie_name = None
+        self.cookie_values = []
         self.domain_hash = None
         self.last_visited_time = None
         self.sessions = None
@@ -131,7 +133,8 @@ class GoogleAnalyticsUtmaPlugin(interface.BaseCookiePlugin):
         """Extracts events from cookie data.
 
         Args:
-          parser_mediator (ParserMediator): parser mediator.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           cookie_data (str): cookie data.
           url (str): URL or path where the cookie got set.
         """
@@ -139,7 +142,7 @@ class GoogleAnalyticsUtmaPlugin(interface.BaseCookiePlugin):
         number_of_fields = len(fields)
 
         if number_of_fields not in (1, 6):
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unsupported number of fields: {number_of_fields:d} in cookie: "
                 f"{self.COOKIE_NAME:s}"
             )
@@ -218,7 +221,8 @@ class GoogleAnalyticsUtmbPlugin(interface.BaseCookiePlugin):
         """Extracts events from cookie data.
 
         Args:
-          parser_mediator (ParserMediator): parser mediator.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           cookie_data (bytes): cookie data.
           url (str): URL or path where the cookie got set.
         """
@@ -226,7 +230,7 @@ class GoogleAnalyticsUtmbPlugin(interface.BaseCookiePlugin):
         number_of_fields = len(fields)
 
         if number_of_fields not in (1, 4):
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unsupported number of fields: {number_of_fields:d} in cookie: "
                 f"{self.COOKIE_NAME:s}"
             )
@@ -282,7 +286,8 @@ class GoogleAnalyticsUtmtPlugin(interface.BaseCookiePlugin):
         """Extracts events from cookie data.
 
         Args:
-          parser_mediator (ParserMediator): parser mediator.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           cookie_data (bytes): cookie data.
           url (str): URL or path where the cookie got set.
         """
@@ -290,7 +295,7 @@ class GoogleAnalyticsUtmtPlugin(interface.BaseCookiePlugin):
         number_of_fields = len(fields)
 
         if number_of_fields != 1:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unsupported number of fields: {number_of_fields:d} in cookie: "
                 f"{self.COOKIE_NAME:s}"
             )
@@ -330,7 +335,8 @@ class GoogleAnalyticsUtmzPlugin(interface.BaseCookiePlugin):
         """Extracts events from cookie data.
 
         Args:
-          parser_mediator (ParserMediator): parser mediator.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           cookie_data (str): cookie data.
           url (str): URL or path where the cookie got set.
         """
@@ -344,7 +350,7 @@ class GoogleAnalyticsUtmzPlugin(interface.BaseCookiePlugin):
             number_of_fields = len(fields)
 
         if number_of_fields not in (1, 5):
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unsupported number of fields: {number_of_fields:d} in cookie: "
                 f"{self.COOKIE_NAME:s}"
             )
@@ -387,10 +393,8 @@ class GoogleAnalyticsUtmzPlugin(interface.BaseCookiePlugin):
         event_data.sources = number_of_sources
         event_data.url = url
 
-        # TODO: explicitly define these as attributes of
-        # GoogleAnalyticsUtmzEventData.
-        for key, value in extra_attributes.items():
-            setattr(event_data, key, value)
+        for key, value in sorted(extra_attributes.items()):
+            event_data.cookie_values.append((key, value))
 
         parser_mediator.ProduceEventData(event_data)
 

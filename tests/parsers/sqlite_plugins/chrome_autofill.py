@@ -14,7 +14,9 @@ class ChromeAutofillPluginTest(test_lib.SQLitePluginTestCase):
     def testProcess(self):
         """Tests the Process function on a Chrome autofill entries database."""
         plugin = chrome_autofill.ChromeAutofillPlugin()
-        storage_writer = self._ParseDatabaseFileWithPlugin(["Web Data"], plugin)
+        storage_writer = self._ParseDatabaseFileWithPlugin(
+            ["chrome", "Web Data"], plugin
+        )
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
@@ -39,7 +41,6 @@ class ChromeAutofillPluginTest(test_lib.SQLitePluginTestCase):
             "usage_count": 1,
             "value": "log2timeline/plaso",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 

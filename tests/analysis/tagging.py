@@ -46,9 +46,9 @@ class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
         },
         {
             "_parser_chain": "winevt",
-            "body": "this is a message",
             "data_type": "windows:evt:record",
             "event_identifier": 16,
+            "message_body": "this is a message",
             "source_name": "Messaging",
             "timestamp": "2016-05-25 13:00:06",
             "timestamp_desc": definitions.TIME_DESCRIPTION_UNKNOWN,

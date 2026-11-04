@@ -5,6 +5,7 @@ import unittest
 
 from plaso.containers import events
 from plaso.containers import plist_event
+from plaso.engine import tagging_file
 from plaso.lib import definitions
 from plaso.parsers import filestat
 from plaso.parsers.olecf_plugins import summary
@@ -28,7 +29,7 @@ class MacOSTaggingFileTest(test_lib.TaggingFileTestCase):
 
     def testRuleApplicationExecution(self):
         """Tests the application_execution tagging rule."""
-        # Test: data_type is 'macosx:application_usage'
+        # Test: data_type is 'macos:application_usage'
         attribute_values_per_name = {}
         self._CheckTaggingRule(
             macos_appusage.MacOSApplicationUsageEventData,
@@ -37,8 +38,8 @@ class MacOSTaggingFileTest(test_lib.TaggingFileTestCase):
         )
 
         # Test: data_type is 'syslog:line' AND
-        #       body contains 'COMMAND=/bin/launchctl'
-        attribute_values_per_name = {"body": ["COMMAND=/bin/launchctl"]}
+        #       message_body contains 'COMMAND=/bin/launchctl'
+        attribute_values_per_name = {"message_body": ["COMMAND=/bin/launchctl"]}
         self._CheckTaggingRule(
             syslog.SyslogLineEventData,
             attribute_values_per_name,
@@ -90,7 +91,7 @@ class MacOSTaggingFileTest(test_lib.TaggingFileTestCase):
             ["file_download"],
         )
 
-        # Test: data_type is 'macosx:lsquarantine'
+        # Test: data_type is 'macos:lsquarantine'
         attribute_values_per_name = {}
         self._CheckTaggingRule(
             ls_quarantine.MacOSLSQuarantineEventData,
@@ -151,6 +152,16 @@ class MacOSTaggingFileTest(test_lib.TaggingFileTestCase):
         storage_writer = self._TagEvent(event, event_data, None)
 
         self._CheckLabels(storage_writer, ["document_print"])
+
+    def testValidate(self):
+        """Tests the Validate function on the tagging file."""
+        tag_file_path = self._GetDataFilePath([self._TAG_FILE])
+        self._SkipIfPathNotExists(tag_file_path)
+
+        tag_file = tagging_file.TaggingFile(tag_file_path)
+
+        findings = tag_file.Validate()
+        self.assertEqual(findings, [])
 
 
 if __name__ == "__main__":

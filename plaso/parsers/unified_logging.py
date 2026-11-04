@@ -36,8 +36,8 @@ class UnifiedLoggingEventData(events.EventData):
       event_type (str): event type.
       message_type (str): message type.
       process_identifier (int): process identifier (PID).
-      process_image_identifier (str): process image identifier.
       process_image_identifier (str): process image identifier, contains an UUID.
+      process_image_path (str): process image path.
       recorded_time (dfdatetime.DateTimeValues): date and time the log entry was
           recorded.
       sender_image_identifier (str): (sender) image identifier, contains an UUID.
@@ -52,7 +52,7 @@ class UnifiedLoggingEventData(events.EventData):
     DATA_TYPE = "macos:unified_logging:event"
 
     def __init__(self):
-        """Initialise event data."""
+        """Initialize event data."""
         super().__init__(data_type=self.DATA_TYPE)
         self.activity_identifier = None
         self.boot_identifier = None
@@ -873,6 +873,9 @@ class LocationLocationManagerStateFormatStringDecoder(
         os.path.dirname(__file__), "macos_core_location.yaml"
     )
 
+    # typos:disable
+    # Note that "pausesLocationUpdatesAutomatially" and "allowsAlteredAccessoryLoctions"
+    # are typos in the original value names.
     _VALUE_MAPPINGS = [
         ("previousAuthorizationStatusValid", "previous_authorization_status_valid"),
         ("paused", "paused"),
@@ -885,7 +888,7 @@ class LocationLocationManagerStateFormatStringDecoder(
         ("allowsLocationPrompts", "allows_location_prompts"),
         ("activityType", "activity_type"),
         ("groundAltitudeEnabled", "ground_altitude_enabled"),
-        ("pausesLocationUpdatesAutomatially", "pauses_location_updates_automatially"),
+        ("pausesLocationUpdatesAutomatially", "pauses_location_updates_automatically"),
         ("fusionInfoEnabled", "fusion_information_enabled"),
         ("isAuthorizedForWidgetUpdates", "is_authorized_for_widget_updates"),
         ("updatingVehicleHeading", "updating_vehicle_heading"),
@@ -903,6 +906,7 @@ class LocationLocationManagerStateFormatStringDecoder(
         ("courtesyPromptNeeded", "courtesy_prompt_needed"),
         ("headingFilter", "heading_filter"),
     ]
+    # typos:enable
 
     def FormatValue(self, value, format_string_operator=None):
         """Formats a location location manager state value.
@@ -1129,8 +1133,8 @@ class BaseMDNSDNSStructureFormatStringDecoder(
         Returns:
           str: formatted flags value.
         """
-        reponse_code = flags & self._RESPONSE_CODE_BITMASK
-        reponse_code = self._RESPONSE_CODES.get(reponse_code, "?")
+        response_code = flags & self._RESPONSE_CODE_BITMASK
+        response_code = self._RESPONSE_CODES.get(response_code, "?")
 
         flag_names = []
 
@@ -1147,7 +1151,7 @@ class BaseMDNSDNSStructureFormatStringDecoder(
 
         return (
             f"{query_or_response:s}/{operation_name:s}, {flag_names:s}, "
-            f"{reponse_code:s}"
+            f"{response_code:s}"
         )
 
 
@@ -1684,9 +1688,7 @@ class SignpostDescriptionAttributeFormatStringDecoder(BaseFormatStringDecoder):
             value, format_string_operator=format_string_operator
         )
 
-        return (
-            f"__##__signpost.description#____#attribute" f"#_##_#{string_value:s}##__##"
-        )
+        return f"__##__signpost.description#____#attribute#_##_#{string_value:s}##__##"
 
 
 class SignpostDescriptionTimeFormatStringDecoder(BaseFormatStringDecoder):
@@ -3497,9 +3499,7 @@ class TraceV3File(BaseUnifiedLoggingFile):
             chunk_data, data_offset, data_type_map
         )
 
-        proc_id = (
-            f"{firehose_header.proc_id_upper:d}@" f"{firehose_header.proc_id_lower:d}"
-        )
+        proc_id = f"{firehose_header.proc_id_upper:d}@{firehose_header.proc_id_lower:d}"
         process_information_entry = self._catalog_process_information_entries.get(
             proc_id
         )
@@ -4213,7 +4213,7 @@ class TraceV3File(BaseUnifiedLoggingFile):
         )
 
         proc_id = (
-            f"{simpledump_chunk.proc_id_upper:d}@" f"{simpledump_chunk.proc_id_lower:d}"
+            f"{simpledump_chunk.proc_id_upper:d}@{simpledump_chunk.proc_id_lower:d}"
         )
         process_information_entry = self._catalog_process_information_entries.get(
             proc_id
@@ -4281,9 +4281,7 @@ class TraceV3File(BaseUnifiedLoggingFile):
             chunk_data, data_offset, data_type_map, context=context
         )
 
-        proc_id = (
-            f"{statedump_chunk.proc_id_upper:d}@" f"{statedump_chunk.proc_id_lower:d}"
-        )
+        proc_id = f"{statedump_chunk.proc_id_upper:d}@{statedump_chunk.proc_id_lower:d}"
         process_information_entry = self._catalog_process_information_entries.get(
             proc_id
         )

@@ -28,11 +28,69 @@ class SELinuxLogEventData(events.EventData):
     """SELinux log event data.
 
     Attributes:
+      access_granted (bool): True if the access was granted by the security
+          policy. An AVC record represents this value as "granted" or "denied".
+      access_permissions (list[str]): permissions that were requested, such as
+          "getattr" or "read", as recorded by an AVC record.
+      account (str): name of the account (acct) that the event acts on, such as
+          "root" for an attempt to authenticate as root. Note that this is an
+          account name, where user_identifier is the numeric user identifier of
+          the process that caused the event, which is typically a different
+          user, such as the user running "su".
+      architecture (str): CPU architecture (arch); the resolved name (e.g.
+          "x86_64") when the record is ENRICHED, otherwise the raw value.
+      audit_login_identifier (str): audit login identifier (auid), the login
+          user identifier that is retained across su and sudo, or None if unset.
+      audit_rule_keys (list[str]): keys (key) of the audit rule that triggered
+          the record, where a rule can have multiple keys.
+      audit_serial (int): audit serial number, used to correlate the records
+          that belong to a single audited event.
+      audit_session_identifier (str): audit session identifier (ses), or None
+          if unset.
       audit_type (str): audit type.
-      body (str): body of the log line.
-      last_written_time (dfdatetime.DateTimeValues): entry last written date and
-          time.
-      pid (int): process identifier (PID) that created the SELinux log line.
+      executable (str): path of the executable (exe).
+      exit_code (int): exit status of the system call (exit), where a negative
+          value represents an errno value.
+      file_mode (int): file mode (mode) of the file, which includes the file type
+          and the permissions, such as 0o100640 for a regular file that is
+          readable and writable by its owner and readable by its group.
+      file_path (str): path of the file referenced by the record (name or path).
+      group_identifier (str): group identifier (gid) of the process.
+      last_written_time (dfdatetime.DateTimeValues): entry last written date and time.
+      message_body (str): message body.
+      name_type (str): type of the path reference (nametype), such as NORMAL,
+          PARENT, CREATE or DELETE.
+      operation (str): operation (op) that is audited, such as
+          "PAM:authentication", "add_rule" or "LOAD".
+      operation_result (bool): True if the audited operation was successful. The
+          log format represents this value as "success" or "failed", or as "1" or
+          "0" on record types such as CONFIG_CHANGE and LOGIN.
+      owner_group_identifier (str): group identifier that owns the file (ogid).
+      owner_user_identifier (str): user identifier that owns the file (ouid).
+      parent_process_identifier (str): parent process identifier (ppid).
+      permissive_mode (bool): True if the security policy was in permissive mode,
+          in which case the access was allowed even though the policy denied it.
+      pid (str): process identifier (PID) that created the SELinux log line.
+      process_arguments (str): arguments of an executed program (the EXECVE argc
+          and a0 .. aN fields), separated by spaces.
+      process_name (str): name of the process (comm).
+      process_title (str): process title (proctitle) of the process, which
+          contains the command line with its arguments separated by spaces.
+      remote_address (str): source address (addr) of a remote event.
+      remote_hostname (str): source hostname (hostname) of a remote event.
+      security_context (str): security context (subj) of the process, such as a
+          SELinux or AppArmor label.
+      success (bool): True if the system call was successful. The log format
+          represents this value as "yes" or "no".
+      system_call (str): system call (syscall).
+      target_object_class (str): class of the object the access was requested on
+          (tclass), such as "file", "process" or "capability".
+      target_security_context (str): security context of the object the access
+          was requested on (tcontext).
+      terminal (str): controlling terminal (terminal) of the event.
+      user_identifier (str): user identifier (uid) of the process.
+      working_directory (str): working directory (cwd) of the process at
+          execution time.
     """
 
     DATA_TYPE = "selinux:line"
@@ -40,10 +98,43 @@ class SELinuxLogEventData(events.EventData):
     def __init__(self):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
+        self.access_granted = None
+        self.access_permissions = None
+        self.account = None
+        self.architecture = None
+        self.audit_login_identifier = None
+        self.audit_rule_keys = None
+        self.audit_serial = None
+        self.audit_session_identifier = None
         self.audit_type = None
-        self.body = None
+        self.executable = None
+        self.exit_code = None
+        self.file_mode = None
+        self.file_path = None
+        self.group_identifier = None
         self.last_written_time = None
+        self.message_body = None
+        self.name_type = None
+        self.operation = None
+        self.operation_result = None
+        self.owner_group_identifier = None
+        self.owner_user_identifier = None
+        self.parent_process_identifier = None
+        self.permissive_mode = None
         self.pid = None
+        self.process_arguments = None
+        self.process_name = None
+        self.process_title = None
+        self.remote_address = None
+        self.remote_hostname = None
+        self.security_context = None
+        self.success = None
+        self.system_call = None
+        self.target_object_class = None
+        self.target_security_context = None
+        self.terminal = None
+        self.user_identifier = None
+        self.working_directory = None
 
 
 class SELinuxTextPlugin(interface.TextPlugin):
@@ -56,13 +147,38 @@ class SELinuxTextPlugin(interface.TextPlugin):
         lambda tokens: int(tokens[0], 10)
     )
 
+    # Values are deliberately not unquoted when parsed, so that a quoted value,
+    # which is a literal, can be distinguished from an unquoted value, which is
+    # hex-encoded.
     _KEY_VALUE_GROUP = pyparsing.Group(
-        pyparsing.Word(pyparsing.alphanums)
+        pyparsing.Word(pyparsing.alphanums + "-_")
         + pyparsing.Suppress("=")
-        + (pyparsing.QuotedString('"') ^ pyparsing.Word(pyparsing.printables))
+        + (
+            pyparsing.QuotedString('"', unquote_results=False)
+            ^ pyparsing.QuotedString("'", unquote_results=False)
+            ^ pyparsing.Word(pyparsing.printables)
+        )
     )
 
     _KEY_VALUE_DICT = pyparsing.Dict(pyparsing.ZeroOrMore(_KEY_VALUE_GROUP))
+
+    # The message body of an AVC record starts with an access vector decision,
+    # such as: avc:  denied  { getattr } for  pid=5962 comm="httpd" …
+    _ACCESS_VECTOR_DECISION = (
+        pyparsing.Suppress("avc:")
+        + (pyparsing.Keyword("denied") ^ pyparsing.Keyword("granted")).set_results_name(
+            "decision"
+        )
+        + pyparsing.Suppress("{")
+        + pyparsing.OneOrMore(
+            pyparsing.Word(pyparsing.alphanums + "_")
+        ).set_results_name("permissions")
+        + pyparsing.Suppress("}")
+        + pyparsing.Suppress("for")
+        + pyparsing.restOfLine().set_results_name("values")
+    )
+
+    _HEX_DIGITS = frozenset("0123456789ABCDEFabcdef")
 
     _TIMESTAMP = pyparsing.Group(_INTEGER + pyparsing.Suppress(".") + _INTEGER)
 
@@ -78,15 +194,311 @@ class SELinuxTextPlugin(interface.TextPlugin):
         + pyparsing.Suppress("msg=audit(")
         + _TIMESTAMP.set_results_name("timestamp")
         + pyparsing.Suppress(":")
-        + _INTEGER
+        + _INTEGER.set_results_name("serial")
         + pyparsing.Suppress("):")
-        + pyparsing.restOfLine().set_results_name("body")
+        + pyparsing.restOfLine().set_results_name("message_body")
         + _END_OF_LINE
     )
 
     _LINE_STRUCTURES = [("log_line", _LOG_LINE)]
 
     VERIFICATION_GRAMMAR = _LOG_LINE
+
+    # auditd sentinels that stand in for an absent value.
+    _SENTINEL_VALUES = frozenset(["?", "(null)", "(none)"])
+
+    # Value that auditd uses for an unset numeric value, which is (uint32_t) -1.
+    _UNSET_NUMERIC_VALUE = "4294967295"
+
+    # Values of a result field, as interpreted by libauparse, which represents a
+    # value that is not defined here as unset.
+    _RESULT_VALUES = {
+        "0": False,
+        "1": True,
+        "failed": False,
+        "no": False,
+        "success": True,
+        "yes": True,
+    }
+
+    # Separator of the audit rule keys of a rule with multiple keys, which is
+    # AUDIT_KEY_SEPARATOR.
+    _RULE_KEY_SEPARATOR = "\x01"
+
+    def _DecodeHexValue(self, parser_mediator, hex_value):
+        """Decodes a hex-encoded value, preserving the original bytes.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          hex_value (str): hex-encoded value.
+
+        Returns:
+          tuple[str, bool]: decoded value, where bytes that are not valid UTF-8 are
+              kept as escaped byte values, and value to indicate the value was
+              corrupted. A value that is not validly hex-encoded is returned
+              unchanged.
+        """
+        try:
+            decoded_bytes = bytes.fromhex(hex_value)
+        except ValueError:
+            parser_mediator.ProduceWarning(
+                f"unable to decode hex-encoded value: {hex_value:s}"
+            )
+            return hex_value, True
+
+        try:
+            return decoded_bytes.decode("utf-8"), False
+        except UnicodeDecodeError:
+            parser_mediator.ProduceWarning(
+                f"unable to decode UTF-8 in hex-encoded value: {hex_value:s}"
+            )
+            return decoded_bytes.decode("utf-8", errors="backslashreplace"), True
+
+    def _GetValues(self, body):
+        """Retrieves the values of the fields in a message body.
+
+        Audit records store fields such as "acct", "exe" and "res" either at the
+        top level of the message body or inside a nested "msg" field, depending on
+        the record type. The values of a nested "msg" field are therefore merged
+        into the result, where they take precedence.
+
+        Args:
+          body (str): message body.
+
+        Returns:
+          dict[str, str]: value per field name, where a value of a quoted field is
+              kept quoted.
+        """
+        values = self._KEY_VALUE_DICT.parse_string(body).as_dict()
+
+        nested_body = values.get("msg", None)
+        if nested_body and nested_body[0] == "'":
+            values.update(
+                self._KEY_VALUE_DICT.parse_string(nested_body[1:-1]).as_dict()
+            )
+
+        return values
+
+    def _GetValue(self, values, name):
+        """Retrieves the value of a field.
+
+        Args:
+          values (dict[str, str]): value per field name.
+          name (str): field name.
+
+        Returns:
+          tuple[str, bool]: value, or None if the field is not present, its value
+              is empty or its value is an auditd sentinel such as "?" or "(null)",
+              and value to indicate the value was quoted.
+        """
+        value = values.get(name, None)
+        if value is None:
+            return None, False
+
+        is_quoted = value[0] == '"'
+        if is_quoted:
+            value = value[1:-1]
+
+        if not value or value in self._SENTINEL_VALUES:
+            return None, False
+
+        return value, is_quoted
+
+    def _GetStringValue(self, values, name):
+        """Retrieves the value of a field as a string.
+
+        Args:
+          values (dict[str, str]): value per field name.
+          name (str): field name.
+
+        Returns:
+          str: value, or None if the field has no usable value.
+        """
+        value, _ = self._GetValue(values, name)
+        return value
+
+    def _GetEncodedStringValue(self, parser_mediator, values, name):
+        """Retrieves the value of a field that auditd can store hex-encoded.
+
+        auditd stores the value of these fields hex-encoded if it contains
+        characters that would otherwise need to be escaped, such as a space, and
+        quoted if not.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          values (dict[str, str]): value per field name.
+          name (str): field name.
+
+        Returns:
+          tuple[str, bool]: value, or None if the field has no usable value, and
+              value to indicate the value was corrupted.
+        """
+        value, is_quoted = self._GetValue(values, name)
+        if value is None:
+            return None, False
+
+        # A quoted value is a literal, where an unquoted value is hex-encoded.
+        if is_quoted or not all(character in self._HEX_DIGITS for character in value):
+            return value, False
+
+        return self._DecodeHexValue(parser_mediator, value)
+
+    def _GetResultValue(self, parser_mediator, values, name):
+        """Retrieves the value of a result field as a boolean.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          values (dict[str, str]): value per field name.
+          name (str): field name.
+
+        Returns:
+          tuple[bool, bool]: result, or None if the field has no usable value or
+              its value is unset, and value to indicate the value was corrupted.
+        """
+        value = self._GetStringValue(values, name)
+        if value is None or value == self._UNSET_NUMERIC_VALUE:
+            return None, False
+
+        result = self._RESULT_VALUES.get(value.lower(), None)
+        if result is None:
+            parser_mediator.ProduceWarning(f"unsupported result value: {value:s}")
+            return None, True
+
+        return result, False
+
+    def _GetRuleKeys(self, parser_mediator, values):
+        """Retrieves the audit rule keys of a record.
+
+        An audit rule can have multiple keys, which auditd stores in a single
+        field separated by AUDIT_KEY_SEPARATOR.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          values (dict[str, str]): value per field name.
+
+        Returns:
+          tuple[list[str], bool]: audit rule keys, or None if the record has no
+              audit rule key, and value to indicate a value was corrupted.
+        """
+        value, corrupted = self._GetEncodedStringValue(parser_mediator, values, "key")
+        if value is None:
+            return None, corrupted
+
+        return value.split(self._RULE_KEY_SEPARATOR), corrupted
+
+    def _GetArguments(self, parser_mediator, values):
+        """Retrieves the command line of an executed program.
+
+        The arguments of an EXECVE record are stored as a number of arguments
+        (argc) and the individual arguments (a0 .. aN), which are joined with a
+        space, as ausearch does.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          values (dict[str, str]): value per field name.
+
+        Returns:
+          tuple[str, bool]: command line, or None if the record has no arguments,
+              and value to indicate a value was corrupted.
+        """
+        number_of_arguments = self._GetStringValue(values, "argc")
+        if number_of_arguments is None:
+            return None, False
+
+        try:
+            number_of_arguments = int(number_of_arguments, 10)
+        except ValueError:
+            parser_mediator.ProduceWarning(
+                f"invalid number of arguments: {number_of_arguments:s}"
+            )
+            return None, True
+
+        corrupted = False
+        arguments = []
+        # A well-formed record stores argc alongside an argument field (a0 .. aN)
+        # per argument, so the number of fields present is always larger than
+        # argc. Bounding the loop by the number of fields present prevents a
+        # record whose argc does not match the argument fields present from
+        # causing a large number of argument field look-ups.
+        number_of_arguments = min(number_of_arguments, len(values))
+        for index in range(number_of_arguments):
+            argument, value_corrupted = self._GetEncodedStringValue(
+                parser_mediator, values, f"a{index:d}"
+            )
+            corrupted = corrupted or value_corrupted
+            if argument is not None:
+                arguments.append(argument)
+
+        return " ".join(arguments) or None, corrupted
+
+    def _GetAccessVectorDecision(self, body):
+        """Retrieves the access vector decision of an AVC record.
+
+        Args:
+          body (str): message body.
+
+        Returns:
+          tuple[pyparsing.ParseResults, str]: access vector decision, or None if
+              the message body does not start with one, and the remainder of the
+              message body, which contains the fields.
+        """
+        if not body.startswith("avc:"):
+            return None, body
+
+        try:
+            structure = self._ACCESS_VECTOR_DECISION.parse_string(body)
+        except pyparsing.ParseException:
+            return None, body
+
+        return structure, self._GetValueFromStructure(
+            structure, "values", default_value=""
+        )
+
+    def _GetIdentifierValue(self, values, name):
+        """Retrieves the value of an identifier field.
+
+        Args:
+          values (dict[str, str]): value per field name.
+          name (str): field name.
+
+        Returns:
+          str: identifier, or None if the field has no usable value or the
+              identifier is unset.
+        """
+        value = self._GetStringValue(values, name)
+        if value == self._UNSET_NUMERIC_VALUE:
+            return None
+
+        return value
+
+    def _GetIntegerValue(self, parser_mediator, values, name, base):
+        """Retrieves the value of a field as an integer.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          values (dict[str, str]): value per field name.
+          name (str): field name.
+          base (int): base of the numeric value.
+
+        Returns:
+          tuple[int, bool]: value, or None if the field has no usable value, and
+              value to indicate the value was corrupted.
+        """
+        value = self._GetStringValue(values, name)
+        if value is None:
+            return None, False
+
+        try:
+            return int(value, base), False
+        except ValueError:
+            parser_mediator.ProduceWarning(f"unsupported {name:s} value: {value:s}")
+            return None, True
 
     def _ParseRecord(self, parser_mediator, key, structure):
         """Parses a pyparsing structure.
@@ -105,27 +517,177 @@ class SELinuxTextPlugin(interface.TextPlugin):
                 structure, "timestamp"
             )
 
-            # Try to parse the body text as key value pairs. Note that not
-            # all log lines will be properly formatted key value pairs.
-            body = self._GetValueFromStructure(structure, "body", default_value="")
-            body = body.strip()
+            # Try to parse the message body as key value pairs. Note that not all log
+            # lines will be properly formatted key value pairs.
+            message_body = self._GetValueFromStructure(
+                structure, "message_body", default_value=""
+            ).strip()
 
-            try:
-                body_structure = self._KEY_VALUE_DICT.parse_string(body)
+            # ENRICHED audit logs (the modern default on both Fedora/RHEL and Ubuntu)
+            # append an interpreted suffix after a 0x1d (group separator) byte, for
+            # example "... key=(null)\x1dARCH=x86_64 SYSCALL=execve AUID=...". Split it
+            # off: the raw key=value body provides the fields and the raw numeric
+            # identifiers are kept for offline soundness; the resolved suffix is used
+            # only for the system call name, which is architecture and kernel specific
+            # and hard to resolve from an offline image. RAW logs have no suffix.
+            raw_body, _, enriched_body = message_body.partition("\x1d")
+            raw_body = raw_body.strip()
 
-                process_identifier = self._GetValueFromStructure(body_structure, "pid")
-            except pyparsing.ParseException:
-                process_identifier = None
+            # The message body of an AVC record starts with an access vector
+            # decision instead of a field, which is parsed separately.
+            access_vector_structure, values_body = self._GetAccessVectorDecision(
+                raw_body
+            )
+
+            # Fields such as "acct", "op" and "res" are stored either at the top
+            # level of the message body or inside a nested "msg" field, hence the
+            # values of a nested "msg" field are merged into the values.
+            top_level_values = self._KEY_VALUE_DICT.parse_string(values_body).as_dict()
+            values = self._GetValues(values_body)
+            enriched_values = self._GetValues(enriched_body)
+
+            corrupted = False
 
             event_data = SELinuxLogEventData()
+            event_data.audit_serial = self._GetValueFromStructure(structure, "serial")
             event_data.audit_type = self._GetValueFromStructure(structure, "type")
-            event_data.body = body or None
             event_data.last_written_time = self._ParseTimeElements(
                 time_elements_structure
             )
-            event_data.pid = process_identifier
+            event_data.message_body = raw_body or None
 
-            parser_mediator.ProduceEventData(event_data)
+            if values:
+                # Fields that are only stored at the top level of the message body.
+                event_data.group_identifier = self._GetStringValue(
+                    top_level_values, "gid"
+                )
+                event_data.parent_process_identifier = self._GetStringValue(
+                    top_level_values, "ppid"
+                )
+                event_data.pid = self._GetStringValue(top_level_values, "pid")
+                event_data.security_context = self._GetStringValue(
+                    top_level_values, "subj"
+                )
+                event_data.system_call = self._GetStringValue(
+                    top_level_values, "syscall"
+                )
+                event_data.user_identifier = self._GetStringValue(
+                    top_level_values, "uid"
+                )
+
+                # An AVC record stores the security context of the process in
+                # "scontext" instead of "subj".
+                if not event_data.security_context:
+                    event_data.security_context = self._GetStringValue(
+                        values, "scontext"
+                    )
+
+                event_data.architecture = self._GetStringValue(values, "arch")
+                event_data.audit_login_identifier = self._GetIdentifierValue(
+                    values, "auid"
+                )
+                event_data.target_object_class = self._GetStringValue(values, "tclass")
+                event_data.target_security_context = self._GetStringValue(
+                    values, "tcontext"
+                )
+
+                event_data.permissive_mode, value_corrupted = self._GetResultValue(
+                    parser_mediator, values, "permissive"
+                )
+                corrupted = corrupted or value_corrupted
+                event_data.audit_session_identifier = self._GetIdentifierValue(
+                    values, "ses"
+                )
+                event_data.name_type = self._GetStringValue(values, "nametype")
+                event_data.operation = self._GetStringValue(values, "op")
+                event_data.owner_group_identifier = self._GetStringValue(values, "ogid")
+                event_data.owner_user_identifier = self._GetStringValue(values, "ouid")
+                event_data.remote_address = self._GetStringValue(values, "addr")
+                event_data.remote_hostname = self._GetStringValue(values, "hostname")
+                event_data.terminal = self._GetStringValue(values, "terminal")
+
+                event_data.audit_rule_keys, value_corrupted = self._GetRuleKeys(
+                    parser_mediator, values
+                )
+                corrupted = corrupted or value_corrupted
+
+                event_data.operation_result, value_corrupted = self._GetResultValue(
+                    parser_mediator, values, "res"
+                )
+                corrupted = corrupted or value_corrupted
+
+                event_data.success, value_corrupted = self._GetResultValue(
+                    parser_mediator, values, "success"
+                )
+                corrupted = corrupted or value_corrupted
+
+                event_data.exit_code, value_corrupted = self._GetIntegerValue(
+                    parser_mediator, values, "exit", 10
+                )
+                corrupted = corrupted or value_corrupted
+
+                event_data.file_mode, value_corrupted = self._GetIntegerValue(
+                    parser_mediator, values, "mode", 8
+                )
+                corrupted = corrupted or value_corrupted
+
+                event_data.process_arguments, value_corrupted = self._GetArguments(
+                    parser_mediator, values
+                )
+                corrupted = corrupted or value_corrupted
+
+                for attribute_name, field_name in (
+                    ("account", "acct"),
+                    ("executable", "exe"),
+                    ("file_path", "name"),
+                    ("process_name", "comm"),
+                    ("working_directory", "cwd"),
+                ):
+                    value, value_corrupted = self._GetEncodedStringValue(
+                        parser_mediator, values, field_name
+                    )
+                    setattr(event_data, attribute_name, value)
+                    corrupted = corrupted or value_corrupted
+
+                # An AVC record identifies the file by "path", which contains the
+                # full path, or by "name", which contains the basename.
+                if not event_data.file_path:
+                    event_data.file_path, value_corrupted = self._GetEncodedStringValue(
+                        parser_mediator, values, "path"
+                    )
+                    corrupted = corrupted or value_corrupted
+
+                process_title, value_corrupted = self._GetEncodedStringValue(
+                    parser_mediator, values, "proctitle"
+                )
+                corrupted = corrupted or value_corrupted
+                if process_title:
+                    # The arguments in a process title are separated by a NUL
+                    # character.
+                    process_title = process_title.replace("\x00", " ")
+                event_data.process_title = process_title
+
+            if access_vector_structure:
+                decision = self._GetValueFromStructure(
+                    access_vector_structure, "decision"
+                )
+                event_data.access_granted = decision == "granted"
+                event_data.access_permissions = list(
+                    self._GetValueFromStructure(
+                        access_vector_structure, "permissions", default_value=[]
+                    )
+                )
+
+            if enriched_values:
+                enriched_system_call = self._GetStringValue(enriched_values, "SYSCALL")
+                if enriched_system_call:
+                    event_data.system_call = enriched_system_call
+
+                enriched_architecture = self._GetStringValue(enriched_values, "ARCH")
+                if enriched_architecture:
+                    event_data.architecture = enriched_architecture
+
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def _ParseTimeElements(self, time_elements_structure):
         """Parses date and time elements of a log line.

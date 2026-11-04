@@ -22,11 +22,11 @@ class BitbucketAccessTextPluginTest(test_lib.TextPluginTestCase):
         plugin = bitbucket_access.BitbucketAccessTextPlugin()
 
         structure = plugin._USER_NAME.parse_string("eaccru")
-        value = plugin._GetStrippedValue(structure, "user_name")
+        value = plugin._GetStrippedValue(structure, "username")
         self.assertEqual(value, "eaccru")
 
         structure = plugin._USER_NAME.parse_string("-")
-        value = plugin._GetStrippedValue(structure, "user_name")
+        value = plugin._GetStrippedValue(structure, "username")
         self.assertIsNone(value)
 
     def test_ParseRecord(self):
@@ -100,7 +100,6 @@ class BitbucketAccessTextPluginTest(test_lib.TextPluginTestCase):
         storage_writer = self._ParseTextFileWithPlugin(
             ["atlassian-bitbucket-access.log"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -134,9 +133,8 @@ class BitbucketAccessTextPluginTest(test_lib.TextPluginTestCase):
             "request_time": 101,
             "session_identifier": "tmpqqw",
             "ssh_repository_path": None,
-            "user_name": "eaccru",
+            "username": "eaccru",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

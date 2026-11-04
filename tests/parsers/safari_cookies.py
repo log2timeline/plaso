@@ -54,6 +54,16 @@ class SafariCookieParserTest(test_lib.ParserTestCase):
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 26)
         self.CheckEventData(event_data, expected_event_values)
 
+        # Check that the cookie plugin event data has the URL of the cookie.
+        expected_event_values = {
+            "cookie_name": "__utma",
+            "data_type": "cookie:google:analytics:utma",
+            "url": ".visir.is",
+        }
+
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 28)
+        self.CheckEventData(event_data, expected_event_values)
+
 
 if __name__ == "__main__":
     unittest.main()

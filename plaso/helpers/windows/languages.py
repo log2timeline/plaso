@@ -4,6 +4,7 @@
 class WindowsLanguageHelper:
     """Windows languages helper."""
 
+    # typos:disable
     _TAG_PER_LCID = {
         0x0036: "af",
         0x0436: "af-ZA",
@@ -397,6 +398,7 @@ class WindowsLanguageHelper:
         0x0035: "zu",
         0x0435: "zu-ZA",
     }
+    # typos:enable
 
     _LCID_PER_TAG = {tag.lower(): lcid for lcid, tag in _TAG_PER_LCID.items()}
 

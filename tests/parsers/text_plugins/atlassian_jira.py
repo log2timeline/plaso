@@ -90,19 +90,18 @@ class AtlassianJiraTest(test_lib.TextPluginTestCase):
         self.assertEqual(number_of_warnings, 0)
 
         expected_event_values = {
-            "body": (
-                "Jira starting up. Version : 9.2.0, Mode : EAR, Build Number : "
-                "904000, Build Date : 2022-08-25, Build UID : "
-                "abc12345-dead-beef-cafe-1234567890ab"
-            ),
             "data_type": "atlassian:jira:line",
             "level": "INFO",
             "logger_class": "com.atlassian.jira.startup.JiraStartupLogger",
             "logger_method": "start",
+            "message_body": (
+                "Jira starting up. Version : 9.2.0, Mode : EAR, Build Number : "
+                "904000, Build Date : 2022-08-25, Build UID : "
+                "abc12345-dead-beef-cafe-1234567890ab"
+            ),
             "thread": "main",
             "written_time": "2022-10-03T09:00:01.042",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

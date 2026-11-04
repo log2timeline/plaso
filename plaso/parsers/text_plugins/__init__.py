@@ -13,6 +13,7 @@ from plaso.parsers.text_plugins import bitbucket_audit
 from plaso.parsers.text_plugins import confluence_access
 from plaso.parsers.text_plugins import cri
 from plaso.parsers.text_plugins import dpkg
+from plaso.parsers.text_plugins import esxi
 from plaso.parsers.text_plugins import gdrive_synclog
 from plaso.parsers.text_plugins import google_logging
 from plaso.parsers.text_plugins import iis
@@ -39,6 +40,7 @@ from plaso.parsers.text_plugins import teamviewer
 from plaso.parsers.text_plugins import viminfo
 from plaso.parsers.text_plugins import vsftpd
 from plaso.parsers.text_plugins import winfirewall
+from plaso.parsers.text_plugins import winhttp_api_error
 from plaso.parsers.text_plugins import xchatlog
 from plaso.parsers.text_plugins import xchatscrollback
 from plaso.parsers.text_plugins import zsh_extended_history

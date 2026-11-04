@@ -71,7 +71,6 @@ class Firefox118DownloadEventData(events.EventData):
           started.
       temporary_location (str): temporary location of the download.
       total_bytes (int): total number of bytes of the download.
-      type (int): type field.
       url (str): source URL of the download.
     """
 
@@ -91,7 +90,6 @@ class Firefox118DownloadEventData(events.EventData):
         self.received_bytes = None
         self.start_time = None
         self.total_bytes = None
-        self.type = None
         self.url = None
 
 
@@ -291,7 +289,8 @@ class Firefox118DownloadsPlugin(interface.SQLitePlugin):
             query_hash, row, "dateAdded"
         )
         event_data.total_bytes = content_data.get("fileSize", 0)
-        event_data.type = self._GetRowValue(query_hash, row, "type")
+        # TODO: re-add with more specific attribute name
+        # self._GetRowValue(query_hash, row, "type")
         event_data.url = self._GetRowValue(query_hash, row, "url")
 
         parser_mediator.ProduceEventData(event_data)

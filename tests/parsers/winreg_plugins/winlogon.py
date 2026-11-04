@@ -30,7 +30,6 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
             offset=153,
             relative_key_path="Microsoft\\Windows NT\\CurrentVersion",
         )
-
         # Setup Winlogon values.
         value_data = "1".encode("utf_16_le")
         registry_value = dfwinreg_fake.FakeWinRegistryValue(
@@ -298,9 +297,8 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_LOCAL_MACHINE\\Software",
-            ("Microsoft\\Windows NT\\CurrentVersion\\Winlogon"),
+            "Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
         )
-
         self._AssertNotFiltersOnKeyPath(plugin, "HKEY_LOCAL_MACHINE\\Software", "Bogus")
 
     def testProcess(self):
@@ -328,7 +326,6 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
         expected_key_path = (
             "HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion"
         )
-
         expected_event_values = {
             "application": "VmApplet",
             "command": "SystemPropertiesPerformance.exe/pagefile",
@@ -337,7 +334,6 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
             "last_written_time": "2013-01-30T10:47:57.0000000+00:00",
             "trigger": "Logon",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 2)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -349,7 +345,6 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
             "last_written_time": "2013-01-30T10:47:57.0000000+00:00",
             "trigger": "Logoff",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 3)
         self.CheckEventData(event_data, expected_event_values)
 

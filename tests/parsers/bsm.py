@@ -31,22 +31,25 @@ class MacOSBSMParserTest(test_lib.ParserTestCase):
         )
         self.assertEqual(number_of_warnings, 0)
 
-        expected_extra_tokens = [
-            {"AUT_TEXT": {"text": "launchctl::Audit recovery"}},
-            {"AUT_PATH": {"path": "/var/audit/20131104171720.crash_recovery"}},
-            {"AUT_RETURN32": {"call_status": 0, "error": "Success", "token_status": 0}},
-        ]
-
         expected_event_values = {
             "data_type": "bsm:entry",
             "event_type": 45029,
-            "extra_tokens": expected_extra_tokens,
+            "extra_tokens": [
+                {"AUT_TEXT": {"text": "launchctl::Audit recovery"}},
+                {"AUT_PATH": {"path": "/var/audit/20131104171720.crash_recovery"}},
+                {
+                    "AUT_RETURN32": {
+                        "call_status": 0,
+                        "error": "Success",
+                        "token_status": 0,
+                    }
+                },
+            ],
             "return_value": (
-                "{'error': 'Success', 'token_status': 0, " "'call_status': 0}"
+                "{'error': 'Success', 'token_status': 0, 'call_status': 0}"
             ),
             "written_time": "2013-11-04T18:36:20.000381+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -74,24 +77,21 @@ class OpenBSMParserTest(test_lib.ParserTestCase):
         )
         self.assertEqual(number_of_warnings, 0)
 
-        expected_extra_tokens = [
-            {
-                "AUT_ARG32": {
-                    "is": 2882400000,
-                    "num_arg": 3,
-                    "string": "test_arg32_token",
-                }
-            }
-        ]
-
         expected_event_values = {
             "data_type": "bsm:entry",
             "event_type": 0,
-            "extra_tokens": expected_extra_tokens,
+            "extra_tokens": [
+                {
+                    "AUT_ARG32": {
+                        "is": 2882400000,
+                        "num_arg": 3,
+                        "string": "test_arg32_token",
+                    }
+                }
+            ],
             "return_value": None,
             "written_time": "2008-12-28T15:12:18.000131+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

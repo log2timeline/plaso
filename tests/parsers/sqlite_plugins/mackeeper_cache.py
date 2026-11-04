@@ -15,9 +15,8 @@ class MacKeeperCachePluginTest(test_lib.SQLitePluginTestCase):
         """Tests the Process function on a MacKeeper Cache database file."""
         plugin = mackeeper_cache.MacKeeperCachePlugin()
         storage_writer = self._ParseDatabaseFileWithPlugin(
-            ["mackeeper_cache.db"], plugin
+            ["sqlite", "mackeeper_cache.db"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -37,19 +36,20 @@ class MacKeeperCachePluginTest(test_lib.SQLitePluginTestCase):
             "added_time": "2013-07-12T19:30:31+00:00",
             "data_type": "mackeeper:cache",
             "description": "Chat Outgoing Message",
-            "record_id": 16059074,
+            "record_identifier": 16059074,
             "room": "12828340738351e0593f987450z40787",
             "text": (
-                "I have received your system scan report and I will start "
-                "analyzing it right now."
+                "I have received your system scan report and I will start analyzing "
+                "it right now."
             ),
             "url": (
-                "http://support.kromtech.net/chat/listen/12828340738351e0593f98745"
-                "0z40787/?client-id=51e0593fa1a24468673655&callback=jQuery18301357"
-                "1173651143909_1373657420912&_=1373657423647"
+                "http://support.kromtech.net/chat/listen/"
+                "12828340738351e0593f987450z40787/?client-id=51e0593fa1a24468673655&"
+                "callback=jQuery183013571173651143909_1373657420912&_=1373657423647"
             ),
+            "user_sid": None,
+            "username": None,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 41)
         self.CheckEventData(event_data, expected_event_values)
 

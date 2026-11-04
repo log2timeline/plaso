@@ -15,9 +15,8 @@ class AndroidTwitterTest(test_lib.SQLitePluginTestCase):
         """Test the Process function on a Twitter Android file."""
         plugin = android_twitter.AndroidTwitterPlugin()
         storage_writer = self._ParseDatabaseFileWithPlugin(
-            ["twitter_android.db"], plugin
+            ["android", "twitter.db"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -47,7 +46,6 @@ class AndroidTwitterTest(test_lib.SQLitePluginTestCase):
             "retweeted": 0,
             "username": "CarolMovieFans",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 4)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -58,7 +56,6 @@ class AndroidTwitterTest(test_lib.SQLitePluginTestCase):
             "name": "rosegold",
             "search_query": "rosegold",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -67,9 +64,9 @@ class AndroidTwitterTest(test_lib.SQLitePluginTestCase):
             "creation_time": "2008-06-03T18:30:55.000+00:00",
             "data_type": "android:twitter:contact",
             "description": (
-                "Started in a San Francisco by bike messenger Rob Honeycutt, "
-                "Timbuk2 has been making tough as hell messenger bags, backpacks "
-                "and travel bags since 1989."
+                "Started in a San Francisco by bike messenger Rob Honeycutt, Timbuk2 "
+                "has been making tough as hell messenger bags, backpacks and travel "
+                "bags since 1989."
             ),
             "followers": 23582,
             "friends": 2725,
@@ -87,7 +84,6 @@ class AndroidTwitterTest(test_lib.SQLitePluginTestCase):
             "username": "timbuk2",
             "web_url": "http://t.co/Z0MZo7f2ne",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 323)
         self.CheckEventData(event_data, expected_event_values)
 

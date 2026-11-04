@@ -18,7 +18,6 @@ class AzureApplicationGatewayAccessLogJSONLPluginTest(test_lib.JSONLPluginTestCa
         storage_writer = self._ParseJSONLFileWithPlugin(
             ["azure_application_gateway_access.json"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -39,15 +38,15 @@ class AzureApplicationGatewayAccessLogJSONLPluginTest(test_lib.JSONLPluginTestCa
             "client_port": 45057,
             "client_response_time": 0,
             "data_type": "azure:application_gateway_access:entry",
-            "host": "20.110.30.194",
             "http_method": "GET",
             "http_status": 200,
             "http_version": "HTTP/1.1",
             "instance_identifier": "appgw_2",
-            "original_host": "20.110.30.194",
+            "original_request_host": "20.110.30.194",
             "original_request_uri": "/",
             "received_bytes": 184,
             "recorded_time": "2021-10-14T22:17:11.000000+00:00",
+            "request_host": "20.110.30.194",
             "request_uri": "/",
             "sent_bytes": 466,
             "server_response_latency": "0.028",
@@ -66,7 +65,6 @@ class AzureApplicationGatewayAccessLogJSONLPluginTest(test_lib.JSONLPluginTestCa
             "waf_evaluation_time": "0.000",
             "waf_mode": "Detection",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

@@ -94,7 +94,7 @@ class ChromeExtensionActivityPlugin(interface.SQLitePlugin):
                 "NULL)"
             ),
             "url_ids": (
-                "CREATE TABLE url_ids (id INTEGER PRIMARY KEY, value TEXT NOT " "NULL)"
+                "CREATE TABLE url_ids (id INTEGER PRIMARY KEY, value TEXT NOT NULL)"
             ),
         }
     ]

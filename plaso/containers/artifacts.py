@@ -642,7 +642,6 @@ class WindowsEventLogMessageStringArtifact(ArtifactAttributeContainer):
     """Windows EventLog message string artifact attribute container.
 
     Attributes:
-      language_identifier (str): language identifier.
       message_identifier (int): message identifier.
       string (str): string.
     """
@@ -650,34 +649,76 @@ class WindowsEventLogMessageStringArtifact(ArtifactAttributeContainer):
     CONTAINER_TYPE = "windows_eventlog_message_string"
 
     SCHEMA = {
-        "_message_file_identifier": "AttributeContainerIdentifier",
-        "language_identifier": "int",
+        "_message_table_identifier": "AttributeContainerIdentifier",
         "message_identifier": "int",
         "string": "str",
     }
 
-    _SERIALIZABLE_PROTECTED_ATTRIBUTES = ["_message_file_identifier"]
+    _SERIALIZABLE_PROTECTED_ATTRIBUTES = ["_message_table_identifier"]
 
-    def __init__(self, language_identifier=None, message_identifier=None, string=None):
+    def __init__(self, message_identifier=None, string=None):
         """Initializes a Windows EventLog message string artifact.
 
         Args:
-          language_identifier (Optional[str]): language identifier.
           message_identifier (Optional[int]): message identifier.
           string (Optional[str]): string.
         """
         super().__init__()
-        self._message_file_identifier = None
-        self.language_identifier = language_identifier
+        self._message_table_identifier = None
         self.message_identifier = message_identifier
         self.string = string
+
+    def GetMessageTableIdentifier(self):
+        """Retrieves the identifier of the associated message table.
+
+        Returns:
+          AttributeContainerIdentifier: message table identifier or None when
+              not set.
+        """
+        return self._message_table_identifier
+
+    def SetMessageTableIdentifier(self, message_table_identifier):
+        """Sets the identifier of the associated message table.
+
+        Args:
+          message_table_identifier (AttributeContainerIdentifier): message table
+              identifier.
+        """
+        self._message_table_identifier = message_table_identifier
+
+
+class WindowsEventLogMessageTableArtifact(ArtifactAttributeContainer):
+    """Windows EventLog message table artifact attribute container.
+
+    Attributes:
+      language_identifier (int): language identifier (LCID).
+    """
+
+    CONTAINER_TYPE = "windows_eventlog_message_table"
+
+    SCHEMA = {
+        "_message_file_identifier": "AttributeContainerIdentifier",
+        "language_identifier": "int",
+    }
+
+    _SERIALIZABLE_PROTECTED_ATTRIBUTES = ["_message_file_identifier"]
+
+    def __init__(self, language_identifier=None):
+        """Initializes a Windows Event Log message table descriptor.
+
+        Args:
+          language_identifier (Optional[int]): language identifier (LCID).
+        """
+        super().__init__()
+        self._message_file_identifier = None
+        self.language_identifier = language_identifier
 
     def GetMessageFileIdentifier(self):
         """Retrieves the identifier of the associated message file.
 
         Returns:
-          AttributeContainerIdentifier: message file identifier or None when
-              not set.
+          AttributeContainerIdentifier: message file identifier or None when not
+              set.
         """
         return self._message_file_identifier
 

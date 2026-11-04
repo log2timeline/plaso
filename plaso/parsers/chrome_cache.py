@@ -79,8 +79,8 @@ class CacheEntry:
     """Chrome cache entry.
 
     Attributes:
-      creation_time (int): creation time, in number of microseconds since
-          January 1, 1601, 00:00:00 UTC.
+      creation_time (int): creation time, in number of microseconds since January 1,
+          1601, 00:00:00 UTC.
       hash (int): super fast hash of the key.
       key (bytes): key.
       next (int): cache address of the next cache entry.
@@ -169,8 +169,8 @@ class ChromeCacheIndexFileParser(
                 )
             except (ValueError, errors.ParseError) as exception:
                 raise errors.ParseError(
-                    f"Unable to map cache address at offset: 0x{file_offset:08x} "
-                    f"with error: {exception!s}"
+                    f"Unable to map cache address at offset: 0x{file_offset:08x} with "
+                    f"error: {exception!s}"
                 )
 
             if value:
@@ -185,7 +185,8 @@ class ChromeCacheIndexFileParser(
         """Parses a file-like object.
 
         Args:
-          parser_mediator (ParserMediator): a parser mediator.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): a file-like object to parse.
 
         Raises:
@@ -197,6 +198,7 @@ class ChromeCacheIndexFileParser(
             raise errors.ParseError(
                 f"Unable to parse index file header with error: {exception!s}"
             )
+
         # Skip over the LRU data, which is 112 bytes in size.
         file_object.seek(112, os.SEEK_CUR)
         self._ParseIndexTable(file_object)
@@ -308,7 +310,8 @@ class ChromeCacheDataBlockFileParser(
         """Parses a file-like object.
 
         Args:
-          parser_mediator (ParserMediator): a parser mediator.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): a file-like object to parse.
 
         Raises:
@@ -352,8 +355,8 @@ class ChromeCacheParser(interface.FileEntryParser):
         """Parses Chrome Cache file entries.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           index_table (list[CacheAddress]): the cache addresses which are stored in
               the index file.
           data_block_files (dict[str: file]): look up table for the data block
@@ -364,7 +367,7 @@ class ChromeCacheParser(interface.FileEntryParser):
             cache_address_chain_length = 0
             while cache_address.value != 0:
                 if cache_address_chain_length >= 64:
-                    parser_mediator.ProduceExtractionWarning(
+                    parser_mediator.ProduceWarning(
                         "Maximum allowed cache address chain length reached."
                     )
                     break
@@ -373,7 +376,7 @@ class ChromeCacheParser(interface.FileEntryParser):
                     cache_address.filename, None
                 )
                 if not data_block_file_object:
-                    parser_mediator.ProduceExtractionWarning(
+                    parser_mediator.ProduceWarning(
                         f"Cache address: 0x{cache_address.value:08x} missing data file."
                     )
                     break
@@ -383,7 +386,7 @@ class ChromeCacheParser(interface.FileEntryParser):
                         data_block_file_object, cache_address.block_offset
                     )
                 except (OSError, errors.ParseError) as exception:
-                    parser_mediator.ProduceExtractionWarning(
+                    parser_mediator.ProduceWarning(
                         f"Unable to parse cache entry with error: {exception!s}"
                     )
                     break
@@ -413,8 +416,8 @@ class ChromeCacheParser(interface.FileEntryParser):
         """Parses a Chrome Cache index table.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_system (dfvfs.FileSystem): file system.
           file_entry (dfvfs.FileEntry): file entry.
           index_table (list[CacheAddress]): the cache addresses which are stored in
@@ -441,21 +444,20 @@ class ChromeCacheParser(interface.FileEntryParser):
                 data_block_file_path_spec = path_spec_factory.Factory.NewPathSpec(
                     file_entry.path_spec.TYPE_INDICATOR, **kwargs
                 )
-
                 try:
                     data_block_file_entry = path_spec_resolver.Resolver.OpenFileEntry(
                         data_block_file_path_spec
                     )
                 except RuntimeError as exception:
                     location = kwargs["location"] or "N/A"
-                    parser_mediator.ProduceExtractionWarning(
+                    parser_mediator.ProduceWarning(
                         f"Unable to open data block file: {location!s} with error: "
                         f"{exception!s}"
                     )
                     data_block_file_entry = None
 
                 if not data_block_file_entry:
-                    parser_mediator.ProduceExtractionWarning(
+                    parser_mediator.ProduceWarning(
                         f"Missing data block file: {cache_address.filename:s}"
                     )
                     data_block_file_object = None
@@ -472,7 +474,7 @@ class ChromeCacheParser(interface.FileEntryParser):
                             f"Unable to parse data block file: "
                             f"{cache_address.filename!s} with error: {exception!s}"
                         )
-                        parser_mediator.ProduceExtractionWarning(message)
+                        parser_mediator.ProduceWarning(message)
                         data_block_file_object = None
 
                 data_block_files[cache_address.filename] = data_block_file_object
@@ -494,8 +496,8 @@ class ChromeCacheParser(interface.FileEntryParser):
         """Parses Chrome Cache files.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_entry (dfvfs.FileEntry): file entry.
 
         Raises:

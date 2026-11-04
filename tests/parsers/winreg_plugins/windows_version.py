@@ -21,9 +21,11 @@ class WindowsRegistryInstallationEventDataTest(shared_test_lib.BaseTestCase):
         attribute_container = windows_version.WindowsRegistryInstallationEventData()
 
         expected_attribute_names = [
+            "_corrupted",
             "_event_data_stream_identifier",
             "_event_values_hash",
             "_parser_chain",
+            "_recovered",
             "build_number",
             "data_type",
             "installation_time",
@@ -110,7 +112,7 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_LOCAL_MACHINE\\Software",
-            ("Microsoft\\Windows NT\\CurrentVersion"),
+            "Microsoft\\Windows NT\\CurrentVersion",
         )
         self._AssertNotFiltersOnKeyPath(plugin, "HKEY_LOCAL_MACHINE\\Software", "Bogus")
 

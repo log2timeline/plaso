@@ -236,6 +236,14 @@ plaso.parsers.sqlite\_plugins.ios\_datausage module
    :show-inheritance:
    :undoc-members:
 
+plaso.parsers.sqlite\_plugins.ios\_health module
+------------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.ios_health
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 plaso.parsers.sqlite\_plugins.ios\_imohdchat module
 ---------------------------------------------------
 

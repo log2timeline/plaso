@@ -59,12 +59,11 @@ class CRILogTextPluginTest(test_lib.TextPluginTestCase):
 
         expected_event_values = {
             "data_type": "cri:container:log:entry",
-            "event_datetime": "2016-10-06T00:17:09.669794202+00:00",
-            "body": " log content 1",
+            "flags": "P",
+            "message_body": " log content 1",
             "stream": "stdout",
-            "tag": "P",
+            "written_time": "2016-10-06T00:17:09.669794202+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

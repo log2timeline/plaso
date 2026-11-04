@@ -169,7 +169,7 @@ class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
         knowledge_base_object.SetTimeZone("Europe/Zurich")
         self.assertEqual(knowledge_base_object._time_zone.zone, "Europe/Zurich")
 
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegex(ValueError, "Unsupported time zone: Bogus"):
             knowledge_base_object.SetTimeZone("Bogus")
 
 

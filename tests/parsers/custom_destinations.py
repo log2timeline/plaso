@@ -14,9 +14,11 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
     def testParse(self):
         """Tests the Parse function."""
         parser = custom_destinations.CustomDestinationsParser()
+        # typos:disable
         storage_writer = self._ParseFile(
             ["customDestinations-ms", "5afe4de1b92fc382.customDestinations-ms"], parser
         )
+        # typos:enable
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -62,6 +64,7 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
             "creation_time": "2009-07-14T05:08:04.1036207+00:00",
             "data_type": "windows:distributed_link_tracking:creation",
             "mac_address": "00:1d:09:fa:5a:1c",
+            # typos:ignore
             "origin": "5afe4de1b92fc382.customDestinations-ms",
             "uuid": "4f6fe1af-7034-11de-b675-001d09fa5a1c",
         }
@@ -77,6 +80,7 @@ class CustomDestinationsParserTest(test_lib.ParserTestCase):
             "long_name": "System32",
             "modification_time": "2015-08-24T10:46:16+00:00",
             "name": "System32",
+            # typos:ignore
             "origin": "5afe4de1b92fc382.customDestinations-ms",
             "shell_item_path": "<My Computer> C:\\\\Windows\\\\System32",
         }

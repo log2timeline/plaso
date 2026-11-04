@@ -53,12 +53,9 @@ class AnalysisPlugin:
         event_identifier_string = event_identifier.CopyToString()
         labels_string = ", ".join(labels)
         logger.debug(
-            (
-                f"Tagged event: {event_identifier_string:s} with labels: "
-                f"{labels_string:s}"
-            )
+            f"Tagged event: {event_identifier_string:s} with labels: "
+            f"{labels_string:s}"
         )
-
         return event_tag
 
     # pylint: disable=unused-argument
@@ -82,7 +79,6 @@ class AnalysisPlugin:
         analysis_report.time_compiled = (
             time_compiled * definitions.MICROSECONDS_PER_SECOND
         )
-
         analysis_report.analysis_counter = self._analysis_counter
 
         return analysis_report

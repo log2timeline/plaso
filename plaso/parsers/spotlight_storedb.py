@@ -55,10 +55,9 @@ class SpotlightStoreMetadataItemEventData(events.EventData):
           created (_kMDItemCreationDate).
       downloaded_time (dfdatetime.DateTimeValues): date and time the item was
           downloaded (kMDItemDownloadedDate).
-      file_name (str): name of the corresponding file (system) entry
-          (_kMDItemFileName).
       file_system_identifier (int): file system identifier, for example the
           catalog node identifier (CNID) on HFS.
+      filename (str): name of the corresponding file (system) entry (_kMDItemFileName).
       kind (str): item kind (kMDItemKind).
       modification_time (dfdatetime.DateTimeValues): date and time the item was
           last modified (_kMDItemContentChangeDate).
@@ -66,7 +65,7 @@ class SpotlightStoreMetadataItemEventData(events.EventData):
       purchase_time  (dfdatetime.DateTimeValues): date and time the item was
           purchased in the AppStore (kMDItemAppStorePurchaseDate).
       snapshot_times (list[dfdatetime.DateTimeValues]): dates and times of
-          the creation of backup snaphots (_kTimeMachineOldestSnapshot and
+          the creation of backup snapshots (_kTimeMachineOldestSnapshot and
           _kTimeMachineNewestSnapshot).
       update_time (dfdatetime.DateTimeValues): date and time the item was last
           updated.
@@ -86,8 +85,8 @@ class SpotlightStoreMetadataItemEventData(events.EventData):
         self.content_type = None
         self.creation_time = None
         self.downloaded_time = None
-        self.file_name = None
         self.file_system_identifier = None
+        self.filename = None
         self.kind = None
         self.modification_time = None
         self.parent_file_system_identifier = None
@@ -539,8 +538,8 @@ class SpotlightStoreDatabaseParser(
         """Parses an Apple Spotlight store metadata item.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           metadata_item (SpotlightStoreMetadataItem): a metadata item.
         """
         event_data = SpotlightStoreMetadataItemEventData()
@@ -597,7 +596,7 @@ class SpotlightStoreDatabaseParser(
         event_data.downloaded_time = self._GetDateTimeMetadataItemValue(
             metadata_item, "kMDItemDownloadedDate"
         )
-        event_data.file_name = self._GetMetadataItemValue(
+        event_data.filename = self._GetMetadataItemValue(
             metadata_item, "_kMDItemFileName"
         )
         event_data.kind = self._GetMetadataItemValue(metadata_item, "kMDItemKind")
@@ -621,8 +620,8 @@ class SpotlightStoreDatabaseParser(
         """Parses a record for its metadata item.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           page_data (bytes): page data.
           page_data_offset (int): offset of the page value relative to the start
               of the page data.
@@ -663,7 +662,7 @@ class SpotlightStoreDatabaseParser(
             self._ParseMetadataItem(parser_mediator, metadata_item)
 
         except errors.ParseError as exception:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unable to read metadata item: 0x{metadata_item.identifier:2x} "
                 f"with error: {exception!s}"
             )
@@ -674,8 +673,8 @@ class SpotlightStoreDatabaseParser(
         """Parses the record page values.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           page_data (bytes): page data.
 
         Raises:
@@ -863,6 +862,16 @@ class SpotlightStoreDatabaseParser(
         page_header, page_header_size = self._ReadStructureFromFileObject(
             file_object, file_offset, data_type_map
         )
+
+        # A page size smaller than the page header does not advance the map
+        # offset in _ReadMapPages, which would prevent the map pages from being
+        # read to completion.
+        if page_header.page_size < page_header_size:
+            raise errors.ParseError(
+                f"Invalid map page size: {page_header.page_size:d} smaller than "
+                f"page header size: {page_header_size:d}"
+            )
+
         file_offset += page_header_size
 
         self._ReadMapPageValues(page_header, file_object, file_offset)
@@ -1007,7 +1016,7 @@ class SpotlightStoreDatabaseParser(
             )
         except dtfabric_errors.MappingError as exception:
             raise errors.ParseError(
-                f"Unable to parse array of byte values with error: " f"{exception!s}"
+                f"Unable to parse array of byte values with error: {exception!s}"
             )
 
         if bytes_read == 0:
@@ -1110,7 +1119,7 @@ class SpotlightStoreDatabaseParser(
         return value, bytes_read
 
     def _ReadMetadataAttributePageValues(self, page_header, page_data, property_table):
-        """Reads the metadata atribute page values.
+        """Reads the metadata attribute page values.
 
         Args:
           page_header (spotlight_store_db_property_page_header): page header.
@@ -1218,7 +1227,7 @@ class SpotlightStoreDatabaseParser(
             )
         except dtfabric_errors.MappingError as exception:
             raise errors.ParseError(
-                f"Unable to parse array of string values with error: " f"{exception!s}"
+                f"Unable to parse array of string values with error: {exception!s}"
             )
 
         if property_type & 0x03 == 0x03:
@@ -1392,12 +1401,22 @@ class SpotlightStoreDatabaseParser(
         Raises:
           ParseError: if the property pages cannot be read.
         """
+        visited_block_numbers = set()
         file_offset = block_number * 0x1000
         while file_offset != 0:
-            _, next_block_number = self._ReadPropertyPage(
+            # A property page that refers back to a block that was already read
+            # would prevent the property pages from being read to completion.
+            if block_number in visited_block_numbers:
+                raise errors.ParseError(
+                    f"Invalid property page block number: {block_number:d} "
+                    f"already read"
+                )
+            visited_block_numbers.add(block_number)
+
+            _, block_number = self._ReadPropertyPage(
                 file_object, file_offset, property_table
             )
-            file_offset = next_block_number * 0x1000
+            file_offset = block_number * 0x1000
 
     def _ReadRecordHeader(self, data, page_data_offset):
         """Reads a record header.
@@ -1618,8 +1637,8 @@ class SpotlightStoreDatabaseParser(
         """Parses an Apple Spotlight store database file entry.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_entry (dfvfs.FileEntry): a file entry to parse.
 
         Raises:
@@ -1694,7 +1713,7 @@ class SpotlightStoreDatabaseParser(
                 )
 
         except errors.ParseError as exception:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unable to read store database with error: {exception!s}"
             )
             return
@@ -1708,9 +1727,9 @@ class SpotlightStoreDatabaseParser(
                 self._ParseRecordPageValues(parser_mediator, page_data)
 
             except errors.ParseError as exception:
-                parser_mediator.ProduceExtractionWarning(
-                    f"unable to read record page at offset: 0x{file_offset:08x} "
-                    f"with error: {exception!s}"
+                parser_mediator.ProduceWarning(
+                    f"unable to read record page at offset: 0x{file_offset:08x} with "
+                    f"error: {exception!s}"
                 )
                 continue
 

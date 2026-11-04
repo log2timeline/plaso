@@ -1,0 +1,14 @@
+#Software: Microsoft HTTP API 2.0
+#Version: 1.0
+#Date: 2025-03-14 08:00:01
+#Fields: date time c-ip c-port s-ip s-port cs-version cs-method cs-uri sc-status s-siteid s-reason s-queuename
+2025-03-14 08:00:01 192.0.2.10 50123 192.0.2.1 80 HTTP/1.1 GET /default.aspx 503 1 AppOffline DefaultAppPool
+2025-03-14 08:02:15 192.0.2.11 50124 192.0.2.1 80 - - - - - Timer_ConnectionIdle -
+2025-03-14 08:03:40 192.0.2.12 50125 192.0.2.1 443 HTTP/1.1 GET /Page'+AND+2*3*8=6*8+AND+'oLjH'!='oLjH%/CookiePolicy 400 1 BadRequest -
+2025-03-14 08:03:41 192.0.2.12 50126 192.0.2.1 443 HTTP/1.1 GET /(select+198766*667891)/index.js#frag{}|^~[]`<>@$ 400 1 BadRequest -
+#Software: Microsoft HTTP API 2.0
+#Version: 1.0
+#Date: 2025-03-14 09:15:00
+#Fields: date time c-ip c-port s-ip s-port cs-version cs-method cs-uri streamid streamid_ex sc-status s-siteid s-reason s-queuename transport fault-code extended-fault-code
+2025-03-14 09:15:02 2001:db8::5%12 50200 2001:db8::1 443 HTTP/2.0 POST /api/upload 3 - 413 2 Request_Too_Large MyAppPool TCP - -
+2025-03-14 09:15:07 192.0.2.13 50201 192.0.2.1 443 HTTP/3 GET /status 5 - 503 2 QueueFull MyAppPool QUIC 0x80070008 0x1

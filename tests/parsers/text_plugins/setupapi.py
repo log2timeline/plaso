@@ -70,7 +70,7 @@ class SetupAPILogTextPluginTest(test_lib.TextPluginTestCase):
         self.assertEqual(number_of_warnings, 0)
 
         expected_event_values = {
-            "data_type": "setupapi:log:line",
+            "data_type": "windows:setupapi:log:line",
             "end_time": "2016-10-12T03:36:30.998",
             "entry_type": (
                 "Device Install (DiInstallDriver) - C:\\Windows\\System32"
@@ -80,7 +80,6 @@ class SetupAPILogTextPluginTest(test_lib.TextPluginTestCase):
             "exit_status": "SUCCESS",
             "start_time": "2016-10-12T03:36:30.936",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 28)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -105,15 +104,14 @@ class SetupAPILogTextPluginTest(test_lib.TextPluginTestCase):
         self.assertEqual(number_of_warnings, 0)
 
         expected_event_values = {
-            "data_type": "setupapi:log:line",
+            "data_type": "windows:setupapi:log:line",
             "end_time": "2015-11-22T17:57:17.704",
             "entry_type": (
-                "Setup Import Driver Package - C:\\Windows\\system32"
-                "\\spool\\tools\\Microsoft XPS Document Writer\\prnms001.Inf"
+                "Setup Import Driver Package - C:\\Windows\\system32\\spool\\tools\\"
+                "Microsoft XPS Document Writer\\prnms001.Inf"
             ),
             "start_time": "2015-11-22T17:57:17.502",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 15)
         self.CheckEventData(event_data, expected_event_values)
 

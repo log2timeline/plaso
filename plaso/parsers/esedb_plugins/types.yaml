@@ -2,7 +2,7 @@
 ---
 name: float32le
 type: floating-point
-description: 32-bit litte-endian single precision floating-point type
+description: 32-bit little-endian single precision floating-point type
 attributes:
   byte_order: little-endian
   size: 4
@@ -10,7 +10,7 @@ attributes:
 ---
 name: float64le
 type: floating-point
-description: 64-bit litte-endian double precision floating-point type
+description: 64-bit little-endian double precision floating-point type
 attributes:
   byte_order: little-endian
   size: 8

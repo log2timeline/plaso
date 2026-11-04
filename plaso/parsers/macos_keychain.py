@@ -22,14 +22,13 @@ class KeychainInternetRecordEventData(events.EventData):
     Attributes:
       account_name (str): name of the account.
       comments (str): comments added by the user.
-      creation_time (dfdatetime.DateTimeValues): creation date and time of
-          the keychain record.
+      creation_time (dfdatetime.DateTimeValues): creation date and time of the keychain
+          record.
       entry_name (str): name of the entry.
-      modification_time (dfdatetime.DateTimeValues): modification date and time
-          of the keychain record.
+      modification_time (dfdatetime.DateTimeValues): modification date and time of the
+          keychain record.
       protocol (str): internet protocol used, for example "https".
-      ssgp_hash (str): password/certificate hash formatted as a hexadecimal
-          string.
+      ssgp_hash (str): password/certificate hash formatted as a hexadecimal string.
       text_description (str): description.
       type_protocol (str): sub-protocol used, for example "form".
       where (str): domain name or IP where the password is used.
@@ -59,13 +58,12 @@ class KeychainApplicationRecordEventData(events.EventData):
     Attributes:
       account_name (str): name of the account.
       comments (str): comments added by the user.
-      creation_time (dfdatetime.DateTimeValues): creation date and time of
-          the keychain record.
+      creation_time (dfdatetime.DateTimeValues): creation date and time of the keychain
+          record.
       entry_name (str): name of the entry.
-      modification_time (dfdatetime.DateTimeValues): modification date and time
-          of the keychain record.
-      ssgp_hash (str): password/certificate hash formatted as a hexadecimal
-          string.
+      modification_time (dfdatetime.DateTimeValues): modification date and time of the
+          keychain record.
+      ssgp_hash (str): password/certificate hash formatted as a hexadecimal string.
       text_description (str): description.
     """
 
@@ -163,12 +161,11 @@ class KeychainParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper)
 
         Args:
           attribute_values_data (bytes): attribute values data.
-          record_offset (int): offset of the record relative to the start of
-              the file.
+          record_offset (int): offset of the record relative to the start of the file.
           attribute_values_data_offset (int): offset of the attribute values data
               relative to the start of the record.
-          attribute_value_offset (int): offset of the attribute relative to
-              the start of the record.
+          attribute_value_offset (int): offset of the attribute relative to the start
+              of the record.
 
         Returns:
           bytes: binary data value or None if attribute value offset is not set.
@@ -184,7 +181,6 @@ class KeychainParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper)
         file_offset = (
             record_offset + attribute_values_data_offset + attribute_value_offset
         )
-
         attribute_value_offset -= attribute_values_data_offset + 1
         attribute_value_data = attribute_values_data[attribute_value_offset:]
 
@@ -194,10 +190,8 @@ class KeychainParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper)
             )
         except (ValueError, errors.ParseError) as exception:
             raise errors.ParseError(
-                (
-                    f"Unable to map binary data attribute value data at offset: "
-                    f"0x{file_offset:08x} with error: {exception!s}"
-                )
+                f"Unable to map binary data attribute value data at offset: "
+                f"0x{file_offset:08x} with error: {exception!s}"
             )
 
         return string_attribute_value.blob
@@ -213,12 +207,11 @@ class KeychainParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper)
 
         Args:
           attribute_values_data (bytes): attribute values data.
-          record_offset (int): offset of the record relative to the start of
-              the file.
+          record_offset (int): offset of the record relative to the start of the file.
           attribute_values_data_offset (int): offset of the attribute values data
               relative to the start of the record.
-          attribute_value_offset (int): offset of the attribute relative to
-              the start of the record.
+          attribute_value_offset (int): offset of the attribute relative to the start
+              of the record.
 
         Returns:
           str: date and time values.
@@ -234,7 +227,6 @@ class KeychainParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper)
         file_offset = (
             record_offset + attribute_values_data_offset + attribute_value_offset
         )
-
         attribute_value_offset -= attribute_values_data_offset + 1
         attribute_value_data = attribute_values_data[attribute_value_offset:]
 
@@ -244,10 +236,8 @@ class KeychainParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper)
             )
         except (ValueError, errors.ParseError) as exception:
             raise errors.ParseError(
-                (
-                    f"Unable to map date time attribute value data at offset: "
-                    f"0x{file_offset:08x} with error: {exception!s}"
-                )
+                f"Unable to map date time attribute value data at offset: "
+                f"0x{file_offset:08x} with error: {exception!s}"
             )
 
         return date_time_attribute_value.date_time.rstrip("\x00")
@@ -263,12 +253,11 @@ class KeychainParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper)
 
         Args:
           attribute_values_data (bytes): attribute values data.
-          record_offset (int): offset of the record relative to the start of
-              the file.
+          record_offset (int): offset of the record relative to the start of the file.
           attribute_values_data_offset (int): offset of the attribute values data
               relative to the start of the record.
-          attribute_value_offset (int): offset of the attribute relative to
-              the start of the record.
+          attribute_value_offset (int): offset of the attribute relative to the start
+              of the record.
 
         Returns:
           int: integer value or None if attribute value offset is not set.
@@ -284,7 +273,6 @@ class KeychainParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper)
         file_offset = (
             record_offset + attribute_values_data_offset + attribute_value_offset
         )
-
         attribute_value_offset -= attribute_values_data_offset + 1
         attribute_value_data = attribute_values_data[attribute_value_offset:]
 
@@ -294,10 +282,8 @@ class KeychainParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper)
             )
         except (ValueError, errors.ParseError) as exception:
             raise errors.ParseError(
-                (
-                    f"Unable to map integer attribute value data at offset: "
-                    f"0x{file_offset:08x} with error: {exception!s}"
-                )
+                f"Unable to map integer attribute value data at offset: "
+                f"0x{file_offset:08x} with error: {exception!s}"
             )
 
     def _ReadAttributeValueString(
@@ -311,12 +297,11 @@ class KeychainParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper)
 
         Args:
           attribute_values_data (bytes): attribute values data.
-          record_offset (int): offset of the record relative to the start of
-              the file.
+          record_offset (int): offset of the record relative to the start of the file.
           attribute_values_data_offset (int): offset of the attribute values data
               relative to the start of the record.
-          attribute_value_offset (int): offset of the attribute relative to
-              the start of the record.
+          attribute_value_offset (int): offset of the attribute relative to the start
+              of the record.
 
         Returns:
           str: string value or None if attribute value offset is not set.
@@ -332,7 +317,6 @@ class KeychainParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper)
         file_offset = (
             record_offset + attribute_values_data_offset + attribute_value_offset
         )
-
         attribute_value_offset -= attribute_values_data_offset + 1
         attribute_value_data = attribute_values_data[attribute_value_offset:]
 
@@ -342,10 +326,8 @@ class KeychainParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper)
             )
         except (ValueError, errors.ParseError) as exception:
             raise errors.ParseError(
-                (
-                    f"Unable to map string attribute value data at offset: "
-                    f"0x{file_offset:08x} with error: {exception!s}"
-                )
+                f"Unable to map string attribute value data at offset: "
+                f"0x{file_offset:08x} with error: {exception!s}"
             )
 
         return string_attribute_value.string
@@ -367,16 +349,13 @@ class KeychainParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper)
         file_header, _ = self._ReadStructureFromFileObject(
             file_object, 0, data_type_map
         )
-
         if (
             file_header.major_format_version != self._MAJOR_VERSION
             or file_header.minor_format_version != self._MINOR_VERSION
         ):
             raise errors.ParseError(
-                (
-                    f"Unsupported format version: {file_header.major_format_version:s}."
-                    f"{file_header.minor_format_version:s}"
-                )
+                f"Unsupported format version: {file_header.major_format_version:s}."
+                f"{file_header.minor_format_version:s}"
             )
 
         return file_header
@@ -464,7 +443,6 @@ class KeychainParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper)
         context = dtfabric_data_maps.DataTypeMapContext(
             values={"number_of_attribute_values": number_of_attribute_values}
         )
-
         data_type_map = self._GetDataTypeMap("keychain_record_attribute_value_offsets")
 
         try:
@@ -498,7 +476,6 @@ class KeychainParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper)
         record_header, _ = self._ReadStructureFromFileObject(
             file_object, record_header_offset, data_type_map
         )
-
         return record_header
 
     def _ReadRecordSchemaAttributes(self, tables, file_object, record_offset):
@@ -518,7 +495,6 @@ class KeychainParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper)
         attribute_value_offsets = self._ReadRecordAttributeValueOffset(
             file_object, record_offset + 24, 6
         )
-
         file_offset = file_object.tell()
         attribute_values_data_offset = file_offset - record_offset
         attribute_values_data_size = record_header.data_size - (
@@ -532,28 +508,24 @@ class KeychainParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper)
             attribute_values_data_offset,
             attribute_value_offsets[0],
         )
-
         attribute_identifier = self._ReadAttributeValueInteger(
             attribute_values_data,
             record_offset,
             attribute_values_data_offset,
             attribute_value_offsets[1],
         )
-
         attribute_name_data_type = self._ReadAttributeValueInteger(
             attribute_values_data,
             record_offset,
             attribute_values_data_offset,
             attribute_value_offsets[2],
         )
-
         attribute_name = self._ReadAttributeValueString(
             attribute_values_data,
             record_offset,
             attribute_values_data_offset,
             attribute_value_offsets[3],
         )
-
         # TODO: handle attribute_value_offsets[4]
 
         attribute_data_type = self._ReadAttributeValueInteger(
@@ -562,8 +534,8 @@ class KeychainParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper)
             attribute_values_data_offset,
             attribute_value_offsets[5],
         )
-
         table = tables.get(relation_identifier)
+
         if not table:
             raise errors.ParseError(
                 f"Missing table for relation identifier: {relation_identifier:d}"
@@ -597,7 +569,6 @@ class KeychainParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper)
                 "AttributeFormat": attribute_data_type,
             }
         )
-
         table.records.append(record)
 
     def _ReadRecordSchemaIndexes(self, tables, file_object, record_offset):
@@ -617,7 +588,6 @@ class KeychainParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper)
         attribute_value_offsets = self._ReadRecordAttributeValueOffset(
             file_object, record_offset + 24, 5
         )
-
         if attribute_value_offsets != (0x2D, 0x31, 0x35, 0x39, 0x3D):
             raise errors.ParseError("Unsupported record attribute value offsets")
 
@@ -627,7 +597,6 @@ class KeychainParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper)
         record_values, _ = self._ReadStructureFromFileObject(
             file_object, file_offset, data_type_map
         )
-
         if record_values.relation_identifier not in tables:
             raise errors.ParseError(
                 "CSSM_DL_DB_SCHEMA_INDEXES defines relation identifier not defined "
@@ -647,7 +616,6 @@ class KeychainParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper)
                 "IndexedDataLocation": record_values.index_data_location,
             }
         )
-
         table.records.append(record)
 
     def _ReadRecordSchemaInformation(self, tables, file_object, record_offset):
@@ -667,7 +635,6 @@ class KeychainParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper)
         attribute_value_offsets = self._ReadRecordAttributeValueOffset(
             file_object, record_offset + 24, 2
         )
-
         if attribute_value_offsets != (0x21, 0x25):
             raise errors.ParseError("Unsupported record attribute value offsets")
 
@@ -677,7 +644,6 @@ class KeychainParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper)
         record_values, _ = self._ReadStructureFromFileObject(
             file_object, file_offset, data_type_map
         )
-
         relation_name = record_values.relation_name.decode("ascii")
 
         table = KeychainDatabaseTable()
@@ -696,7 +662,6 @@ class KeychainParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper)
                 "RelationName": relation_name,
             }
         )
-
         table.records.append(record)
 
     def _ReadTable(self, tables, file_object, table_offset):
@@ -753,7 +718,6 @@ class KeychainParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper)
         table_header, _ = self._ReadStructureFromFileObject(
             file_object, table_header_offset, data_type_map
         )
-
         return table_header
 
     def _ReadTablesArray(self, file_object, tables_array_offset):
@@ -778,34 +742,38 @@ class KeychainParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper)
         tables_array, _ = self._ReadStructureFromFileObject(
             file_object, tables_array_offset, data_type_map
         )
-
         tables = collections.OrderedDict()
         for table_offset in tables_array.table_offsets:
             self._ReadTable(tables, file_object, tables_array_offset + table_offset)
 
         return tables
 
-    def _ParseDateTimeValue(self, parser_mediator, date_time_value):
+    def _ParseDateTimeValue(self, parser_mediator, record, name):
         """Parses a date time value.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
-          date_time_value (str): date time value
-              (CSSM_DB_ATTRIBUTE_FORMAT_TIME_DATE) in the format: "YYYYMMDDhhmmssZ".
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
+          record (dict[str, object]): database record.
+          name (str): name of the date time value (CSSM_DB_ATTRIBUTE_FORMAT_TIME_DATE)
+              the format: "YYYYMMDDhhmmssZ".
 
         Returns:
-          dfdatetime.TimeElements: date and time extracted from the value or None
-              if the value does not represent a valid string.
+          tuple: containing:
+
+              dfdatetime.TimeElements: date and time extracted from the value or None
+                  if the value does not represent a valid string.
+              bool: value to indicate the date and time value was corrupted.
         """
+        date_time_value = record[name]
         if not date_time_value:
-            return None
+            return None, False
 
         if date_time_value[14] != "Z":
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unsupported date and time value: {date_time_value!s}"
             )
-            return None
+            return None, True
 
         try:
             year = int(date_time_value[0:4], 10)
@@ -815,71 +783,101 @@ class KeychainParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper)
             minutes = int(date_time_value[10:12], 10)
             seconds = int(date_time_value[12:14], 10)
         except (TypeError, ValueError):
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unsupported date and time value: {date_time_value!s}"
             )
-            return None
+            return None, True
 
         time_elements_tuple = (year, month, day_of_month, hours, minutes, seconds)
 
         try:
-            return dfdatetime_time_elements.TimeElements(
+            date_time = dfdatetime_time_elements.TimeElements(
                 time_elements_tuple=time_elements_tuple
             )
         except ValueError:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unsupported date and time value: {date_time_value!s}"
             )
-            return None
+            return None, True
 
-    def _ParseBinaryDataAsString(self, parser_mediator, binary_data_value):
+        return date_time, False
+
+    def _ParseBinaryDataAsString(self, parser_mediator, record, name):
         """Parses a binary data value as string.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
-          binary_data_value (bytes): binary data value
-              (CSSM_DB_ATTRIBUTE_FORMAT_BLOB)
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
+          record (dict[str, object]): database record.
+          name (str): name of the binary data value (CSSM_DB_ATTRIBUTE_FORMAT_BLOB).
 
         Returns:
-          str: binary data value formatted as a string or None if no string could
-              be extracted or binary data value is None (NULL).
+          tuple: containing:
+
+              str: binary data value formatted as a string or None if no string could
+                  be extracted or binary data value is None (NULL).
+              bool: value to indicate the binary data value was corrupted.
         """
+        binary_data_value = record[name]
         if not binary_data_value:
-            return None
+            return None, False
+
+        corrupted = False
 
         try:
-            return binary_data_value.decode("utf-8")
+            value = binary_data_value.decode("utf-8")
         except UnicodeDecodeError:
-            binary_data_string = repr(binary_data_value)
-            parser_mediator.ProduceExtractionWarning(
-                f"unable to decode binary data value: {binary_data_string:s}"
+            parser_mediator.ProduceWarning(
+                f"Unable to decode binary data value: {name:s} as UTF-8. Unsupported "
+                f"code points are escaped."
             )
-            return None
+            value = binary_data_value.decode("utf-8", errors="backslashreplace")
+            corrupted = True
 
-    def _ParseIntegerTagString(self, integer_value):
+        return value, corrupted
+
+    def _ParseIntegerTagString(self, parser_mediator, record, name):
         """Parses an integer value as a tag string.
 
         Args:
-          integer_value (int): integer value (CSSM_DB_ATTRIBUTE_FORMAT_SINT32,
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
+          record (dict[str, object]): database record.
+          name (str): name of the integer value (CSSM_DB_ATTRIBUTE_FORMAT_SINT32 or
               CSSM_DB_ATTRIBUTE_FORMAT_UINT32) that represents a tag string.
 
         Returns:
-          str: integer value formatted as a tag string or None if integer value is
-              None (NULL).
-        """
-        if not integer_value:
-            return None
+          tuple: containing:
 
+              str: integer value formatted as a tag string or None if integer value is
+                  None (NULL).
+              bool: value to indicate the tag string value was corrupted.
+        """
+        integer_value = record[name]
+        if not integer_value:
+            return None, False
+
+        corrupted = False
         tag_string = codecs.decode(f"{integer_value:08x}", "hex")
-        return codecs.decode(tag_string, "utf-8")
+
+        try:
+            tag_string = tag_string.decode("utf-8")
+        except UnicodeDecodeError:
+            parser_mediator.ProduceWarning(
+                f"Unable to decode tag string value: {name:s} as UTF-8. Unsupported "
+                f"code points are escaped."
+            )
+            tag_string = tag_string.decode("utf-8", errors="backslashreplace")
+            corrupted = True
+
+        return tag_string, corrupted
 
     def _ParseApplicationPasswordRecord(self, parser_mediator, record):
         """Extracts the information from an application password record.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           record (dict[str, object]): database record.
 
         Raises:
@@ -888,41 +886,67 @@ class KeychainParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper)
         key = record.get("_key_")
         if not key or not key.startswith(b"ssgp"):
             raise errors.ParseError(
-                (
-                    "Unsupported application password record key value does not start "
-                    'with: "ssgp".'
-                )
+                "Unsupported application password record key value does not start "
+                'with: "ssgp".'
             )
 
+        corrupted = False
+
         ssgp_hash = codecs.encode(key[4:], "hex")
+        try:
+            ssgp_hash = ssgp_hash.decode("utf-8")
+        except UnicodeDecodeError:
+            parser_mediator.ProduceWarning(
+                "Unable to decode ssgp hash as UTF-8. Unsupported code points are "
+                "escaped."
+            )
+            ssgp_hash = ssgp_hash.decode("utf-8", errors="backslashreplace")
+            corrupted = True
 
         event_data = KeychainApplicationRecordEventData()
-        event_data.account_name = self._ParseBinaryDataAsString(
-            parser_mediator, record["acct"]
+        event_data.account_name, value_corrupted = self._ParseBinaryDataAsString(
+            parser_mediator,
+            record,
+            "acct",
         )
-        event_data.comments = self._ParseIntegerTagString(record["crtr"])
-        event_data.creation_time = self._ParseDateTimeValue(
-            parser_mediator, record["cdat"]
+        event_data.comments, value_corrupted = self._ParseIntegerTagString(
+            parser_mediator, record, "crtr"
         )
-        event_data.entry_name = self._ParseBinaryDataAsString(
-            parser_mediator, record["PrintName"]
-        )
-        event_data.modification_time = self._ParseDateTimeValue(
-            parser_mediator, record["mdat"]
-        )
-        event_data.ssgp_hash = codecs.decode(ssgp_hash, "utf-8")
-        event_data.text_description = self._ParseBinaryDataAsString(
-            parser_mediator, record["desc"]
-        )
+        corrupted = corrupted or value_corrupted
 
-        parser_mediator.ProduceEventData(event_data)
+        event_data.creation_time, value_corrupted = self._ParseDateTimeValue(
+            parser_mediator, record, "cdat"
+        )
+        corrupted = corrupted or value_corrupted
+
+        event_data.entry_name, value_corrupted = self._ParseBinaryDataAsString(
+            parser_mediator,
+            record,
+            "PrintName",
+        )
+        corrupted = corrupted or value_corrupted
+
+        event_data.modification_time, value_corrupted = self._ParseDateTimeValue(
+            parser_mediator, record, "mdat"
+        )
+        corrupted = corrupted or value_corrupted
+
+        event_data.ssgp_hash = ssgp_hash
+        event_data.text_description, value_corrupted = self._ParseBinaryDataAsString(
+            parser_mediator,
+            record,
+            "desc",
+        )
+        corrupted = corrupted or value_corrupted
+
+        parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def _ParseInternetPasswordRecord(self, parser_mediator, record):
         """Extracts the information from an Internet password record.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           record (dict[str, object]): database record.
 
         Raises:
@@ -931,44 +955,79 @@ class KeychainParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper)
         key = record.get("_key_")
         if not key or not key.startswith(b"ssgp"):
             raise errors.ParseError(
-                (
-                    "Unsupported Internet password record key value does not start "
-                    'with: "ssgp".'
-                )
+                "Unsupported Internet password record key value does not start "
+                'with: "ssgp".'
             )
+
+        corrupted = False
 
         protocol_value = record["ptcl"]
         protocol_string = codecs.decode(f"{protocol_value:08x}", "hex")
-        protocol_string = codecs.decode(protocol_string, "utf-8")
+
+        try:
+            protocol_string = protocol_string.decode("utf-8")
+        except UnicodeDecodeError:
+            parser_mediator.ProduceWarning(
+                "Unable to decode ptcl as UTF-8. Unsupported code points are escaped."
+            )
+            protocol_string = protocol_string.decode("utf-8", errors="backslashreplace")
+            corrupted = True
+
+        ssgp_hash = codecs.encode(key[4:], "hex")
+        try:
+            ssgp_hash = ssgp_hash.decode("utf-8")
+        except UnicodeDecodeError:
+            parser_mediator.ProduceWarning(
+                "Unable to decode ssgp hash as UTF-8. Unsupported code points are "
+                "escaped."
+            )
+            ssgp_hash = ssgp_hash.decode("utf-8", errors="backslashreplace")
+            corrupted = True
 
         event_data = KeychainInternetRecordEventData()
-        event_data.account_name = self._ParseBinaryDataAsString(
-            parser_mediator, record["acct"]
+        event_data.account_name, value_corrupted = self._ParseBinaryDataAsString(
+            parser_mediator, record, "acct"
         )
-        event_data.comments = self._ParseIntegerTagString(record["crtr"])
-        event_data.creation_time = self._ParseDateTimeValue(
-            parser_mediator, record["cdat"]
+        corrupted = corrupted or value_corrupted
+
+        event_data.comments, value_corrupted = self._ParseIntegerTagString(
+            parser_mediator, record, "crtr"
         )
-        event_data.entry_name = self._ParseBinaryDataAsString(
-            parser_mediator, record["PrintName"]
+        corrupted = corrupted or value_corrupted
+
+        event_data.creation_time, value_corrupted = self._ParseDateTimeValue(
+            parser_mediator, record, "cdat"
         )
-        event_data.modification_time = self._ParseDateTimeValue(
-            parser_mediator, record["mdat"]
+        corrupted = corrupted or value_corrupted
+
+        event_data.entry_name, value_corrupted = self._ParseBinaryDataAsString(
+            parser_mediator, record, "PrintName"
         )
+        corrupted = corrupted or value_corrupted
+
+        event_data.modification_time, value_corrupted = self._ParseDateTimeValue(
+            parser_mediator, record, "mdat"
+        )
+        corrupted = corrupted or value_corrupted
+
         event_data.protocol = self._PROTOCOL_TRANSLATION_DICT.get(
             protocol_string, protocol_string
         )
-        ssgp_hash = codecs.encode(key[4:], "hex")
-        event_data.ssgp_hash = codecs.decode(ssgp_hash, "utf-8")
-        event_data.text_description = self._ParseBinaryDataAsString(
-            parser_mediator, record["desc"]
+        event_data.ssgp_hash = ssgp_hash
+        event_data.text_description, value_corrupted = self._ParseBinaryDataAsString(
+            parser_mediator, record, "desc"
         )
-        event_data.type_protocol = self._ParseBinaryDataAsString(
-            parser_mediator, record["atyp"]
+        corrupted = corrupted or value_corrupted
+
+        event_data.type_protocol, value_corrupted = self._ParseBinaryDataAsString(
+            parser_mediator, record, "atyp"
         )
-        event_data.where = self._ParseBinaryDataAsString(
-            parser_mediator, record["srvr"]
+        corrupted = corrupted or value_corrupted
+
+        event_data.where, value_corrupted = self._ParseBinaryDataAsString(
+            parser_mediator, record, "srvr"
         )
+        corrupted = corrupted or value_corrupted
 
         parser_mediator.ProduceEventData(event_data)
 
@@ -987,8 +1046,8 @@ class KeychainParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper)
         """Parses a MacOS keychain file-like object.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): a file-like object.
 
         Raises:

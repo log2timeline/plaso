@@ -1,7 +1,5 @@
 """SQLite parser plugin for iOS Notes database files."""
 
-from dfdatetime import cocoa_time as dfdatetime_cocoa_time
-
 from plaso.containers import events
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
@@ -11,10 +9,9 @@ class IOSNotesEventData(events.EventData):
     """iOS Notes event data.
 
     Attributes:
-      creation_time (dfdatetime.DateTimeValues): date and time the note was
-          created.
-      modification_time (dfdatetime.DateTimeValues): date and time the note was
-          last modified.
+      creation_time (dfdatetime.DateTimeValues): date and time the note was created.
+      modification_time (dfdatetime.DateTimeValues): date and time the note was last
+          modified.
       snippet (str): snippet of the note.
       title (str): title of the note.
     """
@@ -195,24 +192,6 @@ class IOSNotesPlugin(interface.SQLitePlugin):
         }
     ]
 
-    def _GetDateTimeRowValue(self, query_hash, row, value_name):
-        """Retrieves a date and time value from the row.
-
-        Args:
-          query_hash (int): hash of the query, that uniquely
-            identifies the query that produced the row.
-          row (sqlite3.Row): row.
-          value_name (str): name of the value.
-
-        Returns:
-          dfdatetime.CocoaTime: date and time value or None if not available.
-        """
-        timestamp = self._GetRowValue(query_hash, row, value_name)
-        if timestamp is None:
-            return None
-
-        return dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
-
     def _ParseNoteRow(self, parser_mediator, query, row, **unused_kwargs):
         """Parses a note row.
 
@@ -225,10 +204,10 @@ class IOSNotesPlugin(interface.SQLitePlugin):
         query_hash = hash(query)
 
         event_data = IOSNotesEventData()
-        event_data.creation_time = self._GetDateTimeRowValue(
+        event_data.creation_time = self._GetCocoaTimeRowValue(
             query_hash, row, "ZCREATIONDATE3"
         )
-        event_data.modification_time = self._GetDateTimeRowValue(
+        event_data.modification_time = self._GetCocoaTimeRowValue(
             query_hash, row, "ZMODIFICATIONDATE1"
         )
         event_data.title = self._GetRowValue(query_hash, row, "ZTITLE1")

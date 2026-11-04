@@ -121,10 +121,11 @@ class TaskManager:
     Tasks are considered "pending" when there is more work that needs to be done
     to complete these tasks. Pending applies to tasks that are:
     * not abandoned;
-    * abandoned, but need to be retried.
+    * abandoned, but need to be retried, up to a maximum number of retries.
 
-    Abandoned tasks without corresponding retry tasks are considered "failed"
-    when the foreman is done processing.
+    Abandoned tasks without corresponding retry tasks, including tasks that have
+    exhausted the maximum number of retries, are considered "failed" when the
+    foreman is done processing.
     """
 
     # Stop pylint from reporting:
@@ -133,6 +134,11 @@ class TaskManager:
 
     # Consider a task inactive after 5 minutes of no activity.
     _TASK_INACTIVE_TIME = 5.0 * 60.0
+
+    # Maximum number of times a task that keeps being abandoned, for example
+    # because it repeatedly terminates the worker processing it, is retried
+    # before it is considered failed.
+    _MAXIMUM_NUMBER_OF_RETRIES = 3
 
     def __init__(self):
         """Initializes a task manager."""
@@ -165,6 +171,10 @@ class TaskManager:
         self._tasks_processing = {}
 
         self._tasks_profiler = None
+
+        # This set contains the identifiers of abandoned tasks for which a retry
+        # task was created.
+        self._tasks_retried = set()
 
         # TODO: implement a limit on the number of tasks.
         self._total_number_of_tasks = 0
@@ -221,7 +231,10 @@ class TaskManager:
               no abandoned tasks that should be retried.
         """
         for task in self._tasks_abandoned.values():
-            if not task.has_retry:
+            if (
+                task.identifier not in self._tasks_retried
+                and task.number_of_retries < self._MAXIMUM_NUMBER_OF_RETRIES
+            ):
                 return task
 
         return None
@@ -261,6 +274,22 @@ class TaskManager:
             self._latest_task_processing_time, task.last_processing_time
         )
 
+    def _UpdateLatestProcessingTimeIfIdle(self):
+        """Updates the latest processing time when no task is queued or processing.
+
+        Workers do not report a task when they have nothing to process, hence the
+        task inactive time should only start when a task becomes available.
+        Otherwise a task created after the workers were idle for longer than
+        the task inactive time is abandoned before a worker can process it.
+
+        This method does not lock the manager and should be called by a method
+        holding the manager lock.
+        """
+        if not self._tasks_queued and not self._tasks_processing:
+            self._latest_task_processing_time = int(
+                time.time() * definitions.MICROSECONDS_PER_SECOND
+            )
+
     def CheckTaskToMerge(self, task):
         """Checks if the task should be merged.
 
@@ -281,7 +310,11 @@ class TaskManager:
             if not is_queued and not is_processing and not is_abandoned:
                 raise KeyError(f"Status of task {task.identifier:s} is unknown.")
 
-            return is_queued or is_processing or is_abandoned and not task.has_retry
+            return (
+                is_queued
+                or is_processing
+                or (is_abandoned and task.identifier not in self._tasks_retried)
+            )
 
     def CreateRetryTask(self):
         """Creates a task that to retry a previously abandoned task.
@@ -299,12 +332,12 @@ class TaskManager:
             # identified in CheckTaskToMerge and UpdateTaskAsPendingMerge.
 
             retry_task = abandoned_task.CreateRetryTask()
+            self._tasks_retried.add(abandoned_task.identifier)
             logger.debug(
-                (
-                    f"Retrying task {abandoned_task.identifier:s} as "
-                    f"{retry_task.identifier:s}."
-                )
+                f"Retrying task {abandoned_task.identifier:s} as "
+                f"{retry_task.identifier:s}."
             )
+            self._UpdateLatestProcessingTimeIfIdle()
 
             self._tasks_queued[retry_task.identifier] = retry_task
             self._total_number_of_tasks += 1
@@ -333,6 +366,8 @@ class TaskManager:
         logger.debug(f"Created task: {task.identifier:s}")
 
         with self._lock:
+            self._UpdateLatestProcessingTimeIfIdle()
+
             self._tasks_queued[task.identifier] = task
             self._total_number_of_tasks += 1
 
@@ -374,7 +409,9 @@ class TaskManager:
 
         with self._lock:
             return [
-                task for task in self._tasks_abandoned.values() if not task.has_retry
+                task
+                for task in self._tasks_abandoned.values()
+                if task.identifier not in self._tasks_retried
             ]
 
     def GetProcessedTaskByIdentifier(self, task_identifier):
@@ -509,12 +546,13 @@ class TaskManager:
             if task.identifier not in self._tasks_abandoned:
                 raise KeyError(f"Task {task.identifier:s} was not abandoned.")
 
-            if not task.has_retry:
+            if task.identifier not in self._tasks_retried:
                 raise KeyError(
                     f"Will not remove a task {task.identifier:s} without retry task."
                 )
 
             del self._tasks_abandoned[task.identifier]
+            self._tasks_retried.discard(task.identifier)
 
             logger.debug(f"Removed task {task.identifier:s}")
 
@@ -567,7 +605,7 @@ class TaskManager:
             if not is_queued and not is_processing and not is_abandoned:
                 raise KeyError(f"Status of task {task.identifier:s} is unknown.")
 
-            if is_abandoned and task.has_retry:
+            if is_abandoned and task.identifier in self._tasks_retried:
                 raise KeyError(
                     f"Will not merge a task {task.identifier:s} with retry task."
                 )
@@ -619,6 +657,15 @@ class TaskManager:
 
             task_abandoned = self._tasks_abandoned.get(task_identifier)
             if task_abandoned:
+                if task_identifier in self._tasks_retried:
+                    # Do not revive an abandoned task that has a retry task, since
+                    # otherwise both tasks will be merged.
+                    logger.debug(
+                        f"Task {task_identifier:s} was abandoned and has a retry "
+                        f"task, ignoring processing update."
+                    )
+                    return
+
                 del self._tasks_abandoned[task_identifier]
                 self._tasks_processing[task_identifier] = task_abandoned
                 logger.debug(

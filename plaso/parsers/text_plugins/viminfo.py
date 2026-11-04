@@ -326,6 +326,28 @@ class VimInfoTextPlugin(
 
     VERIFICATION_GRAMMAR = _PREAMBLE
 
+    def _GetDateTimeValueFromStructure(self, timestamp_string):
+        """Retrieves a date and time value from a Pyparsing structure.
+
+        Args:
+          timestamp_string (str): string containing a POSIX timestamp.
+
+        Returns:
+          dfdatetime.TimeElements: date and time value or None if not available.
+
+        Raises:
+          ParseError: if a valid date and time value cannot be derived from
+              the time elements.
+        """
+        try:
+            timestamp = int(timestamp_string, 10)
+        except (TypeError, ValueError) as exception:
+            raise errors.ParseError(
+                f"Unable to parse timestamp with error: {exception!s}"
+            )
+
+        return dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+
     def _ParseCommandLineHistory(self, parser_mediator, structure):
         """Parses command line history items and creates VimInfoEventData objects.
 
@@ -336,15 +358,19 @@ class VimInfoTextPlugin(
               lines of text that match a command line history
         """
         for index, item in enumerate(structure.get("command_line_items", [])):
+            try:
+                recorded_time = self._GetDateTimeValueFromStructure(item[5])
+                corrupted = False
+            except (IndexError, errors.ParseError):
+                recorded_time = None
+                corrupted = True
+
             event_data = VimInfoEventData()
             event_data.history_value = item[1]
             event_data.history_type = "Command Line History"
             event_data.item_number = index
-            event_data.recorded_time = dfdatetime_posix_time.PosixTime(
-                timestamp=item[5]
-            )
-
-            parser_mediator.ProduceEventData(event_data)
+            event_data.recorded_time = recorded_time
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def _ParseSearchStringHistory(self, parser_mediator, structure):
         """Parses search string history items and creates VimInfoEventData objects.
@@ -356,15 +382,19 @@ class VimInfoTextPlugin(
               lines of text that match a search string history
         """
         for index, item in enumerate(structure.get("search_string_items", [])):
+            try:
+                recorded_time = self._GetDateTimeValueFromStructure(item[5])
+                corrupted = False
+            except (IndexError, errors.ParseError):
+                recorded_time = None
+                corrupted = True
+
             event_data = VimInfoEventData()
             event_data.history_value = item[1]
             event_data.history_type = "Search String History"
             event_data.item_number = index
-            event_data.recorded_time = dfdatetime_posix_time.PosixTime(
-                timestamp=item[5]
-            )
-
-            parser_mediator.ProduceEventData(event_data)
+            event_data.recorded_time = recorded_time
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def _ParseExpressionHistory(self, parser_mediator, structure):
         """Parses expression history items and creates VimInfoEventData objects.
@@ -376,15 +406,19 @@ class VimInfoTextPlugin(
               lines of text that match an expression history
         """
         for index, item in enumerate(structure.get("expression_history_items", [])):
+            try:
+                recorded_time = self._GetDateTimeValueFromStructure(item[5])
+                corrupted = False
+            except (IndexError, errors.ParseError):
+                recorded_time = None
+                corrupted = True
+
             event_data = VimInfoEventData()
             event_data.history_value = item[1]
             event_data.history_type = "Expression History"
             event_data.item_number = index
-            event_data.recorded_time = dfdatetime_posix_time.PosixTime(
-                timestamp=item[5]
-            )
-
-            parser_mediator.ProduceEventData(event_data)
+            event_data.recorded_time = recorded_time
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def _ParseInputLineHistory(self, parser_mediator, structure):
         """Parses input line history items and creates VimInfoEventData objects.
@@ -396,15 +430,19 @@ class VimInfoTextPlugin(
               lines of text that match an input line history
         """
         for index, item in enumerate(structure.get("input_line_history_items", [])):
+            try:
+                recorded_time = self._GetDateTimeValueFromStructure(item[5])
+                corrupted = False
+            except (IndexError, errors.ParseError):
+                recorded_time = None
+                corrupted = True
+
             event_data = VimInfoEventData()
             event_data.history_value = item[1]
             event_data.history_type = "Input Line History"
             event_data.item_number = index
-            event_data.recorded_time = dfdatetime_posix_time.PosixTime(
-                timestamp=item[5]
-            )
-
-            parser_mediator.ProduceEventData(event_data)
+            event_data.recorded_time = recorded_time
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def _ParseDebugLineHistory(self, parser_mediator, structure):
         """Parses debug line history items and creates VimInfoEventData objects.
@@ -416,15 +454,19 @@ class VimInfoTextPlugin(
               lines of text that match a debug line history
         """
         for index, item in enumerate(structure.get("debug_line_history_items", [])):
+            try:
+                recorded_time = self._GetDateTimeValueFromStructure(item[5])
+                corrupted = False
+            except (IndexError, errors.ParseError):
+                recorded_time = None
+                corrupted = True
+
             event_data = VimInfoEventData()
             event_data.history_value = item[1]
             event_data.history_type = "Debug Line History"
             event_data.item_number = index
-            event_data.recorded_time = dfdatetime_posix_time.PosixTime(
-                timestamp=item[5]
-            )
-
-            parser_mediator.ProduceEventData(event_data)
+            event_data.recorded_time = recorded_time
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def _ParseRegistersHistory(self, parser_mediator, structure):
         """Parses register history items and creates VimInfoEventData objects.
@@ -436,15 +478,19 @@ class VimInfoTextPlugin(
               lines of text that match a Register history
         """
         for item in structure.get("registers_items", []):
+            try:
+                recorded_time = self._GetDateTimeValueFromStructure(item[12])
+                corrupted = False
+            except (IndexError, errors.ParseError):
+                recorded_time = None
+                corrupted = True
+
             event_data = VimInfoEventData()
             event_data.history_value = "\n".join(item[4])
             event_data.history_type = "Register"
             event_data.item_number = item[1]
-            event_data.recorded_time = dfdatetime_posix_time.PosixTime(
-                timestamp=item[12]
-            )
-
-            parser_mediator.ProduceEventData(event_data)
+            event_data.recorded_time = recorded_time
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def _ParseFilemarksHistory(self, parser_mediator, structure):
         """Parses filemarks history items and creates VimInfoEventData objects.
@@ -456,15 +502,19 @@ class VimInfoTextPlugin(
               lines of text that match a Filemarks history
         """
         for index, item in enumerate(structure.get("filemarks_items", [])):
+            try:
+                recorded_time = self._GetDateTimeValueFromStructure(item[5][5])
+                corrupted = False
+            except (IndexError, errors.ParseError):
+                recorded_time = None
+                corrupted = True
+
             event_data = VimInfoEventData()
             event_data.filename = item[4].strip()
             event_data.history_type = "File mark"
             event_data.item_number = index
-            event_data.recorded_time = dfdatetime_posix_time.PosixTime(
-                timestamp=item[5][5]
-            )
-
-            parser_mediator.ProduceEventData(event_data)
+            event_data.recorded_time = recorded_time
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def _ParseJumplistHistory(self, parser_mediator, structure):
         """Parses jumplist items and creates VimInfoEventData objects.
@@ -476,15 +526,19 @@ class VimInfoTextPlugin(
               lines of text that match a JumpList history
         """
         for index, item in enumerate(structure.get("jumplist_items", [])):
+            try:
+                recorded_time = self._GetDateTimeValueFromStructure(item[4][5])
+                corrupted = False
+            except (IndexError, errors.ParseError):
+                recorded_time = None
+                corrupted = True
+
             event_data = VimInfoEventData()
             event_data.filename = item[3].strip()
             event_data.history_type = "Jumplist"
             event_data.item_number = index
-            event_data.recorded_time = dfdatetime_posix_time.PosixTime(
-                timestamp=item[4][5]
-            )
-
-            parser_mediator.ProduceEventData(event_data)
+            event_data.recorded_time = recorded_time
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def _ParseRecord(self, parser_mediator, key, structure):
         """Parses a pyparsing structure.

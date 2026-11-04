@@ -17,7 +17,6 @@ class MacOSNotificationCenterTest(test_lib.SQLitePluginTestCase):
         storage_writer = self._ParseDatabaseFileWithPlugin(
             ["mac_notificationcenter.db"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -34,14 +33,13 @@ class MacOSNotificationCenterTest(test_lib.SQLitePluginTestCase):
         self.assertEqual(number_of_warnings, 0)
 
         expected_event_values = {
-            "body": "KeePassXC can now be run",
             "bundle_name": "com.google.santagui",
             "creation_time": "2018-05-02T10:59:18.930155+00:00",
             "data_type": "macos:notification_center:entry",
+            "message_body": "KeePassXC can now be run",
             "presented": 1,
             "title": "Santa",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

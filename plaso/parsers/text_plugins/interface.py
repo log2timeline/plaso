@@ -24,7 +24,7 @@ class TextPlugin(plugins.BasePlugin):
     # the supported grammar.
     _LINE_STRUCTURES = []
 
-    # PyParsing grammer used to verify the text-log file format. Note that since
+    # PyParsing grammar used to verify the text-log file format. Note that since
     # this is called often it should optimize on failing fast.
     VERIFICATION_GRAMMAR = None
     VERIFICATION_LITERALS = None
@@ -33,12 +33,17 @@ class TextPlugin(plugins.BasePlugin):
     # aborting parsing.
     _MAXIMUM_CONSECUTIVE_LINE_FAILURES = 20
 
+    # Message of the exception that stops the scan for a match that starts on
+    # the first line.
+    _END_OF_FIRST_LINE = "End of first line"
+
     def __init__(self):
         """Initializes a parser."""
         super().__init__()
         self._current_offset = 0
         self._parser_mediator = None
         self._pyparsing_grammar = None
+        self._pyparsing_first_line_grammar = None
 
         codecs.register_error("text_parser_handler", self._EncodingErrorHandler)
 
@@ -63,7 +68,7 @@ class TextPlugin(plugins.BasePlugin):
         byte_value = exception.object[exception.start]
         if self._parser_mediator:
             offset = self._current_offset + exception.start
-            self._parser_mediator.ProduceExtractionWarning(
+            self._parser_mediator.ProduceWarning(
                 f"error decoding 0x{byte_value:02x} at offset: {offset:d}"
             )
 
@@ -129,8 +134,8 @@ class TextPlugin(plugins.BasePlugin):
         """Finalizes parsing.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
         """
         return
 
@@ -140,8 +145,8 @@ class TextPlugin(plugins.BasePlugin):
         """Parses a text-log file header.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           text_reader (EncodedTextReader): text reader.
 
         Raises:
@@ -153,8 +158,8 @@ class TextPlugin(plugins.BasePlugin):
         """Parses lines of text using a pyparsing definition.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           text_reader (EncodedTextReader): text reader.
         """
         consecutive_line_failures = 0
@@ -163,11 +168,9 @@ class TextPlugin(plugins.BasePlugin):
             text_reader.ReadLines()
             self._current_offset = text_reader.get_offset()
         except UnicodeDecodeError as exception:
-            parser_mediator.ProduceExtractionWarning(
-                (
-                    f"unable to read and decode log line at offset: "
-                    f"{self._current_offset:d} with error: {exception!s}"
-                )
+            parser_mediator.ProduceWarning(
+                f"unable to read and decode log line at offset: "
+                f"{self._current_offset:d} with error: {exception!s}"
             )
             return
 
@@ -176,11 +179,9 @@ class TextPlugin(plugins.BasePlugin):
                 break
 
             if consecutive_line_failures > self._MAXIMUM_CONSECUTIVE_LINE_FAILURES:
-                parser_mediator.ProduceExtractionWarning(
-                    (
-                        f"more than {self._MAXIMUM_CONSECUTIVE_LINE_FAILURES:d} "
-                        f"consecutive failures to parse lines."
-                    )
+                parser_mediator.ProduceWarning(
+                    f"more than {self._MAXIMUM_CONSECUTIVE_LINE_FAILURES:d} "
+                    f"consecutive failures to parse lines."
                 )
                 break
 
@@ -200,11 +201,10 @@ class TextPlugin(plugins.BasePlugin):
                     truncated_line = line[:77]
                     line = f"{truncated_line:s}..."
 
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"unable to parse log line: {text_reader.line_number:d} "
                     f'"{line:s}"'
                 )
-
                 consecutive_line_failures += 1
 
                 continue
@@ -216,7 +216,7 @@ class TextPlugin(plugins.BasePlugin):
                 self._ParseRecord(parser_mediator, key, structure)
 
             except errors.ParseError as exception:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"unable to parse record: {key:s} with error: {exception!s}"
                 )
 
@@ -226,11 +226,9 @@ class TextPlugin(plugins.BasePlugin):
                 text_reader.ReadLines()
                 self._current_offset = text_reader.get_offset()
             except UnicodeDecodeError as exception:
-                parser_mediator.ProduceExtractionWarning(
-                    (
-                        f"unable to read and decode log line at offset: "
-                        f"{self._current_offset:d} with error: {exception!s}"
-                    )
+                parser_mediator.ProduceWarning(
+                    f"unable to read and decode log line at offset: "
+                    f"{self._current_offset:d} with error: {exception!s}"
                 )
                 break
 
@@ -239,14 +237,61 @@ class TextPlugin(plugins.BasePlugin):
         """Parses a pyparsing structure.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           key (str): name of the parsed structure.
           structure (pyparsing.ParseResults): tokens from a parsed log line.
 
         Raises:
           ParseError: when the structure type is unknown.
         """
+
+    @staticmethod
+    def _IsOnFirstLine(string, location, unused_tokens):
+        """Determines if a location is on the first line of a string.
+
+        Args:
+          string (str): string being parsed.
+          location (int): location in the string.
+          unused_tokens (pyparsing.ParseResults): tokens.
+
+        Returns:
+          bool: True if the location is 0 or before the first newline.
+        """
+        return location == 0 or string.find("\n", 0, location + 1) == -1
+
+    def _ScanFirstLineMatch(self, string):
+        """Scans for the first grammar match that starts on the first line.
+
+        This is equivalent to pyparsing.ParserElement.scan_string() with
+        max_matches=1 but only attempts to match at offsets before the first
+        newline. A match that _ParseString() accepts must start before the first
+        newline (a match that starts on a later line is rejected as having a
+        preceding line), so there is no need to let pyparsing walk the remainder
+        of the forward read buffer one character at a time searching for a match
+        that would be discarded anyway. The full string is still used as the parse
+        input so multi-line grammars can look ahead past the first newline.
+
+        Args:
+          string (str): string.
+
+        Returns:
+          tuple[pyparsing.ParseResults, int, int] or None: parsed tokens, start
+              and end offset, or None if there is no match starting on the first
+              line.
+        """
+        try:
+            return next(
+                self._pyparsing_first_line_grammar.scan_string(string, max_matches=1),
+                None,
+            )
+
+        except pyparsing.ParseFatalException as exception:
+            # The scan reached the first newline without a match.
+            if exception.msg != self._END_OF_FIRST_LINE:
+                raise
+
+        return None
 
     def _ParseString(self, string):
         """Parses a string for known grammar.
@@ -261,11 +306,25 @@ class TextPlugin(plugins.BasePlugin):
         Raises:
           ParseError: when the string cannot be parsed by the grammar.
         """
+        first_newline_offset = string.find("\n")
+
+        structure = None
+        start = 0
+        end = 0
         try:
-            structure_generator = self._pyparsing_grammar.scan_string(
-                string, max_matches=1
-            )
-            structure, start, end = next(structure_generator)
+            if first_newline_offset == -1 or self._pyparsing_grammar.ignoreExprs:
+                # The forward read buffer contains no newline or the grammar has
+                # ignore expressions, so fall back to an unbounded scan to preserve
+                # the original behavior.
+                structure_generator = self._pyparsing_grammar.scan_string(
+                    string, max_matches=1
+                )
+                structure, start, end = next(structure_generator)
+
+            else:
+                match = self._ScanFirstLineMatch(string)
+                if match is not None:
+                    structure, start, end = match
 
         except StopIteration:
             structure = None
@@ -304,7 +363,7 @@ class TextPlugin(plugins.BasePlugin):
             if not self._pyparsing_grammar:
                 self._pyparsing_grammar = expression
             else:
-                self._pyparsing_grammar ^= expression
+                self._pyparsing_grammar |= expression
 
         # Override Pyparsing's default replacement of tabs with spaces to
         # SkipAhead() the correct number of bytes after a match.
@@ -312,6 +371,22 @@ class TextPlugin(plugins.BasePlugin):
 
         # Override Pyparsing's whitespace characters to spaces only.
         self._pyparsing_grammar.set_default_whitespace_chars(" ")
+
+        # Prefix the grammar with an empty expression that stops scan_string()
+        # in _ScanFirstLineMatch() once it reaches the first newline. The empty
+        # expression has the whitespace characters of the grammar so that
+        # scan_string() skips the same leading whitespace.
+        first_line_condition = (
+            pyparsing.Empty()
+            .set_whitespace_chars(self._pyparsing_grammar.whiteChars)
+            .add_condition(
+                self._IsOnFirstLine, fatal=True, message=self._END_OF_FIRST_LINE
+            )
+        )
+        self._pyparsing_first_line_grammar = (
+            first_line_condition + self._pyparsing_grammar
+        )
+        self._pyparsing_first_line_grammar.parse_with_tabs()
 
     def _VerifyString(self, string):
         """Checks a string for known grammar.
@@ -340,8 +415,8 @@ class TextPlugin(plugins.BasePlugin):
         """Check if the log record has the minimal structure required by the plugin.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           text_reader (EncodedTextReader): text reader.
 
         Returns:
@@ -353,8 +428,8 @@ class TextPlugin(plugins.BasePlugin):
         """Extracts events from a text log file.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (Optional[dfvfs.FileIO]): a file-like object.
         """
         # This will raise if unhandled keyword arguments are passed.
@@ -375,24 +450,21 @@ class TextPlugin(plugins.BasePlugin):
             text_reader = text_parser.EncodedTextReader(
                 file_object, encoding=encoding, encoding_errors="text_parser_handler"
             )
-
             try:
                 text_reader.ReadLines()
                 self._current_offset = text_reader.get_offset()
             except UnicodeDecodeError as exception:
-                parser_mediator.ProduceExtractionWarning(
-                    (
-                        f"unable to read and decode log line at offset: "
-                        f"{self._current_offset:d} with error: {exception!s}"
-                    )
+                parser_mediator.ProduceWarning(
+                    f"unable to read and decode log line at offset: "
+                    f"{self._current_offset:d} with error: {exception!s}"
                 )
                 return
 
             try:
                 self._ParseHeader(parser_mediator, text_reader)
             except UnicodeDecodeError as exception:
-                parser_mediator.ProduceExtractionWarning(
-                    (f"unable to parser header with error: {exception!s}")
+                parser_mediator.ProduceWarning(
+                    f"unable to parser header with error: {exception!s}"
                 )
                 return
 

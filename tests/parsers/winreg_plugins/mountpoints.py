@@ -59,7 +59,7 @@ class MountPoints2PluginTest(test_lib.RegistryPluginTestCase):
             "name": "{8bff1c84-9188-11e5-824f-806e6f6e6963}",
             "server_name": "Drive",
             "share_name": None,
-            "type": "Volume",
+            "source_type": "Volume",
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)

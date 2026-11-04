@@ -15,9 +15,8 @@ class WindowsTimelinePluginTest(test_lib.SQLitePluginTestCase):
         """Tests the Process function."""
         plugin = windows_timeline.WindowsTimelinePlugin()
         storage_writer = self._ParseDatabaseFileWithPlugin(
-            ["windows_timeline_ActivitiesCache.db"], plugin
+            ["windows", "ActivitiesCache.db"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -40,7 +39,6 @@ class WindowsTimelinePluginTest(test_lib.SQLitePluginTestCase):
             "reporting_app": "ShellActivityMonitor",
             "start_time": "2018-08-03T11:29:00+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -51,7 +49,6 @@ class WindowsTimelinePluginTest(test_lib.SQLitePluginTestCase):
             "package_identifier": "Microsoft.SkyDrive.Desktop",
             "start_time": "2018-07-25T12:04:48+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 80)
         self.CheckEventData(event_data, expected_event_values)
 

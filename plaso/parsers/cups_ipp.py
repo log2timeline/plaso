@@ -40,21 +40,19 @@ class CupsIppEventData(events.EventData):
 
     Attributes:
       application (str): application that prints the document.
-      computer_name (str): name of the computer.
       copies (int): number of copies.
-      creation_time (dfdatetime.DateTimeValues): date and time the print job
-          was created (added).
-      doc_type (str): type of document.
-      end_time (dfdatetime.DateTimeValues): date and time the print job
-          was stopped.
-      job_id (str): job identifier.
+      creation_time (dfdatetime.DateTimeValues): date and time the print job was
+          created (added).
+      document_type (str): type of document.
+      end_time (dfdatetime.DateTimeValues): date and time the print job was stopped.
+      hostname (str): hostname.
+      job_identifier (str): job identifier.
       job_name (str): job name.
       owner (str): real name of the user.
       printer_id (str): identification name of the print.
-      start_time (dfdatetime.DateTimeValues): date and time the print job
-          was started.
+      start_time (dfdatetime.DateTimeValues): date and time the print job was started.
       uri (str): URL of the CUPS service.
-      user (str): system user name.
+      username (str): username.
     """
 
     DATA_TYPE = "cups:ipp:event"
@@ -63,18 +61,18 @@ class CupsIppEventData(events.EventData):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
         self.application = None
-        self.computer_name = None
         self.copies = None
         self.creation_time = None
-        self.doc_type = None
+        self.document_type = None
         self.end_time = None
-        self.job_id = None
+        self.hostname = None
+        self.job_identifier = None
         self.job_name = None
         self.owner = None
         self.printer_id = None
         self.start_time = None
         self.uri = None
-        self.user = None
+        self.username = None
 
 
 class CupsIppParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
@@ -142,11 +140,11 @@ class CupsIppParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         "com.apple.print.JobInfo.PMApplicationName": "application",
         "com.apple.print.JobInfo.PMJobOwner": "owner",
         "DestinationPrinterID": "printer_id",
-        "document-format": "doc_type",
+        "document-format": "document_type",
         "job-name": "job_name",
-        "job-originating-host-name": "computer_name",
-        "job-originating-user-name": "user",
-        "job-uuid": "job_id",
+        "job-originating-host-name": "hostname",
+        "job-originating-user-name": "username",
+        "job-uuid": "job_identifier",
         "printer-uri": "uri",
     }
 
@@ -419,23 +417,27 @@ class CupsIppParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
                 is_first_attribute_group = False
 
         except (ValueError, errors.ParseError) as exception:
-            error_message = f"unable to parse attribute group with error: {exception!s}"
+            warning_message = (
+                f"unable to parse attribute group with error: {exception!s}"
+            )
             if is_first_attribute_group:
-                raise errors.WrongParser(error_message)
+                raise errors.WrongParser(warning_message)
 
-            parser_mediator.ProduceExtractionWarning(error_message)
+            parser_mediator.ProduceWarning(warning_message)
             return
 
         event_data = CupsIppEventData()
         event_data.application = self._GetStringValue(cupp_ipp_values, "application")
-        event_data.computer_name = self._GetStringValue(
-            cupp_ipp_values, "computer_name"
-        )
+        event_data.hostname = self._GetStringValue(cupp_ipp_values, "hostname")
         event_data.copies = cupp_ipp_values.get("copies", [0])[0]
-        event_data.doc_type = self._GetStringValue(cupp_ipp_values, "doc_type")
-        event_data.job_id = self._GetStringValue(cupp_ipp_values, "job_id")
+        event_data.document_type = self._GetStringValue(
+            cupp_ipp_values, "document_type"
+        )
+        event_data.job_identifier = self._GetStringValue(
+            cupp_ipp_values, "job_identifier"
+        )
         event_data.job_name = self._GetStringValue(cupp_ipp_values, "job_name")
-        event_data.user = self._GetStringValue(cupp_ipp_values, "user")
+        event_data.username = self._GetStringValue(cupp_ipp_values, "username")
         event_data.owner = self._GetStringValue(cupp_ipp_values, "owner")
         event_data.printer_id = self._GetStringValue(cupp_ipp_values, "printer_id")
         event_data.uri = self._GetStringValue(cupp_ipp_values, "uri")

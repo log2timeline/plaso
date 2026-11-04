@@ -20,6 +20,7 @@ firefox_cache | Parser for Mozilla Firefox Cache version 1 file (version 31 or e
 firefox_cache2 | Parser for Mozilla Firefox Cache version 2 file (version 32 or later).
 fish_history | Parser for Fish history files.
 fseventsd | Parser for MacOS File System Events Disk Log Stream (fseventsd) files.
+ivanti_vc0 | Parser for Ivanti Connect Secure (.vc0) log files.
 java_idx | Parser for Java WebStart Cache IDX files.
 jsonl | Parser for JSON-L log files.
 lnk | Parser for Windows Shortcut (LNK) files.
@@ -169,7 +170,8 @@ hangouts_messages | Parser for Google Hangouts conversations SQLite database (ba
 imessage | Parser for MacOS and iOS iMessage database (chat.db, sms.db) files.
 instagram_ios | Parser for iOS Instagram threads SQLite database (9368974384.db) files.
 ios_accounts | Parser for iOS accounts SQLite database (Accounts3.db) files.
-ios_datausage | Parser for iOS data usage SQLite databse (DataUsage.sqlite) file..
+ios_datausage | Parser for iOS data usage SQLite database (DataUsage.sqlite) files.
+ios_health | Parser for iOS Health SQLite database (healthdb_secure.sqlite) files.
 ios_imohdchat_message | Parser for IMO HD chat message SQLite database (IMODb2.sqlite) files.
 ios_netusage | Parser for iOS network usage SQLite database (netusage.sqlite) files.
 ios_notes | Parser for iOS Notes SQLite database files.
@@ -212,6 +214,7 @@ bitbucket_audit | Parser for Atlassian Bitbucket audit log (atlassian-bitbucket-
 confluence_access | Parser for Confluence access log (access.log) files.
 cri_log | Parser for Container Runtime Interface log files.
 dpkg | Parser for Debian package manager log (dpkg.log) files.
+esxi_log | Parser for VMware ESXi log files.
 gdrive_synclog | Parser for Google Drive Sync log files.
 googlelog | Parser for Google-formatted log files.
 ios_lockdownd | Parser for iOS lockdown daemon log.
@@ -235,12 +238,13 @@ snort_fastlog | Parser for Snort3/Suricata fast-log alert log (fast.log) files.
 sophos_av | Parser for Sophos anti-virus log file (SAV.txt) files.
 syslog | Parser for System log (syslog) files.
 syslog_traditional | Parser for Traditional system log (syslog) files.
-teamviewer_application_log | Parser for TeamViewer application log file parser..
+teamviewer_application_log | Parser for TeamViewer application log file parser.
 teamviewer_connections_incoming | Parser for TeamViewer connections_incoming.txt log files.
 teamviewer_connections_outgoing | Parser for TeamViewer connections.txt log files.
 viminfo | Parser for Viminfo files.
 vsftpd | Parser for vsftpd log files.
 winfirewall | Parser for Windows Firewall log files.
+winhttp_api_error | Parser for Microsoft HTTP Server API (HTTP.sys) error log files.
 winiis | Parser for Microsoft IIS log files.
 xchatlog | Parser for XChat log files.
 xchatscrollback | Parser for XChat scrollback log files.
@@ -281,7 +285,8 @@ windows_services | Parser for Windows drivers and services Registry data.
 windows_shutdown | Parser for Windows last shutdown Registry data.
 windows_task_cache | Parser for Windows Task Scheduler cache Registry data.
 windows_timezone | Parser for Windows time zone Registry data.
-windows_typed_urls | Parser for Windows Explorer typed URLs Registry data.
+windows_typed_urls | Parser for Windows Explorer typed paths and URLs Registry data.
+windows_typed_urls_time | Parser for Windows Explorer typed URLs time Registry data.
 windows_usb_devices | Parser for Windows USB device Registry data.
 windows_usbstor_devices | Parser for Windows USB Plug And Play Manager USBStor Registry data.
 windows_version | Parser for Windows version (product) Registry data.

@@ -251,8 +251,8 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
         """Parses a Container_# table.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           table (pyesedb.table): table.
           container_name (str): container name, which indicates the table type.
         """
@@ -268,16 +268,15 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
                 value_mappings = None
 
             try:
-                record_values = self._GetRecordValues(
+                record_values, corrupted = self._GetRecordValues(
                     parser_mediator,
                     table.name,
                     record_index,
                     esedb_record,
                     value_mappings=value_mappings,
                 )
-
             except UnicodeDecodeError:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"Unable to retrieve record values from record: {record_index:d} "
                     f"in table: {table.name:s}"
                 )
@@ -334,7 +333,7 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
                 )
                 event_data.url = url
 
-                parser_mediator.ProduceEventData(event_data)
+                parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def _CookieHexToAscii(self, raw_cookie):
         """Translates a cookie from a binary string to a string.
@@ -373,8 +372,8 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
         """Parses a CookieEntryEx_# table.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           table (pyesedb.table): table.
           container_name (str): container name, which indicates the table type.
         """
@@ -383,12 +382,11 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
                 break
 
             try:
-                record_values = self._GetRecordValues(
+                record_values, corrupted = self._GetRecordValues(
                     parser_mediator, table.name, record_index, esedb_record
                 )
-
             except UnicodeDecodeError:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"Unable to retrieve record values from record: {record_index:d} "
                     f"in table: {table.name:s}"
                 )
@@ -415,7 +413,7 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
                 record_values, "LastModified"
             )
             event_data.request_domain = record_values.get("RDomain")
-            parser_mediator.ProduceEventData(event_data)
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def ParseContainersTable(
         self, parser_mediator, database=None, table=None, **unused_kwargs
@@ -423,8 +421,8 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
         """Parses a Containers table.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           database (Optional[ESEDatabase]): ESE database.
           table (Optional[pyesedb.table]): table.
 
@@ -441,7 +439,7 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
             if parser_mediator.abort:
                 break
 
-            record_values = self._GetRecordValues(
+            record_values, corrupted = self._GetRecordValues(
                 parser_mediator, table.name, record_index, esedb_record
             )
             event_data = MsieWebCacheContainersEventData()
@@ -456,7 +454,7 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
             )
             event_data.set_identifier = record_values.get("SetId")
 
-            parser_mediator.ProduceEventData(event_data)
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
             container_identifier = record_values.get("ContainerId")
             container_name = record_values.get("Name")
@@ -465,7 +463,7 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
                 continue
 
             if container_name in self._IGNORED_CONTAINER_NAMES:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"Skipped container (ContainerId: {container_identifier:d}, Name: "
                     f"{container_name:s})"
                 )
@@ -487,8 +485,8 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
         """Parses a LeakFiles table.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           database (Optional[ESEDatabase]): ESE database.
           table (Optional[pyesedb.table]): table.
 
@@ -505,10 +503,9 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
             if parser_mediator.abort:
                 break
 
-            record_values = self._GetRecordValues(
+            record_values, corrupted = self._GetRecordValues(
                 parser_mediator, table.name, record_index, esedb_record
             )
-
             event_data = MsieWebCacheLeakFilesEventData()
             event_data.cached_filename = record_values.get("Filename")
             event_data.creation_time = self._GetDateTimeValue(
@@ -516,7 +513,7 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
             )
             event_data.leak_identifier = record_values.get("LeakId")
 
-            parser_mediator.ProduceEventData(event_data)
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def ParsePartitionsTable(
         self, parser_mediator, database=None, table=None, **unused_kwargs
@@ -524,8 +521,8 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
         """Parses a Partitions or PartitionsEx table.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           database (Optional[ESEDatabase]): ESE database.
           table (Optional[pyesedb.table]): table.
 
@@ -542,7 +539,7 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
             if parser_mediator.abort:
                 break
 
-            record_values = self._GetRecordValues(
+            record_values, corrupted = self._GetRecordValues(
                 parser_mediator, table.name, record_index, esedb_record
             )
             event_data = MsieWebCachePartitionsEventData()
@@ -554,7 +551,7 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
             )
             event_data.table_identifier = record_values.get("TableId")
 
-            parser_mediator.ProduceEventData(event_data)
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
 
 esedb.ESEDBParser.RegisterPlugin(MsieWebCacheESEDBPlugin)

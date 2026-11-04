@@ -22,14 +22,14 @@ class JavaIDXEventData(events.EventData):
     """Java IDX cache file event data.
 
     Attributes:
-      downloaded_time (dfdatetime.DateTimeValues): date and time the content
-          was downloaded.
-      expiration_time (dfdatetime.DateTimeValues): date and time the cached
-          download expires.
+      downloaded_time (dfdatetime.DateTimeValues): date and time the content was
+          downloaded.
+      expiration_time (dfdatetime.DateTimeValues): date and time the cached download
+          expires.
       idx_version (str): format version of IDX file.
       ip_address (str): IP address of the host in the URL.
-      modification_time (dfdatetime.DateTimeValues): date and time the cached
-          download expires.
+      modification_time (dfdatetime.DateTimeValues): date and time the cached download
+          expires.
       url (str): URL of the downloaded file.
     """
 
@@ -49,14 +49,12 @@ class JavaIDXEventData(events.EventData):
 class JavaIDXParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
     """Parser for Java WebStart Cache IDX files.
 
-    There are five structures defined. 6.02 files had one generic section
-    that retained all data. From 6.03, the file went to a multi-section
-    format where later sections were optional and had variable-lengths.
-    6.03, 6.04, and 6.05 files all have their main data section (#2)
-    begin at offset 128. The short structure is because 6.05 files
-    deviate after the 8th byte. So, grab the first 8 bytes to ensure it's
-    valid, get the file version, then continue on with the correct
-    structures.
+    There are five structures defined. 6.02 files had one generic section that retained
+    all data. From 6.03, the file went to a multi-section format where later sections
+    were optional and had variable-lengths. 6.03, 6.04, and 6.05 files all have their
+    main data section (#2) begin at offset 128. The short structure is because 6.05
+    files deviate after the 8th byte. So, grab the first 8 bytes to ensure it's valid,
+    get the file version, then continue on with the correct structures.
     """
 
     NAME = "java_idx"
@@ -72,8 +70,8 @@ class JavaIDXParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         """Parses a Java WebStart Cache IDX file-like object.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): a file-like object to parse.
 
         Raises:
@@ -137,6 +135,8 @@ class JavaIDXParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         if not section2.url:
             raise errors.WrongParser("URL not found in file.")
 
+        corrupted = False
+
         date_http_header = None
         for _ in range(section2.number_of_http_headers):
             http_header_map = self._GetDataTypeMap("java_idx_http_header")
@@ -145,9 +145,10 @@ class JavaIDXParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
                     file_object, file_offset, http_header_map
                 )
             except (ValueError, errors.ParseError) as exception:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"Unable to parse HTTP header value at offset: 0x{file_offset:08x}"
                 )
+                corrupted = True
                 break
 
             file_offset += data_size
@@ -160,16 +161,17 @@ class JavaIDXParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
             # A HTTP header date and time should be formatted according to RFC 1123.
             # The date "should" be in UTC or have associated time zone information
             # in the string itself. If that is not the case then there is no reliable
-            # method for Plaso to determine the proper time zone, so the assumption
-            # is that the date and time is in UTC.
+            # method to determine the proper time zone, so the assumption is that the
+            # date and time is in UTC.
             try:
                 downloaded_time = dfdatetime_time_elements.TimeElements()
                 downloaded_time.CopyFromStringRFC1123(date_http_header.value)
             except ValueError as exception:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"Unable to parse date HTTP header string: "
                     f"{date_http_header.value:s} with error: {exception!s}"
                 )
+                corrupted = True
 
         event_data = JavaIDXEventData()
         event_data.downloaded_time = downloaded_time
@@ -185,7 +187,7 @@ class JavaIDXParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
                 timestamp=section1.expiration_time
             )
 
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
 
 manager.ParsersManager.RegisterParser(JavaIDXParser)

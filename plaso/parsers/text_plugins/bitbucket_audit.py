@@ -41,7 +41,7 @@ class BitbucketAuditEventData(events.EventData):
           the audit event, correlatable with the access log.
       session_identifier (str): session identifier, correlatable with the access
           log.
-      user_name (str): the name of the user who triggered the event.
+      username (str): username.
     """
 
     DATA_TYPE = "atlassian:bitbucket:audit"
@@ -56,7 +56,7 @@ class BitbucketAuditEventData(events.EventData):
         self.remote_address = None
         self.request_identifier = None
         self.session_identifier = None
-        self.user_name = None
+        self.username = None
 
 
 class BitbucketAuditTextPlugin(interface.TextPlugin):
@@ -84,7 +84,7 @@ class BitbucketAuditTextPlugin(interface.TextPlugin):
     # User name: alphanumeric with dots/hyphens/underscores, or '-'
     _USER_NAME = (
         pyparsing.Word(pyparsing.alphanums + "-_./@") | pyparsing.Literal("-")
-    ).set_results_name("user_name")
+    ).set_results_name("username")
 
     # Timestamp: milliseconds since Unix epoch, such as 1400681361906
     _TIMESTAMP_MS = (
@@ -208,7 +208,7 @@ class BitbucketAuditTextPlugin(interface.TextPlugin):
         event_data.session_identifier = self._GetStrippedValue(
             structure, "session_identifier"
         )
-        event_data.user_name = self._GetStrippedValue(structure, "user_name")
+        event_data.username = self._GetStrippedValue(structure, "username")
 
         parser_mediator.ProduceEventData(event_data)
 

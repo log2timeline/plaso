@@ -14,7 +14,9 @@ class FirefoxDownloadsPluginTest(test_lib.SQLitePluginTestCase):
     def testProcessVersion25(self):
         """Tests the Process function on a Firefox Downloads database file."""
         plugin = firefox_downloads.FirefoxDownloadsPlugin()
-        storage_writer = self._ParseDatabaseFileWithPlugin(["downloads.sqlite"], plugin)
+        storage_writer = self._ParseDatabaseFileWithPlugin(
+            ["firefox", "downloads.sqlite"], plugin
+        )
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
@@ -43,14 +45,15 @@ class FirefoxDownloadsPluginTest(test_lib.SQLitePluginTestCase):
                 "plaso-static-1.0.1-win32-vs2008.zip"
             ),
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
     def testProcessVersion118(self):
         """Tests the Process function on a Firefox Downloads database file."""
         plugin = firefox_downloads.Firefox118DownloadsPlugin()
-        storage_writer = self._ParseDatabaseFileWithPlugin(["places118.sqlite"], plugin)
+        storage_writer = self._ParseDatabaseFileWithPlugin(
+            ["firefox", "places118.sqlite"], plugin
+        )
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
@@ -79,14 +82,12 @@ class FirefoxDownloadsPluginTest(test_lib.SQLitePluginTestCase):
             "received_bytes": 93176792,
             "start_time": "2023-07-18T23:20:28.452000+00:00",
             "total_bytes": 93176792,
-            "type": 3,
             "url": (
                 "https://az764295.vo.msecnd.net/stable/"
                 "74f6148eb9ea00507ec113ec51c489d6ffb4b771/"
                 "VSCodeUserSetup-x64-1.80.1.exe"
             ),
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 2)
         self.CheckEventData(event_data, expected_event_values)
 

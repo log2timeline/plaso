@@ -118,14 +118,16 @@ class ZeroMQQueue(plaso_queue.Queue):
 
         return False
 
-    def _ReceiveItemOnActivity(self, zmq_socket):
+    def _ReceiveItemOnActivity(self, zmq_socket, deserialize=True):
         """Attempts to receive an item from a ZeroMQ socket.
 
         Args:
           zmq_socket (zmq.Socket): used to the receive the item.
+          deserialize (Optional[bool]): True if the received item should be
+              deserialized (unpickled), False if it should be discarded.
 
         Returns:
-          object: item from the socket.
+          object: item from the socket or None if the item was discarded.
 
         Raises:
           QueueEmpty: if no item could be received within the timeout.
@@ -134,6 +136,12 @@ class ZeroMQQueue(plaso_queue.Queue):
         events = zmq_socket.poll(self._ZMQ_SOCKET_RECEIVE_TIMEOUT_MILLISECONDS)
         if events:
             try:
+                if not deserialize:
+                    # Receive all parts of the message so the socket is ready to
+                    # send a reply.
+                    self._zmq_socket.recv_multipart()
+                    return None
+
                 received_object = self._zmq_socket.recv_pyobj()
                 return received_object
 
@@ -732,7 +740,10 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
 
             try:
                 # We need to receive a request before we can reply with the item.
-                self._ReceiveItemOnActivity(self._zmq_socket)
+                # The content of the request is not used, hence it is discarded
+                # without being deserialized, since any local process can connect
+                # to the socket and send a request.
+                self._ReceiveItemOnActivity(self._zmq_socket, deserialize=False)
 
             except errors.QueueEmpty:
                 if self._closed_event.is_set() and self._queue.empty():

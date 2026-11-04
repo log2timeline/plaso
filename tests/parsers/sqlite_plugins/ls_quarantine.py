@@ -14,7 +14,9 @@ class MacOSLSQuarantinePluginTest(test_lib.SQLitePluginTestCase):
     def testProcess(self):
         """Tests the Process function on a LS Quarantine database file."""
         plugin = ls_quarantine.MacOSLSQuarantinePlugin()
-        storage_writer = self._ParseDatabaseFileWithPlugin(["quarantine.db"], plugin)
+        storage_writer = self._ParseDatabaseFileWithPlugin(
+            ["sqlite", "quarantine.db"], plugin
+        )
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
@@ -39,13 +41,14 @@ class MacOSLSQuarantinePluginTest(test_lib.SQLitePluginTestCase):
             ),
             "data_type": "macos:lsquarantine:entry",
             "downloaded_time": "2013-07-12T19:30:16.000000+00:00",
+            # typos:disable
             "url": (
                 "http://mackeeperapp.zeobit.com/aff/speedtest.net.6/download.php?"
                 "affid=460245286&trt=5&utm_campaign=3ES&tid_ext=P107fSKcSfqpMbcP3"
                 "sI4fhKmeMchEB3dkAGpX4YIsvM;US;L;1"
             ),
+            # typos:enable
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 10)
         self.CheckEventData(event_data, expected_event_values)
 

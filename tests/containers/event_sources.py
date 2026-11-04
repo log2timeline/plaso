@@ -22,19 +22,5 @@ class EventSourceTest(shared_test_lib.BaseTestCase):
         self.assertEqual(attribute_names, expected_attribute_names)
 
 
-class FileEntryEventSourceTest(shared_test_lib.BaseTestCase):
-    """Tests for the file entry event source attribute container."""
-
-    def testGetAttributeNames(self):
-        """Tests the GetAttributeNames function."""
-        attribute_container = event_sources.FileEntryEventSource()
-
-        expected_attribute_names = ["data_type", "file_entry_type", "path_spec"]
-
-        attribute_names = sorted(attribute_container.GetAttributeNames())
-
-        self.assertEqual(attribute_names, expected_attribute_names)
-
-
 if __name__ == "__main__":
     unittest.main()

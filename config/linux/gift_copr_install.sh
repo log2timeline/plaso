@@ -154,16 +154,20 @@ DEBUG_DEPENDENCIES="libbde-debuginfo
 
 sudo dnf install -q dnf-plugins-core
 sudo dnf copr -q -y enable @gift/dev
+# shellcheck disable=SC2086
 sudo dnf install -q -y ${PYTHON3_DEPENDENCIES}
 
 if [[ "$*" =~ "include-debug" ]]; then
+    # shellcheck disable=SC2086
     sudo dnf install -q -y ${DEBUG_DEPENDENCIES}
 fi
 
 if [[ "$*" =~ "include-development" ]]; then
+    # shellcheck disable=SC2086
     sudo dnf install -q -y ${DEVELOPMENT_DEPENDENCIES}
 fi
 
 if [[ "$*" =~ "include-test" ]]; then
+    # shellcheck disable=SC2086
     sudo dnf install -q -y ${TEST_DEPENDENCIES}
 fi

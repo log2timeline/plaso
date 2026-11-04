@@ -16,16 +16,16 @@ class WinPrefetchExecutionEventData(events.EventData):
 
     Attributes:
       executable (str): executable filename.
-      format_version (int): format version.
-      last_run_time (dfdatetime.DateTimeValues): executable (binary) last run
-          date and time.
+      last_run_time (dfdatetime.DateTimeValues): executable (binary) last run date and
+          time.
       mapped_files (list[str]): mapped filenames.
       number_of_volumes (int): number of volumes.
       path_hints (list[str]): possible full paths to the executable.
       prefetch_hash (int): prefetch hash.
-      previous_run_times (list[dfdatetime.DateTimeValues]): previous executable
-          (binary) run date and time.
+      previous_run_times (list[dfdatetime.DateTimeValues]): previous executable (binary)
+          run date and time.
       run_count (int): run count.
+      version (int): format version.
       volume_device_paths (list[str]): volume device paths.
       volume_serial_numbers (list[int]): volume serial numbers.
     """
@@ -72,8 +72,8 @@ class WinPrefetchParser(interface.FileObjectParser):
         """Parses a Windows Prefetch (SCCA) file.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           scca_file (pyscca.file): Windows Prefetch (SCCA) file
 
         Raises:
@@ -81,6 +81,8 @@ class WinPrefetchParser(interface.FileObjectParser):
         """
         format_version = scca_file.format_version
         executable_filename = scca_file.executable_filename
+        executable_filename_lower = executable_filename.lower()
+        executable_filename_length = len(executable_filename)
         prefetch_hash = scca_file.prefetch_hash
         run_count = scca_file.run_count
         number_of_volumes = scca_file.number_of_volumes
@@ -108,21 +110,28 @@ class WinPrefetchParser(interface.FileObjectParser):
 
                 parser_mediator.ProduceEventData(event_data)
 
+            volume_device_path_length = len(volume_device_path)
             for filename in iter(scca_file.filenames):
-                if not filename:
+                if not filename or not filename.startswith(volume_device_path):
                     continue
 
-                if filename.startswith(volume_device_path) and filename.endswith(
-                    executable_filename
+                path = filename[volume_device_path_length:]
+                _, _, basename = path.rpartition("\\")
+                basename_lower = basename.lower()
+                if executable_filename_length == 29 and basename_lower.startswith(
+                    executable_filename_lower
                 ):
-                    _, _, path = filename.partition(volume_device_path)
+                    path_hints.append(path)
+                elif basename_lower == executable_filename_lower:
                     path_hints.append(path)
 
         mapped_files = []
         for entry_index, file_metrics in enumerate(scca_file.file_metrics_entries):
             mapped_file_string = file_metrics.filename
             if not mapped_file_string:
-                parser_mediator.ProduceExtractionWarning(
+                # Note given this is a lookup error not treating it as corruption
+                # scenario.
+                parser_mediator.ProduceWarning(
                     f"missing filename for file metrics entry: {entry_index:d}"
                 )
                 continue
@@ -152,8 +161,7 @@ class WinPrefetchParser(interface.FileObjectParser):
         if timestamp:
             event_data.last_run_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
 
-        # Check for the 7 older last run time values available since
-        # format version 26.
+        # Check for the 7 older last run time values available since format version 26.
         if format_version >= 26:
             previous_run_times = []
             for last_run_time_index in range(1, 8):
@@ -171,8 +179,8 @@ class WinPrefetchParser(interface.FileObjectParser):
         """Parses a Windows Prefetch file-like object.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): file-like object.
         """
         scca_file = pyscca.file()
@@ -180,7 +188,7 @@ class WinPrefetchParser(interface.FileObjectParser):
         try:
             scca_file.open_file_object(file_object)
         except OSError as exception:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unable to open file with error: {exception!s}"
             )
             return
@@ -188,7 +196,7 @@ class WinPrefetchParser(interface.FileObjectParser):
         try:
             self._ParseSCCAFile(parser_mediator, scca_file)
         except OSError as exception:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unable to parse file with error: {exception!s}"
             )
         finally:

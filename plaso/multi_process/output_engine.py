@@ -39,12 +39,18 @@ class PsortEventHeap:
             EventObject: event.
             EventData: event data.
             EventDataStream: event data stream.
+            EventTag: event tag or None if not resolved.
         """
         try:
-            event_values_hash, _, event, event_data, event_data_stream = heapq.heappop(
-                self._heap
-            )
-            return event_values_hash, event, event_data, event_data_stream
+            (
+                event_values_hash,
+                _,
+                event,
+                event_data,
+                event_data_stream,
+                event_tag,
+            ) = heapq.heappop(self._heap)
+            return event_values_hash, event, event_data, event_data_stream, event_tag
 
         except IndexError:
             return None
@@ -67,13 +73,15 @@ class PsortEventHeap:
             yield heap_values
             heap_values = self.PopEvent()
 
-    def PushEvent(self, event, event_data, event_data_stream):
+    def PushEvent(self, event, event_data, event_data_stream, event_tag=None):
         """Pushes an event onto the heap.
 
         Args:
           event (EventObject): event.
           event_data (EventData): event data.
           event_data_stream (EventDataStream): event data stream.
+          event_tag (Optional[EventTag]): event tag, or None if the event tag
+              should be resolved when the export buffer is flushed.
         """
         event_values_hash = getattr(event_data, "_event_values_hash", None)
         if event_values_hash is None:
@@ -90,7 +98,14 @@ class PsortEventHeap:
         # similar event values.
         heapq.heappush(
             self._heap,
-            (event_values_hash, timestamp_desc, event, event_data, event_data_stream),
+            (
+                event_values_hash,
+                timestamp_desc,
+                event,
+                event_data,
+                event_data_stream,
+                event_tag,
+            ),
         )
 
 
@@ -111,6 +126,7 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
         super().__init__()
         # The export event heap is used to make sure the events are sorted in
         # a deterministic way.
+        self._event_tags = None
         self._events_status = processing_status.EventsStatus()
         self._export_event_heap = PsortEventHeap()
         self._export_event_timestamp = 0
@@ -141,8 +157,9 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
             data_location=processing_configuration.data_location,
             dynamic_time=processing_configuration.dynamic_time,
             preferred_encoding=processing_configuration.preferred_encoding,
+            use_fallback_hostname=processing_configuration.use_fallback_hostname,
+            use_fallback_path_spec=processing_configuration.use_fallback_path,
         )
-
         if processing_configuration.preferred_language:
             try:
                 mediator.SetPreferredLanguageIdentifier(
@@ -150,10 +167,8 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
                 )
             except (KeyError, TypeError):
                 logger.warning(
-                    (
-                        f"Unable to to set preferred language: "
-                        f"{processing_configuration.preferred_language!s}"
-                    )
+                    f"Unable to to set preferred language: "
+                    f"{processing_configuration.preferred_language!s}"
                 )
 
         mediator.SetTimeZone(processing_configuration.preferred_time_zone)
@@ -163,7 +178,6 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
             processing_configuration.data_location,
             processing_configuration.custom_formatters_path,
         )
-
         return mediator
 
     def _ExportEvent(
@@ -173,7 +187,9 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
         event,
         event_data,
         event_data_stream,
+        event_tag=None,
         deduplicate_events=True,
+        resolve_event_tag=True,
     ):
         """Exports an event using an output module.
 
@@ -183,19 +199,28 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
           event (EventObject): event.
           event_data (EventData): event data.
           event_data_stream (EventDataStream): event data stream.
+          event_tag (Optional[EventTag]): event tag, or None if the event tag
+              should be resolved when the export buffer is flushed.
           deduplicate_events (Optional[bool]): True if events should be
               deduplicated.
+          resolve_event_tag (Optional[bool]): True if the event tag should be
+              resolved when the export buffer is flushed.
         """
         if (
             event.timestamp != self._export_event_timestamp
             or self._export_event_heap.number_of_events > self._HEAP_MAXIMUM_EVENTS
         ):
             self._FlushExportBuffer(
-                storage_reader, output_module, deduplicate_events=deduplicate_events
+                storage_reader,
+                output_module,
+                deduplicate_events=deduplicate_events,
+                resolve_event_tag=resolve_event_tag,
             )
             self._export_event_timestamp = event.timestamp
 
-        self._export_event_heap.PushEvent(event, event_data, event_data_stream)
+        self._export_event_heap.PushEvent(
+            event, event_data, event_data_stream, event_tag=event_tag
+        )
 
     def _ExportEvents(
         self,
@@ -221,6 +246,14 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
               an event of interest.
         """
         self._status = definitions.STATUS_INDICATOR_EXPORTING
+
+        # An event filter can match on the labels of an event tag, in which case
+        # the event tag needs to be resolved before the filter is applied.
+        # Otherwise it is resolved when the export buffer is flushed, after
+        # duplicate events have been discarded.
+        resolve_event_tag = event_filter is None
+
+        self._event_tags = None
 
         time_slice_buffer = None
         time_slice_range = None
@@ -254,8 +287,9 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
             else:
                 event_data_stream = None
 
-            event_identifier = event.GetIdentifier()
-            event_tag = storage_reader.GetEventTagByEventIdentifer(event_identifier)
+            event_tag = None
+            if not resolve_event_tag:
+                event_tag = self._GetEventTag(storage_reader, event)
 
             if time_slice_range and event.timestamp != time_slice.event_timestamp:
                 self._events_status.number_of_events_from_time_slice += 1
@@ -273,7 +307,7 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
                     self._events_status.number_of_filtered_events += 1
 
                 elif forward_entries == 0:
-                    time_slice_buffer.Append((event, event_data))
+                    time_slice_buffer.Append((event, event_data, event_data_stream))
                     self._events_status.number_of_filtered_events += 1
 
                 elif forward_entries <= time_slice_buffer.size:
@@ -283,7 +317,9 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
                         event,
                         event_data,
                         event_data_stream,
+                        event_tag=event_tag,
                         deduplicate_events=deduplicate_events,
+                        resolve_event_tag=resolve_event_tag,
                     )
                     self._number_of_consumed_events += 1
                     self._events_status.number_of_events_from_time_slice += 1
@@ -302,14 +338,26 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
                     for (
                         event_in_buffer,
                         event_data_in_buffer,
+                        event_data_stream_in_buffer,
                     ) in time_slice_buffer.Flush():
+                        event_tag_in_buffer = None
+                        if not resolve_event_tag:
+                            event_identifier = event_in_buffer.GetIdentifier()
+                            event_tag_in_buffer = (
+                                storage_reader.GetEventTagByEventIdentifier(
+                                    event_identifier
+                                )
+                            )
+
                         self._ExportEvent(
                             storage_reader,
                             output_module,
                             event_in_buffer,
                             event_data_in_buffer,
-                            event_data_stream,
+                            event_data_stream_in_buffer,
+                            event_tag=event_tag_in_buffer,
                             deduplicate_events=deduplicate_events,
+                            resolve_event_tag=resolve_event_tag,
                         )
                         self._number_of_consumed_events += 1
                         self._events_status.number_of_filtered_events += 1
@@ -323,7 +371,9 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
                     event,
                     event_data,
                     event_data_stream,
+                    event_tag=event_tag,
                     deduplicate_events=deduplicate_events,
+                    resolve_event_tag=resolve_event_tag,
                 )
                 self._number_of_consumed_events += 1
 
@@ -335,10 +385,16 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
                 ):
                     break
 
-        self._FlushExportBuffer(storage_reader, output_module)
+        self._FlushExportBuffer(
+            storage_reader, output_module, resolve_event_tag=resolve_event_tag
+        )
 
     def _FlushExportBuffer(
-        self, storage_reader, output_module, deduplicate_events=True
+        self,
+        storage_reader,
+        output_module,
+        deduplicate_events=True,
+        resolve_event_tag=True,
     ):
         """Flushes buffered events and writes them to the output module.
 
@@ -347,6 +403,9 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
           output_module (OutputModule): output module.
           deduplicate_events (Optional[bool]): True if events should be
               deduplicated.
+          resolve_event_tag (Optional[bool]): True if the event tag should be
+              resolved, which is the case if it was not resolved before the
+              event filter was applied.
         """
         last_event_values_hash = None
         last_macb_group_identifier = None
@@ -358,6 +417,7 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
             event,
             event_data,
             event_data_stream,
+            event_tag,
         ) in self._export_event_heap.PopEvents():
             timestamp_desc = event.timestamp_desc
 
@@ -369,8 +429,8 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
                 self._events_status.number_of_duplicate_events += 1
                 continue
 
-            event_identifier = event.GetIdentifier()
-            event_tag = storage_reader.GetEventTagByEventIdentifer(event_identifier)
+            if resolve_event_tag:
+                event_tag = self._GetEventTag(storage_reader, event)
 
             if timestamp_desc in (
                 definitions.TIME_DESCRIPTION_LAST_ACCESS,
@@ -420,6 +480,27 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
         if macb_group:
             output_module.WriteFieldValuesOfMACBGroup(self._output_mediator, macb_group)
 
+    def _GetEventTag(self, storage_reader, event):
+        """Retrieves the event tag of an event.
+
+        The event tags are read from the storage once and cached, instead of
+        querying the storage for every event.
+
+        Args:
+          storage_reader (StorageReader): storage reader.
+          event (EventObject): event.
+
+        Returns:
+          EventTag: event tag or None if the event has no event tag.
+        """
+        if self._event_tags is None:
+            self._event_tags = {}
+            for event_tag in storage_reader.GetAttributeContainers("event_tag"):
+                lookup_key = event_tag.GetEventIdentifier().CopyToString()
+                self._event_tags.setdefault(lookup_key, event_tag)
+
+        return self._event_tags.get(event.GetIdentifier().CopyToString())
+
     def _ReadMessageFormatters(
         self, output_mediator_object, data_location, custom_formatters_path
     ):
@@ -460,10 +541,8 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
                 output_mediator_object.ReadMessageFormattersFromFile(formatters_file)
             except KeyError as exception:
                 raise errors.BadConfigOption(
-                    (
-                        f"Unable to read message formatters from file: "
-                        f"{formatters_file:s} with error: {exception!s}"
-                    )
+                    f"Unable to read message formatters from file: "
+                    f"{formatters_file:s} with error: {exception!s}"
                 )
 
         else:
@@ -476,10 +555,8 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
                 )
             except KeyError as exception:
                 raise errors.BadConfigOption(
-                    (
-                        f"Unable to read custrom message formatters from file: "
-                        f"{formatters_file:s} with error: {exception!s}"
-                    )
+                    f"Unable to read custrom message formatters from file: "
+                    f"{formatters_file:s} with error: {exception!s}"
                 )
 
     def _UpdateForemanProcessStatus(self):
@@ -503,7 +580,6 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
             0,
             0,
         )
-
         self._processing_status.UpdateEventsStatus(self._events_status)
 
     def _UpdateStatus(self):
@@ -557,7 +633,6 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
                     "parser_count"
                 )
             }
-
             total_number_of_events = parsers_counter["total"]
 
         self._events_status.total_number_of_events = total_number_of_events
@@ -565,8 +640,7 @@ class OutputAndFormattingMultiProcessEngine(engine.MultiProcessEngine):
         self._output_mediator = self._CreateOutputMediator(
             storage_reader, processing_configuration
         )
-
-        output_module.WriteHeader(output_mediator)
+        output_module.WriteHeader(self._output_mediator)
 
         self._StartStatusUpdateThread()
 

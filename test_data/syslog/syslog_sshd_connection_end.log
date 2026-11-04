@@ -1,0 +1,23 @@
+2026-07-28T18:57:09.958129+00:00 ubuntu sshd-session[2780]: Connection closed by authenticating user svc-backup 192.168.1.92 port 38204 [preauth]
+2026-07-26T13:03:24.719663+00:00 ubuntu sshd-session[2149]: Received disconnect from 192.168.137.1 port 63234:11: disconnected by user
+2026-07-26T13:03:24.720238+00:00 ubuntu sshd-session[2149]: Disconnected from user ubuntu 192.168.137.1 port 63234
+2026-10-07T11:26:40.249155+00:00 ubuntu sshd-session[2617]: error: kex_exchange_identification: read: Connection reset by peer
+2026-10-07T11:26:40.250152+00:00 ubuntu sshd-session[2617]: Connection reset by 192.168.248.1 port 60274
+2026-10-07T11:26:45.296051+00:00 ubuntu sshd-session[2618]: Connection reset by 192.168.248.1 port 60275 [preauth]
+2026-10-07T11:28:05.062021+00:00 ubuntu sshd-session[2900]: Timeout, client not responding from user ubuntu 192.168.248.1 port 55307
+2026-10-07T11:28:38.532521+00:00 ubuntu sshd[2538]: Timeout before authentication for connection from 192.168.248.1 to 192.168.248.128, pid = 2903
+2026-10-08T00:19:26.539626+00:00 ubuntu sshd-session[3824]: Invalid user john doe from 192.168.248.1 port 54928
+2026-10-08T00:19:26.556935+00:00 ubuntu sshd-session[3824]: Connection closed by invalid user john doe 192.168.248.1 port 54928 [preauth]
+2026-10-08T00:19:27.016966+00:00 ubuntu sshd-session[3826]: Accepted publickey for ubuntu from fe80::621:e520:10d6:6621%ens36 port 54931 ssh2: ED25519 SHA256:a79QfkCiaM8pEpw/wmP0Qfkl3ttsHxPlSKgqilMv9K8
+2026-10-08T00:19:28.765131+00:00 ubuntu sshd-session[3884]: Received disconnect from fe80::621:e520:10d6:6621%ens36 port 54931:11: disconnected by user
+2026-10-08T00:19:28.778673+00:00 ubuntu sshd-session[3884]: Disconnected from user ubuntu fe80::621:e520:10d6:6621%ens36 port 54931
+2026-10-08T00:19:30.044227+00:00 ubuntu sshd-session[3889]: Invalid user nosuchuser from 192.168.248.1 port 54936
+2026-10-08T00:19:31.525388+00:00 ubuntu sshd-session[3889]: Failed password for invalid user nosuchuser from 192.168.248.1 port 54936 ssh2
+2026-10-08T00:19:31.816400+00:00 ubuntu sshd-session[3889]: error: Received disconnect from 192.168.248.1 port 54936:14: No more authentication methods available [preauth]
+2026-10-08T00:19:31.817153+00:00 ubuntu sshd-session[3889]: Disconnected from invalid user nosuchuser 192.168.248.1 port 54936 [preauth]
+2026-10-08T00:19:35.989237+00:00 ubuntu sshd-session[3891]: Failed password for ubuntu from 192.168.248.1 port 54937 ssh2
+2026-10-08T00:19:36.053001+00:00 ubuntu sshd-session[3891]: error: Received disconnect from 192.168.248.1 port 54937:13: Authentication cancelled by user [preauth]
+2026-10-08T00:19:36.075978+00:00 ubuntu sshd-session[3891]: Disconnected from authenticating user ubuntu 192.168.248.1 port 54937 [preauth]
+2026-10-08T00:19:50.936735+00:00 ubuntu sshd-session[3943]: Read error from remote host 192.168.248.1 port 54939: Connection reset by peer
+2026-10-08T00:21:19.589487+00:00 ubuntu sshd-session[4011]: Connection closed by 192.168.248.1 port 54950 [preauth]
+2026-10-08T00:21:26.627269+00:00 ubuntu sshd-session[4071]: Connection closed by 192.168.248.1 port 54957

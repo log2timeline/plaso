@@ -70,9 +70,11 @@ class SantaExecutionEventData(events.EventData):
       process_arguments (str): executed process with its arguments.
       process_hash (str): SHA256 hash for the executed process.
       process_path (str): process file path.
+      quarantine_url (str): URL the executed file was downloaded from, if the
+          file was quarantined.
       reason (str): reason behind Santa decision to execute or block a process.
       uid (str): user identifier associated with the executed process.
-      user (str): user name associated with the executed process.
+      username (str): username associated with the executed process.
     """
 
     DATA_TYPE = "santa:execution"
@@ -98,7 +100,7 @@ class SantaExecutionEventData(events.EventData):
         self.quarantine_url = None
         self.reason = None
         self.uid = None
-        self.user = None
+        self.username = None
 
 
 class SantaFileSystemEventData(events.EventData):
@@ -120,7 +122,7 @@ class SantaFileSystemEventData(events.EventData):
       process_path (str): process file path.
       process (str): process name.
       uid (str): user identifier associated with the executed process.
-      user (str): user name associated with the executed process.
+      username (str): username associated with the executed process.
     """
 
     DATA_TYPE = "santa:file_system_event"
@@ -140,7 +142,7 @@ class SantaFileSystemEventData(events.EventData):
         self.process = None
         self.process_path = None
         self.uid = None
-        self.user = None
+        self.username = None
 
 
 class SantaProcessExitEventData(events.EventData):
@@ -179,6 +181,10 @@ class SantaTextPlugin(interface.TextPlugin):
     DATA_FORMAT = "Santa log (santa.log) file"
 
     ENCODING = "utf-8"
+
+    _ONE_OR_TWO_DIGITS = pyparsing.Word(pyparsing.nums, max=2).set_parse_action(
+        lambda tokens: int(tokens[0], 10)
+    )
 
     _TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).set_parse_action(
         lambda tokens: int(tokens[0], 10)
@@ -316,7 +322,9 @@ class SantaTextPlugin(interface.TextPlugin):
 
     _UID = pyparsing.Suppress("|uid=") + _SKIP_TO_SEPARATOR.set_results_name("uid")
 
-    _USER = pyparsing.Suppress("|user=") + _SKIP_TO_SEPARATOR.set_results_name("user")
+    _USER = pyparsing.Suppress("|user=") + _SKIP_TO_SEPARATOR.set_results_name(
+        "username"
+    )
 
     _VOLUME = pyparsing.Suppress("|volume=") + _SKIP_TO_SEPARATOR.set_results_name(
         "volume"
@@ -423,16 +431,37 @@ class SantaTextPlugin(interface.TextPlugin):
         + _END_OF_LINE
     )
 
+    # Line added by newsyslog when it turns over the log file, at the start of
+    # the new log file and at the end of the turned over log file.
+    # Formatted as: Mar 31 06:30:02 hostname newsyslog[10904]: logfile turned over
+    _NEWSYSLOG_LINE = (
+        pyparsing.Word(pyparsing.alphas, exact=3)
+        + _ONE_OR_TWO_DIGITS
+        + _TWO_DIGITS
+        + pyparsing.Suppress(":")
+        + _TWO_DIGITS
+        + pyparsing.Suppress(":")
+        + _TWO_DIGITS
+        + pyparsing.Word(pyparsing.alphanums + "-._")
+        + pyparsing.Literal("newsyslog[")
+        + pyparsing.Word(pyparsing.nums)
+        + pyparsing.Literal("]:")
+        + pyparsing.Literal("logfile turned over")
+        + pyparsing.restOfLine()
+        + _END_OF_LINE
+    )
+
     _LINE_STRUCTURES = [
         ("execution_line", _EXECUTION_LINE),
         ("file_system_event_line", _FILE_OPERATION_LINE),
         ("mount_line", _DISK_MOUNT_LINE),
+        ("newsyslog_line", _NEWSYSLOG_LINE),
         ("process_exit_line", _PROCESS_EXIT_LINE),
         ("quota_exceeded_line", _QUOTA_EXCEEDED_LINE),
         ("unmount_line", _DISK_UNMOUNT_LINE),
     ]
 
-    VERIFICATION_GRAMMAR = (
+    VERIFICATION_GRAMMAR = pyparsing.Optional(pyparsing.Suppress(_NEWSYSLOG_LINE)) + (
         _DISK_MOUNT_LINE
         ^ _DISK_UNMOUNT_LINE
         ^ _EXECUTION_LINE
@@ -452,7 +481,7 @@ class SantaTextPlugin(interface.TextPlugin):
         Raises:
           ParseError: if the structure cannot be parsed.
         """
-        if key == "quota_exceeded_line":
+        if key in ("newsyslog_line", "quota_exceeded_line"):
             # skip this line
             return
 
@@ -490,7 +519,7 @@ class SantaTextPlugin(interface.TextPlugin):
             event_data.process_path = self._GetValueFromStructure(structure, "path")
             event_data.reason = self._GetValueFromStructure(structure, "reason")
             event_data.uid = self._GetValueFromStructure(structure, "uid")
-            event_data.user = self._GetValueFromStructure(structure, "user")
+            event_data.username = self._GetValueFromStructure(structure, "username")
 
         if key == "process_exit_line":
             event_data = SantaProcessExitEventData()
@@ -522,7 +551,7 @@ class SantaTextPlugin(interface.TextPlugin):
                 structure, "processpath"
             )
             event_data.uid = self._GetValueFromStructure(structure, "uid")
-            event_data.user = self._GetValueFromStructure(structure, "user")
+            event_data.username = self._GetValueFromStructure(structure, "username")
 
         elif key == "unmount_line":
             event_data = SantaMountEventData()
@@ -570,7 +599,6 @@ class SantaTextPlugin(interface.TextPlugin):
             year, month, day_of_month, hours, minutes, seconds, milliseconds = (
                 time_elements_structure
             )
-
             # Ensure time_elements_tuple is not a pyparsing.ParseResults otherwise
             # copy.deepcopy() of the dfDateTime object will fail on Python 3.8 with:
             # "TypeError: 'str' object is not callable" due to pyparsing.ParseResults
@@ -585,7 +613,6 @@ class SantaTextPlugin(interface.TextPlugin):
                 seconds,
                 milliseconds,
             )
-
             return dfdatetime_time_elements.TimeElementsInMilliseconds(
                 time_elements_tuple=time_elements_tuple
             )

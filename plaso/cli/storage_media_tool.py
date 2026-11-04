@@ -131,7 +131,6 @@ class StorageMediaToolMediator(dfvfs_command_line.CLIVolumeScannerMediator):
                 "Volume Shadow Snapshots (VSS) were selected also process current\n"
                 "volume? [yes, no]\n"
             )
-
             process_current_volume = self._input_reader.Read()
             process_current_volume = process_current_volume.strip()
             process_current_volume = process_current_volume.lower()
@@ -150,13 +149,14 @@ class StorageMediaToolMediator(dfvfs_command_line.CLIVolumeScannerMediator):
 class StorageMediaToolVolumeScanner(dfvfs_volume_scanner.VolumeScanner):
     """Volume scanner used by the storage media tool."""
 
-    def __init__(self, mediator=None):
+    def __init__(self, mediator=None, sector_size=None):
         """Initializes a volume scanner.
 
         Args:
           mediator (Optional[VolumeScannerMediator]): a volume scanner mediator.
+          sector_size (Optional[int]): number of bytes per sector.
         """
-        super().__init__(mediator=mediator)
+        super().__init__(mediator=mediator, sector_size=sector_size)
         self._credential_configurations = []
         self._snapshots_only = False
 
@@ -238,7 +238,6 @@ class StorageMediaToolVolumeScanner(dfvfs_volume_scanner.VolumeScanner):
                 credential_type=credential_type,
                 path_spec=scan_node.path_spec,
             )
-
             self._credential_configurations.append(credential_configuration)
 
     def _ScanFileSystem(self, scan_node, base_path_specs):
@@ -288,6 +287,7 @@ class StorageMediaToolVolumeScanner(dfvfs_volume_scanner.VolumeScanner):
             volume_identifiers = self._GetVolumeIdentifiers(volume_system, options)
 
         elif scan_node.type_indicator in (
+            dfvfs_definitions.TYPE_INDICATOR_APM,
             dfvfs_definitions.TYPE_INDICATOR_GPT,
             dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION,
         ):
@@ -301,13 +301,17 @@ class StorageMediaToolVolumeScanner(dfvfs_volume_scanner.VolumeScanner):
 
         elif scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_VSHADOW:
             volume_system = vshadow_volume_system.VShadowVolumeSystem()
-            volume_system.Open(scan_node.path_spec)
 
-            volume_identifiers = self._GetVolumeSnapshotIdentifiers(
-                volume_system, options
-            )
-            # Process VSS stores (snapshots) starting with the most recent one.
-            volume_identifiers.reverse()
+            try:
+                volume_system.Open(scan_node.path_spec)
+                volume_identifiers = self._GetVolumeSnapshotIdentifiers(
+                    volume_system, options
+                )
+                # Process VSS stores (snapshots) starting with the most recent one.
+                volume_identifiers.reverse()
+
+            except dfvfs_errors.BackEndError:
+                volume_identifiers = []
 
             # TODO: difference with dfVFS for current VSS volume support.
             if not options.snapshots_only and self._mediator and volume_identifiers:
@@ -394,6 +398,7 @@ class StorageMediaTool(tools.CLITool):
             input_reader=input_reader, output_writer=output_writer
         )
         self._partitions = None
+        self._sector_size = None
         self._source_path = None
         self._source_type = None
         self._volumes = None
@@ -476,20 +481,29 @@ class StorageMediaTool(tools.CLITool):
         self._partitions = getattr(options, "partitions", None)
         if self._partitions:
             try:
-                self._mediator.ParseVolumeIdentifiersString(
+                self._partitions = self._mediator.ParseVolumeIdentifiersString(
                     self._partitions, prefix="p"
                 )
             except ValueError:
                 raise errors.BadConfigOption("Unsupported partitions")
 
+        self._sector_size = getattr(options, "sector_size", None)
         self._volumes = getattr(options, "volumes", None)
         if self._volumes:
             try:
-                self._mediator.ParseVolumeIdentifiersString(
+                self._volumes = self._mediator.ParseVolumeIdentifiersString(
                     self._volumes, prefix="apfs"
                 )
             except ValueError:
                 raise errors.BadConfigOption("Unsupported volumes")
+
+            # The volume identifier prefix depends on the volume system, such as
+            # APFS or LVM, hence the volume identifiers are passed as integers.
+            if self._volumes != ["all"]:
+                self._volumes = [
+                    int(volume_identifier.removeprefix("apfs"), 10)
+                    for volume_identifier in self._volumes
+                ]
 
     def _ParseVSSProcessingOptions(self, options):
         """Parses the VSS processing options.
@@ -513,7 +527,9 @@ class StorageMediaTool(tools.CLITool):
 
         if vss_stores and vss_stores != "none":
             try:
-                self._mediator.ParseVolumeIdentifiersString(vss_stores, prefix="vss")
+                vss_stores = self._mediator.ParseVolumeIdentifiersString(
+                    vss_stores, prefix="vss"
+                )
             except ValueError:
                 raise errors.BadConfigOption("Unsupported VSS stores")
 
@@ -568,7 +584,16 @@ class StorageMediaTool(tools.CLITool):
                 'partition is 1. All partitions can be specified with: "all".'
             ),
         )
-
+        argument_group.add_argument(
+            "--sector_size",
+            "--sector-size",
+            dest="sector_size",
+            action="store",
+            metavar="SIZE",
+            type=int,
+            default=None,
+            help="number of bytes per sector.",
+        )
         argument_group.add_argument(
             "--volumes",
             "--volume",
@@ -603,7 +628,6 @@ class StorageMediaTool(tools.CLITool):
                 "option is deprecated use --vss_stores=none instead."
             ),
         )
-
         argument_group.add_argument(
             "--vss_only",
             "--vss-only",
@@ -615,7 +639,6 @@ class StorageMediaTool(tools.CLITool):
                 "(VSS) have been selected."
             ),
         )
-
         argument_group.add_argument(
             "--vss_stores",
             "--vss-stores",
@@ -659,32 +682,25 @@ class StorageMediaTool(tools.CLITool):
             options.scan_mode = options.SCAN_MODE_ALL
         options.snapshots_only = self._vss_only
 
-        if self._partitions == "all":
-            options.partitions = ["all"]
-        else:
-            options.partitions = self._partitions
+        options.partitions = self._partitions
 
         if not self._vss_stores and self._unattended_mode:
             options.snapshots = ["none"]
-        elif self._vss_stores == "all":
-            options.snapshots = ["all"]
         elif self._vss_stores == "none":
             options.snapshots = ["none"]
         else:
             options.snapshots = self._vss_stores
 
-        if self._volumes == "all":
-            options.volumes = ["all"]
-        else:
-            options.volumes = self._volumes
+        options.volumes = self._volumes
 
         if self._unattended_mode:
             mediator = None
         else:
             mediator = self._mediator
 
-        volume_scanner = StorageMediaToolVolumeScanner(mediator=mediator)
-
+        volume_scanner = StorageMediaToolVolumeScanner(
+            mediator=mediator, sector_size=self._sector_size
+        )
         try:
             base_path_specs = volume_scanner.GetBasePathSpecs(
                 source_path, options=options

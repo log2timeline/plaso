@@ -75,7 +75,13 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
             ),
             (
                 "Google Search",
-                re.compile(r"(www\.|encrypted\.|/)google\.[^/]*/search"),
+                # The segment between "google." and "/search" is the remainder
+                # of the host (a TLD, optionally a port), so it is short. Bound
+                # it rather than using an unbounded "[^/]*": the unbounded form
+                # rescans the rest of a slash-free value from every "google."
+                # token, making the examine time grow with the square of the
+                # URL length on long values.
+                re.compile(r"(www\.|encrypted\.|/)google\.[^/]{0,256}/search"),
                 "_ExtractGoogleSearchQuery",
             ),
             (
@@ -183,10 +189,12 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
         """
         if "p=" not in url:
             return None
+
         _, _, line = url.partition("p=")
         before_and, _, _ = line.partition("&")
         if not before_and:
             return None
+
         yahoo_search_url = before_and.split()[0]
 
         return yahoo_search_url.replace("+", " ")
@@ -204,10 +212,12 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
         """
         if "text=" not in url:
             return None
+
         _, _, line = url.partition("text=")
         before_and, _, _ = line.partition("&")
         if not before_and:
             return None
+
         yandex_search_url = before_and.split()[0]
 
         return yandex_search_url.replace("+", " ")
@@ -317,13 +327,10 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
 
             search_query = callback_method(url)
             if not search_query:
-                analysis_mediator.ProduceAnalysisWarning(
-                    (
-                        f"Unable to determine search query: {method_name:s} in URL: "
-                        f"{url:s}"
-                    ),
-                    self.NAME,
+                message = (
+                    f"Unable to determine search query: {method_name:s} in URL: {url:s}"
                 )
+                analysis_mediator.ProduceAnalysisWarning(message, self.NAME)
                 continue
 
             try:
@@ -332,10 +339,10 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
                 search_query = None
 
             if not search_query:
-                analysis_mediator.ProduceAnalysisWarning(
-                    f"Unable to decode search query: {method_name:s} in URL: {url:s}",
-                    self.NAME,
+                message = (
+                    f"Unable to decode search query: {method_name:s} in URL: {url:s}"
                 )
+                analysis_mediator.ProduceAnalysisWarning(message, self.NAME)
                 continue
 
             event_tag = self._CreateEventTag(event, self._EVENT_TAG_LABELS)

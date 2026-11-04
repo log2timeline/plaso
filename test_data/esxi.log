@@ -1,0 +1,11 @@
+2024-12-12T01:44:43.728Z shell[71435]: [root]: ls -la
+2024-03-12T07:48:40.079Z In(182) vmkernel: cpu21:2099003)<NMLX_ERR> attach failed
+2021-01-04T16:02:17.168Z info hostd[526501] [Originator@6876 sub=Libs user=root] New ERROR
+<166>2019-05-21T19:27:32.479Z esxi.example Hostd: info hostd[111111] [Originator@6876 user=root] logged out
+2024-12-12T01:45:05.064Z info auth[71470]: Session opened for user root
+2024-12-12T01:45:06.064Z info vobd[71471]: [UserLevelCorrelator] SSH access enabled
+2024-12-12T01:45:07.064Z info esxcli[71472]: system syslog mark --message=test
+2024-12-12T01:45:08.064Z info rhttpproxy[71473]: New proxy client
+2024-12-12T01:45:09.064Z info vpxa[71474]: Connected to hostd
+[2008-05-07 09:50:04.857 'SOAP' 2260 trivia] Received soap response
+POST /sdk HTTP/1.1

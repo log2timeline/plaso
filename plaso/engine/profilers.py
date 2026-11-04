@@ -1,6 +1,5 @@
 """The profiler classes."""
 
-import codecs
 import gzip
 import os
 import time
@@ -65,7 +64,7 @@ class SampleFileProfiler:
         Args:
           content (str): content to write to the sample file.
         """
-        content_bytes = codecs.encode(content, "utf-8")
+        content_bytes = content.encode("utf-8")
         self._sample_file.write(content_bytes)
 
     @classmethod

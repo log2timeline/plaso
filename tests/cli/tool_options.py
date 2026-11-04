@@ -136,6 +136,7 @@ class OutputModuleOptionsTest(test_lib.CLIToolTestCase):
 usage: tool_options.py [--additional_fields ADDITIONAL_FIELDS]
                        [--custom_fields CUSTOM_FIELDS]
                        [--custom_formatter_definitions PATH] [--dynamic_time]
+                       [--output_fallback_hostname] [--output_fallback_path]
                        [--output_time_zone TIME_ZONE]
 
 Test argument parser.
@@ -152,7 +153,7 @@ Test argument parser.
                         besides the default fields. A custom field is defined
                         as "name:value". Multiple custom field names can be
                         defined as list of comma separated values. Note that
-                        regular fields will are favoured above custom fields
+                        regular fields will are favored above custom fields
                         with same name. Output formats that support this are:
                         dynamic, opensearch and xlsx.
   --custom_formatter_definitions, --custom-formatter-definitions PATH
@@ -164,6 +165,14 @@ Test argument parser.
   --dynamic_time, --dynamic-time
                         Indicate that the output should use dynamic time.
                         Output formats that support dynamic time are: dynamic
+  --output_fallback_hostname, --output-fallback-hostname
+                        Indicate that the output should use the hostname value
+                        derived by pre-processing as fallback for the hostname
+                        output field
+  --output_fallback_path, --output-fallback-path
+                        Indicate that the output should use the event data
+                        stream path specification value as fallback for the
+                        filename and inode output fields
   --output_time_zone, --output-time-zone TIME_ZONE
                         time zone of date and time values written to the
                         output, if supported by the output format. Use "list"
@@ -176,6 +185,7 @@ Test argument parser.
 usage: tool_options.py [--additional_fields ADDITIONAL_FIELDS]
                        [--custom_fields CUSTOM_FIELDS]
                        [--custom_formatter_definitions PATH] [--dynamic_time]
+                       [--output_fallback_hostname] [--output_fallback_path]
                        [--output_time_zone TIME_ZONE]
 
 Test argument parser.
@@ -192,7 +202,7 @@ Test argument parser.
                         besides the default fields. A custom field is defined
                         as "name:value". Multiple custom field names can be
                         defined as list of comma separated values. Note that
-                        regular fields will are favoured above custom fields
+                        regular fields will are favored above custom fields
                         with same name. Output formats that support this are:
                         dynamic, opensearch and xlsx.
   --custom_formatter_definitions PATH, --custom-formatter-definitions PATH
@@ -204,6 +214,14 @@ Test argument parser.
   --dynamic_time, --dynamic-time
                         Indicate that the output should use dynamic time.
                         Output formats that support dynamic time are: dynamic
+  --output_fallback_hostname, --output-fallback-hostname
+                        Indicate that the output should use the hostname value
+                        derived by pre-processing as fallback for the hostname
+                        output field
+  --output_fallback_path, --output-fallback-path
+                        Indicate that the output should use the event data
+                        stream path specification value as fallback for the
+                        filename and inode output fields
   --output_time_zone TIME_ZONE, --output-time-zone TIME_ZONE
                         time zone of date and time values written to the
                         output, if supported by the output format. Use "list"
@@ -331,8 +349,6 @@ class TestToolWithStorageFileOptions(tools.CLITool, tool_options.StorageFileOpti
 
 class StorageFileOptionsTest(test_lib.CLIToolTestCase):
     """Tests for the storage file options."""
-
-    # TODO: add test for _CheckStorageFile
 
 
 if __name__ == "__main__":

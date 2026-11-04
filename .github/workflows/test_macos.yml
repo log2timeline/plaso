@@ -1,10 +1,17 @@
 # Run tests on Mac OS.
 name: test_macos
-on: [push, pull_request]
-permissions: read-all
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+on:
+  pull_request:
+  push:
+permissions:
+  contents: read
 jobs:
   test_macos:
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
     strategy:
       matrix:
         include:
@@ -12,12 +19,17 @@ jobs:
           python-version: '3.14'
           toxenv: 'py314'
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
     - name: Install dependencies
       run: |
         brew update -q
-        brew install -q gettext gnu-sed python@${{ matrix.python-version }} tox || true
+        brew install -q gettext gnu-sed openssl@3 python@${{ matrix.python-version }} tox || true
         brew link --force gettext
+        echo "LDFLAGS=-L$(brew --prefix openssl@3)/lib" >> $GITHUB_ENV
+        echo "CPPFLAGS=-I$(brew --prefix openssl@3)/include" >> $GITHUB_ENV
+        echo "PKG_CONFIG_PATH=$(brew --prefix openssl@3)/lib/pkgconfig" >> $GITHUB_ENV
     - name: Run tests
       run: |
         tox -e ${{ matrix.toxenv }}

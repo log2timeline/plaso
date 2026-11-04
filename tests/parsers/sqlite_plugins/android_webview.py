@@ -14,7 +14,9 @@ class AndroidWebView(test_lib.SQLitePluginTestCase):
     def testProcess(self):
         """Test the Process function on a WebView SQLite file."""
         plugin = android_webview.AndroidWebViewPlugin()
-        storage_writer = self._ParseDatabaseFileWithPlugin(["webview.db"], plugin)
+        storage_writer = self._ParseDatabaseFileWithPlugin(
+            ["android", "webview.db"], plugin
+        )
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
@@ -38,11 +40,10 @@ class AndroidWebView(test_lib.SQLitePluginTestCase):
             ),
             "data_type": "android:webview:cookie",
             "expiration_time": "2014-03-05T15:04:44.000+00:00",
-            "host": "skype.com",
+            "hostname": "skype.com",
             "path": "/",
             "secure": False,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

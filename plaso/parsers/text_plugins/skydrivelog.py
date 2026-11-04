@@ -296,7 +296,7 @@ class SkyDriveLog2TextPlugin(interface.TextPluginWithLineContinuation):
         + _THREE_DIGITS
     ).set_results_name("header_date_time")
 
-    # Formate version 2 date and time values are formatted as:
+    # Format version 2 date and time values are formatted as:
     # MM-DD-YY,hh:mm:ss.###
     # For example: 07-25-13,16:06:31.820
     _DATE_TIME_V2 = (

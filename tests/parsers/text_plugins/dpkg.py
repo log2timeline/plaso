@@ -59,10 +59,9 @@ class DpkgTextPluginTest(test_lib.TextPluginTestCase):
 
         expected_event_values = {
             "added_time": "2009-02-25T11:45:23",
-            "body": "conffile /etc/X11/Xsession keep",
             "data_type": "linux:dpkg_log:entry",
+            "message_body": "conffile /etc/X11/Xsession keep",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

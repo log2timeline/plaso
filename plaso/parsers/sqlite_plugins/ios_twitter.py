@@ -160,6 +160,8 @@ class IOSTwitterPlugin(interface.SQLitePlugin):
                 "CREATE TABLE MyRetweets ( 'statusId' INTEGER PRIMARY KEY, "
                 "'myRetweetId' INTEGER )"
             ),
+            # typos:disable
+            # Note that "supplmentalLanguage" is from the original schema.
             "Statuses": (
                 "CREATE TABLE Statuses ( 'id' INTEGER PRIMARY KEY, 'text' TEXT, "
                 "'date' REAL, 'userId' INTEGER, 'inReplyToStatusId' INTEGER, "
@@ -175,6 +177,7 @@ class IOSTwitterPlugin(interface.SQLitePlugin):
                 "TEXT, 'supplmentalLanguage' TEXT, 'includeInProfileTimeline' "
                 "INTEGER, 'quotedStatusId' INTEGER, 'source' TEXT )"
             ),
+            # typos:enable
             "StatusesShadow": (
                 "CREATE TABLE StatusesShadow ( 'id' INTEGER PRIMARY KEY, 'text' "
                 "TEXT, 'date' REAL, 'userId' INTEGER, 'inReplyToStatusId' "

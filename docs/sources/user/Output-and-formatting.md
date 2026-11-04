@@ -14,7 +14,7 @@ json | Output events to JSON format.
 json_line | Output events to JSON line format.
 kml | Output events with geography data into a KML format.
 l2tcsv | Output events to log2timeline.pl legacy CSV format, with 17 fixed fields. Also see: [l2tcsv output format](Output-format-l2tcsv.html)
-l2ttln | Output events to log2timeline.pl extended TLN format, with 7 fixed field. | delimited output. Also see: [TLN](https://forensics.wiki/tln).
+l2ttln | Output events to log2timeline.pl extended TLN format, with 7 fixed fields, pipe delimited. Also see: [TLN](https://forensics.wiki/tln).
 null | Do not output events.
 rawpy | Output events in "raw" (or native) Python format.
 opensearch | Saves the events into an OpenSearch database. Requires opensearchpy.
@@ -48,27 +48,27 @@ Name | Description
 --- | ---
 date | The date of the event formatted as "YYYY-MM-DD" or "0000-00-00" on error
 datetime | The date and time of the event in ISO 8601 format in microseconds or "0000-00-00T00:00:00.000000+00:00" on error
-description | The event message string as defined by the message formatter
-description_short | The short event message string as defined by the message formatter
 display_name | Human readable representation of the path specification
-filename | The "filename" attribute if present in the event data, otherwise derived from the path specification
-host | The hostname derived by pre-processing
-hostname | The hostname derived by pre-processing
-inode | The "inode" attribute if present in the event data, otherwise derived from the file system identifier (such as inode, MFT entry) in the path specification
+filename | The "filename" attribute if present in the event data. Will fallback to the filename derived from the event data stream path specification, if the option "--output-fallback-path" is enabled.
+host | Equivalent to the hostname field
+hostname | The "hostname" attribute if present in the event data. Will fallback to the hostname derived by pre-processing, if the option "--output-fallback-hostname" is enabled.
+inode | The "inode" attribute if present in the event data. Will fallback to the file system identifier (such as inode, MFT entry) derived from the event data stream path specification, if the option "--output-fallback-path" is enabled.
 macb | MACB (Modification, Access, Change, Birth) group representation
 message | The event message string as defined by the message formatter
 message_short | The short event message string as defined by the message formatter
-source | The short event source as defined by `data/sources.config`
-sourcetype | The event source as defined by `data/sources.config`, equivalent to source_long
-source_long | The event source as defined by `data/sources.config`
+parser | Chain of parsers that generated the event.
+source | The short event source as defined by the formatter (`data/formatters/*.yaml`)
+sourcetype | Equivalent to the source_long field
+source_long | The event source as defined by the formatter (`data/formatters/*.yaml`)
 tag | The labels defined by event tags
 time | The time of the event in seconds formatted as "HH:MM:SS" or "--:--:--" on error
 timestamp_desc | Indication of what the event time represents such as Creation Time or Program Execution Duration
 timezone | Time zone indicator
-type | Indication of what the event time represents such as Creation Time or Program Execution Duration, equivalent to timestamp_desc
-user | The username derived by pre-processing, equivalent to username
-username | The username derived by pre-processing
-zone | Time zone indicator, equivalent to timezone
+type | Equivalent to the timestamp_desc field
+user | Equivalent to the username field
+username | The "username" attribute if present in the event data. Will fallback to trying to resolve the username based on the "user_sid" attribute and user accounts derived by pre-processing.
+values | The "values" attribute if present in the event data. For Windows Registry key value and service event data (data types "windows:registry:key_value" and "windows:registry:service") the values are formatted as "name: [type] data".
+zone | Equivalent to the timezone field
 
 Note that the `--dynamic-time` output option will change the format of the
 datetime output field to use value appropriate granularity, for example seconds
@@ -82,49 +82,44 @@ support the dynamic time option.
 Name | Description
 --- | ---
 display_name | Human readable representation of the path specification
-filename | The "filename" attribute if present in the event data, otherwise derived from the path specification
-inode | The "inode" attribute if present in the event data, otherwise derived from the file system identifier (such as inode, MFT entry) in the path specification
+filename | The "filename" attribute if present in the event data. Will fallback to the filename derived from the event data stream path specification, if the option "--output-fallback-path" is enabled.
+hostname | The "hostname" attribute if present in the event data. Will fallback to the hostname derived by pre-processing, if the option "--output-fallback-hostname" is enabled. Omitted when no value can be resolved.
+inode | The "inode" attribute if present in the event data. Will fallback to the file system identifier (such as inode, MFT entry) derived from the event data stream path specification, if the option "--output-fallback-path" is enabled.
 message | The event message string as defined by the message formatter
 pathspec | JSON serialized path specification
 parser | Chain of parsers that generated the event.
 tag | The labels defined by event tags
 timestamp_desc | Indication of what the event time represents such as Creation Time or Program Execution Duration
+username | The "username" attribute if present in the event data. Will fallback to trying to resolve the username based on the "user_sid" attribute and user accounts derived by pre-processing. Omitted when no value can be resolved.
 
 ### Native (or "raw") Python runtime fields
+
+The rawpy output module outputs the event data attributes as-is, together with
+the following runtime fields. It does not output formatted fields such as
+message or source.
 
 Name | Description
 --- | ---
 display_name | Human readable representation of the path specification
-filename | The "filename" attribute if present in the event data, otherwise derived from the path specification
-inode | The "inode" attribute if present in the event data, otherwise derived from the file system identifier (such as inode, MFT entry) in the path specification
-message | The event message string as defined by the message formatter
+filename | The "filename" attribute if present in the event data. Will fallback to the filename derived from the event data stream path specification, if the option "--output-fallback-path" is enabled.
+inode | The "inode" attribute if present in the event data. Will fallback to the file system identifier (such as inode, MFT entry) derived from the event data stream path specification, if the option "--output-fallback-path" is enabled.
 parser | Chain of parsers that generated the event.
-short_source | The short event source as defined by `data/sources.config`
-source_long | The event source as defined by `data/sources.config`
-timestamp_desc | Indication of what the event time represents such as Creation Time or Program Execution Duration
 
 ### OpenSearch runtime fields
 
 Name | Description
 --- | ---
+datetime | The date and time of the event in ISO 8601 format in microseconds
 display_name | Human readable representation of the path specification
+inode | The "inode" attribute if present in the event data
 message | The event message string as defined by the message formatter
 parser | Chain of parsers that generated the event.
-short_source | The short event source as defined by `data/sources.config`
-source_long | The event source as defined by `data/sources.config`
+source_long | The event source as defined by the formatter (`data/formatters/*.yaml`)
+source_short | The short event source as defined by the formatter (`data/formatters/*.yaml`)
 tag | The labels defined by event tags
+timestamp | The timestamp of the event in number of microseconds since January 1, 1970 00:00:00 UTC
 timestamp_desc | Indication of what the event time represents such as Creation Time or Program Execution Duration
-
-## Output field formatting
-
-### Source fields
-
-As of Plaso 20200916 the value of the long and short source fields are defined
-in `data/sources.config`. This file contains 3 tab separated values:
-
-* data_type; event data type.
-* short_source; short source identifier that corresponds with the l2tcsv and tln source field.
-* source; source identifier that corresponds with the l2tcsv sourcetype field.
+yara_match | Names of the Yara rules that matched the data stream content.
 
 ## Message formatting
 
@@ -148,9 +143,12 @@ An event formatter is defined as a set of attributes:
 * "boolean_helpers"; optional boolean helpers.
 * "custom_helpers"; optional custom helpers.
 * "enumeration_helpers"; optional enumeration helpers.
+* "flags_helpers"; optional flags helpers.
 * "message"; required formatter message string, for a basic type, or list of messages string pieces, for a conditional type.
 * "separator"; optional conditional message string piece separator, the default is a single space.
 * "short_message"; required formatter short message string, for a basic type, or list of short messages string pieces, for a conditional type.
+* "short_source"; required short event source, for example "LOG".
+* "source"; required event source, for example "Bash History".
 * "type"; required event formatter type either "basic" or "conditional".
 
 For example:
@@ -158,9 +156,11 @@ For example:
 ```
 ---
 type: 'basic'
-data_type: 'bash:history:command'
+data_type: 'bash:history:entry'
 message: 'Command executed: {command}'
 short_message: '{command}'
+short_source: 'LOG'
+source: 'Bash History'
 ---
 type: 'conditional'
 data_type: 'syslog:cron:task_run'
@@ -170,7 +170,9 @@ message:
 - 'pid: {pid}'
 separator: ', '
 short_message:
-- '{body}'
+- '{message_body}'
+short_source: 'LOG'
+source: 'Cron log'
 ```
 
 #### Boolean helpers
@@ -192,13 +194,14 @@ message:
 - '[{shared}]'
 short_message:
 - '{path}'
+short_source: 'LOG'
+source: 'Google Drive (cloud entry)'
 ```
 
 Boolean helpers are defined as a set of attributes:
 
 * "input_attribute"; required name of the attribute which the value is read from.
 * "output_attribute"; required name of the attribute which the formatted value is written to.
-* "default_value"; optional default value if there is no corresponding mapping in "values".
 * "value_if_false"; optional output value if the boolean input value is False.
 * "value_if_true"; optional output value if the boolean input value is True.
 
@@ -219,6 +222,8 @@ message:
 short_message:
 - '{filename}'
 - '{file_reference}'
+short_source: 'FILE'
+source: 'NTFS file stat'
 ```
 
 Here `ntfs_file_reference` references the `NTFSFileReferenceFormatterHelper`,
@@ -263,6 +268,8 @@ message:
 - 'Restore point type: {restore_point_type}'
 short_message:
 - '{description}'
+short_source: 'RP'
+source: 'Windows Restore Point'
 ```
 
 Enumeration helpers are defined as a set of attributes:
@@ -318,6 +325,8 @@ message:
 short_message:
 - '{path}'
 - '{flag_values}'
+short_source: 'FILE'
+source: 'MacOS File System Events Disk Log Stream'
 ```
 
 Flags helpers are defined as a set of attributes:
@@ -334,3 +343,5 @@ Flags helpers are defined as a set of attributes:
 * 20200916 Removed source types from formatters.
 * 20201220 Added support for boolean helpers.
 * 20201227 Added support for custom helpers.
+* 20221003 Removed `data/sources.config` in favor of formatter configuration (`data/formatters/*.yaml`), the "short_source" and "source" attributes are required.
+* 20260703 description and description_short are no longer used as dynamic output field names.

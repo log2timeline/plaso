@@ -78,7 +78,6 @@ class JiraAccessTextPluginTest(test_lib.TextPluginTestCase):
         storage_writer = self._ParseTextFileWithPlugin(
             ["jira_access_months.log"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -148,9 +147,8 @@ class JiraAccessTextPluginTest(test_lib.TextPluginTestCase):
             "recorded_time": "2022-10-03T09:00:01+00:00",
             "remote_name": "192.168.1.10",
             "thread_name": "http-nio-8080-exec-1",
-            "user_name": "admin",
+            "username": "admin",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -160,7 +158,6 @@ class JiraAccessTextPluginTest(test_lib.TextPluginTestCase):
         storage_writer = self._ParseTextFileWithPlugin(
             ["jira_access_post9.4.log"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -194,9 +191,8 @@ class JiraAccessTextPluginTest(test_lib.TextPluginTestCase):
             "recorded_time": "2022-10-03T09:00:01+00:00",
             "remote_name": "192.168.1.10",
             "thread_name": "http-nio-8080-exec-1",
-            "user_name": "admin",
+            "username": "admin",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

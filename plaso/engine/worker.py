@@ -50,6 +50,7 @@ class EventExtractionWorkerVolumeScanner(dfvfs_volume_scanner.VolumeScanner):
             options = dfvfs_volume_scanner.VolumeScannerOptions()
             options.partitions = ["all"]
             options.scan_mode = options.SCAN_MODE_ALL
+            options.sector_size = None
             options.snapshots = ["none"]
             options.snapshots_only = False
             options.volumes = ["all"]
@@ -153,7 +154,7 @@ class EventExtractionWorker:
         self._abort = False
         self._analyzers = []
         self._analyzers_profiler = None
-        self._achive_type_scanner = self._CreateArchiveTypeScanner([])
+        self._archive_type_scanner = self._CreateArchiveTypeScanner([])
         self._archive_types = []
         self._event_data_extractor = extractors.EventDataExtractor(
             force_parser=force_parser, parser_filter_expression=parser_filter_expression
@@ -551,9 +552,7 @@ class EventExtractionWorker:
                 f"analyzer failed to determine compressed stream type indicators "
                 f"with error: {exception!s}"
             )
-            parser_mediator.ProduceExtractionWarning(
-                warning_message, path_spec=path_spec
-            )
+            parser_mediator.ProduceWarning(warning_message, path_spec=path_spec)
 
         return type_indicators
 
@@ -581,9 +580,7 @@ class EventExtractionWorker:
                 f"analyzer failed to determine storage media image type indicators "
                 f"with error: {exception!s}"
             )
-            parser_mediator.ProduceExtractionWarning(
-                warning_message, path_spec=path_spec
-            )
+            parser_mediator.ProduceWarning(warning_message, path_spec=path_spec)
 
         return type_indicators
 
@@ -632,7 +629,7 @@ class EventExtractionWorker:
                 if self._abort:
                     break
 
-                event_source = event_sources.FileEntryEventSource(
+                event_source = event_sources.EventSource(
                     file_entry_type=dfvfs_definitions.FILE_ENTRY_TYPE_FILE,
                     path_spec=generated_path_spec,
                 )
@@ -644,7 +641,7 @@ class EventExtractionWorker:
             warning_message = (
                 f"unable to process archive file with error: {exception!s}"
             )
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 warning_message, path_spec=generated_path_spec
             )
 
@@ -681,7 +678,7 @@ class EventExtractionWorker:
                 if self._abort:
                     break
 
-                event_source = event_sources.FileEntryEventSource(
+                event_source = event_sources.EventSource(
                     file_entry_type=dfvfs_definitions.FILE_ENTRY_TYPE_FILE,
                     path_spec=base_path_spec,
                 )
@@ -693,7 +690,7 @@ class EventExtractionWorker:
             warning_message = (
                 f"unable to process storage media image with error: {exception!s}"
             )
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 warning_message, path_spec=storage_media_image_path_spec
             )
 
@@ -746,12 +743,10 @@ class EventExtractionWorker:
                     f"unsupported compressed stream format type indicator: "
                     f"{type_indicator:s}"
                 )
-                parser_mediator.ProduceExtractionWarning(
-                    warning_message, path_spec=path_spec
-                )
+                parser_mediator.ProduceWarning(warning_message, path_spec=path_spec)
 
             if compressed_stream_path_spec:
-                event_source = event_sources.FileEntryEventSource(
+                event_source = event_sources.EventSource(
                     file_entry_type=dfvfs_definitions.FILE_ENTRY_TYPE_FILE,
                     path_spec=compressed_stream_path_spec,
                 )
@@ -785,7 +780,7 @@ class EventExtractionWorker:
                     f"unable to process directory entry: {sub_file_entry.name:s} with "
                     f"error: {exception!s}"
                 )
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     warning_message, path_spec=file_entry.path_spec
                 )
                 continue
@@ -796,7 +791,7 @@ class EventExtractionWorker:
                 if file_entry.IsRoot() and sub_file_entry.name == "$OrphanFiles":
                     continue
 
-            event_source = event_sources.FileEntryEventSource(
+            event_source = event_sources.EventSource(
                 file_entry_type=sub_file_entry.entry_type,
                 path_spec=sub_file_entry.path_spec,
             )
@@ -921,7 +916,7 @@ class EventExtractionWorker:
                 )
                 if file_object:
                     scan_state = pysigscan.scan_state()
-                    self._achive_type_scanner.scan_file_object(scan_state, file_object)
+                    self._archive_type_scanner.scan_file_object(scan_state, file_object)
                     results = [
                         scan_result.identifier
                         for scan_result in iter(scan_state.scan_results)
@@ -1011,7 +1006,7 @@ class EventExtractionWorker:
         self._archive_types = [
             archive_type.lower() for archive_type in archive_types_string.split(",")
         ]
-        self._achive_type_scanner = self._CreateArchiveTypeScanner(self._archive_types)
+        self._archive_type_scanner = self._CreateArchiveTypeScanner(self._archive_types)
 
     def _SetHashers(self, hasher_names_string):
         """Sets the hasher names.

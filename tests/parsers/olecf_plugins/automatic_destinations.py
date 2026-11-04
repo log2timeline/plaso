@@ -41,7 +41,7 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
         # Check a AutomaticDestinationsDestListEntryEvent.
         expected_event_values = {
             "birth_droid_file_identifier": "{9b1ce584-4a4c-11e5-b5c9-080027ac3d7f}",
-            "birth_droid_volume_identifier": ("{fb6af886-05d7-402d-9741-d1ee9e64c41f}"),
+            "birth_droid_volume_identifier": "{fb6af886-05d7-402d-9741-d1ee9e64c41f}",
             "data_type": "olecf:dest_list:entry",
             "droid_file_identifier": "{9b1ce584-4a4c-11e5-b5c9-080027ac3d7f}",
             "droid_volume_identifier": "{fb6af886-05d7-402d-9741-d1ee9e64c41f}",
@@ -114,7 +114,7 @@ class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
         # Check a AutomaticDestinationsDestListEntryEvent.
         expected_event_values = {
             "birth_droid_file_identifier": "{00000000-0000-0000-0000-000000000000}",
-            "birth_droid_volume_identifier": ("{00000000-0000-0000-0000-000000000000}"),
+            "birth_droid_volume_identifier": "{00000000-0000-0000-0000-000000000000}",
             "data_type": "olecf:dest_list:entry",
             "droid_file_identifier": "{00000000-0000-0000-0000-000000000000}",
             "droid_volume_identifier": "{00000000-0000-0000-0000-000000000000}",

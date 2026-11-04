@@ -15,9 +15,8 @@ class AzureActivityLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
         """Tests the Process function."""
         plugin = azure_activity_log.AzureActivityLogJSONLPlugin()
         storage_writer = self._ParseJSONLFileWithPlugin(
-            ["azure_activity_log.jsonl"], plugin
+            ["jsonl", "azure_activity_log.jsonl"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -54,7 +53,6 @@ class AzureActivityLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
             "subscription_identifier": "12345678-9abc-defg-hijk-lmnopqrstuvw",
             "tenant_identifier": "12345678-9abc-defg-hijk-lmnopqrstuvw",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

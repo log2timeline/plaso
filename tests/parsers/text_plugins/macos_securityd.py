@@ -19,13 +19,11 @@ class MacOSSecuritydLogTextPluginTest(test_lib.TextPluginTestCase):
         plugin = macos_securityd.MacOSSecuritydLogTextPlugin()
 
         file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
-        file_system_builder.AddFile(
-            "/file.txt",
-            (
-                b"Feb 26 19:11:56 secd[1] <Error> [user{} ]: "
-                b"securityd_xpc_dictionary_handler\n"
-            ),
+        data = (
+            b"Feb 26 19:11:56 secd[1] <Error> [user{} ]: "
+            b"securityd_xpc_dictionary_handler\n"
         )
+        file_system_builder.AddFile("/file.txt", data)
 
         file_entry = file_system_builder.file_system.GetFileEntryByPath("/file.txt")
 
@@ -39,13 +37,11 @@ class MacOSSecuritydLogTextPluginTest(test_lib.TextPluginTestCase):
 
         # Check non-matching format.
         file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
-        file_system_builder.AddFile(
-            "/file.txt",
-            (
-                b"Jan 22 07:52:33 myhostname.myhost.com client[30840]: INFO No new "
-                b"content in image.dd.\n"
-            ),
+        data = (
+            b"Jan 22 07:52:33 myhostname.myhost.com client[30840]: INFO No new "
+            b"content in image.dd.\n"
         )
+        file_system_builder.AddFile("/file.txt", data)
 
         file_entry = file_system_builder.file_system.GetFileEntryByPath("/file.txt")
 
@@ -83,16 +79,15 @@ class MacOSSecuritydLogTextPluginTest(test_lib.TextPluginTestCase):
             "data_type": "macos:securityd_log:entry",
             "facility": "user",
             "level": "Error",
-            "message": (
-                "securityd_xpc_dictionary_handler EscrowSecurityAl"
-                "[3273] DeviceInCircle \xdeetta \xe6tti a\xf0 virka "
-                "l\xedka, setja \xedslensku inn."
+            "message_body": (
+                "securityd_xpc_dictionary_handler EscrowSecurityAl[3273] "
+                "DeviceInCircle \xdeetta \xe6tti a\xf0 virka l\xedka, setja "
+                "\xedslensku inn."
             ),
             "security_api": None,
             "sender_pid": 1,
             "sender": "secd",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -103,12 +98,11 @@ class MacOSSecuritydLogTextPluginTest(test_lib.TextPluginTestCase):
             "data_type": "macos:securityd_log:entry",
             "facility": "user",
             "level": "Error",
-            "message": "Repeated 3 times: Happy new year!",
+            "message_body": "Repeated 3 times: Happy new year!",
             "security_api": None,
             "sender_pid": 456,
             "sender": "secd",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 8)
         self.CheckEventData(event_data, expected_event_values)
 

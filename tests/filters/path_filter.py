@@ -70,7 +70,7 @@ class PathFilterScanTreeTest(test_lib.FilterTestCase):
                 "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\"
                 "Explorer\\UserAssist\\{BCB48336-4DDD-48FF-BB0B-D3190DACB3E2}"
             ),
-            ("HKEY_CURRENT_USER\\Software\\Microsoft\\Internet Explorer\\TypedURLs"),
+            "HKEY_CURRENT_USER\\Software\\Microsoft\\Internet Explorer\\TypedURLs",
             (
                 "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\"
                 "Explorer\\TypedPaths"
@@ -83,7 +83,7 @@ class PathFilterScanTreeTest(test_lib.FilterTestCase):
                 "HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\"
                 "Session Manager\\AppCompatCache"
             ),
-            ("HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion"),
+            "HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion",
             "HKEY_LOCAL_MACHINE\\SAM\\Domains\\Account\\Users",
             (
                 "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\"

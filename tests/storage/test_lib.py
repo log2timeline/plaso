@@ -38,13 +38,13 @@ class StorageTestCase(shared_test_lib.BaseTestCase):
         },
         {
             "_parser_chain": "test_parser",
-            "body": (
+            "data_type": "syslog:line",
+            "hostname": "nomachine",
+            "message_body": (
                 "This is a line by someone not reading the log line properly. And "
                 "since this log line exceeds the accepted 80 chars it will be "
                 "shortened."
             ),
-            "data_type": "syslog:line",
-            "hostname": "nomachine",
             "offset": 12,
             "timestamp": "2009-04-05 12:27:39",
             "timestamp_desc": definitions.TIME_DESCRIPTION_WRITTEN,

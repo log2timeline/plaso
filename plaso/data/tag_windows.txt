@@ -70,11 +70,11 @@ task_schedule
   data_type is 'windows:evt:record' AND source_name is 'Security' AND event_identifier is 602
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-Security-Auditing' AND event_identifier is 4698
 
-# Tags task sheduler successful completed job events.
+# Tags task scheduler successful completed job events.
 job_success
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TaskScheduler' AND event_identifier is 102
 
-# Tags task sheduler successful completed actions events.
+# Tags task scheduler successful completed actions events.
 action_success
   data_type is 'windows:evtx:record' AND source_name is 'Microsoft-Windows-TaskScheduler' AND event_identifier is 201
 

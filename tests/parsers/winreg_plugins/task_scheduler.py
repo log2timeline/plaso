@@ -18,7 +18,7 @@ class TaskCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_LOCAL_MACHINE\\Software",
-            ("Microsoft\\Windows NT\\CurrentVersion\\Schedule\\TaskCache"),
+            "Microsoft\\Windows NT\\CurrentVersion\\Schedule\\TaskCache",
         )
         self._AssertNotFiltersOnKeyPath(plugin, "HKEY_LOCAL_MACHINE\\Software", "Bogus")
 
@@ -26,8 +26,8 @@ class TaskCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         """Tests the Process function."""
         test_file_entry = self._GetTestFileEntry(["SOFTWARE-RunTests"])
         key_path = (
-            "HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\"
-            "CurrentVersion\\Schedule\\TaskCache"
+            "HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion\\"
+            "Schedule\\TaskCache"
         )
         plugin = task_scheduler.TaskCacheWindowsRegistryPlugin()
 
@@ -51,11 +51,14 @@ class TaskCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         )
         self.assertEqual(number_of_warnings, 0)
 
+        task_key_path = "\\".join(
+            [key_path, "Tasks", "{044A6734-E90E-4F8F-B357-B2DC8AB3B5EC}"]
+        )
         expected_event_values = {
-            "data_type": "task_scheduler:task_cache:entry",
-            "key_path": key_path,
+            "data_type": "windows:registry:task_scheduler:task_cache:entry",
+            "key_path": task_key_path,
             "last_registered_time": "2009-07-14T05:08:50.8116269+00:00",
-            "last_written_time": "2009-07-14T04:53:25.8116181+00:00",
+            "last_written_time": "2011-08-15T08:54:09.0468750+00:00",
             "launch_time": None,
             "task_name": "SynchronizeTime",
             "task_identifier": "{044A6734-E90E-4F8F-B357-B2DC8AB3B5EC}",

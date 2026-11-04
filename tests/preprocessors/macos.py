@@ -50,14 +50,12 @@ class MacOSHostnamePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
             "/Library/Preferences/SystemConfiguration/preferences.plist",
             self._FILE_DATA,
         )
-
         mount_point = fake_path_spec.FakePathSpec(location="/")
 
         plugin = macos.MacOSHostnamePlugin()
         test_mediator = self._RunPreprocessorPluginOnFileSystem(
             file_system_builder.file_system, mount_point, None, plugin
         )
-
         self.assertEqual(test_mediator.hostname.name, "Plaso's Mac mini")
 
 
@@ -66,21 +64,19 @@ class MacOSKeyboardLayoutPluginTest(test_lib.ArtifactPreprocessorPluginTestCase)
 
     def testParsePlistKeyValue(self):
         """Tests the _ParsePlistKeyValue function."""
-        test_file_path = self._GetTestFilePath(["com.apple.HIToolbox.plist"])
+        test_file_path = self._GetTestFilePath(["plist", "com.apple.HIToolbox.plist"])
         self._SkipIfPathNotExists(test_file_path)
 
         file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
         file_system_builder.AddFileReadData(
             "/Library/Preferences/com.apple.HIToolbox.plist", test_file_path
         )
-
         mount_point = fake_path_spec.FakePathSpec(location="/")
 
         plugin = macos.MacOSKeyboardLayoutPlugin()
         test_mediator = self._RunPreprocessorPluginOnFileSystem(
             file_system_builder.file_system, mount_point, None, plugin
         )
-
         keyboard_layout = test_mediator.GetValue("keyboard_layout")
         self.assertEqual(keyboard_layout, "US")
 
@@ -114,14 +110,12 @@ class MacOSSystemVersionPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
         file_system_builder.AddFile(
             "/System/Library/CoreServices/SystemVersion.plist", self._FILE_DATA
         )
-
         mount_point = fake_path_spec.FakePathSpec(location="/")
 
         plugin = macos.MacOSSystemVersionPlugin()
         test_mediator = self._RunPreprocessorPluginOnFileSystem(
             file_system_builder.file_system, mount_point, None, plugin
         )
-
         build = test_mediator.GetValue("operating_system_version")
         self.assertEqual(build, "10.9.2")
 
@@ -135,7 +129,6 @@ class MacOSTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
         file_system_builder.AddSymbolicLink(
             "/private/etc/localtime", "/usr/share/zoneinfo/Europe/Amsterdam"
         )
-
         mount_point = fake_path_spec.FakePathSpec(location="/")
 
         storage_writer = self._CreateTestStorageWriter()
@@ -144,7 +137,6 @@ class MacOSTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
         test_mediator = self._RunPreprocessorPluginOnFileSystem(
             file_system_builder.file_system, mount_point, storage_writer, plugin
         )
-
         number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
             "preprocessing_warning"
         )
@@ -158,7 +150,6 @@ class MacOSTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
         file_system_builder.AddSymbolicLink(
             "/private/etc/localtime", "/usr/share/zoneinfo/Bogus"
         )
-
         mount_point = fake_path_spec.FakePathSpec(location="/")
 
         storage_writer = self._CreateTestStorageWriter()
@@ -167,7 +158,6 @@ class MacOSTimeZonePluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
         test_mediator = self._RunPreprocessorPluginOnFileSystem(
             file_system_builder.file_system, mount_point, storage_writer, plugin
         )
-
         number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
             "preprocessing_warning"
         )
@@ -183,14 +173,13 @@ class MacOSUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
 
     def testRun(self):
         """Tests the Run function."""
-        test_file_path = self._GetTestFilePath(["nobody.plist"])
+        test_file_path = self._GetTestFilePath(["plist", "nobody.plist"])
         self._SkipIfPathNotExists(test_file_path)
 
         file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
         file_system_builder.AddFileReadData(
             "/private/var/db/dslocal/nodes/Default/users/nobody.plist", test_file_path
         )
-
         mount_point = fake_path_spec.FakePathSpec(location="/")
 
         storage_writer = self._CreateTestStorageWriter()
@@ -199,7 +188,6 @@ class MacOSUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
         self._RunPreprocessorPluginOnFileSystem(
             file_system_builder.file_system, mount_point, storage_writer, plugin
         )
-
         number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
             "preprocessing_warning"
         )
@@ -219,14 +207,13 @@ class MacOSUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
 
     def testRunWithTruncatedFile(self):
         """Tests the Run function on a truncated plist file."""
-        test_file_path = self._GetTestFilePath(["truncated.plist"])
+        test_file_path = self._GetTestFilePath(["plist", "truncated.plist"])
         self._SkipIfPathNotExists(test_file_path)
 
         file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
         file_system_builder.AddFileReadData(
             "/private/var/db/dslocal/nodes/Default/users/nobody.plist", test_file_path
         )
-
         mount_point = fake_path_spec.FakePathSpec(location="/")
 
         storage_writer = self._CreateTestStorageWriter()
@@ -235,7 +222,6 @@ class MacOSUserAccountsPluginTest(test_lib.ArtifactPreprocessorPluginTestCase):
         self._RunPreprocessorPluginOnFileSystem(
             file_system_builder.file_system, mount_point, storage_writer, plugin
         )
-
         number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
             "preprocessing_warning"
         )

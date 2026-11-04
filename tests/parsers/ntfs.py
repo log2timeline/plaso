@@ -11,8 +11,52 @@ from plaso.parsers import ntfs
 from tests.parsers import test_lib
 
 
+class TestMFTEntry:
+    """MFT entry for testing.
+
+    Attributes:
+      file_reference (int): NTFS file reference.
+    """
+
+    def __init__(self, file_reference):
+        """Initializes an MFT entry for testing.
+
+        Args:
+          file_reference (int): NTFS file reference.
+        """
+        super().__init__()
+        self.file_reference = file_reference
+
+
+class TestMFTAttribute:
+    """MFT attribute for testing.
+
+    Attributes:
+      attribute_type (int): attribute type.
+      birth_droid_file_identifier (str): birth droid file identifier.
+      droid_file_identifier (str): droid file identifier.
+    """
+
+    def __init__(
+        self, attribute_type, droid_file_identifier, birth_droid_file_identifier
+    ):
+        """Initializes an MFT attribute for testing.
+
+        Args:
+          attribute_type (int): attribute type.
+          droid_file_identifier (str): droid file identifier.
+          birth_droid_file_identifier (str): birth droid file identifier.
+        """
+        super().__init__()
+        self.attribute_type = attribute_type
+        self.droid_file_identifier = droid_file_identifier
+        self.birth_droid_file_identifier = birth_droid_file_identifier
+
+
 class NTFSMFTParserTest(test_lib.ParserTestCase):
     """Tests for NTFS $MFT metadata file parser."""
+
+    # pylint: disable=protected-access
 
     def testParseFile(self):
         """Tests the Parse function on a stand-alone $MFT file."""
@@ -103,6 +147,52 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
         }
 
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 920)
+        self.CheckEventData(event_data, expected_event_values)
+
+    def testParseObjectIDAttribute(self):
+        """Tests the _ParseObjectIDAttribute function."""
+        parser = ntfs.NTFSMFTParser()
+
+        storage_writer = self._CreateStorageWriter()
+        parser_mediator = self._CreateParserMediator(storage_writer)
+
+        mft_entry = TestMFTEntry((1 << 48) | 462)
+        mft_attribute = TestMFTAttribute(
+            0x00000040,
+            "9fe44b69-2709-11dc-a06b-db3099beae3c",
+            "9fe44b71-2709-11dc-a06b-001122334455",
+        )
+
+        parser._ParseObjectIDAttribute(parser_mediator, mft_entry, mft_attribute)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 2)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        expected_event_values = {
+            "data_type": "windows:distributed_link_tracking:creation",
+            "mac_address": "db:30:99:be:ae:3c",
+            "origin": "$MFT: 462-1",
+            "uuid": "9fe44b69-2709-11dc-a06b-db3099beae3c",
+        }
+
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
+
+        expected_event_values = {
+            "data_type": "windows:distributed_link_tracking:creation",
+            "mac_address": "00:11:22:33:44:55",
+            "origin": "$MFT: 462-1",
+            "uuid": "9fe44b71-2709-11dc-a06b-001122334455",
+        }
+
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 
     def testParseImage(self):

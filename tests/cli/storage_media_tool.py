@@ -74,7 +74,6 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
             location="/",
             parent=test_gpt_partition_path_spec,
         )
-
         volume_system = apfs_volume_system.APFSVolumeSystem()
         volume_system.Open(test_apfs_container_path_spec)
 
@@ -84,7 +83,6 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
         test_mediator = storage_media_tool.StorageMediaToolMediator(
             output_writer=test_output_writer
         )
-
         test_mediator._PrintAPFSVolumeIdentifiersOverview(volume_system, ["apfs1"])
 
         file_object.seek(0, os.SEEK_SET)
@@ -98,7 +96,6 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
             b"",
             b"",
         ]
-
         if not win32console:
             # Using join here since Python 3 does not support format of bytes.
             expected_output_data[2] = b"".join(
@@ -123,7 +120,6 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
             location="/",
             parent=test_raw_path_spec,
         )
-
         volume_system = lvm_volume_system.LVMVolumeSystem()
         volume_system.Open(test_lvm_path_spec)
 
@@ -133,11 +129,9 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
         test_mediator = storage_media_tool.StorageMediaToolMediator(
             output_writer=test_output_writer
         )
-
         test_mediator._PrintLVMVolumeIdentifiersOverview(
             volume_system, ["lvm1", "lvm2"]
         )
-
         file_object.seek(0, os.SEEK_SET)
         output_data = file_object.read()
 
@@ -150,7 +144,6 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
             b"",
             b"",
         ]
-
         if not win32console:
             # Using join here since Python 3 does not support format of bytes.
             expected_output_data[2] = b"".join(
@@ -173,7 +166,6 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
         test_tsk_partition_path_spec = path_spec_factory.Factory.NewPathSpec(
             dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, parent=test_raw_path_spec
         )
-
         volume_system = tsk_volume_system.TSKVolumeSystem()
         volume_system.Open(test_tsk_partition_path_spec)
 
@@ -183,7 +175,6 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
         test_mediator = storage_media_tool.StorageMediaToolMediator(
             output_writer=test_output_writer
         )
-
         test_mediator._PrintTSKPartitionIdentifiersOverview(volume_system, ["p1", "p5"])
 
         file_object.seek(0, os.SEEK_SET)
@@ -193,15 +184,11 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
             b"The following partitions were found:",
             b"",
             b"Identifier      Offset (in bytes)       Size (in bytes)",
-            (
-                b"p1              512 (0x00000200)        175.0KiB / 179.2kB "
-                b"(179200 B)"
-            ),
+            b"p1              512 (0x00000200)        175.0KiB / 179.2kB (179200 B)",
             b"p5              180224 (0x0002c000)     1.2MiB / 1.3MB (1294336 B)",
             b"",
             b"",
         ]
-
         if not win32console:
             # Using join here since Python 3 does not support format of bytes.
             expected_output_data[2] = b"".join(
@@ -224,7 +211,6 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
         test_vss_path_spec = path_spec_factory.Factory.NewPathSpec(
             dfvfs_definitions.TYPE_INDICATOR_VSHADOW, parent=test_qcow_path_spec
         )
-
         volume_system = vshadow_volume_system.VShadowVolumeSystem()
         volume_system.Open(test_vss_path_spec)
 
@@ -234,7 +220,6 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
         test_mediator = storage_media_tool.StorageMediaToolMediator(
             output_writer=test_output_writer
         )
-
         test_mediator._PrintVSSStoreIdentifiersOverview(volume_system, ["vss1", "vss2"])
 
         file_object.seek(0, os.SEEK_SET)
@@ -249,7 +234,6 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
             b"",
             b"",
         ]
-
         if not win32console:
             # Using join here since Python 3 does not support format of bytes.
             expected_output_data[2] = b"".join(
@@ -257,8 +241,6 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
             )
 
         self.assertEqual(output_data.split(b"\n"), expected_output_data)
-
-    # TODO: add tests for _ReadSelectedVolumes
 
     def testParseVolumeIdentifiersString(self):
         """Tests the ParseVolumeIdentifiersString function."""
@@ -315,7 +297,6 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
             location="/",
             parent=test_gpt_partition_path_spec,
         )
-
         volume_system = apfs_volume_system.APFSVolumeSystem()
         volume_system.Open(test_apfs_container_path_spec)
 
@@ -329,11 +310,9 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
         test_mediator = storage_media_tool.StorageMediaToolMediator(
             input_reader=test_input_reader, output_writer=test_output_writer
         )
-
         volume_identifiers = test_mediator.GetAPFSVolumeIdentifiers(
             volume_system, ["apfs1"]
         )
-
         self.assertEqual(volume_identifiers, ["apfs1"])
 
         # Test selection of single volume.
@@ -346,11 +325,9 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
         test_mediator = storage_media_tool.StorageMediaToolMediator(
             input_reader=test_input_reader, output_writer=test_output_writer
         )
-
         volume_identifiers = test_mediator.GetAPFSVolumeIdentifiers(
             volume_system, ["apfs1"]
         )
-
         self.assertEqual(volume_identifiers, ["apfs1"])
 
         # Test selection of single volume with invalid input on first attempt.
@@ -363,11 +340,9 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
         test_mediator = storage_media_tool.StorageMediaToolMediator(
             input_reader=test_input_reader, output_writer=test_output_writer
         )
-
         volume_identifiers = test_mediator.GetAPFSVolumeIdentifiers(
             volume_system, ["apfs1"]
         )
-
         self.assertEqual(volume_identifiers, ["apfs1"])
 
         # Test selection of all volumes.
@@ -380,11 +355,9 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
         test_mediator = storage_media_tool.StorageMediaToolMediator(
             input_reader=test_input_reader, output_writer=test_output_writer
         )
-
         volume_identifiers = test_mediator.GetAPFSVolumeIdentifiers(
             volume_system, ["apfs1"]
         )
-
         self.assertEqual(volume_identifiers, ["apfs1"])
 
         # Test selection of no volumes.
@@ -397,11 +370,9 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
         test_mediator = storage_media_tool.StorageMediaToolMediator(
             input_reader=test_input_reader, output_writer=test_output_writer
         )
-
         volume_identifiers = test_mediator.GetAPFSVolumeIdentifiers(
             volume_system, ["apfs1"]
         )
-
         self.assertEqual(volume_identifiers, [])
 
     def testGetLVMVolumeIdentifiers(self):
@@ -420,7 +391,6 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
             location="/",
             parent=test_raw_path_spec,
         )
-
         volume_system = lvm_volume_system.LVMVolumeSystem()
         volume_system.Open(test_lvm_path_spec)
 
@@ -434,11 +404,9 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
         test_mediator = storage_media_tool.StorageMediaToolMediator(
             input_reader=test_input_reader, output_writer=test_output_writer
         )
-
         volume_identifiers = test_mediator.GetLVMVolumeIdentifiers(
             volume_system, ["lvm1"]
         )
-
         self.assertEqual(volume_identifiers, ["lvm1"])
 
         # Test selection of single volume.
@@ -451,11 +419,9 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
         test_mediator = storage_media_tool.StorageMediaToolMediator(
             input_reader=test_input_reader, output_writer=test_output_writer
         )
-
         volume_identifiers = test_mediator.GetLVMVolumeIdentifiers(
             volume_system, ["lvm1"]
         )
-
         self.assertEqual(volume_identifiers, ["lvm1"])
 
         # Test selection of single volume with invalid input on first attempt.
@@ -468,11 +434,9 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
         test_mediator = storage_media_tool.StorageMediaToolMediator(
             input_reader=test_input_reader, output_writer=test_output_writer
         )
-
         volume_identifiers = test_mediator.GetLVMVolumeIdentifiers(
             volume_system, ["lvm1"]
         )
-
         self.assertEqual(volume_identifiers, ["lvm1"])
 
         # Test selection of all volumes.
@@ -485,11 +449,9 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
         test_mediator = storage_media_tool.StorageMediaToolMediator(
             input_reader=test_input_reader, output_writer=test_output_writer
         )
-
         volume_identifiers = test_mediator.GetLVMVolumeIdentifiers(
             volume_system, ["lvm1", "lvm2"]
         )
-
         self.assertEqual(volume_identifiers, ["lvm1", "lvm2"])
 
         # Test selection of no volumes.
@@ -502,11 +464,9 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
         test_mediator = storage_media_tool.StorageMediaToolMediator(
             input_reader=test_input_reader, output_writer=test_output_writer
         )
-
         volume_identifiers = test_mediator.GetLVMVolumeIdentifiers(
             volume_system, ["lvm1"]
         )
-
         self.assertEqual(volume_identifiers, [])
 
     def testGetPartitionIdentifiers(self):
@@ -523,7 +483,6 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
         test_tsk_partition_path_spec = path_spec_factory.Factory.NewPathSpec(
             dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, parent=test_raw_path_spec
         )
-
         volume_system = tsk_volume_system.TSKVolumeSystem()
         volume_system.Open(test_tsk_partition_path_spec)
 
@@ -533,7 +492,6 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
         test_mediator = storage_media_tool.StorageMediaToolMediator(
             output_writer=test_output_writer
         )
-
         # Test selection of single partition.
         input_file_object = io.BytesIO(b"5\n")
         test_input_reader = tools.FileObjectInputReader(input_file_object)
@@ -544,11 +502,9 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
         test_mediator = storage_media_tool.StorageMediaToolMediator(
             input_reader=test_input_reader, output_writer=test_output_writer
         )
-
         volume_identifiers = test_mediator.GetPartitionIdentifiers(
             volume_system, ["p1", "p5"]
         )
-
         self.assertEqual(volume_identifiers, ["p5"])
 
         # Test selection of single partition.
@@ -561,11 +517,9 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
         test_mediator = storage_media_tool.StorageMediaToolMediator(
             input_reader=test_input_reader, output_writer=test_output_writer
         )
-
         volume_identifiers = test_mediator.GetPartitionIdentifiers(
             volume_system, ["p1", "p5"]
         )
-
         self.assertEqual(volume_identifiers, ["p5"])
 
         # Test selection of single partition with invalid input on first attempt.
@@ -578,11 +532,9 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
         test_mediator = storage_media_tool.StorageMediaToolMediator(
             input_reader=test_input_reader, output_writer=test_output_writer
         )
-
         volume_identifiers = test_mediator.GetPartitionIdentifiers(
             volume_system, ["p1", "p5"]
         )
-
         self.assertEqual(volume_identifiers, ["p5"])
 
         # Test selection of all partitions.
@@ -595,16 +547,51 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
         test_mediator = storage_media_tool.StorageMediaToolMediator(
             input_reader=test_input_reader, output_writer=test_output_writer
         )
-
         volume_identifiers = test_mediator.GetPartitionIdentifiers(
             volume_system, ["p1", "p5"]
         )
-
         self.assertEqual(volume_identifiers, ["p1", "p5"])
 
-        # TODO: test selection of no partitions.
+        # Test selection of no partitions.
+        input_file_object = io.BytesIO(b"\n")
+        test_input_reader = tools.FileObjectInputReader(input_file_object)
 
-    # TODO: add test for PromptUserForVSSCurrentVolume.
+        output_file_object = io.BytesIO()
+        test_output_writer = tools.FileObjectOutputWriter(output_file_object)
+
+        test_mediator = storage_media_tool.StorageMediaToolMediator(
+            input_reader=test_input_reader, output_writer=test_output_writer
+        )
+        volume_identifiers = test_mediator.GetPartitionIdentifiers(
+            volume_system, ["p1", "p5"]
+        )
+        self.assertEqual(volume_identifiers, [])
+
+    def testPromptUserForVSSCurrentVolume(self):
+        """Tests the PromptUserForVSSCurrentVolume function."""
+        for input_data, expected_result in (
+            (b"yes\n", True),
+            (b"NO\n", False),
+            (b"\n", True),
+            (b"bogus\nno\n", False),
+        ):
+            input_file_object = io.BytesIO(input_data)
+            test_input_reader = tools.FileObjectInputReader(input_file_object)
+
+            output_file_object = io.BytesIO()
+            test_output_writer = tools.FileObjectOutputWriter(output_file_object)
+
+            test_mediator = storage_media_tool.StorageMediaToolMediator(
+                input_reader=test_input_reader, output_writer=test_output_writer
+            )
+            result = test_mediator.PromptUserForVSSCurrentVolume()
+            self.assertEqual(result, expected_result)
+
+            output_data = output_file_object.getvalue()
+            self.assertTrue(output_data.startswith(b"Volume Shadow Snapshots (VSS)"))
+
+            number_of_retries = output_data.count(b"Unsupported option")
+            self.assertEqual(number_of_retries, input_data.count(b"bogus"))
 
     def testGetVSSStoreIdentifiers(self):
         """Tests the GetVSSStoreIdentifiers function."""
@@ -620,7 +607,6 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
         test_vss_path_spec = path_spec_factory.Factory.NewPathSpec(
             dfvfs_definitions.TYPE_INDICATOR_VSHADOW, parent=test_qcow_path_spec
         )
-
         volume_system = vshadow_volume_system.VShadowVolumeSystem()
         volume_system.Open(test_vss_path_spec)
 
@@ -630,7 +616,6 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
         test_mediator = storage_media_tool.StorageMediaToolMediator(
             output_writer=test_output_writer
         )
-
         # Test selection of single store.
         input_file_object = io.BytesIO(b"2\n")
         test_input_reader = tools.FileObjectInputReader(input_file_object)
@@ -641,11 +626,9 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
         test_mediator = storage_media_tool.StorageMediaToolMediator(
             input_reader=test_input_reader, output_writer=test_output_writer
         )
-
         volume_identifiers = test_mediator.GetVSSStoreIdentifiers(
             volume_system, ["vss1", "vss2"]
         )
-
         self.assertEqual(volume_identifiers, ["vss2"])
 
         # Test selection of single store.
@@ -658,11 +641,9 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
         test_mediator = storage_media_tool.StorageMediaToolMediator(
             input_reader=test_input_reader, output_writer=test_output_writer
         )
-
         volume_identifiers = test_mediator.GetVSSStoreIdentifiers(
             volume_system, ["vss1", "vss2"]
         )
-
         self.assertEqual(volume_identifiers, ["vss2"])
 
         # Test selection of single store with invalid input on first attempt.
@@ -675,11 +656,9 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
         test_mediator = storage_media_tool.StorageMediaToolMediator(
             input_reader=test_input_reader, output_writer=test_output_writer
         )
-
         volume_identifiers = test_mediator.GetVSSStoreIdentifiers(
             volume_system, ["vss1", "vss2"]
         )
-
         self.assertEqual(volume_identifiers, ["vss2"])
 
         # Test selection of all stores.
@@ -692,11 +671,9 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
         test_mediator = storage_media_tool.StorageMediaToolMediator(
             input_reader=test_input_reader, output_writer=test_output_writer
         )
-
         volume_identifiers = test_mediator.GetVSSStoreIdentifiers(
             volume_system, ["vss1", "vss2"]
         )
-
         self.assertEqual(volume_identifiers, ["vss1", "vss2"])
 
         # Test selection of no stores.
@@ -709,11 +686,9 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
         test_mediator = storage_media_tool.StorageMediaToolMediator(
             input_reader=test_input_reader, output_writer=test_output_writer
         )
-
         volume_identifiers = test_mediator.GetVSSStoreIdentifiers(
             volume_system, ["vss1", "vss2"]
         )
-
         self.assertEqual(volume_identifiers, [])
 
 
@@ -1202,7 +1177,7 @@ class StorageMediaToolVolumeScannerTest(test_lib.CLIToolTestCase):
 
         self._TestScanSourceLVMImage(source_path)
 
-    def testScanSourceNonExisitingFile(self):
+    def testScanSourceNonExistingFile(self):
         """Tests the ScanSource function on a non existing file."""
         with self.assertRaises(dfvfs_errors.ScannerError):
             source_path = self._GetTestFilePath(["nosuchfile.raw"])
@@ -1274,7 +1249,7 @@ Test argument parser.
     if _PYTHON3_13_OR_LATER:
         _EXPECTED_OUTPUT_STORAGE_MEDIA_OPTIONS = f"""\
 usage: storage_media_tool_test.py [--partitions PARTITIONS]
-                                  [--volumes VOLUMES]
+                                  [--sector_size SIZE] [--volumes VOLUMES]
 
 Test argument parser.
 
@@ -1286,6 +1261,8 @@ Test argument parser.
                         separated values). Ranges and lists can also be
                         combined as: "1,3..5". The first partition is 1. All
                         partitions can be specified with: "all".
+  --sector_size, --sector-size SIZE
+                        number of bytes per sector.
   --volumes, --volume VOLUMES
                         Define volumes to be processed. A range of volumes can
                         be defined as: "3..5". Multiple volumes can be defined
@@ -1297,7 +1274,7 @@ Test argument parser.
     else:
         _EXPECTED_OUTPUT_STORAGE_MEDIA_OPTIONS = f"""\
 usage: storage_media_tool_test.py [--partitions PARTITIONS]
-                                  [--volumes VOLUMES]
+                                  [--sector_size SIZE] [--volumes VOLUMES]
 
 Test argument parser.
 
@@ -1309,6 +1286,8 @@ Test argument parser.
                         separated values). Ranges and lists can also be
                         combined as: "1,3..5". The first partition is 1. All
                         partitions can be specified with: "all".
+  --sector_size SIZE, --sector-size SIZE
+                        number of bytes per sector.
   --volumes VOLUMES, --volume VOLUMES
                         Define volumes to be processed. A range of volumes can
                         be defined as: "3..5". Multiple volumes can be defined
@@ -1392,6 +1371,21 @@ Test argument parser.
         options = test_lib.TestOptions()
 
         test_tool._ParseCredentialOptions(options)
+        self.assertEqual(test_tool._credentials, [])
+
+        options.credentials = ["password:bde-TEST", "recovery_password:1234"]
+
+        test_tool._ParseCredentialOptions(options)
+        self.assertEqual(
+            test_tool._credentials,
+            [("password", "bde-TEST"), ("recovery_password", "1234")],
+        )
+
+        for credentials in ("password:test", ["password"], ["bogus:test"]):
+            options.credentials = credentials
+
+            with self.assertRaises(errors.BadConfigOption):
+                test_tool._ParseCredentialOptions(options)
 
         # TODO: improve test coverage.
 
@@ -1432,8 +1426,26 @@ Test argument parser.
         options.partitions = "all"
 
         test_tool._ParseStorageMediaImageOptions(options)
+        self.assertEqual(test_tool._partitions, ["all"])
+        self.assertIsNone(test_tool._volumes)
 
-        # TODO: improve test coverage.
+        options.partitions = "1,3"
+        options.volumes = "2..3"
+
+        test_tool._ParseStorageMediaImageOptions(options)
+        self.assertEqual(test_tool._partitions, ["p1", "p3"])
+        self.assertEqual(test_tool._volumes, [2, 3])
+
+        options.partitions = "bogus"
+
+        with self.assertRaises(errors.BadConfigOption):
+            test_tool._ParseStorageMediaImageOptions(options)
+
+        options.partitions = None
+        options.volumes = "bogus"
+
+        with self.assertRaises(errors.BadConfigOption):
+            test_tool._ParseStorageMediaImageOptions(options)
 
     def testParseVSSProcessingOptions(self):
         """Tests the _ParseVSSProcessingOptions function."""
@@ -1442,8 +1454,20 @@ Test argument parser.
         options = test_lib.TestOptions()
 
         test_tool._ParseVSSProcessingOptions(options)
+        self.assertFalse(test_tool._vss_only)
+        self.assertIsNone(test_tool._vss_stores)
 
-        # TODO: improve test coverage.
+        options.vss_only = True
+        options.vss_stores = "1..2"
+
+        test_tool._ParseVSSProcessingOptions(options)
+        self.assertTrue(test_tool._vss_only)
+        self.assertEqual(test_tool._vss_stores, ["vss1", "vss2"])
+
+        options.vss_stores = "bogus"
+
+        with self.assertRaises(errors.BadConfigOption):
+            test_tool._ParseVSSProcessingOptions(options)
 
     def testAddCredentialOptions(self):
         """Tests the AddCredentialOptions function."""
@@ -1474,6 +1498,91 @@ Test argument parser.
 
         output = self._RunArgparseFormatHelp(argument_parser)
         self.assertEqual(output, self._EXPECTED_OUTPUT_VSS_PROCESSING_OPTIONS)
+
+    def testScanSourceWithPartitions(self):
+        """Tests the ScanSource function with the partitions option."""
+        test_file_path = self._GetTestFilePath(["multi_partition_image.vmdk"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        test_tool = storage_media_tool.StorageMediaTool()
+        test_tool._unattended_mode = True
+
+        options = test_lib.TestOptions()
+        options.partitions = "1,2"
+        options.source = test_file_path
+
+        test_tool._ParseStorageMediaOptions(options)
+        test_tool.ScanSource(test_tool._source_path)
+
+        self.assertEqual(len(test_tool._file_system_path_specs), 2)
+
+        test_tool = storage_media_tool.StorageMediaTool()
+        test_tool._unattended_mode = True
+
+        # Partition 12 does not exist and should not be read as partition 1 and 2.
+        options.partitions = "12"
+
+        test_tool._ParseStorageMediaOptions(options)
+
+        with self.assertRaises(errors.SourceScannerError):
+            test_tool.ScanSource(test_tool._source_path)
+
+    def testScanSourceWithVolumes(self):
+        """Tests the ScanSource function with the volumes option."""
+        test_file_path = self._GetTestFilePath(["lvm.raw"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        test_tool = storage_media_tool.StorageMediaTool()
+        test_tool._unattended_mode = True
+
+        options = test_lib.TestOptions()
+        options.source = test_file_path
+        options.volumes = "1..2"
+
+        test_tool._ParseStorageMediaOptions(options)
+        test_tool.ScanSource(test_tool._source_path)
+
+        # Only the first of the 2 LVM volumes contains a file system.
+        self.assertEqual(len(test_tool._file_system_path_specs), 1)
+
+        test_tool = storage_media_tool.StorageMediaTool()
+        test_tool._unattended_mode = True
+
+        options.volumes = "1"
+
+        test_tool._ParseStorageMediaOptions(options)
+        test_tool.ScanSource(test_tool._source_path)
+
+        self.assertEqual(len(test_tool._file_system_path_specs), 1)
+
+    def testScanSourceWithVSSStores(self):
+        """Tests the ScanSource function with the VSS stores option."""
+        test_file_path = self._GetTestFilePath(["vsstest.qcow2"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        test_tool = storage_media_tool.StorageMediaTool()
+        test_tool._unattended_mode = True
+
+        options = test_lib.TestOptions()
+        options.source = test_file_path
+        options.vss_stores = "1,2"
+
+        test_tool._ParseStorageMediaOptions(options)
+        test_tool.ScanSource(test_tool._source_path)
+
+        # The 2 VSS stores and the current volume.
+        self.assertEqual(len(test_tool._file_system_path_specs), 3)
+
+        test_tool = storage_media_tool.StorageMediaTool()
+        test_tool._unattended_mode = True
+
+        # VSS store 12 does not exist and should not be read as VSS store 1 and 2.
+        options.vss_stores = "12"
+
+        test_tool._ParseStorageMediaOptions(options)
+
+        with self.assertRaises(errors.SourceScannerError):
+            test_tool.ScanSource(test_tool._source_path)
 
 
 if __name__ == "__main__":

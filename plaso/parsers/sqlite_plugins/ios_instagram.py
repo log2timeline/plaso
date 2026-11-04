@@ -16,7 +16,7 @@ class IOSInstagramMessageEventData(events.EventData):
     """Instagram message event data.
 
     Attributes:
-      message (str): Content of the direct message or chat sent in the thread.
+      message_body (str): Content of the direct message or chat sent in the thread.
       query (str): SQL query that was used to obtain the event data.
       sender_identifier (str): unique identifier (or primary key) of the sender
           account.
@@ -34,7 +34,7 @@ class IOSInstagramMessageEventData(events.EventData):
     def __init__(self):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
-        self.message = None
+        self.message_body = None
         self.query = None
         self.sender_identifier = None
         self.shared_media_identifier = None
@@ -110,11 +110,11 @@ class IOSInstagramPlugin(interface.SQLitePlugin):
         """Parses a row in the messages table.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           query (str): query that created the row.
           row (sqlite3.Row): row.
-          cache (Optional[SQLiteCache]): cache.
+          cache (Optional[SQLiteCache): cache which contains cached user information.
         """
         query_hash = hash(query)
 
@@ -122,13 +122,13 @@ class IOSInstagramPlugin(interface.SQLitePlugin):
 
         archive = self._GetRowValue(query_hash, row, "archive")
         if not archive:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"Message: {message_identifier:s} missing archive value"
             )
             return
 
         if not archive.startswith(b"bplist"):
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"Message: {message_identifier:s} unsupported archive value - not a "
                 f"binary plist."
             )
@@ -138,16 +138,15 @@ class IOSInstagramPlugin(interface.SQLitePlugin):
             top_level_object = plistlib.loads(archive)
 
         except plistlib.InvalidFileException as exception:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"Message: {message_identifier:s} unable to parse archive plist with "
                 f"error: {exception!s}"
             )
             return
 
         if not self._plist_decoder.IsEncoded(top_level_object):
-            parser_mediator.ProduceExtractionWarning(
-                f"Message: {message_identifier:s} unsupported archive plist "
-                f"encoding."
+            parser_mediator.ProduceWarning(
+                f"Message: {message_identifier:s} unsupported archive plist encoding."
             )
             return
 
@@ -160,14 +159,14 @@ class IOSInstagramPlugin(interface.SQLitePlugin):
         thread_activity = content.get(
             "IGDirectThreadActivityAnnouncement*threadActivity", {}
         )
-
         photo = media.get(
             "IGDirectPublishedMessagePermanentMedia*permanentMedia", {}
         ).get("IGPhoto*photo", {})
+
         image_versions = photo.get("imageVersions")
 
         event_data = IOSInstagramMessageEventData()
-        event_data.message = content.get("NSString*string")
+        event_data.message_body = content.get("NSString*string")
         event_data.query = query
         event_data.sender_identifier = metadata.get("NSString*senderPk")
         event_data.sent_time = metadata.get("NSDate*serverTimestamp")
@@ -191,11 +190,11 @@ class IOSInstagramPlugin(interface.SQLitePlugin):
         """Parses a row in the threads table.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           query (str): query that created the row.
           row (sqlite3.Row): row.
-          cache (Optional[SQLiteCache]): cache.
+          cache (Optional[SQLiteCache): cache which contains cached user information.
         """
         query_hash = hash(query)
 
@@ -206,7 +205,7 @@ class IOSInstagramPlugin(interface.SQLitePlugin):
             return
 
         if not metadata.startswith(b"bplist"):
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"Thread: {thread_identifier:s} unsupported metadata - not a binary "
                 f"plist."
             )
@@ -216,14 +215,14 @@ class IOSInstagramPlugin(interface.SQLitePlugin):
             top_level_object = plistlib.loads(metadata)
 
         except plistlib.InvalidFileException as exception:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"Thread: {thread_identifier:s} unable to parse metadata plist with "
                 f"error: {exception!s}"
             )
             return
 
         if not self._plist_decoder.IsEncoded(top_level_object):
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"Thread: {thread_identifier:s} unsupported metadata plist encoding."
             )
             return

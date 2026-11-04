@@ -2,6 +2,8 @@
 
 import os
 
+from dfvfs.helpers import file_system_searcher
+
 from plaso.containers import artifacts
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
@@ -125,12 +127,14 @@ class WindowsProfilePathEnvironmentVariableArtifactPreprocessorPlugin(
             )
 
 
-class WindowsPathEnvironmentVariableArtifactPreprocessorPlugin(
+class WindowsPathEnvironmentVariablePreprocessorPlugin(
     interface.FileSystemArtifactPreprocessorPlugin
 ):
     """Windows path environment variable plugin interface."""
 
     _NAME = None
+
+    _WINDOWS_PATHS = frozenset(["\\Windows", "\\WinNT", "\\WINNT35", "\\WTSRV"])
 
     def _ParsePathSpecification(
         self, mediator, searcher, file_system, path_specification, path_separator
@@ -153,7 +157,7 @@ class WindowsPathEnvironmentVariableArtifactPreprocessorPlugin(
         relative_path = searcher.GetRelativePath(path_specification)
         if not relative_path:
             raise errors.PreProcessFail(
-                f"Unable to read: {self.ARTIFACT_DEFINITION_NAME:s} with error: "
+                f"Unable to determine environment variable: {self._NAME:s} with error: "
                 f"missing relative path."
             )
 
@@ -169,9 +173,51 @@ class WindowsPathEnvironmentVariableArtifactPreprocessorPlugin(
             mediator.AddEnvironmentVariable(environment_variable)
         except KeyError:
             mediator.ProducePreprocessingWarning(
-                self.ARTIFACT_DEFINITION_NAME,
+                "WindowsPathEnvironmentVariablePreprocessorPlugin",
                 f"Unable to set environment variable: {self._NAME:s}.",
             )
+
+    # pylint: disable=unused-argument
+    def Collect(self, mediator, artifact_definition, searcher, file_system):
+        """Collects values using a file artifact definition.
+
+        Args:
+          mediator (PreprocessMediator): mediates interactions between preprocess
+              plugins and other components, such as storage and knowledge base.
+          artifact_definition (artifacts.ArtifactDefinition): artifact definition.
+          searcher (dfvfs.FileSystemSearcher): file system searcher to preprocess
+              the file system.
+          file_system (dfvfs.FileSystem): file system to be preprocessed.
+
+        Raises:
+          PreProcessFail: if the preprocessing fails.
+        """
+        last_exception = None
+
+        for path in self._WINDOWS_PATHS:
+            find_spec = file_system_searcher.FindSpec(
+                case_sensitive=False,
+                location_glob=path,
+                location_separator="\\",
+            )
+            for path_specification in searcher.Find(find_specs=[find_spec]):
+                try:
+                    self._ParsePathSpecification(
+                        mediator,
+                        searcher,
+                        file_system,
+                        path_specification,
+                        "\\",
+                    )
+                    last_exception = None
+
+                except errors.PreProcessFail as exception:
+                    last_exception = exception
+
+        if last_exception:
+            # Only raise an exception if none of the paths were successfully
+            # pre-processed.
+            raise last_exception
 
 
 class WindowsAllUsersAppDataKnowledgeBasePlugin(
@@ -309,7 +355,7 @@ class WindowsAvailableTimeZonesPlugin(
         if not tzi_value:
             message = (
                 f"TZI value missing from Windows Registry key: "
-                f"{registry_key.key_path:s}."
+                f"{registry_key.path:s}."
             )
             mediator.ProducePreprocessingWarning(
                 self.ARTIFACT_DEFINITION_NAME,
@@ -327,7 +373,7 @@ class WindowsAvailableTimeZonesPlugin(
         except (ValueError, errors.ParseError) as exception:
             message = (
                 f"Unable to parse TZI record value in Windows Registry key: "
-                f"{registry_key.key_path:s} with error: {exception!s}"
+                f"{registry_key.path:s} with error: {exception!s}"
             )
             mediator.ProducePreprocessingWarning(
                 self.ARTIFACT_DEFINITION_NAME,
@@ -865,7 +911,7 @@ class WindowsServicesAndDriversPlugin(
             mediator.AddArtifact(service_configuration)
         except KeyError:
             message = (
-                f"Unable to add Windows service configuation: "
+                f"Unable to add Windows service configuration: "
                 f"{registry_value.name:s} artifact."
             )
             mediator.ProducePreprocessingWarning(
@@ -903,11 +949,9 @@ class WindowsSystemProductPlugin(
 
 
 class WindowsSystemRootEnvironmentVariablePlugin(
-    WindowsPathEnvironmentVariableArtifactPreprocessorPlugin
+    WindowsPathEnvironmentVariablePreprocessorPlugin
 ):
     """The Windows %SystemRoot% environment variable plugin."""
-
-    ARTIFACT_DEFINITION_NAME = "WindowsEnvironmentVariableSystemRoot"
 
     _NAME = "systemroot"
 
@@ -965,10 +1009,10 @@ class WindowsTimeZonePlugin(interface.WindowsRegistryValueArtifactPreprocessorPl
 
         try:
             mediator.SetTimeZone(value_data)
-        except ValueError as execption:
+        except ValueError as exception:
             message = (
                 f'Unable to map: "{value_data:s}" to time zone with error: '
-                f"{execption!s}"
+                f"{exception!s}"
             )
             mediator.ProducePreprocessingWarning(
                 self.ARTIFACT_DEFINITION_NAME,
@@ -1049,11 +1093,9 @@ class WindowsUserAccountsPlugin(interface.WindowsRegistryKeyArtifactPreprocessor
 
 
 class WindowsWinDirEnvironmentVariablePlugin(
-    WindowsPathEnvironmentVariableArtifactPreprocessorPlugin
+    WindowsPathEnvironmentVariablePreprocessorPlugin
 ):
     """The Windows %WinDir% environment variable plugin."""
-
-    ARTIFACT_DEFINITION_NAME = "WindowsEnvironmentVariableWinDir"
 
     _NAME = "windir"
 

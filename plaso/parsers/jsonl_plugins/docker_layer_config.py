@@ -39,8 +39,8 @@ class DockerLayerConfigurationJSONLPlugin(interface.JSONLPlugin):
         """Extracts a layer (or graph) identifier from a path.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
 
         Returns:
           str: layer identifier.
@@ -56,8 +56,8 @@ class DockerLayerConfigurationJSONLPlugin(interface.JSONLPlugin):
         """Parses a Docker layer configuration record.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           json_dict (dict): JSON dictionary of the configuration record.
         """
         command = None
@@ -72,14 +72,15 @@ class DockerLayerConfigurationJSONLPlugin(interface.JSONLPlugin):
                     ]
                 )
 
-        event_data = DockerLayerConfigurationEventData()
-        event_data.command = command
-        event_data.creation_time = self._ParseISO8601DateTimeString(
+        date_time, corrupted = self._ParseISO8601DateTimeString(
             parser_mediator, json_dict, "created"
         )
+        event_data = DockerLayerConfigurationEventData()
+        event_data.command = command
+        event_data.creation_time = date_time
         event_data.layer_identifier = self._GetLayerIdentifierFromPath(parser_mediator)
 
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def CheckRequiredFormat(self, json_dict):
         """Check if the record has the minimal structure required by the plugin.

@@ -16,7 +16,7 @@ class MountPoints2EventData(events.EventData):
       name (str): name of the mount point source.
       server_name (str): name of the remote drive server or None if not set.
       share_name (str): name of the remote drive share or None if not set.
-      type (str): type of the mount point source, which can be "Drive",
+      source_type (str): type of the mount point source, which can be "Drive",
           "Remove Drive" or "Volume".
     """
 
@@ -31,7 +31,7 @@ class MountPoints2EventData(events.EventData):
         self.name = None
         self.server_name = None
         self.share_name = None
-        self.type = None
+        self.source_type = None
 
 
 class MountPoints2Plugin(interface.WindowsRegistryPlugin):
@@ -89,7 +89,7 @@ class MountPoints2Plugin(interface.WindowsRegistryPlugin):
             event_data.name = name
             event_data.server_name = server_name
             event_data.share_name = share_name
-            event_data.type = source_type
+            event_data.source_type = source_type
 
             parser_mediator.ProduceEventData(event_data)
 

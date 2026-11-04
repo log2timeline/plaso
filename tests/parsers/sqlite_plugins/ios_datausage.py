@@ -17,7 +17,6 @@ class IOSDataUsagePluginTest(test_lib.SQLitePluginTestCase):
         storage_writer = self._ParseDatabaseFileWithPlugin(
             ["ios", "DataUsage.sqlite"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -37,7 +36,6 @@ class IOSDataUsagePluginTest(test_lib.SQLitePluginTestCase):
             "wireless_wan_in": 1185814689,
             "wireless_wan_out": 150,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -50,7 +48,6 @@ class IOSDataUsagePluginTest(test_lib.SQLitePluginTestCase):
             "wireless_wan_in": 4498,
             "wireless_wan_out": 1408,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 332)
         self.CheckEventData(event_data, expected_event_values)
 

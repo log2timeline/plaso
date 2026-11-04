@@ -54,8 +54,8 @@ class LocateDatabaseParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
 
         Args:
           file_object (dfvfs.FileIO): file-like object to be parsed.
-          file_offset (int): offset of the directory entry relative to the start of
-              the file.
+          file_offset (int): offset of the directory entry relative to the start of the
+              file.
 
         Returns:
           tuple[list[str], int]: names of sub directory entries and total number of
@@ -104,7 +104,8 @@ class LocateDatabaseParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
         """Parses a locate database (updatedb) file-like object.
 
         Args:
-          parser_mediator (ParserMediator): parser mediator.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): file-like object to be parsed.
 
         Raises:
@@ -132,7 +133,7 @@ class LocateDatabaseParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
                     file_object, file_offset, self._directory_header_map
                 )
             except (ValueError, errors.ParseError) as exception:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"unable to parse locate directory header at offset: "
                     f"0x{file_offset:08x} with error: {exception!s}"
                 )
@@ -140,21 +141,23 @@ class LocateDatabaseParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
 
             file_offset += data_size
 
+            corrupted = False
+
             timestamp = directory_header.nanoseconds + (
                 directory_header.seconds * definitions.NANOSECONDS_PER_SECOND
             )
-
             try:
                 entries, data_size = self._ParseDirectoryEntry(file_object, file_offset)
 
                 file_offset += data_size
 
             except (ValueError, errors.ParseError) as exception:
-                parser_mediator.ProduceExtractionWarning(
-                    f"unable to parse directory entry at offset: "
-                    f"0x{file_offset:08x} with error: {exception!s}"
+                parser_mediator.ProduceWarning(
+                    f"unable to parse directory entry at offset: 0x{file_offset:08x} "
+                    f"with error: {exception!s}"
                 )
-                return
+                entries = None
+                corrupted = True
 
             event_data = LocateDatabaseEvent()
             event_data.entries = entries or None
@@ -162,8 +165,7 @@ class LocateDatabaseParser(interface.FileObjectParser, dtfabric_helper.DtFabricH
             event_data.written_time = posix_time.PosixTimeInNanoseconds(
                 timestamp=timestamp
             )
-
-            parser_mediator.ProduceEventData(event_data)
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
 
 manager.ParsersManager.RegisterParser(LocateDatabaseParser)

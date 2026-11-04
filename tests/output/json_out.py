@@ -10,6 +10,7 @@ import unittest
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
+from plaso.containers import events
 from plaso.lib import definitions
 from plaso.output import json_out
 
@@ -65,18 +66,17 @@ class JSONOutputTest(test_lib.OutputModuleTestCase):
         event, event_data, event_data_stream = (
             containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0])
         )
+        event_tag = events.EventTag()
+        event_tag.AddLabels(["Malware", "Printed"])
 
-        # TODO: add test for event_tag.
         field_values = output_module.GetFieldValues(
-            output_mediator, event, event_data, event_data_stream, None
+            output_mediator, event, event_data, event_data_stream, event_tag
         )
-
         output_module.WriteFieldValues(output_mediator, field_values)
 
         expected_timestamp = shared_test_lib.CopyTimestampFromString(
             "2012-06-27 18:17:01"
         )
-
         expected_os_location = os.path.join(os.path.sep, "cases", "image.dd")
         if sys.platform.startswith("win"):
             # The dict comparison is very picky on Windows hence we have to make
@@ -94,9 +94,7 @@ class JSONOutputTest(test_lib.OutputModuleTestCase):
                 },
                 "data_type": "test:event",
                 "display_name": "TSK:/var/log/syslog.1",
-                "filename": "/var/log/syslog.1",
                 "hostname": "ubuntu",
-                "inode": "15",
                 "message": (
                     "Reporter <CRON> PID: |8442| (pam_unix(cron:session): "
                     "session closed for user root)"
@@ -112,6 +110,11 @@ class JSONOutputTest(test_lib.OutputModuleTestCase):
                         "type_indicator": "OS",
                         "location": expected_os_location,
                     },
+                },
+                "tag": {
+                    "__container_type__": "event_tag",
+                    "__type__": "AttributeContainer",
+                    "labels": ["Malware", "Printed"],
                 },
                 "text": (
                     "Reporter <CRON> PID: |8442| (pam_unix(cron:session): "

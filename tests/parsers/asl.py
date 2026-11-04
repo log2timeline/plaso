@@ -14,543 +14,21 @@ class ASLParserTest(test_lib.ParserTestCase):
 
     # pylint: disable=protected-access
 
-    _TEST_RECORD = bytes(
-        bytearray(
-            [
-                0x00,
-                0x01,
-                0x00,
-                0x00,
-                0x00,
-                0x14,
-                0x44,
-                0x61,
-                0x72,
-                0x6B,
-                0x54,
-                0x65,
-                0x6D,
-                0x70,
-                0x6C,
-                0x61,
-                0x72,
-                0x2D,
-                0x32,
-                0x2E,
-                0x6C,
-                0x6F,
-                0x63,
-                0x61,
-                0x6C,
-                0x00,
-                0x00,
-                0x01,
-                0x00,
-                0x00,
-                0x00,
-                0x0A,
-                0x6C,
-                0x6F,
-                0x63,
-                0x61,
-                0x74,
-                0x69,
-                0x6F,
-                0x6E,
-                0x64,
-                0x00,
-                0x00,
-                0x01,
-                0x00,
-                0x00,
-                0x00,
-                0x14,
-                0x63,
-                0x6F,
-                0x6D,
-                0x2E,
-                0x61,
-                0x70,
-                0x70,
-                0x6C,
-                0x65,
-                0x2E,
-                0x6C,
-                0x6F,
-                0x63,
-                0x61,
-                0x74,
-                0x69,
-                0x6F,
-                0x6E,
-                0x64,
-                0x00,
-                0x00,
-                0x01,
-                0x00,
-                0x00,
-                0x00,
-                0x11,
-                0x43,
-                0x46,
-                0x4C,
-                0x6F,
-                0x67,
-                0x20,
-                0x4C,
-                0x6F,
-                0x63,
-                0x61,
-                0x6C,
-                0x20,
-                0x54,
-                0x69,
-                0x6D,
-                0x65,
-                0x00,
-                0x00,
-                0x01,
-                0x00,
-                0x00,
-                0x00,
-                0x18,
-                0x32,
-                0x30,
-                0x31,
-                0x33,
-                0x2D,
-                0x31,
-                0x31,
-                0x2D,
-                0x32,
-                0x35,
-                0x20,
-                0x30,
-                0x39,
-                0x3A,
-                0x34,
-                0x35,
-                0x3A,
-                0x33,
-                0x35,
-                0x2E,
-                0x37,
-                0x30,
-                0x31,
-                0x00,
-                0x00,
-                0x01,
-                0x00,
-                0x00,
-                0x00,
-                0x0D,
-                0x43,
-                0x46,
-                0x4C,
-                0x6F,
-                0x67,
-                0x20,
-                0x54,
-                0x68,
-                0x72,
-                0x65,
-                0x61,
-                0x64,
-                0x00,
-                0x00,
-                0x01,
-                0x00,
-                0x00,
-                0x00,
-                0x96,
-                0x49,
-                0x6E,
-                0x63,
-                0x6F,
-                0x72,
-                0x72,
-                0x65,
-                0x63,
-                0x74,
-                0x20,
-                0x4E,
-                0x53,
-                0x53,
-                0x74,
-                0x72,
-                0x69,
-                0x6E,
-                0x67,
-                0x45,
-                0x6E,
-                0x63,
-                0x6F,
-                0x64,
-                0x69,
-                0x6E,
-                0x67,
-                0x20,
-                0x76,
-                0x61,
-                0x6C,
-                0x75,
-                0x65,
-                0x20,
-                0x30,
-                0x78,
-                0x38,
-                0x30,
-                0x30,
-                0x30,
-                0x31,
-                0x30,
-                0x30,
-                0x20,
-                0x64,
-                0x65,
-                0x74,
-                0x65,
-                0x63,
-                0x74,
-                0x65,
-                0x64,
-                0x2E,
-                0x20,
-                0x41,
-                0x73,
-                0x73,
-                0x75,
-                0x6D,
-                0x69,
-                0x6E,
-                0x67,
-                0x20,
-                0x4E,
-                0x53,
-                0x41,
-                0x53,
-                0x43,
-                0x49,
-                0x49,
-                0x53,
-                0x74,
-                0x72,
-                0x69,
-                0x6E,
-                0x67,
-                0x45,
-                0x6E,
-                0x63,
-                0x6F,
-                0x64,
-                0x69,
-                0x6E,
-                0x67,
-                0x2E,
-                0x20,
-                0x57,
-                0x69,
-                0x6C,
-                0x6C,
-                0x20,
-                0x73,
-                0x74,
-                0x6F,
-                0x70,
-                0x20,
-                0x74,
-                0x68,
-                0x69,
-                0x73,
-                0x20,
-                0x63,
-                0x6F,
-                0x6D,
-                0x70,
-                0x61,
-                0x74,
-                0x69,
-                0x62,
-                0x6C,
-                0x69,
-                0x74,
-                0x79,
-                0x20,
-                0x6D,
-                0x61,
-                0x70,
-                0x70,
-                0x69,
-                0x6E,
-                0x67,
-                0x20,
-                0x62,
-                0x65,
-                0x68,
-                0x61,
-                0x76,
-                0x69,
-                0x6F,
-                0x72,
-                0x20,
-                0x69,
-                0x6E,
-                0x20,
-                0x74,
-                0x68,
-                0x65,
-                0x20,
-                0x6E,
-                0x65,
-                0x61,
-                0x72,
-                0x20,
-                0x66,
-                0x75,
-                0x74,
-                0x75,
-                0x72,
-                0x65,
-                0x2E,
-                0x00,
-                0x00,
-                0x01,
-                0x00,
-                0x00,
-                0x00,
-                0x11,
-                0x53,
-                0x65,
-                0x6E,
-                0x64,
-                0x65,
-                0x72,
-                0x5F,
-                0x4D,
-                0x61,
-                0x63,
-                0x68,
-                0x5F,
-                0x55,
-                0x55,
-                0x49,
-                0x44,
-                0x00,
-                0x00,
-                0x01,
-                0x00,
-                0x00,
-                0x00,
-                0x25,
-                0x35,
-                0x30,
-                0x45,
-                0x31,
-                0x46,
-                0x37,
-                0x36,
-                0x41,
-                0x2D,
-                0x36,
-                0x30,
-                0x46,
-                0x46,
-                0x2D,
-                0x33,
-                0x36,
-                0x38,
-                0x43,
-                0x2D,
-                0x42,
-                0x37,
-                0x34,
-                0x45,
-                0x2D,
-                0x45,
-                0x42,
-                0x34,
-                0x38,
-                0x46,
-                0x36,
-                0x44,
-                0x39,
-                0x38,
-                0x43,
-                0x35,
-                0x31,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0xA4,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x03,
-                0xCE,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x01,
-                0x8C,
-                0x1E,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x52,
-                0x93,
-                0x1C,
-                0x3F,
-                0x2A,
-                0x0C,
-                0xC9,
-                0x28,
-                0x00,
-                0x04,
-                0x00,
-                0x01,
-                0x00,
-                0x00,
-                0x00,
-                0x45,
-                0x00,
-                0x00,
-                0x00,
-                0xCD,
-                0x00,
-                0x00,
-                0x00,
-                0xCD,
-                0x00,
-                0x00,
-                0x00,
-                0xCD,
-                0xFF,
-                0xFF,
-                0xFF,
-                0xFF,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x06,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x1A,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x2A,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x8C,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x44,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x5B,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x79,
-                0x84,
-                0x31,
-                0x30,
-                0x30,
-                0x37,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x01,
-                0x28,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x01,
-                0x3F,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-            ]
-        )
+    _TEST_RECORD = bytes.fromhex(
+        "0001000000144461726b54656d706c61722d322e6c6f63616c0000010000000a6c6f63617469"
+        "6f6e6400000100000014636f6d2e6170706c652e6c6f636174696f6e64000001000000114346"
+        "4c6f67204c6f63616c2054696d6500000100000018323031332d31312d32352030393a34353a"
+        "33352e3730310000010000000d43464c6f672054687265616400000100000096496e636f7272"
+        "656374204e53537472696e67456e636f64696e672076616c7565203078383030303130302064"
+        "657465637465642e20417373756d696e67204e534153434949537472696e67456e636f64696e"
+        "672e2057696c6c2073746f70207468697320636f6d70617469626c697479206d617070696e67"
+        "206265686176696f7220696e20746865206e656172206675747572652e000001000000115365"
+        "6e6465725f4d6163685f555549440000010000002535304531463736412d363046462d333638"
+        "432d423734452d454234384636443938433531000000000000a400000000000003ce00000000"
+        "00018c1e0000000052931c3f2a0cc9280004000100000045000000cd000000cd000000cdffff"
+        "ffff00000000000000060000000000000000000000000000001a000000000000002a00000000"
+        "0000008c000000000000000000000000000000000000000000000044000000000000005b0000"
+        "00000000007984313030370000000000000000000128000000000000013f0000000000000000"
     )
 
     def testParseRecord(self):
@@ -571,7 +49,19 @@ class ASLParserTest(test_lib.ParserTestCase):
         with self.assertRaises(errors.ParseError):
             parser._ParseRecord(parser_mediator, file_object, 362)
 
-        # TODO: test with invalid additional data size.
+        # Test with invalid additional data size, which is not a multiple of 8.
+        test_record = bytearray(self._TEST_RECORD)
+
+        # The data size is stored at offset 2 of the record.
+        data_size = int.from_bytes(test_record[364:368], "big")
+        test_record[364:368] = (data_size + 1).to_bytes(4, "big")
+
+        file_object = self._CreateFileObject("asl", bytes(test_record))
+
+        with self.assertRaisesRegex(
+            errors.ParseError, "Unsupported record additional data size"
+        ):
+            parser._ParseRecord(parser_mediator, file_object, 362)
 
     def testParseRecordExtraField(self):
         """Tests the _ParseRecordExtraField function."""
@@ -699,7 +189,6 @@ class ASLParserTest(test_lib.ParserTestCase):
         file_object = self._CreateFileObject(
             "asl", b"".join([b"\xff\xff\xff\xff", file_header_data[4:]])
         )
-
         storage_writer = self._CreateStorageWriter()
         parser_mediator = self._CreateParserMediator(storage_writer)
 
@@ -710,13 +199,70 @@ class ASLParserTest(test_lib.ParserTestCase):
         file_object = self._CreateFileObject(
             "asl", b"".join([file_header_data, self._TEST_RECORD[:452]])
         )
-
         parser.ParseFileObject(parser_mediator, file_object)
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
         self.assertEqual(number_of_event_data, 0)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 1)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "recovery_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+    def testParseFileObjectSelfReferencingRecordChain(self):
+        """Tests the ParseFileObject function on a self-referencing record chain."""
+        parser = asl.ASLParser()
+
+        file_header_data = self._CreateFileHeaderData(parser)
+
+        # Build a single record whose next record offset points back to the start
+        # of the record chain (offset 80), which forms a chain that refers back to
+        # itself. A data size of 92 results in no additional record data.
+        record_map = parser._GetDataTypeMap("asl_record")
+        record = record_map.CreateStructureValues(
+            unknown1=0,
+            data_size=92,
+            next_record_offset=80,
+            message_identifier=0,
+            written_time=0,
+            written_time_nanoseconds=0,
+            alert_level=0,
+            flags=0,
+            process_identifier=0,
+            user_identifier=0,
+            group_identifier=0,
+            read_user_identifier=0,
+            read_group_identifier=0,
+            reference_process_identifier=0,
+            hostname_string_offset=0,
+            sender_string_offset=0,
+            facility_string_offset=0,
+            message_string_offset=0,
+        )
+        record_data = record_map.FoldByteStream(record)
+
+        storage_writer = self._CreateStorageWriter()
+        parser_mediator = self._CreateParserMediator(storage_writer)
+
+        file_object = self._CreateFileObject(
+            "asl", b"".join([file_header_data, record_data])
+        )
+
+        # Parsing must terminate rather than follow the self-referencing chain
+        # without end.
+        parser.ParseFileObject(parser_mediator, file_object)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 1)
 
         number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
             "extraction_warning"
@@ -754,14 +300,13 @@ class ASLParserTest(test_lib.ParserTestCase):
             "format_version": 2,
             "is_dirty": False,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 2)
         self.CheckEventData(event_data, expected_event_values)
 
+        # typos:disable
         # Note that "compatiblity" is spelt incorrectly in the actual message being
         # tested here.
         expected_event_values = {
-            "computer_name": "DarkTemplar-2.local",
             "data_type": "macos:asl:entry",
             "extra_information": (
                 "CFLog Local Time: 2013-11-25 09:45:35.701, "
@@ -770,8 +315,9 @@ class ASLParserTest(test_lib.ParserTestCase):
             ),
             "facility": "com.apple.locationd",
             "group_identifier": 205,
+            "hostname": "DarkTemplar-2.local",
             "level": 4,
-            "message": (
+            "message_body": (
                 "Incorrect NSStringEncoding value 0x8000100 detected. "
                 "Assuming NSASCIIStringEncoding. Will stop this compatiblity "
                 "mapping behavior in the near future."
@@ -785,13 +331,13 @@ class ASLParserTest(test_lib.ParserTestCase):
             "user_identifier": 205,
             "written_time": "2013-11-25T09:45:35.705481000+00:00",
         }
-
+        # typos:enable
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
         # Check a second event data to ensure record strings are parsed correctly.
+        # typos:disable
         expected_event_values = {
-            "computer_name": "DarkTemplar-2.local",
             "data_type": "macos:asl:entry",
             "extra_information": (
                 "CFLog Local Time: 2013-11-25 17:12:43.537, "
@@ -800,8 +346,9 @@ class ASLParserTest(test_lib.ParserTestCase):
             ),
             "facility": "com.apple.locationd",
             "group_identifier": 205,
+            "hostname": "DarkTemplar-2.local",
             "level": 4,
-            "message": (
+            "message_body": (
                 "Incorrect NSStringEncoding value 0x8000100 detected. "
                 "Assuming NSASCIIStringEncoding. Will stop this compatiblity "
                 "mapping behavior in the near future."
@@ -815,7 +362,7 @@ class ASLParserTest(test_lib.ParserTestCase):
             "user_identifier": 205,
             "written_time": "2013-11-25T17:12:43.571140000+00:00",
         }
-
+        # typos:enable
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -845,7 +392,6 @@ class ASLParserTest(test_lib.ParserTestCase):
             "format_version": 2,
             "is_dirty": True,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 318)
         self.CheckEventData(event_data, expected_event_values)
 

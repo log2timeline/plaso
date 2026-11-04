@@ -17,7 +17,6 @@ class IOSNotesTest(test_lib.SQLitePluginTestCase):
         storage_writer = self._ParseDatabaseFileWithPlugin(
             ["ios", "NoteStore.sqlite"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -39,7 +38,6 @@ class IOSNotesTest(test_lib.SQLitePluginTestCase):
             "snippet": None,
             "title": "My Secret Note",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 

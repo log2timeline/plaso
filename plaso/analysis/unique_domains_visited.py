@@ -22,7 +22,7 @@ class UniqueDomainsVisitedPlugin(interface.AnalysisPlugin):
             "chrome:history:page_visited",
             "firefox:downloads:download",
             "firefox:places:page_visited",
-            "macosx:lsquarantine",
+            "macos:lsquarantine",
             "msiecf:redirected",
             "msiecf:url",
             "msie:webcache:container",

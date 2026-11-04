@@ -105,10 +105,14 @@ class McafeeAccessProtectionParser(dsv_parser.DSVParser):
         except (AttributeError, ValueError):
             raise errors.ParseError(f"Unsupported time string: {time_string!s}")
 
+        if time_suffix not in ("AM", "PM"):
+            raise errors.ParseError(f"Unsupported time suffix: {time_suffix!s}.")
+
+        # 12:xx AM is 00:xx and 12:xx PM is 12:xx.
+        if hours == 12:
+            hours = 0
         if time_suffix == "PM":
             hours += 12
-        elif time_suffix != "AM":
-            raise errors.ParseError(f"Unsupported time suffix: {time_suffix!s}.")
 
         time_elements_tuple = (year, month, day_of_month, hours, minutes, seconds)
 
@@ -116,7 +120,6 @@ class McafeeAccessProtectionParser(dsv_parser.DSVParser):
             date_time = dfdatetime_time_elements.TimeElements(
                 time_elements_tuple=time_elements_tuple
             )
-
         except ValueError:
             raise errors.ParseError(
                 f"Unsupported date and time strings: {date_string!s} {time_string!s}"
@@ -134,13 +137,16 @@ class McafeeAccessProtectionParser(dsv_parser.DSVParser):
           row_offset (int): offset of the line from which the row was extracted.
           row (dict[str, str]): fields of a single row, as specified in COLUMNS.
         """
+        corrupted = False
+
         try:
             date_time = self._CreateDateTime(row["date"], row["time"])
         except errors.ParseError as exception:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"Unable to create date time with error: {exception!s}"
             )
             date_time = None
+            corrupted = True
 
         status = row["status"]
         if status:
@@ -156,7 +162,7 @@ class McafeeAccessProtectionParser(dsv_parser.DSVParser):
         event_data.username = row["username"]
         event_data.written_time = date_time
 
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def VerifyRow(self, parser_mediator, row):
         """Verifies if a line of the file is in the expected format.
@@ -172,8 +178,8 @@ class McafeeAccessProtectionParser(dsv_parser.DSVParser):
         if len(row) != self._NUMBER_OF_COLUMNS:
             return False
 
-        # If the date and time string cannot be converted into a date time object,
-        # then do not consider this to be a McAfee AV Access Protection Log.
+        # If the date and time string cannot be converted into a date time object, then
+        # do not consider this to be a McAfee AV Access Protection Log.
         try:
             self._CreateDateTime(row["date"], row["time"])
         except errors.ParseError:

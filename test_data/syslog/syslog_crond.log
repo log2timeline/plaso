@@ -1,0 +1,42 @@
+Jul  7 20:56:16 localhost crond[1276]: (CRON) STARTUP (1.7.2)
+Jul  7 20:56:16 localhost crond[1276]: (CRON) INFO (Syslog will be used instead of sendmail.)
+Jul  7 20:56:16 localhost crond[1276]: (CRON) INFO (RANDOM_DELAY will be scaled with factor 55% if used.)
+Jul  7 20:56:16 localhost crond[1276]: (CRON) INFO (running with inotify support)
+Jul  7 21:01:00 localhost CROND[1396]: (root) CMD (run-parts /etc/cron.hourly)
+Jul  7 21:01:00 localhost run-parts[1399]: (/etc/cron.hourly) starting 0anacron
+Jul  7 21:01:00 localhost anacron[1409]: Anacron started on 2026-07-07
+Jul  7 21:01:00 localhost anacron[1409]: Will run job `cron.daily' in 10 min.
+Jul  7 21:01:00 localhost anacron[1409]: Will run job `cron.weekly' in 30 min.
+Jul  7 21:01:00 localhost anacron[1409]: Will run job `cron.monthly' in 50 min.
+Jul  7 21:01:00 localhost anacron[1409]: Jobs will be executed sequentially
+Jul  7 21:01:00 localhost run-parts[1411]: (/etc/cron.hourly) finished 0anacron
+Jul  7 21:01:00 localhost CROND[1395]: (root) CMDEND (run-parts /etc/cron.hourly)
+Jul  7 21:03:04 localhost crond[1276]: (CRON) INFO (Shutting down)
+Jul 28 08:10:18 localhost crond[1300]: (CRON) STARTUP (1.7.2)
+Jul 28 08:10:18 localhost crond[1300]: (CRON) INFO (Syslog will be used instead of sendmail.)
+Jul 28 08:10:18 localhost crond[1300]: (CRON) INFO (RANDOM_DELAY will be scaled with factor 12% if used.)
+Jul 28 08:10:18 localhost crond[1300]: (CRON) INFO (running with inotify support)
+Jul 28 09:01:00 localhost CROND[2176]: (root) CMD (run-parts /etc/cron.hourly)
+Jul 28 09:01:00 localhost run-parts[2179]: (/etc/cron.hourly) starting 0anacron
+Jul 28 09:01:00 localhost anacron[2189]: Anacron started on 2026-07-28
+Jul 28 09:01:00 localhost anacron[2189]: Will run job `cron.daily' in 29 min.
+Jul 28 09:01:00 localhost anacron[2189]: Will run job `cron.weekly' in 49 min.
+Jul 28 09:01:00 localhost anacron[2189]: Will run job `cron.monthly' in 69 min.
+Jul 28 09:01:00 localhost anacron[2189]: Jobs will be executed sequentially
+Jul 28 09:01:00 localhost run-parts[2191]: (/etc/cron.hourly) finished 0anacron
+Jul 28 09:01:00 localhost CROND[2175]: (root) CMDEND (run-parts /etc/cron.hourly)
+Jul 28 09:30:00 localhost anacron[2189]: Job `cron.daily' started
+Jul 28 09:30:00 localhost anacron[2189]: Job `cron.daily' terminated
+Jul 28 09:50:00 localhost anacron[2189]: Job `cron.weekly' started
+Jul 28 09:50:00 localhost anacron[2189]: Job `cron.weekly' terminated
+Jul 28 10:01:00 localhost CROND[2340]: (root) CMD (run-parts /etc/cron.hourly)
+Jul 28 10:01:00 localhost run-parts[2343]: (/etc/cron.hourly) starting 0anacron
+Jul 28 10:01:00 localhost run-parts[2349]: (/etc/cron.hourly) finished 0anacron
+Jul 28 10:01:00 localhost CROND[2339]: (root) CMDEND (run-parts /etc/cron.hourly)
+Jul 28 10:10:00 localhost anacron[2189]: Job `cron.monthly' started
+Jul 28 10:10:00 localhost anacron[2189]: Job `cron.monthly' terminated
+Jul 28 10:10:00 localhost anacron[2189]: Normal exit (3 jobs run)
+Jul 28 11:01:00 localhost CROND[2486]: (root) CMD (run-parts /etc/cron.hourly)
+Jul 28 11:01:00 localhost run-parts[2489]: (/etc/cron.hourly) starting 0anacron
+Jul 28 11:01:00 localhost run-parts[2495]: (/etc/cron.hourly) finished 0anacron
+Jul 28 11:01:00 localhost CROND[2485]: (root) CMDEND (run-parts /etc/cron.hourly)

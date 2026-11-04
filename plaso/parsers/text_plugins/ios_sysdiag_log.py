@@ -14,7 +14,7 @@ class IOSSysdiagLogEventData(events.EventData):
     """iOS sysdiagnose log event data.
 
     Attributes:
-      body (str): body of the event line.
+      message_body (str): message body.
       originating_call (str): call that created the entry.
       process_identifier (str): process_identifier.
       severity (str): severity of the message.
@@ -27,7 +27,7 @@ class IOSSysdiagLogEventData(events.EventData):
     def __init__(self):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
-        self.body = None
+        self.message_body = None
         self.originating_call = None
         self.process_identifier = None
         self.severity = None
@@ -114,7 +114,9 @@ class IOSSysdiagLogTextPlugin(interface.TextPluginWithLineContinuation):
     )
 
     _LOG_LINE = (
-        _LOG_LINE_START + pyparsing.restOfLine().set_results_name("body") + _END_OF_LINE
+        _LOG_LINE_START
+        + pyparsing.restOfLine().set_results_name("message_body")
+        + _END_OF_LINE
     )
 
     _LINE_STRUCTURES = [("log_line", _LOG_LINE)]
@@ -135,7 +137,7 @@ class IOSSysdiagLogTextPlugin(interface.TextPluginWithLineContinuation):
               and other components, such as storage and dfVFS.
         """
         if self._event_data:
-            self._event_data.body = " ".join(self._body_lines)
+            self._event_data.message_body = " ".join(self._body_lines)
             self._body_lines = None
 
             parser_mediator.ProduceEventData(self._event_data)
@@ -150,7 +152,7 @@ class IOSSysdiagLogTextPlugin(interface.TextPluginWithLineContinuation):
         """
         time_elements_structure = self._GetValueFromStructure(structure, "date_time")
 
-        body = self._GetValueFromStructure(structure, "body")
+        message_body = self._GetValueFromStructure(structure, "message_body")
 
         event_data = IOSSysdiagLogEventData()
         event_data.originating_call = self._GetValueFromStructure(
@@ -163,7 +165,7 @@ class IOSSysdiagLogTextPlugin(interface.TextPluginWithLineContinuation):
         event_data.written_time = self._ParseTimeElements(time_elements_structure)
 
         self._event_data = event_data
-        self._body_lines = [body]
+        self._body_lines = [message_body]
 
     def _ParseRecord(self, parser_mediator, key, structure):
         """Parses a pyparsing structure.
@@ -178,12 +180,12 @@ class IOSSysdiagLogTextPlugin(interface.TextPluginWithLineContinuation):
           ParseError: if the structure cannot be parsed.
         """
         if key == "_line_continuation":
-            body = structure.replace("\n", " ").strip()
-            self._body_lines.append(body)
+            message_body = structure.replace("\n", " ").strip()
+            self._body_lines.append(message_body)
 
         else:
             if self._event_data:
-                self._event_data.body = " ".join(self._body_lines)
+                self._event_data.message_body = " ".join(self._body_lines)
 
                 parser_mediator.ProduceEventData(self._event_data)
 

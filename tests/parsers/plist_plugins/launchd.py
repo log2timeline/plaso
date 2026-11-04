@@ -17,9 +17,8 @@ class MacOSLaunchdPlistPluginTest(test_lib.PlistPluginTestCase):
 
         plugin = launchd.MacOSLaunchdPlistPlugin()
         storage_writer = self._ParsePlistFileWithPlugin(
-            plugin, [plist_name], plist_name
+            plugin, ["plist", plist_name], plist_name
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -40,9 +39,8 @@ class MacOSLaunchdPlistPluginTest(test_lib.PlistPluginTestCase):
             "group_name": "nobody",
             "name": "com.foobar.test",
             "program": "/Test --flag arg1",
-            "user_name": "nobody",
+            "username": "nobody",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -52,9 +50,8 @@ class MacOSLaunchdPlistPluginTest(test_lib.PlistPluginTestCase):
 
         plugin = launchd.MacOSLaunchdPlistPlugin()
         storage_writer = self._ParsePlistFileWithPlugin(
-            plugin, [plist_name], plist_name
+            plugin, ["plist", plist_name], plist_name
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -74,8 +71,8 @@ class MacOSLaunchdPlistPluginTest(test_lib.PlistPluginTestCase):
             "data_type": "macos:launchd:entry",
             "name": "foo",
             "program": "/usr/bin/true",
+            "username": None,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -85,9 +82,8 @@ class MacOSLaunchdPlistPluginTest(test_lib.PlistPluginTestCase):
 
         plugin = launchd.MacOSLaunchdPlistPlugin()
         storage_writer = self._ParsePlistFileWithPlugin(
-            plugin, [plist_name], plist_name
+            plugin, ["plist", plist_name], plist_name
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -107,8 +103,8 @@ class MacOSLaunchdPlistPluginTest(test_lib.PlistPluginTestCase):
             "data_type": "macos:launchd:entry",
             "name": "foo",
             "program": "/usr/bin/true",
+            "username": None,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

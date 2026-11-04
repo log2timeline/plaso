@@ -9,7 +9,7 @@ from plaso.containers import warnings
 
 
 class BaseTaskMergeHelper:
-    """Interface of heler for merging task related attribute containers.
+    """Interface of helper for merging task related attribute containers.
 
     Attributes:
       task_identifier (str): identifier of the task that is merged.

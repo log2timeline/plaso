@@ -30,12 +30,10 @@ class TerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
             offset=865,
             relative_key_path=("Software\\Microsoft\\Terminal Server Client\\Servers"),
         )
-
         server_subkey_name = "myserver.com"
         server_subkey = dfwinreg_fake.FakeWinRegistryKey(
             server_subkey_name, last_written_time=filetime.timestamp, offset=1456
         )
-
         registry_key.AddSubkey(server_subkey_name, server_subkey)
 
         value_data = "DOMAIN\\username".encode("utf_16_le")
@@ -56,15 +54,13 @@ class TerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_CURRENT_USER",
-            ("Software\\Microsoft\\Terminal Server Client\\Servers"),
+            "Software\\Microsoft\\Terminal Server Client\\Servers",
         )
-
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_CURRENT_USER",
-            ("Software\\Microsoft\\Terminal Server Client\\Default\\AddIns\\RDPDR"),
+            "Software\\Microsoft\\Terminal Server Client\\Default\\AddIns\\RDPDR",
         )
-
         self._AssertNotFiltersOnKeyPath(plugin, "HKEY_CURRENT_USER", "Bogus")
 
     def testProcess(self):
@@ -107,7 +103,6 @@ class TerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
             "last_written_time": "2012-08-28T09:23:49.0020310+00:00",
             "values": None,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -130,7 +125,6 @@ class TerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
             offset=1456,
             relative_key_path=("Software\\Microsoft\\Terminal Server Client\\Default"),
         )
-
         value_data = "192.168.16.60".encode("utf_16_le")
         registry_value = dfwinreg_fake.FakeWinRegistryValue(
             "MRU0", data=value_data, data_type=dfwinreg_definitions.REG_SZ, offset=1892
@@ -170,14 +164,12 @@ class TerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
         expected_key_path = (
             "HKEY_CURRENT_USER\\Software\\Microsoft\\Terminal Server Client\\Default"
         )
-
         expected_event_values = {
             "data_type": "windows:registry:mstsc:mru",
-            "entries": ("MRU0: 192.168.16.60 MRU1: computer.domain.com"),
+            "entries": "MRU0: 192.168.16.60 MRU1: computer.domain.com",
             "key_path": expected_key_path,
             "last_written_time": "2012-08-28T09:23:49.0020310+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

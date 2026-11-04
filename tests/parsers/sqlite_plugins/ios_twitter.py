@@ -17,7 +17,6 @@ class IOSTwitterTest(test_lib.SQLitePluginTestCase):
         storage_writer = self._ParseDatabaseFileWithPlugin(
             ["ios", "twitter.db"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -55,7 +54,6 @@ class IOSTwitterTest(test_lib.SQLitePluginTestCase):
             "screen_name": "BBCBreaking",
             "url": "http://www.bbc.co.uk/news",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -71,7 +69,6 @@ class IOSTwitterTest(test_lib.SQLitePluginTestCase):
             "text": "Never forget. http://t.co/L7bjWue1A2",
             "user_identifier": 475222380,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 25)
         self.CheckEventData(event_data, expected_event_values)
 

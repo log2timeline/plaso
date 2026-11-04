@@ -1,0 +1,29 @@
+2026-07-26T13:03:25.681173+00:00 ubuntu sudo: pam_unix(sudo:session): session opened for user root(uid=0) by ubuntu(uid=1000)
+2026-07-26T13:03:25.682007+00:00 ubuntu sudo: ubuntu :  PWD=/home/ubuntu ; USER=root ; COMMAND=/usr/sbin/auditctl -D
+2026-07-26T13:03:25.693018+00:00 ubuntu sudo: pam_unix(sudo:session): session closed for user root
+2026-07-26T13:04:05.151191+00:00 ubuntu sudo: ubuntu :  PWD=/home/ubuntu ; USER=root ; COMMAND=/usr/bin/systemctl is-active auditd
+2026-07-26T13:04:05.200093+00:00 ubuntu sudo: ubuntu :  PWD=/home/ubuntu ; USER=root ; COMMAND=/usr/bin/tail -2 /var/log/audit/audit.log
+2026-07-26T18:39:27.044051+00:00 ubuntu sudo: ubuntu :  PWD=/home/ubuntu ; USER=root ; COMMAND=/usr/bin/growpart /dev/sda 2
+2026-07-28T12:01:58.208794+00:00 ubuntu sudo: pam_unix(sudo:auth): conversation failed
+2026-07-28T12:01:58.209311+00:00 ubuntu sudo: pam_unix(sudo:auth): auth could not identify password for [ubuntu]
+2026-07-28T12:02:39.079824+00:00 ubuntu sudo: ubuntu :  PWD=/home/ubuntu ; USER=root ; COMMAND=/usr/sbin/ufw status
+2026-07-28T12:10:50.432238+00:00 ubuntu sudo: ubuntu :  PWD=/home/ubuntu ; USER=root ; COMMAND=/usr/bin/true 
+2026-07-28T12:10:51.142772+00:00 ubuntu sudo: ubuntu :  PWD=/home/ubuntu ; USER=root ; COMMAND=/usr/bin/zcat /var/log/syslog.2.gz
+2026-07-28T12:11:25.829775+00:00 ubuntu sudo: ubuntu :  PWD=/home/ubuntu ; USER=root ; COMMAND=/usr/bin/find / -xdev -type d -name Trash
+2026-07-28T12:12:17.835651+00:00 ubuntu sudo: ubuntu :  PWD=/home/ubuntu ; USER=root ; COMMAND=/usr/bin/zgrep -ahE useradd|usermod|groupadd|new user|new group|passwd\\[ /var/log/auth.log.1 /var/log/auth.log.2.gz
+2026-07-28T12:12:44.009943+00:00 ubuntu sudo: ubuntu :  PWD=/home/ubuntu ; USER=root ; COMMAND=/usr/bin/python3 -c import json;d=json.load(open(\"/var/lib/snapd/state.json\"));print(sorted(d.keys()));print(json.dumps(d,indent=1)[:1800])
+2026-07-28T12:30:38.540150+00:00 ubuntu sudo: pam_unix(sudo:auth): authentication failure; logname=ubuntu uid=1000 euid=0 tty= ruser=ubuntu rhost=  user=ubuntu
+2026-07-28T22:16:08.521834+00:00 ubuntu24 sudo: pam_unix(sudo:session): session opened for user root(uid=0) by ubuntu(uid=1000)
+2026-07-28T22:16:09.401758+00:00 ubuntu24 sudo: pam_unix(sudo:session): session closed for user root
+2026-07-28T22:17:25.893483+00:00 ubuntu24 sudo: svc-backup : TTY=pts/0 ; PWD=/home/svc-backup ; USER=root ; COMMAND=/usr/bin/id -un
+2026-07-28T22:17:31.279993+00:00 ubuntu24 sudo: john.doe : user NOT in sudoers ; TTY=pts/0 ; PWD=/home/john.doe ; USER=root ; COMMAND=/usr/bin/id
+2026-07-28T22:17:37.661828+00:00 ubuntu24 sudo: pam_unix(sudo:auth): authentication failure; logname=test_user uid=1003 euid=0 tty=/dev/pts/0 ruser=test_user rhost=  user=test_user
+2026-07-28T22:17:43.515211+00:00 ubuntu24 sudo: test_user : 3 incorrect password attempts ; TTY=pts/0 ; PWD=/home/test_user ; USER=root ; COMMAND=/usr/bin/id
+2026-07-29T10:36:29.167005+00:00 ubuntu24 sudo:   ubuntu : PWD=/home/ubuntu ; USER=root ; COMMAND=/usr/bin/id -un
+2026-07-29T10:36:29.187337+00:00 ubuntu24 sudo:   ubuntu : PWD=/home/ubuntu ; USER=root ; COMMAND=/bin/echo tab#011here
+2026-07-29T10:36:29.245044+00:00 ubuntu24 sudo:   ubuntu : PWD=/home/ubuntu ; USER=root ; COMMAND=/bin/echo nl#012here
+2026-07-29T10:36:29.267234+00:00 ubuntu24 sudo:   ubuntu : PWD=/home/ubuntu ; USER=root ; COMMAND=/bin/echo 'hello world'
+2026-07-29T10:36:29.292096+00:00 ubuntu24 sudo:   ubuntu : PWD=/home/ubuntu ; USER=root ; COMMAND=/tmp/a#040b.sh
+2026-07-29T10:36:29.308488+00:00 ubuntu24 sudo:   ubuntu : PWD=/home/ubuntu ; USER=root ; COMMAND=/bin/echo 'it\'s a \\ test'
+2026-07-29T10:36:29.418533+00:00 ubuntu24 sudo:   ubuntu : PWD=/home/ubuntu ; USER=root ; COMMAND=/bin/echo arg0000 arg0001 arg0002 arg0003 arg0004 arg0005 arg0006 arg0007 arg0008 arg0009 arg0010 arg0011 arg0012 arg0013 arg0014 arg0015 arg0016 arg0017 arg0018 arg0019 arg0020 arg0021 arg0022 arg0023 arg0024 arg0025 arg0026 arg0027 arg0028 arg0029 arg0030 arg0031 arg0032 arg0033 arg0034 arg0035 arg0036 arg0037 arg0038 arg0039 arg0040 arg0041 arg0042 arg0043 arg0044 arg0045 arg0046 arg0047 arg0048 arg0049 arg0050 arg0051 arg0052 arg0053 arg0054 arg0055 arg0056 arg0057 arg0058 arg0059 arg0060 arg0061 arg0062 arg0063 arg0064 arg0065 arg0066 arg0067 arg0068 arg0069 arg0070 arg0071 arg0072 arg0073 arg0074 arg0075 arg0076 arg0077 arg0078 arg0079 arg0080 arg0081 arg0082 arg0083 arg0084 arg0085 arg0086 arg0087 arg0088 arg0089 arg0090 arg0091 arg0092 arg0093 arg0094 arg0095 arg0096 arg0097 arg0098 arg0099 arg0100 arg0101 arg0102 arg0103 arg0104 arg0105 arg0106 arg0107 arg0108 arg0109 arg0110 arg0111
+2026-07-29T10:36:29.419578+00:00 ubuntu24 sudo:   ubuntu : (command continued) arg0112 arg0113 arg0114 arg0115 arg0116 arg0117 arg0118 arg0119 arg0120 arg0121 arg0122 arg0123 arg0124 arg0125 arg0126 arg0127 arg0128 arg0129 arg0130 arg0131 arg0132 arg0133 arg0134 arg0135 arg0136 arg0137 arg0138 arg0139 arg0140 arg0141 arg0142 arg0143 arg0144 arg0145 arg0146 arg0147 arg0148 arg0149 arg0150 arg0151 arg0152 arg0153 arg0154 arg0155 arg0156 arg0157 arg0158 arg0159 arg0160 arg0161 arg0162 arg0163 arg0164 arg0165 arg0166 arg0167 arg0168 arg0169 arg0170 arg0171 arg0172 arg0173 arg0174 arg0175 arg0176 arg0177 arg0178 arg0179 arg0180 arg0181 arg0182 arg0183 arg0184 arg0185 arg0186 arg0187 arg0188 arg0189 arg0190 arg0191 arg0192 arg0193 arg0194 arg0195 arg0196 arg0197 arg0198 arg0199

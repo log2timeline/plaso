@@ -179,7 +179,7 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
                     logger.debug("ConsumeItems exiting, dequeued QueueAbort object.")
                     break
 
-                self._ProcessEventTripple(self._analysis_mediator, queued_object)
+                self._ProcessEventTriple(self._analysis_mediator, queued_object)
 
                 self._number_of_consumed_events += 1
 
@@ -247,20 +247,20 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
         except errors.QueueAlreadyClosed:
             logger.error(f"Queue for {self.name:s} was already closed.")
 
-    def _ProcessEventTripple(self, mediator, event_tripple):
-        """Processes an event tripple.
+    def _ProcessEventTriple(self, mediator, event_triple):
+        """Processes an event triple.
 
         Args:
           mediator (AnalysisMediator): mediates interactions between
               analysis plugins and other components, such as storage and dfVFS.
-          event_tripple (EventTripple): event tripple.
+          event_triple (EventTriple): event triple.
         """
         try:
             self._analysis_plugin.ExamineEvent(
                 mediator,
-                event_tripple.event,
-                event_tripple.event_data,
-                event_tripple.event_data_stream,
+                event_triple.event,
+                event_triple.event_data,
+                event_triple.event_data_stream,
             )
 
         except Exception as exception:  # pylint: disable=broad-except

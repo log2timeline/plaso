@@ -12,7 +12,6 @@ from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.containers import events
 from plaso.engine import artifact_filters
-from plaso.parsers import mediator as parsers_mediator
 from plaso.parsers import winreg_parser
 
 # Register all plugins.
@@ -114,6 +113,27 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
         )
         self.assertEqual(number_of_warnings, 0)
 
+    def testParseNTUserDatWithTypedURLsTime(self):
+        """Tests the Parse function on a NTUSER.DAT file with TypedURLsTime."""
+        parser = winreg_parser.WinRegistryParser()
+        parser.EnablePlugins(parser.ALL_PLUGINS)
+        storage_writer = self._ParseFile(["regf", "NTUSER.DAT"], parser)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 1620)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "recovery_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
     def testParseNoRootKey(self):
         """Test the parse function on a Registry file with no root key."""
         parser = winreg_parser.WinRegistryParser()
@@ -204,14 +224,11 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
         path_spec = path_spec_factory.Factory.NewPathSpec(
             dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
         )
-
         parser = winreg_parser.WinRegistryParser()
         parser.EnablePlugins(parser.ALL_PLUGINS)
 
-        parser_mediator = parsers_mediator.ParserMediator()
-
         storage_writer = self._CreateStorageWriter()
-        parser_mediator.SetStorageWriter(storage_writer)
+        parser_mediator = self._CreateParserMediator(storage_writer)
 
         file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
         parser_mediator.SetFileEntry(file_entry)

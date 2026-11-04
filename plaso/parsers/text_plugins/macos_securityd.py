@@ -20,7 +20,7 @@ class MacOSSecuritydLogEventData(events.EventData):
       caller (str): caller, consists of two hex numbers.
       facility (str): facility.
       level (str): priority level.
-      message (str): message.
+      message_body (str): message body.
       security_api (str): name of securityd function.
       sender (str): name of the sender.
       sender_pid (int): process identifier of the sender.
@@ -35,7 +35,7 @@ class MacOSSecuritydLogEventData(events.EventData):
         self.caller = None
         self.facility = None
         self.level = None
-        self.message = None
+        self.message_body = None
         self.security_api = None
         self.sender = None
         self.sender_pid = None
@@ -97,7 +97,7 @@ class MacOSSecuritydLogTextPlugin(
         + pyparsing.Suppress("}")
         + pyparsing.Optional(pyparsing.CharsNotIn("]:").set_results_name("caller"))
         + pyparsing.Suppress("]:")
-        + pyparsing.restOfLine().set_results_name("message")
+        + pyparsing.restOfLine().set_results_name("message_body")
         + _END_OF_LINE
     )
 
@@ -140,21 +140,21 @@ class MacOSSecuritydLogTextPlugin(
         if key == "log_liine":
             self._repeated_structure = structure
 
-            message = self._GetStringValueFromStructure(structure, "message")
+            message_body = self._GetStringValueFromStructure(structure, "message_body")
         else:
             repeat_count = self._GetValueFromStructure(structure, "times")
 
             structure = self._repeated_structure
 
-            message = self._GetStringValueFromStructure(structure, "message")
-            message = f"Repeated {repeat_count:d} times: {message:s}"
+            message_body = self._GetStringValueFromStructure(structure, "message_body")
+            message_body = f"Repeated {repeat_count:d} times: {message_body:s}"
 
         event_data = MacOSSecuritydLogEventData()
         event_data.added_time = self._ParseTimeElements(time_elements_structure)
         event_data.caller = self._GetStringValueFromStructure(structure, "caller")
         event_data.facility = self._GetValueFromStructure(structure, "facility")
         event_data.level = self._GetValueFromStructure(structure, "level")
-        event_data.message = message or None
+        event_data.message_body = message_body or None
         event_data.security_api = self._GetValueFromStructure(structure, "security_api")
         event_data.sender_pid = self._GetValueFromStructure(structure, "sender_pid")
         event_data.sender = self._GetStringValueFromStructure(structure, "sender")

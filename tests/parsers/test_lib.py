@@ -127,7 +127,6 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
         parser_mediator = parsers_mediator.ParserMediator(
             registry_find_specs=registry_find_specs
         )
-
         storage_writer = self._CreateStorageWriter()
         parser_mediator.SetStorageWriter(storage_writer)
 
@@ -183,7 +182,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
             self.assertEqual(
                 value,
                 expected_value,
-                (f'event value: "{name:s}" does not match expected value'),
+                f'event value: "{name:s}" does not match expected value',
             )
 
     def CheckEventValues(self, storage_writer, event, expected_event_values):
@@ -222,7 +221,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
             self.assertEqual(
                 value,
                 expected_value,
-                (f'event value: "{name:s}" does not match expected value'),
+                f'event value: "{name:s}" does not match expected value',
             )
 
     def CheckTimestamp(self, timestamp, expected_date_time):

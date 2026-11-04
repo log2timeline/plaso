@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 """Tests for the fake storage writer."""
 
+import collections
 import unittest
 
+from plaso.containers import event_sources
 from plaso.containers import events
 from plaso.lib import definitions
+from plaso.storage import time_range as storage_time_range
 from plaso.storage.fake import writer as fake_writer
 
 from tests.storage import test_lib
@@ -130,8 +133,69 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
         finally:
             storage_writer.Close()
 
-    # TODO: add tests for GetFirstWrittenEventSource
-    # TODO: add tests for GetNextWrittenEventSource
+    def testGetFirstWrittenEventSource(self):
+        """Tests the GetFirstWrittenEventSource function."""
+        storage_writer = fake_writer.FakeStorageWriter()
+
+        with self.assertRaises(OSError):
+            storage_writer.GetFirstWrittenEventSource()
+
+        storage_writer.Open()
+
+        try:
+            event_source = storage_writer.GetFirstWrittenEventSource()
+            self.assertIsNone(event_source)
+
+            first_event_source = event_sources.EventSource(file_entry_type="file")
+            storage_writer.AddAttributeContainer(first_event_source)
+
+            second_event_source = event_sources.EventSource(file_entry_type="directory")
+            storage_writer.AddAttributeContainer(second_event_source)
+
+            event_source = storage_writer.GetFirstWrittenEventSource()
+            self.assertIsNotNone(event_source)
+            self.assertEqual(event_source.file_entry_type, "file")
+
+            # GetFirstWrittenEventSource resets the position of
+            # GetNextWrittenEventSource.
+            storage_writer.GetNextWrittenEventSource()
+            event_source = storage_writer.GetFirstWrittenEventSource()
+            self.assertEqual(event_source.file_entry_type, "file")
+
+            event_source = storage_writer.GetNextWrittenEventSource()
+            self.assertEqual(event_source.file_entry_type, "directory")
+
+        finally:
+            storage_writer.Close()
+
+    def testGetNextWrittenEventSource(self):
+        """Tests the GetNextWrittenEventSource function."""
+        storage_writer = fake_writer.FakeStorageWriter()
+
+        with self.assertRaises(OSError):
+            storage_writer.GetNextWrittenEventSource()
+
+        storage_writer.Open()
+
+        try:
+            first_event_source = event_sources.EventSource(file_entry_type="file")
+            storage_writer.AddAttributeContainer(first_event_source)
+
+            second_event_source = event_sources.EventSource(file_entry_type="directory")
+            storage_writer.AddAttributeContainer(second_event_source)
+
+            event_source = storage_writer.GetFirstWrittenEventSource()
+            self.assertEqual(event_source.file_entry_type, "file")
+
+            event_source = storage_writer.GetNextWrittenEventSource()
+            self.assertIsNotNone(event_source)
+            self.assertEqual(event_source.file_entry_type, "directory")
+
+            event_source = storage_writer.GetNextWrittenEventSource()
+            self.assertIsNone(event_source)
+
+        finally:
+            storage_writer.Close()
 
     def testGetSortedEvents(self):
         """Tests the GetSortedEvents function."""
@@ -144,10 +208,61 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
             test_events = list(storage_writer.GetSortedEvents())
             self.assertEqual(len(test_events), 4)
 
+            time_range = storage_time_range.TimeRange(
+                1334940286000000, 1334961526929596
+            )
+            test_events = list(storage_writer.GetSortedEvents(time_range=time_range))
+            timestamps = [event.timestamp for event in test_events]
+            self.assertEqual(timestamps, [1334940286000000, 1334961526929596])
+
         finally:
             storage_writer.Close()
 
-        # TODO: add test with time range.
+    def testUpdateEventLabelsCounter(self):
+        """Tests the UpdateEventLabelsCounter function."""
+        storage_writer = fake_writer.FakeStorageWriter()
+        storage_writer.Open()
+
+        try:
+            stored_event_labels_counter = storage_writer.GetEventLabelsCounter()
+            self.assertEqual(len(stored_event_labels_counter), 0)
+
+            event_labels_counter = collections.Counter({"corrupted": 5, "total": 5})
+            storage_writer.UpdateEventLabelsCounter(
+                stored_event_labels_counter, event_labels_counter
+            )
+            number_of_containers = storage_writer.GetNumberOfAttributeContainers(
+                "event_label_count"
+            )
+            self.assertEqual(number_of_containers, 2)
+
+            number_of_containers = storage_writer.GetNumberOfAttributeContainers(
+                "parser_count"
+            )
+            self.assertEqual(number_of_containers, 0)
+
+            stored_event_labels_counter = storage_writer.GetEventLabelsCounter()
+            self.assertEqual(
+                stored_event_labels_counter["corrupted"].number_of_events, 5
+            )
+            event_labels_counter = collections.Counter({"corrupted": 3, "total": 3})
+
+            storage_writer.UpdateEventLabelsCounter(
+                stored_event_labels_counter, event_labels_counter
+            )
+            number_of_containers = storage_writer.GetNumberOfAttributeContainers(
+                "event_label_count"
+            )
+            self.assertEqual(number_of_containers, 2)
+
+            stored_event_labels_counter = storage_writer.GetEventLabelsCounter()
+            self.assertEqual(
+                stored_event_labels_counter["corrupted"].number_of_events, 8
+            )
+            self.assertEqual(stored_event_labels_counter["total"].number_of_events, 8)
+
+        finally:
+            storage_writer.Close()
 
     def testOpenClose(self):
         """Tests the Open and Close functions."""

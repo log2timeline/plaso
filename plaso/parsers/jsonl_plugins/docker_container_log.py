@@ -12,8 +12,8 @@ class DockerContainerLogEventData(events.EventData):
 
     Attributes:
       container_identifier (str): identifier of the container (SHA256).
-      log_line (str): log line.
       log_source (str): log source.
+      message_body (str): message body.
       written_time (dfdatetime.DateTimeValues): date and time the entry was
           written.
     """
@@ -24,8 +24,8 @@ class DockerContainerLogEventData(events.EventData):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
         self.container_identifier = None
-        self.log_line = None
         self.log_source = None
+        self.message_body = None
         self.written_time = None
 
 
@@ -48,8 +48,8 @@ class DockerContainerLogJSONLPlugin(interface.JSONLPlugin):
         """Extracts a container identifier from a path.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
 
         Returns:
           str: container identifier.
@@ -65,8 +65,8 @@ class DockerContainerLogJSONLPlugin(interface.JSONLPlugin):
         """Parses a Docker container log record.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           json_dict (dict): JSON dictionary of the log record.
         """
         if not self._container_identifier:
@@ -74,18 +74,19 @@ class DockerContainerLogJSONLPlugin(interface.JSONLPlugin):
                 parser_mediator
             )
 
-        # TODO: escape special characters in log line.
-        log_line = self._GetJSONValue(json_dict, "log", default_value="")
+        # TODO: escape special characters in the message body.
+        message_body = self._GetJSONValue(json_dict, "log", default_value="")
 
-        event_data = DockerContainerLogEventData()
-        event_data.container_identifier = self._container_identifier
-        event_data.log_line = log_line or None
-        event_data.log_source = self._GetJSONValue(json_dict, "stream")
-        event_data.written_time = self._ParseISO8601DateTimeString(
+        date_time, corrupted = self._ParseISO8601DateTimeString(
             parser_mediator, json_dict, "time"
         )
+        event_data = DockerContainerLogEventData()
+        event_data.container_identifier = self._container_identifier
+        event_data.message_body = message_body or None
+        event_data.log_source = self._GetJSONValue(json_dict, "stream")
+        event_data.written_time = date_time
 
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def CheckRequiredFormat(self, json_dict):
         """Check if the log record has the minimal structure required by the plugin.

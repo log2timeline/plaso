@@ -17,7 +17,6 @@ class IOSKikMessageTest(test_lib.SQLitePluginTestCase):
         storage_writer = self._ParseDatabaseFileWithPlugin(
             ["ios", "kik.sqlite"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -34,15 +33,14 @@ class IOSKikMessageTest(test_lib.SQLitePluginTestCase):
         self.assertEqual(number_of_warnings, 0)
 
         expected_event_values = {
-            "body": "Hello",
+            "application_display_name": "Ken Doh",
             "data_type": "ios:kik:messaging",
-            "displayname": "Ken Doh",
+            "message_body": "Hello",
             "message_status": 94,
             "message_type": 2,
             "received_time": "2015-06-29T12:26:11.584833+00:00",
             "username": "ken.doh",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 

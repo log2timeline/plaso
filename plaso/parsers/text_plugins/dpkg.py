@@ -37,7 +37,7 @@ class DpkgEventData(events.EventData):
     Attributes:
       added_time (dfdatetime.DateTimeValues): date and time the log entry
           was added.
-      body (str): body of the log line.
+      message_body (str): message body.
     """
 
     DATA_TYPE = "linux:dpkg_log:entry"
@@ -46,7 +46,7 @@ class DpkgEventData(events.EventData):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
         self.added_time = None
-        self.body = None
+        self.message_body = None
 
 
 class DpkgTextPlugin(interface.TextPlugin):
@@ -124,7 +124,7 @@ class DpkgTextPlugin(interface.TextPlugin):
                 _DPKG_ACTION_BODY,
                 _DPKG_CONFFILE_BODY,
             ]
-        ).set_results_name("body")
+        ).set_results_name("message_body")
         + _END_OF_LINE
     )
 
@@ -161,7 +161,7 @@ class DpkgTextPlugin(interface.TextPlugin):
 
         event_data = DpkgEventData()
         event_data.added_time = self._ParseTimeElements(time_elements_structure)
-        event_data.body = self._GetValueFromStructure(structure, "body")
+        event_data.message_body = self._GetValueFromStructure(structure, "message_body")
 
         parser_mediator.ProduceEventData(event_data)
 

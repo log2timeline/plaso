@@ -1,6 +1,7 @@
 """The task-based multi-process processing analysis engine."""
 
 import collections
+import logging
 import os
 import time
 
@@ -11,6 +12,7 @@ from plaso.containers import tasks
 from plaso.engine import processing_status
 from plaso.lib import definitions
 from plaso.lib import errors
+from plaso.lib import loggers
 from plaso.multi_process import analysis_process
 from plaso.multi_process import logger
 from plaso.multi_process import merge_helpers
@@ -50,6 +52,12 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         if worker_memory_limit is None:
             worker_memory_limit = definitions.DEFAULT_WORKER_MEMORY_LIMIT
 
+        if worker_timeout:
+            # The worker timeout is specified in minutes.
+            worker_timeout *= 60.0
+        else:
+            worker_timeout = definitions.DEFAULT_WORKER_TIMEOUT
+
         super().__init__()
         self._analysis_plugins = {}
         self._completed_analysis_processes = set()
@@ -77,7 +85,7 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         self._status_update_callback = None
         self._user_accounts = None
         self._worker_memory_limit = worker_memory_limit
-        self._worker_timeout = worker_timeout or definitions.DEFAULT_WORKER_TIMEOUT
+        self._worker_timeout = worker_timeout
 
     def _AnalyzeEvents(self, storage_writer, analysis_plugins, event_filter=None):
         """Analyzes events in a Plaso storage.
@@ -127,10 +135,13 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
             else:
                 event_data_stream = None
 
-            event_identifier = event.GetIdentifier()
-            event_tag = storage_writer.GetEventTagByEventIdentifer(event_identifier)
-
             if event_filter:
+                # The event tag is only needed to apply the event filter.
+                event_identifier = event.GetIdentifier()
+                event_tag = storage_writer.GetEventTagByEventIdentifier(
+                    event_identifier
+                )
+
                 filter_match = event_filter.Match(
                     event, event_data, event_data_stream, event_tag
                 )
@@ -144,12 +155,12 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
             for event_queue in self._event_queues.values():
                 # TODO: Check for premature exit of analysis plugins.
-                event_tripple = events.EventTripple()
-                event_tripple.event = event
-                event_tripple.event_data = event_data
-                event_tripple.event_data_stream = event_data_stream
+                event_triple = events.EventTriple()
+                event_triple.event = event
+                event_triple.event_data = event_data
+                event_triple.event_data_stream = event_data_stream
 
-                event_queue.PushItem(event_tripple)
+                event_queue.PushItem(event_triple)
 
             self._number_of_consumed_events += 1
 
@@ -406,7 +417,21 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
             event_filter_expression=self._event_filter_expression,
             name=process_name,
         )
+        # Remove all possible log handlers to prevent a child process from logging
+        # to the main process log file and garbling the log. The log handlers are
+        # recreated after the worker process has been started.
+        for handler in list(logging.root.handlers):
+            logging.root.removeHandler(handler)
+            handler.close()
+
         process.start()
+
+        loggers.ConfigureLogging(
+            debug_output=self._debug_output,
+            filename=self._log_filename,
+            mode="a",
+            quiet_mode=self._quiet_mode,
+        )
 
         logger.info(
             f"Started analysis plugin: {process_name:s} (PID: {process.pid:d})."
@@ -634,6 +659,9 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         self._event_filter_expression = event_filter_expression
         self._events_status = processing_status.EventsStatus()
         self._processing_configuration = processing_configuration
+
+        self._debug_output = processing_configuration.debug_output
+        self._log_filename = processing_configuration.log_filename
         self._session = session
         self._status_update_callback = status_update_callback
         self._storage_file_path = storage_file_path
@@ -641,8 +669,8 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         self._user_accounts = list(
             storage_writer.GetAttributeContainers("user_account")
         )
-
         stored_event_labels_counter = {}
+
         if storage_writer.HasAttributeContainers("event_label_count"):
             stored_event_labels_counter = {
                 event_label_count.label: event_label_count
@@ -653,6 +681,7 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
         self._event_labels_counter = collections.Counter()
 
+        total_number_of_events = 0
         if storage_writer.HasAttributeContainers("parser_count"):
             parsers_counter = {
                 parser_count.name: parser_count.number_of_events
@@ -660,13 +689,7 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
                     "parser_count"
                 )
             }
-
             total_number_of_events = parsers_counter["total"]
-
-        else:
-            total_number_of_events = 0
-            for stored_session in storage_writer.GetSessions():
-                total_number_of_events += stored_session.parsers_counter["total"]
 
         self._events_status.total_number_of_events = total_number_of_events
 
@@ -685,7 +708,6 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
             self._AnalyzeEvents(
                 storage_writer, analysis_plugins, event_filter=event_filter
             )
-
             for key, value in self._event_labels_counter.items():
                 event_label_count = stored_event_labels_counter.get(key)
                 if event_label_count:
@@ -717,7 +739,7 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
             self._StopProfiling()
 
-        # Update the status view one last time before the analysis processses are
+        # Update the status view one last time before the analysis processes are
         # stopped.
         self._UpdateStatus()
 

@@ -45,7 +45,6 @@ class DockerLayerLogJSONLPluginTest(test_lib.JSONLPluginTestCase):
             "data_type": "docker:layer:configuration",
             "layer_identifier": layer_identifier,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

@@ -27,9 +27,8 @@ class AndroidNativeDownloadsEventData(events.EventData):
           will be displayed in system notifications.
       destination (int): Flag that controls download destination. Also see the
           DESTINATION_* constants for a list of supported values.
-      error_msg (str): The column with errorMsg for a failed downloaded.
-          Used only for debugging purposes.
       e_tag (str): ETag of this file.
+      error_message (str): error message for failed downloads.
       identifier (int): identifier of the download.
       is_visible_in_downloads_ui (int):  Whether or not this download should
           be displayed in the system's Downloads UI. Defaults to true.
@@ -62,8 +61,8 @@ class AndroidNativeDownloadsEventData(events.EventData):
         self.deleted = None
         self.description = None
         self.destination = None
-        self.error_msg = None
         self.e_tag = None
+        self.error_message = None
         self.identifier = None
         self.is_visible_in_downloads_ui = None
         self.media_provider_uri = None
@@ -174,8 +173,8 @@ class AndroidNativeDownloadsPlugin(interface.SQLitePlugin):
             self._GetRowValue(query_hash, row, "description") or None
         )
         event_data.destination = self._GetRowValue(query_hash, row, "destination")
-        event_data.error_msg = self._GetRowValue(query_hash, row, "errorMsg")
         event_data.e_tag = self._GetRowValue(query_hash, row, "etag")
+        event_data.error_message = self._GetRowValue(query_hash, row, "errorMsg")
         event_data.identifier = self._GetRowValue(query_hash, row, "_id")
         event_data.is_visible_in_downloads_ui = self._GetRowValue(
             query_hash, row, "is_visible_in_downloads_ui"

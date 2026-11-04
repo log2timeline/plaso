@@ -7,7 +7,7 @@ some of the steps we recommend taking.
 
 ### I just want to run Plaso or log2timeline
 
-If you just want to run Plaso we stronly recommend to use a packaged release
+If you just want to run Plaso we strongly recommend to use a packaged release
 unless you are the adventurous type that is familiar with troubleshooting
 installation issues.
 
@@ -67,7 +67,7 @@ To follow announcements from the Plaso team or send in generic inquiries or
 discuss the tool:
 
 * subscribe to the [log2timeline-discuss](https://groups.google.com/forum/#!forum/log2timeline-discuss) mailing list.
-* join the Plaso channel part of the [open-source-dfir Slack community](https://open-source-dfir.slack.com/), more information can be found [here](https://github.com/open-source-dfir/slack).
+* join the Plaso channel part of the [open-source-dfir Slack community](https://github.com/open-source-dfir/slack).
 
 Please be mindful of people's time:
 

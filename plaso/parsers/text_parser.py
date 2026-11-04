@@ -53,7 +53,7 @@ class EncodedTextReader:
             self.ReadLines()
 
         line, _, self.lines = self.lines.partition("\n")
-        self.lines_size += len(line) + 1
+        self.lines_size -= len(line) + 1
         self.line_number += 1
 
         return line
@@ -342,7 +342,7 @@ class TextLogParser(interface.FileObjectParser):
                             parser_mediator, file_object=file_object
                         )
                     except Exception as exception:  # pylint: disable=broad-except
-                        parser_mediator.ProduceExtractionWarning(
+                        parser_mediator.ProduceWarning(
                             f"plugin: {plugin.NAME:s} unable to parse text file with "
                             f"error: {exception!s}"
                         )

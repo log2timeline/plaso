@@ -108,6 +108,14 @@ plaso.parsers.text\_plugins.dpkg module
    :show-inheritance:
    :undoc-members:
 
+plaso.parsers.text\_plugins.esxi module
+---------------------------------------
+
+.. automodule:: plaso.parsers.text_plugins.esxi
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 plaso.parsers.text\_plugins.gdrive\_synclog module
 --------------------------------------------------
 
@@ -320,6 +328,14 @@ plaso.parsers.text\_plugins.winfirewall module
 ----------------------------------------------
 
 .. automodule:: plaso.parsers.text_plugins.winfirewall
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+plaso.parsers.text\_plugins.winhttp\_api\_error module
+------------------------------------------------------
+
+.. automodule:: plaso.parsers.text_plugins.winhttp_api_error
    :members:
    :show-inheritance:
    :undoc-members:

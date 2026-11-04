@@ -15,9 +15,8 @@ class MacOSNotesTest(test_lib.SQLitePluginTestCase):
         """Test the Process function on a Mac Notes file."""
         plugin_object = macos_notes.MacOSNotesPlugin()
         storage_writer = self._ParseDatabaseFileWithPlugin(
-            ["NotesV7.storedata"], plugin_object
+            ["macos", "NotesV7.storedata"], plugin_object
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -44,7 +43,6 @@ class MacOSNotesTest(test_lib.SQLitePluginTestCase):
             ),
             "title": "building 4th brandy gibs",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

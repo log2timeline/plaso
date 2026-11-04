@@ -70,13 +70,13 @@ field and is discouraged to be used in the event filter. As of 20230724 the
 ## Example event filter expressions
 
 ```
-data_type is 'syslog:line' and body contains 'root'
+data_type is 'syslog:line' and message_body contains 'root'
 ```
 
 This event filter applies to all events where:
 
 * the event has data type 'syslog:line' (case sensitive) and;
-* the body attribute contains the substring 'root' (case insensitive).
+* the message_body attribute contains the substring 'root' (case insensitive).
 
 ```
 data_type contains 'firefox' AND pathspec.vss_store_number > 0

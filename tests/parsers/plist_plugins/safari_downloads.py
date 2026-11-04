@@ -17,9 +17,8 @@ class SafariDownloadsPlistPluginTest(test_lib.PlistPluginTestCase):
 
         plugin = safari_downloads.SafariDownloadsPlistPlugin()
         storage_writer = self._ParsePlistFileWithPlugin(
-            plugin, [plist_name], plist_name
+            plugin, ["plist", plist_name], plist_name
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -47,11 +46,9 @@ class SafariDownloadsPlistPluginTest(test_lib.PlistPluginTestCase):
             "start_time": "2022-12-14T19:05:26.862793+00:00",
             "total_bytes": 826337,
             "url": (
-                "https://www.dotpdn.com/files/"
-                "paint.net.4.3.12.install.anycpu.web.zip"
+                "https://www.dotpdn.com/files/paint.net.4.3.12.install.anycpu.web.zip"
             ),
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

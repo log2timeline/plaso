@@ -43,7 +43,7 @@ class DynamicOutputArgumentsHelper(interface.ArgumentsHelper):
             type=str,
             action="store",
             default=cls._DEFAULT_FIELDS,
-            help=("Defines which fields should be included in the output."),
+            help="Defines which fields should be included in the output.",
         )
 
     @classmethod
@@ -66,7 +66,6 @@ class DynamicOutputArgumentsHelper(interface.ArgumentsHelper):
         fields = cls._ParseStringOption(
             options, "fields", default_value=cls._DEFAULT_FIELDS
         )
-
         output_module.SetFields([name.strip() for name in fields.split(",")])
 
 

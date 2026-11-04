@@ -71,7 +71,7 @@ class ChromeAutofillPlugin(interface.SQLitePlugin):
                 "value BLOB)"
             ),
             "autofill_profile_emails": (
-                "CREATE TABLE autofill_profile_emails ( guid VARCHAR, email " "VARCHAR)"
+                "CREATE TABLE autofill_profile_emails ( guid VARCHAR, email VARCHAR)"
             ),
             "autofill_profile_names": (
                 "CREATE TABLE autofill_profile_names ( guid VARCHAR, first_name "

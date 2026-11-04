@@ -15,9 +15,8 @@ class MacOSDocumentVersionsTest(test_lib.SQLitePluginTestCase):
         """Tests the Process function on a MacOS Document Versions file."""
         plugin = macos_document_versions.MacOSDocumentVersionsPlugin()
         storage_writer = self._ParseDatabaseFileWithPlugin(
-            ["document_versions.sql"], plugin
+            ["macos", "document_versions.sql"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -45,7 +44,6 @@ class MacOSDocumentVersionsTest(test_lib.SQLitePluginTestCase):
                 "08CFEB5A-5CDA-486F-AED5-EA35BF3EE4C2.rtf"
             ),
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

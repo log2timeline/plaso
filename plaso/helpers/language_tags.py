@@ -8,6 +8,7 @@ For a list of language tags see:
 class LanguageTagHelper:
     """Language tags helper."""
 
+    # typos:disable
     _LANGUAGE_PER_TAG = {
         "af": "Afrikaans",
         "af-ZA": "Afrikaans, South Africa",
@@ -401,6 +402,7 @@ class LanguageTagHelper:
         "zu": "Zulu",
         "zu-ZA": "Zulu, South Africa",
     }
+    # typos:enable
 
     _LANGUAGE_PER_TAG_LOWER_CASE = {
         tag.lower(): language for tag, language in _LANGUAGE_PER_TAG.items()
@@ -411,13 +413,13 @@ class LanguageTagHelper:
         """Retrieveve the language tags with their description.
 
         Returns:
-          tuple[str, str]: lanugage tag and description.
+          tuple[str, str]: language tag and description.
         """
         return sorted(cls._LANGUAGE_PER_TAG.items())
 
     @classmethod
     def IsLanguageTag(cls, string):
-        """Detemines if a string contains a valid language tag.
+        """Determines if a string contains a valid language tag.
 
         Args:
           string (str): a string.

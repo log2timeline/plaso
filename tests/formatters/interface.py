@@ -65,7 +65,6 @@ class FlagsEventFormatterHelperTest(test_lib.EventFormatterTestCase):
             output_attribute="test",
             values={1: "flag1", 2: "flag2"},
         )
-
         output_mediator = self._CreateOutputMediator()
 
         event_values = {"flags": 3}
@@ -98,15 +97,31 @@ class EventFormatterTest(test_lib.EventFormatterTestCase):
         )
         self.assertIsNotNone(event_formatter)
 
-    # TODO: add tests for _FormatMessage
-    # TODO: add tests for _FormatMessages
+    def testFormatMessage(self):
+        """Tests the message formatting with GetMessage."""
+        event_formatter = interface.BasicEventFormatter(
+            data_type="test", format_string="{text}"
+        )
+
+        message = event_formatter.GetMessage({"text": "line1\r\nline2\n"})
+        self.assertEqual(message, "line1line2")
+
+        event_values = {"data_type": "test:event", "numeric": 12}
+        with self.assertLogs("formatters", level="ERROR") as context_manager:
+            message = event_formatter.GetMessage(event_values)
+
+        self.assertEqual(message, "data_type: test:event numeric: 12")
+        self.assertEqual(len(context_manager.records), 1)
+        self.assertIn(
+            'unable to format string: "{text}" with error: ',
+            context_manager.records[0].getMessage(),
+        )
 
     def testGetFormatStringAttributeNames(self):
         """Tests the GetFormatStringAttributeNames function."""
         event_formatter = interface.BasicEventFormatter(
             data_type="test", format_string="{text}"
         )
-
         expected_attribute_names = ["text"]
 
         attribute_names = event_formatter.GetFormatStringAttributeNames()
@@ -117,7 +132,6 @@ class EventFormatterTest(test_lib.EventFormatterTestCase):
         event_formatter = interface.BasicEventFormatter(
             data_type="test", format_string="{text}"
         )
-
         _, event_data, _ = containers_test_lib.CreateEventFromValues(
             self._TEST_EVENTS[0]
         )
@@ -126,7 +140,7 @@ class EventFormatterTest(test_lib.EventFormatterTestCase):
         message = event_formatter.GetMessage(event_values)
 
         self.assertEqual(
-            message, ("but we're still trying to say something about the event")
+            message, "but we're still trying to say something about the event"
         )
 
     def testGetMessageShort(self):
@@ -134,7 +148,6 @@ class EventFormatterTest(test_lib.EventFormatterTestCase):
         event_formatter = interface.BasicEventFormatter(
             data_type="test", format_string="{text}"
         )
-
         _, event_data, _ = containers_test_lib.CreateEventFromValues(
             self._TEST_EVENTS[0]
         )
@@ -143,7 +156,7 @@ class EventFormatterTest(test_lib.EventFormatterTestCase):
         message_short = event_formatter.GetMessageShort(event_values)
 
         self.assertEqual(
-            message_short, ("but we're still trying to say something about the event")
+            message_short, "but we're still trying to say something about the event"
         )
 
 
@@ -190,11 +203,9 @@ class ConditionalEventFormatterTest(test_lib.EventFormatterTestCase):
         event_formatter = interface.ConditionalEventFormatter(
             data_type="test", format_string_pieces=self._TEST_FORMAT_STRING_PIECES
         )
-
         expected_attribute_names = sorted(
             ["description", "numeric", "optional", "text"]
         )
-
         attribute_names = event_formatter.GetFormatStringAttributeNames()
         self.assertEqual(sorted(attribute_names), expected_attribute_names)
 
@@ -203,7 +214,6 @@ class ConditionalEventFormatterTest(test_lib.EventFormatterTestCase):
         event_formatter = interface.ConditionalEventFormatter(
             data_type="test", format_string_pieces=self._TEST_FORMAT_STRING_PIECES
         )
-
         _, event_data, _ = containers_test_lib.CreateEventFromValues(
             self._TEST_EVENTS[0]
         )
@@ -222,7 +232,6 @@ class ConditionalEventFormatterTest(test_lib.EventFormatterTestCase):
         event_formatter = interface.ConditionalEventFormatter(
             data_type="test", format_string_pieces=self._TEST_FORMAT_STRING_PIECES
         )
-
         _, event_data, _ = containers_test_lib.CreateEventFromValues(
             self._TEST_EVENTS[0]
         )

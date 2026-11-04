@@ -159,21 +159,25 @@ DEBUG_DEPENDENCIES="libbde-dbg
                     libvslvm-dbg
                     libvslvm-python3-dbg";
 
-sudo add-apt-repository ppa:gift/${GIFT_PPA_TRACK} -y
+sudo add-apt-repository "ppa:gift/${GIFT_PPA_TRACK}" -y
 sudo apt update -q
+# shellcheck disable=SC2086
 sudo apt install -q -y ${PYTHON_DEPENDENCIES}
 
 if [[ "$*" =~ "include-debug" ]];
 then
+	# shellcheck disable=SC2086
 	sudo apt install -q -y ${DEBUG_DEPENDENCIES}
 fi
 
 if [[ "$*" =~ "include-development" ]];
 then
+	# shellcheck disable=SC2086
 	sudo apt install -q -y ${DEVELOPMENT_DEPENDENCIES}
 fi
 
 if [[ "$*" =~ "include-test" ]];
 then
+	# shellcheck disable=SC2086
 	sudo apt install -q -y ${TEST_DEPENDENCIES}
 fi

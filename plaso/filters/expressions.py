@@ -225,7 +225,6 @@ class EventExpression(Expression):
                         "Implicit event filter date and time conversion is deprecated "
                         "use the DATETIME() value type indicator instead"
                     )
-
                     try:
                         date_time = value_types.DateTimeValueType(argument)
                     except ValueError as exception:

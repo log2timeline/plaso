@@ -54,7 +54,7 @@ source-level events. For example a line in syslog representing, or a file entry
 creation.
 
 Multiple source-level events can make up higher-level events. For example
-a processess execution log file (source) could have process start and stop
+a processes execution log file (source) could have process start and stop
 events. However these events could be combined into a single process execution
 (duration) event.
 
@@ -99,6 +99,11 @@ its reference date (or [epoch](https://en.wikipedia.org/wiki/Epoch_(reference_da
 * An event spanning a duration is currently not supported
 * Time-less events currently overload timestamp 0
 
+For event data without date and time values, of the data types that are
+configured with `place_holder_event` in `plaso/data/timeliner.yaml`, Plaso
+creates a place holder event. This event has a "Not set" date and time value,
+which corresponds with timestamp 0, and the time description "Not a time".
+
 As of 20210511 Plaso supports "dynamic time" which preserves the "datetime
 storage granularity" and "datetime value granularity" of the event time as
 stored in the source. For this Plaso now represent event time as an
@@ -117,13 +122,16 @@ granularity" see [accuracy and precision](https://dfdatetime.readthedocs.io/en/l
 ### Event data
 
 Plaso stores various pieces of information related to the event in an event
-data attribute container (object). 
+data attribute container (object). Attributes common to all event data are:
 
 * data type to distinguish between different types of event data;
-* information about which Plaso parser generated the event data;
+* the parser chain, which indicates which Plaso parser and plugin(s) generated the event data;
+* flags that indicate if the event data is corrupted or was recovered.
+
+Other attributes are data type specific, for example some parsers store:
+
 * offset in the event data stream of the raw data where the event originates from;
-* database query where the event originates from;
-* other data type specific attributes.
+* database query where the event originates from.
 
 Note that event data is currently free form. Work is in progress to make
 a more formal specification. For more details see: https://github.com/log2timeline/plaso/issues/2129
@@ -147,5 +155,32 @@ which event data originates in an event data stream attribute container
 
 * a [dfVFS path specification](https://dfvfs.readthedocs.io/en/latest/sources/Path-specifications.html) that specifies the location of the data stream within a storage media image and/or as a file on-disk
 * a MD5, SHA-1, SHA-256 digest hash of the data stream
+* the byte entropy of the data stream
 * matches of Yara signatures
 
+### Event data state
+
+A parser can indicate the state of the event data it produces. Plaso uses
+the following terms:
+
+* corrupted; the parser encountered a format (edge) case where parsing failed. Note that this can also be related to the parsing configuration, such as the code page, or an edge case the parser cannot handle, such as an UCS-2 string conversion;
+* recovered; the parser recovered the event data outside the regular (allocated) structures of the data format, for example a recovered Windows EventLog (EVT) or Windows XML EventLog (EVTX) record.
+
+Events of corrupted or recovered event data are tagged with the label
+`corrupted` or `recovered` respectively. These labels can be used in an
+[event filter](Event-filters.md), for example:
+
+```
+tag contains 'recovered'
+```
+
+A parser can also produce warnings. Warnings produced while recovering event
+data are stored as recovery warnings, other parser warnings as extraction
+warnings. Both types of warnings can be shown with:
+
+```bash
+$ pinfo.py --sections warnings timeline.plaso
+```
+
+Parsers set the state with the `corrupted` and `recovered` arguments of the
+`ProduceEventData` method of the [parsers mediator](https://plaso.readthedocs.io/en/latest/sources/api/plaso.parsers.html#module-plaso.parsers.mediator).

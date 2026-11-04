@@ -16,15 +16,13 @@ class AzureApplicationGatewayAccessEventData(events.EventData):
       client_response_time (int): Duration, in seconds, from the first byte of
           a client request to be processed up to the first byte sent as response
           to the client.
-      host (str): Address listed in the host header of the request. If rewritten
-          using header rewrite, contains the updated host name.
       http_method (str): HTTP method used by the request.
       http_status (int): HTTP status code returned to the client from application
           gateway.
       http_version (str): HTTP version of the request.
       instance_identifier (str): Application gateway instance that served
           the request.
-      original_host (str): Original request host name.
+      original_request_host (str): Original IP address or name of the requested host.
       original_request_uri (str): Original request URL, including arguments.
       received_bytes (int): Size of packet received, in bytes.
       recorded_time (dfdatetime.DateTimeValues): date and time the log entry
@@ -35,6 +33,8 @@ class AzureApplicationGatewayAccessEventData(events.EventData):
           the back-end servers. SERVER-STATUS: HTTP response code that application
           gateway received from the back-end.
       request_uri (str): URI of the received request.
+      request_host (str): IP address or name of the requested host as listed in the
+          x-original-host header, which could have been changed by a reverse proxy.
       sent_bytes (int): Size of packet sent, in bytes.
       server_response_latency (str): Latency of the response (in seconds) from
           the back-end server.
@@ -55,7 +55,7 @@ class AzureApplicationGatewayAccessEventData(events.EventData):
           the response to the client. It's important to note that the Time-Taken
           field usually includes the time that the request and response packets
           are traveling over the network.
-      transaction_id (str): Unique identifier to correlate the request received
+      transaction_identifier (str): Unique identifier to correlate the request received
           from the client
       user_agent (str): User agent from the HTTP request header.
       waf_evaluation_time (str): Duration, in seconds, that it takes for
@@ -71,15 +71,15 @@ class AzureApplicationGatewayAccessEventData(events.EventData):
         self.client_ip = None
         self.client_port = None
         self.client_response_time = None
-        self.host = None
         self.http_method = None
         self.http_status = None
         self.http_version = None
         self.instance_identifier = None
-        self.original_host = None
+        self.original_request_host = None
         self.original_request_uri = None
         self.received_bytes = None
         self.recorded_time = None
+        self.request_host = None
         self.request_query = None
         self.request_uri = None
         self.sent_bytes = None
@@ -109,21 +109,23 @@ class AzureApplicationGatewayAccessLogJSONLPlugin(interface.JSONLPlugin):
         """Parses an Azure application gateway access log record.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           json_dict (dict): JSON dictionary of the log record.
         """
         properties_json_dict = self._GetJSONValue(
             json_dict, "properties", default_value={}
         )
-
+        date_time, corrupted = self._ParseISO8601DateTimeString(
+            parser_mediator, json_dict, "timeStamp"
+        )
         event_data = AzureApplicationGatewayAccessEventData()
         event_data.client_ip = self._GetJSONValue(properties_json_dict, "clientIP")
         event_data.client_port = self._GetJSONValue(properties_json_dict, "clientPort")
         event_data.client_response_time = self._GetJSONValue(
             properties_json_dict, "clientResponseTime"
         )
-        event_data.host = self._GetJSONValue(properties_json_dict, "host")
+        event_data.request_host = self._GetJSONValue(properties_json_dict, "host")
         event_data.http_method = self._GetJSONValue(properties_json_dict, "httpMethod")
         event_data.http_status = self._GetJSONValue(properties_json_dict, "httpStatus")
         event_data.http_version = self._GetJSONValue(
@@ -132,7 +134,7 @@ class AzureApplicationGatewayAccessLogJSONLPlugin(interface.JSONLPlugin):
         event_data.instance_identifier = self._GetJSONValue(
             properties_json_dict, "instanceId"
         )
-        event_data.original_host = self._GetJSONValue(
+        event_data.original_request_host = self._GetJSONValue(
             properties_json_dict, "originalHost"
         )
         event_data.original_request_uri = self._GetJSONValue(
@@ -141,9 +143,7 @@ class AzureApplicationGatewayAccessLogJSONLPlugin(interface.JSONLPlugin):
         event_data.received_bytes = self._GetJSONValue(
             properties_json_dict, "receivedBytes"
         )
-        event_data.recorded_time = self._ParseISO8601DateTimeString(
-            parser_mediator, json_dict, "timeStamp"
-        )
+        event_data.recorded_time = date_time
         event_data.request_query = self._GetJSONValue(
             properties_json_dict, "requestQuery"
         )
@@ -182,7 +182,7 @@ class AzureApplicationGatewayAccessLogJSONLPlugin(interface.JSONLPlugin):
         )
         event_data.waf_mode = self._GetJSONValue(properties_json_dict, "WAFMode")
 
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def CheckRequiredFormat(self, json_dict):
         """Check if the log record has the minimal structure required by the plugin.

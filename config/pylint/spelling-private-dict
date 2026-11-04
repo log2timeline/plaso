@@ -74,7 +74,6 @@ codecs
 codepage
 collectfromfilesystem
 companyname
-compatiblity
 concatting
 conf
 conffile
@@ -194,14 +193,12 @@ filesystem
 filesystems
 filesystem's
 filesystemsearcher
-filesytem
 filetime
 fileversion
 filterobject
 findspec
 findspecs
 findutils
-fle
 formatter
 formatters
 fpi
@@ -248,7 +245,6 @@ http
 httpd
 httponly
 https
-hve
 hwm
 icmpcode
 icmptype
@@ -310,7 +306,6 @@ lnk
 localappdata
 localtime
 lockdown
-loction
 logline
 logname
 logon
@@ -356,7 +351,6 @@ multiline
 mutators
 mystorage
 myvalue
-namd
 namedtuple
 namespace
 nano
@@ -368,7 +362,6 @@ notevil
 ns
 nsrlsvr
 ntdomain
-nubmer
 nuku'alofa
 numimpfunctions
 numpy
@@ -406,7 +399,6 @@ pids
 pinfo
 pirelli
 plaintext
-plas
 plaso
 plaso's
 plist
@@ -457,7 +449,6 @@ pysqlite
 pytz
 quarfwd
 queueempty
-queueing
 raðar
 rc
 readline
@@ -485,7 +476,6 @@ runtime
 rus
 safna
 santa
-sav
 sc
 scalability
 scancontext
@@ -497,7 +487,6 @@ sdf
 sdist
 securityd
 seedtime
-seeked
 selinux
 sem
 sendall
@@ -520,7 +509,6 @@ sophos
 sourcescancontext
 sourcescannercontext
 sourcescannode
-specfic
 spelt
 sqlite
 sqlitecache
@@ -569,7 +557,6 @@ testdir
 textfile
 textwrap
 tgz
-tha
 thismykey
 timeelements
 timelib
@@ -585,7 +572,6 @@ timezones
 tln
 tmp
 todo
-totalling
 traceback
 trackpad
 trigproc
@@ -594,8 +580,6 @@ tskvolumesystem
 tuple
 tuples
 txt
-tyre
-tyres
 tz
 tzif
 tzinfo
@@ -649,7 +633,6 @@ wildcards
 windir
 windowspathresolver
 windowsservice
-windwos
 winlnk
 winlogon
 winregistry

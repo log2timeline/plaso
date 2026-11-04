@@ -21,21 +21,19 @@ class OpenXMLEventData(events.EventData):
       application (str): name of application that created document.
       application_version (str): version of application that created document.
       author (str): name of author.
-      creation_time (dfdatetime.DateTimeValues): creation date and time of
-          the document.
+      creation_time (dfdatetime.DateTimeValues): creation date and time of the document.
       digital_signature (str): digital signature.
       edit_duration (int): total editing time.
       hyperlinks_changed (bool): True if hyperlinks have changed.
-      last_printed_time (dfdatetime.DateTimeValues): date and time the document
-          was last printed.
+      last_printed_time (dfdatetime.DateTimeValues): date and time the document was last
+          printed.
       last_saved_by (str): name of user that last saved the document.
       links_up_to_date (bool): True if the links are up to date.
-      modification_time (dfdatetime.DateTimeValues): modification date and time
-          of the document.
-      number_of_characters (int): number of characters without spaces in
+      modification_time (dfdatetime.DateTimeValues): modification date and time of the
+          document.
+      number_of_characters (int): number of characters without spaces in the document.
+      number_of_characters_with_spaces (int): number of characters including spaces in
           the document.
-      number_of_characters_with_spaces (int): number of characters including
-          spaces in the document.
       number_of_clips (int): number of multi-media clips in the document.
       number_of_hidden_slides (int): number of hidden slides in the document.
       number_of_lines (int): number of lines in the document.
@@ -44,8 +42,8 @@ class OpenXMLEventData(events.EventData):
       number_of_slides (int): number of slides in the document.
       number_of_words (int): number of words in the document.
       revision_number (int): revision number.
-      scale (bool): True if scaling of the thumbnail is desired or false if
-          cropping is desired.
+      scale (bool): True if scaling of the thumbnail is desired or false if cropping is
+          desired.
       security_flags (int): security flags.
       shared_doc (bool): True if document is shared.
       template (str): name of the template used to created the document.
@@ -108,29 +106,41 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
         "Shared_Doc": "shared",
     }
 
-    def _GetPropertyValue(self, parser_mediator, properties, name):
-        """Retrieves a property value.
+    _BINARY_VALUE_NAMES = frozenset(
+        [
+            "application",
+            "app_version",
+            "author",
+            "dig_sig",
+            "last_saved_by",
+            "shared_doc",
+            "template",
+        ]
+    )
 
-        Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
-          properties (dict[str, object]): properties.
-          name (str): name of the property.
+    _BOOLEAN_VALUE_NAMES = frozenset(
+        ["hyperlinks_changed", "links_up_to_date", "scale_crop"]
+    )
 
-        Returns:
-          str: property value.
-        """
-        property_value = properties.get(name)
-        if isinstance(property_value, bytes):
-            try:
-                # TODO: get encoding form XML metadata.
-                property_value = property_value.decode("utf-8")
-            except UnicodeDecodeError:
-                parser_mediator.ProduceExtractionWarning(
-                    f"unable to decode property: {name:s}"
-                )
+    _INTEGER_VALUE_NAMES = frozenset(
+        [
+            "doc_security",
+            "hidden_slides",
+            "i4",
+            "mm_clips",
+            "number_of_characters",
+            "number_of_characters_with_spaces",
+            "number_of_lines",
+            "number_of_pages",
+            "number_of_paragraphs",
+            "number_of_words",
+            "revision_number",
+            "slides",
+            "total_time",
+        ]
+    )
 
-        return property_value
+    _ISO8601_STRING_VALUES = frozenset(["created", "last_printed", "modified"])
 
     def _FormatPropertyName(self, name):
         """Formats a camel case property name as snake case.
@@ -145,95 +155,27 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
         fix_key = re.sub(r"(.)([A-Z][a-z]+)", r"\1_\2", name)
         return re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", fix_key).lower()
 
-    def _ParseBooleanValue(self, properties, name):
-        """Parses a boolean property value.
-
-        Args:
-          properties (dict[str, object]): properties.
-          name (str): name of the property.
-
-        Returns:
-          bool: boolean value or None not available.
-        """
-        string_value = properties.get(name)
-        if string_value:
-            if string_value == "false":
-                return False
-            if string_value == "true":
-                return True
-
-        return None
-
-    def _ParseIntegerValue(self, properties, name):
-        """Parses an integer property value.
-
-        Args:
-          properties (dict[str, object]): properties.
-          name (str): name of the property.
-
-        Returns:
-          int: integer value or None not available.
-        """
-        string_value = properties.get(name)
-        if string_value:
-            try:
-                return int(string_value, 10)
-            except (TypeError, ValueError):
-                pass
-
-        return None
-
-    def _ParseISO8601DateTimeString(self, parser_mediator, properties, name):
-        """Parses an ISO8601 date and time string.
-
-        Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
-          properties (dict[str, object]): properties.
-          name (str): name of the property.
-
-        Returns:
-          dfdatetime.TimeElementsInMicroseconds: date and time value or None if
-              not available.
-        """
-        iso8601_string = properties.get(name)
-        if not iso8601_string:
-            return None
-
-        # Date and time strings are in ISO8601 format either with 1 second
-        # or 100th nano second precision. For example:
-        # 2012-11-07T23:29:00Z
-        # 2012-03-05T20:40:00.0000000Z
-        date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
-
-        try:
-            date_time.CopyFromStringISO8601(iso8601_string)
-        except ValueError as exception:
-            parser_mediator.ProduceExtractionWarning(
-                (
-                    f"Unable to parse value: {name:s} ISO8601 string: "
-                    f"{iso8601_string:s} with error: {exception!s}"
-                )
-            )
-            return None
-
-        return date_time
-
-    def _ParsePropertiesXMLFile(self, xml_data):
+    def _ParsePropertiesXMLFile(self, parser_mediator, xml_data):
         """Parses a properties XML file.
 
         Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           xml_data (bytes): data of a _rels/.rels XML file.
 
         Returns:
-          dict[str, object]: properties.
+          tuple: containing:
+
+              dict[str, object]: properties.
+              bool: value to indicate the ISO8601 date and time string was corrupted.
 
         Raises:
           zipfile.BadZipfile: if the properties XML file cannot be read.
         """
-        xml_root = ElementTree.fromstring(xml_data)
-
+        corrupted = False
         properties = {}
+
+        xml_root = ElementTree.fromstring(xml_data)
         for xml_element in xml_root.iter():
             if not xml_element.text:
                 continue
@@ -250,9 +192,69 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
             if not property_name:
                 property_name = self._FormatPropertyName(name)
 
-            properties[property_name] = xml_element.text
+            property_value = xml_element.text
+            if property_value in (None, b"", ""):
+                property_value = None
 
-        return properties
+            elif property_name in self._BINARY_VALUE_NAMES:
+                if isinstance(property_value, bytes):
+                    try:
+                        # TODO: get encoding form XML metadata.
+                        property_value = property_value.decode("utf-8")
+                    except UnicodeDecodeError:
+                        parser_mediator.ProduceWarning(
+                            f"Unable to decode property value: {property_name:s} as "
+                            f"UTF-8. Unsupported code points are escaped."
+                        )
+                        property_value = property_value.decode(
+                            "utf-8", errors="backslashreplace"
+                        )
+                        corrupted = True
+
+            elif property_name in self._BOOLEAN_VALUE_NAMES:
+                if property_value == "false":
+                    property_value = False
+                elif property_value == "true":
+                    property_value = True
+                else:
+                    parser_mediator.ProduceWarning(
+                        f"Unable to parse boolean value: {property_name:s}"
+                    )
+                    property_value = None
+                    corrupted = True
+
+            elif property_name in self._INTEGER_VALUE_NAMES:
+                try:
+                    property_value = int(property_value, 10)
+                except (TypeError, ValueError):
+                    parser_mediator.ProduceWarning(
+                        f"Unable to parse integer value: {property_name:s}"
+                    )
+                    property_value = None
+                    corrupted = True
+
+            elif property_name in self._ISO8601_STRING_VALUES:
+                # Date and time strings are in ISO8601 format either with 1 second
+                # or 100th nano second precision. For example:
+                # 2012-11-07T23:29:00Z
+                # 2012-03-05T20:40:00.0000000Z
+                date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
+
+                try:
+                    date_time.CopyFromStringISO8601(property_value)
+                except ValueError as exception:
+                    parser_mediator.ProduceWarning(
+                        f"Unable to parse ISO8601 string value: {property_name:s} "
+                        f"with error: {exception!s}"
+                    )
+                    date_time = None
+                    corrupted = True
+
+                property_value = date_time
+
+            properties[property_name] = property_value
+
+        return properties, corrupted
 
     def _ParseRelationshipsXMLFile(self, xml_data):
         """Parses the relationships XML file (_rels/.rels).
@@ -282,8 +284,8 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
         """Parses an OXML file-like object.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           zip_file (zipfile.ZipFile): the zip file containing OXML content. It is
               not be closed in this method, but will be closed by the parser logic
                in czip.py.
@@ -302,20 +304,21 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
             expat.ExpatError,
             zipfile.BadZipfile,
         ) as exception:
-            parser_mediator.ProduceExtractionWarning(
-                (
-                    f"Unable to parse relationships XML file: _rels/.rels with error: "
-                    f"{exception!s}"
-                )
+            parser_mediator.ProduceWarning(
+                f"Unable to parse relationships XML file: _rels/.rels with error: "
+                f"{exception!s}"
             )
             return
 
+        corrupted = False
         metadata = {}
 
         for path in property_files:
             try:
                 xml_data = zip_file.read(path)
-                properties = self._ParsePropertiesXMLFile(xml_data)
+                properties, properties_corrupted = self._ParsePropertiesXMLFile(
+                    parser_mediator, xml_data
+                )
             except (
                 IndexError,
                 KeyError,
@@ -327,84 +330,46 @@ class OpenXMLPlugin(interface.CompoundZIPPlugin):
                 expat.ExpatError,
                 zipfile.BadZipfile,
             ) as exception:
-                parser_mediator.ProduceExtractionWarning(
-                    (
-                        f"Unable to parse properties XML file: {path:s} with error: "
-                        f"{exception!s}"
-                    )
+                parser_mediator.ProduceWarning(
+                    f"Unable to parse properties XML file: {path:s} with error: "
+                    f"{exception!s}"
                 )
                 continue
 
             metadata.update(properties)
+            corrupted = corrupted or properties_corrupted
 
         event_data = OpenXMLEventData()
-        event_data.application = self._GetPropertyValue(
-            parser_mediator, metadata, "application"
+        event_data.application = metadata.get("application")
+        event_data.application_version = metadata.get("app_version")
+        event_data.author = metadata.get("author")
+        event_data.creation_time = metadata.get("created")
+        event_data.digital_signature = metadata.get("dig_sig")
+        event_data.edit_duration = metadata.get("total_time")
+        event_data.hyperlinks_changed = metadata.get("hyperlinks_changed")
+        # event_data.i4 = metadata.get("i4")
+        event_data.last_printed_time = metadata.get("last_printed")
+        event_data.last_saved_by = metadata.get("last_saved_by")
+        event_data.links_up_to_date = metadata.get("links_up_to_date")
+        event_data.modification_time = metadata.get("modified")
+        event_data.number_of_characters = metadata.get("number_of_characters")
+        event_data.number_of_characters_with_spaces = metadata.get(
+            "number_of_characters_with_spaces"
         )
-        event_data.application_version = self._GetPropertyValue(
-            parser_mediator, metadata, "app_version"
-        )
-        event_data.author = self._GetPropertyValue(parser_mediator, metadata, "author")
-        event_data.creation_time = self._ParseISO8601DateTimeString(
-            parser_mediator, metadata, "created"
-        )
-        event_data.digital_signature = self._GetPropertyValue(
-            parser_mediator, metadata, "dig_sig"
-        )
-        event_data.edit_duration = self._ParseIntegerValue(metadata, "total_time")
-        event_data.hyperlinks_changed = self._ParseBooleanValue(
-            metadata, "hyperlinks_changed"
-        )
-        # event_data.i4 = self._ParseIntegerValue(
-        #     parser_mediator, metadata, 'i4')
-        event_data.last_printed_time = self._ParseISO8601DateTimeString(
-            parser_mediator, metadata, "last_printed"
-        )
-        event_data.last_saved_by = self._GetPropertyValue(
-            parser_mediator, metadata, "last_saved_by"
-        )
-        event_data.links_up_to_date = self._ParseBooleanValue(
-            metadata, "links_up_to_date"
-        )
-        event_data.modification_time = self._ParseISO8601DateTimeString(
-            parser_mediator, metadata, "modified"
-        )
-        event_data.number_of_characters = self._ParseIntegerValue(
-            metadata, "number_of_characters"
-        )
-        event_data.number_of_characters_with_spaces = self._ParseIntegerValue(
-            metadata, "number_of_characters_with_spaces"
-        )
-        event_data.number_of_clips = self._ParseIntegerValue(metadata, "mm_clips")
-        event_data.number_of_hidden_slides = self._ParseIntegerValue(
-            metadata, "hidden_slides"
-        )
-        event_data.number_of_lines = self._ParseIntegerValue(
-            metadata, "number_of_lines"
-        )
-        event_data.number_of_pages = self._ParseIntegerValue(
-            metadata, "number_of_pages"
-        )
-        event_data.number_of_paragraphs = self._ParseIntegerValue(
-            metadata, "number_of_paragraphs"
-        )
-        event_data.number_of_slides = self._ParseIntegerValue(metadata, "slides")
-        event_data.number_of_words = self._ParseIntegerValue(
-            metadata, "number_of_words"
-        )
-        event_data.revision_number = self._ParseIntegerValue(
-            metadata, "revision_number"
-        )
-        event_data.scale = self._ParseBooleanValue(metadata, "scale_crop")
-        event_data.security_flags = self._ParseIntegerValue(metadata, "doc_security")
-        event_data.shared_doc = self._GetPropertyValue(
-            parser_mediator, metadata, "shared_doc"
-        )
-        event_data.template = self._GetPropertyValue(
-            parser_mediator, metadata, "template"
-        )
+        event_data.number_of_clips = metadata.get("mm_clips")
+        event_data.number_of_hidden_slides = metadata.get("hidden_slides")
+        event_data.number_of_lines = metadata.get("number_of_lines")
+        event_data.number_of_pages = metadata.get("number_of_pages")
+        event_data.number_of_paragraphs = metadata.get("number_of_paragraphs")
+        event_data.number_of_slides = metadata.get("slides")
+        event_data.number_of_words = metadata.get("number_of_words")
+        event_data.revision_number = metadata.get("revision_number")
+        event_data.scale = metadata.get("scale_crop")
+        event_data.security_flags = metadata.get("doc_security")
+        event_data.shared_doc = metadata.get("shared_doc")
+        event_data.template = metadata.get("template")
 
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
 
 czip.CompoundZIPParser.RegisterPlugin(OpenXMLPlugin)

@@ -27,6 +27,11 @@ class PathHelper:
         ],
         "%%users.temp%%": [["%%users.localappdata%%", "Temp"]],
     }
+
+    # Characters that have a special meaning in a regular expression, outside
+    # and inside a character class.
+    _REGULAR_EXPRESSION_SPECIAL_CHARACTERS = frozenset("$()*+-.?[\\]^{|}")
+
     _DIRTY_CHARACTERS = frozenset(
         [
             "\x00",
@@ -181,6 +186,29 @@ class PathHelper:
         return [path]
 
     @classmethod
+    def _EscapeRegularExpression(cls, string):
+        """Escapes the regular expression special characters in a string.
+
+        Unlike re.escape, which characters are escaped does not depend on the
+        Python version: only the characters in
+        _REGULAR_EXPRESSION_SPECIAL_CHARACTERS are escaped.
+
+        Args:
+          string (str): string to escape.
+
+        Returns:
+          str: string that matches the original string literally when used as a
+              regular expression.
+        """
+        escaped_characters = []
+        for character in string:
+            if character in cls._REGULAR_EXPRESSION_SPECIAL_CHARACTERS:
+                escaped_characters.append("\\")
+            escaped_characters.append(character)
+
+        return "".join(escaped_characters)
+
+    @classmethod
     def _IsWindowsDrivePathSegment(cls, path_segment):
         """Determines if the path segment contains a Windows Drive indicator.
 
@@ -305,7 +333,9 @@ class PathHelper:
         return "\\".join(path_segments)
 
     @classmethod
-    def ExpandWindowsPathSegments(cls, path_segments, environment_variables):
+    def ExpandWindowsPathSegments(
+        cls, path_segments, environment_variables, escape_values=False
+    ):
         """Expands a Windows path segments containing environment variables.
 
         Args:
@@ -313,6 +343,10 @@ class PathHelper:
               variables.
           environment_variables (list[EnvironmentVariableArtifact]): environment
               variables.
+          escape_values (Optional[bool]): True if regular expression metacharacters
+              in environment variable values should be escaped. This is used when
+              the expanded path segments are used as regular expressions so that an
+              environment variable value is matched literally. Defaults to False.
 
         Returns:
           list[str]: expanded Windows path segments.
@@ -344,8 +378,18 @@ class PathHelper:
                 lookup_key = path_segment_upper_case[10:-2]
             else:
                 lookup_key = path_segment_upper_case[1:-1]
+
+            value_found = lookup_key in lookup_table
             path_segment = lookup_table.get(lookup_key, path_segment)
             path_segment = path_segment.split("\\")
+
+            # An environment variable value is defined by the evidence and is
+            # matched literally, so escape regular expression metacharacters it
+            # contains when the result is used as a regular expression.
+            if escape_values and value_found:
+                path_segment = [
+                    cls._EscapeRegularExpression(segment) for segment in path_segment
+                ]
 
             expanded_path_segments = list(path_segments[:index])
             expanded_path_segments.extend(path_segment)

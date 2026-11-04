@@ -2,6 +2,7 @@
 
 import sqlite3
 
+from dfdatetime import cocoa_time as dfdatetime_cocoa_time
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import java_time as dfdatetime_java_time
 from dfdatetime import posix_time as dfdatetime_posix_time
@@ -64,6 +65,26 @@ class SQLitePlugin(plugins.BasePlugin):
         date_time = dfdatetime_time_elements.TimeElements()
         date_time.CopyFromDateTimeString(date_time_string)
         return date_time
+
+    def _GetCocoaTimeRowValue(self, query_hash, row, value_name):
+        """Retrieves a Cocoa date and time value from the row.
+
+        Args:
+          query_hash (int): hash of the query, that uniquely
+              identifies the query that produced the row.
+          row (sqlite3.Row): row.
+          value_name (str): name of the value.
+
+        Returns:
+          dfdatetime.CocoaTime: date and time value or None if not available.
+        """
+        timestamp = self._GetRowValue(query_hash, row, value_name)
+        # Note that pysqlite3 can return an empty string for a NULL value.
+        # Also see: https://github.com/log2timeline/plaso/issues/4961
+        if timestamp in (None, ""):
+            return None
+
+        return dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
 
     def _GeFiletimeRowValue(self, query_hash, row, value_name):
         """Retrieves a FILETIME date and time value from the row.
@@ -210,7 +231,8 @@ class SQLitePlugin(plugins.BasePlugin):
         """Extracts events from a SQLite database.
 
         Args:
-          parser_mediator (ParserMediator): parser mediator.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           database (SQLiteDatabase): database.
           query (str): query.
           callback (function): function to invoke to parse an individual row.
@@ -222,7 +244,7 @@ class SQLitePlugin(plugins.BasePlugin):
             rows = database.Query(query)
 
         except sqlite3.DatabaseError as exception:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unable to run query: {query:s} on database with error: "
                 f"{exception!s}"
             )
@@ -240,7 +262,7 @@ class SQLitePlugin(plugins.BasePlugin):
                 callback(parser_mediator, query, row, cache=cache, database=database)
 
             except Exception as exception:  # pylint: disable=broad-except
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"unable to parse row: {index:d} with callback: "
                     f"{callback.__name__:s} on database with error: {exception!s}"
                 )
@@ -302,7 +324,8 @@ class SQLitePlugin(plugins.BasePlugin):
         """Extracts events from a SQLite database.
 
         Args:
-          parser_mediator (ParserMediator): parser mediator.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           cache (Optional[SQLiteCache]): cache.
           database (Optional[SQLiteDatabase]): database.
 

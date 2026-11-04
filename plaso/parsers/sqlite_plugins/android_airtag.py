@@ -133,24 +133,27 @@ class AirTagPlugin(interface.SQLitePlugin):
           value_name (str): name of the value.
 
         Returns:
-          dfdatetime.TimeElementsInMilliseconds: date and time value or None if
-              not available.
+          tuple: containing:
+
+              dfdatetime.TimeElementsInMilliseconds: date and time value or None if
+                  not available.
+              bool: value to indicate the date and time value was corrupted
         """
         iso8601_string = self._GetRowValue(query_hash, row, value_name)
         if iso8601_string is None:
-            return None
+            return None, False
 
         try:
             date_time = dfdatetime_time_elements.TimeElementsInMilliseconds()
             date_time.CopyFromStringISO8601(iso8601_string)
         except ValueError as exception:
-            parser_mediator.ProduceExtractionWarning(
-                f"Unable to parse ${value_name:} date and time string: "
+            parser_mediator.ProduceWarning(
+                f"Unable to parse ${value_name:s} date and time string: "
                 f"{iso8601_string:s} with error: {exception!s}"
             )
-            date_time = None
+            return None, True
 
-        return date_time
+        return date_time, False
 
     def _ParseAirTagRow(self, parser_mediator, query, row, **unused_kwargs):
         """Parses an AirTag row.
@@ -163,20 +166,26 @@ class AirTagPlugin(interface.SQLitePlugin):
         """
         query_hash = hash(query)
 
+        corrupted = False
+
         event_data = AirTagEventData()
         event_data.device_address = self._GetRowValue(query_hash, row, "address")
         event_data.device_name = self._GetRowValue(query_hash, row, "name")
-        event_data.first_discovery_time = self._GetDateTimeRowValue(
+        event_data.first_discovery_time, value_corrupted = self._GetDateTimeRowValue(
             parser_mediator, query_hash, row, "firstDiscovery"
         )
-        event_data.last_seen_time = self._GetDateTimeRowValue(
+        corrupted = corrupted or value_corrupted
+
+        event_data.last_seen_time, value_corrupted = self._GetDateTimeRowValue(
             parser_mediator, query_hash, row, "lastSeen"
         )
+        corrupted = corrupted or value_corrupted
+
         event_data.latitude = self._GetRowValue(query_hash, row, "latitude")
         event_data.longitude = self._GetRowValue(query_hash, row, "longitude")
         event_data.rssi = self._GetRowValue(query_hash, row, "rssi")
 
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
 
 sqlite.SQLiteParser.RegisterPlugin(AirTagPlugin)

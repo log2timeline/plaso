@@ -18,6 +18,7 @@ The list below is based on time zone definitions from:
 And utils/generate_windows_time_zones.py
 """
 
+# typos:disable
 WINDOWS_TIME_ZONES = {
     "Afghanistan Standard Time": "Asia/Kabul",
     "Alaskan Standard Time": "America/Anchorage",
@@ -163,3 +164,4 @@ WINDOWS_TIME_ZONES = {
     "Yakutsk Standard Time": "Asia/Yakutsk",
     "Yukon Standard Time": "America/Whitehorse",
 }
+# typos:enable

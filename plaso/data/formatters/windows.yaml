@@ -1,21 +1,5 @@
 # Plaso Windows related event formatters.
 ---
-type: 'basic'
-data_type: 'ccleaner:configuration'
-message: '[{key_path}] {configuration}'
-short_message: '[{key_path}] {configuration}'
-short_source: 'REG'
-source: 'CCleaner Registry key'
----
-type: 'conditional'
-data_type: 'ccleaner:update'
-message:
-- 'Origin: {key_path}'
-short_message:
-- 'Origin: {key_path}'
-short_source: 'REG'
-source: 'CCleaner Registry key'
----
 type: 'conditional'
 data_type: 'iis:log:line'
 message:
@@ -57,35 +41,11 @@ short_source: 'LOG'
 source: 'SCCM Log'
 ---
 type: 'conditional'
-data_type: 'setupapi:log:line'
-message:
-- '{entry_type}'
-- '{exit_status}'
-separator: ' - '
-# Reversing fields for short description to prevent truncating the status
-short_message:
-- '{exit_status}'
-- '{entry_type}'
-short_source: 'LOG'
-source: 'Setup API Log'
----
-type: 'conditional'
-data_type: 'task_scheduler:task_cache:entry'
-message:
-- '[{key_path}]'
-- 'Task: {task_name}'
-- '[Identifier: {task_identifier}]'
-short_message:
-- 'Task: {task_name}'
-short_source: 'REG'
-source: 'Task Cache Registry Key'
----
-type: 'conditional'
 data_type: 'wincc:simatic_s7:entry'
 message:
-- '{body}'
+- '{message_body}'
 short_message:
-- '{body}'
+- '{message_body}'
 short_source: 'LOG'
 source: 'SIMATIC S7 log'
 ---
@@ -94,10 +54,10 @@ data_type: 'wincc:sys_log:entry'
 message:
 - 'Hostname: {log_hostname}'
 - 'Source: {source_device}'
-- '{body}'
+- '{message_body}'
 short_message:
 - '{source_device}'
-- '{body}'
+- '{message_body}'
 short_source: 'LOG'
 source: 'WinCC Sys Log'
 ---
@@ -161,7 +121,7 @@ message:
 - '[{event_identifier} / 0x{event_identifier:04x}]'
 - 'Source Name: {source_name}'
 - 'Strings: {strings}'
-- 'Computer Name: {computer_name}'
+- 'Hostname: {hostname}'
 - 'Severity: {severity}'
 - 'Record Number: {record_number}'
 - 'Event Type: {event_type}'
@@ -184,7 +144,7 @@ message:
 - 'Provider identifier: {provider_identifier}'
 - 'Source Name: {source_name}'
 - 'Strings: {strings}'
-- 'Computer Name: {computer_name}'
+- 'Hostname: {hostname}'
 - 'Record Number: {record_number}'
 - 'Event Level: {event_level}'
 - 'Message string: {message_string}'
@@ -225,7 +185,7 @@ message:
 - '>'
 - '{destination_ip}'
 - ':{destination_port}'
-- 'Size (bytes): {size}'
+- 'Size (bytes): {packet_size}'
 - 'TCP flags [{tcp_flags}]'
 - 'TCP sequence number: {tcp_sequence_number}'
 - 'TCP ACK number: {tcp_ack}'
@@ -243,6 +203,31 @@ short_message:
 - ': {destination_port}'
 short_source: 'LOG'
 source: 'Windows Firewall Log'
+---
+type: 'conditional'
+data_type: 'windows:httperr_log:entry'
+message:
+- '{http_method}'
+- '{requested_uri}'
+- 'Source IP: {source_ip}'
+- 'Source Port: {source_port}'
+- 'Destination IP: {destination_ip}'
+- 'Destination Port: {destination_port}'
+- 'HTTP Status: {http_status}'
+- 'Reason: {reason}'
+- 'Protocol Version: {protocol_version}'
+- 'Site Identifier: {site_identifier}'
+- 'Queue Name: {queue_name}'
+- 'Transport: {transport}'
+- 'Fault Code: {fault_code}'
+- 'Extended Fault Code: {extended_fault_code}'
+short_message:
+- '{http_method}'
+- '{requested_uri}'
+- 'Source IP: {source_ip}'
+- 'Reason: {reason}'
+short_source: 'LOG'
+source: 'HTTP Server API Error Log'
 ---
 type: 'conditional'
 data_type: 'windows:lnk:link'
@@ -461,6 +446,22 @@ short_message: '[{key_path}] ImagePath: {image_path}'
 short_source: 'REG'
 source: 'Registry Key'
 ---
+type: 'basic'
+data_type: 'windows:registry:ccleaner:configuration'
+message: '[{key_path}] {configuration}'
+short_message: '[{key_path}] {configuration}'
+short_source: 'REG'
+source: 'CCleaner Registry key'
+---
+type: 'conditional'
+data_type: 'windows:registry:ccleaner:update'
+message:
+- 'Origin: {key_path}'
+short_message:
+- 'Origin: {key_path}'
+short_source: 'REG'
+source: 'CCleaner Registry key'
+---
 type: 'conditional'
 data_type: 'windows:registry:diagnosed_applications'
 message:
@@ -540,14 +541,14 @@ message:
 - 'Label: {label}'
 - 'Remote_Server: {server_name}'
 - 'Share_Name: {share_name}'
-- 'Type: {type}'
+- 'Source type: {source_type}'
 - 'Volume: {name}'
 short_message:
 - '[{key_path}]'
 - 'Label: {label}'
 - 'Remote_Server: {server_name}'
 - 'Share_Name: {share_name}'
-- 'Type: {type}'
+- 'Source type: {source_type}'
 - 'Volume: {name}'
 short_source: 'REG'
 source: 'Registry Key'
@@ -611,15 +612,15 @@ enumeration_helpers:
 message:
 - 'SSID: {ssid}'
 - 'Description: {description}'
-- 'Connection Type: {connection_type}'
-- 'Default Gateway Mac: {default_gateway_mac}'
-- 'DNS Suffix: {dns_suffix}'
+- 'Connection type: {connection_type}'
+- 'Default gateway MAC address: {default_gateway_mac_address}'
+- 'DNS suffix: {dns_suffix}'
 short_message:
 - 'SSID: {ssid}'
 - 'Description: {description}'
-- 'Connection Type: {connection_type}'
-- 'Default Gateway Mac: {default_gateway_mac}'
-- 'DNS Suffix: {dns_suffix}'
+- 'Connection type: {connection_type}'
+- 'Default gateway MAC address: {default_gateway_mac_address}'
+- 'DNS suffix: {dns_suffix}'
 short_source: 'REG'
 source: 'Network Connection Registry Key'
 ---
@@ -750,6 +751,17 @@ short_message:
 short_source: 'REG'
 source: 'Shutdown Registry Key'
 ---
+type: 'conditional'
+data_type: 'windows:registry:task_scheduler:task_cache:entry'
+message:
+- '[{key_path}]'
+- 'Task: {task_name}'
+- '[Identifier: {task_identifier}]'
+short_message:
+- 'Task: {task_name}'
+short_source: 'REG'
+source: 'Task Cache Registry Key'
+---
 type: 'basic'
 data_type: 'windows:registry:timezone'
 message: '[{key_path}] {configuration}'
@@ -801,14 +813,14 @@ data_type: 'windows:registry:usbstor:instance'
 message:
 - '[{key_path}]'
 - 'Device type: {device_type}'
-- 'Display name: {display_name}'
+- 'Device display name: {device_display_name}'
 - 'Product: {product}'
 - 'Revision: {revision}'
 - 'Vendor: {vendor}'
 short_message:
 - '[{key_path}]'
 - 'Device type: {device_type}'
-- 'Display name: {display_name}'
+- 'Device display name: {device_display_name}'
 - 'Product: {product}'
 - 'Revision: {revision}'
 - 'Vendor: {vendor}'
@@ -847,6 +859,13 @@ short_message:
 short_source: 'REG'
 source: 'Winlogon Registry Key'
 ---
+type: 'basic'
+data_type: 'windows:registry:winrar:history'
+message: '[{key_path}] {entries}'
+short_message: '[{key_path}] {entries}'
+short_source: 'REG'
+source: 'WinRAR History Registry Key'
+---
 type: 'conditional'
 data_type: 'windows:restore_point:info'
 enumeration_helpers:
@@ -875,6 +894,19 @@ short_message:
 - '{description}'
 short_source: 'RP'
 source: 'Windows Restore Point'
+---
+type: 'conditional'
+data_type: 'windows:setupapi:log:line'
+message:
+- '{entry_type}'
+- '{exit_status}'
+separator: ' - '
+# Reversing fields for short description to prevent truncating the status
+short_message:
+- '{exit_status}'
+- '{entry_type}'
+short_source: 'LOG'
+source: 'Setup API Log'
 ---
 type: 'conditional'
 data_type: 'windows:shell_item:file_entry'
@@ -1064,10 +1096,3 @@ short_message:
 - 'Origin: {origin}'
 short_source: 'LOG'
 source: 'System'
----
-type: 'basic'
-data_type: 'winrar:history'
-message: '[{key_path}] {entries}'
-short_message: '[{key_path}] {entries}'
-short_source: 'REG'
-source: 'WinRAR History Registry Key'

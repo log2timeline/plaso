@@ -55,7 +55,7 @@ class OLECFParser(interface.FileObjectParser):
         try:
             olecf_file.open_file_object(file_object)
         except (OSError, TypeError) as exception:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unable to open file with error: {exception!s}"
             )
             return
@@ -106,7 +106,7 @@ class OLECFParser(interface.FileObjectParser):
                     plugin.UpdateChainAndProcess(parser_mediator, root_item=root_item)
 
                 except Exception as exception:  # pylint: disable=broad-except
-                    parser_mediator.ProduceExtractionWarning(
+                    parser_mediator.ProduceWarning(
                         f"plugin: {plugin_name:s} unable to parse OLECF file with "
                         f"error: {exception!s}"
                     )
@@ -123,7 +123,7 @@ class OLECFParser(interface.FileObjectParser):
                         parser_mediator, root_item=root_item
                     )
                 except Exception as exception:  # pylint: disable=broad-except
-                    parser_mediator.ProduceExtractionWarning(
+                    parser_mediator.ProduceWarning(
                         f"plugin: {self._default_plugin_name:s} unable to parse OLECF "
                         f"file with error: {exception!s}"
                     )

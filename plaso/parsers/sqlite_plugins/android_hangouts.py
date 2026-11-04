@@ -18,9 +18,9 @@ class AndroidHangoutsMessageData(events.EventData):
     """Google Hangouts Message event data.
 
     Attributes:
-      body (str): content of the SMS text message.
       creation_time (dfdatetime.DateTimeValues): date and time the Google Hangouts
           message was created.
+      message_body (str): content of the SMS text message.
       message_status (int): message status.
       message_type (int): message type.
       offset (str): identifier of the row, from which the event data was
@@ -34,8 +34,8 @@ class AndroidHangoutsMessageData(events.EventData):
     def __init__(self):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
-        self.body = None
         self.creation_time = None
+        self.message_body = None
         self.message_status = None
         self.message_type = None
         self.offset = None
@@ -163,6 +163,8 @@ class AndroidHangoutsMessagePlugin(interface.SQLitePlugin):
                 "frequent_order INT, person_logging_id TEXT, person_affinity_score "
                 "REAL DEFAULT (0.0), is_in_same_domain INT DEFAULT (0))"
             ),
+            # typos:disable
+            # Note that "timetamp" is what is used in the schema.
             "messages": (
                 "CREATE TABLE messages (_id INTEGER PRIMARY KEY, message_id TEXT, "
                 "message_type INT, conversation_id TEXT, author_chat_id TEXT, "
@@ -197,6 +199,7 @@ class AndroidHangoutsMessagePlugin(interface.SQLitePlugin):
                 "UPDATE CASCADE, UNIQUE (conversation_id,message_id) ON CONFLICT "
                 "REPLACE)"
             ),
+            # typos:enable
             "mms_notification_inds": (
                 "CREATE TABLE mms_notification_inds (_id INTEGER PRIMARY KEY, "
                 "content_location TEXT, transaction_id TEXT, from_address TEXT, "
@@ -314,7 +317,7 @@ class AndroidHangoutsMessagePlugin(interface.SQLitePlugin):
         query_hash = hash(query)
 
         event_data = AndroidHangoutsMessageData()
-        event_data.body = self._GetRowValue(query_hash, row, "text")
+        event_data.message_body = self._GetRowValue(query_hash, row, "text")
         event_data.creation_time = self._GetPosixTimeInMicrosecondsRowValue(
             query_hash, row, "timestamp"
         )

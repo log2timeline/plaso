@@ -19,7 +19,6 @@ class IOSMobileBackupPlistPluginTest(test_lib.PlistPluginTestCase):
         storage_writer = self._ParsePlistFileWithPlugin(
             plugin, ["ios", plist_name], plist_name
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -41,7 +40,6 @@ class IOSMobileBackupPlistPluginTest(test_lib.PlistPluginTestCase):
             "backup_state_time": "2023-04-15T14:08:21.008032+00:00",
             "data_type": "ios:mobile_backup:entry",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -50,7 +48,6 @@ class IOSMobileBackupPlistPluginTest(test_lib.PlistPluginTestCase):
             "data_type": "ios:mobile_backup:state",
             "description": "Backup succeeded",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 

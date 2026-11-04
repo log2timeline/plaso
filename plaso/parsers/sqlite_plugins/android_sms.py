@@ -10,9 +10,9 @@ class AndroidSMSEventData(events.EventData):
 
     Attributes:
       address (str): phone number associated to the sender or receiver.
-      body (str): content of the SMS text message.
       creation_time (dfdatetime.DateTimeValues): creation date and time of
           the message.
+      message_body (str): content of the SMS text message.
       offset (str): identifier of the row, from which the event data was
           extracted.
       query (str): SQL query that was used to obtain the event data.
@@ -26,8 +26,8 @@ class AndroidSMSEventData(events.EventData):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
         self.address = None
-        self.body = None
         self.creation_time = None
+        self.message_body = None
         self.offset = None
         self.query = None
         self.sms_read = None
@@ -149,8 +149,8 @@ class AndroidSMSPlugin(interface.SQLitePlugin):
 
         event_data = AndroidSMSEventData()
         event_data.address = self._GetRowValue(query_hash, row, "address")
-        event_data.body = self._GetRowValue(query_hash, row, "body")
         event_data.creation_time = self._GetJavaTimeRowValue(query_hash, row, "date")
+        event_data.message_body = self._GetRowValue(query_hash, row, "body")
         event_data.offset = self._GetRowValue(query_hash, row, "id")
         event_data.query = query
         event_data.sms_read = self._GetRowValue(query_hash, row, "read")

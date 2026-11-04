@@ -136,20 +136,20 @@ class APTHistoryLogTextPlugin(interface.TextPlugin):
         Raises:
           ParseError: when the date and time value is missing.
         """
-        command, body = structure
+        command, record_body = structure
 
         if command == "Commandline:":
-            self._event_data.command_line = body.strip()
+            self._event_data.command_line = record_body.strip()
 
         elif command == "Error:":
-            self._event_data.error = body.strip()
+            self._event_data.error = record_body.strip()
 
         elif command == "Requested-By:":
-            self._event_data.requester = body.strip()
+            self._event_data.requester = record_body.strip()
 
         elif command in ("Downgrade:", "Install:", "Purge:", "Remove:", "Upgrade:"):
             self._event_data.command = command[:-1]
-            self._event_data.packages = body.strip()
+            self._event_data.packages = record_body.strip()
 
     def _ParseRecordEnd(self, parser_mediator, structure):
         """Parses the last line of a log record.

@@ -10,10 +10,9 @@ class WindowsBootExecuteEventData(events.EventData):
 
     Attributes:
       key_path (str): Windows Registry key path.
-      last_written_time (dfdatetime.DateTimeValues): entry last written date and
-          time.
-      value (str): boot execute value, contains the value obtained from
-          the BootExecute Registry value.
+      last_written_time (dfdatetime.DateTimeValues): entry last written date and time.
+      value (str): boot execute value, contains the value obtained from the BootExecute
+          Registry value.
     """
 
     DATA_TYPE = "windows:registry:boot_execute"
@@ -30,11 +29,10 @@ class WindowsBootVerificationEventData(events.EventData):
     """Windows Boot Verification event data attribute container.
 
     Attributes:
-      image_path (str): location of the boot verification executable, contains
-          the value obtained from the ImagePath Registry value.
+      image_path (str): location of the boot verification executable, contains the value
+          obtained from the ImagePath Registry value.
       key_path (str): Windows Registry key path.
-      last_written_time (dfdatetime.DateTimeValues): entry last written date and
-          time.
+      last_written_time (dfdatetime.DateTimeValues): entry last written date and time.
     """
 
     DATA_TYPE = "windows:registry:boot_verification"
@@ -66,8 +64,8 @@ class BootVerificationPlugin(interface.WindowsRegistryPlugin):
         """Extracts events from a Windows Registry key.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
         """
         image_path = None
@@ -107,14 +105,14 @@ class BootExecutePlugin(interface.WindowsRegistryPlugin):
         """Extracts events from a Windows Registry key.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
         """
         registry_value = registry_key.GetValueByName("BootExecute")
         if registry_value:
-            # MSDN: claims that the data type of this value is REG_BINARY
-            # although REG_MULTI_SZ is known to be used.
+            # MSDN: claims that the data type of this value is REG_BINARY although
+            # REG_MULTI_SZ is known to be used.
             if registry_value.DataIsString():
                 boot_execute = registry_value.GetDataAsObject()
             elif registry_value.DataIsMultiString():
@@ -122,11 +120,9 @@ class BootExecutePlugin(interface.WindowsRegistryPlugin):
                 boot_execute = ", ".join(value_object or [])
             else:
                 boot_execute = None
-                parser_mediator.ProduceExtractionWarning(
-                    (
-                        f"Key: {registry_key.path:s}, value: BootExecute: unsupported "
-                        f"value data type: {registry_value.data_type_string:s}."
-                    )
+                parser_mediator.ProduceWarning(
+                    f"Key: {registry_key.path:s}, value: BootExecute: unsupported "
+                    f"value data type: {registry_value.data_type_string:s}."
                 )
 
             if boot_execute:

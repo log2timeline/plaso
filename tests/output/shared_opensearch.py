@@ -107,6 +107,77 @@ class SharedOpenSearchOutputModuleTest(test_lib.OutputModuleTestCase):
 
         self.assertIsNone(output_module._client)
 
+    def testFlushEvents(self):
+        """Tests the _FlushEvents function.
+
+        Raises:
+          SkipTest: if opensearch-py is missing.
+        """
+        if shared_opensearch.opensearchpy is None:
+            raise unittest.SkipTest("missing opensearch-py")
+
+        output_module = TestOpenSearchOutputModule()
+
+        output_module._Connect()
+        output_module._client.bulk.return_value = {"errors": False, "items": []}
+
+        output_module._event_documents = [{"index": {"_index": "test"}}, {}]
+        output_module._number_of_buffered_events = 1
+
+        with self.assertLogs("output", level="DEBUG") as log_context:
+            output_module._FlushEvents()
+
+        self.assertIn(
+            "DEBUG:output:Inserted 1 events into OpenSearch", log_context.output
+        )
+        self.assertEqual(output_module._event_documents, [])
+        self.assertEqual(output_module._number_of_buffered_events, 0)
+
+    def testFlushEventsWithRejectedDocuments(self):
+        """Tests the _FlushEvents function with rejected documents.
+
+        Raises:
+          SkipTest: if opensearch-py is missing.
+        """
+        if shared_opensearch.opensearchpy is None:
+            raise unittest.SkipTest("missing opensearch-py")
+
+        output_module = TestOpenSearchOutputModule()
+
+        output_module._Connect()
+        output_module._client.bulk.return_value = {
+            "errors": True,
+            "items": [
+                {"index": {"_index": "test", "status": 201}},
+                {
+                    "index": {
+                        "_index": "test",
+                        "status": 400,
+                        "error": {
+                            "type": "mapper_parsing_exception",
+                            "reason": "failed to parse field [my_number]",
+                        },
+                    }
+                },
+            ],
+        }
+
+        output_module._event_documents = [
+            {"index": {"_index": "test"}},
+            {"my_number": 1},
+            {"index": {"_index": "test"}},
+            {"my_number": "one"},
+        ]
+        output_module._number_of_buffered_events = 2
+
+        with self.assertLogs("output", level="WARNING") as log_context:
+            output_module._FlushEvents()
+
+        self.assertEqual(len(log_context.output), 1)
+        self.assertIn("1 of 2 events", log_context.output[0])
+        self.assertIn("mapper_parsing_exception", log_context.output[0])
+        self.assertIn("failed to parse field [my_number]", log_context.output[0])
+
     def testGetFieldValues(self):
         """Tests the GetFieldValues function."""
         output_mediator = self._CreateOutputMediator()

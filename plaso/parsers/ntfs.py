@@ -20,24 +20,22 @@ class NTFSFileStatEventData(events.EventData):
     """NTFS file system stat event data.
 
     Attributes:
-      access_time (dfdatetime.DateTimeValues): file entry last access date
-          and time.
-      attribute_type (int): attribute type for example "0x00000030", which
-          represents "$FILE_NAME".
-      creation_time (dfdatetime.DateTimeValues): file entry creation date
-          and time.
+      access_time (dfdatetime.DateTimeValues): file entry last access date and time.
+      attribute_type (int): attribute type for example "0x00000030", which represents
+          "$FILE_NAME".
+      creation_time (dfdatetime.DateTimeValues): file entry creation date and time.
       display_name (str): display name.
-      entry_modification_time (dfdatetime.DateTimeValues): file entry
-           modification date and time.
+      entry_modification_time (dfdatetime.DateTimeValues): file entry modification date
+          and time.
       file_attribute_flags (int): NTFS file attribute flags.
       file_reference (int): NTFS file reference.
       file_system_type (str): file system type.
       filename (str): name of the file.
       is_allocated (bool): True if the MFT entry is allocated (marked as in use).
-      modification_time (dfdatetime.DateTimeValues): file entry last modification
-          date and time.
-      name (str): name associated with the stat event, for example that of
-          a $FILE_NAME attribute or None if not available.
+      modification_time (dfdatetime.DateTimeValues): file entry last modification date
+          and time.
+      name (str): name associated with the stat event, for example that of a $FILE_NAME
+          attribute or None if not available.
       parent_file_reference (int): NTFS file reference of the parent.
       path_hints (list[str]): hints about the full path of the file.
       symbolic_link_target (str): path of the symbolic link target.
@@ -72,7 +70,6 @@ class NTFSUSNChangeEventData(events.EventData):
       file_attribute_flags (int): NTFS file attribute flags.
       filename (str): name of the file associated with the event.
       file_reference (int): NTFS file reference.
-      file_system_type (str): file system type.
       parent_file_reference (int): NTFS file reference of the parent.
       offset (int): offset of the USN record relative to the start of the $J data
           stream, from which the event data was extracted.
@@ -150,8 +147,10 @@ class NTFSMFTParser(interface.FileObjectParser):
         uuid_object = uuid.UUID(uuid_string)
 
         if uuid_object.version == 1:
-            event_data = windows_events.WindowsDistributedLinkTrackingEventData(
-                uuid_object, origin
+            event_data = (
+                windows_events.WindowsDistributedLinkTrackingEventData.CreateFromUUID(
+                    uuid_object, origin
+                )
             )
             parser_mediator.ProduceEventData(event_data)
 
@@ -167,6 +166,8 @@ class NTFSMFTParser(interface.FileObjectParser):
           mft_attribute (pyfsntfs.attribute): MFT attribute.
           path_hints (list[str]): hints about the full path of the file.
         """
+        corrupted = False
+
         event_data = NTFSFileStatEventData()
         event_data.attribute_type = mft_attribute.attribute_type
         event_data.display_name = parser_mediator.GetDisplayName()
@@ -185,49 +186,45 @@ class NTFSMFTParser(interface.FileObjectParser):
             filetime = mft_attribute.get_access_time_as_integer()
             event_data.access_time = self._GetDateTime(filetime)
         except OverflowError as exception:
-            parser_mediator.ProduceExtractionWarning(
-                (
-                    f"unable to read the access timestamp from MFT attribute: "
-                    f"0x{mft_attribute.attribute_type:08x} with error: {exception!s}"
-                )
+            parser_mediator.ProduceWarning(
+                f"unable to read the access timestamp from MFT attribute: "
+                f"0x{mft_attribute.attribute_type:08x} with error: {exception!s}"
             )
+            corrupted = True
 
         try:
             filetime = mft_attribute.get_creation_time_as_integer()
             event_data.creation_time = self._GetDateTime(filetime)
         except OverflowError as exception:
-            parser_mediator.ProduceExtractionWarning(
-                (
-                    f"unable to read the creation timestamp from MFT attribute: "
-                    f"0x{mft_attribute.attribute_type:08x} with error: {exception!s}"
-                )
+            parser_mediator.ProduceWarning(
+                f"unable to read the creation timestamp from MFT attribute: "
+                f"0x{mft_attribute.attribute_type:08x} with error: {exception!s}"
             )
+            corrupted = True
 
         try:
             filetime = mft_attribute.get_entry_modification_time_as_integer()
             event_data.entry_modification_time = self._GetDateTime(filetime)
         except OverflowError as exception:
-            parser_mediator.ProduceExtractionWarning(
-                (
-                    f"unable to read the entry modification timestamp from MFT "
-                    f"attribute: 0x{mft_attribute.attribute_type:08x} with error: "
-                    f"{exception!s}"
-                )
+            parser_mediator.ProduceWarning(
+                f"unable to read the entry modification timestamp from MFT "
+                f"attribute: 0x{mft_attribute.attribute_type:08x} with error: "
+                f"{exception!s}"
             )
+            corrupted = True
 
         try:
             filetime = mft_attribute.get_modification_time_as_integer()
             event_data.modification_time = self._GetDateTime(filetime)
         except OverflowError as exception:
-            parser_mediator.ProduceExtractionWarning(
-                (
-                    f"unable to read the modification timestamp from MFT attribute: "
-                    f"0x{mft_attribute.attribute_type:08x} "
-                    f"with error: {exception!s}"
-                )
+            parser_mediator.ProduceWarning(
+                f"unable to read the modification timestamp from MFT attribute: "
+                f"0x{mft_attribute.attribute_type:08x} "
+                f"with error: {exception!s}"
             )
+            corrupted = True
 
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
     def _ParseObjectIDAttribute(self, parser_mediator, mft_entry, mft_attribute):
         """Extract data from a NFTS $OBJECT_ID attribute.
@@ -242,35 +239,30 @@ class NTFSMFTParser(interface.FileObjectParser):
             f"$MFT: {mft_entry.file_reference & 0xffffffffffff:d}-"
             f"{mft_entry.file_reference >> 48:d}"
         )
-
         if mft_attribute.droid_file_identifier:
             try:
                 self._ParseDistributedTrackingIdentifier(
                     parser_mediator, mft_attribute.droid_file_identifier, display_name
                 )
-
             except (TypeError, ValueError) as exception:
-                parser_mediator.ProduceExtractionWarning(
-                    (
-                        f"unable to read droid file identifier from attribute: "
-                        f"0x{mft_attribute.attribute_type:08x} "
-                        f"with error: {exception!s}"
-                    )
+                parser_mediator.ProduceWarning(
+                    f"unable to read droid file identifier from attribute: "
+                    f"0x{mft_attribute.attribute_type:08x} "
+                    f"with error: {exception!s}"
                 )
 
         if mft_attribute.birth_droid_file_identifier:
             try:
                 self._ParseDistributedTrackingIdentifier(
-                    parser_mediator, mft_attribute.droid_file_identifier, display_name
+                    parser_mediator,
+                    mft_attribute.birth_droid_file_identifier,
+                    display_name,
                 )
-
             except (TypeError, ValueError) as exception:
-                parser_mediator.ProduceExtractionWarning(
-                    (
-                        f"unable to read birth droid file identifier from attribute: "
-                        f"0x{mft_attribute.attribute_type:08x} "
-                        f"with error: {exception!s}"
-                    )
+                parser_mediator.ProduceWarning(
+                    f"unable to read birth droid file identifier from attribute: "
+                    f"0x{mft_attribute.attribute_type:08x} "
+                    f"with error: {exception!s}"
                 )
 
     def _ParseMFTEntry(self, parser_mediator, mft_entry):
@@ -307,16 +299,13 @@ class NTFSMFTParser(interface.FileObjectParser):
                     self._ParseObjectIDAttribute(
                         parser_mediator, mft_entry, mft_attribute
                     )
-
                 elif mft_attribute.attribute_type == self._MFT_ATTRIBUTE_DATA:
                     data_stream_names.append(mft_attribute.attribute_name)
 
             except OSError as exception:
-                parser_mediator.ProduceExtractionWarning(
-                    (
-                        f"unable to parse MFT attribute: {attribute_index:d} "
-                        f"with error: {exception!s}"
-                    )
+                parser_mediator.ProduceWarning(
+                    f"unable to parse MFT attribute: {attribute_index:d} "
+                    f"with error: {exception!s}"
                 )
 
         if standard_information_attribute:
@@ -346,12 +335,10 @@ class NTFSMFTParser(interface.FileObjectParser):
                     path_hints_with_data_streams,
                 )
             except OSError as exception:
-                parser_mediator.ProduceExtractionWarning(
-                    (
-                        f"unable to parse MFT attribute: "
-                        f"{standard_information_attribute_index:d} "
-                        f"with error: {exception!s}"
-                    )
+                parser_mediator.ProduceWarning(
+                    f"unable to parse MFT attribute: "
+                    f"{standard_information_attribute_index:d} with error: "
+                    f"{exception!s}"
                 )
 
     def ParseFileObject(self, parser_mediator, file_object):
@@ -367,7 +354,7 @@ class NTFSMFTParser(interface.FileObjectParser):
         try:
             mft_metadata_file.open_file_object(file_object)
         except OSError as exception:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unable to open $MFT file with error: {exception!s}"
             )
             return
@@ -382,11 +369,9 @@ class NTFSMFTParser(interface.FileObjectParser):
                     self._ParseMFTEntry(parser_mediator, mft_entry)
 
             except OSError as exception:
-                parser_mediator.ProduceExtractionWarning(
-                    (
-                        f"unable to parse MFT entry: {entry_index:d} "
-                        f"with error: {exception!s}"
-                    )
+                parser_mediator.ProduceWarning(
+                    f"unable to parse MFT entry: {entry_index:d} with error: "
+                    f"{exception!s}"
                 )
 
         mft_metadata_file.close()
@@ -445,27 +430,26 @@ class NTFSUsnJrnlParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelp
                 )
             except (ValueError, errors.ParseError) as exception:
                 raise errors.ParseError(
-                    (
-                        f"Unable to parse USN record at offset: 0x{current_offset:08x} "
-                        f"with error: {exception!s}"
-                    )
+                    f"Unable to parse USN record at offset: 0x{current_offset:08x} "
+                    f"with error: {exception!s}"
                 )
 
             # Per MSDN we need to use name offset for forward compatibility.
             name_offset = usn_record.name_offset - 60
-            utf16_stream = usn_record.name[name_offset : usn_record.name_size]
+            ucs2_stream = usn_record.name[name_offset : usn_record.name_size]
+
+            corrupted = False
 
             try:
-                name_string = utf16_stream.decode("utf-16-le")
+                name_string = ucs2_stream.decode("utf-16-le")
             except (UnicodeDecodeError, UnicodeEncodeError) as exception:
-                name_string = utf16_stream.decode("utf-16-le", errors="replace")
-                parser_mediator.ProduceExtractionWarning(
-                    (
-                        f"unable to decode USN record name string with error: "
-                        f"{exception!s}. Characters that cannot be decoded will be "
-                        f'replaced with "?" or "\\ufffd".'
-                    )
+                name_string = ucs2_stream.decode("utf-16-le", errors="backslashreplace")
+                parser_mediator.ProduceWarning(
+                    f"unable to decode USN record name string with error: "
+                    f"{exception!s}. Unsupported code points are escaped."
                 )
+                # Note that valid UCS-2 strings can be tagged as corrupted.
+                corrupted = True
 
             event_data = NTFSUSNChangeEventData()
             event_data.file_attribute_flags = usn_record.file_attribute_flags
@@ -478,7 +462,7 @@ class NTFSUsnJrnlParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelp
             event_data.update_sequence_number = usn_record.update_sequence_number
             event_data.update_source_flags = usn_record.update_source_flags
 
-            parser_mediator.ProduceEventData(event_data)
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
             usn_record_data = usn_change_journal.read_usn_record()
 
@@ -494,7 +478,7 @@ class NTFSUsnJrnlParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelp
         try:
             fsntfs_volume.open_file_object(file_object)
         except OSError as exception:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unable to open NTFS volume with error: {exception!s}"
             )
             return

@@ -6,6 +6,7 @@ import collections
 import io
 import json
 import os
+import stat
 import textwrap
 
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -132,8 +133,11 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     ):
         """Creates a sanitized path of both destination directory and filename.
 
-        This function replaces non-printable and other characters defined in
-         _DIRTY_CHARACTERS with an underscore "_".
+        Path segments are split on "/\" and "\\" since either can be a path
+        separator depending on the platform. Non-printable and other special
+        characters are replaced with an underscore "_", empty path segments, as
+        well as "." and ".." path segments are removed or replaced, since those
+        cannot be used to define a safe export destination.
 
         Args:
           source_file_entry (dfvfs.FileEntry): file entry of the source file.
@@ -144,39 +148,100 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
           destination_path (str): path of the destination directory.
 
         Returns:
-          tuple[str, str]: sanitized paths of both destination directory and
-              filename.
+          tuple[str, Optional[str]]: sanitized paths of both destination directory
+              and filename, where the filename can be None if a safe destination
+              path cannot be determined.
         """
         file_system = source_file_entry.GetFileSystem()
         path = getattr(file_system_path_spec, "location", None)
-        path_segments = file_system.SplitPath(path)
-
-        path_segments = path_helper.PathHelper.SanitizePathSegments(path_segments)
-
-        target_filename = path_segments.pop()
+        path_segments = self._SanitizeExportPathSegments(
+            file_system.SplitPath(path) if path else []
+        )
+        target_filename = None
+        if path_segments:
+            target_filename = path_segments.pop()
 
         parent_path_spec = getattr(source_file_entry.path_spec, "parent", None)
 
         while parent_path_spec:
+            parent_location = getattr(parent_path_spec, "location", None)
+            parent_path_segments = self._SanitizeExportPathSegments(
+                [(parent_location or "")[1:]]
+            )
             if parent_path_spec.type_indicator in (
                 dfvfs_definitions.FILE_SYSTEM_TYPE_INDICATORS
             ):
-                path_segments.insert(0, parent_path_spec.location[1:])
+                # Note that this statement inserts the parent_path_segment list at the
+                # front of path_segments.
+                path_segments[0:0] = parent_path_segments
                 break
 
             if parent_path_spec.type_indicator == (
                 dfvfs_definitions.TYPE_INDICATOR_VSHADOW
             ):
-                path_segments.insert(0, parent_path_spec.location[1:])
+                # Note that this statement inserts the parent_path_segment list at the
+                # front of path_segments.
+                path_segments[0:0] = parent_path_segments
 
             parent_path_spec = getattr(parent_path_spec, "parent", None)
 
         target_directory = os.path.join(destination_path, *path_segments)
 
-        if source_data_stream_name:
-            target_filename = "_".join([target_filename, source_data_stream_name])
+        if source_data_stream_name and target_filename:
+            # The data stream name is read from the source and must be sanitized
+            # like any other path segment. Both "/" and "\" are replaced since
+            # either can be a path separator depending on the host.
+            sanitized_data_stream_name = path_helper.PathHelper.SanitizePathSegments(
+                [source_data_stream_name.replace("/", "_").replace("\\", "_")]
+            )[0]
+            target_filename = "_".join([target_filename, sanitized_data_stream_name])
 
         return target_directory, target_filename
+
+    def _CreateDirectoryPath(self, destination_path, target_directory):
+        """Creates the missing directories in a path within the destination.
+
+        The path is traversed one component at a time, starting with the
+        destination directory. Existing components are verified, using lstat
+        which does not follow symbolic links, to be directories, such that no
+        directory is created through a symbolic link or outside of the
+        destination directory.
+
+        Args:
+          destination_path (str): path of the destination directory.
+          target_directory (str): path of the directory to create, within the
+              destination directory.
+
+        Raises:
+          OSError: if the target directory is outside of the destination
+              directory, if a path component is a symbolic link or a file, or
+              the directories cannot be created.
+        """
+        relative_path = os.path.relpath(target_directory, destination_path)
+        if os.path.isabs(relative_path) or ".." in relative_path.split(os.sep):
+            raise OSError(
+                f"Target directory: {target_directory:s} is outside of "
+                f"destination directory: {destination_path:s}"
+            )
+
+        directory_path = destination_path
+        for path_segment in relative_path.split(os.sep):
+            if path_segment == ".":
+                continue
+
+            directory_path = os.path.join(directory_path, path_segment)
+            try:
+                stat_result = os.lstat(directory_path)
+            except OSError:
+                # The component does not exist, create it in its parent
+                # directory, which was verified not to be a symbolic link.
+                os.mkdir(directory_path)
+                continue
+
+            if stat.S_ISLNK(stat_result.st_mode) or not stat.S_ISDIR(
+                stat_result.st_mode
+            ):
+                raise OSError(f"Path component: {directory_path:s} is not a directory")
 
     def _ExtractDataStream(
         self, file_entry, data_stream_name, destination_path, skip_duplicates=True
@@ -196,7 +261,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
             file_entry.path_spec
         )
-
         try:
             digest = self._CalculateDigestHash(file_entry, data_stream_name)
         except (OSError, dfvfs_errors.BackEndError) as exception:
@@ -215,10 +279,37 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         target_directory, target_filename = self._CreateSanitizedDestination(
             file_entry, file_entry.path_spec, data_stream_name, destination_path
         )
+        if not target_filename:
+            logger.error(
+                f"[skipping] unable to determine a safe export destination for "
+                f"file entry: {display_name:s}"
+            )
+            return
+
         path = path_helper.PathHelper.GetRelativePath(
             target_directory, target_filename, destination_path
         )
         target_path = os.path.join(target_directory, target_filename)
+
+        # Defense in depth: never write outside the destination directory.
+        real_destination_path = os.path.realpath(destination_path)
+        try:
+            within_destination_path = (
+                os.path.commonpath(
+                    [real_destination_path, os.path.realpath(target_path)]
+                )
+                == real_destination_path
+            )
+        except ValueError:
+            # For example a target path on another drive (Windows).
+            within_destination_path = False
+
+        if not within_destination_path:
+            logger.error(
+                f"[skipping] export path of file entry: {display_name:s} resolves "
+                f"outside of the destination directory."
+            )
+            return
 
         self._paths_by_hash[digest].append(path)
 
@@ -233,10 +324,17 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
             self._digests[digest] = display_name
 
-        if not os.path.isdir(target_directory):
-            os.makedirs(target_directory)
+        try:
+            if not os.path.isdir(target_directory):
+                self._CreateDirectoryPath(destination_path, target_directory)
+        except OSError as exception:
+            logger.error(
+                f"[skipping] unable to create destination directory: "
+                f"{target_directory:s} with error: {exception!s}"
+            )
+            return
 
-        if os.path.exists(target_path):
+        if os.path.lexists(target_path):
             logger.warning(
                 f"[skipping] unable to export contents of file entry: "
                 f"{display_name:s} because exported file: {target_path:s} already "
@@ -259,7 +357,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
                 f"[skipping] unable to export contents of file entry: "
                 f"{display_name:s} with error: {exception!s}"
             )
-
             try:
                 os.remove(target_path)
             except OSError:
@@ -288,7 +385,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
                 destination_path,
                 skip_duplicates=skip_duplicates,
             )
-
             file_entry_processed = True
 
         if not file_entry_processed:
@@ -332,10 +428,12 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         """
         extraction_engine = engine.BaseEngine()
 
-        extraction_engine.BuildArtifactsRegistry(
-            artifact_definitions_path, custom_artifacts_path
-        )
-
+        if self._artifacts_registry:
+            extraction_engine.SetArtifactsRegistry(self._artifacts_registry)
+        else:
+            extraction_engine.BuildArtifactsRegistry(
+                artifact_definitions_path, custom_artifacts_path
+            )
         storage_writer = fake_writer.FakeStorageWriter()
         storage_writer.Open()
 
@@ -381,8 +479,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
             )
 
         if self._enable_artifacts_map:
-            atrifacts_trie = extraction_engine.GetArtifactsTrie()
-            self._filter_collection.SetArtifactsTrie(atrifacts_trie)
+            artifacts_trie = extraction_engine.GetArtifactsTrie()
+            self._filter_collection.SetArtifactsTrie(artifacts_trie)
 
         excluded_find_specs = extraction_engine.GetCollectionExcludedFindSpecs()
         included_find_specs = extraction_engine.GetCollectionIncludedFindSpecs()
@@ -395,16 +493,14 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
                 find_specs=included_find_specs,
                 resolver_context=self._resolver_context,
             )
-
             for path_spec in path_spec_generator:
                 file_entry = path_spec_resolver.Resolver.OpenFileEntry(
                     path_spec, resolver_context=self._resolver_context
                 )
-
                 if not file_entry:
                     path_spec_string = self._GetPathSpecificationString(path_spec)
                     logger.warning(
-                        f"Unable to open file entry for path specfication: "
+                        f"Unable to open file entry for path specification: "
                         f"{path_spec_string:s}"
                     )
                     continue
@@ -558,6 +654,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
                     # TODO: find another way to do this that doesn't use an undocumented
                     # API.
                     pattern = codecs.escape_decode(pattern)[0]
+
                 # ValueError is raised when the patterns contains invalid escaped
                 # characters, such as "\xg1".
                 except ValueError:
@@ -570,10 +667,46 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
         return specification_store
 
+    def _SanitizeExportPathSegments(self, path_segments):
+        """Sanitizes path segments for use in an export destination path.
+
+        Both "/" and "\\" are treated as path separators, since either can be
+        a path separator depending on the platform. Non-printable and other
+        special characters are replaced with an underscore "_", empty path
+        segments are removed, and "." and ".." path segments are replaced
+        with an underscore "_", since those cannot be used to define a safe
+        export destination path.
+
+        Args:
+          path_segments (list[str]): path segments.
+
+        Returns:
+          list[str]: sanitized path segments.
+        """
+        export_path_segments = []
+        for path_segment in path_segments:
+            # Treat both "/" and backslash as path separators, regardless of which one
+            # the platform uses as path separator.
+            for path_fragment in f"{path_segment:s}".replace("\\", "/").split("/"):
+                sanitized_path_fragment = path_helper.PathHelper.SanitizePathSegments(
+                    [path_fragment]
+                )[0]
+                if not sanitized_path_fragment:
+                    continue
+
+                if sanitized_path_fragment in (".", ".."):
+                    sanitized_path_fragment = "_"
+
+                export_path_segments.append(sanitized_path_fragment)
+
+        return export_path_segments
+
     def _WriteFileEntry(self, file_entry, data_stream_name, destination_file):
         """Writes the contents of the source file entry to a destination file.
 
-        Note that this function will overwrite an existing file.
+        The destination file is created exclusively and must not already exist,
+        so the contents are never written to an existing file, or through a
+        symbolic link at the destination path.
 
         Args:
           file_entry (dfvfs.FileEntry): file entry whose content is to be written.
@@ -585,7 +718,22 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         if not source_file_object:
             return
 
-        with open(destination_file, "wb") as destination_file_object:
+        try:
+            destination_file_descriptor = os.open(
+                destination_file, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o644
+            )
+        except OSError as exception:
+            # The destination file cannot be created, for example because it
+            # already exists or it is a symbolic link. Do not raise, to prevent
+            # the caller from removing a file which this function has not
+            # created.
+            logger.error(
+                f"[skipping] unable to create destination file: "
+                f"{destination_file:s} with error: {exception!s}"
+            )
+            return
+
+        with os.fdopen(destination_file_descriptor, "wb") as destination_file_object:
             source_file_object.seek(0, os.SEEK_SET)
 
             data = source_file_object.read(self._COPY_BUFFER_SIZE)
@@ -603,7 +751,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
             argument_group, names=names
         )
-
         argument_group.add_argument(
             "-x",
             "--extensions",
@@ -616,7 +763,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
                 'multiple comma separated values e.g. "csv,docx,pst".'
             ),
         )
-
         argument_group.add_argument(
             "--names",
             dest="names_string",
@@ -629,7 +775,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
                 '"NTUSER.DAT,UsrClass.dat".'
             ),
         )
-
         argument_group.add_argument(
             "--signatures",
             dest="signature_identifiers",
@@ -692,7 +837,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
             add_help=False,
             formatter_class=argparse.RawDescriptionHelpFormatter,
         )
-
         self.AddBasicOptions(argument_parser)
         self.AddInformationalOptions(argument_parser)
 
@@ -702,7 +846,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
             argument_parser, names=argument_helper_names
         )
-
         self.AddLogFileOptions(argument_parser)
 
         self.AddStorageMediaImageOptions(argument_parser)
@@ -721,7 +864,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
                 "artifact definitions."
             ),
         )
-
         argument_parser.add_argument(
             "-w",
             "--write",
@@ -730,9 +872,11 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
             type=str,
             metavar="PATH",
             default="export",
-            help=("The directory in which extracted files should be stored."),
+            help=(
+                "The directory in which extracted files should be stored. The "
+                "destination directory must not be a symbolic link."
+            ),
         )
-
         argument_parser.add_argument(
             "--include_duplicates",
             "--include-duplicates",
@@ -746,7 +890,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
                 "include duplicate files in the export."
             ),
         )
-
         argument_parser.add_argument(
             "--no_hashes",
             "--no-hashes",
@@ -755,7 +898,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
             default=False,
             help=(f"Do not generate the {self._HASHES_FILENAME:s} file"),
         )
-
         argument_parser.add_argument(
             self._SOURCE_OPTION,
             nargs="?",
@@ -769,7 +911,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
                 "Plaso supports."
             ),
         )
-
         try:
             options = argument_parser.parse_args(arguments)
         except UnicodeEncodeError:
@@ -794,7 +935,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
             filename=self._log_file,
             quiet_mode=self._quiet_mode,
         )
-
         return True
 
     def ParseOptions(self, options):
@@ -810,7 +950,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         helpers_manager.ArgumentHelperManager.ParseOptions(
             options, self, names=["data_location"]
         )
-
         self.show_troubleshooting = getattr(options, "show_troubleshooting", False)
 
         # Check the list options first otherwise required options will raise.
@@ -829,7 +968,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         self._destination_path = self.ParseStringOption(
             options, "path", default_value="export"
         )
-
         if not self._data_location:
             logger.warning("Unable to automatically determine data location.")
 
@@ -841,7 +979,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         helpers_manager.ArgumentHelperManager.ParseOptions(
             options, self, names=argument_helper_names
         )
-
         if self._vfs_back_end == "fsext":
             dfvfs_definitions.PREFERRED_EXT_BACK_END = (
                 dfvfs_definitions.TYPE_INDICATOR_EXT
@@ -903,28 +1040,44 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         """Processes the source.
 
         Raises:
+          BadConfigOption: if the destination directory is a symbolic link or
+              cannot be created.
           SourceScannerError: if the source scanner could not find a supported
               file system.
           UserAbort: if the user initiated an abort.
         """
+        if os.path.islink(self._destination_path):
+            raise errors.BadConfigOption(
+                f"Destination directory: {self._destination_path:s} is a "
+                "symbolic link, choose a destination directory that is not a "
+                "symbolic link."
+            )
+
         try:
             self.ScanSource(self._source_path)
             if self._source_type not in self._SOURCE_TYPES_TO_PREPROCESS:
                 source_types = ", ".join(self._SOURCE_TYPES_TO_PREPROCESS)
                 self._output_writer.Write(
-                    (
-                        f'Input must be in "{source_types:s}" the type: '
-                        f'"{self._source_type}" is not supported.\n'
-                    )
+                    f'Input must be one of "{source_types:s}", type: "file" is not '
+                    f"supported.\n"
                 )
                 return
         except dfvfs_errors.UserAbort as exception:
             raise errors.UserAbort(exception)
 
         self._output_writer.Write("Export started.\n")
+        self._output_writer.Write(
+            f"Destination directory: " f"{os.path.realpath(self._destination_path):s}\n"
+        )
 
-        if not os.path.isdir(self._destination_path):
-            os.makedirs(self._destination_path)
+        try:
+            if not os.path.isdir(self._destination_path):
+                os.makedirs(self._destination_path)
+        except OSError as exception:
+            raise errors.BadConfigOption(
+                f"Unable to create export directory: {self._destination_path:s} "
+                f"with error: {exception!s}"
+            )
 
         self._Extract(
             self._file_system_path_specs,
@@ -936,24 +1089,35 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
             self._custom_artifacts_path,
             skip_duplicates=self._skip_duplicates,
         )
-
         json_data = []
 
         if not self._no_hashes:
             hashes_file_path = os.path.join(
                 self._destination_path, self._HASHES_FILENAME
             )
-            with open(hashes_file_path, "w", encoding="utf-8") as file_object:
-                for sha256, paths in self._paths_by_hash.items():
-                    json_data.append({"sha256": sha256, "paths": paths})
-                json.dump(json_data, file_object)
+            if os.path.islink(hashes_file_path):
+                logger.warning(
+                    f"[skipping] unable to write the {self._HASHES_FILENAME:s} "
+                    "file because it is a symbolic link."
+                )
+            else:
+                with open(hashes_file_path, "w", encoding="utf-8") as file_object:
+                    for sha256, paths in self._paths_by_hash.items():
+                        json_data.append({"sha256": sha256, "paths": paths})
+                    json.dump(json_data, file_object)
 
         if self._enable_artifacts_map:
             artifacts_map_file = os.path.join(
                 self._destination_path, "artifacts_map.json"
             )
-            with open(artifacts_map_file, "w", encoding="utf-8") as file_object:
-                json.dump(self._artifacts_paths_map, file_object)
+            if os.path.islink(artifacts_map_file):
+                logger.warning(
+                    "[skipping] unable to write the artifacts_map.json file "
+                    "because it is a symbolic link."
+                )
+            else:
+                with open(artifacts_map_file, "w", encoding="utf-8") as file_object:
+                    json.dump(self._artifacts_paths_map, file_object)
 
         self._output_writer.Write("Export completed.\n")
         self._output_writer.Write("\n")

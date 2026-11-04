@@ -105,6 +105,28 @@ class XLSXOutputModuleTest(test_lib.OutputModuleTestCase):
 
         return rows
 
+    def testFormatDateTime(self):
+        """Tests the _FormatDateTime function."""
+        output_mediator = self._CreateOutputMediator()
+
+        output_module = xlsx.XLSXOutputModule()
+
+        event, event_data, _ = containers_test_lib.CreateEventFromValues(
+            self._TEST_EVENTS[0]
+        )
+
+        date_time_value = output_module._FormatDateTime(
+            output_mediator, event, event_data
+        )
+        self.assertEqual(date_time_value, datetime.datetime(2012, 6, 27, 18, 17, 1))
+
+        output_mediator.SetTimeZone("Europe/Amsterdam")
+
+        date_time_value = output_module._FormatDateTime(
+            output_mediator, event, event_data
+        )
+        self.assertEqual(date_time_value, datetime.datetime(2012, 6, 27, 20, 17, 1))
+
     def testGetFieldValues(self):
         """Tests the GetFieldValues function."""
         output_mediator = self._CreateOutputMediator()

@@ -14,7 +14,9 @@ class Chrome17CookiesPluginTest(test_lib.SQLitePluginTestCase):
     def testProcess(self):
         """Tests the Process function on a Chrome cookie database file."""
         plugin = chrome_cookies.Chrome17CookiePlugin()
-        storage_writer = self._ParseDatabaseFileWithPlugin(["cookies.db"], plugin)
+        storage_writer = self._ParseDatabaseFileWithPlugin(
+            ["chrome", "cookies.db"], plugin
+        )
 
         # 560 Chrome cookie and 43 cookie plugin.
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
@@ -42,12 +44,11 @@ class Chrome17CookiesPluginTest(test_lib.SQLitePluginTestCase):
             ),
             "data_type": "chrome:cookie:entry",
             "expiration_time": "2011-11-23T21:48:19.792703+00:00",
-            "host": "www.linkedin.com",
+            "hostname": "www.linkedin.com",
             "httponly": False,
             "persistent": True,
             "url": "http://www.linkedin.com/",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 45)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -59,9 +60,8 @@ class Chrome66CookiesPluginTest(test_lib.SQLitePluginTestCase):
         """Tests the Process function on a Chrome cookie database file."""
         plugin = chrome_cookies.Chrome66CookiePlugin()
         storage_writer = self._ParseDatabaseFileWithPlugin(
-            ["Cookies-68.0.3440.106"], plugin
+            ["chrome", "Cookies-68.0.3440.106"], plugin
         )
-
         # 5 Chrome cookie and 1 cookie plugin.
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
@@ -85,12 +85,11 @@ class Chrome66CookiesPluginTest(test_lib.SQLitePluginTestCase):
             "data": "",
             "data_type": "chrome:cookie:entry",
             "expiration_time": "2020-08-13T15:03:45.000000+00:00",
-            "host": "google.com",
+            "hostname": "google.com",
             "httponly": False,
             "persistent": True,
             "url": "http://google.com/gmail/about/",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -99,7 +98,6 @@ class Chrome66CookiesPluginTest(test_lib.SQLitePluginTestCase):
             "data_type": "cookie:google:analytics:utma",
             "url": "http://google.com/gmail/about/",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 

@@ -13,11 +13,10 @@ class WinRARHistoryEventData(events.EventData):
     Attributes:
       entries (str): archive history entries.
       key_path (str): Windows Registry key path.
-      last_written_time (dfdatetime.DateTimeValues): entry last written date and
-          time.
+      last_written_time (dfdatetime.DateTimeValues): entry last written date and time.
     """
 
-    DATA_TYPE = "winrar:history"
+    DATA_TYPE = "windows:registry:winrar:history"
 
     def __init__(self):
         """Initializes event data."""
@@ -53,8 +52,8 @@ class WinRARHistoryPlugin(interface.WindowsRegistryPlugin):
         """Extracts events from a Windows Registry key.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
         """
         entries = []

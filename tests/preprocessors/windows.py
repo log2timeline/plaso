@@ -4,17 +4,21 @@
 import unittest
 
 from dfvfs.helpers import fake_file_system_builder
+from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
+from dfwinreg import definitions as dfwinreg_definitions
 from dfwinreg import fake as dfwinreg_fake
 from dfwinreg import regf as dfwinreg_regf
 from dfwinreg import registry as dfwinreg_registry
 from dfwinreg import registry_searcher
 
 from plaso.containers import artifacts
+from plaso.lib import errors
 from plaso.preprocessors import manager
 from plaso.preprocessors import mediator
 from plaso.preprocessors import windows
+from plaso.storage.fake import writer as fake_writer
 
 from tests.preprocessors import test_lib
 
@@ -359,6 +363,8 @@ class WindowsAllUsersAppProfileKnowledgeBasePluginTest(
 class WindowsAvailableTimeZonesPluginTest(WindowsArtifactPreprocessorPluginTestCase):
     """Tests for the Windows available time zones plugin."""
 
+    # pylint: disable=protected-access
+
     def testParseKey(self):
         """Tests the _ParseKey function."""
         test_file_path = self._GetTestFilePath(["SOFTWARE"])
@@ -384,6 +390,58 @@ class WindowsAvailableTimeZonesPluginTest(WindowsArtifactPreprocessorPluginTestC
         )
 
         self.assertEqual(available_time_zone.name, "AUS Central Standard Time")
+
+    def testParseKeyWithInvalidTZIValue(self):
+        """Tests the _ParseKey function with a missing or invalid TZI value."""
+        key_path_prefix = (
+            "HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion\\"
+            "Time Zones"
+        )
+        relative_key_path = "Microsoft\\Windows NT\\CurrentVersion\\Time Zones"
+
+        plugin = windows.WindowsAvailableTimeZonesPlugin()
+
+        # Test key without a TZI value.
+        registry_key = dfwinreg_fake.FakeWinRegistryKey(
+            "Test Standard Time",
+            key_path_prefix=key_path_prefix,
+            relative_key_path=relative_key_path,
+        )
+
+        storage_writer = self._CreateTestStorageWriter()
+        test_mediator = mediator.PreprocessMediator(storage_writer)
+        plugin._ParseKey(test_mediator, registry_key, None)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "preprocessing_warning"
+        )
+        self.assertEqual(number_of_warnings, 1)
+
+        number_of_artifacts = storage_writer.GetNumberOfAttributeContainers("time_zone")
+        self.assertEqual(number_of_artifacts, 0)
+
+        # Test key with a TZI value that is too small.
+        registry_key = dfwinreg_fake.FakeWinRegistryKey(
+            "Test Standard Time",
+            key_path_prefix=key_path_prefix,
+            relative_key_path=relative_key_path,
+        )
+        registry_value = dfwinreg_fake.FakeWinRegistryValue(
+            "TZI", data=b"\x00" * 8, data_type=dfwinreg_definitions.REG_BINARY
+        )
+        registry_key.AddValue(registry_value)
+
+        storage_writer = self._CreateTestStorageWriter()
+        test_mediator = mediator.PreprocessMediator(storage_writer)
+        plugin._ParseKey(test_mediator, registry_key, None)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "preprocessing_warning"
+        )
+        self.assertEqual(number_of_warnings, 1)
+
+        number_of_artifacts = storage_writer.GetNumberOfAttributeContainers("time_zone")
+        self.assertEqual(number_of_artifacts, 0)
 
 
 class WindowsCodePagePluginTest(WindowsArtifactPreprocessorPluginTestCase):
@@ -435,8 +493,91 @@ class WindowsEventLogPublishersPluginTest(WindowsArtifactPreprocessorPluginTestC
         self.assertEqual(number_of_artifacts, 438)
 
 
+class _SingleKeyWinRegistrySearcher:
+    """Windows Registry searcher that returns a single, fixed key.
+
+    This is used to exercise WindowsRegistryKeyArtifactPreprocessorPlugin
+    .Collect() without requiring a full Windows Registry file or virtual
+    key hierarchy to be constructed.
+    """
+
+    # pylint: disable=unused-argument
+
+    def __init__(self, key_path, registry_key):
+        """Initializes a Windows Registry searcher.
+
+        Args:
+          key_path (str): key path to return as the single match.
+          registry_key (dfwinreg.WinRegistryKey): Windows Registry key to
+              return for key_path.
+        """
+        super().__init__()
+        self._key_path = key_path
+        self._registry_key = registry_key
+
+    def Find(self, find_specs=None):
+        """Searches for matching keys within the Windows Registry.
+
+        Args:
+          find_specs (list[FindSpec]): find specifications, which are
+              ignored by this implementation.
+
+        Yields:
+          str: key path of a matching Windows Registry key.
+        """
+        yield self._key_path
+
+    def GetKeyByPath(self, key_path):
+        """Retrieves a specific key within the Windows Registry.
+
+        Args:
+          key_path (str): key path, which is ignored by this implementation.
+
+        Returns:
+          dfwinreg.WinRegistryKey: Windows Registry key.
+        """
+        return self._registry_key
+
+
 class WindowsEventLogSourcesPluginTest(WindowsArtifactPreprocessorPluginTestCase):
     """Tests for the Windows Event Log sources plugin."""
+
+    def testCollectWithCorruptedCategoryMessageFileValue(self):
+        """Tests Collect() with a corrupted CategoryMessageFile value.
+
+        This is a regression test for a Windows Registry value that cannot be
+        decoded, for example a REG_EXPAND_SZ value with a truncated UTF-16
+        little-endian byte stream. Previously the dfwinreg.errors.Error raised
+        by WinRegistryValue.GetDataAsObject() while parsing such a value was
+        not caught, causing the error to propagate out of Collect() and abort
+        the entire preprocessing run instead of being reported as a single
+        preprocessing warning.
+        """
+        registry_key = dfwinreg_fake.FakeWinRegistryKey("TestProvider")
+        registry_value = dfwinreg_fake.FakeWinRegistryValue(
+            "CategoryMessageFile",
+            data=b"\x01",
+            data_type=dfwinreg_definitions.REG_EXPAND_SZ,
+        )
+        registry_key.AddValue(registry_value)
+
+        searcher = _SingleKeyWinRegistrySearcher(
+            "HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Services\\EventLog\\"
+            "Application\\TestProvider",
+            registry_key,
+        )
+
+        artifact_definition = self._artifacts_registry.GetDefinitionByName(
+            "WindowsEventLogSources"
+        )
+        self.assertIsNotNone(artifact_definition)
+
+        storage_writer = self._CreateTestStorageWriter()
+        test_mediator = mediator.PreprocessMediator(storage_writer)
+
+        plugin = windows.WindowsEventLogSourcesPlugin()
+        with self.assertRaises(errors.PreProcessFail):
+            plugin.Collect(test_mediator, artifact_definition, searcher)
 
     def testParseValueData(self):
         """Tests the _ParseValueData function."""
@@ -753,29 +894,38 @@ class WindowsSystemRootEnvironmentVariablePluginTest(
         mount_point = path_spec_factory.Factory.NewPathSpec(
             dfvfs_definitions.TYPE_INDICATOR_FAKE, location="/"
         )
+        storage_writer = fake_writer.FakeStorageWriter()
+        test_mediator = mediator.PreprocessMediator(storage_writer)
 
-        storage_writer = self._CreateTestStorageWriter()
+        searcher = file_system_searcher.FileSystemSearcher(
+            file_system_builder.file_system, mount_point
+        )
         plugin = windows.WindowsSystemRootEnvironmentVariablePlugin()
-        self._RunPreprocessorPluginOnFileSystem(
-            file_system_builder.file_system, mount_point, storage_writer, plugin
-        )
 
-        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-            "preprocessing_warning"
-        )
-        self.assertEqual(number_of_warnings, 0)
+        storage_writer.Open()
 
-        number_of_artifacts = storage_writer.GetNumberOfAttributeContainers(
-            "environment_variable"
-        )
-        self.assertEqual(number_of_artifacts, 1)
+        try:
+            plugin.Collect(
+                test_mediator, None, searcher, file_system_builder.file_system
+            )
+            number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+                "preprocessing_warning"
+            )
+            self.assertEqual(number_of_warnings, 0)
 
-        environment_variable = storage_writer.GetAttributeContainerByIndex(
-            "environment_variable", 0
-        )
-        self.assertIsNotNone(environment_variable)
-        self.assertEqual(environment_variable.name, "systemroot")
-        self.assertEqual(environment_variable.value, "\\Windows")
+            number_of_artifacts = storage_writer.GetNumberOfAttributeContainers(
+                "environment_variable"
+            )
+            self.assertEqual(number_of_artifacts, 1)
+
+            environment_variable = storage_writer.GetAttributeContainerByIndex(
+                "environment_variable", 0
+            )
+            self.assertIsNotNone(environment_variable)
+            self.assertEqual(environment_variable.name, "systemroot")
+            self.assertEqual(environment_variable.value, "\\Windows")
+        finally:
+            storage_writer.Close()
 
 
 class WindowsServicesAndDriversPluginTest(WindowsArtifactPreprocessorPluginTestCase):
@@ -978,29 +1128,38 @@ class WindowsWinDirEnvironmentVariablePluginTest(
         mount_point = path_spec_factory.Factory.NewPathSpec(
             dfvfs_definitions.TYPE_INDICATOR_FAKE, location="/"
         )
+        storage_writer = fake_writer.FakeStorageWriter()
+        test_mediator = mediator.PreprocessMediator(storage_writer)
 
-        storage_writer = self._CreateTestStorageWriter()
+        searcher = file_system_searcher.FileSystemSearcher(
+            file_system_builder.file_system, mount_point
+        )
         plugin = windows.WindowsWinDirEnvironmentVariablePlugin()
-        self._RunPreprocessorPluginOnFileSystem(
-            file_system_builder.file_system, mount_point, storage_writer, plugin
-        )
 
-        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-            "preprocessing_warning"
-        )
-        self.assertEqual(number_of_warnings, 0)
+        storage_writer.Open()
 
-        number_of_artifacts = storage_writer.GetNumberOfAttributeContainers(
-            "environment_variable"
-        )
-        self.assertEqual(number_of_artifacts, 1)
+        try:
+            plugin.Collect(
+                test_mediator, None, searcher, file_system_builder.file_system
+            )
+            number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+                "preprocessing_warning"
+            )
+            self.assertEqual(number_of_warnings, 0)
 
-        environment_variable = storage_writer.GetAttributeContainerByIndex(
-            "environment_variable", 0
-        )
-        self.assertIsNotNone(environment_variable)
-        self.assertEqual(environment_variable.name, "windir")
-        self.assertEqual(environment_variable.value, "\\Windows")
+            number_of_artifacts = storage_writer.GetNumberOfAttributeContainers(
+                "environment_variable"
+            )
+            self.assertEqual(number_of_artifacts, 1)
+
+            environment_variable = storage_writer.GetAttributeContainerByIndex(
+                "environment_variable", 0
+            )
+            self.assertIsNotNone(environment_variable)
+            self.assertEqual(environment_variable.name, "windir")
+            self.assertEqual(environment_variable.value, "\\Windows")
+        finally:
+            storage_writer.Close()
 
 
 if __name__ == "__main__":

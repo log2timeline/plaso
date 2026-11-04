@@ -57,7 +57,6 @@ class CustomDestinationsParser(
         category_header, bytes_read = self._ReadStructureFromFileObject(
             file_object, file_offset, data_type_map
         )
-
         if category_header.category_type > 2:
             raise errors.ParseError(
                 f"Unsupported category type: {category_header.category_type:d}."
@@ -113,9 +112,8 @@ class CustomDestinationsParser(
                 path_spec, resolver_context=parser_mediator.resolver_context
             )
         except (dfvfs_errors.BackEndError, RuntimeError) as exception:
-            parser_mediator.ProduceExtractionWarning(
-                f"unable to open LNK file: {display_name:s} with error: "
-                f"{exception!s}"
+            parser_mediator.ProduceWarning(
+                f"unable to open LNK file: {display_name:s} with error: {exception!s}"
             )
             return 0
 
@@ -128,8 +126,8 @@ class CustomDestinationsParser(
         finally:
             parser_mediator.PopFromParserChain()
 
-        # We cannot trust the file size in the LNK data so we get the last offset
-        # that was read instead.
+        # We cannot rely on the file size in the LNK data so we get the last offset that
+        # was read instead.
         return lnk_file_object.get_offset()
 
     @classmethod
@@ -195,9 +193,8 @@ class CustomDestinationsParser(
                     entry_header, _ = self._ReadStructureFromFileObject(
                         file_object, file_offset, entry_header_data_type_map
                     )
-
                 except errors.ParseError as exception:
-                    parser_mediator.ProduceExtractionWarning(
+                    parser_mediator.ProduceWarning(
                         f"unable to parse entry header at offset: 0x{file_offset:08x} "
                         f"with error: {exception!s}"
                     )
@@ -211,11 +208,10 @@ class CustomDestinationsParser(
                     lnk_file_size = self._ParseLNKFile(
                         parser_mediator, file_entry, file_offset, remaining_file_size
                     )
-
                     file_offset += lnk_file_size
 
                 elif entry_header.guid[:4] != self._CATEGORY_FOOTER_SIGNATURE:
-                    parser_mediator.ProduceExtractionWarning(
+                    parser_mediator.ProduceWarning(
                         f"unsupported entry: {entry_index:d} at offset: "
                         f"0x{file_offset:08x}"
                     )

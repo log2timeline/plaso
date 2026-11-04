@@ -172,12 +172,12 @@ class BencodeParser(interface.FileObjectParser):
             bencode_file.Open(file_object)
         except OSError as exception:
             raise errors.WrongParser(
-                f"[{self.NAME:s}] unable to parse file: {display_name:s} "
-                f"with error: {exception!s}"
+                f"[{self.NAME:s}] unable to parse file: {display_name:s} with error: "
+                f"{exception!s}"
             )
 
         if bencode_file.IsEmpty():
-            parser_mediator.ProduceExtractionWarning("missing decoded Bencode values")
+            parser_mediator.ProduceWarning("missing decoded Bencode values")
             return
 
         try:
@@ -210,9 +210,8 @@ class BencodeParser(interface.FileObjectParser):
                     plugin.UpdateChainAndProcess(
                         parser_mediator, bencode_file=bencode_file
                     )
-
                 except Exception as exception:  # pylint: disable=broad-except
-                    parser_mediator.ProduceExtractionWarning(
+                    parser_mediator.ProduceWarning(
                         f"plugin: {plugin_name:s} unable to parse Bencode file with "
                         f"error: {exception!s}"
                     )

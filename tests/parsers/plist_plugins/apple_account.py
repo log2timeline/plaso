@@ -17,12 +17,10 @@ class AppleAccountPlistPluginTest(test_lib.PlistPluginTestCase):
             "com.apple.coreservices.appleidauthenticationinfo."
             "ABC0ABC1-ABC0-ABC0-ABC0-ABC0ABC1ABC2.plist"
         )
-
         plugin = apple_account.AppleAccountPlistPlugin()
         storage_writer = self._ParsePlistFileWithPlugin(
-            plugin, [plist_name], plist_name
+            plugin, ["plist", plist_name], plist_name
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -47,7 +45,6 @@ class AppleAccountPlistPluginTest(test_lib.PlistPluginTestCase):
             "last_name": "Moreno Garijo",
             "validation_time": "2013-12-25T14:00:32.000000+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

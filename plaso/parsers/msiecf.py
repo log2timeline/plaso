@@ -22,7 +22,6 @@ class MSIECFLeakEventData(events.EventData):
       cache_directory_name (str): name of the cache directory.
       offset (int): offset of the MSIECF item relative to the start of the file,
           from which the event data was extracted.
-      recovered (bool): True if the item was recovered.
     """
 
     DATA_TYPE = "msiecf:leak"
@@ -35,7 +34,6 @@ class MSIECFLeakEventData(events.EventData):
         self.cache_directory_index = None
         self.cache_directory_name = None
         self.offset = None
-        self.recovered = None
 
 
 class MSIECFRedirectedEventData(events.EventData):
@@ -44,7 +42,6 @@ class MSIECFRedirectedEventData(events.EventData):
     Attributes:
       offset (int): offset of the MSIECF item relative to the start of the file,
           from which the event data was extracted.
-      recovered (bool): True if the item was recovered.
       url (str): location URL.
     """
 
@@ -54,7 +51,6 @@ class MSIECFRedirectedEventData(events.EventData):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
         self.offset = None
-        self.recovered = None
         self.url = None
 
 
@@ -82,7 +78,6 @@ class MSIECFURLEventData(events.EventData):
           from which the event data was extracted.
       primary_time (dfdatetime.DateTimeValues): unspecified primary date and time
           of the MSIECF item.
-      recovered (bool): True if the item was recovered.
       secondary_time (dfdatetime.DateTimeValues): unspecified secondary date and
           time of the MSIECF item.
       synchronization_time (dfdatetime.DateTimeValues): synchronization date
@@ -109,7 +104,6 @@ class MSIECFURLEventData(events.EventData):
         self.number_of_hits = None
         self.offset = None
         self.primary_time = None
-        self.recovered = None
         self.secondary_time = None
         self.synchronization_time = None
         self.url = None
@@ -142,7 +136,6 @@ class MSIECFParser(interface.FileObjectParser):
         event_data.cached_file_size = msiecf_item.cached_file_size
         event_data.cache_directory_index = msiecf_item.cache_directory_index
         event_data.offset = msiecf_item.offset
-        event_data.recovered = recovered
 
         if (
             event_data.cache_directory_index >= 0
@@ -152,7 +145,7 @@ class MSIECFParser(interface.FileObjectParser):
                 event_data.cache_directory_index
             ]
 
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data, recovered=recovered)
 
     def _ParseItems(self, parser_mediator, msiecf_file):
         """Parses a MSIE Cache File (MSIECF) items.
@@ -172,18 +165,17 @@ class MSIECFParser(interface.FileObjectParser):
             except UnicodeDecodeError:
                 decode_error = True
                 cache_directory_name = cache_directory_name.decode(
-                    "ascii", errors="replace"
+                    "ascii", errors="backslashreplace"
                 )
 
             cache_directories.append(cache_directory_name)
 
         if decode_error:
-            parser_mediator.ProduceExtractionWarning(
-                (
-                    "unable to decode cache directory names. Characters that cannot "
-                    'be decoded will be replaced with "?" or "\\ufffd".'
-                )
+            warning_message = (
+                "unable to decode cache directory names as ASCII. Unsupported code "
+                "points are escaped."
             )
+            parser_mediator.ProduceWarning(warning_message)
 
         for item_index in range(0, msiecf_file.number_of_items):
             try:
@@ -200,9 +192,10 @@ class MSIECFParser(interface.FileObjectParser):
                     )
 
             except OSError as exception:
-                parser_mediator.ProduceExtractionWarning(
+                warning_message = (
                     f"Unable to parse item: {item_index:d} with error: {exception!s}"
                 )
+                parser_mediator.ProduceWarning(warning_message)
 
         for item_index in range(0, msiecf_file.number_of_recovered_items):
             try:
@@ -225,10 +218,11 @@ class MSIECFParser(interface.FileObjectParser):
                     )
 
             except OSError as exception:
-                parser_mediator.ProduceRecoveryWarning(
+                warning_message = (
                     f"Unable to parse recovered item: {item_index:d} with error: "
                     f"{exception!s}"
                 )
+                parser_mediator.ProduceWarning(warning_message, recovered=True)
 
     def _ParseRedirected(self, parser_mediator, msiecf_item, recovered=False):
         """Extract data from a MSIE Cache Files (MSIECF) redirected item.
@@ -243,10 +237,9 @@ class MSIECFParser(interface.FileObjectParser):
         """
         event_data = MSIECFRedirectedEventData()
         event_data.offset = msiecf_item.offset
-        event_data.recovered = recovered
         event_data.url = msiecf_item.location
 
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data, recovered=recovered)
 
     def _ParseUrl(
         self,
@@ -287,7 +280,6 @@ class MSIECFParser(interface.FileObjectParser):
             secondary_date_time = dfdatetime_filetime.Filetime(
                 timestamp=secondary_timestamp
             )
-
             if msiecf_item.type in ("history-daily", "history-weekly"):
                 secondary_date_time.is_local_time = True
 
@@ -303,16 +295,14 @@ class MSIECFParser(interface.FileObjectParser):
                     except UnicodeDecodeError:
                         warning_message = (
                             f"unable to decode HTTP headers of URL record at offset: "
-                            f"0x{msiecf_item.offset:08x}. Characters that cannot be "
-                            f'decoded will be replaced with "?" or "\\ufffd".'
+                            f"0x{msiecf_item.offset:08x} as ASCII. Unsupported code "
+                            f"points are escaped."
                         )
-                        if recovered:
-                            parser_mediator.ProduceRecoveryWarning(warning_message)
-                        else:
-                            parser_mediator.ProduceExtractionWarning(warning_message)
-
+                        parser_mediator.ProduceWarning(
+                            warning_message, recovered=recovered
+                        )
                         http_headers = msiecf_item.data[:-1].decode(
-                            "ascii", errors="replace"
+                            "ascii", errors="backslashreplace"
                         )
 
             # TODO: parse data of other URL item type like history which requires
@@ -325,7 +315,6 @@ class MSIECFParser(interface.FileObjectParser):
         event_data.http_headers = http_headers
         event_data.number_of_hits = msiecf_item.number_of_hits
         event_data.offset = msiecf_item.offset
-        event_data.recovered = recovered
         event_data.url = msiecf_item.location
 
         if (
@@ -381,7 +370,7 @@ class MSIECFParser(interface.FileObjectParser):
                 fat_date_time=last_checked_timestamp
             )
 
-        parser_mediator.ProduceEventData(event_data)
+        parser_mediator.ProduceEventData(event_data, recovered=recovered)
 
     @classmethod
     def GetFormatSpecification(cls):
@@ -412,9 +401,8 @@ class MSIECFParser(interface.FileObjectParser):
         try:
             msiecf_file.open_file_object(file_object)
         except OSError as exception:
-            parser_mediator.ProduceExtractionWarning(
-                f"unable to open file with error: {exception!s}"
-            )
+            warning_message = f"unable to open file with error: {exception!s}"
+            parser_mediator.ProduceWarning(warning_message)
             return
 
         try:

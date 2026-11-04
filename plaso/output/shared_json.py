@@ -109,12 +109,11 @@ class SharedJSONOutputModule(text_file.TextFileOutputModule):
 
     _JSON_SERIALIZER = json_serializer.JSONAttributeContainerSerializer
 
-    _GENERATED_FIELD_VALUES = ["display_name", "filename", "inode"]
-
     def __init__(self):
         """Initializes an output module."""
         super().__init__()
         self._field_formatting_helper = JSONFieldFormattingHelper()
+        self._generated_field_values = None
 
     def GetFieldValues(
         self, output_mediator, event, event_data, event_data_stream, event_tag
@@ -132,6 +131,11 @@ class SharedJSONOutputModule(text_file.TextFileOutputModule):
         Returns:
           dict[str, str]: output field values per name.
         """
+        if self._generated_field_values is None:
+            self._generated_field_values = ["display_name"]
+            if output_mediator.use_fallback_path_spec:
+                self._generated_field_values.extend(["filename", "inode"])
+
         field_values = {"__container_type__": "event", "__type__": "AttributeContainer"}
 
         if event_data:
@@ -167,7 +171,6 @@ class SharedJSONOutputModule(text_file.TextFileOutputModule):
                     event_data_stream,
                     event_tag,
                 )
-
                 # Output _parser_chain as parser for backwards compatibility.
                 if attribute_name == "_parser_chain":
                     attribute_name = "parser"
@@ -200,7 +203,7 @@ class SharedJSONOutputModule(text_file.TextFileOutputModule):
 
                 field_values[attribute_name] = attribute_value
 
-        for field_name in self._GENERATED_FIELD_VALUES:
+        for field_name in self._generated_field_values:
             if field_name not in field_values:
                 field_value = field_values.get(field_name)
                 if field_value is None:
@@ -217,6 +220,18 @@ class SharedJSONOutputModule(text_file.TextFileOutputModule):
         field_values["message"] = self._field_formatting_helper.GetFormattedField(
             output_mediator, "message", event, event_data, event_data_stream, event_tag
         )
+        # Use the output mediator to resolve hostname and username fields, similar to
+        # dynamic output. In contrast to dynamic output do not default to "-"
+        # placeholder.
+
+        hostname = output_mediator.GetHostname(event_data, default_hostname="")
+        if hostname:
+            field_values["hostname"] = hostname
+
+        username = output_mediator.GetUsername(event_data, default_username="")
+        if username:
+            field_values["username"] = username
+
         if event_tag:
             event_tag_values = {
                 "__container_type__": "event_tag",

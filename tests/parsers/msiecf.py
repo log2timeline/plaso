@@ -43,7 +43,6 @@ class MSIECFParserTest(test_lib.ParserTestCase):
             "number_of_hits": 3,
             "offset": 25472,
             "primary_time": None,
-            "recovered": False,
             "secondary_time": None,
             "synchronization_time": "2015-08-25T11:05:36+00:00",
             "url": "http://www.bing.com/favicon.ico",
@@ -54,7 +53,6 @@ class MSIECFParserTest(test_lib.ParserTestCase):
         expected_event_values = {
             "data_type": "msiecf:redirected",
             "offset": 27392,
-            "recovered": False,
             "url": "http://go.microsoft.com/fwlink/?LinkId=299196",
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 7)
@@ -92,7 +90,6 @@ class MSIECFParserTest(test_lib.ParserTestCase):
             "number_of_hits": 1,
             "offset": 20480,
             "primary_time": None,
-            "recovered": False,
             "secondary_time": "2015-08-25T11:05:18.5120000+00:00",
             "synchronization_time": "2015-08-25T11:05:20+00:00",
             "url": "Visited: gold_administrator@http://www.msn.com/?ocid=iehp",
@@ -127,7 +124,6 @@ class MSIECFParserTest(test_lib.ParserTestCase):
             "cached_filename": "ADSAdClient31[1].htm",
             "data_type": "msiecf:leak",
             "offset": 26368,
-            "recovered": False,
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 4)
         self.CheckEventData(event_data, expected_event_values)

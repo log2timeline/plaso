@@ -71,6 +71,8 @@ class AWSELBEventData(events.EventData):
       destination_status_code_list (str): A space-delimited list of status codes.
       domain_name (str): The SNI domain provided by the
           source during the TLS handshake.
+      elb_status_code (int): The status code of the response from the load
+          balancer.
       error_reason (str): The error reason code, enclosed in
           double quotes.
       handshake_duration (str): duration of the handshake to complete after
@@ -87,6 +89,8 @@ class AWSELBEventData(events.EventData):
       received_bytes (int): The size of the request, in bytes, received from
           the source.
       redirect_url (str): The URL of the redirect destination.
+      request (str): The request line from the source, which contains the
+          HTTP method, the URL and the HTTP version.
       request_processing_duration (str): total duration from the time the load
           balancer received the request until the time it sent the request to
           a destination.

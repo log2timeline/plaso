@@ -18,8 +18,8 @@ class FilesByGoogleEventData(events.EventData):
     """Files by Google event data.
 
     Attributes:
-      file_name (str): name of a file.
       file_size (int): size of a file.
+      filename (str): filename.
       is_hidden (int): mark of a hidden file.
       media_type (str): file's media type.
       mime_type (str): format of a file.
@@ -38,8 +38,8 @@ class FilesByGoogleEventData(events.EventData):
     def __init__(self):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
-        self.file_name = None
         self.file_size = None
+        self.filename = None
         self.is_hidden = None
         self.media_type = None
         self.mime_type = None
@@ -207,8 +207,8 @@ class FilesByGooglePlugin(interface.SQLitePlugin):
         query_hash = hash(query)
 
         event_data = FilesByGoogleEventData()
-        event_data.file_name = self._GetRowValue(query_hash, row, "file_name")
         event_data.file_size = self._GetRowValue(query_hash, row, "size")
+        event_data.filename = self._GetRowValue(query_hash, row, "file_name")
         event_data.is_hidden = self._GetRowValue(query_hash, row, "is_hidden")
         event_data.media_type = self._GetRowValue(query_hash, row, "media_type")
         event_data.mime_type = self._GetRowValue(query_hash, row, "mime_type")

@@ -9,13 +9,56 @@ from acstore.containers import manager
 from dfdatetime import interface as dfdatetime_interface
 
 
-def CalculateEventValuesHash(event_data, event_data_stream):
+def CalculateEventDataStreamHashAttributes(event_data_stream):
+    """Calculates the event data stream portion of the event values hash.
+
+    The returned strings are byte-identical for every event data that shares
+    the same event data stream, so they can be calculated once and reused.
+
+    Args:
+      event_data_stream (EventDataStream): event data stream.
+
+    Returns:
+      list[str]: event data stream attribute strings used to calculate the
+          event values hash.
+
+    Raises:
+      RuntimeError: if the event values hash cannot be determined.
+    """
+    attributes = []
+
+    for attribute_name, attribute_value in sorted(event_data_stream.GetAttributes()):
+        if attribute_name == "path_spec":
+            attribute_value = attribute_value.comparable
+
+        elif not isinstance(attribute_value, (bool, float, int, list, str)):
+            raise RuntimeError(
+                f"Unsupported attribute: {attribute_name:s} value type: "
+                f"{type(attribute_value)!s}"
+            )
+
+        try:
+            attributes.append(f"{attribute_name:s}: {attribute_value!s}")
+        except UnicodeDecodeError:
+            raise RuntimeError(f"Failed to decode attribute {attribute_name:s}")
+
+    return attributes
+
+
+def CalculateEventValuesHash(
+    event_data, event_data_stream, event_data_stream_attributes=None
+):
     """Calculates a digest hash of the event values.
 
     Args:
       event_data (EventData): event data.
       event_data_stream (EventDataStream): an event data stream or None if not
           available.
+      event_data_stream_attributes (Optional[list[str]]): precomputed event
+          data stream attribute strings, as returned by
+          CalculateEventDataStreamHashAttributes, to reuse across event data
+          that share the same event data stream. If None the strings are
+          calculated from event_data_stream.
 
     Returns:
       str: digest hash of the event values content.
@@ -27,9 +70,11 @@ def CalculateEventValuesHash(event_data, event_data_stream):
 
     for attribute_name, attribute_value in sorted(event_data.GetAttributes()):
         if attribute_value is None or attribute_name in (
+            "_corrupted",
             "_event_data_stream_identifier",
             "_event_values_hash",
             "_parser_chain",
+            "_recovered",
             "data_type",
         ):
             continue
@@ -57,23 +102,12 @@ def CalculateEventValuesHash(event_data, event_data_stream):
             raise RuntimeError(f"Failed to decode attribute {attribute_name:s}")
 
     if event_data_stream:
-        for attribute_name, attribute_value in sorted(
-            event_data_stream.GetAttributes()
-        ):
+        if event_data_stream_attributes is None:
+            event_data_stream_attributes = CalculateEventDataStreamHashAttributes(
+                event_data_stream
+            )
 
-            if attribute_name == "path_spec":
-                attribute_value = attribute_value.comparable
-
-            elif not isinstance(attribute_value, (bool, float, int, list, str)):
-                raise RuntimeError(
-                    f"Unsupported attribute: {attribute_name:s} value type: "
-                    f"{type(attribute_value)!s}"
-                )
-
-            try:
-                attributes.append(f"{attribute_name:s}: {attribute_value!s}")
-            except UnicodeDecodeError:
-                raise RuntimeError(f"Failed to decode attribute {attribute_name:s}")
+        attributes.extend(event_data_stream_attributes)
 
     content = ", ".join(attributes)
     content_data = content.encode("utf-8")
@@ -123,19 +157,6 @@ class DateLessLogHelper(interface.AttributeContainer):
         self.granularity = self.GRANULARITY_NO_YEAR
         self.last_relative_date = None
         self.latest_date = None
-
-    # TODO: the YearLessLogHelper attribute container is kept for backwards
-    # compatibility remove once storage format 20230327 is obsolete.
-    def CopyFromYearLessLogHelper(self, year_less_log_helper):
-        """Copy the values of a year-less log helper.
-
-        Args:
-          year_less_log_helper (YearLessLogHelper): year-less log helper.
-        """
-        self.earliest_date = (year_less_log_helper.earliest_year, 1, 1)
-        self.granularity = self.GRANULARITY_NO_YEAR
-        self.last_relative_date = (year_less_log_helper.last_relative_year, 0, 0)
-        self.latest_date = (year_less_log_helper.latest_year, 1, 1)
 
     def GetEarliestDate(self):
         """Retrieves the earliest date adjusted to the granularity.
@@ -200,8 +221,8 @@ class DateLessLogHelper(interface.AttributeContainer):
 class EventData(interface.AttributeContainer):
     """Event data attribute container.
 
-    The event data attribute container represents the attributes of an entity,
-    such as a database record or log line.
+    The event data attribute container represents the attributes of an entity, such as
+    a database record or log line.
 
     Attributes:
       data_type (str): event data type indicator.
@@ -210,16 +231,20 @@ class EventData(interface.AttributeContainer):
     CONTAINER_TYPE = "event_data"
 
     SCHEMA = {
+        "_corrupted": "bool",
         "_event_data_stream_identifier": "AttributeContainerIdentifier",
         "_event_values_hash": "str",
         "_parser_chain": "str",
+        "_recovered": "bool",
         "data_type": "str",
     }
 
     _SERIALIZABLE_PROTECTED_ATTRIBUTES = [
+        "_corrupted",
         "_event_data_stream_identifier",
         "_event_values_hash",
         "_parser_chain",
+        "_recovered",
     ]
 
     def __init__(self, data_type=None):
@@ -229,9 +254,11 @@ class EventData(interface.AttributeContainer):
           data_type (Optional[str]): event data type indicator.
         """
         super().__init__()
+        self._corrupted = False
         self._event_data_stream_identifier = None
         self._event_values_hash = None
         self._parser_chain = None
+        self._recovered = False
 
         self.data_type = data_type
 
@@ -509,8 +536,8 @@ class EventTag(interface.AttributeContainer):
         self._event_identifier = event_identifier
 
 
-class EventTripple(interface.AttributeContainer):
-    """Event tripple.
+class EventTriple(interface.AttributeContainer):
+    """Event triple.
 
     Attributes:
       event (EventObject): event.
@@ -518,70 +545,14 @@ class EventTripple(interface.AttributeContainer):
       event_data_stream (EventDataStream): event data stream.
     """
 
-    CONTAINER_TYPE = "event_tripple"
+    CONTAINER_TYPE = "event_triple"
 
     def __init__(self):
-        """Initializes an event tripple."""
+        """Initializes an event triple."""
         super().__init__()
         self.event = None
         self.event_data = None
         self.event_data_stream = None
-
-
-# TODO: the YearLessLogHelper attribute container is kept for backwards
-# compatibility remove once storage format 20230327 is obsolete.
-class YearLessLogHelper(interface.AttributeContainer):
-    """Year-less log helper attribute container.
-
-    Attributes:
-      earliest_year (int): earliest possible year the event data stream was
-          created.
-      last_relative_year (int): last relative year determined by the year-less
-          log helper.
-      latest_year (int): latest possible year the event data stream was created.
-    """
-
-    CONTAINER_TYPE = "year_less_log_helper"
-
-    SCHEMA = {
-        "_event_data_stream_identifier": "AttributeContainerIdentifier",
-        "earliest_year": "int",
-        "last_relative_year": "int",
-        "latest_year": "int",
-    }
-
-    _SERIALIZABLE_PROTECTED_ATTRIBUTES = ["_event_data_stream_identifier"]
-
-    def __init__(self):
-        """Initializes a year-less log helper attribute container."""
-        super().__init__()
-        self._event_data_stream_identifier = None
-        self.earliest_year = None
-        self.last_relative_year = None
-        self.latest_year = None
-
-    def GetEventDataStreamIdentifier(self):
-        """Retrieves the identifier of the associated event data stream.
-
-        The event data stream identifier is a storage specific value that requires
-        special handling during serialization.
-
-        Returns:
-          AttributeContainerIdentifier: event data stream or None when not set.
-        """
-        return self._event_data_stream_identifier
-
-    def SetEventDataStreamIdentifier(self, event_data_stream_identifier):
-        """Sets the identifier of the associated event data stream.
-
-        The event data stream identifier is a storage specific value that requires
-        special handling during serialization.
-
-        Args:
-          event_data_stream_identifier (AttributeContainerIdentifier): event data
-              stream identifier.
-        """
-        self._event_data_stream_identifier = event_data_stream_identifier
 
 
 manager.AttributeContainersManager.RegisterAttributeContainers(
@@ -591,7 +562,6 @@ manager.AttributeContainersManager.RegisterAttributeContainers(
         EventDataStream,
         EventObject,
         EventTag,
-        EventTripple,
-        YearLessLogHelper,
+        EventTriple,
     ]
 )

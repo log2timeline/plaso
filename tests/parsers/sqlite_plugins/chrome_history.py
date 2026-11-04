@@ -15,9 +15,8 @@ class GoogleChrome8HistoryPluginTest(test_lib.SQLitePluginTestCase):
         """Tests the Process function on a Chrome History database file."""
         plugin = chrome_history.GoogleChrome8HistoryPlugin()
         storage_writer = self._ParseDatabaseFileWithPlugin(
-            ["chrome_history", "History"], plugin
+            ["chrome", "History"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -41,11 +40,20 @@ class GoogleChrome8HistoryPluginTest(test_lib.SQLitePluginTestCase):
             "title": "Ubuntu Start Page",
             "typed_count": 0,
             "url": "http://start.ubuntu.com/10.04/Google/",
+            "url_hidden": False,
             "visit_count": 4,
             "visit_source": 3,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # Check a hidden page visited entry.
+        expected_event_values = {
+            "data_type": "chrome:history:page_visited",
+            "url": "http://www.google.ch/blank.html",
+            "url_hidden": True,
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 20)
         self.CheckEventData(event_data, expected_event_values)
 
         # Check the first file downloaded entry.
@@ -58,7 +66,6 @@ class GoogleChrome8HistoryPluginTest(test_lib.SQLitePluginTestCase):
             "total_bytes": 1132155,
             "url": "http://fatloss4idiotsx.com/download/funcats/funcats_scr.exe",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 69)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -70,9 +77,8 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         """Tests the Process function on a Google Chrome 57 History database."""
         plugin = chrome_history.GoogleChrome27HistoryPlugin()
         storage_writer = self._ParseDatabaseFileWithPlugin(
-            ["chrome_history", "History-57.0.2987.133"], plugin
+            ["chrome", "History-57.0.2987.133"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -89,20 +95,17 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         self.assertEqual(number_of_warnings, 0)
 
         # Check the page visit entry.
-        expected_url = (
-            "https://raw.githubusercontent.com/dfirlabs/chrome-specimens/master/"
-            "generate-specimens.sh"
-        )
-
         expected_event_values = {
             "data_type": "chrome:history:page_visited",
             "last_visited_time": "2018-01-21T14:09:53.885478+00:00",
             "title": "",
             "typed_count": 0,
             "visit_count": 1,
-            "url": expected_url,
+            "url": (
+                "https://raw.githubusercontent.com/dfirlabs/chrome-specimens/master/"
+                "generate-specimens.sh"
+            ),
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -119,7 +122,6 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
                 "win32/plaso-20171231.1.win32.msi"
             ),
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -127,9 +129,8 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         """Tests the Process function on a Google Chrome 58 History database."""
         plugin = chrome_history.GoogleChrome27HistoryPlugin()
         storage_writer = self._ParseDatabaseFileWithPlugin(
-            ["chrome_history", "History-58.0.3029.96"], plugin
+            ["chrome", "History-58.0.3029.96"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -146,20 +147,17 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         self.assertEqual(number_of_warnings, 0)
 
         # Check the page visit entry.
-        expected_url = (
-            "https://raw.githubusercontent.com/dfirlabs/chrome-specimens/master/"
-            "generate-specimens.sh"
-        )
-
         expected_event_values = {
             "data_type": "chrome:history:page_visited",
             "last_visited_time": "2018-01-21T14:09:27.315765+00:00",
             "title": "",
             "typed_count": 0,
             "visit_count": 1,
-            "url": expected_url,
+            "url": (
+                "https://raw.githubusercontent.com/dfirlabs/chrome-specimens/master/"
+                "generate-specimens.sh"
+            ),
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -176,7 +174,6 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
                 "win32/plaso-20171231.1.win32.msi"
             ),
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -184,9 +181,8 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         """Tests the Process function on a Google Chrome 59 History database."""
         plugin = chrome_history.GoogleChrome27HistoryPlugin()
         storage_writer = self._ParseDatabaseFileWithPlugin(
-            ["chrome_history", "History-59.0.3071.86"], plugin
+            ["chrome", "History-59.0.3071.86"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -203,20 +199,17 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         self.assertEqual(number_of_warnings, 0)
 
         # Check the page visit entry.
-        expected_url = (
-            "https://raw.githubusercontent.com/dfirlabs/chrome-specimens/master/"
-            "generate-specimens.sh"
-        )
-
         expected_event_values = {
             "data_type": "chrome:history:page_visited",
             "last_visited_time": "2018-01-21T14:08:52.037692+00:00",
             "title": "",
             "typed_count": 0,
             "visit_count": 1,
-            "url": expected_url,
+            "url": (
+                "https://raw.githubusercontent.com/dfirlabs/chrome-specimens/master/"
+                "generate-specimens.sh"
+            ),
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -233,7 +226,6 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
                 "win32/plaso-20171231.1.win32.msi"
             ),
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -244,9 +236,8 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         """
         plugin = chrome_history.GoogleChrome27HistoryPlugin()
         storage_writer = self._ParseDatabaseFileWithPlugin(
-            ["chrome_history", "History-59_added-fake-column"], plugin
+            ["chrome", "History-59_added-fake-column"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -263,20 +254,17 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
         self.assertEqual(number_of_warnings, 0)
 
         # Check the page visit entry.
-        expected_url = (
-            "https://raw.githubusercontent.com/dfirlabs/chrome-specimens/master/"
-            "generate-specimens.sh"
-        )
-
         expected_event_values = {
             "data_type": "chrome:history:page_visited",
             "last_visited_time": "2018-01-21T14:08:52.037692+00:00",
             "title": "",
             "typed_count": 0,
             "visit_count": 1,
-            "url": expected_url,
+            "url": (
+                "https://raw.githubusercontent.com/dfirlabs/chrome-specimens/master/"
+                "generate-specimens.sh"
+            ),
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -293,7 +281,6 @@ class GoogleChrome27HistoryPluginTest(test_lib.SQLitePluginTestCase):
                 "win32/plaso-20171231.1.win32.msi"
             ),
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 

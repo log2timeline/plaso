@@ -2,7 +2,6 @@
 
 import collections
 import os
-import sqlite3
 
 from acstore import sqlite_store
 from acstore.containers import interface as containers_interface
@@ -11,330 +10,6 @@ from plaso.engine import path_helper
 from plaso.helpers.windows import languages
 from plaso.helpers.windows import resource_files
 from plaso.output import logger
-
-
-class Sqlite3DatabaseFile:
-    """Class that defines a sqlite3 database file."""
-
-    _HAS_TABLE_QUERY = (
-        "SELECT name FROM sqlite_master WHERE type = 'table' AND name = '{0:s}'"
-    )
-
-    def __init__(self):
-        """Initializes the database file object."""
-        super().__init__()
-        self._connection = None
-        self._cursor = None
-        self.filename = None
-        self.read_only = None
-
-    def Close(self):
-        """Closes the database file.
-
-        Raises:
-          RuntimeError: if the database is not opened.
-        """
-        if not self._connection:
-            raise RuntimeError("Cannot close database not opened.")
-
-        # We need to run commit or not all data is stored in the database.
-        self._connection.commit()
-        self._connection.close()
-
-        self._connection = None
-        self._cursor = None
-        self.filename = None
-        self.read_only = None
-
-    def HasTable(self, table_name):
-        """Determines if a specific table exists.
-
-        Args:
-          table_name (str): table name.
-
-        Returns:
-          bool: True if the table exists.
-
-        Raises:
-          RuntimeError: if the database is not opened.
-        """
-        if not self._connection:
-            raise RuntimeError("Cannot determine if table exists database not opened.")
-
-        sql_query = self._HAS_TABLE_QUERY.format(table_name)
-
-        self._cursor.execute(sql_query)
-        if self._cursor.fetchone():
-            return True
-
-        return False
-
-    def GetValues(self, table_names, column_names, condition):
-        """Retrieves values from a table.
-
-        Args:
-          table_names (list[str]): table names.
-          column_names (list[str]): column names.
-          condition (str): query condition such as
-              "log_source == 'Application Error'".
-
-        Yields:
-          sqlite3.row: row.
-
-        Raises:
-          RuntimeError: if the database is not opened.
-        """
-        if not self._connection:
-            raise RuntimeError("Cannot retrieve values database not opened.")
-
-        if condition:
-            condition = f" WHERE {condition:s}"
-        else:
-            condition = ""
-
-        table_names_string = ", ".join(table_names)
-        column_names_string = ", ".join(column_names)
-        sql_query = (
-            f"SELECT {column_names_string:s} FROM {table_names_string:s}"
-            f"{condition:s}"
-        )
-        self._cursor.execute(sql_query)
-
-        # TODO: have a look at https://docs.python.org/2/library/
-        # sqlite3.html#sqlite3.Row.
-        for row in self._cursor:
-            yield {
-                column_name: row[column_index]
-                for column_index, column_name in enumerate(column_names)
-            }
-
-    def Open(self, filename, read_only=False):
-        """Opens the database file.
-
-        Args:
-          filename (str): filename of the database.
-          read_only (Optional[bool]): True if the database should be opened in
-              read-only mode. Since sqlite3 does not support a real read-only
-              mode we fake it by only permitting SELECT queries.
-
-        Returns:
-          bool: True if successful.
-
-        Raises:
-          RuntimeError: if the database is already opened.
-        """
-        if self._connection:
-            raise RuntimeError("Cannot open database already opened.")
-
-        self.filename = filename
-        self.read_only = read_only
-
-        try:
-            self._connection = sqlite3.connect(filename)
-        except sqlite3.OperationalError:
-            return False
-
-        if not self._connection:
-            return False
-
-        self._cursor = self._connection.cursor()
-        if not self._cursor:
-            return False
-
-        return True
-
-
-class WinevtResourcesSqlite3DatabaseReader:
-    """Windows EventLog resources SQLite database reader."""
-
-    def __init__(self):
-        """Initializes a Windows EventLog resources SQLite database reader."""
-        super().__init__()
-        self._database_file = Sqlite3DatabaseFile()
-        self._resouce_file_helper = resource_files.WindowsResourceFileHelper
-        self._string_format = "wrc"
-
-    def _GetEventLogProviderKey(self, log_source):
-        """Retrieves the EventLog provider key.
-
-        Args:
-          log_source (str): EventLog source.
-
-        Returns:
-          str: EventLog provider key or None if not available.
-
-        Raises:
-          RuntimeError: if more than one value is found in the database.
-        """
-        table_names = ["event_log_providers"]
-        column_names = ["event_log_provider_key"]
-        condition = f'log_source == "{log_source:s}"'
-
-        values_list = list(
-            self._database_file.GetValues(table_names, column_names, condition)
-        )
-        number_of_values = len(values_list)
-        if number_of_values == 0:
-            return None
-
-        if number_of_values == 1:
-            values = values_list[0]
-            return values["event_log_provider_key"]
-
-        raise RuntimeError("More than one value found in database.")
-
-    def _GetMessage(self, message_file_key, lcid, message_identifier):
-        """Retrieves a specific message from a specific message table.
-
-        Args:
-          message_file_key (int): message file key.
-          lcid (int): language code identifier (LCID).
-          message_identifier (int): message identifier.
-
-        Returns:
-          str: message string or None if not available.
-
-        Raises:
-          RuntimeError: if more than one value is found in the database.
-        """
-        table_name = f"message_table_{message_file_key:d}_0x{lcid:08x}"
-
-        has_table = self._database_file.HasTable(table_name)
-        if not has_table:
-            return None
-
-        column_names = ["message_string"]
-        condition = f'message_identifier == "0x{message_identifier:08x}"'
-
-        values = list(
-            self._database_file.GetValues([table_name], column_names, condition)
-        )
-        number_of_values = len(values)
-        if number_of_values == 0:
-            return None
-
-        if number_of_values == 1:
-            return values[0]["message_string"]
-
-        raise RuntimeError("More than one value found in database.")
-
-    def _GetMessageFileKeys(self, event_log_provider_key):
-        """Retrieves the message file keys.
-
-        Args:
-          event_log_provider_key (int): EventLog provider key.
-
-        Yields:
-          int: message file key.
-        """
-        table_names = ["message_file_per_event_log_provider"]
-        column_names = ["message_file_key"]
-        condition = f"event_log_provider_key == {event_log_provider_key:d}"
-
-        generator = self._database_file.GetValues(table_names, column_names, condition)
-        for values in generator:
-            yield values["message_file_key"]
-
-    def Close(self):
-        """Closes the database reader object."""
-        self._database_file.Close()
-
-    def GetMessage(self, log_source, lcid, message_identifier):
-        """Retrieves a specific message for a specific EventLog source.
-
-        Args:
-          log_source (str): EventLog source, such as "Application Error".
-          lcid (int): language code identifier (LCID).
-          message_identifier (int): message identifier.
-
-        Returns:
-          str: message string or None if not available.
-        """
-        event_log_provider_key = self._GetEventLogProviderKey(log_source)
-        if not event_log_provider_key:
-            return None
-
-        generator = self._GetMessageFileKeys(event_log_provider_key)
-        if not generator:
-            return None
-
-        message_string = None
-        for message_file_key in generator:
-            message_string = self._GetMessage(
-                message_file_key, lcid, message_identifier
-            )
-            if message_string:
-                break
-
-        if self._string_format == "wrc":
-            message_string = self._resouce_file_helper.FormatMessageStringInPEP3101(
-                message_string
-            )
-
-        return message_string
-
-    def GetMetadataAttribute(self, attribute_name):
-        """Retrieves the metadata attribute.
-
-        Args:
-          attribute_name (str): name of the metadata attribute.
-
-        Returns:
-          str: the metadata attribute or None.
-
-        Raises:
-          RuntimeError: if more than one value is found in the database.
-        """
-        table_name = "metadata"
-
-        has_table = self._database_file.HasTable(table_name)
-        if not has_table:
-            return None
-
-        column_names = ["value"]
-        condition = f'name == "{attribute_name:s}"'
-
-        values = list(
-            self._database_file.GetValues([table_name], column_names, condition)
-        )
-        number_of_values = len(values)
-        if number_of_values == 0:
-            return None
-
-        if number_of_values == 1:
-            return values[0]["value"]
-
-        raise RuntimeError("More than one value found in database.")
-
-    def Open(self, filename):
-        """Opens the database reader object.
-
-        Args:
-          filename (str): filename of the database.
-
-        Returns:
-          bool: True if successful.
-
-        Raises:
-          RuntimeError: if the version or string format of the database
-              is not supported.
-        """
-        if not self._database_file.Open(filename, read_only=True):
-            return False
-
-        version = self.GetMetadataAttribute("version")
-        if not version or version != "20150315":
-            raise RuntimeError(f"Unsupported version: {version:s}")
-
-        string_format = self.GetMetadataAttribute("string_format")
-        if not string_format:
-            string_format = "wrc"
-
-        if string_format not in ("pep3101", "wrc"):
-            raise RuntimeError(f"Unsupported string format: {string_format:s}")
-
-        self._string_format = string_format
-        return True
 
 
 class WinevtResourcesEventLogProvider(containers_interface.AttributeContainer):
@@ -608,15 +283,18 @@ class WinevtResourcesAttributeContainerStore(
         super().__init__()
         self.string_format = string_format
 
-        self._containers_manager.RegisterAttributeContainers(
-            [
-                WinevtResourcesEventLogProvider,
-                WinevtResourcesMessageFile,
-                WinevtResourcesMessageString,
-                WinevtResourcesMessageStringMapping,
-                WinevtResourcesMessageTable,
-            ]
-        )
+        try:
+            self._containers_manager.RegisterAttributeContainers(
+                [
+                    WinevtResourcesEventLogProvider,
+                    WinevtResourcesMessageFile,
+                    WinevtResourcesMessageString,
+                    WinevtResourcesMessageStringMapping,
+                    WinevtResourcesMessageTable,
+                ]
+            )
+        except KeyError:
+            pass
 
     def _ReadAndCheckStorageMetadata(self, check_readable_only=False):
         """Reads storage metadata and checks that the values are valid.
@@ -677,7 +355,7 @@ class WinevtResourcesHelper:
         self._language_tag = language_tag.lower()
         self._lcid = lcid or self.DEFAULT_LCID
         self._message_string_cache = collections.OrderedDict()
-        self._resouce_file_helper = resource_files.WindowsResourceFileHelper
+        self._resource_file_helper = resource_files.WindowsResourceFileHelper
         self._storage_reader = None
         self._windows_eventlog_message_files = None
         self._windows_eventlog_providers = None
@@ -770,7 +448,6 @@ class WinevtResourcesHelper:
             path, filename = path_helper.PathHelper.GetWindowsSystemPath(
                 windows_path, self._environment_variables
             )
-
             lookup_path = "\\".join([path, filename]).lower()
             message_file_identifier = self._windows_eventlog_message_files.get(
                 lookup_path, None
@@ -846,19 +523,24 @@ class WinevtResourcesHelper:
         """
         message_strings = []
 
-        # TODO: add message_file_identifiers to filter_expression
-        filter_expression = (
-            f"language_identifier == {self._lcid:d} and "
-            f"message_identifier == {message_identifier:d}"
-        )
-
-        for message_string in storage_reader.GetAttributeContainers(
-            "windows_eventlog_message_string", filter_expression=filter_expression
-        ):
-            identifier = message_string.GetMessageFileIdentifier()
-            identifier = identifier.CopyToString()
-            if identifier in message_file_identifiers:
-                message_strings.append(message_string)
+        for message_file_identifier in message_file_identifiers:
+            filter_expression = (
+                f"_message_file_identifier == '{message_file_identifier:s}' and "
+                f"language_identifier == {self._lcid:d}"
+            )
+            for message_table in storage_reader.GetAttributeContainers(
+                "windows_eventlog_message_table", filter_expression=filter_expression
+            ):
+                message_table_identifier = message_table.GetIdentifier()
+                filter_expression = (
+                    f"_message_table_identifier == '{message_table_identifier:s}' and "
+                    f"message_identifier == {message_identifier:d}"
+                )
+                for message_string in storage_reader.GetAttributeContainers(
+                    "windows_eventlog_message_string",
+                    filter_expression=filter_expression,
+                ):
+                    message_strings.append(message_string)
 
         return message_strings
 
@@ -933,8 +615,8 @@ class WinevtResourcesHelper:
         """Opens the Windows EventLog resource database reader.
 
         Returns:
-          WinevtResourcesSqlite3DatabaseReader: Windows EventLog resource
-              database reader or None.
+          WinevtResourcesAttributeContainerStore: Windows EventLog resource database
+              reader or None.
         """
         if not self._winevt_database_reader and self._data_location:
             logger.warning(
@@ -947,25 +629,10 @@ class WinevtResourcesHelper:
                 return None
 
             try:
-                self._winevt_database_reader = WinevtResourcesSqlite3DatabaseReader()
-                result = self._winevt_database_reader.Open(database_path)
-            except sqlite3.OperationalError:
-                result = False
-
-            if not result:
-                try:
-                    self._winevt_database_reader = (
-                        WinevtResourcesAttributeContainerStore()
-                    )
-                    # pylint: disable=no-value-for-parameter,unexpected-keyword-arg
-                    self._winevt_database_reader.Open(
-                        path=database_path, read_only=True
-                    )
-                    result = True
-                except OSError:
-                    result = False
-
-            if not result:
+                self._winevt_database_reader = WinevtResourcesAttributeContainerStore()
+                # pylint: disable=no-value-for-parameter,unexpected-keyword-arg
+                self._winevt_database_reader.Open(path=database_path, read_only=True)
+            except OSError:
                 self._winevt_database_reader = None
 
         return self._winevt_database_reader
@@ -987,11 +654,6 @@ class WinevtResourcesHelper:
         database_reader = self._GetWinevtRcDatabaseReader()
         if not database_reader:
             return None
-
-        if isinstance(database_reader, WinevtResourcesSqlite3DatabaseReader):
-            return database_reader.GetMessage(
-                log_source, self._lcid, message_identifier
-            )
 
         if self._windows_eventlog_providers is None:
             self._ReadWindowsEventLogProviders(
@@ -1017,7 +679,6 @@ class WinevtResourcesHelper:
         message_identifier = self._GetMappedMessageIdentifier(
             database_reader, provider_identifier, message_identifier, event_version
         )
-
         message_file_identifiers = self._GetEventMessageFileIdentifiers(
             provider.event_message_files
         )
@@ -1042,7 +703,78 @@ class WinevtResourcesHelper:
 
         message_string = message_strings[0].text
         if database_reader.string_format == "wrc":
-            message_string = self._resouce_file_helper.FormatMessageStringInPEP3101(
+            message_string = self._resource_file_helper.FormatMessageStringInPEP3101(
+                message_string
+            )
+
+        return message_string
+
+    def _GetWinevtRcDatabaseParameterMessageString(
+        self,
+        provider_identifier,
+        log_source,
+        message_identifier,
+    ):
+        """Retrieves a specific Windows EventLog resource database parameter string.
+
+        Args:
+          provider_identifier (str): EventLog provider identifier.
+          log_source (str): EventLog source, such as "Application Error".
+          message_identifier (int): message identifier.
+
+        Returns:
+          str: parameter message string or None if not available.
+        """
+        database_reader = self._GetWinevtRcDatabaseReader()
+        if not database_reader:
+            return None
+
+        if self._windows_eventlog_providers is None:
+            self._ReadWindowsEventLogProviders(
+                database_reader, container_type="winevtrc_eventlog_provider"
+            )
+
+        if self._windows_eventlog_message_files is None:
+            self._ReadWindowsEventLogMessageFiles(
+                database_reader,
+                container_type="winevtrc_message_file",
+                path_attribute="windows_path",
+            )
+
+        provider, provider_lookup_key = self._GetWindowsEventLogProvider(
+            provider_identifier, log_source
+        )
+        if not provider:
+            return None
+
+        message_files = provider.parameter_message_files
+        if not message_files:
+            # If no parameter message files are defined fallback to the event message
+            # files and default parameter message files.
+            message_files = list(provider.event_message_files)
+            message_files.extend(self._DEFAULT_PARAMETER_MESSAGE_FILES)
+
+        message_file_identifiers = self._GetEventMessageFileIdentifiers(message_files)
+        if not message_file_identifiers:
+            logger.warning(
+                f"No parameter message file for identifier: "
+                f"0x{message_identifier:08x} of provider: {provider_lookup_key:s}"
+            )
+            return None
+
+        message_strings = self._GetMessageStringsWithMessageTable(
+            database_reader, message_file_identifiers, message_identifier
+        )
+        if not message_strings:
+            logger.warning(
+                f"No parameter string for identifier: 0x{message_identifier:08x} "
+                f"of provider: {provider_lookup_key:s}"
+            )
+            return None
+
+        message_string = message_strings[0].text
+        if database_reader.string_format == "wrc":
+            message_string = self._resource_file_helper.FormatMessageStringInPEP3101(
                 message_string
             )
 
@@ -1103,7 +835,6 @@ class WinevtResourcesHelper:
         message_identifier = self._GetMappedMessageIdentifier(
             storage_reader, provider_identifier, message_identifier, event_version
         )
-
         message_file_identifiers = self._GetEventMessageFileIdentifiers(
             provider.event_message_files
         )
@@ -1162,8 +893,8 @@ class WinevtResourcesHelper:
 
         message_files = provider.parameter_message_files
         if not message_files:
-            # If no parameter message files are defined fallback to the event
-            # message files and default parameter message files.
+            # If no parameter message files are defined fallback to the event message
+            # files and default parameter message files.
             message_files = list(provider.event_message_files)
             message_files.extend(self._DEFAULT_PARAMETER_MESSAGE_FILES)
 
@@ -1293,6 +1024,12 @@ class WinevtResourcesHelper:
             if self._storage_reader:
                 message_string = self._ReadParameterMessageString(
                     self._storage_reader,
+                    provider_identifier,
+                    log_source,
+                    message_identifier,
+                )
+            else:
+                message_string = self._GetWinevtRcDatabaseParameterMessageString(
                     provider_identifier,
                     log_source,
                     message_identifier,

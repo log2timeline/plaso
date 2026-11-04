@@ -6,9 +6,12 @@ import os
 import sys
 import unittest
 
+from xml.etree import ElementTree
+
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
+from plaso.containers import events
 from plaso.lib import definitions
 from plaso.output import kml
 
@@ -68,6 +71,9 @@ class KMLOutputTest(test_lib.OutputModuleTestCase):
 
     def testWriteFieldValues(self):
         """Tests the WriteFieldValues function."""
+        event_tag = events.EventTag()
+        event_tag.AddLabels(["Malware", "Printed"])
+
         # Test event without geo-location.
         test_file_object = io.StringIO()
 
@@ -78,12 +84,9 @@ class KMLOutputTest(test_lib.OutputModuleTestCase):
         event, event_data, event_data_stream = (
             containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0])
         )
-
-        # TODO: add test for event_tag.
         field_values = output_module.GetFieldValues(
-            output_mediator, event, event_data, event_data_stream, None
+            output_mediator, event, event_data, event_data_stream, event_tag
         )
-
         output_module.WriteFieldValues(output_mediator, field_values)
 
         event_body = test_file_object.getvalue()
@@ -99,12 +102,9 @@ class KMLOutputTest(test_lib.OutputModuleTestCase):
         event, event_data, event_data_stream = (
             containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[1])
         )
-
-        # TODO: add test for event_tag.
         field_values = output_module.GetFieldValues(
-            output_mediator, event, event_data, event_data_stream, None
+            output_mediator, event, event_data, event_data_stream, event_tag
         )
-
         output_module.WriteFieldValues(output_mediator, field_values)
 
         event_body = test_file_object.getvalue()
@@ -134,9 +134,7 @@ class KMLOutputTest(test_lib.OutputModuleTestCase):
             "[Reserved attributes]:",
             "  {data_type} test:output",
             "  {display_name} TSK:/var/log/syslog.1",
-            "  {filename} /var/log/syslog.1",
             "  {hostname} ubuntu",
-            "  {inode} 15",
             "  {username} root",
             "",
             "[Additional attributes]:",
@@ -148,16 +146,51 @@ class KMLOutputTest(test_lib.OutputModuleTestCase):
             ),
             " closed for user root)",
             "",
+            "[Tag]:",
+            "  {labels} ['Malware', 'Printed']",
+            "",
             (
                 "</description>"
                 "<Point><coordinates>-122.082203543,37.4222899014</coordinates>"
                 "</Point></Placemark>"
             ),
         ]
-
-        # Compare the output as list of lines which makes it easier to spot
-        # differences.
+        # Compare the output as list of lines which makes it easier to spot differences.
         self.assertEqual(event_body.split("\n"), expected_event_body_lines)
+
+    def testWriteFieldValuesWithControlCharacters(self):
+        """Tests the WriteFieldValues function with control characters."""
+        test_file_object = io.StringIO()
+
+        output_mediator = self._CreateOutputMediator()
+        output_module = kml.KMLOutputModule()
+        output_module._file_object = test_file_object
+
+        test_event_values = dict(self._TEST_EVENTS[1])
+        test_event_values["text"] = "Reporter <CRON>\x01 PID: |8442|\x1f"
+
+        event, event_data, event_data_stream = (
+            containers_test_lib.CreateEventFromValues(test_event_values)
+        )
+        field_values = output_module.GetFieldValues(
+            output_mediator, event, event_data, event_data_stream, None
+        )
+        output_module.WriteHeader(output_mediator)
+        output_module.WriteFieldValues(output_mediator, field_values)
+        output_module.WriteFooter()
+
+        kml_root_element = ElementTree.fromstring(test_file_object.getvalue())
+
+        description_xml_element = kml_root_element.find(
+            "{http://www.opengis.net/kml/2.2}Document/"
+            "{http://www.opengis.net/kml/2.2}Placemark/"
+            "{http://www.opengis.net/kml/2.2}description"
+        )
+        self.assertIsNotNone(description_xml_element)
+        self.assertIn(
+            "  {text} Reporter <CRON>\ufffd PID: |8442|\ufffd\n",
+            description_xml_element.text,
+        )
 
     def testWriteFooter(self):
         """Tests the WriteFooter function."""
@@ -185,7 +218,6 @@ class KMLOutputTest(test_lib.OutputModuleTestCase):
             '<?xml version="1.0" encoding="utf-8"?>'
             '<kml xmlns="http://www.opengis.net/kml/2.2"><Document>'
         )
-
         header = test_file_object.getvalue()
         self.assertEqual(header, expected_header)
 

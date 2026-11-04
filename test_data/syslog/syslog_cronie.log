@@ -1,0 +1,33 @@
+Oct 10 06:44:29 localhost crontab[1578]: (root) REPLACE (root)
+Oct 10 06:44:39 localhost anacron[1588]: Anacron started on 2026-10-10
+Oct 10 06:44:39 localhost anacron[1588]: Will run job `plaso-fail'
+Oct 10 06:44:39 localhost anacron[1588]: Jobs will be executed sequentially
+Oct 10 06:44:39 localhost anacron[1588]: Job `plaso-fail' started
+Oct 10 06:44:39 localhost anacron[1588]: Job `plaso-fail' terminated (exit status: 3) (produced output)
+Oct 10 06:44:39 localhost anacron[1588]: Can't find sendmail at /usr/sbin/sendmail, not mailing output
+Oct 10 06:44:39 localhost anacron[1588]: Normal exit (1 job run)
+Oct 10 06:44:42 localhost anacron[1595]: Anacron started on 2026-10-10
+Oct 10 06:44:42 localhost anacron[1595]: Will run job `cron.daily'
+Oct 10 06:44:42 localhost anacron[1595]: Jobs will be executed sequentially
+Oct 10 06:44:42 localhost anacron[1595]: Job `cron.daily' started
+Oct 10 06:44:42 localhost run-parts[1601]: (/etc/cron.daily) starting zz-plaso-fail
+Oct 10 06:44:42 localhost run-parts[1605]: (/etc/cron.daily) finished zz-plaso-fail
+Oct 10 06:44:42 localhost anacron[1595]: Job `cron.daily' terminated (produced output)
+Oct 10 06:44:42 localhost anacron[1595]: Can't find sendmail at /usr/sbin/sendmail, not mailing output
+Oct 10 06:44:42 localhost anacron[1595]: Normal exit (1 job run)
+Oct 10 06:44:45 localhost crond[1317]: (CRON) INFO (Shutting down)
+Oct 10 06:44:45 localhost crond[1608]: (CRON) STARTUP (1.7.2)
+Oct 10 06:44:45 localhost crond[1608]: (CRON) INFO (Syslog will be used instead of sendmail.)
+Oct 10 06:44:45 localhost crond[1608]: (CRON) INFO (RANDOM_DELAY will be scaled with factor 96% if used.)
+Oct 10 06:44:45 localhost crond[1608]: (CRON) INFO (running with inotify support)
+Oct 10 06:44:45 localhost crond[1608]: (CRON) INFO (@reboot jobs will be run at computer's startup.)
+Oct 10 06:44:48 localhost crontab[1611]: (root) DELETE (root)
+Oct 10 06:44:51 localhost crontab[1618]: (root) LIST (root)
+Oct 10 06:45:00 localhost crond[1608]: (*system*) RELOAD (/etc/cron.d/0hourly)
+Oct 10 06:46:17 localhost crontab[1771]: (root) REPLACE (root)
+Oct 10 06:47:05 localhost crontab[1779]: (root) REPLACE (root)
+Oct 10 06:47:05 localhost crontab[1781]: (root) BEGIN EDIT (root)
+Oct 10 06:47:05 localhost crontab[1781]: (root) END EDIT (root)
+Oct 10 06:48:00 localhost crond[1608]: (root) RELOAD (/var/spool/cron/root)
+Oct 10 06:48:05 localhost crontab[1786]: (root) DELETE (root)
+Oct 10 06:48:07 localhost crontab[1790]: (root) LIST (root)

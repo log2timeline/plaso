@@ -13,7 +13,7 @@ class PlistTests(shared_test_lib.BaseTestCase):
 
     def testGetValueByPath(self):
         """Tests the GetValueByPath function."""
-        test_file_path = self._GetTestFilePath(["com.apple.HIToolbox.plist"])
+        test_file_path = self._GetTestFilePath(["plist", "com.apple.HIToolbox.plist"])
         self._SkipIfPathNotExists(test_file_path)
 
         with open(test_file_path, "rb") as file_object:
@@ -27,7 +27,7 @@ class PlistTests(shared_test_lib.BaseTestCase):
 
     def testReadBinary(self):
         """Tests the Read function on a binary plist file."""
-        test_file_path = self._GetTestFilePath(["com.apple.HIToolbox.plist"])
+        test_file_path = self._GetTestFilePath(["plist", "com.apple.HIToolbox.plist"])
         self._SkipIfPathNotExists(test_file_path)
 
         with open(test_file_path, "rb") as file_object:
@@ -38,7 +38,7 @@ class PlistTests(shared_test_lib.BaseTestCase):
 
     def testReadXML(self):
         """Tests the Read function on a XML plist file."""
-        test_file_path = self._GetTestFilePath(["com.apple.iPod.plist"])
+        test_file_path = self._GetTestFilePath(["plist", "com.apple.iPod.plist"])
         self._SkipIfPathNotExists(test_file_path)
 
         with open(test_file_path, "rb") as file_object:

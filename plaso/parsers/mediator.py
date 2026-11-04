@@ -1,6 +1,5 @@
 """The parser mediator."""
 
-import collections
 import datetime
 import time
 
@@ -24,8 +23,6 @@ class ParserMediator:
           to indicate the last time the worker was known to be active. This
           information is then used by the foreman to detect workers that are
           not responding (stalled).
-      parsers_counter (collections.Counter): number of events per parser or
-          parser plugin.
       registry_find_specs (list[dfwinreg.FindSpec]): Windows Registry find
           specifications.
     """
@@ -57,6 +54,7 @@ class ParserMediator:
         self._cached_parser_chain = None
         self._environment_variables_per_path_spec = None
         self._event_data_stream = None
+        self._event_data_stream_hash_attributes = None
         self._event_data_stream_identifier = None
         self._extract_winevt_resources = True
         self._extract_winreg_binary_values = False
@@ -84,7 +82,6 @@ class ParserMediator:
 
         self.registry_find_specs = registry_find_specs
         self.last_activity_timestamp = 0.0
-        self.parsers_counter = collections.Counter()
 
         self._CreateEnvironmentVariablesPerPathSpec(system_configurations)
 
@@ -158,7 +155,6 @@ class ParserMediator:
             self._FillEventLogMessageFileLookupTablesWithMessageFiles(
                 environment_variables, provider, provider.event_message_files
             )
-
             self._FillEventLogMessageFileLookupTablesWithMessageFiles(
                 environment_variables, provider, provider.parameter_message_files
             )
@@ -239,6 +235,15 @@ class ParserMediator:
               message string.
         """
         self._storage_writer.AddAttributeContainer(message_string)
+
+    def AddWindowsEventLogMessageTable(self, message_table):
+        """Adds a Windows EventLog message table.
+
+        Args:
+          message_table (WindowsEventLogMessageTableArtifact): Windows EventLog
+              message table.
+        """
+        self._storage_writer.AddAttributeContainer(message_table)
 
     def AddWindowsWevtTemplateEvent(self, event_definition):
         """Adds a Windows WEVT_TEMPLATE event definition.
@@ -467,7 +472,6 @@ class ParserMediator:
             providers_per_filename = self._windows_event_log_providers_per_path.get(
                 lookup_path, {}
             )
-
             for filename, provider in providers_per_filename.items():
                 if lookup_filename in (filename, f"{filename:s}.mui"):
                     windows_path = "\\".join([lookup_path, filename])
@@ -483,11 +487,13 @@ class ParserMediator:
         self._cached_parser_chain = None
         self._parser_chain_components.pop()
 
-    def ProduceEventData(self, event_data):
+    def ProduceEventData(self, event_data, corrupted=False, recovered=False):
         """Produces event data.
 
         Args:
           event_data (EventData): event data.
+          corrupted (Optional[bool]): True if the item was corrupted.
+          recovered (Optional[bool]): True if the item was recovered.
 
         Raises:
           RuntimeError: when storage writer is not set.
@@ -495,18 +501,34 @@ class ParserMediator:
         if not self._storage_writer:
             raise RuntimeError("Storage writer not set.")
 
-        parser_chain = getattr(event_data, "_parser_chain", None)
-        if not parser_chain:
+        if not getattr(event_data, "_parser_chain"):
             parser_chain = self.GetParserChain()
             setattr(event_data, "_parser_chain", parser_chain)
 
         if self._event_data_stream_identifier:
             event_data.SetEventDataStreamIdentifier(self._event_data_stream_identifier)
 
+        # The event data stream portion of the hash is byte-identical for every
+        # event data that shares the same event data stream, so it is calculated
+        # once (on the first produced event data) and reused. The stream
+        # attributes are frozen before any event data is produced (the worker
+        # analyzes the data stream before calling ProduceEventDataStream).
+        if (
+            self._event_data_stream is not None
+            and self._event_data_stream_hash_attributes is None
+        ):
+            self._event_data_stream_hash_attributes = (
+                events.CalculateEventDataStreamHashAttributes(self._event_data_stream)
+            )
+
         event_values_hash = events.CalculateEventValuesHash(
-            event_data, self._event_data_stream
+            event_data,
+            self._event_data_stream,
+            event_data_stream_attributes=self._event_data_stream_hash_attributes,
         )
+        setattr(event_data, "_corrupted", corrupted)
         setattr(event_data, "_event_values_hash", event_values_hash)
+        setattr(event_data, "_recovered", recovered)
 
         self._storage_writer.AddAttributeContainer(event_data)
         self._number_of_event_data += 1
@@ -525,6 +547,8 @@ class ParserMediator:
         """
         if not self._storage_writer:
             raise RuntimeError("Storage writer not set.")
+
+        self._event_data_stream_hash_attributes = None
 
         if not event_data_stream:
             self._event_data_stream = None
@@ -559,14 +583,15 @@ class ParserMediator:
 
         self.last_activity_timestamp = time.time()
 
-    def ProduceExtractionWarning(self, message, path_spec=None):
-        """Produces an extraction warning.
+    def ProduceWarning(self, message, path_spec=None, recovered=False):
+        """Produces an extraction or recovery warning.
 
         Args:
           message (str): message of the warning.
           path_spec (Optional[dfvfs.PathSpec]): path specification, where None
               will use the path specification of current file entry set in
               the mediator.
+          recovered (Optional[bool]): True if the item was recovered.
 
         Raises:
           RuntimeError: when storage writer is not set.
@@ -578,38 +603,22 @@ class ParserMediator:
             path_spec = self._file_entry.path_spec
 
         parser_chain = self.GetParserChain()
-        warning = warnings.ExtractionWarning(
-            message=message, parser_chain=parser_chain, path_spec=path_spec
-        )
+
+        if recovered:
+            warning = warnings.RecoveryWarning(
+                message=message, parser_chain=parser_chain, path_spec=path_spec
+            )
+        else:
+            warning = warnings.ExtractionWarning(
+                message=message, parser_chain=parser_chain, path_spec=path_spec
+            )
+
         self._storage_writer.AddAttributeContainer(warning)
-        self._number_of_extraction_warnings += 1
 
-        self.last_activity_timestamp = time.time()
-
-    def ProduceRecoveryWarning(self, message, path_spec=None):
-        """Produces a recovery warning.
-
-        Args:
-          message (str): message of the warning.
-          path_spec (Optional[dfvfs.PathSpec]): path specification, where None
-              will use the path specification of current file entry set in
-              the mediator.
-
-        Raises:
-          RuntimeError: when storage writer is not set.
-        """
-        if not self._storage_writer:
-            raise RuntimeError("Storage writer not set.")
-
-        if not path_spec and self._file_entry:
-            path_spec = self._file_entry.path_spec
-
-        parser_chain = self.GetParserChain()
-        warning = warnings.RecoveryWarning(
-            message=message, parser_chain=parser_chain, path_spec=path_spec
-        )
-        self._storage_writer.AddAttributeContainer(warning)
-        self._number_of_recovery_warnings += 1
+        if recovered:
+            self._number_of_recovery_warnings += 1
+        else:
+            self._number_of_extraction_warnings += 1
 
         self.last_activity_timestamp = time.time()
 
@@ -697,6 +706,7 @@ class ParserMediator:
           file_entry (dfvfs.FileEntry): file entry.
         """
         self._event_data_stream = None
+        self._event_data_stream_hash_attributes = None
         self._event_data_stream_identifier = None
         self._file_entry = file_entry
 

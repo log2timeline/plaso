@@ -378,6 +378,8 @@ for all IE cache files that are 43 bytes in size. If we wanted to gather some
 context surrounding these events we can supply the ``--slicer`` flag, for
 example:
 
+<!-- typos:disable -->
+
 ```bash
 $ psort.py --slicer -q timeline.plaso "cached_file_size is 43"
 datetime,timestamp_desc,source,source_long,message,parser,display_name,tag,store_number,store_index
@@ -390,6 +392,8 @@ datetime,timestamp_desc,source,source_long,message,parser,display_name,tag,store
 2001-02-26T05:16:09+00:00,Content Modification Time,WEBHIST,MSIE Cache File URL record,Location: http://www.2600.org/images/725274831586.gif Number of hits: 1 Cached file: PN0J7OQM\725274831586[1].gif Cached file size: 1568 HTTP headers: HTTP/1.1 200 OK - ETag: "565068-620-3a99e699" - Content-Length: 1568 - Content-Type: image/gif -  - ~U:mr. evil - ,msiecf,TSK:/Documents and Settings/Mr. Evil/Local Settings/Temporary Internet Files/Content.IE5/index.dat,-,1,1418
 ...
 ```
+
+<!-- typos:enable -->
 
 By default the tool will include five events before and after each filter match.
 This can be controlled using the ``--slice_size``.

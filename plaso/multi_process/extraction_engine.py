@@ -12,7 +12,6 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import context
 from dfvfs.resolver import resolver as path_spec_resolver
 
-from plaso.containers import counts
 from plaso.containers import event_sources
 from plaso.containers import events
 from plaso.containers import warnings
@@ -38,8 +37,7 @@ class _EventSourceHeap:
         """Initializes an event source heap.
 
         Args:
-          maximum_number_of_items (Optional[int]): maximum number of items
-              in the heap.
+          maximum_number_of_items (Optional[int]): maximum number of items in the heap.
         """
         super().__init__()
         self._heap = []
@@ -155,10 +153,8 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
             except NotImplementedError:
                 logger.error(
-                    (
-                        f"Unable to determine number of CPUs defaulting to "
-                        f"{self._WORKER_PROCESSES_MINIMUM:d} worker processes."
-                    )
+                    f"Unable to determine number of CPUs defaulting to "
+                    f"{self._WORKER_PROCESSES_MINIMUM:d} worker processes."
                 )
                 cpu_count = self._WORKER_PROCESSES_MINIMUM
 
@@ -167,7 +163,10 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         if worker_memory_limit is None:
             worker_memory_limit = definitions.DEFAULT_WORKER_MEMORY_LIMIT
 
-        if not worker_timeout:
+        if worker_timeout:
+            # The worker timeout is specified in minutes.
+            worker_timeout *= 60.0
+        else:
             worker_timeout = definitions.DEFAULT_WORKER_TIMEOUT
 
         super().__init__()
@@ -259,7 +258,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
                 file_system = path_spec_resolver.Resolver.OpenFileSystem(
                     file_system_path_spec, resolver_context=self._resolver_context
                 )
-
                 path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
                     file_system_path_spec,
                     find_specs=included_find_specs,
@@ -277,11 +275,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
                         logger.debug(f"Excluded from extraction: {display_name:s}.")
                         continue
 
-                    # TODO: determine if event sources should be DataStream or FileEntry
-                    # or both.
-                    event_source = event_sources.FileEntryEventSource(
-                        path_spec=path_spec
-                    )
+                    event_source = event_sources.EventSource(path_spec=path_spec)
                     storage_writer.AddAttributeContainer(event_source)
 
                     self._number_of_produced_sources += 1
@@ -303,12 +297,12 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
             # All exceptions need to be caught here to prevent the foreman
             # from being killed by an uncaught exception.
             except Exception as exception:  # pylint: disable=broad-except
+                warning_message = (
+                    f"unable to process path specification with error: {exception!s}"
+                )
                 self._ProduceExtractionWarning(
                     storage_writer,
-                    (
-                        f"unable to process path specification with error: "
-                        f"{exception!s}"
-                    ),
+                    warning_message,
                     file_system_path_spec,
                 )
 
@@ -432,7 +426,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
                 event_data_stream_lookup_key = (
                     event_data_stream_identifier.CopyToString()
                 )
-
                 event_data_stream_identifier = (
                     merge_helper.GetAttributeContainerIdentifier(
                         event_data_stream_lookup_key
@@ -445,15 +438,12 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
                 identifier = container.GetIdentifier()
                 identifier_string = identifier.CopyToString()
 
-                # TODO: store this as a merge warning so this is preserved
-                # in the storage file.
+                # TODO: store this as a merge warning so this is preserved in the
+                # storage file.
                 logger.error(
-                    (
-                        f"Unable to merge {container.CONTAINER_TYPE:s} attribute "
-                        f"container: {identifier_string:s} since corresponding event "
-                        f"data stream: {event_data_stream_lookup_key:s} could not be "
-                        f"found."
-                    )
+                    f"Unable to merge {container.CONTAINER_TYPE:s} attribute "
+                    f"container: {identifier_string:s} since corresponding event data "
+                    f"stream: {event_data_stream_lookup_key:s} could not be found."
                 )
                 return
 
@@ -467,7 +457,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
             message_file_identifier = merge_helper.GetAttributeContainerIdentifier(
                 message_file_lookup_key
             )
-
             if message_file_identifier:
                 container.SetMessageFileIdentifier(message_file_identifier)
             else:
@@ -482,11 +471,9 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
                     description = "WEVT_TEMPLATE event definition"
 
                 logger.error(
-                    (
-                        f"Unable to merge {description:s} attribute container: "
-                        f"{identifier_string:s} since corresponding Windows EventLog "
-                        f"message file: {message_file_lookup_key:s} could not be found."
-                    )
+                    f"Unable to merge {description:s} attribute container: "
+                    f"{identifier_string:s} since corresponding Windows EventLog "
+                    f"message file: {message_file_lookup_key:s} could not be found."
                 )
                 return
 
@@ -527,7 +514,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
             self._event_data_timeliner.ProcessEventData(
                 storage_writer, container, event_data_stream
             )
-
             self._number_of_consumed_event_data += 1
             self._number_of_produced_events += (
                 self._event_data_timeliner.number_of_produced_events
@@ -588,7 +574,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         task_identifiers = self._GetProcessedTaskIdentifiers(
             self._task_storage_format, session_identifier
         )
-
         for task_identifier in task_identifiers:
             try:
                 task = self._task_manager.GetProcessedTaskByIdentifier(task_identifier)
@@ -755,7 +740,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         self._FillEventSourceHeap(
             storage_writer, event_source_heap, start_with_first=True
         )
-
         event_source = event_source_heap.PopEventSource()
 
         task = None
@@ -818,13 +802,12 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
             # from being killed by an uncaught exception.
             except Exception as exception:  # pylint: disable=broad-except
                 path_spec = getattr(event_source, "path_spec", None) or "N/A"
-                message = (
-                    f"unable to process path specification with error: "
-                    f"{exception!s}"
+                warning_message = (
+                    f"unable to process path specification with error: {exception!s}"
                 )
                 self._ProduceExtractionWarning(
                     storage_writer,
-                    message,
+                    warning_message,
                     path_spec,
                 )
                 event_source = None
@@ -864,22 +847,9 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         self._number_of_produced_events = 0
         self._number_of_produced_sources = 0
 
-        stored_data_types_counter = collections.Counter(
-            {
-                data_type_count.name: data_type_count
-                for data_type_count in storage_writer.GetAttributeContainers(
-                    "data_type_count"
-                )
-            }
-        )
-        stored_parsers_counter = collections.Counter(
-            {
-                parser_count.name: parser_count
-                for parser_count in storage_writer.GetAttributeContainers(
-                    "parser_count"
-                )
-            }
-        )
+        stored_data_types_counter = storage_writer.GetDataTypesCounter()
+        stored_parsers_counter = storage_writer.GetParsersCounter()
+        stored_event_labels_counter = storage_writer.GetEventLabelsCounter()
 
         self._CollectInitialEventSources(storage_writer, file_system_path_specs)
 
@@ -891,29 +861,19 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         else:
             self._status = definitions.STATUS_INDICATOR_COMPLETED
 
-        for key, value in self._event_data_timeliner.data_types_counter.items():
-            data_type_count = stored_data_types_counter.get(key, None)
-            if data_type_count:
-                data_type_count.number_of_events += value
-                storage_writer.UpdateAttributeContainer(data_type_count)
-            else:
-                data_type_count = counts.DataTypeCount(name=key, number_of_events=value)
-                storage_writer.AddAttributeContainer(data_type_count)
-
-        for key, value in self._event_data_timeliner.parsers_counter.items():
-            parser_count = stored_parsers_counter.get(key)
-            if parser_count:
-                parser_count.number_of_events += value
-                storage_writer.UpdateAttributeContainer(parser_count)
-            else:
-                parser_count = counts.ParserCount(name=key, number_of_events=value)
-                storage_writer.AddAttributeContainer(parser_count)
-
+        storage_writer.UpdateDataTypesCounter(
+            stored_data_types_counter, self._event_data_timeliner.data_types_counter
+        )
+        storage_writer.UpdateParsersCounter(
+            stored_parsers_counter, self._event_data_timeliner.parsers_counter
+        )
+        storage_writer.UpdateEventLabelsCounter(
+            stored_event_labels_counter, self._event_data_timeliner.event_labels_counter
+        )
         if self._processing_profiler:
             self._processing_profiler.StopTiming("process_source")
 
-        # Update the foreman process and task status in case we are using
-        # a filter file.
+        # Update the foreman process and task status in case we are using a filter file.
         self._UpdateForemanProcessStatus()
 
         tasks_status = self._task_manager.GetStatusInformation()
@@ -969,7 +929,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
             port=self._task_queue_port,
             timeout_seconds=self._TASK_QUEUE_TIMEOUT_SECONDS,
         )
-
         process = extraction_process.ExtractionWorkerProcess(
             task_queue,
             self._processing_configuration,
@@ -979,11 +938,12 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
             enable_sigsegv_handler=self._enable_sigsegv_handler,
             name=process_name,
         )
-
         # Remove all possible log handlers to prevent a child process from logging
         # to the main process log file and garbling the log. The log handlers are
-        # recreated after the worker process has been started.
-        for handler in logging.root.handlers:
+        # recreated after the worker process has been started. list() makes a
+        # shallow copy of the list of handlers, otherwise removing a handler while
+        # iterating skips the next one.
+        for handler in list(logging.root.handlers):
             logging.root.removeHandler(handler)
             handler.close()
 
@@ -995,7 +955,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
             mode="a",
             quiet_mode=self._quiet_mode,
         )
-
         try:
             self._StartMonitoringProcess(process)
 
@@ -1247,7 +1206,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
             preferred_year=processing_configuration.preferred_year,
             system_configurations=system_configurations,
         )
-
         try:
             self._event_data_timeliner.SetPreferredTimeZone(
                 processing_configuration.preferred_time_zone
@@ -1266,7 +1224,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         self._windows_event_log_providers = list(
             storage_writer.GetAttributeContainers("windows_eventlog_provider")
         )
-
         # Set up the task queue.
         task_outbound_queue = zeromq_queue.ZeroMQBufferedReplyBindQueue(
             delay_open=True,
@@ -1296,7 +1253,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         self._task_manager.StartProfiling(
             self._processing_configuration.profiling, self._name
         )
-
         if self._serializers_profiler:
             storage_writer.SetSerializersProfiler(self._serializers_profiler)
 
@@ -1309,7 +1265,6 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
             self._ProcessSource(
                 storage_writer, session_identifier, file_system_path_specs
             )
-
         finally:
             # Stop the status update thread after close of the storage writer
             # so we include the storage sync to disk in the status updates.
@@ -1330,12 +1285,12 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         except KeyboardInterrupt:
             self._AbortKill()
 
-            # The abort can leave the main process unresponsive
-            # due to incorrectly finalized IPC.
+            # The abort can leave the main process unresponsive due to incorrectly
+            # finalized IPC.
             self._KillProcess(os.getpid())
 
-        # The task queue should be closed by _StopExtractionProcesses, this
-        # close is a failsafe.
+        # The task queue should be closed by _StopExtractionProcesses, this close is a
+        # failsafe.
         self._task_queue.Close(abort=True)
 
         if self._processing_status.error_path_specs:

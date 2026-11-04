@@ -3,7 +3,7 @@
 This file contains an implementation of a queue used by plaso for queue management.
 
 The queue has been abstracted in order to provide support for different implementations
-of the queueing mechanism, to support multi processing and scalability.
+of the queuing mechanism, to support multi processing and scalability.
 """
 
 import abc

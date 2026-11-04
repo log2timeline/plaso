@@ -1,0 +1,57 @@
+[files]
+extend-exclude = [
+    "test_data/"
+]
+
+[default]
+binary = false
+check-filename = true
+check-file = true
+unicode = true
+locale = "en-us"
+extend-ignore-re = [
+    # Ignore a line that is preceded with `# typos:ignore`
+    "(#|//)\\s*typos:ignore\\n.*",
+
+    # Ignore code blocks between `# typos:disable` and `# typos:enable`
+    "(?s)(#|//)\\s*typos:disable.*?\\n\\s*(#|//)\\s*typos:enable",
+
+    # Ignore text between <!-- typos:disable --> and <!-- typos:enable -->
+    "(?s)<!--\\s*typos:disable\\s*-->.*?<!--\\s*typos:enable\\s*-->",
+
+    # Ignore "amcache.hve" (case-insensitive).
+    "(?i)amcache\\.hve",
+
+    # Ignore "AMcache[.]hve"
+    "AMcache\\[\\.\\]hve",
+
+    # Ignore "sav.txt" (case-insensitive).
+    "(?i)sav\\.txt",
+
+    # Ignore "DBE_DIRECTORY"
+    "\\bDBE_DIRECTORY\\b",
+
+    # Ignore "DBE_END"
+    "\\bDBE_END\\b",
+
+    # Ignore "DBE_NORMAL"
+    "\\bDBE_NORMAL\\b",
+
+    # Ignore "GL_EVENT_SAV_PROVIDER_PARSING_ERROR"
+    "\\bGL_EVENT_SAV_PROVIDER_PARSING_ERROR\\b",
+
+    # Ignore "Caesium-1-4"
+    "\\bCaesium-1-4\\b",
+
+    # Ignore "Eric Mak"
+    "\\bEric Mak\\b",
+]
+extend-words = {
+    "certifi" = "certifi",
+    "conectix" = "conectix",
+    "exportfs" = "exportfs",
+    "flor" = "flor",
+    "IST" = "IST",
+    "packageid" = "packageid",
+    "ZUSER" = "ZUSER",
+}

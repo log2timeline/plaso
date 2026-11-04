@@ -14,7 +14,9 @@ class AndroidSMSTest(test_lib.SQLitePluginTestCase):
     def testProcess(self):
         """Test the Process function on an Android SMS mmssms.db file."""
         plugin = android_sms.AndroidSMSPlugin()
-        storage_writer = self._ParseDatabaseFileWithPlugin(["mmssms.db"], plugin)
+        storage_writer = self._ParseDatabaseFileWithPlugin(
+            ["android", "mmssms.db"], plugin
+        )
 
         # The SMS database file contains 9 events (5 SENT, 4 RECEIVED messages).
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
@@ -34,13 +36,12 @@ class AndroidSMSTest(test_lib.SQLitePluginTestCase):
 
         expected_event_values = {
             "address": "1 555-521-5554",
-            "body": "Yo Fred this is my new number.",
             "creation_time": "2013-10-29T16:56:28.038+00:00",
+            "message_body": "Yo Fred this is my new number.",
             "data_type": "android:messaging:sms",
             "sms_type": 2,
             "sms_read": 1,
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

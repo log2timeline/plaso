@@ -18,12 +18,12 @@ class UtmpxMacOSEventData(events.EventData):
 
     Attributes:
       hostname (str): hostname or IP address.
-      offset (int): offset of the utmpx record relative to the start of the file,
-          from which the event data was extracted.
+      login_type (int): login type.
+      offset (int): offset of the utmpx record relative to the start of the file, from
+          which the event data was extracted.
       pid (int): process identifier (PID).
       terminal (str): name of the terminal.
       terminal_identifier (int): inittab identifier.
-      type (int): type of login.
       username (str): user name.
       written_time (dfdatetime.DateTimeValues): entry written date and time.
     """
@@ -34,11 +34,11 @@ class UtmpxMacOSEventData(events.EventData):
         """Initializes event data."""
         super().__init__(data_type=self.DATA_TYPE)
         self.hostname = None
+        self.login_type = None
         self.offset = None
         self.pid = None
         self.terminal = None
         self.terminal_identifier = None
-        self.type = None
         self.username = None
         self.written_time = None
 
@@ -55,19 +55,23 @@ class UtmpxParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
 
     _FILE_HEADER_USERNAME = "utmpx-1.00"
     _FILE_HEADER_TYPE = 10
+    _RECORD_SIZE = 628
 
     def _ReadEntry(self, parser_mediator, file_object, file_offset):
         """Reads an utmpx entry.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): a file-like object.
-          file_offset (int): offset of the data relative from the start of
-              the file-like object.
+          file_offset (int): offset of the data relative from the start of the file-like
+              object.
 
         Returns:
-          UtmpxMacOSEventData: event data of the utmpx entry read.
+          tuple: containing:
+
+              UtmpxMacOSEventData: event data of the utmpx entry read.
+              boot: value to indicate the entry was corrupted.
 
         Raises:
           ParseError: if the entry cannot be parsed.
@@ -84,55 +88,65 @@ class UtmpxParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
                 f"error: {exception!s}"
             )
 
-        if entry.type not in self._SUPPORTED_TYPES:
-            raise errors.ParseError(f"Unsupported type: {entry.type:d}")
+        if entry.login_type not in self._SUPPORTED_TYPES:
+            raise errors.ParseError(f"Unsupported login type: {entry.login_type:d}")
 
         code_page = parser_mediator.GetCodePage()
+        corrupted = False
 
+        username = entry.username.split(b"\x00", maxsplit=1)[0]
         try:
-            username = entry.username.split(b"\x00")[0]
-            username = username.decode(code_page).rstrip()
+            username = username.decode(code_page)
         except UnicodeDecodeError:
-            parser_mediator.ProduceExtractionWarning("unable to decode username string")
-            username = None
+            parser_mediator.ProduceWarning(
+                f"unable to decode username as {code_page:s}. Unsupported code points "
+                f"are escaped."
+            )
+            username = username.decode(code_page, errors="backslashreplace")
+            corrupted = True
 
+        terminal = entry.terminal.split(b"\x00", maxsplit=1)[0]
         try:
-            terminal = entry.terminal.split(b"\x00")[0]
-            terminal = terminal.decode(code_page).rstrip()
+            terminal = terminal.decode(code_page)
         except UnicodeDecodeError:
-            parser_mediator.ProduceExtractionWarning("unable to decode terminal string")
-            terminal = None
+            parser_mediator.ProduceWarning(
+                f"unable to decode terminal as {code_page:s}. Unsupported code points "
+                f"are escaped."
+            )
+            terminal = terminal.decode(code_page, errors="backslashreplace")
+            corrupted = True
+
+        terminal = terminal.rstrip()
 
         if terminal == "~":
             terminal = "system boot"
 
+        hostname = entry.hostname.split(b"\x00", maxsplit=1)[0]
         try:
-            hostname = entry.hostname.split(b"\x00")[0]
             hostname = hostname.decode(code_page).rstrip()
         except UnicodeDecodeError:
-            parser_mediator.ProduceExtractionWarning("unable to decode hostname string")
-            hostname = None
-
-        if not hostname:
-            hostname = "localhost"
+            parser_mediator.ProduceWarning(
+                f"unable to decode hostname as {code_page:s}. Unsupported code points "
+                f"are escaped."
+            )
+            hostname = hostname.decode(code_page, errors="backslashreplace")
+            corrupted = True
 
         timestamp = entry.microseconds + (
             entry.timestamp * definitions.MICROSECONDS_PER_SECOND
         )
-
         event_data = UtmpxMacOSEventData()
-        event_data.hostname = hostname
+        event_data.hostname = hostname.rstrip() or "localhost"
+        event_data.login_type = entry.login_type
         event_data.pid = entry.pid
         event_data.offset = file_offset
         event_data.terminal = terminal or None
         event_data.terminal_identifier = entry.terminal_identifier
-        event_data.type = entry.type
-        event_data.username = username or None
+        event_data.username = username.rstrip() or None
         event_data.written_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
             timestamp=timestamp
         )
-
-        return event_data
+        return event_data, corrupted
 
     @classmethod
     def GetFormatSpecification(cls):
@@ -149,8 +163,8 @@ class UtmpxParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         """Parses an UTMPX file-like object.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): a file-like object.
 
         Raises:
@@ -159,7 +173,7 @@ class UtmpxParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         file_offset = 0
 
         try:
-            event_data = self._ReadEntry(parser_mediator, file_object, file_offset)
+            event_data, _ = self._ReadEntry(parser_mediator, file_object, file_offset)
         except errors.ParseError as exception:
             raise errors.WrongParser(
                 f"Unable to parse utmpx file header with error: {exception!s}"
@@ -170,10 +184,9 @@ class UtmpxParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
                 "Unable to parse utmpx file header with error: unsupported username"
             )
 
-        if event_data.type != self._FILE_HEADER_TYPE:
+        if event_data.login_type != self._FILE_HEADER_TYPE:
             raise errors.WrongParser(
-                "Unable to parse utmp file header with error: unsupported type of "
-                "login"
+                "Unable to parse utmp file header with error: unsupported login type"
             )
 
         file_offset = file_object.tell()
@@ -184,11 +197,16 @@ class UtmpxParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
                 break
 
             try:
-                event_data = self._ReadEntry(parser_mediator, file_object, file_offset)
-            except errors.ParseError:
-                break
+                event_data, corrupted = self._ReadEntry(
+                    parser_mediator, file_object, file_offset
+                )
+            except errors.ParseError as exception:
+                parser_mediator.ProduceWarning(f"{exception!s}")
+                file_offset += self._RECORD_SIZE
+                file_object.seek(file_offset, os.SEEK_SET)
+                continue
 
-            parser_mediator.ProduceEventData(event_data)
+            parser_mediator.ProduceEventData(event_data, corrupted=corrupted)
 
             file_offset = file_object.tell()
 

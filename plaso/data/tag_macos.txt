@@ -1,7 +1,7 @@
 # Tags MacOS application execution events.
 application_execution
   data_type is 'macos:application_usage:entry'
-  data_type is 'syslog:line' AND body contains 'COMMAND=/bin/launchctl'
+  data_type is 'syslog:line' AND message_body contains 'COMMAND=/bin/launchctl'
 
 # Tags MacOS application installation events.
 application_install

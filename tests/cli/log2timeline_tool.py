@@ -63,8 +63,25 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
 
         return options
 
-    # TODO: add tests for _CheckStorageFile
-    # TODO: add tests for _CreateProcessingConfiguration
+    def testCheckStorageFile(self):
+        """Tests the _CheckStorageFile function."""
+        test_tool = log2timeline_tool.Log2TimelineTool()
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            storage_file_path = os.path.join(temp_directory, "storage.plaso")
+            test_tool._CheckStorageFile(storage_file_path)
+
+            with open(storage_file_path, "wb") as file_object:
+                file_object.write(b"")
+
+            with self.assertLogs("cli", level="WARNING") as log_context:
+                test_tool._CheckStorageFile(storage_file_path, warn_about_existing=True)
+
+            self.assertEqual(len(log_context.output), 1)
+            self.assertIn("already existing storage file", log_context.output[0])
+
+            with self.assertRaises(errors.BadConfigOption):
+                test_tool._CheckStorageFile(temp_directory)
 
     def testGetPluginData(self):
         """Tests the _GetPluginData function."""
@@ -112,17 +129,20 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
         # Ensure there are no events left unaccounted for.
         self.assertEqual(event_counters, collections.Counter())
 
-    # TODO: add tests for _PrintProcessingSummary
-
     def testParseArguments(self):
         """Tests the ParseArguments function."""
+        # Disable terminal colors otherwise the test fails due argparse using colors.
+        os.environ["NO_COLOR"] = "1"
+
         output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
         test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
 
         result = test_tool.ParseArguments([])
         self.assertFalse(result)
 
-        # TODO: check output.
+        output = output_writer.ReadOutput()
+        self.assertTrue(output.startswith("ERROR: Missing source path.\n\nusage: "))
+
         # TODO: improve test coverage.
 
     def testParseOptions(self):
@@ -266,9 +286,12 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
                 "Processing started.",
                 "Processing completed.",
                 "",
+                "Number of warnings generated while extracting events: 1.",
+                "",
+                "Use pinfo to inspect warnings in more detail.",
+                "",
                 "",
             ]
-
             output = output_writer.ReadOutput()
             self._CheckOutput(output, expected_output)
 

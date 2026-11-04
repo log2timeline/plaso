@@ -17,9 +17,8 @@ class SpotlightVolumeConfigurationPlistPluginTest(test_lib.PlistPluginTestCase):
 
         plugin = spotlight_volume.SpotlightVolumeConfigurationPlistPlugin()
         storage_writer = self._ParsePlistFileWithPlugin(
-            plugin, [plist_name], plist_name
+            plugin, ["plist", plist_name], plist_name
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -41,7 +40,6 @@ class SpotlightVolumeConfigurationPlistPluginTest(test_lib.PlistPluginTestCase):
             "partial_path": "/.MobileBackups",
             "volume_identifier": "4D4BFEB5-7FE6-4033-AAAA-AAAABBBBCCCCDDDD",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

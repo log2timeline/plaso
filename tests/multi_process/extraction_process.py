@@ -27,8 +27,8 @@ class TestEventExtractionWorker(worker.EventExtractionWorker):
         """Processes a path specification.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           path_spec (dfvfs.PathSpec): path specification.
           excluded_find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
              that are excluded from processing.
@@ -97,7 +97,6 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
             port=output_task_queue.port,
             timeout_seconds=self._QUEUE_TIMEOUT,
         )
-
         with shared_test_lib.TempDirectory() as temp_directory:
             configuration = configurations.ProcessingConfiguration()
             configuration.task_storage_path = temp_directory
@@ -105,7 +104,6 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
             test_process = extraction_process.ExtractionWorkerProcess(
                 input_task_queue, configuration, [], [], None, name="TestWorker"
             )
-
             test_process.start()
 
             output_task_queue.PushItem(plaso_queue.QueueAbort(), block=False)
@@ -119,7 +117,6 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
         path_spec = path_spec_factory.Factory.NewPathSpec(
             dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
         )
-
         with shared_test_lib.TempDirectory() as temp_directory:
             configuration = configurations.ProcessingConfiguration()
             configuration.task_storage_path = temp_directory
@@ -127,7 +124,6 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
             test_process = extraction_process.ExtractionWorkerProcess(
                 None, configuration, [], [], None, name="TestWorker"
             )
-
             task_storage_writer = self._CreateStorageWriter()
             parser_mediator = self._CreateParserMediator(task_storage_writer)
 
@@ -155,7 +151,6 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
             test_process._parser_mediator = self._CreateParserMediator(
                 task_storage_writer
             )
-
             task = tasks.Task(session_identifier=session.identifier)
             test_process._ProcessTask(task)
 

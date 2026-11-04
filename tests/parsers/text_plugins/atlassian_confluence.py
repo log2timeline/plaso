@@ -45,7 +45,6 @@ class AtlassianConfluenceTest(test_lib.TextPluginTestCase):
         storage_writer = self._ParseTextFileWithPlugin(
             ["atlassian-confluence.log"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -62,15 +61,14 @@ class AtlassianConfluenceTest(test_lib.TextPluginTestCase):
         self.assertEqual(number_of_warnings, 0)
 
         expected_event_values = {
-            "body": "Starting the cluster.",
             "data_type": "atlassian:confluence:line",
             "level": "INFO",
             "logger_class": "confluence.cluster.hazelcast.HazelcastClusterManager",
             "logger_method": "startCluster",
+            "message_body": "Starting the cluster.",
             "thread": "Catalina-utility-1",
             "written_time": "2022-07-12T01:08:59.489",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

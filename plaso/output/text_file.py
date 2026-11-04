@@ -65,6 +65,7 @@ class TextFileOutputModule(interface.OutputModule):
     WRITES_OUTPUT_FILE = True
 
     _ENCODING = "utf-8"
+    _ERRORS = "backslashreplace"
 
     def __init__(self):
         """Initializes an output module that writes to a text file."""
@@ -114,7 +115,9 @@ class TextFileOutputModule(interface.OutputModule):
             )
 
         # pylint: disable=consider-using-with
-        self._file_object = open(path, "wt", encoding=self._ENCODING)
+        self._file_object = open(
+            path, "wt", encoding=self._ENCODING, errors=self._ERRORS
+        )
 
     @abc.abstractmethod
     def WriteFieldValues(self, output_mediator, field_values):

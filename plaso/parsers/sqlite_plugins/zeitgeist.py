@@ -111,10 +111,10 @@ class ZeitgeistActivityDatabasePlugin(interface.SQLitePlugin):
                 "UNIQUE, state INTEGER, icon VARCHAR, display_name VARCHAR )"
             ),
             "text": (
-                "CREATE TABLE text ( id INTEGER PRIMARY KEY, value VARCHAR " "UNIQUE )"
+                "CREATE TABLE text ( id INTEGER PRIMARY KEY, value VARCHAR UNIQUE )"
             ),
             "uri": (
-                "CREATE TABLE uri ( id INTEGER PRIMARY KEY, value VARCHAR " "UNIQUE )"
+                "CREATE TABLE uri ( id INTEGER PRIMARY KEY, value VARCHAR UNIQUE )"
             ),
         }
     ]

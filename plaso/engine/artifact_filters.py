@@ -233,7 +233,7 @@ class ArtifactDefinitionsFiltersHelper:
                 )
 
             elif key_path_glob_upper.startswith("HKEY_USERS\\%%USERS.SID%%"):
-                # Escaping charachter excluded from string index.
+                # Escaping character excluded from string index.
                 key_path_glob = "".join(["HKEY_CURRENT_USER", key_path_glob[24:]])
 
             find_spec = dfwinreg_registry_searcher.FindSpec(key_path_glob=key_path_glob)

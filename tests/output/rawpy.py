@@ -9,6 +9,7 @@ import unittest
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
+from plaso.containers import events
 from plaso.lib import definitions
 from plaso.output import rawpy
 
@@ -59,18 +60,16 @@ class NativePythonOutputTest(test_lib.OutputModuleTestCase):
         event, event_data, event_data_stream = (
             containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0])
         )
-
         event_identifier = event.GetIdentifier()
         event_identifier_string = event_identifier.CopyToString()
 
         expected_field_values = {
             "_event_identifier": event_identifier_string,
+            "_event_tag_labels": ["Malware", "Printed"],
             "_timestamp": "2012-06-27T18:17:01.000000+00:00",
             "data_type": "test:output",
             "display_name": "TSK:/var/log/syslog.1",
-            "filename": "/var/log/syslog.1",
             "hostname": "ubuntu",
-            "inode": "15",
             "path_spec": event_data_stream.path_spec,
             "text": (
                 "Reporter <CRON> PID: |8442| (pam_unix(cron:session): "
@@ -78,12 +77,12 @@ class NativePythonOutputTest(test_lib.OutputModuleTestCase):
             ),
             "username": "root",
         }
+        event_tag = events.EventTag()
+        event_tag.AddLabels(["Malware", "Printed"])
 
-        # TODO: add test for event_tag.
         field_values = output_module.GetFieldValues(
-            output_mediator, event, event_data, event_data_stream, None
+            output_mediator, event, event_data, event_data_stream, event_tag
         )
-
         self.assertEqual(field_values, expected_field_values)
 
     def testWriteFieldValues(self):
@@ -97,12 +96,12 @@ class NativePythonOutputTest(test_lib.OutputModuleTestCase):
         event, event_data, event_data_stream = (
             containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0])
         )
+        event_tag = events.EventTag()
+        event_tag.AddLabels(["Malware", "Printed"])
 
-        # TODO: add test for event_tag.
         field_values = output_module.GetFieldValues(
-            output_mediator, event, event_data, event_data_stream, None
+            output_mediator, event, event_data, event_data_stream, event_tag
         )
-
         output_module.WriteFieldValues(output_mediator, field_values)
 
         expected_os_location = os.path.join(os.path.sep, "cases", "image.dd")
@@ -126,9 +125,7 @@ class NativePythonOutputTest(test_lib.OutputModuleTestCase):
             "[Reserved attributes]:",
             "  {data_type} test:output",
             "  {display_name} TSK:/var/log/syslog.1",
-            "  {filename} /var/log/syslog.1",
             "  {hostname} ubuntu",
-            "  {inode} 15",
             "  {username} root",
             "",
             "[Additional attributes]:",
@@ -138,13 +135,14 @@ class NativePythonOutputTest(test_lib.OutputModuleTestCase):
             ),
             " closed for user root)",
             "",
+            "[Tag]:",
+            "  {labels} ['Malware', 'Printed']",
+            "",
             "",
         ]
-
         event_body = test_file_object.getvalue()
 
-        # Compare the output as list of lines which makes it easier to spot
-        # differences.
+        # Compare the output as list of lines which makes it easier to spot differences.
         self.assertEqual(event_body.split("\n"), expected_event_body_lines)
 
 

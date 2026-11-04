@@ -20,8 +20,7 @@ class ExplorerProgramsCacheEventData(events.EventData):
       entries (str): entries in the program cache.
       key_path (str): Windows Registry key path.
       known_folder_identifier (str): known folder identifier.
-      last_written_time (dfdatetime.DateTimeValues): entry last written date and
-          time.
+      last_written_time (dfdatetime.DateTimeValues): entry last written date and time.
       value_name (str): Windows Registry value name.
     """
 
@@ -64,8 +63,8 @@ class ExplorerProgramsCacheWindowsRegistryPlugin(
         """Extracts event objects from a Explorer ProgramsCache value data.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
           registry_value (dfwinreg.WinRegistryValue): Windows Registry value.
 
@@ -85,7 +84,7 @@ class ExplorerProgramsCacheWindowsRegistryPlugin(
         try:
             header = self._ReadStructureFromByteStream(value_data, 0, header_map)
         except (ValueError, errors.ParseError) as exception:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unable to parse header value with error: {exception!s}"
             )
             return
@@ -102,7 +101,7 @@ class ExplorerProgramsCacheWindowsRegistryPlugin(
             value_data_offset = 20
 
         else:
-            parser_mediator.ProduceExtractionWarning(
+            parser_mediator.ProduceWarning(
                 f"unsupported format version: {header.format_version:d}"
             )
             return
@@ -122,7 +121,7 @@ class ExplorerProgramsCacheWindowsRegistryPlugin(
                     context=context,
                 )
             except (ValueError, errors.ParseError) as exception:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"unable to parse sentinel at offset: 0x{value_data_offset:08x} "
                     f"with error: {exception!s}"
                 )
@@ -147,7 +146,7 @@ class ExplorerProgramsCacheWindowsRegistryPlugin(
                     context=context,
                 )
             except (ValueError, errors.ParseError) as exception:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"unable to parse entry header at offset: "
                     f"0x{value_data_offset:08x} with error: {exception!s}"
                 )
@@ -178,7 +177,7 @@ class ExplorerProgramsCacheWindowsRegistryPlugin(
                     context=context,
                 )
             except (ValueError, errors.ParseError) as exception:
-                parser_mediator.ProduceExtractionWarning(
+                parser_mediator.ProduceWarning(
                     f"unable to parse entry footer at offset: "
                     f"0x{value_data_offset:08x} with error: {exception!s}"
                 )
@@ -214,8 +213,8 @@ class ExplorerProgramsCacheWindowsRegistryPlugin(
         """Extracts events from a Windows Registry key.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
           registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
         """
         registry_value = registry_key.GetValueByName("ProgramsCache")

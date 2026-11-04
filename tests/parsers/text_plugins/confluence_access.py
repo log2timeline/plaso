@@ -61,7 +61,6 @@ class ConfluenceAccessTextPluginTest(test_lib.TextPluginTestCase):
         storage_writer = self._ParseTextFileWithPlugin(
             ["confluence_access.log"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -95,9 +94,8 @@ class ConfluenceAccessTextPluginTest(test_lib.TextPluginTestCase):
             "recorded_time": "2021-06-17T12:57:26+02:00",
             "remote_name": "192.168.192.1",
             "thread_name": "http-nio-8080-exec-6",
-            "user_name": "user",
+            "username": "user",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
@@ -107,7 +105,6 @@ class ConfluenceAccessTextPluginTest(test_lib.TextPluginTestCase):
         storage_writer = self._ParseTextFileWithPlugin(
             ["confluence_access_post7.11.log"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -141,9 +138,8 @@ class ConfluenceAccessTextPluginTest(test_lib.TextPluginTestCase):
             "recorded_time": "2021-06-17T12:57:26+02:00",
             "remote_name": "0:0:0:0:0:0:0:1",
             "thread_name": "http-nio-8080-exec-6",
-            "user_name": "testuser",
+            "username": "testuser",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

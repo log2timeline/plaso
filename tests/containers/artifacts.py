@@ -56,14 +56,12 @@ class OperatingSystemArtifactTest(shared_test_lib.BaseTestCase):
         attribute_container = artifacts.OperatingSystemArtifact(
             product="Windows Server 2012 R2 Standard"
         )
-
         name = attribute_container._GetNameFromProduct()
         self.assertEqual(name, "Windows 2012 R2")
 
         attribute_container = artifacts.OperatingSystemArtifact(
             product="Microsoft Windows Server 2003"
         )
-
         name = attribute_container._GetNameFromProduct()
         self.assertEqual(name, "Windows 2003")
 
@@ -81,7 +79,6 @@ class OperatingSystemArtifactTest(shared_test_lib.BaseTestCase):
         winnt51_container = artifacts.OperatingSystemArtifact(
             family=definitions.OPERATING_SYSTEM_FAMILY_WINDOWS_NT, version="5.1"
         )
-
         self.assertFalse(winnt62_container.IsEquivalent(winnt51_container))
         self.assertFalse(winnt51_container.IsEquivalent(winnt62_container))
 
@@ -91,7 +88,6 @@ class OperatingSystemArtifactTest(shared_test_lib.BaseTestCase):
         winnt_container = artifacts.OperatingSystemArtifact(
             family=definitions.OPERATING_SYSTEM_FAMILY_WINDOWS_NT
         )
-
         self.assertFalse(win9x_container.IsEquivalent(winnt_container))
         self.assertFalse(winnt_container.IsEquivalent(win9x_container))
 
@@ -125,7 +121,6 @@ class PathArtifactTest(shared_test_lib.BaseTestCase):
             "path_segment_separator",
             "path_segments",
         ]
-
         attribute_names = sorted(attribute_container.GetAttributeNames())
         self.assertEqual(attribute_names, expected_attribute_names)
 
@@ -142,7 +137,30 @@ class PathArtifactTest(shared_test_lib.BaseTestCase):
 
         self.assertFalse(attribute_container == "/etc/issue")
 
-    # TODO: add tests for _SplitPath.
+    def testSplitPath(self):
+        """Tests the _SplitPath function."""
+        attribute_container = artifacts.PathArtifact()
+
+        # pylint: disable=protected-access
+        path_segments = attribute_container._SplitPath("etc/issue", "/")
+        self.assertEqual(path_segments, ["etc", "issue"])
+
+        # An absolute path keeps an empty leading segment.
+        path_segments = attribute_container._SplitPath("/etc/issue", "/")
+        self.assertEqual(path_segments, ["", "etc", "issue"])
+
+        # Empty segments after the first one are removed.
+        path_segments = attribute_container._SplitPath("/etc//issue/", "/")
+        self.assertEqual(path_segments, ["", "etc", "issue"])
+
+        path_segments = attribute_container._SplitPath("C:\\Windows\\System32", "\\")
+        self.assertEqual(path_segments, ["C:", "Windows", "System32"])
+
+        path_segments = attribute_container._SplitPath("", "/")
+        self.assertEqual(path_segments, [""])
+
+        path_segments = attribute_container._SplitPath(None, "/")
+        self.assertEqual(path_segments, [""])
 
     def testContainedIn(self):
         """Tests the ContainedIn function."""
@@ -187,7 +205,6 @@ class SystemConfigurationArtifactTest(shared_test_lib.BaseTestCase):
             "time_zone",
             "user_accounts",
         ]
-
         attribute_names = sorted(attribute_container.GetAttributeNames())
         self.assertEqual(attribute_names, expected_attribute_names)
 
@@ -206,7 +223,6 @@ class UserAccountArtifactTest(shared_test_lib.BaseTestCase):
             "user_directory",
             "username",
         ]
-
         attribute_names = sorted(attribute_container.GetAttributeNames())
         self.assertEqual(attribute_names, expected_attribute_names)
 
@@ -226,6 +242,15 @@ class WindowsEventLogMessageStringArtifactTest(shared_test_lib.BaseTestCase):
     def testInitialize(self):
         """Tests the __init__ function."""
         attribute_container = artifacts.WindowsEventLogMessageStringArtifact()
+        self.assertIsNotNone(attribute_container)
+
+
+class WindowsEventLogMessageTableArtifactTest(shared_test_lib.BaseTestCase):
+    """Tests for the Windows EventLog message table artifact."""
+
+    def testInitialize(self):
+        """Tests the __init__ function."""
+        attribute_container = artifacts.WindowsEventLogMessageTableArtifact()
         self.assertIsNotNone(attribute_container)
 
 

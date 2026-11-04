@@ -14,7 +14,7 @@ class WindowsRegistryMotherboardInfoEventData(events.EventData):
       key_path (str): Windows Registry key path.
       last_written_time (dfdatetime.DateTimeValues): entry last written date
           and time.
-      motherboard_manufacturer (str): Motherboard manafacturer name.
+      motherboard_manufacturer (str): Motherboard manufacturer name.
       motherboard_model (str): Name of the specific motherboard model.
     """
 

@@ -7,3 +7,4 @@ Mar 11 22:55:32 ubuntu2015 sshd[3]:  Failed password for root from 188.124.3.41 
 Mar 11 22:55:33 ubuntu2015 sshd[3]:  Accepted publickey for fred from 192.0.2.60 port 60594 ssh2: RSA e8:31:68:c7:01:2d:25:20:36:8f:50:5d:f9:ee:70:4c
 Mar 11 22:55:34 ubuntu2015 sshd[3]:  Accepted publickey for fred from 192.0.2.60 port 20042 ssh2
 Mar 11 22:55:35 ubuntu2015 sshd[3]:  Accepted publickey for fred from 192.0.2.60 port 59915 ssh2: RSA SHA256:5xyQ+PG1Z3CIiShclJ2iNya5TOdKDgE/HrOXr21IdOo
+Jul 28 22:16:48 ubuntu24 sshd[2118]: Failed password for invalid user admin from 192.168.1.92 port 35932 ssh2

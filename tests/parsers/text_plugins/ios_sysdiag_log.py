@@ -63,7 +63,8 @@ class IOSSysdiagLogTextPluginTest(test_lib.TextPluginTestCase):
         self.assertEqual(number_of_warnings, 0)
 
         expected_event_values = {
-            "body": (
+            "data_type": "ios:sysdiag_log:entry",
+            "message_body": (
                 "Ignoring plugin at /System/Library/PrivateFrameworks/"
                 "AccessibilityUtilities.framework/PlugIns/com.apple.accessibility."
                 "Accessibility.HearingAidsTapToRadar.appex due to validation "
@@ -78,7 +79,6 @@ class IOSSysdiagLogTextPluginTest(test_lib.TextPluginTestCase):
             "severity": "err",
             "written_time": "2021-08-11T05:51:02+00:00",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 7)
         self.CheckEventData(event_data, expected_event_values)
 

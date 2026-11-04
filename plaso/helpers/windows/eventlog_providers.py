@@ -33,7 +33,7 @@ class WindowsEventLogProvidersHelper:
 
         elif path_segments_lower[0] in ("system32", "$(runtime.system32)"):
             # Note that the path can be relative so if it starts with "System32"
-            # asume this represents "%SystemRoot%\System32".
+            # assume this represents "%SystemRoot%\System32".
             path_segments = ["%SystemRoot%", "System32"] + path_segments[1:]
 
         elif path_segments_lower[0] in (

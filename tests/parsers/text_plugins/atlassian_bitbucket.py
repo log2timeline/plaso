@@ -71,6 +71,38 @@ class AtlassianBitbucketTextPluginTest(test_lib.TextPluginTestCase):
 
         self.assertFalse(plugin.CheckRequiredFormat(parser_mediator, text_reader))
 
+        # Check Confluence format, where the logger class is enclosed in brackets.
+        file_object = io.BytesIO(
+            b"2022-07-12 01:08:59,489 INFO [Catalina-utility-1] "
+            b"[confluence.cluster.hazelcast.HazelcastClusterManager] "
+            b"startCluster Starting the cluster.\n"
+            b"2022-07-12 01:09:02,530 INFO [hz.confluence.event-3] "
+            b"[confluence.cluster.hazelcast.LoggingClusterMembershipListener] "
+            b"memberAdded [10.0.0.123]:5801 joined the cluster\n"
+        )
+        text_reader = text_parser.EncodedTextReader(
+            file_object, encoding=plugin.ENCODING
+        )
+        text_reader.ReadLines()
+
+        self.assertFalse(plugin.CheckRequiredFormat(parser_mediator, text_reader))
+
+        # Check Jira format, where the logger class is enclosed in brackets.
+        file_object = io.BytesIO(
+            b"2022-10-03 09:00:01,042 INFO [main] "
+            b"[com.atlassian.jira.startup.JiraStartupLogger] start Jira starting "
+            b"up. Version : 9.2.0\n"
+            b"2022-10-03 09:01:12,884 WARN [Caesium-1-4] "
+            b"[com.atlassian.jira.cluster.ClusterManager] checkClusterLock Lock "
+            b"'CLUSTER_UPGRADE_LOCK' is held by node 'node1'. Cannot acquire.\n"
+        )
+        text_reader = text_parser.EncodedTextReader(
+            file_object, encoding=plugin.ENCODING
+        )
+        text_reader.ReadLines()
+
+        self.assertFalse(plugin.CheckRequiredFormat(parser_mediator, text_reader))
+
         # Check unsupported date and time value.
         file_object = io.BytesIO(
             b"2020-09-08 07:53:45,084 INFO [main] "
@@ -92,7 +124,6 @@ class AtlassianBitbucketTextPluginTest(test_lib.TextPluginTestCase):
         storage_writer = self._ParseTextFileWithPlugin(
             ["atlassian-bitbucket.log"], plugin
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -109,24 +140,75 @@ class AtlassianBitbucketTextPluginTest(test_lib.TextPluginTestCase):
         self.assertEqual(number_of_warnings, 0)
 
         expected_event_values = {
-            "body": (
-                "Repository 0030-8a2a778e2d97e278f541-5 has been created and "
-                "configured successfully"
-            ),
             "data_type": "atlassian:bitbucket:line",
             "ip_address": "10.229.31.195",
             "level": "INFO",
             "logger_class": "c.a.b.m.r.DefaultRepositoryManager",
+            "message_body": (
+                "Repository 0030-8a2a778e2d97e278f541-5 has been created and "
+                "configured successfully"
+            ),
             "request_action": "TransactionService/Transact",
             "request_identifier": "2CM38K4Fx339x113x2",
             "session_identifier": "@5XDWX5x339x568x0,4SJOMSOBx339x40x2",
             "thread": "tx:thread-2",
-            "user_name": "admin",
+            "username": "admin",
             "written_time": "2022-04-12T05:39:57.408",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
+
+    def testParseLongLine(self):
+        """Tests parsing a long line."""
+        plugin = atlassian_bitbucket.AtlassianBitbucketTextPlugin()
+
+        # A normal line parses to its thread, logger class and message body.
+        normal_line = (
+            "2014-12-04 19:39:39,749 DEBUG [clusterScheduler_Worker-8] "
+            "org.hibernate.SQL delete sta_activity_0\n"
+        )
+        key, structure, _, _ = plugin._ParseString(normal_line)
+        self.assertEqual(key, "log_entry")
+        self.assertEqual(
+            plugin._GetValueFromStructure(structure, "thread"),
+            "clusterScheduler_Worker-8",
+        )
+        self.assertEqual(
+            plugin._GetValueFromStructure(structure, "logger_class"),
+            "org.hibernate.SQL",
+        )
+        self.assertEqual(
+            plugin._GetValueFromStructure(structure, "message_body"),
+            "delete sta_activity_0",
+        )
+
+        # The same line with a long request-context region before the logger
+        # class parses to the same thread, logger class and message body, and
+        # captures the request context verbatim.
+        request_context = "ctx " * 5000
+        long_line = (
+            "2014-12-04 19:39:39,749 DEBUG [clusterScheduler_Worker-8] "
+            + request_context
+            + "org.hibernate.SQL delete sta_activity_0\n"
+        )
+        key, structure, _, _ = plugin._ParseString(long_line)
+        self.assertEqual(key, "log_entry")
+        self.assertEqual(
+            plugin._GetValueFromStructure(structure, "thread"),
+            "clusterScheduler_Worker-8",
+        )
+        self.assertEqual(
+            plugin._GetValueFromStructure(structure, "logger_class"),
+            "org.hibernate.SQL",
+        )
+        self.assertEqual(
+            plugin._GetValueFromStructure(structure, "message_body"),
+            "delete sta_activity_0",
+        )
+        self.assertEqual(
+            plugin._GetValueFromStructure(structure, "request_context_text"),
+            request_context.strip(),
+        )
 
 
 if __name__ == "__main__":

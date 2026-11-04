@@ -19,7 +19,6 @@ class IOSWiFiKnownNetworksPlistPluginTest(test_lib.PlistPluginTestCase):
         storage_writer = self._ParsePlistFileWithPlugin(
             plugin, ["ios", plist_name], plist_name
         )
-
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
@@ -43,7 +42,6 @@ class IOSWiFiKnownNetworksPlistPluginTest(test_lib.PlistPluginTestCase):
             "last_associated_time": "2023-05-14T01:15:45.013600+00:00",
             "ssid": "Matt_Foley",
         }
-
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 

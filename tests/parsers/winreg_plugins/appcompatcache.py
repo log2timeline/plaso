@@ -7,6 +7,7 @@ from dfdatetime import filetime as dfdatetime_filetime
 from dfwinreg import definitions as dfwinreg_definitions
 from dfwinreg import fake as dfwinreg_fake
 
+from plaso.lib import errors
 from plaso.parsers.winreg_plugins import appcompatcache
 
 from tests.parsers.winreg_plugins import test_lib
@@ -1157,6 +1158,15 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
         return registry_key
 
+    def testGetCachedEntryDataTypeMapWithUnsupportedFormatType(self):
+        """Tests the _GetCachedEntryDataTypeMap function with an unsupported format."""
+        plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
+
+        with self.assertRaisesRegex(errors.ParseError, "Unsupported format type: 99"):
+            plugin._GetCachedEntryDataTypeMap(  # pylint: disable=protected-access
+                99, b"", 0
+            )
+
     def testFilters(self):
         """Tests the FILTERS class attribute."""
         plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
@@ -1164,12 +1174,12 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_LOCAL_MACHINE\\System",
-            ("CurrentControlSet\\Control\\Session Manager\\AppCompatibility"),
+            "CurrentControlSet\\Control\\Session Manager\\AppCompatibility",
         )
         self._AssertFiltersOnKeyPath(
             plugin,
             "HKEY_LOCAL_MACHINE\\System",
-            ("CurrentControlSet\\Control\\Session Manager\\AppCompatCache"),
+            "CurrentControlSet\\Control\\Session Manager\\AppCompatCache",
         )
         self._AssertFiltersOnKeyPath(
             plugin,
@@ -1536,7 +1546,7 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
             "last_update_time": None,
             "registry_last_written_time": "2015-06-15T11:53:37.0430610+00:00",
             "path": (
-                "C:\\Program Files (x86)\\NVIDIA Corporation\\3D Vision\\" "nvstreg.exe"
+                "C:\\Program Files (x86)\\NVIDIA Corporation\\3D Vision\\nvstreg.exe"
             ),
             "insertion_flags": None,
         }
