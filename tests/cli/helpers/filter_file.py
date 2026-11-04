@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Tests for the filter file CLI arguments helper."""
 
+import os
 import sys
 import unittest
 
@@ -70,7 +71,28 @@ Test argument parser.
         with self.assertRaises(errors.BadConfigObject):
             filter_file.FilterFileArgumentsHelper.ParseOptions(options, None)
 
-        # TODO: improve test coverage.
+        # A filter file that does not exist is looked up in the data location.
+        options.file_filter = os.path.join("bogus", "filter2.txt")
+
+        with self.assertRaises(errors.BadConfigOption):
+            filter_file.FilterFileArgumentsHelper.ParseOptions(options, test_tool)
+
+        test_tool._data_location = self._GetTestFilePath(["testdir"])
+        filter_file.FilterFileArgumentsHelper.ParseOptions(options, test_tool)
+
+        expected_filter_file = self._GetTestFilePath(["testdir", "filter2.txt"])
+        self.assertEqual(test_tool._filter_file, expected_filter_file)
+
+        options.file_filter = os.path.join("bogus", "bogus.txt")
+
+        with self.assertRaises(errors.BadConfigOption):
+            filter_file.FilterFileArgumentsHelper.ParseOptions(options, test_tool)
+
+        options = cli_test_lib.TestOptions()
+
+        filter_file.FilterFileArgumentsHelper.ParseOptions(options, test_tool)
+
+        self.assertIsNone(test_tool._filter_file)
 
 
 if __name__ == "__main__":

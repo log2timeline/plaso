@@ -7,7 +7,11 @@ from dfvfs.file_io import fake_file_io
 from dfvfs.path import fake_path_spec
 from dfvfs.resolver import context as dfvfs_context
 
+from plaso.lib import errors
 from plaso.parsers import text_parser
+
+# Register all plugins.
+from plaso.parsers import text_plugins  # pylint: disable=unused-import
 
 from tests.parsers import test_lib
 
@@ -168,7 +172,65 @@ class TextLogParserTest(test_lib.ParserTestCase):
         parser.EnablePlugins(["apache_access"])
         self.assertEqual(len(parser._plugins_per_name), 1)
 
-    # TODO: add tests for ParseFileObject
+    def testParseFileObject(self):
+        """Tests the ParseFileObject function."""
+        parser = text_parser.TextLogParser()
+        parser.EnablePlugins(["xchatlog"])
+
+        storage_writer = self._ParseFile(["xchat.log"], parser)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 9)
+
+        # The test file contains lines that are not supported by the plugin.
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 3)
+
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.assertEqual(event_data.data_type, "xchat:log:line")
+        self.assertEqual(event_data._parser_chain, "text/xchatlog")
+
+        test_text = "\n".join(
+            [
+                "**** BEGIN LOGGING AT Mon Dec 31 21:11:55 2011",
+                "",
+                "dec 31 21:11:55 --> You are now talking on #gugle",
+                "",
+            ]
+        )
+
+        # Test with text that does not match an enabled plugin.
+        parser = text_parser.TextLogParser()
+        parser.EnablePlugins(["xchatlog"])
+
+        storage_writer = self._CreateStorageWriter()
+        parser_mediator = self._CreateParserMediator(storage_writer)
+
+        file_object = self._CreateFileObject(
+            "test.log", b"This is not a supported log format.\n"
+        )
+        with self.assertRaises(errors.WrongParser):
+            parser.ParseFileObject(parser_mediator, file_object)
+
+        # Test with binary data that otherwise matches an enabled plugin.
+        test_data = b"".join([b"\x00\x01\x02\x03", test_text.encode("utf-8")])
+        file_object = self._CreateFileObject("test.log", test_data)
+        with self.assertRaises(errors.WrongParser):
+            parser.ParseFileObject(parser_mediator, file_object)
+
+        # Test with the same data without the binary prefix.
+        file_object = self._CreateFileObject("test.log", test_text.encode("utf-8"))
+        parser.ParseFileObject(parser_mediator, file_object)
+
+        # The begin logging and talking on lines are both stored as event data.
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 2)
 
 
 if __name__ == "__main__":

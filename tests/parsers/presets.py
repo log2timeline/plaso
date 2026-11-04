@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Tests for parser and parser plugin presets."""
 
+import io
 import unittest
 
 from plaso.containers import artifacts
+from plaso.lib import errors
 from plaso.parsers import presets
 
 from tests import test_lib as shared_test_lib
@@ -75,8 +77,99 @@ class ParserPresetsManagerTest(shared_test_lib.BaseTestCase):
         "zsh_extended_history",
     ]
 
-    # TODO add tests for _ReadPresetDefinitionValues
-    # TODO add tests for _ReadPresetsFromFileObject
+    _PRESETS_YAML_DATA = "\n".join(
+        [
+            "name: first",
+            "parsers:",
+            "- parser1",
+            "- parser2/plugin1",
+            "---",
+            "name: second",
+            "deprecated: true",
+            "operating_systems:",
+            "- family: Linux",
+            "parsers:",
+            "- parser3",
+            "",
+        ]
+    )
+
+    # pylint: disable=protected-access
+
+    def testReadParserPresetValues(self):
+        """Tests the _ReadParserPresetValues function."""
+        test_manager = presets.ParserPresetsManager()
+
+        preset_definition_values = {
+            "name": "test",
+            "operating_systems": [{"family": "MacOS"}],
+            "parsers": ["parser1", "parser2/plugin1"],
+        }
+        test_preset = test_manager._ReadParserPresetValues(preset_definition_values)
+        self.assertEqual(test_preset.name, "test")
+        self.assertEqual(test_preset.parsers, ["parser1", "parser2/plugin1"])
+        self.assertFalse(test_preset.deprecated)
+        self.assertEqual(len(test_preset.operating_systems), 1)
+        self.assertEqual(test_preset.operating_systems[0].family, "MacOS")
+
+        preset_definition_values = {
+            "deprecated": True,
+            "name": "test",
+            "parsers": ["parser1"],
+        }
+        test_preset = test_manager._ReadParserPresetValues(preset_definition_values)
+        self.assertTrue(test_preset.deprecated)
+        self.assertEqual(test_preset.operating_systems, [])
+
+        with self.assertRaises(errors.MalformedPresetError):
+            test_manager._ReadParserPresetValues(None)
+
+        with self.assertRaises(errors.MalformedPresetError):
+            test_manager._ReadParserPresetValues({"parsers": ["parser1"]})
+
+        with self.assertRaises(errors.MalformedPresetError):
+            test_manager._ReadParserPresetValues({"name": "test"})
+
+        with self.assertRaises(errors.MalformedPresetError):
+            test_manager._ReadParserPresetValues({"name": "test", "parsers": []})
+
+        preset_definition_values = {
+            "name": "test",
+            "operating_systems": [{"version": "1"}],
+            "parsers": ["parser1"],
+        }
+        with self.assertRaises(errors.MalformedPresetError):
+            test_manager._ReadParserPresetValues(preset_definition_values)
+
+    def testReadPresetsFromFileObject(self):
+        """Tests the _ReadPresetsFromFileObject function."""
+        test_manager = presets.ParserPresetsManager()
+
+        file_object = io.StringIO(self._PRESETS_YAML_DATA)
+        test_presets = list(test_manager._ReadPresetsFromFileObject(file_object))
+
+        self.assertEqual(len(test_presets), 2)
+
+        self.assertEqual(test_presets[0].name, "first")
+        self.assertEqual(test_presets[0].parsers, ["parser1", "parser2/plugin1"])
+        self.assertFalse(test_presets[0].deprecated)
+        self.assertEqual(test_presets[0].operating_systems, [])
+
+        self.assertEqual(test_presets[1].name, "second")
+        self.assertEqual(test_presets[1].parsers, ["parser3"])
+        self.assertTrue(test_presets[1].deprecated)
+        self.assertEqual(len(test_presets[1].operating_systems), 1)
+        self.assertEqual(test_presets[1].operating_systems[0].family, "Linux")
+
+        # Test with a malformed first preset definition.
+        file_object = io.StringIO("name: first\n")
+        with self.assertRaisesRegex(errors.MalformedPresetError, "^At start "):
+            list(test_manager._ReadPresetsFromFileObject(file_object))
+
+        # Test with a malformed second preset definition.
+        file_object = io.StringIO("name: first\nparsers:\n- parser1\n---\nname: x\n")
+        with self.assertRaisesRegex(errors.MalformedPresetError, "^After: first "):
+            list(test_manager._ReadPresetsFromFileObject(file_object))
 
     def testGetNames(self):
         """Tests the GetNames function."""

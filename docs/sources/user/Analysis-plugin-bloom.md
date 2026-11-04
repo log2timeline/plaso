@@ -33,8 +33,14 @@ log2timeline.py --hashers sha1 --storage-file timeline.plaso image.raw
 Next run `psort` to tag events:
 
 ```bash
-psort.py --analysis bloom --bloom_file hashlookup-full.bloom -o null timeline.plaso
+psort.py --analysis bloom --bloom-file hashlookup-full.bloom -o null timeline.plaso
 ```
+
+The bloom analysis plugin supports the following options:
+
+* `--bloom-file`: path of the bloom database file, the default is `hashlookup-full.bloom`;
+* `--bloom-hash`: type of hash to look up, which can be `md5`, `sha1` or `sha256`, the default is `sha1`;
+* `--bloom-label`: label to apply to events, the default is `bloom_present`.
 
 The last step would be to export a timeline with the tags (By default, the tag value is `bloom_present`) :
 
@@ -42,6 +48,8 @@ The last step would be to export a timeline with the tags (By default, the tag v
 psort.py -o dynamic --dynamic-time --fields datetime,timestamp_desc,source,source_long,message,parser,data_type,display_name,tag,sha1_hash -w timeline.csv timeline.plaso
 ```
 
+Or to tag events and export them as JSON lines in a single run:
+
 ```bash
-psort.py --analysis hashlookup_bloom --hashlookup_bloom_file hashlookup-full.bloom -o json_line -w timeline.jsonl 20221228T162736-Laptop1Final.E01.plaso
+psort.py --analysis bloom --bloom-file hashlookup-full.bloom -o json_line -w timeline.jsonl timeline.plaso
 ```

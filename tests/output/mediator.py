@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
 """Tests for the output mediator object."""
 
+import os
 import unittest
+
+import pytz
+
+from dfvfs.lib import definitions as dfvfs_definitions
+from dfvfs.path import factory as path_spec_factory
 
 from plaso.containers import artifacts
 from plaso.lib import definitions
@@ -32,7 +38,15 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
         }
     ]
 
-    # TODO: add tests for _GetWinevtRcDatabaseReader
+    _TSK_PATH_SPEC = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK,
+        inode=15,
+        location="/var/log/syslog.1",
+        parent=path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_OS,
+            location=os.path.join(os.path.sep, "cases", "image.dd"),
+        ),
+    )
 
     def testReadMessageFormattersFile(self):
         """Tests the _ReadMessageFormattersFile function."""
@@ -50,9 +64,24 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
         finally:
             storage_writer.Close()
 
-    # TODO: add tests for _ReadSourceMappings
+    def testGetDisplayNameForPathSpec(self):
+        """Tests the GetDisplayNameForPathSpec function."""
+        storage_writer = fake_writer.FakeStorageWriter()
+        storage_writer.Open()
 
-    # TODO: add tests for GetDisplayNameForPathSpec
+        try:
+            output_mediator = mediator.OutputMediator(storage_writer)
+
+            display_name = output_mediator.GetDisplayNameForPathSpec(
+                self._TSK_PATH_SPEC
+            )
+            self.assertEqual(display_name, "TSK:/var/log/syslog.1")
+
+            display_name = output_mediator.GetDisplayNameForPathSpec(None)
+            self.assertIsNone(display_name)
+
+        finally:
+            storage_writer.Close()
 
     def testGetHostname(self):
         """Tests the GetHostname function."""
@@ -129,9 +158,112 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
         finally:
             storage_writer.Close()
 
-    # TODO: add tests for GetMACBRepresentationFromDescriptions
-    # TODO: add tests for GetMessageFormatter
-    # TODO: add tests for GetRelativePathForPathSpec
+    def testGetMACBRepresentationFromDescriptions(self):
+        """Tests the GetMACBRepresentationFromDescriptions function."""
+        storage_writer = fake_writer.FakeStorageWriter()
+        storage_writer.Open()
+
+        try:
+            output_mediator = mediator.OutputMediator(storage_writer)
+
+            macb_representation = output_mediator.GetMACBRepresentationFromDescriptions(
+                []
+            )
+            self.assertEqual(macb_representation, "....")
+
+            macb_representation = output_mediator.GetMACBRepresentationFromDescriptions(
+                [
+                    definitions.TIME_DESCRIPTION_CREATION,
+                    definitions.TIME_DESCRIPTION_MODIFICATION,
+                ]
+            )
+            self.assertEqual(macb_representation, "M..B")
+
+            macb_representation = output_mediator.GetMACBRepresentationFromDescriptions(
+                ["mtime", "atime", "ctime", "crtime"]
+            )
+            self.assertEqual(macb_representation, "MACB")
+
+            macb_representation = output_mediator.GetMACBRepresentationFromDescriptions(
+                [
+                    definitions.TIME_DESCRIPTION_LAST_ACCESS,
+                    definitions.TIME_DESCRIPTION_METADATA_MODIFICATION,
+                ]
+            )
+            self.assertEqual(macb_representation, ".AC.")
+
+        finally:
+            storage_writer.Close()
+
+    def testGetMessageFormatter(self):
+        """Tests the GetMessageFormatter function."""
+        test_file_path = self._GetTestFilePath(["formatters", "format_test.yaml"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        storage_writer = fake_writer.FakeStorageWriter()
+        storage_writer.Open()
+
+        try:
+            output_mediator = mediator.OutputMediator(storage_writer)
+
+            message_formatter = output_mediator.GetMessageFormatter("test:event")
+            self.assertIsNone(message_formatter)
+
+            output_mediator.ReadMessageFormattersFromFile(test_file_path)
+
+            message_formatter = output_mediator.GetMessageFormatter("TEST:EVENT")
+            self.assertIsNotNone(message_formatter)
+            self.assertEqual(message_formatter.data_type, "test:event")
+
+            message = message_formatter.GetMessage({"text": "My text"})
+            self.assertEqual(message, "My text")
+
+            message_formatter = output_mediator.GetMessageFormatter("test:bogus")
+            self.assertIsNone(message_formatter)
+
+        finally:
+            storage_writer.Close()
+
+    def testGetRelativePathForPathSpec(self):
+        """Tests the GetRelativePathForPathSpec function."""
+        storage_writer = fake_writer.FakeStorageWriter()
+        storage_writer.Open()
+
+        try:
+            output_mediator = mediator.OutputMediator(storage_writer)
+
+            relative_path = output_mediator.GetRelativePathForPathSpec(
+                self._TSK_PATH_SPEC
+            )
+            self.assertEqual(relative_path, "/var/log/syslog.1")
+
+            relative_path = output_mediator.GetRelativePathForPathSpec(None)
+            self.assertIsNone(relative_path)
+
+        finally:
+            storage_writer.Close()
+
+    def testGetSourceMapping(self):
+        """Tests the GetSourceMapping function."""
+        test_file_path = self._GetTestFilePath(["formatters", "format_test.yaml"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        storage_writer = fake_writer.FakeStorageWriter()
+        storage_writer.Open()
+
+        try:
+            output_mediator = mediator.OutputMediator(storage_writer)
+
+            output_mediator.ReadMessageFormattersFromFile(test_file_path)
+
+            source_mapping = output_mediator.GetSourceMapping("TEST:EVENT")
+            self.assertEqual(source_mapping, ("FILE", "Test log file"))
+
+            source_mapping = output_mediator.GetSourceMapping("test:bogus")
+            self.assertEqual(source_mapping, (None, None))
+
+        finally:
+            storage_writer.Close()
 
     def testGetUsername(self):
         """Tests the GetUsername function."""
@@ -172,8 +304,6 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
 
         finally:
             storage_writer.Close()
-
-    # TODO: add tests for GetWindowsEventMessage
 
     def testReadMessageFormattersFromDirectory(self):
         """Tests the ReadMessageFormattersFromDirectory function."""
@@ -217,8 +347,58 @@ class OutputMediatorTest(test_lib.OutputModuleTestCase):
         finally:
             storage_writer.Close()
 
-    # TODO: add tests for SetPreferredLanguageIdentifier
-    # TODO: add tests for SetTimezone
+    def testSetPreferredLanguageIdentifier(self):
+        """Tests the SetPreferredLanguageIdentifier function."""
+        storage_writer = fake_writer.FakeStorageWriter()
+        storage_writer.Open()
+
+        try:
+            output_mediator = mediator.OutputMediator(storage_writer)
+
+            output_mediator.SetPreferredLanguageIdentifier("is-IS")
+            self.assertEqual(output_mediator._lcid, 0x040F)
+
+            winevt_resources_helper = output_mediator.GetWinevtResourcesHelper()
+            self.assertEqual(winevt_resources_helper._lcid, 0x040F)
+
+            output_mediator.SetPreferredLanguageIdentifier(None)
+            self.assertIsNone(output_mediator._lcid)
+
+            winevt_resources_helper = output_mediator.GetWinevtResourcesHelper()
+            self.assertEqual(winevt_resources_helper._lcid, 0x0409)
+
+            with self.assertRaises(ValueError):
+                output_mediator.SetPreferredLanguageIdentifier("bogus")
+
+            with self.assertRaises(ValueError):
+                output_mediator.SetPreferredLanguageIdentifier(1033)
+
+        finally:
+            storage_writer.Close()
+
+    def testSetTimeZone(self):
+        """Tests the SetTimeZone function."""
+        storage_writer = fake_writer.FakeStorageWriter()
+        storage_writer.Open()
+
+        try:
+            output_mediator = mediator.OutputMediator(storage_writer)
+
+            self.assertEqual(output_mediator.time_zone, pytz.UTC)
+
+            output_mediator.SetTimeZone("Europe/Brussels")
+            self.assertEqual(
+                output_mediator.time_zone, pytz.timezone("Europe/Brussels")
+            )
+
+            output_mediator.SetTimeZone(None)
+            self.assertEqual(output_mediator.time_zone, pytz.UTC)
+
+            with self.assertRaises(ValueError):
+                output_mediator.SetTimeZone("Bogus/Zone")
+
+        finally:
+            storage_writer.Close()
 
 
 if __name__ == "__main__":
