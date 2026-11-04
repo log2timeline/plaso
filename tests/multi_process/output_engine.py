@@ -454,6 +454,59 @@ class OutputAndFormattingMultiProcessEngineTest(test_lib.MultiProcessingTestCase
         ]
         self.assertEqual(output_module.events, expected_events)
 
+    def testInternalExportEventsWithTimestampFilter(self):
+        """Tests the _ExportEvents function with a filter on the timestamp."""
+        test_events = []
+        for index, timestamp in enumerate(
+            (
+                1000000,
+                1608735599999999,
+                1608735600000000,
+                1608735600000001,
+                1608822000000000,
+            )
+        ):
+            test_events.append(
+                {
+                    "data_type": "test:event",
+                    "md5_hash": f"{index:032d}",
+                    "timestamp": timestamp,
+                    "timestamp_desc": definitions.TIME_DESCRIPTION_UNKNOWN,
+                }
+            )
+
+        test_filter = event_filter.EventObjectFilter()
+        test_filter.CompileFilter(
+            'date > DATETIME("2020-12-23T15:00:00") and md5_hash != "0"'
+        )
+
+        output_module = TestOutputModule()
+
+        test_engine = output_engine.OutputAndFormattingMultiProcessEngine()
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            temp_file = os.path.join(temp_directory, "storage.plaso")
+            self._CreateTestStorageFile(temp_file, event_values_list=test_events)
+
+            storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
+                temp_file
+            )
+
+            test_engine._ExportEvents(
+                storage_reader, output_module, event_filter=test_filter
+            )
+
+        expected_events = [
+            {"md5_hash": "00000000000000000000000000000003"},
+            {"md5_hash": "00000000000000000000000000000004"},
+        ]
+        self.assertEqual(output_module.events, expected_events)
+
+        # Includes the event that was not read since it cannot match the filter.
+        self.assertEqual(test_engine._events_status.number_of_filtered_events, 3)
+
+    # TODO: add test for _FlushExportBuffer.
+
     def testInternalFlushExportBuffer(self):
         """Tests the _FlushExportBuffer function."""
         test_events = [
