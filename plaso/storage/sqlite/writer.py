@@ -14,7 +14,7 @@ class SQLiteStorageWriter(writer.StorageWriter):
         Args:
           storage_type (Optional[str]): storage type.
         """
-        super().__init__()
+        super().__init__(storage_type=storage_type)
         self._first_written_event_data_index = 0
         self._first_written_event_source_index = 0
         self._written_event_data_index = 0
