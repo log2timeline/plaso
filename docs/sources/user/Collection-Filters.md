@@ -59,6 +59,7 @@ directory Plaso should include or exclude from parsing.
 
 * Inclusion filters are applied before exclusion filters.
 * Specifying the path of a directory will include or exclude its files and subdirectories.
+* Paths are relative to the root of the file system, or to the source directory when the source is a directory.
 
 Path filters are case insensitive, regardless of whether the file system is
 case sensitive.
