@@ -707,7 +707,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         Args:
           storage_writer (StorageWriter): storage writer for a session storage.
           message (str): message of the warning.
-          path_spec (dfvfs.PathSpec): path specification.
+          path_spec (dfvfs.PathSpec): path specification or None if not available.
 
         Raises:
           RuntimeError: when storage writer is not set.
@@ -801,7 +801,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
             # All exceptions need to be caught here to prevent the foreman
             # from being killed by an uncaught exception.
             except Exception as exception:  # pylint: disable=broad-except
-                path_spec = getattr(event_source, "path_spec", None) or "N/A"
+                path_spec = getattr(event_source, "path_spec", None)
                 warning_message = (
                     f"unable to process path specification with error: {exception!s}"
                 )
@@ -1174,6 +1174,8 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         Raises:
           BadConfigOption: if an invalid collection filter was specified or if
               the preferred time zone is invalid.
+          Exception: if an unexpected error occurred while processing the source,
+              which is raised after the worker processes have been stopped.
         """
         self._enable_sigsegv_handler = enable_sigsegv_handler
         self._system_configurations = system_configurations
@@ -1261,10 +1263,19 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
         self._StartStatusUpdateThread()
 
+        processing_exception = None
         try:
             self._ProcessSource(
                 storage_writer, session_identifier, file_system_path_specs
             )
+
+        # An unexpected exception aborts processing, so that the worker processes
+        # and task queue are stopped and the process does not hang on exit.
+        except Exception as exception:  # pylint: disable=broad-except
+            logger.error(f"Unable to process source with error: {exception!s}")
+            processing_exception = exception
+            self._abort = True
+
         finally:
             # Stop the status update thread after close of the storage writer
             # so we include the storage sync to disk in the status updates.
@@ -1324,5 +1335,8 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         self._system_configurations = None
         self._task_storage_format = None
         self._windows_event_log_providers = None
+
+        if processing_exception:
+            raise processing_exception
 
         return self._processing_status
