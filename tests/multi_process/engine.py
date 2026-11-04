@@ -134,8 +134,6 @@ class MultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
     # pylint: disable=protected-access
 
-    # TODO: add test for _CheckStatusWorkerProcess
-
     # The process identifiers (PIDs) used in these tests are made up, therefore
     # the test engine records attempts to kill a process instead.
 
@@ -213,6 +211,46 @@ class MultiProcessEngineTest(shared_test_lib.BaseTestCase):
         self.assertEqual(test_engine.killed_pids, [])
         self.assertNotIn(1001, test_engine._process_information_per_pid)
         self.assertNotIn(1001, test_engine._rpc_clients_per_pid)
+        self.assertEqual(test_engine.started_process_names, ["Worker_00"])
+
+    def testCheckStatusWorkerProcessWithRPCError(self):
+        """Tests the _CheckStatusWorkerProcess function with a RPC error."""
+        test_engine = TestEngine()
+        test_engine._worker_memory_limit = 0
+
+        test_process = TestProcess(1001, "Worker_00")
+        test_engine._RegisterProcess(test_process)
+
+        # The RPC client was not opened, therefore querying the status fails.
+        test_engine._process_information_per_pid[1001] = process_info.ProcessInfo(
+            os.getpid()
+        )
+        test_engine._rpc_clients_per_pid[1001] = (
+            plaso_xmlrpc.XMLProcessStatusRPCClient()
+        )
+
+        test_engine._CheckStatusWorkerProcess(1001)
+
+        self.assertEqual(len(test_engine.processing_status_updates), 1)
+        pid, process_status, _ = test_engine.processing_status_updates[0]
+        self.assertEqual(pid, 1001)
+        self.assertEqual(process_status, {"processing_status": "RPC error"})
+
+        self.assertEqual(test_engine._rpc_errors_per_pid[1001], 1)
+        self.assertFalse(test_process.is_terminated)
+        self.assertEqual(test_engine.started_process_names, [])
+
+        # Test with too many RPC errors.
+        test_engine._rpc_errors_per_pid[1001] = test_engine._MAXIMUM_RPC_ERRORS
+
+        test_engine._CheckStatusWorkerProcess(1001)
+
+        self.assertEqual(len(test_engine.processing_status_updates), 2)
+        pid, process_status, _ = test_engine.processing_status_updates[1]
+        self.assertEqual(pid, 1001)
+        self.assertEqual(process_status, {"processing_status": "killed"})
+
+        self.assertTrue(test_process.is_terminated)
         self.assertEqual(test_engine.started_process_names, ["Worker_00"])
 
     def testCheckStatusWorkerProcessWithStatus(self):
