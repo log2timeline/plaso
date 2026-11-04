@@ -358,7 +358,7 @@ class WinevtResourcesHelper:
         self._language_tag = language_tag.lower()
         self._lcid = lcid or self.DEFAULT_LCID
         self._message_string_cache = collections.OrderedDict()
-        self._missing_message_strings = set()
+        self._missing_message_strings_cache = set()
         self._resource_file_helper = resource_files.WindowsResourceFileHelper
         self._storage_reader = None
         self._windows_eventlog_message_files = None
@@ -411,12 +411,12 @@ class WinevtResourcesHelper:
           lookup_key (tuple): lookup key of the missing message string.
         """
         if (
-            len(self._missing_message_strings)
+            len(self._missing_message_strings_cache)
             >= self._MAXIMUM_CACHED_MISSING_MESSAGE_STRINGS
         ):
-            self._missing_message_strings.clear()
+            self._missing_message_strings_cache.clear()
 
-        self._missing_message_strings.add(lookup_key)
+        self._missing_message_strings_cache.add(lookup_key)
 
     def _GetCachedMessageString(
         self, provider_identifier, log_source, message_identifier, event_version
@@ -1011,7 +1011,7 @@ class WinevtResourcesHelper:
             message_identifier,
             event_version,
         )
-        if lookup_key in self._missing_message_strings:
+        if lookup_key in self._missing_message_strings_cache:
             return None
 
         if self._storage_reader:
@@ -1058,7 +1058,7 @@ class WinevtResourcesHelper:
             return message_string
 
         lookup_key = ("parameter", provider_identifier, log_source, message_identifier)
-        if lookup_key in self._missing_message_strings:
+        if lookup_key in self._missing_message_strings_cache:
             return None
 
         if self._storage_reader:

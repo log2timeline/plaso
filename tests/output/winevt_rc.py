@@ -65,7 +65,7 @@ class WinevtResourcesHelperTest(shared_test_lib.BaseTestCase):
             None,
         )
         self.assertIsNotNone(message_string)
-        self.assertEqual(len(test_helper._missing_message_strings), 0)
+        self.assertEqual(len(test_helper._missing_message_strings_cache), 0)
 
         # Test that a lookup without a message string is cached.
         for _ in range(2):
@@ -77,7 +77,7 @@ class WinevtResourcesHelperTest(shared_test_lib.BaseTestCase):
             )
             self.assertIsNone(message_string)
 
-        self.assertEqual(len(test_helper._missing_message_strings), 1)
+        self.assertEqual(len(test_helper._missing_message_strings_cache), 1)
 
     def testGetParameterString(self):
         """Tests the GetParameterString function."""
@@ -93,7 +93,7 @@ class WinevtResourcesHelperTest(shared_test_lib.BaseTestCase):
             0x00001712,
         )
         self.assertEqual(message_string, "No network adapters are available.")
-        self.assertEqual(len(test_helper._missing_message_strings), 0)
+        self.assertEqual(len(test_helper._missing_message_strings_cache), 0)
 
         # Test that a lookup without a parameter string is cached.
         for _ in range(2):
@@ -104,7 +104,7 @@ class WinevtResourcesHelperTest(shared_test_lib.BaseTestCase):
             )
             self.assertIsNone(message_string)
 
-        self.assertEqual(len(test_helper._missing_message_strings), 1)
+        self.assertEqual(len(test_helper._missing_message_strings_cache), 1)
 
         # Test that a missing parameter string does not affect a message string
         # lookup with the same identifier.
@@ -114,7 +114,7 @@ class WinevtResourcesHelperTest(shared_test_lib.BaseTestCase):
             0xFFFFFFFF,
             None,
         )
-        self.assertEqual(len(test_helper._missing_message_strings), 2)
+        self.assertEqual(len(test_helper._missing_message_strings_cache), 2)
 
 
 if __name__ == "__main__":
