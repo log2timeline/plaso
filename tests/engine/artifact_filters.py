@@ -225,6 +225,91 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
         compatible_key = test_filter_file.CheckKeyCompatibility(key_path)
         self.assertTrue(compatible_key)
 
+    def testBuildFindSpecsWithMultipleSources(self):
+        """Tests the BuildFindSpecs function with multiple sources.
+
+        The first sources of the artifact definition do not apply: an unsupported
+        source type, an unsupported Windows Registry key and a users variable
+        without user accounts.
+        """
+        test_filters_helper = self._CreateTestArtifactDefinitionsFiltersHelper()
+
+        test_filters_helper.BuildFindSpecs(["TestMultipleSources"])
+
+        self.assertEqual(len(test_filters_helper.file_system_find_specs), 1)
+        self.assertEqual(len(test_filters_helper.registry_find_specs), 0)
+        self.assertEqual(
+            test_filters_helper.file_system_artifact_names, {"TestMultipleSources"}
+        )
+        self.assertEqual(test_filters_helper.registry_artifact_names, set())
+
+        location_segments = test_filters_helper.file_system_find_specs[
+            0
+        ]._location_segments
+        self.assertEqual(location_segments, ["a_directory", "another_file"])
+
+    def testBuildFindSpecsWithAlias(self):
+        """Tests the BuildFindSpecs function with an artifact definition alias."""
+        test_filters_helper = self._CreateTestArtifactDefinitionsFiltersHelper()
+
+        test_filters_helper.BuildFindSpecs(["TestFilesAlias"])
+
+        self.assertEqual(len(test_filters_helper.file_system_find_specs), 1)
+        self.assertEqual(
+            test_filters_helper.file_system_artifact_names, {"TestAliasedFiles"}
+        )
+
+        location_segments = test_filters_helper.file_system_find_specs[
+            0
+        ]._location_segments
+        self.assertEqual(location_segments, ["passwords\\.txt"])
+
+    def testBuildFindSpecsWithNestedGroup(self):
+        """Tests the BuildFindSpecs function with a nested group."""
+        test_filters_helper = self._CreateTestArtifactDefinitionsFiltersHelper()
+
+        test_filters_helper.BuildFindSpecs(["TestNestedGroup"])
+
+        self.assertEqual(len(test_filters_helper.file_system_find_specs), 1)
+        self.assertEqual(
+            test_filters_helper.file_system_artifact_names, {"TestAliasedFiles"}
+        )
+
+    def testBuildFindSpecsWithUndefinedName(self):
+        """Tests the BuildFindSpecs function with an undefined name."""
+        test_filters_helper = self._CreateTestArtifactDefinitionsFiltersHelper()
+
+        test_filters_helper.BuildFindSpecs(["DoesNotExist"])
+
+        self.assertEqual(len(test_filters_helper.file_system_find_specs), 0)
+        self.assertEqual(len(test_filters_helper.registry_find_specs), 0)
+        self.assertEqual(test_filters_helper.file_system_artifact_names, set())
+
+    def testBuildFindSpecsWithUsersVariableWithoutUserAccounts(self):
+        """Tests the BuildFindSpecs function with a users variable."""
+        test_filters_helper = self._CreateTestArtifactDefinitionsFiltersHelper()
+
+        test_filters_helper.BuildFindSpecs(["TestUsersFiles"])
+
+        self.assertEqual(len(test_filters_helper.file_system_find_specs), 0)
+
+        test_filters_helper = self._CreateTestArtifactDefinitionsFiltersHelper()
+        test_user_accounts = self._CreateTestUserAccounts()
+
+        test_filters_helper.BuildFindSpecs(
+            ["TestUsersFiles"], user_accounts=test_user_accounts
+        )
+
+        location_segments = sorted(
+            find_spec._location_segments
+            for find_spec in test_filters_helper.file_system_find_specs
+        )
+        expected_location_segments = [
+            ["Users", "testuser1", "a_file"],
+            ["Users", "testuser2", "a_file"],
+        ]
+        self.assertEqual(location_segments, expected_location_segments)
+
     def testBuildFindSpecsFromArtifact(self):
         """Tests the _BuildFindSpecsFromArtifact function."""
         test_filters_helper = self._CreateTestArtifactDefinitionsFiltersHelper()
@@ -326,6 +411,33 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
             {"TestFiles3", "TestFiles4"},
         )
 
+        # Test with multiple sources and a Windows Registry key with globstars.
+        test_filters_helper = self._CreateTestArtifactDefinitionsFiltersHelper()
+
+        definition = test_filters_helper._artifacts_registry.GetDefinitionByName(
+            "TestMultipleSources"
+        )
+        find_specs = test_filters_helper._BuildFindSpecsFromArtifact(definition, [], [])
+        self.assertEqual(len(find_specs), 1)
+        self.assertIsInstance(find_specs[0], file_system_searcher.FindSpec)
+
+        definition = test_filters_helper._artifacts_registry.GetDefinitionByName(
+            "TestRegistryKey"
+        )
+        find_specs = test_filters_helper._BuildFindSpecsFromArtifact(definition, [], [])
+        # Two globstars that expand to 10 levels each and one key path.
+        self.assertEqual(len(find_specs), 21)
+        for find_spec in find_specs:
+            self.assertIsInstance(find_spec, dfwinreg_registry_searcher.FindSpec)
+
+        self.assertEqual(
+            test_filters_helper.registry_artifact_names, {"TestRegistryKey"}
+        )
+
+        # Test that the find specifications are not stored by the helper.
+        self.assertEqual(len(test_filters_helper.file_system_find_specs), 0)
+        self.assertEqual(len(test_filters_helper.registry_find_specs), 0)
+
     def testBuildFindSpecsFromGroupName(self):
         """Tests the _BuildFindSpecsFromGroupName function."""
         test_filters_helper = self._CreateTestArtifactDefinitionsFiltersHelper()
@@ -357,6 +469,17 @@ class ArtifactDefinitionsFiltersHelperTest(shared_test_lib.BaseTestCase):
             "Bogus", environment_variables, []
         )
         self.assertIsNone(find_specs)
+
+        # Test with a group and an alias.
+        find_specs = test_filters_helper._BuildFindSpecsFromGroupName(
+            "TestGroupExport", [], []
+        )
+        self.assertEqual(len(find_specs), 4)
+
+        find_specs = test_filters_helper._BuildFindSpecsFromGroupName(
+            "TestFilesAlias", [], []
+        )
+        self.assertEqual(len(find_specs), 1)
 
     def testBuildFindSpecsFromFileSourcePath(self):
         """Tests the _BuildFindSpecsFromFileSourcePath function on file sources."""

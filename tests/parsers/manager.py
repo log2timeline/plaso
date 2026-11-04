@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 """Tests for the parsers manager."""
 
+import io
 import unittest
 
+import pysigscan
+
+from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
 from plaso.parsers import plugins
@@ -71,7 +75,62 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
 
     # pylint: disable=protected-access
 
+    def _ScanData(self, scanner_object, specification_store, data):
+        """Scans data with a signature scanner.
+
+        Args:
+          scanner_object (pysigscan.scanner): signature scanner.
+          specification_store (FormatSpecificationStore): format specifications
+              with signatures.
+          data (bytes): data to scan.
+
+        Returns:
+          set[str]: identifiers of the format specifications with matching
+              signatures.
+        """
+        scan_state = pysigscan.scan_state()
+        scanner_object.scan_file_object(scan_state, io.BytesIO(data))
+
+        identifiers = set()
+        for scan_result in iter(scan_state.scan_results):
+            format_specification = specification_store.GetSpecificationBySignature(
+                scan_result.identifier
+            )
+            identifiers.add(format_specification.identifier)
+
+        return identifiers
+
     # TODO: add tests for CreateSignatureScanner.
+
+    def testCreateSignatureScanner(self):
+        """Tests the CreateSignatureScanner function."""
+        specification_store = specification.FormatSpecificationStore()
+
+        format_specification = specification.FormatSpecification("start")
+        format_specification.AddNewSignature(b"STRT", offset=0)
+        specification_store.AddSpecification(format_specification)
+
+        format_specification = specification.FormatSpecification("end")
+        format_specification.AddNewSignature(b"TEND", offset=-4)
+        specification_store.AddSpecification(format_specification)
+
+        scanner_object = manager.ParsersManager.CreateSignatureScanner(
+            specification_store
+        )
+        self.assertIsNotNone(scanner_object)
+
+        test_data = b"".join([b"STRT", b"\x00" * 32, b"TEND"])
+        identifiers = self._ScanData(scanner_object, specification_store, test_data)
+        self.assertEqual(identifiers, {"end", "start"})
+
+        # Test with signatures that are not at their expected offsets.
+        test_data = b"".join([b"TEND", b"\x00" * 32, b"STRT"])
+        identifiers = self._ScanData(scanner_object, specification_store, test_data)
+        self.assertEqual(identifiers, set())
+
+        test_data = b"".join([b"\x00", b"STRT", b"\x00" * 32, b"TEND", b"\x00"])
+        identifiers = self._ScanData(scanner_object, specification_store, test_data)
+        self.assertEqual(identifiers, set())
 
     def testParserRegistration(self):
         """Tests the RegisterParser and DeregisterParser functions."""
@@ -88,7 +147,47 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
         manager.ParsersManager.DeregisterParser(TestParser)
         self.assertEqual(len(manager.ParsersManager._parser_classes), number_of_parsers)
 
-    # TODO: add tests for GetFormatsWithSignatures.
+    def testGetFormatsWithSignatures(self):
+        """Tests the GetFormatsWithSignatures function."""
+        manager.ParsersManager.RegisterParser(TestParser)
+
+        try:
+            specification_store, remainder_list = (
+                manager.ParsersManager.GetFormatsWithSignatures(
+                    parser_filter_expression="test_parser"
+                )
+            )
+            self.assertEqual(list(specification_store.specifications), [])
+            self.assertEqual(remainder_list, ["test_parser"])
+
+        finally:
+            manager.ParsersManager.DeregisterParser(TestParser)
+
+        specification_store, remainder_list = (
+            manager.ParsersManager.GetFormatsWithSignatures(
+                parser_filter_expression="sqlite"
+            )
+        )
+        identifiers = [
+            format_specification.identifier
+            for format_specification in specification_store.specifications
+        ]
+        self.assertEqual(identifiers, ["sqlite"])
+        self.assertEqual(remainder_list, [])
+
+        # The plist parser has a signature but also needs to be applied to files
+        # that do not match the signature.
+        specification_store, remainder_list = (
+            manager.ParsersManager.GetFormatsWithSignatures(
+                parser_filter_expression="plist"
+            )
+        )
+        identifiers = [
+            format_specification.identifier
+            for format_specification in specification_store.specifications
+        ]
+        self.assertEqual(identifiers, ["plist"])
+        self.assertEqual(remainder_list, ["plist"])
 
     def testCheckParserNames(self):
         """Tests the CheckFilterExpression function."""

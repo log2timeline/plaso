@@ -43,7 +43,8 @@ git remote add upstream https://github.com/log2timeline/plaso.git
 git pull --rebase upstream main
 ```
 
-We provide packaged versions of the dependencies via the [l2tbinaries project](https://github.com/log2timeline/l2tbinaries/blob/main/README.md).
+We provide packaged versions of the dependencies via the [GIFT PPA](https://launchpad.net/~gift),
+see [prepackaged dependencies](Development-Dependencies.html#Ubuntu).
 However it is possible that the dependencies are not fully up to date therefore
 we also provide a build script as part of [l2tdevtools project](https://github.com/log2timeline/l2tdevtools)
 to do unattended bulk builds.
@@ -52,4 +53,7 @@ to do unattended bulk builds.
 If you intend to do development on Plaso you'll also need to install some
 development tools:
 
-* PyLint 3.2.x
+* PyLint 4.0.x
+* black
+* docformatter
+* yamllint
