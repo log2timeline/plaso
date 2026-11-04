@@ -27,7 +27,6 @@ from plaso.containers import events
 from plaso.lib import dtfabric_helper
 from plaso.lib import errors
 from plaso.parsers import interface
-from plaso.parsers import logger
 from plaso.parsers import manager
 
 # TODO: RFC pending types: resolution, dateTime, rangeOfInteger.
@@ -352,13 +351,14 @@ class CupsIppParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
                 f"Unable to parse integer value with error: {exception!s}"
             )
 
-    def _ParseHeader(self, parser_mediator, file_object):
+    def _ParseHeader(self, file_object):
         """Parses a CUPS IPP header from a file-like object.
 
         Args:
-          parser_mediator (ParserMediator): mediates interactions between parsers
-              and other components, such as storage and dfVFS.
           file_object (dfvfs.FileIO): file-like object.
+
+        Returns:
+          cups_ipp_header: header.
 
         Raises:
           WrongParser: when the header cannot be parsed.
@@ -378,14 +378,7 @@ class CupsIppParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
                 f"[{self.NAME:s}] Unsupported format version {format_version:s}."
             )
 
-        if header.operation_identifier != 5:
-            # TODO: generate ExtractionWarning instead of printing debug output.
-            display_name = parser_mediator.GetDisplayName()
-            logger.debug(
-                f"[{self.NAME:s}] Non-standard operation identifier: "
-                f"0x{header.operation_identifier:08x} in file header "
-                f"of: {display_name:s}."
-            )
+        return header
 
     def ParseFileObject(self, parser_mediator, file_object):
         """Parses a CUPS IPP file-like object.
@@ -400,10 +393,11 @@ class CupsIppParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         """
         self._last_charset_attribute = "ascii"
 
-        self._ParseHeader(parser_mediator, file_object)
+        header = self._ParseHeader(file_object)
 
         cupp_ipp_values = {}
         is_first_attribute_group = True
+        warning_message = None
 
         try:
             for name, value in self._ParseAttributesGroup(file_object):
@@ -423,6 +417,15 @@ class CupsIppParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
             if is_first_attribute_group:
                 raise errors.WrongParser(warning_message)
 
+        # The operation identifier is checked after the attribute group has been
+        # parsed to prevent warnings for files that are not CUPS IPP files.
+        if header.operation_identifier != 5:
+            parser_mediator.ProduceWarning(
+                f"non-standard operation identifier: "
+                f"0x{header.operation_identifier:08x} in file header"
+            )
+
+        if warning_message:
             parser_mediator.ProduceWarning(warning_message)
             return
 
