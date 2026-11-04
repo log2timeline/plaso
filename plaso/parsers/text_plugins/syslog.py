@@ -1433,12 +1433,89 @@ class TraditionalSyslogTextPlugin(
 
     _LINE_STRUCTURES = [("log_line", _LOG_LINE)]
 
+    _FACILITY_REGEX_CHARACTERS = re.escape(_FACILITY_CHARACTERS)
+
+    _REPORTER_REGEX_CHARACTERS = re.escape(_REPORTER_CHARACTERS)
+
+    # Regular expression of the fast path of the rsyslog traditional file format
+    # log line. It matches a subset of the lines _LOG_LINE matches, where the
+    # tokens are separated by spaces only, and stops at the start of the message
+    # body, which is matched with _BODY_REGEX as _LOG_LINE does. Lines where
+    # the time elements are followed by a host name that starts with "kernel",
+    # ":" or ".", which can match the kernel or comment body or the fraction of
+    # seconds, and lines where the body could start with an optional element
+    # are left to _LOG_LINE.
+    _FAST_PATH_REGEX = re.compile(
+        r"(?P<month>[A-Za-z]{3}) +(?P<day_of_month>[0-9]{1,2}) +"
+        r"(?P<hours>[0-9]{2}):(?P<minutes>[0-9]{2}):(?P<seconds>[0-9]{2})"
+        r"(?:\.(?P<fraction_of_second>[0-9]+))? +"
+        r"(?!kernel|[.:])(?P<hostname>[!-~]+) +"
+        rf"(?P<reporter>[{_REPORTER_REGEX_CHARACTERS:s}]+)"
+        rf"(?![{_REPORTER_REGEX_CHARACTERS:s}])"
+        r"(?:\[(?P<pid>[0-9]{1,5})\])?"
+        rf"(?:<(?P<facility>[{_FACILITY_REGEX_CHARACTERS:s}]+)>)?"
+        r"(?::[ ]*(?=\S)|[ ]*(?=[^\s:<\[]))"
+    )
+
+    _BODY_REGEX = re.compile(_BODY_PATTERN, re.DOTALL)
+
     # Using a regular expression here is faster on non-match than the log line
     # grammar.
     VERIFICATION_GRAMMAR = pyparsing.Regex(
         r"(?P<date_time>(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) "
         r"( [1-9]|[1-9][0-9]) [0-9]{2}:[0-9]{2}:[0-9]{2}) \S+ .*\n"
     )
+
+    def _ParseFastPathMatch(self, string, match):
+        """Parses a match of the fast path regular expression.
+
+        Args:
+          string (str): string.
+          match (re.Match): match of the fast path regular expression at the start
+              of the string.
+
+        Returns:
+          tuple[str, dict[str, object], int, int]: key, parsed tokens, start and
+              end offset or None if the match cannot be parsed by the fast path.
+        """
+        body_match = self._BODY_REGEX.match(string, match.end())
+        if not body_match:
+            return None
+
+        # The end of line follows the message body and is either a newline or
+        # the end of the string, where pyparsing.LineEnd() also adds 1 to
+        # the offset.
+        end = body_match.end()
+        if end < len(string) and string[end] != "\n":
+            return None
+
+        time_elements = [
+            match.group("month"),
+            int(match.group("day_of_month"), 10),
+            int(match.group("hours"), 10),
+            int(match.group("minutes"), 10),
+            int(match.group("seconds"), 10),
+        ]
+        fraction_of_second = match.group("fraction_of_second")
+        if fraction_of_second is not None:
+            time_elements.append(fraction_of_second)
+
+        structure = {
+            "date_time": time_elements,
+            "hostname": match.group("hostname"),
+            "reporter": match.group("reporter"),
+            "message_body": body_match.group(),
+        }
+
+        pid = match.group("pid")
+        if pid is not None:
+            structure["pid"] = int(pid, 10)
+
+        facility = match.group("facility")
+        if facility is not None:
+            structure["facility"] = facility
+
+        return "log_line", structure, 0, end + 1
 
     def _ParseRecord(self, parser_mediator, key, structure):
         """Parses a pyparsing structure.
@@ -1447,7 +1524,8 @@ class TraditionalSyslogTextPlugin(
           parser_mediator (ParserMediator): mediates interactions between parsers
               and other components, such as storage and dfVFS.
           key (str): name of the parsed structure.
-          structure (pyparsing.ParseResults): tokens from a parsed log line.
+          structure (pyparsing.ParseResults|dict[str, object]): tokens from a
+              parsed log line.
 
         Raises:
           ParseError: if the structure cannot be parsed.
@@ -1487,8 +1565,8 @@ class TraditionalSyslogTextPlugin(
         """Parses date and time elements of a log line.
 
         Args:
-          time_elements_structure (pyparsing.ParseResults): date and time elements
-              of a log line.
+          time_elements_structure (pyparsing.ParseResults|list[object]): date and
+              time elements of a log line.
 
         Returns:
           dfdatetime.TimeElements: date and time value.
