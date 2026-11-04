@@ -7,7 +7,6 @@ import os
 import random
 import signal
 import sys
-import time
 
 from plaso.engine import process_info
 from plaso.engine import profilers
@@ -24,7 +23,6 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     """
 
     _NUMBER_OF_RPC_SERVER_START_ATTEMPTS = 14
-    _PROCESS_JOIN_TIMEOUT = 5.0
 
     def __init__(
         self, processing_configuration, enable_sigsegv_handler=False, **kwargs
@@ -55,7 +53,6 @@ class MultiProcessBaseProcess(multiprocessing.Process):
         self._quiet_mode = False
         self._rpc_server = None
         self._serializers_profiler = None
-        self._status_is_running = False
         self._storage_profiler = None
         self._tasks_profiler = None
 
@@ -223,10 +220,6 @@ class MultiProcessBaseProcess(multiprocessing.Process):
         if not self._rpc_server:
             return
 
-        # Make sure the engine gets one more status update so it knows
-        # the worker has completed.
-        self._WaitForStatusNotRunning()
-
         self._rpc_server.Stop()
         self._rpc_server = None
         self.rpc_port.value = 0
@@ -258,17 +251,6 @@ class MultiProcessBaseProcess(multiprocessing.Process):
         if self._tasks_profiler:
             self._tasks_profiler.Stop()
             self._tasks_profiler = None
-
-    def _WaitForStatusNotRunning(self):
-        """Waits for the status is running to change to false."""
-        # We wait slightly longer than the status check sleep time.
-        time.sleep(2.0)
-        time_slept = 2.0
-        while self._status_is_running:
-            time.sleep(0.5)
-            time_slept += 0.5
-            if time_slept >= self._PROCESS_JOIN_TIMEOUT:
-                break
 
     # This method is part of the multiprocessing.Process interface hence
     # its name does not follow the style guide.
@@ -309,11 +291,6 @@ class MultiProcessBaseProcess(multiprocessing.Process):
         self._pid = os.getpid()
         self._process_information = process_info.ProcessInfo(self._pid)
 
-        # We need to set the is running status explicitly to True in case
-        # the process completes before the engine is able to determine
-        # the status of the process, such as in the unit tests.
-        self._status_is_running = True
-
         # Logging needs to be configured before the first output otherwise we
         # mess up the logging of the parent process.
         loggers.ConfigureLogging(
@@ -328,18 +305,20 @@ class MultiProcessBaseProcess(multiprocessing.Process):
 
         logger.debug(f"Process: {self._name:s} (PID: {self._pid:d}) enter main.")
 
-        self._Main()
+        try:
+            self._Main()
 
-        logger.debug(f"Process: {self._name:s} (PID: {self._pid:d}) exit main.")
+            logger.debug(f"Process: {self._name:s} (PID: {self._pid:d}) exit main.")
 
-        self._StopProcessStatusRPCServer()
+        finally:
+            # The process status RPC server runs in a non-daemon thread, which
+            # prevents the process from exiting if the server is not stopped.
+            self._StopProcessStatusRPCServer()
 
         logger.debug(f"Process: {self._name:s} (PID: {self._pid:d}) stopped.")
 
         # Make sure log files are cleanly closed.
         logging.shutdown()
-
-        self._status_is_running = False
 
     @abc.abstractmethod
     def SignalAbort(self):

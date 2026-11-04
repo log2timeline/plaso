@@ -235,12 +235,15 @@ class ZeroMQQueue(plaso_queue.Queue):
               condition. If True, queue contents may be lost.
 
         Raises:
-          QueueAlreadyClosed: if the queue is not started, or has already been
-              closed.
-          RuntimeError: if closed or terminate event is missing.
+          QueueAlreadyClosed: if the queue has already been closed.
         """
-        if not self._closed_event or not self._terminate_event:
-            raise RuntimeError("Missing closed or terminate event.")
+        # A queue with delay_open that was never used has no events yet, for
+        # example a worker that is aborted before it requested its first task.
+        if not self._closed_event:
+            self._closed_event = threading.Event()
+
+        if not self._terminate_event:
+            self._terminate_event = threading.Event()
 
         if not abort and self._closed_event.is_set():
             raise errors.QueueAlreadyClosed()
@@ -645,12 +648,15 @@ class ZeroMQBufferedQueue(ZeroMQQueue):
               condition. If True, queue contents may be lost.
 
         Raises:
-          QueueAlreadyClosed: if the queue is not started, or has already been
-              closed.
-          RuntimeError: if closed or terminate event is missing.
+          QueueAlreadyClosed: if the queue has already been closed.
         """
-        if not self._closed_event or not self._terminate_event:
-            raise RuntimeError("Missing closed or terminate event.")
+        # A queue with delay_open that was never used has no events yet, for
+        # example a worker that is aborted before it requested its first task.
+        if not self._closed_event:
+            self._closed_event = threading.Event()
+
+        if not self._terminate_event:
+            self._terminate_event = threading.Event()
 
         if not abort and self._closed_event.is_set():
             raise errors.QueueAlreadyClosed()
