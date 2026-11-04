@@ -222,6 +222,7 @@ class ProcessingConfiguration(interface.AttributeContainer):
           fallback for the hostname output field.
       use_fallback_path (bool): use the event data stream path specification value as
           fallback for the filename and inode output fields.
+      vfs_back_end (str): preferred dfVFS back-end.
     """
 
     CONTAINER_TYPE = "processing_configuration"
@@ -254,3 +255,4 @@ class ProcessingConfiguration(interface.AttributeContainer):
         self.temporary_directory = None
         self.use_fallback_hostname = None
         self.use_fallback_path = None
+        self.vfs_back_end = None

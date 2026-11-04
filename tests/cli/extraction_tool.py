@@ -284,6 +284,7 @@ Test argument parser.
         test_tool._hasher_names_string = "sha256"
         test_tool._preferred_time_zone = "CET"
         test_tool._preferred_year = 2012
+        test_tool._vfs_back_end = "tsk"
 
         configuration = test_tool._CreateExtractionProcessingConfiguration()
         self.assertIsNotNone(configuration)
@@ -292,6 +293,7 @@ Test argument parser.
         self.assertEqual(configuration.extraction.hasher_names_string, "sha256")
         self.assertEqual(configuration.preferred_time_zone, "CET")
         self.assertEqual(configuration.preferred_year, 2012)
+        self.assertEqual(configuration.vfs_back_end, "tsk")
 
     def testGenerateStorageFileName(self):
         """Tests the _GenerateStorageFileName function."""
