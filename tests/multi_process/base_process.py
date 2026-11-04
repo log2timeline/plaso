@@ -74,11 +74,14 @@ class MultiProcessBaseProcessTest(shared_test_lib.BaseTestCase):
         self.assertIsNotNone(test_process)
 
     def testName(self):
-        """Tests the name property."""
+        """Tests the name attribute provided by multiprocessing.Process."""
         configuration = configurations.ProcessingConfiguration()
 
         test_process = TestProcess(configuration, name="TestBase")
         self.assertEqual(test_process.name, "TestBase")
+
+        test_process.name = "TestRenamed"
+        self.assertEqual(test_process.name, "TestRenamed")
 
     def testOnCriticalError(self):
         """Tests the _OnCriticalError function."""
