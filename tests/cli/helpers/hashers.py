@@ -20,7 +20,8 @@ class HashersArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
 
     if _PYTHON3_13_OR_LATER:
         _EXPECTED_OUTPUT = f"""\
-usage: cli_helper.py [--hasher_file_size_limit SIZE] [--hashers HASHER_LIST]
+usage: cli_helper.py [--hasher_file_size_limit SIZE]
+                     [--hasher_skip_excluded_files] [--hashers HASHER_LIST]
 
 Test argument parser.
 
@@ -29,6 +30,11 @@ Test argument parser.
                         Define the maximum file size in bytes that hashers
                         should process. Any larger file will be skipped. A
                         size of 0 represents no limit.
+  --hasher_skip_excluded_files, --hasher-skip-excluded-files
+                        Do not hash files that are excluded from content
+                        extraction, such as pagefile.sys, hiberfil.sys,
+                        sleepimage and browser cache data files. Event data of
+                        these files will not contain hashes.
   --hashers HASHER_LIST
                         Define a list of hashers to use by the tool. This is a
                         comma separated list where each entry is the name of a
@@ -40,7 +46,8 @@ Test argument parser.
 
     else:
         _EXPECTED_OUTPUT = f"""\
-usage: cli_helper.py [--hasher_file_size_limit SIZE] [--hashers HASHER_LIST]
+usage: cli_helper.py [--hasher_file_size_limit SIZE]
+                     [--hasher_skip_excluded_files] [--hashers HASHER_LIST]
 
 Test argument parser.
 
@@ -49,6 +56,11 @@ Test argument parser.
                         Define the maximum file size in bytes that hashers
                         should process. Any larger file will be skipped. A
                         size of 0 represents no limit.
+  --hasher_skip_excluded_files, --hasher-skip-excluded-files
+                        Do not hash files that are excluded from content
+                        extraction, such as pagefile.sys, hiberfil.sys,
+                        sleepimage and browser cache data files. Event data of
+                        these files will not contain hashes.
   --hashers HASHER_LIST
                         Define a list of hashers to use by the tool. This is a
                         comma separated list where each entry is the name of a
@@ -77,6 +89,12 @@ Test argument parser.
         hashers.HashersArgumentsHelper.ParseOptions(options, test_tool)
 
         self.assertEqual(test_tool._hasher_names_string, options.hashers)
+        self.assertFalse(test_tool._hasher_skip_excluded_files)
+
+        options.hasher_skip_excluded_files = True
+        hashers.HashersArgumentsHelper.ParseOptions(options, test_tool)
+
+        self.assertTrue(test_tool._hasher_skip_excluded_files)
 
         with self.assertRaises(errors.BadConfigObject):
             hashers.HashersArgumentsHelper.ParseOptions(options, None)
