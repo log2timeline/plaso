@@ -2,6 +2,7 @@
 
 from dfdatetime import time_elements as dfdatetime_time_elements
 
+from plaso.cli import logger
 from plaso.cli import time_slices
 from plaso.cli import tools
 from plaso.cli.helpers import interface
@@ -152,6 +153,17 @@ class EventFiltersArgumentsHelper(interface.ArgumentsHelper):
                         f"{time_slice_event_time_string:s}. The date and time must be "
                         f"defined in ISO 8601 format, for example: "
                         f"2020-06-19T20:09:23+02:00"
+                    )
+                )
+
+            if "T" not in time_slice_event_time_string.upper():
+                logger.warning(
+                    (
+                        f"Time slice date and time: {time_slice_event_time_string:s} "
+                        f"does not define a time of day and is interpreted as "
+                        f"midnight (00:00:00). The time slice therefore covers "
+                        f"{time_slice_duration:d} minutes before and after "
+                        f"midnight and not the entire day."
                     )
                 )
 
