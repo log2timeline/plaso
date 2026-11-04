@@ -54,6 +54,7 @@ class ParserMediator:
         self._cached_parser_chain = None
         self._environment_variables_per_path_spec = None
         self._event_data_stream = None
+        self._event_data_stream_hash_attributes = None
         self._event_data_stream_identifier = None
         self._extract_winevt_resources = True
         self._extract_winreg_binary_values = False
@@ -507,8 +508,23 @@ class ParserMediator:
         if self._event_data_stream_identifier:
             event_data.SetEventDataStreamIdentifier(self._event_data_stream_identifier)
 
+        # The event data stream portion of the hash is byte-identical for every
+        # event data that shares the same event data stream, so it is calculated
+        # once (on the first produced event data) and reused. The stream
+        # attributes are frozen before any event data is produced (the worker
+        # analyzes the data stream before calling ProduceEventDataStream).
+        if (
+            self._event_data_stream is not None
+            and self._event_data_stream_hash_attributes is None
+        ):
+            self._event_data_stream_hash_attributes = (
+                events.CalculateEventDataStreamHashAttributes(self._event_data_stream)
+            )
+
         event_values_hash = events.CalculateEventValuesHash(
-            event_data, self._event_data_stream
+            event_data,
+            self._event_data_stream,
+            event_data_stream_attributes=self._event_data_stream_hash_attributes,
         )
         setattr(event_data, "_corrupted", corrupted)
         setattr(event_data, "_event_values_hash", event_values_hash)
@@ -531,6 +547,8 @@ class ParserMediator:
         """
         if not self._storage_writer:
             raise RuntimeError("Storage writer not set.")
+
+        self._event_data_stream_hash_attributes = None
 
         if not event_data_stream:
             self._event_data_stream = None
@@ -688,6 +706,7 @@ class ParserMediator:
           file_entry (dfvfs.FileEntry): file entry.
         """
         self._event_data_stream = None
+        self._event_data_stream_hash_attributes = None
         self._event_data_stream_identifier = None
         self._file_entry = file_entry
 

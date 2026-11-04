@@ -7,6 +7,7 @@ from dfdatetime import filetime as dfdatetime_filetime
 from dfwinreg import definitions as dfwinreg_definitions
 from dfwinreg import fake as dfwinreg_fake
 
+from plaso.lib import errors
 from plaso.parsers.winreg_plugins import appcompatcache
 
 from tests.parsers.winreg_plugins import test_lib
@@ -1156,6 +1157,15 @@ class AppCompatCacheWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         registry_key.AddValue(registry_value)
 
         return registry_key
+
+    def testGetCachedEntryDataTypeMapWithUnsupportedFormatType(self):
+        """Tests the _GetCachedEntryDataTypeMap function with an unsupported format."""
+        plugin = appcompatcache.AppCompatCacheWindowsRegistryPlugin()
+
+        with self.assertRaisesRegex(errors.ParseError, "Unsupported format type: 99"):
+            plugin._GetCachedEntryDataTypeMap(  # pylint: disable=protected-access
+                99, b"", 0
+            )
 
     def testFilters(self):
         """Tests the FILTERS class attribute."""

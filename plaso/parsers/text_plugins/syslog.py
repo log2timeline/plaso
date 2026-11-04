@@ -68,6 +68,71 @@ class SyslogLineEventData(events.EventData):
         self.severity = None
 
 
+class SyslogAnacronJobEventData(SyslogLineEventData):
+    """Syslog anacron job event data.
+
+    Attributes:
+      job_identifier (str): identifier of the job, such as "cron.daily".
+      last_written_time (dfdatetime.DateTimeValues): entry last written date and time.
+    """
+
+    def __init__(self):
+        """Initializes event data."""
+        super().__init__(data_type=self.DATA_TYPE)
+        self.job_identifier = None
+        self.last_written_time = None
+
+
+class SyslogAnacronJobEndEventData(SyslogAnacronJobEventData):
+    """Syslog anacron job end event data.
+
+    Attributes:
+      exit_status (int): exit status of the job, or None if anacron reported a
+          signal or an abnormal termination instead.
+    """
+
+    DATA_TYPE = "syslog:anacron:job_end"
+
+    def __init__(self):
+        """Initializes event data."""
+        super().__init__()
+        self.exit_status = None
+
+
+class SyslogAnacronJobStartEventData(SyslogAnacronJobEventData):
+    """Syslog anacron job start event data."""
+
+    DATA_TYPE = "syslog:anacron:job_start"
+
+
+class SyslogCronEntryEventData(SyslogLineEventData):
+    """Syslog cron entry event data.
+
+    Cron writes every entry as "(name) EVENT (detail)", where the name is the
+    literal "CRON" for the daemon's own messages, otherwise a user name or the
+    system crontab.
+
+    Attributes:
+      detail (str): detail of the entry, such as a version, a crontab path or an
+          informational message.
+      event_type (str): type of the entry, such as "STARTUP", "INFO", "RELOAD" or
+          "REPLACE".
+      last_written_time (dfdatetime.DateTimeValues): entry last written date and time.
+      username (str): name of the user the entry is about, or the system crontab
+          as cron writes it, or None for the daemon's own messages.
+    """
+
+    DATA_TYPE = "syslog:cron:entry"
+
+    def __init__(self):
+        """Initializes event data."""
+        super().__init__(data_type=self.DATA_TYPE)
+        self.detail = None
+        self.event_type = None
+        self.last_written_time = None
+        self.username = None
+
+
 class SyslogCronTaskEventData(SyslogLineEventData):
     """Syslog cron task event data.
 
@@ -97,6 +162,35 @@ class SyslogCronTaskRunEventData(SyslogCronTaskEventData):
     DATA_TYPE = "syslog:cron:task_run"
 
 
+class SyslogRunPartsScriptEventData(SyslogLineEventData):
+    """Syslog run-parts script event data.
+
+    Attributes:
+      directory (str): directory the script was run from, such as "/etc/cron.daily".
+      last_written_time (dfdatetime.DateTimeValues): entry last written date and time.
+      script_name (str): name of the script.
+    """
+
+    def __init__(self):
+        """Initializes event data."""
+        super().__init__(data_type=self.DATA_TYPE)
+        self.directory = None
+        self.last_written_time = None
+        self.script_name = None
+
+
+class SyslogRunPartsScriptEndEventData(SyslogRunPartsScriptEventData):
+    """Syslog run-parts script end event data."""
+
+    DATA_TYPE = "syslog:run_parts:script_end"
+
+
+class SyslogRunPartsScriptStartEventData(SyslogRunPartsScriptEventData):
+    """Syslog run-parts script start event data."""
+
+    DATA_TYPE = "syslog:run_parts:script_start"
+
+
 class SyslogSSHEventData(SyslogLineEventData):
     """SSH event data.
 
@@ -120,6 +214,27 @@ class SyslogSSHEventData(SyslogLineEventData):
         self.port = None
         self.protocol = None
         self.username = None
+
+
+class SyslogSSHClosedConnectionEventData(SyslogSSHEventData):
+    """SSH closed connection event data.
+
+    Attributes:
+      is_authenticated (bool): True if sshd wrote the user name as an
+          authenticated user, False if as a user that was still authenticating or
+          as an invalid user, None if the message does not name a user.
+      is_invalid_user (bool): True if sshd wrote the user name as an invalid user,
+          which is a name that does not resolve to an account that is allowed to
+          log in, None if the message does not name a user.
+    """
+
+    DATA_TYPE = "syslog:ssh:closed_connection"
+
+    def __init__(self):
+        """Initializes event data."""
+        super().__init__()
+        self.is_authenticated = None
+        self.is_invalid_user = None
 
 
 # TODO: merge separate SyslogSSHEventData classes.
@@ -146,10 +261,34 @@ class SyslogSSHFailedConnectionEventData(SyslogSSHEventData):
         self.is_invalid_user = None
 
 
+class SyslogSSHInvalidUserEventData(SyslogSSHEventData):
+    """SSH invalid user event data."""
+
+    DATA_TYPE = "syslog:ssh:invalid_user"
+
+
 class SyslogSSHOpenedConnectionEventData(SyslogSSHEventData):
     """SSH opened connection event data."""
 
     DATA_TYPE = "syslog:ssh:opened_connection"
+
+
+class SyslogSSHReceivedDisconnectEventData(SyslogSSHEventData):
+    """SSH received disconnect event data.
+
+    Attributes:
+      disconnect_reason (str): disconnect reason as sent by the peer.
+      disconnect_reason_code (int): disconnect reason code as sent by the peer,
+          see RFC 4253 section 11.1.
+    """
+
+    DATA_TYPE = "syslog:ssh:received_disconnect"
+
+    def __init__(self):
+        """Initializes event data."""
+        super().__init__()
+        self.disconnect_reason = None
+        self.disconnect_reason_code = None
 
 
 class SyslogSudoCommandEventData(SyslogLineEventData):
@@ -190,9 +329,11 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
 
     # pylint: disable=abstract-method
 
+    # cron writes the account name as is, which is not limited to letters and
+    # digits, hence the name is determined by the text inside the parentheses.
     _CRON_USERNAME = (
         pyparsing.Literal("(")
-        + pyparsing.Word(pyparsing.alphanums).set_results_name("username")
+        + pyparsing.Regex(r"[^)]+").set_results_name("username")
         + pyparsing.Literal(")")
     )
 
@@ -218,13 +359,46 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
         + pyparsing.StringEnd()
     )
 
-    _CRON_MESSAGE = pyparsing.Group(_CRON_TASK_END).set_results_name(
-        "task_end"
-    ) ^ pyparsing.Group(_CRON_TASK_RUN).set_results_name("task_run")
+    # Every other entry has the same shape, see log_it in cron misc.c, where
+    # the name is the literal "CRON" for the daemon's own messages and cronie
+    # appends the error message when an errno is passed.
+    _CRON_ENTRY = pyparsing.Regex(
+        r"\((?P<username>[^)]+)\) (?P<event_type>.+?) \((?P<detail>.*)\)(?:: .+)?$"
+    )
 
-    # cronie writes job records under the upper case reporter name, CROND, and
-    # the daemon's own messages under the lower case name, crond.
-    _CRON_REPORTERS = frozenset(["CRON", "CROND"])
+    _CRON_MESSAGE = (
+        pyparsing.Group(_CRON_TASK_END).set_results_name("task_end")
+        | pyparsing.Group(_CRON_TASK_RUN).set_results_name("task_run")
+        | pyparsing.Group(_CRON_ENTRY).set_results_name("entry")
+    )
+
+    # cron and cronie write job records under the upper case reporter name,
+    # CRON and CROND, the daemon's own messages under the lower case name, and
+    # the crontab command its records under crontab.
+    _CRON_REPORTERS = frozenset(["CRON", "CROND", "cron", "crond", "crontab"])
+
+    # run-parts writes the start and end of every script it runs from a cron
+    # directory, see run-parts in crontabs.
+    _RUN_PARTS_MESSAGE = (
+        pyparsing.Literal("(")
+        + pyparsing.Regex(r"[^)]+").set_results_name("directory")
+        + pyparsing.Literal(")")
+        + (
+            pyparsing.Keyword("starting").set_results_name("start")
+            | pyparsing.Keyword("finished").set_results_name("end")
+        )
+        + pyparsing.Regex(r".+").set_results_name("script_name")
+        + pyparsing.StringEnd()
+    )
+
+    # anacron writes the start and the end of a job, where the end carries the
+    # exit status when it is not 0, or the signal, see tend_job in anacron
+    # runjob.c.
+    _ANACRON_JOB = pyparsing.Regex(
+        r"Job `(?P<job_identifier>[^']+)' (?:(?P<started>started)|terminated"
+        r"(?: \(exit status: (?P<exit_status>\d+)\)| due to signal (?P<signal>\d+)"
+        r"|(?P<abnormal> abnormally))?(?: \(produced output\))?)$"
+    )
 
     # OpenSSH 9.8 split the server into a listener binary, sshd, and a per-session
     # binary, sshd-session, which writes the authentication messages.
@@ -256,12 +430,56 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
         .set_results_name("username")
     )
 
-    _SSH_IP_ADDRESS = (
-        pyparsing.pyparsing_common.ipv4_address
-        | pyparsing.pyparsing_common.ipv6_address
+    # A link-local IPv6 address is logged with its zone identifier, such as
+    # "fe80::1%eth0", since sshd determines the address with getnameinfo and
+    # NI_NUMERICHOST, see get_peer_ipaddr in OpenSSH canohost.c and RFC 4007
+    # section 11.
+    _SSH_IP_ADDRESS = pyparsing.Combine(
+        (
+            pyparsing.pyparsing_common.ipv4_address
+            | pyparsing.pyparsing_common.ipv6_address
+        )
+        + pyparsing.Optional(
+            pyparsing.Literal("%") + pyparsing.Word(pyparsing.alphanums + "_.-")
+        )
     )
 
     _SSH_PORT = pyparsing.Word(pyparsing.nums, max=5).set_results_name("port")
+
+    # sshd writes the user name as "user NAME" after a successful
+    # authentication, and as "authenticating user NAME" or "invalid user NAME"
+    # once an authentication request named a user, see
+    # ssh_packet_set_log_preamble in OpenSSH auth2.c. In the connection
+    # identifier the name directly precedes the address, see
+    # sshpkt_fmt_connection_id in packet.c, hence the name is determined by the
+    # text that precedes the address and port.
+    _SSH_CONNECTION_USERNAME = (
+        pyparsing.SkipTo(_SSH_IP_ADDRESS + pyparsing.Literal("port") + _SSH_PORT)
+        .set_parse_action(lambda tokens: tokens[0].strip())
+        .set_results_name("username")
+    )
+
+    _SSH_CONNECTION_IDENTIFIER = (
+        pyparsing.Optional(
+            (
+                (
+                    pyparsing.Keyword("authenticating") + pyparsing.Keyword("user")
+                ).set_results_name("authenticating_user")
+                | (
+                    pyparsing.Keyword("invalid") + pyparsing.Keyword("user")
+                ).set_results_name("invalid_user")
+                | pyparsing.Keyword("user").set_results_name("authenticated_user")
+            )
+            + _SSH_CONNECTION_USERNAME
+        )
+        + _SSH_IP_ADDRESS.set_results_name("ip_address")
+        + pyparsing.Literal("port")
+        + _SSH_PORT
+    )
+
+    # Messages the unprivileged pre-authentication process writes are suffixed
+    # with "[preauth]" by the monitor, see monitor.c in OpenSSH.
+    _SSHD_PREAUTH_SUFFIX = pyparsing.Optional(pyparsing.Literal("[preauth]"))
 
     # sshd writes "invalid user" before the user name when the name does not
     # resolve to an account that is allowed to log in, see auth_log in OpenSSH
@@ -304,10 +522,91 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
         + pyparsing.StringEnd()
     )
 
+    # The end of a connection is written with the connection identifier by
+    # sshpkt_vfatal in OpenSSH packet.c, for the peer sending a disconnect
+    # message, closing or resetting the TCP connection, and by client_alive_check
+    # in serverloop.c, for a client that stops responding.
+    _SSHD_CLOSED_CONNECTION = (
+        (
+            pyparsing.Literal("Connection closed by")
+            | pyparsing.Literal("Connection reset by")
+            | pyparsing.Literal("Disconnected from")
+            | pyparsing.Literal("Timeout, client not responding from")
+        )
+        + _SSH_CONNECTION_IDENTIFIER
+        + _SSHD_PREAUTH_SUFFIX
+        + pyparsing.StringEnd()
+    )
+
+    # A read error after authentication is written with the address and port
+    # and the error message, see process_input in OpenSSH serverloop.c.
+    _SSHD_READ_ERROR = (
+        pyparsing.Literal("Read error from remote host")
+        + _SSH_IP_ADDRESS.set_results_name("ip_address")
+        + pyparsing.Literal("port")
+        + _SSH_PORT
+        + pyparsing.Literal(":")
+        + pyparsing.Regex(r".+")
+        + pyparsing.StringEnd()
+    )
+
+    # The listener writes a connection that did not authenticate within
+    # LoginGraceTime with the remote and local addresses, see OpenSSH sshd.c.
+    _SSHD_AUTHENTICATION_TIMEOUT = (
+        pyparsing.Literal("Timeout before authentication for connection from")
+        + _SSH_IP_ADDRESS.set_results_name("ip_address")
+        + pyparsing.Literal("to")
+        + _SSH_IP_ADDRESS
+        + pyparsing.Literal(", pid =")
+        + pyparsing.Word(pyparsing.nums)
+        + pyparsing.StringEnd()
+    )
+
+    # sshd writes the invalid user message once per connection when the user
+    # name does not resolve, see getpwnamallow in OpenSSH auth.c.
+    _SSHD_INVALID_USER = (
+        pyparsing.Literal("Invalid user")
+        + _SSH_USERNAME
+        + pyparsing.Literal("from")
+        + _SSH_IP_ADDRESS.set_results_name("ip_address")
+        + pyparsing.Literal("port")
+        + _SSH_PORT
+        + pyparsing.StringEnd()
+    )
+
+    # A disconnect message of the peer is written with its reason code and text,
+    # see ssh_packet_read_poll2 in OpenSSH packet.c. A reason other than 11, a
+    # normal client exit, is logged at the error level, which OpenSSH prefixes
+    # with "error: ", see do_log in log.c.
+    _SSHD_RECEIVED_DISCONNECT = (
+        pyparsing.Optional(pyparsing.Literal("error:"))
+        + pyparsing.Literal("Received disconnect from")
+        + _SSH_IP_ADDRESS.set_results_name("ip_address")
+        + pyparsing.Literal("port")
+        + _SSH_PORT
+        + pyparsing.Literal(":")
+        + pyparsing.Word(pyparsing.nums)
+        .set_parse_action(lambda tokens: int(tokens[0], 10))
+        .set_results_name("disconnect_reason_code")
+        + pyparsing.Literal(":")
+        + pyparsing.SkipTo(_SSHD_PREAUTH_SUFFIX + pyparsing.StringEnd())
+        .set_parse_action(lambda tokens: tokens[0].strip())
+        .set_results_name("disconnect_reason")
+        + _SSHD_PREAUTH_SUFFIX
+        + pyparsing.StringEnd()
+    )
+
     _SSHD_MESSAGE = (
-        pyparsing.Group(_SSHD_FAILED_CONNECTION).set_results_name("failed_connection")
+        pyparsing.Group(
+            _SSHD_CLOSED_CONNECTION | _SSHD_READ_ERROR | _SSHD_AUTHENTICATION_TIMEOUT
+        ).set_results_name("closed_connection")
+        ^ pyparsing.Group(_SSHD_FAILED_CONNECTION).set_results_name("failed_connection")
+        ^ pyparsing.Group(_SSHD_INVALID_USER).set_results_name("invalid_user")
         ^ pyparsing.Group(_SSHD_LOGIN).set_results_name("login")
         ^ pyparsing.Group(_SSHD_OPENED_CONNECTION).set_results_name("opened_connection")
+        ^ pyparsing.Group(_SSHD_RECEIVED_DISCONNECT).set_results_name(
+            "received_disconnect"
+        )
     )
 
     # sudo writes a command record as "username : [TTY=… ;] PWD=… ; USER=… ;
@@ -386,6 +685,17 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
         key = keys[0]
         structure = structure[0]
 
+        if key == "entry":
+            entry_event_data = SyslogCronEntryEventData()
+            entry_event_data.detail = structure.get("detail")
+            entry_event_data.event_type = structure.get("event_type")
+
+            username = structure.get("username")
+            if username != "CRON":
+                entry_event_data.username = username
+
+            return entry_event_data
+
         if key == "task_end":
             event_data = SyslogCronTaskEndEventData()
         elif key == "task_run":
@@ -395,6 +705,40 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
 
         event_data.command = structure.get("command")
         event_data.username = structure.get("username")
+
+        return event_data
+
+    def _ParseAnacronMessageBody(self, message_body):
+        """Parses an anacron syslog message body.
+
+        Args:
+          message_body (str): syslog message body.
+
+        Returns:
+          SyslogAnacronJobEventData: event data or None if not available.
+        """
+        try:
+            structure = self._ANACRON_JOB.parse_string(message_body)
+        except pyparsing.ParseException as exception:
+            logger.debug(
+                f"Unable to parse anacron message body with error: {exception!s}"
+            )
+            return None
+
+        if structure.get("started"):
+            event_data = SyslogAnacronJobStartEventData()
+        else:
+            event_data = SyslogAnacronJobEndEventData()
+
+            exit_status = structure.get("exit_status")
+            if exit_status is not None:
+                event_data.exit_status = int(exit_status, 10)
+            elif not structure.get("signal") and not structure.get("abnormal"):
+                # anacron only writes a job as terminated without a status when the
+                # status is 0.
+                event_data.exit_status = 0
+
+        event_data.job_identifier = structure.get("job_identifier")
 
         return event_data
 
@@ -408,6 +752,33 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
         if self._sudo_command_event_data:
             parser_mediator.ProduceEventData(self._sudo_command_event_data)
             self._sudo_command_event_data = None
+
+    def _ParseRunPartsMessageBody(self, message_body):
+        """Parses a run-parts syslog message body.
+
+        Args:
+          message_body (str): syslog message body.
+
+        Returns:
+          SyslogRunPartsScriptEventData: event data or None if not available.
+        """
+        try:
+            structure = self._RUN_PARTS_MESSAGE.parse_string(message_body)
+        except pyparsing.ParseException as exception:
+            logger.debug(
+                f"Unable to parse run-parts message body with error: {exception!s}"
+            )
+            return None
+
+        if structure.get("start"):
+            event_data = SyslogRunPartsScriptStartEventData()
+        else:
+            event_data = SyslogRunPartsScriptEndEventData()
+
+        event_data.directory = structure.get("directory")
+        event_data.script_name = structure.get("script_name")
+
+        return event_data
 
     def _ParseSshdMessageBody(self, message_body):
         """Parses a sshd syslog message body.
@@ -431,13 +802,24 @@ class BaseSyslogTextPlugin(interface.TextPlugin):
         key = keys[0]
         structure = structure[0]
 
-        if key == "failed_connection":
+        if key == "closed_connection":
+            event_data = SyslogSSHClosedConnectionEventData()
+            if "username" in structure:
+                event_data.is_authenticated = "authenticated_user" in structure
+                event_data.is_invalid_user = "invalid_user" in structure
+        elif key == "failed_connection":
             event_data = SyslogSSHFailedConnectionEventData()
             event_data.is_invalid_user = structure.get("invalid_user") is not None
+        elif key == "invalid_user":
+            event_data = SyslogSSHInvalidUserEventData()
         elif key == "login":
             event_data = SyslogSSHLoginEventData()
         elif key == "opened_connection":
             event_data = SyslogSSHOpenedConnectionEventData()
+        elif key == "received_disconnect":
+            event_data = SyslogSSHReceivedDisconnectEventData()
+            event_data.disconnect_reason = structure.get("disconnect_reason")
+            event_data.disconnect_reason_code = structure.get("disconnect_reason_code")
         else:
             return None
 
@@ -783,6 +1165,10 @@ class SyslogTextPlugin(BaseSyslogTextPlugin):
         event_data = None
         if reporter in self._CRON_REPORTERS:
             event_data = self._ParseCronMessageBody(message_body)
+        elif reporter == "anacron":
+            event_data = self._ParseAnacronMessageBody(message_body)
+        elif reporter == "run-parts":
+            event_data = self._ParseRunPartsMessageBody(message_body)
         elif reporter in self._SSHD_REPORTERS:
             event_data = self._ParseSshdMessageBody(message_body)
         elif reporter == "sudo":
@@ -1027,7 +1413,9 @@ class TraditionalSyslogTextPlugin(
 
     _SYSLOG_COMMENT_BODY = (
         pyparsing.Suppress(": ---")
-        + pyparsing.SkipTo(_SYSLOG_COMMENT_END).set_results_name("message_body")
+        + pyparsing.SkipTo(_SYSLOG_COMMENT_END, fail_on=_END_OF_LINE).set_results_name(
+            "message_body"
+        )
         + pyparsing.Suppress("---")
     )
 
@@ -1072,6 +1460,10 @@ class TraditionalSyslogTextPlugin(
         event_data = None
         if reporter in self._CRON_REPORTERS:
             event_data = self._ParseCronMessageBody(message_body)
+        elif reporter == "anacron":
+            event_data = self._ParseAnacronMessageBody(message_body)
+        elif reporter == "run-parts":
+            event_data = self._ParseRunPartsMessageBody(message_body)
         elif reporter in self._SSHD_REPORTERS:
             event_data = self._ParseSshdMessageBody(message_body)
         elif reporter == "sudo":

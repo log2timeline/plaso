@@ -235,7 +235,6 @@ class AndroidLogcatTextPlugin(
             time_elements_structure = self._GetValueFromStructure(
                 structure, "date_time"
             )
-
             has_year = len(time_elements_structure) == 7
 
             if has_year:

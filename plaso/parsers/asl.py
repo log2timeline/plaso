@@ -301,8 +301,17 @@ class ASLParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
         if file_header.first_log_entry_offset > 0:
             last_log_entry_offset = 0
             file_offset = file_header.first_log_entry_offset
+            parsed_record_offsets = set()
 
             while file_offset < file_size:
+                if file_offset in parsed_record_offsets:
+                    parser_mediator.ProduceWarning(
+                        f"record offset: 0x{file_offset:08x} was already parsed, "
+                        f"which indicates a self-referential record chain."
+                    )
+                    return
+
+                parsed_record_offsets.add(file_offset)
                 last_log_entry_offset = file_offset
 
                 try:

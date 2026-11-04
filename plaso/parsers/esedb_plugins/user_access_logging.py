@@ -490,14 +490,14 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
             database.Open(file_object)
         except (OSError, ValueError) as exception:
             parser_mediator.ProduceWarning(
-                f"unable to open SystemInformation.mdb with error: {exception!s}"
+                f"unable to open SystemIdentity.mdb with error: {exception!s}"
             )
             return
 
         role_ids_table = database.GetTableByName("ROLE_IDS")
         if not role_ids_table:
             parser_mediator.ProduceWarning(
-                "unable to get ROLE_IDS table in SystemInformation.mdb"
+                "unable to get ROLE_IDS table in SystemIdentity.mdb"
             )
         else:
             self._ParseRoleIDsTable(
@@ -507,7 +507,7 @@ class UserAccessLoggingESEDBPlugin(interface.ESEDBPlugin):
         system_identity_table = database.GetTableByName("SYSTEM_IDENTITY")
         if not system_identity_table:
             parser_mediator.ProduceWarning(
-                "unable to get SYSTEM_IDENTITY table in SystemInformation.mdb"
+                "unable to get SYSTEM_IDENTITY table in SystemIdentity.mdb"
             )
         else:
             self._ParseSystemIdentityTable(

@@ -95,6 +95,7 @@ class SRUMNetworkConnectivityUsageEventData(events.EventData):
         self.last_connected_time = None
         self.l2_profile_flags = None
         self.l2_profile_identifier = None
+        self.recorded_time = None
         self.user_identifier = None
 
 
@@ -128,6 +129,7 @@ class SRUMNetworkDataUsageEventData(events.EventData):
         self.interface_luid = None
         self.l2_profile_flags = None
         self.l2_profile_identifier = None
+        self.recorded_time = None
         self.user_identifier = None
 
 

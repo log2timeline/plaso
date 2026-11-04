@@ -1,12 +1,37 @@
 #!/usr/bin/env python3
 """Tests for the the zeromq queue."""
 
+import os
+import pickle
 import unittest
+
+import zmq
 
 from plaso.lib import errors
 from plaso.multi_process import zeromq_queue
 
 from tests import test_lib as shared_test_lib
+
+
+class CreateDirectoryOnUnpickle:
+    """Object that creates a directory when it is unpickled."""
+
+    def __init__(self, path):
+        """Initializes the object.
+
+        Args:
+          path (str): path of the directory to create when unpickled.
+        """
+        super().__init__()
+        self._path = path
+
+    def __reduce__(self):
+        """Retrieves the function and arguments used to unpickle the object.
+
+        Returns:
+          tuple[function, tuple[str]]: function and arguments.
+        """
+        return os.mkdir, (self._path,)
 
 
 class ZeroMQPullBindQueue(zeromq_queue.ZeroMQPullQueue):
@@ -71,6 +96,35 @@ class ZeroMQQueuesTest(shared_test_lib.BaseTestCase):
         test_queue.Close(abort=True)
         with self.assertRaises(errors.QueueAlreadyClosed):
             test_queue.PushItem("This shouldn't work")
+
+    def testBufferedReplyQueueRequestNotDeserialized(self):
+        """Tests that the buffered reply queue does not deserialize requests."""
+        test_queue = zeromq_queue.ZeroMQBufferedReplyBindQueue(
+            name="bufferedreply_request", delay_open=False, linger_seconds=1
+        )
+        test_queue.PushItem("This is a test item.")
+
+        zmq_context = zmq.Context()  # pylint: disable=abstract-class-instantiated
+        zmq_socket = zmq_context.socket(zmq.REQ)
+        zmq_socket.setsockopt(zmq.RCVTIMEO, 10000)
+        zmq_socket.setsockopt(zmq.LINGER, 0)
+
+        try:
+            with shared_test_lib.TempDirectory() as temp_directory:
+                path = os.path.join(temp_directory, "unpickled")
+
+                zmq_socket.connect(f"tcp://127.0.0.1:{test_queue.port:d}")
+                zmq_socket.send(pickle.dumps(CreateDirectoryOnUnpickle(path)))
+
+                # The request is answered with the item, without the request being
+                # unpickled.
+                self.assertEqual(zmq_socket.recv_pyobj(), "This is a test item.")
+                self.assertFalse(os.path.exists(path))
+
+        finally:
+            zmq_socket.close()
+            zmq_context.term()
+            test_queue.Close(abort=True)
 
     def testPushPullQueues(self):
         """Tests than an item can be transferred between push and pull queues."""

@@ -191,6 +191,105 @@ class SyslogTextPluginTest(test_lib.TextPluginTestCase):
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
 
+    def testProcessCronDebian(self):
+        """Tests the Process function with Debian cron daemon and crontab messages."""
+        plugin = syslog.SyslogTextPlugin()
+        storage_writer = self._ParseTextFileWithPlugin(
+            ["syslog", "syslog_cron_debian.log"], plugin
+        )
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 15)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "recovery_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        expected_data_types = [
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:task_run",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:task_run",
+            "syslog:cron:entry",
+        ]
+        for index, expected_data_type in enumerate(expected_data_types):
+            event_data = storage_writer.GetAttributeContainerByIndex(
+                "event_data", index
+            )
+            self.assertEqual(event_data.data_type, expected_data_type, index)
+
+        # cron[1615]: (CRON) INFO (pidfile fd = 3)
+        expected_event_values = {
+            "data_type": "syslog:cron:entry",
+            "detail": "pidfile fd = 3",
+            "event_type": "INFO",
+            "last_written_time": "2026-10-10T11:45:20.510482+00:00",
+            "reporter": "cron",
+            "username": None,
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # CRON[1682]: (svc-backup) CMD (/usr/local/bin/agent --daemon)
+        expected_event_values = {
+            "command": "/usr/local/bin/agent --daemon",
+            "data_type": "syslog:cron:task_run",
+            "last_written_time": "2026-10-10T11:45:20.972191+00:00",
+            "reporter": "CRON",
+            "username": "svc-backup",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 2)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # crontab[2436]: (ubuntu) REPLACE (ubuntu)
+        expected_event_values = {
+            "data_type": "syslog:cron:entry",
+            "detail": "ubuntu",
+            "event_type": "REPLACE",
+            "reporter": "crontab",
+            "username": "ubuntu",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 3)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # cron[1615]: (ubuntu) RELOAD (crontabs/ubuntu)
+        expected_event_values = {
+            "data_type": "syslog:cron:entry",
+            "detail": "crontabs/ubuntu",
+            "event_type": "RELOAD",
+            "reporter": "cron",
+            "username": "ubuntu",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 8)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # cron[2478]: (*system*plaso-capture) RELOAD (/etc/cron.d/plaso-capture)
+        expected_event_values = {
+            "data_type": "syslog:cron:entry",
+            "detail": "/etc/cron.d/plaso-capture",
+            "event_type": "RELOAD",
+            "username": "*system*plaso-capture",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 14)
+        self.CheckEventData(event_data, expected_event_values)
+
     def testProcessRsyslog(self):
         """Tests the Process function with a rsyslog file."""
         plugin = syslog.SyslogTextPlugin()
@@ -253,6 +352,207 @@ class SyslogTextPluginTest(test_lib.TextPluginTestCase):
             "severity": "DEBUG",
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
+
+    def testProcessSshdConnectionEnd(self):
+        """Tests the Process function with sshd connection end messages."""
+        plugin = syslog.SyslogTextPlugin()
+        storage_writer = self._ParseTextFileWithPlugin(
+            ["syslog", "syslog_sshd_connection_end.log"], plugin
+        )
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 23)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "recovery_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        expected_data_types = [
+            "syslog:ssh:closed_connection",
+            "syslog:ssh:received_disconnect",
+            "syslog:ssh:closed_connection",
+            "syslog:line",
+            "syslog:ssh:closed_connection",
+            "syslog:ssh:closed_connection",
+            "syslog:ssh:closed_connection",
+            "syslog:ssh:closed_connection",
+            "syslog:ssh:invalid_user",
+            "syslog:ssh:closed_connection",
+            "syslog:ssh:login",
+            "syslog:ssh:received_disconnect",
+            "syslog:ssh:closed_connection",
+            "syslog:ssh:invalid_user",
+            "syslog:ssh:failed_connection",
+            "syslog:ssh:received_disconnect",
+            "syslog:ssh:closed_connection",
+            "syslog:ssh:failed_connection",
+            "syslog:ssh:received_disconnect",
+            "syslog:ssh:closed_connection",
+            "syslog:ssh:closed_connection",
+            "syslog:ssh:closed_connection",
+            "syslog:ssh:closed_connection",
+        ]
+        for index, expected_data_type in enumerate(expected_data_types):
+            event_data = storage_writer.GetAttributeContainerByIndex(
+                "event_data", index
+            )
+            self.assertEqual(event_data.data_type, expected_data_type, index)
+
+        # Connection closed by authenticating user svc-backup 192.168.1.92 port
+        # 38204 [preauth]
+        expected_event_values = {
+            "data_type": "syslog:ssh:closed_connection",
+            "ip_address": "192.168.1.92",
+            "is_authenticated": False,
+            "is_invalid_user": False,
+            "last_written_time": "2026-07-28T18:57:09.958129+00:00",
+            "port": "38204",
+            "reporter": "sshd-session",
+            "username": "svc-backup",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # Received disconnect from 192.168.137.1 port 63234:11: disconnected by user
+        expected_event_values = {
+            "data_type": "syslog:ssh:received_disconnect",
+            "disconnect_reason": "disconnected by user",
+            "disconnect_reason_code": 11,
+            "ip_address": "192.168.137.1",
+            "last_written_time": "2026-07-26T13:03:24.719663+00:00",
+            "port": "63234",
+            "reporter": "sshd-session",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # Disconnected from user ubuntu 192.168.137.1 port 63234
+        expected_event_values = {
+            "data_type": "syslog:ssh:closed_connection",
+            "ip_address": "192.168.137.1",
+            "is_authenticated": True,
+            "is_invalid_user": False,
+            "port": "63234",
+            "username": "ubuntu",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 2)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # Connection reset by 192.168.248.1 port 60274
+        expected_event_values = {
+            "data_type": "syslog:ssh:closed_connection",
+            "ip_address": "192.168.248.1",
+            "is_authenticated": None,
+            "is_invalid_user": None,
+            "port": "60274",
+            "username": None,
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 4)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # Timeout, client not responding from user ubuntu 192.168.248.1 port 55307
+        expected_event_values = {
+            "data_type": "syslog:ssh:closed_connection",
+            "ip_address": "192.168.248.1",
+            "is_authenticated": True,
+            "port": "55307",
+            "username": "ubuntu",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 6)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # Timeout before authentication for connection from 192.168.248.1 to
+        # 192.168.248.128, pid = 2903
+        expected_event_values = {
+            "data_type": "syslog:ssh:closed_connection",
+            "ip_address": "192.168.248.1",
+            "is_authenticated": None,
+            "port": None,
+            "reporter": "sshd",
+            "username": None,
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 7)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # Invalid user john doe from 192.168.248.1 port 54928
+        expected_event_values = {
+            "data_type": "syslog:ssh:invalid_user",
+            "ip_address": "192.168.248.1",
+            "last_written_time": "2026-10-08T00:19:26.539626+00:00",
+            "port": "54928",
+            "username": "john doe",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 8)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # Connection closed by invalid user john doe 192.168.248.1 port 54928
+        # [preauth]
+        expected_event_values = {
+            "data_type": "syslog:ssh:closed_connection",
+            "ip_address": "192.168.248.1",
+            "is_authenticated": False,
+            "is_invalid_user": True,
+            "port": "54928",
+            "username": "john doe",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 9)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # Accepted publickey for ubuntu from fe80::621:e520:10d6:6621%ens36 port
+        # 54931 ssh2: ED25519 SHA256:a79QfkCiaM8pEpw/wmP0Qfkl3ttsHxPlSKgqilMv9K8
+        expected_event_values = {
+            "authentication_method": "publickey",
+            "data_type": "syslog:ssh:login",
+            "fingerprint": "ED25519 SHA256:a79QfkCiaM8pEpw/wmP0Qfkl3ttsHxPlSKgqilMv9K8",
+            "ip_address": "fe80::621:e520:10d6:6621%ens36",
+            "port": "54931",
+            "username": "ubuntu",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 10)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # error: Received disconnect from 192.168.248.1 port 54936:14: No more
+        # authentication methods available [preauth]
+        expected_event_values = {
+            "data_type": "syslog:ssh:received_disconnect",
+            "disconnect_reason": "No more authentication methods available",
+            "disconnect_reason_code": 14,
+            "ip_address": "192.168.248.1",
+            "port": "54936",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 15)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # Disconnected from invalid user nosuchuser 192.168.248.1 port 54936
+        # [preauth]
+        expected_event_values = {
+            "data_type": "syslog:ssh:closed_connection",
+            "is_authenticated": False,
+            "is_invalid_user": True,
+            "port": "54936",
+            "username": "nosuchuser",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 16)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # Read error from remote host 192.168.248.1 port 54939: Connection reset
+        # by peer
+        expected_event_values = {
+            "data_type": "syslog:ssh:closed_connection",
+            "ip_address": "192.168.248.1",
+            "is_authenticated": None,
+            "port": "54939",
+            "username": None,
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 20)
         self.CheckEventData(event_data, expected_event_values)
 
     def testProcessSudo(self):
@@ -629,11 +929,14 @@ class TraditionalSyslogTextPluginTest(test_lib.TextPluginTestCase):
 
         # The daemon writes its own messages under the lower case reporter name.
         expected_event_values = {
-            "data_type": "syslog:line",
+            "data_type": "syslog:cron:entry",
+            "detail": "1.7.2",
+            "event_type": "STARTUP",
             "last_written_time": "0000-07-07T20:56:16",
             "message_body": "(CRON) STARTUP (1.7.2)",
             "pid": 1276,
             "reporter": "crond",
+            "username": None,
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
@@ -650,10 +953,12 @@ class TraditionalSyslogTextPluginTest(test_lib.TextPluginTestCase):
         self.CheckEventData(event_data, expected_event_values)
 
         expected_event_values = {
-            "data_type": "syslog:line",
+            "data_type": "syslog:run_parts:script_start",
+            "directory": "/etc/cron.hourly",
             "last_written_time": "0000-07-07T21:01:00",
             "message_body": "(/etc/cron.hourly) starting 0anacron",
             "reporter": "run-parts",
+            "script_name": "0anacron",
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 5)
         self.CheckEventData(event_data, expected_event_values)
@@ -667,6 +972,171 @@ class TraditionalSyslogTextPluginTest(test_lib.TextPluginTestCase):
             "username": "root",
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 12)
+        self.CheckEventData(event_data, expected_event_values)
+
+    def testProcessCronie(self):
+        """Tests the Process function with cronie, crontab, run-parts and anacron."""
+        plugin = syslog.TraditionalSyslogTextPlugin()
+        storage_writer = self._ParseTextFileWithPlugin(
+            ["syslog", "syslog_cronie.log"], plugin
+        )
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 33)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "recovery_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        expected_data_types = [
+            "syslog:cron:entry",
+            "syslog:line",
+            "syslog:line",
+            "syslog:line",
+            "syslog:anacron:job_start",
+            "syslog:anacron:job_end",
+            "syslog:line",
+            "syslog:line",
+            "syslog:line",
+            "syslog:line",
+            "syslog:line",
+            "syslog:anacron:job_start",
+            "syslog:run_parts:script_start",
+            "syslog:run_parts:script_end",
+            "syslog:anacron:job_end",
+            "syslog:line",
+            "syslog:line",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+            "syslog:cron:entry",
+        ]
+        for index, expected_data_type in enumerate(expected_data_types):
+            event_data = storage_writer.GetAttributeContainerByIndex(
+                "event_data", index
+            )
+            self.assertEqual(event_data.data_type, expected_data_type, index)
+
+        # crontab[1578]: (root) REPLACE (root)
+        expected_event_values = {
+            "data_type": "syslog:cron:entry",
+            "detail": "root",
+            "event_type": "REPLACE",
+            "last_written_time": "0000-10-10T06:44:29",
+            "reporter": "crontab",
+            "username": "root",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # anacron[1588]: Job `plaso-fail' started
+        expected_event_values = {
+            "data_type": "syslog:anacron:job_start",
+            "job_identifier": "plaso-fail",
+            "last_written_time": "0000-10-10T06:44:39",
+            "reporter": "anacron",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 4)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # anacron[1588]: Job `plaso-fail' terminated (exit status: 3) (produced output)
+        expected_event_values = {
+            "data_type": "syslog:anacron:job_end",
+            "exit_status": 3,
+            "job_identifier": "plaso-fail",
+            "reporter": "anacron",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 5)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # run-parts[1601]: (/etc/cron.daily) starting zz-plaso-fail
+        expected_event_values = {
+            "data_type": "syslog:run_parts:script_start",
+            "directory": "/etc/cron.daily",
+            "last_written_time": "0000-10-10T06:44:42",
+            "reporter": "run-parts",
+            "script_name": "zz-plaso-fail",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 12)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # run-parts[1605]: (/etc/cron.daily) finished zz-plaso-fail
+        expected_event_values = {
+            "data_type": "syslog:run_parts:script_end",
+            "directory": "/etc/cron.daily",
+            "script_name": "zz-plaso-fail",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 13)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # anacron[1595]: Job `cron.daily' terminated (produced output)
+        expected_event_values = {
+            "data_type": "syslog:anacron:job_end",
+            "exit_status": 0,
+            "job_identifier": "cron.daily",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 14)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # crond[1608]: (CRON) STARTUP (1.7.2)
+        expected_event_values = {
+            "data_type": "syslog:cron:entry",
+            "detail": "1.7.2",
+            "event_type": "STARTUP",
+            "reporter": "crond",
+            "username": None,
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 18)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # crond[1608]: (*system*) RELOAD (/etc/cron.d/0hourly)
+        expected_event_values = {
+            "data_type": "syslog:cron:entry",
+            "detail": "/etc/cron.d/0hourly",
+            "event_type": "RELOAD",
+            "username": "*system*",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 25)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # crontab[1781]: (root) BEGIN EDIT (root)
+        expected_event_values = {
+            "data_type": "syslog:cron:entry",
+            "detail": "root",
+            "event_type": "BEGIN EDIT",
+            "username": "root",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 28)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # crond[1608]: (root) RELOAD (/var/spool/cron/root)
+        expected_event_values = {
+            "data_type": "syslog:cron:entry",
+            "detail": "/var/spool/cron/root",
+            "event_type": "RELOAD",
+            "last_written_time": "0000-10-10T06:48:00",
+            "username": "root",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 30)
         self.CheckEventData(event_data, expected_event_values)
 
     def testProcessDarwin(self):
@@ -922,14 +1392,29 @@ class TraditionalSyslogTextPluginTest(test_lib.TextPluginTestCase):
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 4)
         self.CheckEventData(event_data, expected_event_values)
 
-        # A message that the sshd structures do not define, which is retained as
-        # a syslog:line.
         expected_event_values = {
-            "data_type": "syslog:line",
+            "data_type": "syslog:ssh:received_disconnect",
+            "disconnect_reason": "disconnected by user",
+            "disconnect_reason_code": 11,
+            "ip_address": "192.168.1.62",
             "last_written_time": "0000-08-02T11:42:18",
+            "port": "60218",
             "reporter": "sshd-session",
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 5)
+        self.CheckEventData(event_data, expected_event_values)
+
+        expected_event_values = {
+            "data_type": "syslog:ssh:closed_connection",
+            "ip_address": "192.168.1.62",
+            "is_authenticated": True,
+            "is_invalid_user": False,
+            "last_written_time": "0000-08-02T11:42:18",
+            "port": "60218",
+            "reporter": "sshd-session",
+            "username": "root",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 6)
         self.CheckEventData(event_data, expected_event_values)
 
         expected_event_values = {
@@ -1014,6 +1499,95 @@ class TraditionalSyslogTextPluginTest(test_lib.TextPluginTestCase):
             "pid": 1765,
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 8)
+        self.CheckEventData(event_data, expected_event_values)
+
+    def _ProcessByteStream(self, plugin, data):
+        """Parses an in-memory byte stream with a traditional syslog plugin.
+
+        Args:
+          plugin (TextPlugin): text log file plugin.
+          data (bytes): contents of the log file to parse.
+
+        Returns:
+          FakeStorageWriter: storage writer.
+        """
+        file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+        file_system_builder.AddFile("/file.txt", data)
+
+        file_entry = file_system_builder.file_system.GetFileEntryByPath("/file.txt")
+
+        storage_writer = self._CreateStorageWriter()
+        parser_mediator = self._CreateParserMediator(
+            storage_writer, file_entry=file_entry
+        )
+        parser_mediator.AppendToParserChain("text")
+
+        file_object = file_entry.GetFileObject()
+        text_reader = text_parser.EncodedTextReader(file_object, encoding="utf-8")
+        text_reader.ReadLines()
+
+        required_format = plugin.CheckRequiredFormat(parser_mediator, text_reader)
+        self.assertTrue(required_format)
+
+        plugin.UpdateChainAndProcess(parser_mediator, file_object=file_object)
+
+        return storage_writer
+
+    def testProcessComment(self):
+        """Tests the Process function with a syslog comment line."""
+        plugin = syslog.TraditionalSyslogTextPlugin()
+
+        data = (
+            b"Jan 22 07:54:32 myhostname client[30840]: starting up\n"
+            b"Jan 22 07:54:32: --- last message repeated 5 times ---\n"
+        )
+
+        storage_writer = self._ProcessByteStream(plugin, data)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 2)
+
+        expected_event_values = {
+            "data_type": "syslog:line",
+            "message_body": "last message repeated 5 times ---",
+            "reporter": "---",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
+        self.CheckEventData(event_data, expected_event_values)
+
+    def testProcessLongComment(self):
+        """Tests the Process function with a long syslog comment line.
+
+        Bounding the comment-body scan to the current line leaves the parsed
+        message body unchanged, whether the comment body is short or long. This
+        parses a long comment line and checks that it produces the same event
+        data structure and message body as the short comment line parsed by
+        testProcessComment.
+        """
+        plugin = syslog.TraditionalSyslogTextPlugin()
+
+        comment_body = ("the quick brown fox jumps over the lazy dog " * 200).strip()
+
+        data = (
+            b"Jan 22 07:54:32 myhostname client[30840]: starting up\n"
+            + f"Jan 22 07:54:32: --- {comment_body} ---\n".encode("utf-8")
+        )
+
+        storage_writer = self._ProcessByteStream(plugin, data)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 2)
+
+        expected_event_values = {
+            "data_type": "syslog:line",
+            "message_body": f"{comment_body} ---",
+            "reporter": "---",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
 
 

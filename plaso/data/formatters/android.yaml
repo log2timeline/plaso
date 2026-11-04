@@ -357,7 +357,7 @@ message:
 - 'Description: {description}'
 - 'URL: {web_url}'
 - 'Number of followers: {followers}'
-- 'Number of following: {friend}'
+- 'Number of following: {friends}'
 - 'Number of tweets: {statuses}'
 short_message:
 - 'Screen name: {username}'
@@ -434,13 +434,13 @@ data_type: 'android:webview:cookie'
 message:
 - 'Hostname: {hostname}'
 - 'Path: {path}'
-- 'Cookie name: {name}'
-- 'Value: {value}'
+- 'Cookie name: {cookie_name}'
+- 'Value: {data}'
 - 'Secure: {secure}'
 short_message:
 - '{hostname}'
-- '{name}'
-- '{value}'
+- '{cookie_name}'
+- '{data}'
 short_source: 'WebView'
 source: 'Android WebView'
 ---

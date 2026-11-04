@@ -36,8 +36,8 @@ class UnifiedLoggingEventData(events.EventData):
       event_type (str): event type.
       message_type (str): message type.
       process_identifier (int): process identifier (PID).
-      process_image_identifier (str): process image identifier.
       process_image_identifier (str): process image identifier, contains an UUID.
+      process_image_path (str): process image path.
       recorded_time (dfdatetime.DateTimeValues): date and time the log entry was
           recorded.
       sender_image_identifier (str): (sender) image identifier, contains an UUID.

@@ -88,7 +88,11 @@ class SCCMTextPlugin(interface.TextPlugin):
     _LOG_MESSAGE_START = pyparsing.Suppress("<![LOG[")
 
     # Using a regular expression look ahead here is faster than pyparsing.SkipTo()
-    _LOG_MESSAGE_TEXT = pyparsing.Regex(r".*?(?=(]LOG]!><))", re.DOTALL)
+    # The scan stops at the message terminator or at the next record opener,
+    # whichever comes first, so that a buffer that never contains the terminator
+    # is not re-scanned to its end at every opener offset. A record opener never
+    # occurs inside a message, so this does not change the captured text.
+    _LOG_MESSAGE_TEXT = pyparsing.Regex(r".*?(?=(]LOG]!><|<!\[LOG\[))", re.DOTALL)
 
     _LOG_MESSAGE_END = pyparsing.Suppress("]LOG]!><")
 

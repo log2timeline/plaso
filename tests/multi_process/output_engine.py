@@ -6,6 +6,7 @@ import os
 import unittest
 
 from plaso.cli import time_slices
+from plaso.containers import events
 from plaso.engine import configurations
 from plaso.filters import event_filter
 from plaso.lib import definitions
@@ -311,6 +312,39 @@ class OutputAndFormattingMultiProcessEngineTest(test_lib.MultiProcessingTestCase
 
     # TODO: add test for _ExportEvent.
 
+    def testGetEventTag(self):
+        """Tests the _GetEventTag function."""
+        test_engine = output_engine.OutputAndFormattingMultiProcessEngine()
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            temp_file = os.path.join(temp_directory, "storage.plaso")
+            self._CreateTestStorageFile(temp_file)
+
+            storage_file = storage_factory.StorageFactory.CreateStorageFile(
+                definitions.DEFAULT_STORAGE_FORMAT
+            )
+            storage_file.Open(path=temp_file, read_only=False)
+
+            storage_reader_events = list(storage_file.GetSortedEvents())
+            event_tag = events.EventTag()
+            event_tag.SetEventIdentifier(storage_reader_events[1].GetIdentifier())
+            event_tag.AddLabel("test_label")
+            storage_file.AddAttributeContainer(event_tag)
+            storage_file.Close()
+
+            storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
+                temp_file
+            )
+
+            event_tags = [
+                test_engine._GetEventTag(storage_reader, event)
+                for event in storage_reader.GetSortedEvents()
+            ]
+
+        self.assertIsNone(event_tags[0])
+        self.assertEqual(event_tags[1].labels, ["test_label"])
+        self.assertEqual(event_tags.count(None), len(event_tags) - 1)
+
     def testInternalExportEvents(self):
         """Tests the _ExportEvents function."""
         formatters_directory_path = self._GetDataFilePath(["formatters"])
@@ -420,7 +454,93 @@ class OutputAndFormattingMultiProcessEngineTest(test_lib.MultiProcessingTestCase
         ]
         self.assertEqual(output_module.events, expected_events)
 
-    # TODO: add test for _FlushExportBuffer.
+    def testInternalFlushExportBuffer(self):
+        """Tests the _FlushExportBuffer function."""
+        test_events = [
+            {
+                "data_type": "test:event",
+                "md5_hash": "11111111111111111111111111111111",
+                "timestamp": 5134324321,
+                "timestamp_desc": definitions.TIME_DESCRIPTION_UNKNOWN,
+            },
+            {
+                "data_type": "test:event",
+                "md5_hash": "11111111111111111111111111111111",
+                "timestamp": 5134324321,
+                "timestamp_desc": definitions.TIME_DESCRIPTION_UNKNOWN,
+            },
+            {
+                "data_type": "test:event",
+                "md5_hash": "22222222222222222222222222222222",
+                "timestamp": 5134324321,
+                "timestamp_desc": definitions.TIME_DESCRIPTION_CREATION,
+            },
+            {
+                "data_type": "test:event",
+                "md5_hash": "22222222222222222222222222222222",
+                "timestamp": 5134324321,
+                "timestamp_desc": definitions.TIME_DESCRIPTION_LAST_ACCESS,
+            },
+        ]
+
+        for deduplicate_events, expected_number_of_written_events in (
+            (True, 1),
+            (False, 2),
+        ):
+            output_module = TestOutputModule()
+
+            test_engine = output_engine.OutputAndFormattingMultiProcessEngine()
+
+            for (
+                event,
+                event_data,
+                event_data_stream,
+            ) in containers_test_lib.CreateEventsFromValues(test_events):
+                test_engine._export_event_heap.PushEvent(
+                    event, event_data, event_data_stream
+                )
+
+            test_engine._FlushExportBuffer(
+                None,
+                output_module,
+                deduplicate_events=deduplicate_events,
+                resolve_event_tag=False,
+            )
+
+            self.assertEqual(test_engine._export_event_heap.number_of_events, 0)
+
+            written_events = [
+                field_values
+                for field_values in output_module.events
+                if isinstance(field_values, dict)
+            ]
+            expected_written_events = [
+                {"md5_hash": "11111111111111111111111111111111"}
+            ] * expected_number_of_written_events
+            self.assertEqual(written_events, expected_written_events)
+
+            self.assertEqual(len(output_module.macb_groups), 1)
+
+            macb_group = output_module.macb_groups[0]
+            self.assertEqual(len(macb_group), 2)
+
+            timestamp_descriptions = sorted(
+                macb_event.timestamp_desc for macb_event, _, _, _ in macb_group
+            )
+            self.assertEqual(
+                timestamp_descriptions,
+                [
+                    definitions.TIME_DESCRIPTION_CREATION,
+                    definitions.TIME_DESCRIPTION_LAST_ACCESS,
+                ],
+            )
+
+            events_status = test_engine._events_status
+            self.assertEqual(
+                events_status.number_of_duplicate_events,
+                2 - expected_number_of_written_events,
+            )
+            self.assertEqual(events_status.number_of_macb_grouped_events, 2)
 
     def testExportEvents(self):
         """Tests the ExportEvents function."""

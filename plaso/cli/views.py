@@ -2,6 +2,8 @@
 
 import abc
 
+from plaso.lib import definitions
+
 
 class BaseTableView:
     """Table view interface."""
@@ -110,8 +112,18 @@ class CLITableView(BaseTableView):
         else:
             value_string = str(values[1])
 
+        # Escape non-printable characters before the width and word-wrapping
+        # logic so that the computed layout matches what is written and no value
+        # can rewrite earlier terminal output.
+        column_name = str(values[0]).translate(
+            definitions.NON_PRINTABLE_CHARACTER_TRANSLATION_TABLE
+        )
+        value_string = value_string.translate(
+            definitions.NON_PRINTABLE_CHARACTER_TRANSLATION_TABLE
+        )
+
         if len(value_string) < maximum_row_width:
-            output_text = primary_format_string.format(values[0], value_string)
+            output_text = primary_format_string.format(column_name, value_string)
             output_writer.Write(output_text)
             return
 
@@ -133,7 +145,7 @@ class CLITableView(BaseTableView):
         lines.append(" ".join(word_buffer))
 
         # Split the column value across multiple lines.
-        output_text = primary_format_string.format(values[0], lines[0])
+        output_text = primary_format_string.format(column_name, lines[0])
         output_writer.Write(output_text)
         for line in lines[1:]:
             output_text = secondary_format_string.format("", line)

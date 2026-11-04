@@ -380,7 +380,7 @@ class MultiProcessEngine(engine.BaseEngine):
         if pid in self._rpc_errors_per_pid:
             del self._rpc_errors_per_pid[pid]
 
-        logger.debug("Stopped monitoring process: {process.name:s} (PID: {pid:d}).")
+        logger.debug(f"Stopped monitoring process: {process.name:s} (PID: {pid:d}).")
 
     def _StopMonitoringProcesses(self):
         """Stops monitoring all processes."""
@@ -428,14 +428,14 @@ class MultiProcessEngine(engine.BaseEngine):
           process (MultiProcessBaseProcess): process to terminate.
         """
         pid = process.pid
-        logger.warning("Terminating process: (PID: {pid:d}).")
+        logger.warning(f"Terminating process: (PID: {pid:d}).")
         process.terminate()
 
         # Wait for the process to exit.
         process.join(timeout=self._PROCESS_JOIN_TIMEOUT)
 
         if process.is_alive():
-            logger.warning("Killing process: (PID: {pid:d}).")
+            logger.warning(f"Killing process: (PID: {pid:d}).")
             self._KillProcess(pid)
 
     @abc.abstractmethod

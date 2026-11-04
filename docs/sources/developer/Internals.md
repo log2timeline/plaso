@@ -111,15 +111,27 @@ components such as the knowledge base and storage.
 
 ### Storage
 
-TODO: describe session and task store
-TODO: describe attribute containers
-TODO: describe different storage back-ends
+Plaso stores its data as attribute containers, using the
+[acstore](https://github.com/log2timeline/acstore) library. An attribute
+container is an object of a specific container type, such as "event",
+"event_data", "event_data_stream", "event_tag", "extraction_warning" or
+"analysis_report". The attribute container types are defined in
+`plaso/containers/`.
 
-The storage role takes care of reading events from the storage queue, filling up
- a buffer and then flushing that buffer to a disk.
+Plaso distinguishes between two types of stores:
 
-The storage portion of the tool also serves as an API to the storage file for
-later processing and extracting events from the storage file. The storage
-library takes care of parsing metadata structures stored inside the storage
-file, tagging and grouping information and to extract fully sorted events out
-of the storage.
+* the session store, which is the storage file, such as `timeline.plaso`, that
+  contains the attribute containers of every processing session;
+* task stores, which contain the attribute containers produced by an individual
+  task of a worker process. In multi-processing mode, the main (foreman)
+  process merges the task stores into the session store.
+
+The following storage back-ends are supported:
+
+* SQLite, which is used for the session store and is the default for task stores;
+* Redis, which can be used for task stores, see the `--task_storage_format`
+  option;
+* a fake, in-memory only, store, which is used for testing.
+
+The storage readers and writers in `plaso/storage/` provide an API to the
+storage, for example to read events in chronological order.

@@ -25,6 +25,7 @@ class FirefoxCookieEventData(events.EventData):
       query (str): SQL query that was used to obtain the event data.
       secure (bool): True if the cookie should only be transmitted over a secure
           channel.
+      url (str): URL of the cookie, built from the hostname and the path.
     """
 
     DATA_TYPE = "firefox:cookie:entry"

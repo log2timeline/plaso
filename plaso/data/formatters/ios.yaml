@@ -149,7 +149,7 @@ source: 'iOS Health database'
 type: 'conditional'
 data_type: 'ios:health:height'
 message:
-- 'Height: {height_m} meters'
+- 'Height: {height} meters'
 short_message:
 - 'Height: {height} m'
 short_source: 'SQLITE'
@@ -159,7 +159,7 @@ type: 'conditional'
 data_type: 'ios:health:resting_heart_rate'
 message:
 - 'Resting Heart Rate: {resting_heart_rate} BPM'
-- 'Source: {source}'
+- 'Source: {source_name}'
 - 'Hardware: {hardware}'
 short_message:
 - 'Resting HR: {resting_heart_rate} BPM'
@@ -174,7 +174,7 @@ message:
 - 'Model: {model}'
 - 'Hardware Version: {hardware}'
 - 'Software/Firmware: {software} / {firmware}'
-- 'Local Identifier: {device_local_identifier}'
+- 'Local Identifier: {local_identifier}'
 - 'Synchronization Provenance: {synchronization_provenance}'
 short_message:
 - 'Source Device: {device_name} ({model})'
@@ -296,14 +296,14 @@ enumeration_helpers:
     3: "Kilocalories"
 message:
 - 'Activity: {activity_label}'
-- 'Duration: {workout_duration}'
+- 'Duration: {duration}'
 - 'Distance: {total_distance} km'
 - 'Energy: {total_energy_burned} kcal Active / {total_basal_energy_burned} kcal Basal'
-- 'Steps: {total_w_steps}'
+- 'Steps: {total_weekly_steps}'
 - 'Flights Climbed: {total_flights_climbed}'
 - 'Goal: {goal_label} ({goal})'
 short_message:
-- '{activity_label}: {total_distance} km in {workout_duration}'
+- '{activity_label}: {total_distance} km in {duration}'
 short_source: 'SQLITE'
 source: 'iOS Health database'
 ---
@@ -315,7 +315,7 @@ message:
 - 'Device: {device_name} ({device_model})'
 - 'Hardware/Software: {device_hardware} / {software_version}'
 - 'Algorithm Version: {algorithm_version}'
-- 'Source: {source}'
+- 'Source: {source_name}'
 short_message:
 - 'Wrist temperature: {wrist_temperature} °C via {device_model}'
 short_source: 'SQLITE'

@@ -97,7 +97,11 @@ class OfficeMRUPlugin(interface.WindowsRegistryPlugin):
 
     # The Office 14 item MRU is formatted as:
     # [F00000000][T%FILETIME%][O00000000]*%FILENAME%
-    _RE_VALUE_DATA = re.compile(r"\[F00000000\]\[T([0-9A-Z]+)\].*\*[\\]?(.*)")
+    #
+    # The expression is anchored at the start of the value data so that it is
+    # evaluated only once instead of at every offset, which keeps matching time
+    # linear in the length of the value data.
+    _RE_VALUE_DATA = re.compile(r"^\[F00000000\]\[T([0-9A-Z]+)\].*\*[\\]?(.*)")
 
     def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
         """Extracts events from a Windows Registry key.

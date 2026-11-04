@@ -21,13 +21,15 @@ class Task(interface.AttributeContainer):
           number of micro seconds since January 1, 1970, 00:00:00 UTC.
       file_entry_type (str): dfVFS type of the file entry the path specification
           is referencing.
-      has_retry (bool): True if the task was previously abandoned and a retry
-          task was created, False otherwise.
+      has_retry (bool): deprecated, no longer set. Retained so that task
+          containers written by older versions can still be deserialized.
       identifier (str): unique identifier of the task.
       last_processing_time (int): the last time the task was marked as being
           processed as number of milliseconds since January 1, 1970, 00:00:00 UTC.
       merge_priority (int): priority used for the task storage file merge, where
           a lower value indicates a higher priority to merge.
+      number_of_retries (int): number of retry tasks that were created for the original
+          task before this one, where 0 indicates the original task.
       path_spec (dfvfs.PathSpec): path specification.
       session_identifier (str): the identifier of the session the task is part of.
       start_time (int): time that the task was started. Contains the number
@@ -46,6 +48,7 @@ class Task(interface.AttributeContainer):
         "identifier": "str",
         "last_processing_time": "int",
         "merge_priority": "int",
+        "number_of_retries": "int",
         "path_spec": "dfvfs.PathSpec",
         "session_identifier": "str",
         "start_time": "int",
@@ -68,6 +71,7 @@ class Task(interface.AttributeContainer):
         self.identifier = f"{uuid.uuid4().hex:s}"
         self.last_processing_time = None
         self.merge_priority = None
+        self.number_of_retries = 0
         self.path_spec = None
         self.session_identifier = session_identifier
         self.start_time = int(time.time() * definitions.MICROSECONDS_PER_SECOND)
@@ -99,10 +103,9 @@ class Task(interface.AttributeContainer):
         retry_task.file_entry_type = self.file_entry_type
         retry_task.merge_priority = self.merge_priority
         retry_task.path_spec = self.path_spec
+        retry_task.number_of_retries = self.number_of_retries + 1
         retry_task.storage_file_size = self.storage_file_size
         retry_task.storage_format = self.storage_format
-
-        self.has_retry = True
 
         return retry_task
 

@@ -60,7 +60,7 @@ class IOSHealthHeadphoneAudioEventData(events.EventData):
     Attributes:
       bundle_identifier (str): application bundle identifier.
       decibels (float): sound level from quantity_samples.quantity.
-      device_local_identifier, (str): device local identifier.
+      device_local_identifier (str): device local identifier.
       device_manufacturer (str): source_devices.manufacturer.
       device_model (str): source_devices.model.
       device_name (str): source_devices.name.

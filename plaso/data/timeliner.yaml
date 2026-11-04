@@ -64,7 +64,7 @@ place_holder_event: true
 ---
 data_type: 'android:sqlite:app_launch'
 attribute_mappings:
-- name: 'launch_time'
+- name: 'start_time'
   description: 'App Launch Time'
 place_holder_event: true
 ---
@@ -183,8 +183,14 @@ place_holder_event: true
 ---
 data_type: 'av:defender:detection_history'
 attribute_mappings:
+- name: 'initial_detection_time'
+  description: 'Initial Detection Time'
+- name: 'last_threat_status_change_time'
+  description: 'Last Threat Status Change Time'
 - name: 'recorded_time'
   description: 'Recorded Time'
+- name: 'remediation_time'
+  description: 'Remediation Time'
 place_holder_event: true
 ---
 data_type: 'av:mcafee:accessprotectionlog'
@@ -659,7 +665,9 @@ place_holder_event: true
 ---
 data_type: 'ios:health:workouts'
 attribute_mappings:
-- name: 'date_time'
+- name: 'end_time'
+  description: 'Workout End Time'
+- name: 'start_time'
   description: 'Workout Start Time'
 place_holder_event: true
 ---
@@ -1076,8 +1084,6 @@ attribute_mappings:
   description: 'Last Login Time'
 - name: 'last_password_set_time'
   description: 'Last Password Set Time'
-- name: 'last_written_time'
-  description: 'Content Modification Time'
 place_holder_event: true
 ---
 data_type: 'macos:utmpx:entry'
@@ -1474,6 +1480,24 @@ attribute_mappings:
   description: 'Creation Time'
 place_holder_event: true
 ---
+data_type: 'syslog:anacron:job_end'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+place_holder_event: false
+---
+data_type: 'syslog:anacron:job_start'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+place_holder_event: false
+---
+data_type: 'syslog:cron:entry'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+place_holder_event: false
+---
 data_type: 'syslog:cron:task_end'
 attribute_mappings:
 - name: 'last_written_time'
@@ -1492,7 +1516,31 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: false
 ---
+data_type: 'syslog:run_parts:script_end'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+place_holder_event: false
+---
+data_type: 'syslog:run_parts:script_start'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+place_holder_event: false
+---
+data_type: 'syslog:ssh:closed_connection'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+place_holder_event: false
+---
 data_type: 'syslog:ssh:failed_connection'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+place_holder_event: false
+---
+data_type: 'syslog:ssh:invalid_user'
 attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'
@@ -1505,6 +1553,12 @@ attribute_mappings:
 place_holder_event: false
 ---
 data_type: 'syslog:ssh:opened_connection'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+place_holder_event: false
+---
+data_type: 'syslog:ssh:received_disconnect'
 attribute_mappings:
 - name: 'last_written_time'
   description: 'Content Modification Time'
@@ -1962,8 +2016,6 @@ place_holder_event: true
 ---
 data_type: 'windows:srum:application_usage'
 attribute_mappings:
-- name: 'last_connected_time'
-  description: 'Last Connection Time'
 - name: 'recorded_time'
   description: 'Recorded Time'
 place_holder_event: true
@@ -1978,8 +2030,6 @@ place_holder_event: true
 ---
 data_type: 'windows:srum:network_usage'
 attribute_mappings:
-- name: 'last_connected_time'
-  description: 'Last Connection Time'
 - name: 'recorded_time'
   description: 'Recorded Time'
 place_holder_event: true

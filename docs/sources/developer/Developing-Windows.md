@@ -50,7 +50,7 @@ set PYTHONPATH=C:\plaso-build\plaso
 To run a tool, for example `pinfo`:
 
 ```bash
-C:\Python3\python.exe C:\plaso-build\plaso\plaso\frontend\pinfo.py timeline.plaso
+C:\Python3\python.exe C:\plaso-build\plaso\plaso\scripts\pinfo.py timeline.plaso
 ```
 
 ## Development tools
@@ -58,4 +58,4 @@ C:\Python3\python.exe C:\plaso-build\plaso\plaso\frontend\pinfo.py timeline.plas
 If you intend to do development on Plaso you'll also need to install the
 following development tools:
 
-* pylint
+* PyLint 4.0.x

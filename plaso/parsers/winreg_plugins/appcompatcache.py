@@ -203,7 +203,7 @@ class AppCompatCacheWindowsRegistryPlugin(
           ParseError: if the cached entry data type map cannot be determined.
         """
         if format_type not in self._SUPPORTED_FORMAT_TYPES:
-            raise errors.ParseError("Unsupported format type: {format_type:d}")
+            raise errors.ParseError(f"Unsupported format type: {format_type:d}")
 
         data_type_map_name = ""
 

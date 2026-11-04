@@ -99,7 +99,38 @@ Description : The description in the table
         # Splitting the string makes it easier to see differences.
         self.assertEqual(string.split("\n"), self._EXPECTED_OUTPUT2.split("\n"))
 
-        # TODO: add test without title.
+        # Table without title.
+        table_view = views.CLITableView(column_names=["Name", "Description"])
+        table_view.AddRow(["First name", "The first name in the table"])
+        table_view.AddRow(["Second name", "The second name in the table"])
+
+        table_view.Write(output_writer)
+        string = output_writer.ReadOutput()
+
+        expected_strings = [
+            "",
+            "*" * 80,
+            "       Name : Description",
+            "-" * 80,
+            " First name : The first name in the table",
+            "Second name : The second name in the table",
+            "-" * 80,
+            "",
+        ]
+        self.assertEqual(string.split("\n"), expected_strings)
+
+        # A value that contains terminal control characters should have those
+        # characters neutralized so they cannot rewrite earlier terminal output.
+        table_view = views.CLITableView(
+            column_names=["Name", "Description"], title="Title"
+        )
+        table_view.AddRow(["Name", "value\x1b[2Kwith control"])
+
+        table_view.Write(output_writer)
+        string = output_writer.ReadOutput()
+
+        self.assertNotIn("\x1b", string)
+        self.assertIn("value\\x1b[2Kwith control", string)
 
         # Table with a too large title.
         # TODO: determine if this is the desired behavior.
@@ -214,7 +245,23 @@ Second name | The second name in the table
         # Splitting the string makes it easier to see differences.
         self.assertEqual(string.split("\n"), expected_string.split("\n"))
 
-        # TODO: add test without title.
+        # Table without title.
+        table_view = views.MarkdownTableView(column_names=["Name", "Description"])
+        table_view.AddRow(["First name", "The first name in the table"])
+        table_view.AddRow(["Second name", "The second name in the table"])
+
+        table_view.Write(output_writer)
+        string = output_writer.ReadOutput()
+
+        expected_strings = [
+            "Name | Description",
+            "--- | ---",
+            "First name | The first name in the table",
+            "Second name | The second name in the table",
+            "",
+            "",
+        ]
+        self.assertEqual(string.split("\n"), expected_strings)
 
 
 if __name__ == "__main__":

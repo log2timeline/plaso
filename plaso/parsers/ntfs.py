@@ -70,7 +70,6 @@ class NTFSUSNChangeEventData(events.EventData):
       file_attribute_flags (int): NTFS file attribute flags.
       filename (str): name of the file associated with the event.
       file_reference (int): NTFS file reference.
-      file_system_type (str): file system type.
       parent_file_reference (int): NTFS file reference of the parent.
       offset (int): offset of the USN record relative to the start of the $J data
           stream, from which the event data was extracted.
@@ -148,8 +147,10 @@ class NTFSMFTParser(interface.FileObjectParser):
         uuid_object = uuid.UUID(uuid_string)
 
         if uuid_object.version == 1:
-            event_data = windows_events.WindowsDistributedLinkTrackingEventData(
-                uuid_object, origin
+            event_data = (
+                windows_events.WindowsDistributedLinkTrackingEventData.CreateFromUUID(
+                    uuid_object, origin
+                )
             )
             parser_mediator.ProduceEventData(event_data)
 
@@ -253,7 +254,9 @@ class NTFSMFTParser(interface.FileObjectParser):
         if mft_attribute.birth_droid_file_identifier:
             try:
                 self._ParseDistributedTrackingIdentifier(
-                    parser_mediator, mft_attribute.droid_file_identifier, display_name
+                    parser_mediator,
+                    mft_attribute.birth_droid_file_identifier,
+                    display_name,
                 )
             except (TypeError, ValueError) as exception:
                 parser_mediator.ProduceWarning(

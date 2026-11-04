@@ -2,6 +2,8 @@
 
 import datetime
 
+import pytz
+
 from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import plist_event
@@ -27,6 +29,9 @@ class DefaultPlugin(interface.PlistPlugin):
         for root, key_name, datetime_value in self._RecurseKey(top_level):
             if not isinstance(datetime_value, datetime.datetime):
                 continue
+
+            # dfDateTime relies on the time zone but plistlib does not set one.
+            datetime_value = datetime_value.replace(tzinfo=pytz.UTC)
 
             date_time = dfdatetime_time_elements.TimeElementsInMicroseconds()
             date_time.CopyFromDatetime(datetime_value)
