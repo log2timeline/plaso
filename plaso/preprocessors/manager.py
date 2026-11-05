@@ -132,6 +132,66 @@ class PreprocessPluginsManager:
     _windows_registry_plugins = {}
 
     @classmethod
+    def _AddPluginInDependencyOrder(
+        cls, name, plugins_per_name, ordered_plugins, pending_names
+    ):
+        """Adds a preprocess plugin after the plugins it depends on.
+
+        Args:
+          name (str): name of the preprocess plugin.
+          plugins_per_name (dict[str, object]): preprocess plugins per name.
+          ordered_plugins (dict[str, object]): preprocess plugins per name in
+              dependency order.
+          pending_names (set[str]): names of the preprocess plugins of which the
+              dependencies are being added.
+        """
+        if name in ordered_plugins:
+            return
+
+        if name in pending_names:
+            logger.warning(
+                f"Unable to resolve dependencies of preprocessor plugin: {name:s} "
+                f"with error: circular dependency."
+            )
+            return
+
+        preprocess_plugin = plugins_per_name[name]
+
+        pending_names.add(name)
+        for dependency in sorted(preprocess_plugin.DEPENDENCIES):
+            dependency = dependency.lower()
+            if dependency in plugins_per_name:
+                cls._AddPluginInDependencyOrder(
+                    dependency, plugins_per_name, ordered_plugins, pending_names
+                )
+
+        pending_names.remove(name)
+
+        ordered_plugins[name] = preprocess_plugin
+
+    @classmethod
+    def _GetPluginsInDependencyOrder(cls, plugins_per_name):
+        """Retrieves preprocess plugins ordered to run after their dependencies.
+
+        Dependencies are only resolved within the given preprocess plugins, other
+        dependencies are ignored. Otherwise the order of the given preprocess plugins
+        is preserved.
+
+        Args:
+          plugins_per_name (dict[str, object]): preprocess plugins per name.
+
+        Returns:
+          list[object]: preprocess plugins in dependency order.
+        """
+        ordered_plugins = {}
+        for name in plugins_per_name:
+            cls._AddPluginInDependencyOrder(
+                name, plugins_per_name, ordered_plugins, set()
+            )
+
+        return list(ordered_plugins.values())
+
+    @classmethod
     def CollectFromFileSystem(cls, artifacts_registry, mediator, searcher, file_system):
         """Collects values from Windows Registry values.
 
@@ -144,7 +204,9 @@ class PreprocessPluginsManager:
               the file system.
           file_system (dfvfs.FileSystem): file system to be preprocessed.
         """
-        for preprocess_plugin in cls._file_system_plugins.values():
+        for preprocess_plugin in cls._GetPluginsInDependencyOrder(
+            cls._file_system_plugins
+        ):
             artifact_definition = None
             if preprocess_plugin.ARTIFACT_DEFINITION_NAME:
                 artifact_definition = artifacts_registry.GetDefinitionByName(
@@ -188,7 +250,9 @@ class PreprocessPluginsManager:
           mediator (PreprocessMediator): mediates interactions between preprocess
               plugins and other components, such as storage and knowledge base.
         """
-        for preprocess_plugin in cls._knowledge_base_plugins.values():
+        for preprocess_plugin in cls._GetPluginsInDependencyOrder(
+            cls._knowledge_base_plugins
+        ):
             class_name = preprocess_plugin.__class__.__name__
             logger.debug(f"Running knowledge base preprocessor plugin: {class_name:s}")
 
@@ -211,10 +275,8 @@ class PreprocessPluginsManager:
           searcher (dfwinreg.WinRegistrySearcher): Windows Registry searcher to
               preprocess the Windows Registry.
         """
-        # TODO: define preprocessing plugin dependency and sort preprocess_plugins
-        # for now sort alphabetically to ensure WindowsAvailableTimeZones is run
-        # before WindowsTimezone.
-        for _, preprocess_plugin in sorted(cls._windows_registry_plugins.items()):
+        plugins_per_name = dict(sorted(cls._windows_registry_plugins.items()))
+        for preprocess_plugin in cls._GetPluginsInDependencyOrder(plugins_per_name):
             artifact_definition = artifacts_registry.GetDefinitionByName(
                 preprocess_plugin.ARTIFACT_DEFINITION_NAME
             )
