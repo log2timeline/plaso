@@ -1,6 +1,8 @@
 # Style Guide
 
 Plaso follows the [log2timeline style guide](https://github.com/log2timeline/l2tdocs/blob/main/process/Style-guide.md).
+The log2timeline style guide is the authoritative guide; this page only adds
+Plaso specific points and must not contradict it.
 
 ## Plaso specific style points
 
@@ -53,18 +55,18 @@ Values stored in an event data attribute container must be of certain types
 otherwise event filtering or output formatting can break. Supported Python types
 are:
 
-* bool (also see note below)
+* bool
 * int
 * str
+* list[str]
 * dfdatetime.DateTimeValues, for date and time values
 
-A list of one of the previously mentioned types is supported. **Do not use
-dict or binary strings.**
+**Do not use dict or binary strings.** Use None instead of an empty string for
+an empty value, and use a bool for boolean values that are stored as integers.
+The message formatter can represent the value as a human readable string.
 
-Use a bool sparsely. For now it is preferred to preserve the original type.
-For example if -1 represents False and 0 True, store the value as an integer
-not as a bool. The message formatter can represent the numeric value as a
-human readable string.
+See the "Event data attributes" section of the log2timeline style guide for the
+complete list of rules, including attribute naming.
 
 ### Tests
 
