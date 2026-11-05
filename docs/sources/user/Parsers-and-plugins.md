@@ -241,6 +241,7 @@ syslog_traditional | Parser for Traditional system log (syslog) files.
 teamviewer_application_log | Parser for TeamViewer application log file parser.
 teamviewer_connections_incoming | Parser for TeamViewer connections_incoming.txt log files.
 teamviewer_connections_outgoing | Parser for TeamViewer connections.txt log files.
+trash_info | Parser for FreeDesktop.org Trash info (.trashinfo) files.
 viminfo | Parser for Viminfo files.
 vsftpd | Parser for vsftpd log files.
 winfirewall | Parser for Windows Firewall log files.
@@ -301,7 +302,7 @@ Name | Parsers and plugins
 android | android_app_usage, chrome_cache, filestat, sqlite/android_app_usage, sqlite/android_calls, sqlite/android_sms, sqlite/android_turbo, sqlite/android_webview, sqlite/android_webviewcache, sqlite/chrome_8_history, sqlite/chrome_17_cookies, sqlite/chrome_27_history, sqlite/chrome_66_cookies, sqlite/skype
 atlassian | text/atlassian_confluence, text/atlassian_jira, text/confluence_access, text/jira_access
 ios | jsonl/ios_application_privacy, plist/ios_identityservices, sqlite/imessage, sqlite/ios_netusage, sqlite/ios_powerlog, sqlite/ios_screentime, sqlite/kik_ios, sqlite/twitter_ios, text/ios_lockdownd, text/ios_logd, text/ios_sysdiag_log
-linux | bencode, czip/oxml, jsonl/docker_container_config, jsonl/docker_container_log, jsonl/docker_layer_config, filestat, olecf, pls_recall, sqlite/google_drive, sqlite/skype, sqlite/zeitgeist, systemd_journal, text/apt_history, text/bash_history, text/dpkg, text/gdrive_synclog, text/googlelog, text/popularity_contest, text/selinux, text/syslog, text/syslog_traditional, text/vsftpd, text/xchatlog, text/xchatscrollback, text/zsh_extended_history, utmp, webhist
+linux | bencode, czip/oxml, jsonl/docker_container_config, jsonl/docker_container_log, jsonl/docker_layer_config, filestat, olecf, pls_recall, sqlite/google_drive, sqlite/skype, sqlite/zeitgeist, systemd_journal, text/apt_history, text/bash_history, text/dpkg, text/gdrive_synclog, text/googlelog, text/popularity_contest, text/selinux, text/syslog, text/syslog_traditional, text/trash_info, text/vsftpd, text/xchatlog, text/xchatscrollback, text/zsh_extended_history, utmp, webhist
 macos | asl_log, bencode, bsm_log, cups_ipp, czip/oxml, filestat, fseventsd, mac_keychain, olecf, plist, spotlight_storedb, sqlite/appusage, sqlite/google_drive, sqlite/imessage, sqlite/ls_quarantine, sqlite/mac_document_versions, sqlite/mac_notes, sqlite/mackeeper_cache, sqlite/mac_knowledgec, sqlite/skype, text/bash_history, text/gdrive_synclog, text/mac_appfirewall_log, text/mac_securityd, text/mac_wifi, text/macos_launchd_log, text/syslog, text/syslog_traditional, text/zsh_extended_history, utmpx, webhist
 mactime | bodyfile
 webhist | binary_cookies, chrome_cache, chrome_preferences, esedb/msie_webcache, firefox_cache, java_idx, msiecf, opera_global, opera_typed_history, plist/safari_history, sqlite/chrome_8_history, sqlite/chrome_17_cookies, sqlite/chrome_27_history, sqlite/chrome_66_cookies, sqlite/chrome_autofill, sqlite/chrome_extension_activity, sqlite/firefox_2_cookies, sqlite/firefox_10_cookies, sqlite/firefox_downloads, sqlite/firefox_history, sqlite/safari_historydb
