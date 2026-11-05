@@ -846,6 +846,10 @@ attribute_mappings:
   description: 'Added Time'
 place_holder_event: true
 ---
+data_type: 'linux:group:entry'
+# Note that the group database entry has no date and time values.
+place_holder_event: true
+---
 data_type: 'linux:locate_database:entry'
 attribute_mappings:
 - name: 'written_time'
