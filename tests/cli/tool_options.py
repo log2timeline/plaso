@@ -178,7 +178,7 @@ Test argument parser.
                         output, if supported by the output format. Use "list"
                         to see a list of available time zones. Output formats
                         that support an output time zone are: dynamic and
-                        l2t_csv.
+                        l2tcsv.
 """
     else:
         _EXPECTED_OUTPUT_TIME_ZONE_OPTION = f"""\
@@ -227,7 +227,7 @@ Test argument parser.
                         output, if supported by the output format. Use "list"
                         to see a list of available time zones. Output formats
                         that support an output time zone are: dynamic and
-                        l2t_csv.
+                        l2tcsv.
 """
 
     def testGetOutputModulesInformation(self):
