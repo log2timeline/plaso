@@ -603,6 +603,21 @@ short_source: 'LOG'
 source: 'Microsoft (Office) 365 Audit Log'
 ---
 type: 'conditional'
+data_type: 'mongodb:log:entry'
+message:
+- 'Severity: {severity}'
+- 'Component: {component}'
+- 'Identifier: {message_identifier}'
+- 'Context: {context}'
+- 'Message: {message_body}'
+short_message:
+- 'Severity: {severity}'
+- 'Component: {component}'
+- 'Message: {message_body}'
+short_source: 'LOG'
+source: 'MongoDB Log'
+---
+type: 'conditional'
 data_type: 'networkminer:fileinfos:file'
 message:
 - 'Source IP: {source_ip}'
