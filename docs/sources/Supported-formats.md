@@ -232,6 +232,7 @@ File System Format support is provided by [dfVFS](https://dfvfs.readthedocs.io/e
 * SELinux audit log (audit.log) file
 * Snort3/Suricata fast-log alert log (fast.log) file
 * Sophos anti-virus log file (SAV.txt) file
+* Squid access log (access.log) file
 * System Center Configuration Manager (SCCM) client log file
 * System log (syslog) file
 * TeamViewer application log file parser
