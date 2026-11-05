@@ -228,6 +228,7 @@ File System Format support is provided by [dfVFS](https://dfvfs.readthedocs.io/e
 * Popularity Contest log file
 * PostgreSQL application log file
 * PowerShell transcript event
+* Samba log file
 * Santa log (santa.log) file
 * SELinux audit log (audit.log) file
 * Snort3/Suricata fast-log alert log (fast.log) file

@@ -1332,6 +1332,12 @@ attribute_mappings:
   description: 'Last Visited Time'
 place_holder_event: true
 ---
+data_type: 'samba:log:entry'
+attribute_mappings:
+- name: 'recorded_time'
+  description: 'Recorded Time'
+place_holder_event: true
+---
 data_type: 'santa:diskmount'
 attribute_mappings:
 - name: 'appearance_time'

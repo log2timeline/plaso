@@ -1,0 +1,11 @@
+[2025/10/06 09:15:02.104311,  0] ../../source3/smbd/server.c:1741(main)
+  smbd version 4.19.5 started.
+  configuration loaded from /etc/samba/smb.conf
+[2025/10/06 09:15:02.118204,  2, pid=1021] ../../source3/smbd/server.c:1206(open_sockets_smbd)
+  waiting for connections
+[2025/10/06 09:17:44.551208,  3, pid=1188] ../../auth/auth_log.c:635(log_authentication_event_human_readable)
+  Auth: [SMB2,(null)] user [EXAMPLE]\[alice] at [Mon, 06 Oct 2025 09:17:44.551190 CEST] with [NTLMv2] status [NT_STATUS_OK] workstation [WS01] remote host [ipv4:192.0.2.17:50432] became [EXAMPLE]\[alice] [S-1-5-21-1004336348-1177238915-682003330-1105]. local host [ipv4:192.0.2.1:445]
+[2025/10/06 09:18:10.000412,  2, pid=1190, effective(0, 0), real(0, 0), class=auth_audit] ../../auth/auth_log.c:635(log_authentication_event_human_readable)
+  Auth: [SMB2,(null)] user [EXAMPLE]\[administrator] at [Mon, 06 Oct 2025 09:18:10.000390 CEST] with [NTLMv2] status [NT_STATUS_WRONG_PASSWORD] workstation [WS02] remote host [ipv4:198.51.100.4:61022] mapped to [EXAMPLE]\[administrator]. local host [ipv4:192.0.2.1:445]
+[2025/10/06 09:25:58,  0] ../../lib/util/become_daemon.c:150(daemon_status)
+  daemon_status: daemon 'smbd' : Shutting down
