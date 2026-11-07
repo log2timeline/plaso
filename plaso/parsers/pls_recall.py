@@ -40,7 +40,7 @@ class PlsRecallEventData(events.EventData):
 class PlsRecallParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
     """Parse PL/SQL Recall files.
 
-    This parser is based on the Delphi definition of the data type:
+    This parser is based on the Delphi definition of the data type::
 
       TRecallRecord = packed record
         Sequence: Integer;
@@ -50,8 +50,8 @@ class PlsRecallParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper
         Text: array[0..4000] of Char;
       end;
 
-      Delphi TDateTime is a little-endian 64-bit floating-point value without
-      time zone information.
+    Delphi TDateTime is a little-endian 64-bit floating-point value without
+    time zone information.
     """
 
     NAME = "pls_recall"

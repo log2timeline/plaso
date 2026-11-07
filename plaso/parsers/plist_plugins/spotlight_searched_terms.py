@@ -1,7 +1,8 @@
 """Plist parser plugin for Spotlight searched terms plist files.
 
 Fields within the plist key: com.apple.spotlight.plist, where the name of
-the key contains the search term.
+the key contains the search term::
+
   DISPLAY_NAME: the display name of the program associated.
   LAST_USED: last time when it was executed.
   PATH: path of the program associated to the term.

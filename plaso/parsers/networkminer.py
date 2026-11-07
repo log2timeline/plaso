@@ -13,11 +13,11 @@ class NetworkMinerEventData(events.EventData):
     Attributes:
       destination_ip (str): Destination IP address.
       destination_port (str): Destination port number.
-      file_details (string): Details about the file.
-      file_md5 (string): MD5 hash of the file.
-      file_path (string): File path to where it was downloaded.
-      file_size (string): Size of the file.
-      filename (string): Name of the file.
+      file_details (str): Details about the file.
+      file_md5 (str): MD5 hash of the file.
+      file_path (str): File path to where it was downloaded.
+      file_size (str): Size of the file.
+      filename (str): Name of the file.
       source_ip (str): Originating IP address.
       source_port (str): Originating port number.
       written_time (dfdatetime.DateTimeValues): entry written date and time.

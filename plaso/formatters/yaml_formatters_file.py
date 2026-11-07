@@ -10,20 +10,21 @@ class YAMLFormattersFile:
     """YAML-based formatters file.
 
     A YAML-based formatters file contains one or more event formatter
-    definitions. An event formatter definition consists of:
+    definitions. An event formatter definition consists of::
 
-    type: 'conditional'
-    data_type: 'fs:stat'
-    message:
-    - '{display_name}'
-    - 'Type: {file_entry_type}'
-    - '({unallocated})'
-    short_message:
-    - '{filename}'
-    short_source: 'FILE'
-    source: 'File stat'
+      type: 'conditional'
+      data_type: 'fs:stat'
+      message:
+      - '{display_name}'
+      - 'Type: {file_entry_type}'
+      - '({unallocated})'
+      short_message:
+      - '{filename}'
+      short_source: 'FILE'
+      source: 'File stat'
 
     Where:
+
     * type, defines the formatter data type, which can be "basic" or
       "conditional";
     * data_type, defines the corresponding event data type;

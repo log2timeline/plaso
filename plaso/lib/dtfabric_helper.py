@@ -13,30 +13,30 @@ class DtFabricHelper:
     """dtFabric format definition helper mix-in.
 
     dtFabric defines its data format structures in dtFabric definition file,
-    for example "dtfabric.yaml":
+    for example "dtfabric.yaml"::
 
-    name: int32
-    type: integer
-    description: 32-bit signed integer type
-    attributes:
-      format: signed
-      size: 4
-      units: bytes
-    ---
-    name: point3d
-    aliases: [POINT]
-    type: structure
-    description: Point in 3 dimensional space.
-    attributes:
-      byte_order: little-endian
-    members:
-    - name: x
-      aliases: [XCOORD]
-      data_type: int32
-    - name: y
-      data_type: int32
-    - name: z
-      data_type: int32
+      name: int32
+      type: integer
+      description: 32-bit signed integer type
+      attributes:
+        format: signed
+        size: 4
+        units: bytes
+      ---
+      name: point3d
+      aliases: [POINT]
+      type: structure
+      description: Point in 3 dimensional space.
+      attributes:
+        byte_order: little-endian
+      members:
+      - name: x
+        aliases: [XCOORD]
+        data_type: int32
+      - name: y
+        data_type: int32
+      - name: z
+        data_type: int32
 
     The path to the definition file is defined in the class constant
     "_DEFINITION_FILE" and will be read on class instantiation.
