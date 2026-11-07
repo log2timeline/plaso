@@ -215,7 +215,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         )
         processing_group = argument_parser.add_argument_group("processing arguments")
 
-        self.AddPerformanceOptions(processing_group)
         self.AddProcessingOptions(processing_group)
 
         processing_group.add_argument(
@@ -357,7 +356,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
         self._ParseStorageMediaOptions(options)
 
-        self._ParsePerformanceOptions(options)
         self._ParseProcessingOptions(options)
 
         self._storage_file_path = self.ParseStringOption(options, "storage_file")
