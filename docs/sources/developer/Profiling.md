@@ -1,3 +1,5 @@
+# Profiling
+
 Plaso supports various profiling options for troubleshooting and performance
 tuning.
 

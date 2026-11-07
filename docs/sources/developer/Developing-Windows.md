@@ -25,7 +25,7 @@ git config --global core.autocrlf false
 ## Dependencies
 
 Install the dependencies, using the
-[prepackaged dependencies](Development-Dependencies.html#Windows).
+[prepackaged dependencies](Development-Dependencies.html#windows).
 
 Check if you have all the dependencies installed and have the right minimum
 version:
