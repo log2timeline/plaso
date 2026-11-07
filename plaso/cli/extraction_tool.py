@@ -201,6 +201,9 @@ class ExtractionTool(
         )
         configuration.extraction.extract_winreg_binary = self._extract_winreg_binary
         configuration.extraction.hasher_names_string = self._hasher_names_string
+        configuration.extraction.hasher_skip_excluded_files = (
+            self._hasher_skip_excluded_files
+        )
         configuration.extraction.process_compressed_streams = (
             self._process_compressed_streams
         )

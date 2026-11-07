@@ -41,6 +41,19 @@ class HashersArgumentsHelper(interface.ArgumentsHelper):
         )
 
         argument_group.add_argument(
+            "--hasher_skip_excluded_files",
+            "--hasher-skip-excluded-files",
+            dest="hasher_skip_excluded_files",
+            action="store_true",
+            default=False,
+            help=(
+                "Do not hash files that are excluded from content extraction, "
+                "such as pagefile.sys, hiberfil.sys, sleepimage and browser cache "
+                "data files. Event data of these files will not contain hashes."
+            ),
+        )
+
+        argument_group.add_argument(
             "--hashers",
             dest="hashers",
             type=str,
@@ -82,6 +95,10 @@ class HashersArgumentsHelper(interface.ArgumentsHelper):
             options, "hasher_file_size_limit", default_value=0
         )
 
+        hasher_skip_excluded_files = getattr(
+            options, "hasher_skip_excluded_files", False
+        )
+
         # TODO: validate hasher names.
 
         if hasher_file_size_limit < 0:
@@ -91,6 +108,11 @@ class HashersArgumentsHelper(interface.ArgumentsHelper):
 
         setattr(configuration_object, "_hasher_names_string", hashers)
         setattr(configuration_object, "_hasher_file_size_limit", hasher_file_size_limit)
+        setattr(
+            configuration_object,
+            "_hasher_skip_excluded_files",
+            hasher_skip_excluded_files,
+        )
 
 
 manager.ArgumentHelperManager.RegisterHelper(HashersArgumentsHelper)

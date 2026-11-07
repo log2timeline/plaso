@@ -37,6 +37,11 @@ sha1_hash | SHA-1 hash of the data stream content.
 sha256_hash | SHA-256 hash of the data stream content.
 yara_match | Names of the Yara rules that matched the data stream content.
 
+Note that hashes are not calculated for data streams larger than the size
+defined by `--hasher_file_size_limit` or, if `--hasher_skip_excluded_files` is
+set, for files that are excluded from content extraction, such as pagefile.sys,
+hiberfil.sys, sleepimage and browser cache data files.
+
 ### Dynamic runtime fields
 
 The dynamic output module defines the following command line options to specify
