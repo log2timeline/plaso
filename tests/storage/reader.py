@@ -220,6 +220,18 @@ class StorageReaderTest(test_lib.StorageTestCase):
         finally:
             test_reader._store.Close()
 
+    def testPrefetchAttributeContainers(self):
+        """Tests the PrefetchAttributeContainers function."""
+        test_reader = reader.StorageReader()
+        test_reader._store = fake_store.FakeStore()
+
+        test_identifier = containers_interface.AttributeContainerIdentifier(
+            name=event_sources.EventSource.CONTAINER_TYPE, sequence_number=1
+        )
+        test_reader.PrefetchAttributeContainers(
+            event_sources.EventSource.CONTAINER_TYPE, [test_identifier]
+        )
+
     def testSetSerializersProfiler(self):
         """Tests the SetSerializersProfiler function."""
         test_reader = reader.StorageReader()
