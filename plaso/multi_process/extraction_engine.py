@@ -448,7 +448,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
                 return
 
         elif container.CONTAINER_TYPE in (
-            "windows_eventlog_message_string",
+            "windows_eventlog_message_table",
             "windows_wevt_template_event",
         ):
             message_file_identifier = container.GetMessageFileIdentifier()
@@ -465,8 +465,8 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
                 # TODO: store this as a merge warning so this is preserved
                 # in the storage file.
-                if container.CONTAINER_TYPE == "windows_eventlog_message_string":
-                    description = "Windows EventLog message string"
+                if container.CONTAINER_TYPE == "windows_eventlog_message_table":
+                    description = "Windows EventLog message table"
                 else:
                     description = "WEVT_TEMPLATE event definition"
 
@@ -477,11 +477,35 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
                 )
                 return
 
+        elif container.CONTAINER_TYPE == "windows_eventlog_message_string":
+            message_table_identifier = container.GetMessageTableIdentifier()
+            message_table_lookup_key = message_table_identifier.CopyToString()
+
+            message_table_identifier = merge_helper.GetAttributeContainerIdentifier(
+                message_table_lookup_key
+            )
+            if message_table_identifier:
+                container.SetMessageTableIdentifier(message_table_identifier)
+            else:
+                identifier = container.GetIdentifier()
+                identifier_string = identifier.CopyToString()
+
+                # TODO: store this as a merge warning so this is preserved
+                # in the storage file.
+                logger.error(
+                    f"Unable to merge Windows EventLog message string attribute "
+                    f"container: {identifier_string:s} since corresponding Windows "
+                    f"EventLog message table: {message_table_lookup_key:s} could not "
+                    f"be found."
+                )
+                return
+
         lookup_key = None
         if container.CONTAINER_TYPE in (
             self._CONTAINER_TYPE_EVENT_DATA,
             self._CONTAINER_TYPE_EVENT_DATA_STREAM,
             "windows_eventlog_message_file",
+            "windows_eventlog_message_table",
         ):
             # Preserve the lookup key before adding it to the attribute container
             # store.
