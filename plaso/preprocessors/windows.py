@@ -989,6 +989,9 @@ class WindowsTimeZonePlugin(interface.WindowsRegistryValueArtifactPreprocessorPl
 
     ARTIFACT_DEFINITION_NAME = "WindowsTimezone"
 
+    # The available time zones are needed to resolve localized time zone names.
+    DEPENDENCIES = frozenset(["WindowsAvailableTimeZones"])
+
     def _ParseValueData(self, mediator, value_data):
         """Parses Windows Registry value data for a preprocessing attribute.
 

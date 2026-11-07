@@ -16,9 +16,16 @@ class ArtifactPreprocessorPlugin:
 
     The artifact preprocessor determines preprocessing attributes based on an artifact
     definition defined by ARTIFACT_DEFINITION_NAME.
+
+    Attributes:
+      DEPENDENCIES (frozenset[str]): names of the preprocessor plugins that need to
+          run before this plugin, where the name of a plugin is its artifact
+          definition name or class name.
     """
 
     ARTIFACT_DEFINITION_NAME = None
+
+    DEPENDENCIES = frozenset()
 
 
 class FileSystemArtifactPreprocessorPlugin(ArtifactPreprocessorPlugin):
@@ -336,7 +343,14 @@ class KnowledgeBasePreprocessorPlugin:
 
     The knowledge base preprocessor determines preprocessing attributes based on other
     values in the knowledge base.
+
+    Attributes:
+      DEPENDENCIES (frozenset[str]): names of the preprocessor plugins that need to
+          run before this plugin, where the name of a plugin is its artifact
+          definition name or class name.
     """
+
+    DEPENDENCIES = frozenset()
 
     @abc.abstractmethod
     def Collect(self, mediator):
