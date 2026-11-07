@@ -309,6 +309,8 @@ data_type: 'chrome:preferences:extension_installation'
 attribute_mappings:
 - name: 'installation_time'
   description: 'Time of installation'
+- name: 'last_ping_time'
+  description: 'Last Ping Time'
 place_holder_event: true
 ---
 data_type: 'chrome:preferences:extensions_autoupdater'
