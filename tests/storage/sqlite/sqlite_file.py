@@ -5,11 +5,21 @@ import csv
 import gzip
 import json
 import os
+import shutil
 import sqlite3
 import unittest
 import zlib
 
 from acstore.containers import interface as containers_interface
+from acstore import sqlite_store
+from dfdatetime import factory as dfdatetime_factory
+from dfdatetime import fat_date_time as dfdatetime_fat_date_time
+from dfdatetime import filetime as dfdatetime_filetime
+from dfdatetime import ole_automation_date as dfdatetime_ole_automation_date
+from dfdatetime import rfc2579_date_time as dfdatetime_rfc2579_date_time
+from dfdatetime import semantic_time as dfdatetime_semantic_time
+from dfdatetime import systemtime as dfdatetime_systemtime
+from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
 from plaso.engine import configurations
@@ -620,6 +630,215 @@ class SQLiteStorageFileTest(test_lib.StorageTestCase):
         compressed_data_size = int(write_rows[0][6])
 
         self.assertGreater(data_size, compressed_data_size)
+
+    def testWriteNewEventWithTypedColumns(self):
+        """Tests the _WriteNewAttributeContainer function with typed event columns."""
+        local_time_date_time = dfdatetime_filetime.Filetime(timestamp=2)
+        local_time_date_time.is_local_time = True
+
+        time_zone_date_time = dfdatetime_filetime.Filetime(timestamp=3)
+        time_zone_date_time.time_zone_hint = "Europe/Brussels"
+        time_zone_date_time.time_zone_offset = 60
+
+        test_date_time_values = [
+            dfdatetime_factory.Factory.NewDateTimeValues(class_name, timestamp=1)
+            for class_name in (
+                "APFSTime",
+                "CocoaTime",
+                "DelphiDateTime",
+                "DotNetDateTime",
+                "FATTimestamp",
+                "Filetime",
+                "HFSTime",
+                "JavaTime",
+                "OLEAutomationDate",
+                "PosixTime",
+                "PosixTimeInMicroseconds",
+                "PosixTimeInMilliseconds",
+                "PosixTimeInNanoseconds",
+                "TSKTime",
+                "UUIDTime",
+                "WebKitTime",
+            )
+        ]
+        test_date_time_values.extend(
+            [
+                dfdatetime_filetime.Filetime(timestamp=-1),
+                local_time_date_time,
+                time_zone_date_time,
+                dfdatetime_ole_automation_date.OLEAutomationDate(timestamp=1.5),
+                dfdatetime_fat_date_time.FATDateTime(fat_date_time=0xA8D03D0C),
+                dfdatetime_rfc2579_date_time.RFC2579DateTime(
+                    rfc2579_date_time_tuple=(2010, 8, 12, 20, 6, 31, 6, "+", 2, 0)
+                ),
+                dfdatetime_semantic_time.Never(),
+                dfdatetime_semantic_time.NotSet(),
+                dfdatetime_systemtime.Systemtime(
+                    system_time_tuple=(2010, 8, 4, 12, 20, 6, 31, 142)
+                ),
+                dfdatetime_time_elements.TimeElements(
+                    time_elements_tuple=(2010, 8, 12, 20, 6, 31)
+                ),
+                dfdatetime_time_elements.TimeElementsInMicroseconds(
+                    time_elements_tuple=(2010, 8, 12, 20, 6, 31, 546875)
+                ),
+                None,
+            ]
+        )
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            test_path = os.path.join(temp_directory, "plaso.sqlite")
+            test_store = sqlite_file.SQLiteStorageFile()
+            test_store.Open(path=test_path, read_only=False)
+
+            try:
+                for sequence_number, date_time in enumerate(test_date_time_values):
+                    event = events.EventObject()
+                    event.date_time = date_time
+                    event.timestamp = sequence_number
+                    event.timestamp_desc = "Test Time"
+                    event.SetEventDataIdentifier(
+                        containers_interface.AttributeContainerIdentifier(
+                            name="event_data", sequence_number=sequence_number + 1
+                        )
+                    )
+                    test_store._WriteNewAttributeContainer(event)
+
+                event = events.EventObject()
+                event.timestamp = len(test_date_time_values)
+                event.SetEventDataIdentifier(
+                    containers_interface.AttributeContainerIdentifier(
+                        name="bogus", sequence_number=1
+                    )
+                )
+                test_store._WriteNewAttributeContainer(event)
+
+                test_store._CommitWriteCache("event")
+
+                test_store._cursor.execute(
+                    "SELECT _event_data_identifier, date_time FROM event "
+                    "WHERE rowid IN (6, 20, 28)"
+                )
+                rows = [tuple(row) for row in test_store._cursor.fetchall()]
+
+            finally:
+                test_store.Close()
+
+            self.assertEqual(rows[0], (6, "Filetime:1"))
+            self.assertEqual(rows[1][0], 20)
+            self.assertTrue(rows[1][1].startswith('{"__class_name__": "OLEAuto'))
+            self.assertEqual(rows[2], (28, None))
+
+            test_store = sqlite_file.SQLiteStorageFile()
+            test_store.Open(path=test_path)
+
+            try:
+                self.assertEqual(test_store.format_version, test_store._FORMAT_VERSION)
+
+                test_events = list(test_store.GetSortedEvents())
+
+            finally:
+                test_store.Close()
+
+        self.assertEqual(len(test_events), len(test_date_time_values) + 1)
+
+        schema_helper = sqlite_store.SQLiteSchemaHelper()
+
+        for sequence_number, date_time in enumerate(test_date_time_values):
+            event = test_events[sequence_number]
+
+            event_data_identifier = event.GetEventDataIdentifier()
+            self.assertEqual(event_data_identifier.name, "event_data")
+            self.assertEqual(event_data_identifier.sequence_number, sequence_number + 1)
+
+            if date_time is None:
+                self.assertIsNone(event.date_time)
+                continue
+
+            # The date and time values must be identical to the earlier JSON form.
+            expected_date_time = schema_helper.DeserializeValue(
+                "dfdatetime.DateTimeValues",
+                schema_helper.SerializeValue("dfdatetime.DateTimeValues", date_time),
+            )
+            self.assertIs(type(event.date_time), type(expected_date_time))
+            self.assertEqual(
+                event.date_time.CopyToSerializableDict(),
+                expected_date_time.CopyToSerializableDict(),
+            )
+            self.assertEqual(
+                event.date_time.is_local_time, expected_date_time.is_local_time
+            )
+
+        event_data_identifier = test_events[-1].GetEventDataIdentifier()
+        self.assertEqual(event_data_identifier.CopyToString(), "bogus.1")
+
+    def testWriteNewEventWithEarlierFormatVersion(self):
+        """Tests writing an event in a storage file of an earlier format version."""
+        test_file_path = self._GetTestFilePath(["psort_test.plaso"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            test_path = os.path.join(temp_directory, "plaso.sqlite")
+            shutil.copyfile(test_file_path, test_path)
+
+            test_store = sqlite_file.SQLiteStorageFile()
+            test_store.Open(path=test_path, read_only=False)
+
+            try:
+                number_of_events = test_store.GetNumberOfAttributeContainers("event")
+
+                event = events.EventObject()
+                event.date_time = dfdatetime_filetime.Filetime(timestamp=1)
+                event.timestamp = 0
+                event.timestamp_desc = "Test Time"
+                event.SetEventDataIdentifier(
+                    containers_interface.AttributeContainerIdentifier(
+                        name="event_data", sequence_number=1
+                    )
+                )
+                test_store.AddAttributeContainer(event)
+
+            finally:
+                test_store.Close()
+
+            test_store = sqlite_file.SQLiteStorageFile()
+            test_store.Open(path=test_path)
+
+            try:
+                self.assertEqual(test_store.format_version, 20260516)
+
+                test_store._cursor.execute(
+                    f"SELECT _event_data_identifier, date_time FROM event "
+                    f"WHERE rowid = {number_of_events + 1:d}"
+                )
+                row = test_store._cursor.fetchone()
+
+                test_events = list(test_store.GetSortedEvents())
+
+            finally:
+                test_store.Close()
+
+        self.assertEqual(
+            tuple(row),
+            (
+                "event_data.1",
+                '{"__class_name__": "Filetime", "__type__": "DateTimeValues", '
+                '"timestamp": 1}',
+            ),
+        )
+
+        self.assertEqual(len(test_events), number_of_events + 1)
+
+        event = test_events[0]
+        self.assertEqual(event.GetEventDataIdentifier().CopyToString(), "event_data.1")
+        self.assertEqual(
+            event.date_time.CopyToSerializableDict(),
+            {
+                "__class_name__": "Filetime",
+                "__type__": "DateTimeValues",
+                "timestamp": 1,
+            },
+        )
 
     def testAddAttributeContainer(self):
         """Tests the AddAttributeContainer function."""
