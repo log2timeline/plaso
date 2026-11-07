@@ -3,6 +3,7 @@
 
 import unittest
 
+from plaso.lib import errors
 from plaso.parsers import winprefetch
 
 from tests.parsers import test_lib
@@ -528,6 +529,17 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
+
+    def testParseCompressedNonPrefetch(self):
+        """Tests the Parse function on a MAM compressed file that is not Prefetch.
+
+        The test file contains 4096 bytes, that start with the header of an
+        Emergency Boot Disk (EBD) file, compressed in the MAM format.
+        """
+        parser = winprefetch.WinPrefetchParser()
+
+        with self.assertRaises(errors.WrongParser):
+            self._ParseFile(["winprefetch", "mam_compressed.bin"], parser)
 
 
 if __name__ == "__main__":

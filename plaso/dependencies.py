@@ -44,7 +44,7 @@ PYTHON_DEPENDENCIES = {
     "pyfsntfs": ("get_version()", "20211229", None, True),
     "pyfsxfs": ("get_version()", "20220829", None, True),
     "pyfvde": ("get_version()", "20220121", None, True),
-    "pyfwnt": ("get_version()", "20210717", None, True),
+    "pyfwnt": ("get_version()", "20220922", None, True),
     "pyfwsi": ("get_version()", "20240225", None, True),
     "pylnk": ("get_version()", "20230716", None, True),
     "pyluksde": ("get_version()", "20220121", None, True),
