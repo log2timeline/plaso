@@ -209,6 +209,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
             help="Disable the dependencies check.",
         )
         self.AddLogFileOptions(info_group)
+        self.AddRedactionOptions(info_group)
 
         helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
             info_group, names=["status_view"]
@@ -281,8 +282,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
             self._output_writer.Write(argument_parser.format_usage())
             return False
 
-        self._command_line_arguments = self.GetCommandLineArguments()
-
         self._WaitUserWarning()
 
         loggers.ConfigureLogging(
@@ -290,6 +289,10 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
             filename=self._log_file,
             quiet_mode=self._quiet_mode,
         )
+
+        # The command line arguments are determined after logging is configured
+        # so that any message about redacted values is written to the log file.
+        self._command_line_arguments = self.GetCommandLineArguments()
         return True
 
     def ParseOptions(self, options):
