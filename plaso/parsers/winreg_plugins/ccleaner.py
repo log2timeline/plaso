@@ -119,6 +119,15 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
             )
             return None
 
+        if not 1 <= hours <= 12:
+            parser_mediator.ProduceWarning(
+                f"invalid UpdateKey date time value: {date_time_string!s}"
+            )
+            return None
+
+        # 12:xx AM is 00:xx and 12:xx PM is 12:xx.
+        if hours == 12:
+            hours = 0
         if part_of_day == "PM":
             hours += 12
 
