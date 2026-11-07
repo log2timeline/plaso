@@ -278,6 +278,21 @@ class SQLiteStorageWriterTest(test_lib.StorageTestCase):
             with self.assertRaises(OSError):
                 storage_writer.Close()
 
+    def testOpenCloseInMemory(self):
+        """Tests the Open and Close functions with an in-memory database."""
+        with shared_test_lib.TempDirectory() as temp_directory:
+            test_path = os.path.join(temp_directory, "plaso.sqlite")
+            storage_writer = sqlite_writer.SQLiteStorageWriter(
+                storage_type=definitions.STORAGE_TYPE_TASK
+            )
+            storage_writer.Open(path=test_path, in_memory=True)
+
+            self.assertFalse(os.path.exists(test_path))
+
+            storage_writer.Close()
+
+            self.assertTrue(os.path.exists(test_path))
+
 
 if __name__ == "__main__":
     unittest.main()

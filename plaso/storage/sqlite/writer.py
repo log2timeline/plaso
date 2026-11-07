@@ -107,11 +107,14 @@ class SQLiteStorageWriter(writer.StorageWriter):
         return event_source
 
     # pylint: disable=arguments-differ
-    def Open(self, path=None, **unused_kwargs):
+    def Open(self, path=None, in_memory=False, **unused_kwargs):
         """Opens the storage writer.
 
         Args:
           path (Optional[str]): path to the output SQLite database.
+          in_memory (Optional[bool]): True if a new SQLite database should be
+              kept in memory and only be written to path on close, or when it
+              exceeds the maximum in-memory size.
 
         Raises:
           OSError: if the storage writer is already opened.
@@ -127,7 +130,7 @@ class SQLiteStorageWriter(writer.StorageWriter):
         if self._storage_profiler:
             self._store.SetStorageProfiler(self._storage_profiler)
 
-        self._store.Open(path=path, read_only=False)
+        self._store.Open(path=path, read_only=False, in_memory=in_memory)
 
         number_of_containers = self._store.GetNumberOfAttributeContainers(
             self._CONTAINER_TYPE_EVENT_DATA
