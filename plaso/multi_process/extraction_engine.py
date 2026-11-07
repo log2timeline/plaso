@@ -673,7 +673,8 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
                 self._processing_profiler.StopTiming("merge")
 
             if fully_merged:
-                self._task_merge_helper.Close()
+                if self._task_merge_helper:
+                    self._task_merge_helper.Close()
 
                 self._RemoveMergeTaskStorage(
                     self._task_storage_format, self._merge_task
