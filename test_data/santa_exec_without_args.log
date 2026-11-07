@@ -1,0 +1,3 @@
+[2023-04-02T10:15:20.100Z] I santad: action=EXEC|decision=ALLOW|reason=BINARY|sha256=0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0|pid=4242|pidversion=31337|ppid=1|uid=0|user=root|gid=0|group=wheel|mode=M|path=/usr/local/bin/example
+[2023-04-02T10:15:21.200Z] I santad: action=EXEC|decision=ALLOW|reason=BINARY|sha256=0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0|pid=4243|pidversion=31338|ppid=1|uid=0|user=root|gid=0|group=wheel|mode=M|path=/usr/local/bin/example|args=example --verbose
+[2023-04-02T10:15:22.300Z] I santad: action=EXIT|pid=4242|pidversion=31337|ppid=1|uid=0|gid=0
