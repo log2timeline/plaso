@@ -97,6 +97,7 @@ docker_layer_config | Parser for Docker layer configuration files.
 gcp_log | Parser for Google Cloud (GCP) log.
 ios_application_privacy | Parser for iOS Application Privacy report.
 microsoft_audit_log | Parser for Microsoft (Office) 365 audit log.
+mongodb_log | Parser for MongoDB log files.
 
 ### Parser plugins: olecf
 
