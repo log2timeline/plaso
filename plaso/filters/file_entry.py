@@ -166,7 +166,7 @@ class DateTimeFileEntryFilter(FileEntryFilter):
                         date_time_range.end_date_time.CopyToDateTimeString()
                     )
                     output_writer.Write(
-                        f"\t{date_time_range.time_value:s} after {end_time_string:s}\n"
+                        f"\t{date_time_range.time_value:s} before {end_time_string:s}\n"
                     )
 
                 elif date_time_range.end_date_time is None:
@@ -175,7 +175,7 @@ class DateTimeFileEntryFilter(FileEntryFilter):
                     )
                     output_writer.Write(
                         (
-                            f"\t{date_time_range.time_value:s} before "
+                            f"\t{date_time_range.time_value:s} after "
                             f"{start_time_string:s}\n"
                         )
                     )
