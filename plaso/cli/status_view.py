@@ -34,7 +34,7 @@ class StatusView:
         dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_IMAGE: ("storage media image"),
     }
 
-    _UNITS_1024 = ["B", "KiB", "MiB", "GiB", "TiB", "EiB", "ZiB", "YiB"]
+    _UNITS_1024 = ["B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"]
 
     _WINAPI_STD_OUTPUT_HANDLE = -11
 
@@ -234,7 +234,7 @@ class StatusView:
             used_memory_1024 /= 1024
             magnitude_1024 += 1
 
-        if 0 < magnitude_1024 <= 7:
+        if 0 < magnitude_1024 < len(self._UNITS_1024):
             units = self._UNITS_1024[magnitude_1024]
             return f"{used_memory_1024:.1f} {units:s}"
 

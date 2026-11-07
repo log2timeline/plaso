@@ -236,8 +236,9 @@ class StatusViewTest(test_lib.CLIToolTestCase):
         self.assertEqual(test_view._FormatSizeInUnitsOf1024(1024**2), "1.0 MiB")
         self.assertEqual(test_view._FormatSizeInUnitsOf1024(5 * 1024**3), "5.0 GiB")
         self.assertEqual(test_view._FormatSizeInUnitsOf1024(1024**4), "1.0 TiB")
-
-    # TODO: add tests for _FormatSizeInUnitsOf1024
+        self.assertEqual(test_view._FormatSizeInUnitsOf1024(1024**5), "1.0 PiB")
+        self.assertEqual(test_view._FormatSizeInUnitsOf1024(1024**6), "1.0 EiB")
+        self.assertEqual(test_view._FormatSizeInUnitsOf1024(1024**8), "1.0 YiB")
 
     def testPrintAnalysisStatusHeader(self):
         """Tests the _PrintAnalysisStatusHeader function."""
