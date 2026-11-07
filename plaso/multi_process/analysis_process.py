@@ -85,7 +85,7 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
 
         status = {
             "display_name": "",
-            "identifier": self._name,
+            "identifier": self.name,
             "number_of_consumed_event_data": None,
             "number_of_consumed_event_tags": None,
             "number_of_consumed_events": self._number_of_consumed_events,
@@ -116,7 +116,7 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
         """The main loop."""
         self._StartProfiling(self._processing_configuration.profiling)
 
-        logger.debug(f"Analysis plugin: {self._name:s} (PID: {self._pid:d}) started.")
+        logger.debug(f"Analysis plugin: {self.name:s} (PID: {self._pid:d}) started.")
 
         # Creating the threading event in the constructor will cause a pickle
         # error on Windows when an analysis process is created.
@@ -159,7 +159,7 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
         try:
             logger.debug(
                 (
-                    f"{self._name:s} (PID: {self._pid:d}) started monitoring event "
+                    f"{self.name:s} (PID: {self._pid:d}) started monitoring event "
                     f"queue."
                 )
             )
@@ -185,7 +185,7 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
 
             logger.debug(
                 (
-                    f"{self._name:s} (PID: {self._pid:d}) stopped monitoring event "
+                    f"{self.name:s} (PID: {self._pid:d}) stopped monitoring event "
                     f"queue."
                 )
             )
@@ -200,7 +200,7 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
         except Exception as exception:  # pylint: disable=broad-except
             logger.warning(
                 (
-                    f"Unhandled exception in process: {self._name:s} (PID: "
+                    f"Unhandled exception in process: {self.name:s} (PID: "
                     f"{self._pid:d})."
                 )
             )
@@ -234,7 +234,7 @@ class AnalysisProcess(task_process.MultiProcessTaskProcess):
         self._foreman_status_wait_event.clear()
         self._foreman_status_wait_event.wait(self._FOREMAN_STATUS_WAIT)
 
-        logger.debug(f"Analysis plugin: {self._name:s} (PID: {self._pid:d}) stopped.")
+        logger.debug(f"Analysis plugin: {self.name:s} (PID: {self._pid:d}) stopped.")
 
         self._StopProfiling()
 

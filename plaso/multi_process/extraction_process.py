@@ -167,7 +167,7 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
 
         status = {
             "display_name": self._current_display_name,
-            "identifier": self._name,
+            "identifier": self.name,
             "last_activity_timestamp": last_activity_timestamp,
             "number_of_consumed_event_data": None,
             "number_of_consumed_event_tags": None,
@@ -215,7 +215,7 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
         )
         self._parser_mediator.StartProfiling(
             self._processing_configuration.profiling,
-            self._name,
+            self.name,
             self._process_information,
         )
         self._StartProfiling(self._processing_configuration.profiling)
@@ -226,13 +226,13 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
         if self._processing_profiler:
             self._extraction_worker.SetProcessingProfiler(self._processing_profiler)
 
-        logger.debug(f"Worker: {self._name!s} (PID: {self._pid:d}) started.")
+        logger.debug(f"Worker: {self.name!s} (PID: {self._pid:d}) started.")
 
         self._status = definitions.STATUS_INDICATOR_RUNNING
 
         try:
             logger.debug(
-                f"{self._name!s} (PID: {self._pid:d}) started monitoring task queue."
+                f"{self.name!s} (PID: {self._pid:d}) started monitoring task queue."
             )
             while not self._abort:
                 try:
@@ -251,14 +251,14 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
                 self._ProcessTask(task)
 
             logger.debug(
-                f"{self._name!s} (PID: {self._pid:d}) stopped monitoring task queue."
+                f"{self.name!s} (PID: {self._pid:d}) stopped monitoring task queue."
             )
 
         # All exceptions need to be caught here to prevent the process
         # from being killed by an uncaught exception.
         except Exception as exception:  # pylint: disable=broad-except
             logger.warning(
-                f"Unhandled exception in process: {self._name!s} (PID: {self._pid:d})."
+                f"Unhandled exception in process: {self.name!s} (PID: {self._pid:d})."
             )
             logger.exception(exception)
 
@@ -283,7 +283,7 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
         else:
             self._status = definitions.STATUS_INDICATOR_COMPLETED
 
-        logger.debug(f"Worker: {self._name!s} (PID: {self._pid:d}) stopped.")
+        logger.debug(f"Worker: {self.name!s} (PID: {self._pid:d}) stopped.")
 
         try:
             self._task_queue.Close(abort=self._abort)
