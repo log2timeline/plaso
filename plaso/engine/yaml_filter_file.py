@@ -53,6 +53,9 @@ class YAMLFilterFile:
         if not filter_definition_values:
             raise errors.ParseError("Missing filter definition values.")
 
+        if not isinstance(filter_definition_values, dict):
+            raise errors.ParseError("Unsupported filter definition values.")
+
         different_keys = set(filter_definition_values) - self._SUPPORTED_KEYS
         if different_keys:
             different_keys = ", ".join(different_keys)
@@ -93,11 +96,21 @@ class YAMLFilterFile:
 
         Yields:
           PathFilter: path filter.
+
+        Raises:
+          ParseError: if the filter file cannot be read or a filter definition
+              is not set or incorrect.
         """
         yaml_generator = yaml.safe_load_all(file_object)
 
-        for yaml_definition in yaml_generator:
-            yield self._ReadFilterDefinition(yaml_definition)
+        try:
+            for yaml_definition in yaml_generator:
+                yield self._ReadFilterDefinition(yaml_definition)
+
+        except yaml.YAMLError as exception:
+            raise errors.ParseError(
+                f"Unable to read filter file with error: {exception!s}"
+            )
 
     def ReadFromFile(self, path):
         """Reads the path filters from the YAML-based filter file.
@@ -107,6 +120,10 @@ class YAMLFilterFile:
 
         Returns:
           list[PathFilter]: path filters.
+
+        Raises:
+          ParseError: if the filter file cannot be read or a filter definition
+              is not set or incorrect.
         """
         with io.open(path, "r", encoding="utf-8") as file_object:
             return list(self._ReadFromFileObject(file_object))
