@@ -13,6 +13,10 @@ field.
 import abc
 import re
 
+from acstore.containers import interface as containers_interface
+
+from dfdatetime import interface as dfdatetime_interface
+
 from plaso.formatters import logger
 
 
@@ -258,6 +262,24 @@ class EventFormatter:
 
             attribute_values = []
             for attribute, value in event_values.items():
+                # Ignore attribute container identifier and date and time values
+                # since their string representation is not reproducible.
+                if isinstance(
+                    value,
+                    (
+                        containers_interface.AttributeContainerIdentifier,
+                        dfdatetime_interface.DateTimeValues,
+                    ),
+                ):
+                    continue
+
+                if (
+                    isinstance(value, list)
+                    and value
+                    and isinstance(value[0], dfdatetime_interface.DateTimeValues)
+                ):
+                    continue
+
                 attribute_values.append(f"{attribute:s}: {value!s}")
 
             message_string = " ".join(attribute_values)
