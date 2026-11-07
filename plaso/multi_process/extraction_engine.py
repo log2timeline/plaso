@@ -98,6 +98,11 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     # Maximum number of dfVFS file system objects to cache in the foreman process.
     _FILE_SYSTEM_CACHE_SIZE = 3
 
+    # Minimum and maximum number of seconds the task scheduler loop sleeps when
+    # an iteration did not produce any work.
+    _IDLE_SLEEP_MINIMUM_SECONDS = 0.001
+    _IDLE_SLEEP_MAXIMUM_SECONDS = 0.05
+
     # Maximum number of concurrent tasks.
     _MAXIMUM_NUMBER_OF_TASKS = 10000
 
@@ -357,9 +362,14 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           event_source_heap (_EventSourceHeap): event source heap.
           start_with_first (Optional[bool]): True if the function should start
               with the first written event source.
+
+        Returns:
+          bool: True if event sources were added to the heap.
         """
         if self._processing_profiler:
             self._processing_profiler.StartTiming("fill_event_source_heap")
+
+        has_added_event_sources = False
 
         if self._processing_profiler:
             self._processing_profiler.StartTiming("get_event_source")
@@ -374,6 +384,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
         while event_source:
             event_source_heap.PushEventSource(event_source)
+            has_added_event_sources = True
             if event_source_heap.IsFull():
                 logger.debug("Event source heap is full.")
                 break
@@ -388,6 +399,26 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
         if self._processing_profiler:
             self._processing_profiler.StopTiming("fill_event_source_heap")
+
+        return has_added_event_sources
+
+    def _GetIdleSleepTime(self, idle_sleep_time):
+        """Determines the next idle sleep time of the task scheduler loop.
+
+        The sleep time is doubled on every consecutive idle iteration, starting
+        with the minimum and up to the maximum idle sleep time.
+
+        Args:
+          idle_sleep_time (float): current idle sleep time in seconds or 0.0 if
+              the previous iteration produced work.
+
+        Returns:
+          float: next idle sleep time in seconds.
+        """
+        if idle_sleep_time <= 0.0:
+            return self._IDLE_SLEEP_MINIMUM_SECONDS
+
+        return min(idle_sleep_time * 2.0, self._IDLE_SLEEP_MAXIMUM_SECONDS)
 
     def _GetPathSpecificationString(self, path_spec):
         """Retrieves a printable string representation of the path specification.
@@ -567,6 +598,9 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
               to merge task storage.
           session_identifier (str): the identifier of the session the tasks are
               part of.
+
+        Returns:
+          bool: True if task storage was processed or merged.
         """
         if self._processing_profiler:
             self._processing_profiler.StartTiming("merge_check")
@@ -604,6 +638,8 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         task = None
         if not self._task_merge_helper_on_hold:
             task = self._task_manager.GetTaskPendingMerge(self._merge_task)
+
+        has_merged = bool(task_identifiers or task or self._task_merge_helper)
 
         if task or self._task_merge_helper:
             if self._processing_profiler:
@@ -701,6 +737,8 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
                         self._merge_task, "merge_resumed"
                     )
 
+        return has_merged
+
     def _ProduceExtractionWarning(self, storage_writer, message, path_spec):
         """Produces an extraction warning.
 
@@ -744,12 +782,15 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
         task = None
         has_pending_tasks = True
+        idle_sleep_time = 0.0
 
         while event_source or has_pending_tasks:
             if self._abort:
                 break
 
             try:
+                has_activity = False
+
                 if not task:
                     task = self._task_manager.CreateRetryTask()
 
@@ -776,18 +817,31 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
                         self._task_manager.SampleTaskStatus(task, "scheduled")
 
                         task = None
+                        has_activity = True
 
-                self._MergeTaskStorage(storage_writer, session_identifier)
+                if self._MergeTaskStorage(storage_writer, session_identifier):
+                    has_activity = True
 
                 if event_source_heap.IsFull():
                     logger.debug("Event source heap is full.")
-                else:
-                    self._FillEventSourceHeap(storage_writer, event_source_heap)
+                elif self._FillEventSourceHeap(storage_writer, event_source_heap):
+                    has_activity = True
 
                 if not task and not event_source:
                     event_source = event_source_heap.PopEventSource()
 
+                if event_source:
+                    has_activity = True
+
                 has_pending_tasks = self._task_manager.HasPendingTasks()
+
+                # Back off when there is no work to prevent the task scheduler loop
+                # from busy waiting for workers to finish their tasks.
+                if has_activity:
+                    idle_sleep_time = 0.0
+                elif has_pending_tasks:
+                    idle_sleep_time = self._GetIdleSleepTime(idle_sleep_time)
+                    time.sleep(idle_sleep_time)
 
             except KeyboardInterrupt:
                 if self._debug_output:
