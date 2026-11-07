@@ -102,7 +102,14 @@ class EventDataExtractor:
               denotes which parsers and plugins should be used. See
               filters/parser_filter.py for details of the expression syntax.
         """
-        self._formats_with_signatures, non_sigscan_parser_names = (
+        # The signature scanner contains the format specifications of all parsers,
+        # including disabled parsers, so that data streams that match the format
+        # of a disabled parser are not parsed by the non-signature parsers.
+        self._formats_with_signatures, _ = (
+            parsers_manager.ParsersManager.GetFormatsWithSignatures()
+        )
+
+        _, non_sigscan_parser_names = (
             parsers_manager.ParsersManager.GetFormatsWithSignatures(
                 parser_filter_expression=parser_filter_expression
             )
@@ -292,13 +299,34 @@ class EventDataExtractor:
         finally:
             parser_mediator.SampleFormatCheckStopTiming("format_scanner")
 
+        enabled_parser_names = [
+            parser_name for parser_name in parser_names if parser_name in self._parsers
+        ]
+
         parse_with_non_sigscan_parsers = True
-        if parser_names:
+        if enabled_parser_names:
             parse_result = self._ParseFileEntryWithParsers(
-                parser_mediator, parser_names, file_entry, file_object=file_object
+                parser_mediator,
+                enabled_parser_names,
+                file_entry,
+                file_object=file_object,
             )
             if parse_result in (self._PARSE_RESULT_FAILURE, self._PARSE_RESULT_SUCCESS):
                 parse_with_non_sigscan_parsers = False
+
+        elif parser_names:
+            # A data stream that only matches the format of disabled parsers is not
+            # parsed by the non-signature parsers.
+            parse_with_non_sigscan_parsers = False
+
+            display_name = parser_mediator.GetDisplayName(file_entry=file_entry)
+            disabled_parser_names = ", ".join(parser_names)
+            logger.debug(
+                (
+                    f"[ParseDataStream] skipped file: {display_name:s} that matches "
+                    f"the format of disabled parsers: {disabled_parser_names:s}"
+                )
+            )
 
         if parse_with_non_sigscan_parsers:
             self._ParseFileEntryWithParsers(

@@ -43,6 +43,44 @@ class EventDataExtractorTest(test_lib.EngineTestCase):
 
         return parser_mediator
 
+    def _ParseDataWithExtractor(self, data, parser_filter_expression):
+        """Parses data with an event data extractor.
+
+        Args:
+          data (bytes): data to parse.
+          parser_filter_expression (str): parser filter expression.
+
+        Returns:
+          int: number of event data extracted.
+        """
+        test_extractor = extractors.EventDataExtractor(
+            parser_filter_expression=parser_filter_expression
+        )
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            test_file_path = os.path.join(temp_directory, "bodyfile")
+            with open(test_file_path, "wb") as file_object:
+                file_object.write(data)
+
+            path_spec = path_spec_factory.Factory.NewPathSpec(
+                dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
+            )
+            resolver_context = context.Context()
+            file_entry = path_spec_resolver.Resolver.OpenFileEntry(
+                path_spec, resolver_context=resolver_context
+            )
+
+            storage_writer = self._CreateStorageWriter()
+            parser_mediator = self._CreateParserMediator(
+                storage_writer, file_entry=file_entry
+            )
+
+            test_extractor.ParseDataStream(parser_mediator, file_entry, "")
+
+            resolver_context.Empty()
+
+        return storage_writer.GetNumberOfAttributeContainers("event_data")
+
     def _GetTestNTFSFileEntry(self, location, data_stream=None):
         """Retrieves a file entry of the NTFS file system in a test image.
 
@@ -353,6 +391,24 @@ class EventDataExtractorTest(test_lib.EngineTestCase):
             "recovery_warning"
         )
         self.assertEqual(number_of_warnings, 0)
+
+    def testParseDataStreamWithDisabledSignatureParser(self):
+        """Tests the ParseDataStream function with a disabled signature parser."""
+        # Bodyfile line where bytes 4 to 8 contain the Windows Prefetch file
+        # signature "SCCA".
+        data = b"0|/aSCCA|12|r/rrwxr-xr-x|0|0|1|1337961350|1337961350|1337961350|0\n"
+
+        number_of_event_data = self._ParseDataWithExtractor(data, "bodyfile")
+        self.assertEqual(number_of_event_data, 0)
+
+        number_of_event_data = self._ParseDataWithExtractor(data, "!winprefetch")
+        self.assertEqual(number_of_event_data, 0)
+
+        # Bodyfile line that is similar but does not contain the signature.
+        data = b"0|/aSCCB|12|r/rrwxr-xr-x|0|0|1|1337961350|1337961350|1337961350|0\n"
+
+        number_of_event_data = self._ParseDataWithExtractor(data, "bodyfile")
+        self.assertEqual(number_of_event_data, 1)
 
     def testParseDataStreamWithForceParser(self):
         """Tests the ParseDataStream function with force parser."""
