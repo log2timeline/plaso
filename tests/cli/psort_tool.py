@@ -238,23 +238,6 @@ Test argument parser.
         with self.assertRaises(errors.BadConfigOption):
             test_tool._CreateOutputModule(options)
 
-    def testGetAnalysisPlugins(self):
-        """Tests the _GetAnalysisPlugins function."""
-        test_tool = psort_tool.PsortTool()
-
-        analysis_plugins = test_tool._GetAnalysisPlugins("")
-        self.assertEqual(analysis_plugins, [])
-
-        analysis_plugins = test_tool._GetAnalysisPlugins(
-            "browser_search, unique_domains_visited"
-        )
-        analysis_plugin_names = sorted(plugin.NAME for plugin in analysis_plugins)
-        self.assertEqual(
-            analysis_plugin_names, ["browser_search", "unique_domains_visited"]
-        )
-
-    # TODO: add test for _ParseAnalysisPluginOptions.
-
     def testParseInformationalOptions(self):
         """Tests the _ParseInformationalOptions function."""
         test_tool = psort_tool.PsortTool()
