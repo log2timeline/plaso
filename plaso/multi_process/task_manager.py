@@ -80,7 +80,7 @@ class _PendingMergeTaskHeap:
           ValueError: if the size of the storage file is not set in the task.
         """
         storage_file_size = getattr(task, "storage_file_size", None)
-        if not storage_file_size:
+        if storage_file_size is None:
             raise ValueError("Task storage file size not set.")
 
         # Prioritize directories over files and other types of file entries to try
