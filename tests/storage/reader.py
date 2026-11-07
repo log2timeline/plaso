@@ -112,6 +112,36 @@ class StorageReaderTest(test_lib.StorageTestCase):
         finally:
             test_reader._store.Close()
 
+    def testGetAttributeContainersWithStoredData(self):
+        """Tests the GetAttributeContainersWithStoredData function."""
+        test_reader = reader.StorageReader()
+        test_reader._store = fake_store.FakeStore()
+        test_reader._store.Open()
+
+        try:
+            event_source = event_sources.EventSource()
+            test_reader._store.AddAttributeContainer(event_source)
+
+            test_generator = test_reader.GetAttributeContainersWithStoredData(
+                event_source.CONTAINER_TYPE
+            )
+            test_containers = list(test_generator)
+            self.assertEqual(len(test_containers), 1)
+
+            _, stored_data = test_containers[0]
+            self.assertIsNone(stored_data)
+
+        finally:
+            test_reader._store.Close()
+
+    def testGetCompressionFormat(self):
+        """Tests the GetCompressionFormat function."""
+        test_reader = reader.StorageReader()
+        test_reader._store = fake_store.FakeStore()
+
+        compression_format = test_reader.GetCompressionFormat()
+        self.assertIsNone(compression_format)
+
     def testGetFormatVersion(self):
         """Tests the GetFormatVersion function."""
         test_reader = reader.StorageReader()

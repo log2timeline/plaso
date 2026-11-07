@@ -20,7 +20,7 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
       compression_format (str): compression format.
     """
 
-    _FORMAT_VERSION = 20260516
+    _FORMAT_VERSION = 20261026
 
     # The earliest format version, stored in-file, that this class
     # is able to append (write).
@@ -28,11 +28,16 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
 
     # The earliest format version, stored in-file, that this class
     # is able to upgrade (write new format features).
-    _UPGRADE_COMPATIBLE_FORMAT_VERSION = 20260516
+    _UPGRADE_COMPATIBLE_FORMAT_VERSION = 20261026
 
     # The earliest format version, stored in-file, that this class
     # is able to read.
     _READ_COMPATIBLE_FORMAT_VERSION = 20260516
+
+    # The earliest format version, stored in-file, that stores the event data
+    # stream identifier of event data in a separate column, instead of in the
+    # serialized data. This allows the serialized data to be copied as-is.
+    _EVENT_DATA_STREAM_IDENTIFIER_COLUMN_FORMAT_VERSION = 20261026
 
     _CONTAINER_TYPE_EVENT = events.EventObject.CONTAINER_TYPE
     _CONTAINER_TYPE_EVENT_DATA = events.EventData.CONTAINER_TYPE
@@ -41,6 +46,10 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
     def __init__(self):
         """Initializes a SQLite-based storage file."""
         super().__init__()
+        self._has_event_data_stream_identifier_column = (
+            self.format_version
+            >= self._EVENT_DATA_STREAM_IDENTIFIER_COLUMN_FORMAT_VERSION
+        )
         self._serializer = json_serializer.JSONAttributeContainerSerializer
         self._serializers_profiler = None
 
@@ -101,7 +110,22 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
                 len(compressed_data),
             )
 
-        return self._DeserializeAttributeContainer(container_type, serialized_data)
+        container = self._DeserializeAttributeContainer(container_type, serialized_data)
+
+        if (
+            container
+            and container_type == self._CONTAINER_TYPE_EVENT_DATA
+            and self._has_event_data_stream_identifier_column
+        ):
+            identifier_string = row[first_column_index + 1]
+            if identifier_string:
+                event_data_stream_identifier = (
+                    containers_interface.AttributeContainerIdentifier()
+                )
+                event_data_stream_identifier.CopyFromString(identifier_string)
+                container.SetEventDataStreamIdentifier(event_data_stream_identifier)
+
+        return container
 
     def _CreateAttributeContainerTable(self, container_type):
         """Creates a table for a specific attribute container type.
@@ -122,10 +146,23 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
             else:
                 data_column_type = "TEXT"
 
-            query = (
-                f"CREATE TABLE {container_type:s} (_identifier INTEGER PRIMARY KEY "
-                f"AUTOINCREMENT, _data {data_column_type:s});"
-            )
+            column_definitions = [
+                "_identifier INTEGER PRIMARY KEY AUTOINCREMENT",
+                f"_data {data_column_type:s}",
+            ]
+            if (
+                container_type == self._CONTAINER_TYPE_EVENT_DATA
+                and self._has_event_data_stream_identifier_column
+            ):
+                identifier_column_type = self._schema_helper.GetStorageDataType(
+                    "AttributeContainerIdentifier"
+                )
+                column_definitions.append(
+                    f"_event_data_stream_identifier {identifier_column_type:s}"
+                )
+
+            column_definitions = ", ".join(column_definitions)
+            query = f"CREATE TABLE {container_type:s} ({column_definitions:s});"
             try:
                 self._cursor.execute(query)
             except (sqlite3.InterfaceError, sqlite3.OperationalError) as exception:
@@ -185,6 +222,24 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
 
         return container
 
+    def _GetSerializedDataColumnNames(self, container_type):
+        """Retrieves the names of the columns of a serialized attribute container.
+
+        Args:
+          container_type (str): attribute container type.
+
+        Returns:
+          list[str]: names of the columns, where the first column contains the
+              serialized data.
+        """
+        if (
+            container_type == self._CONTAINER_TYPE_EVENT_DATA
+            and self._has_event_data_stream_identifier_column
+        ):
+            return ["_data", "_event_data_stream_identifier"]
+
+        return ["_data"]
+
     def _ReadAndCheckStorageMetadata(self, check_readable_only=False):
         """Reads storage metadata and checks that the values are valid.
 
@@ -205,6 +260,11 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
         self.compression_format = metadata_values["compression_format"]
         self.serialization_format = metadata_values["serialization_format"]
 
+        self._has_event_data_stream_identifier_column = (
+            self.format_version
+            >= self._EVENT_DATA_STREAM_IDENTIFIER_COLUMN_FORMAT_VERSION
+        )
+
     def _SerializeAttributeContainer(self, container):
         """Serializes an attribute container.
 
@@ -224,11 +284,17 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
             json_dict = self._serializer.WriteSerializedDict(container)
 
             if container.CONTAINER_TYPE == self._CONTAINER_TYPE_EVENT_DATA:
-                event_data_stream_identifier = container.GetEventDataStreamIdentifier()
-                if event_data_stream_identifier:
-                    json_dict["_event_data_stream_identifier"] = (
-                        event_data_stream_identifier.CopyToString()
+                if self._has_event_data_stream_identifier_column:
+                    # The event data stream identifier is stored in a separate column.
+                    json_dict.pop("_event_data_stream_identifier", None)
+                else:
+                    event_data_stream_identifier = (
+                        container.GetEventDataStreamIdentifier()
                     )
+                    if event_data_stream_identifier:
+                        json_dict["_event_data_stream_identifier"] = (
+                            event_data_stream_identifier.CopyToString()
+                        )
 
             try:
                 serialized_string = json.dumps(json_dict)
@@ -285,19 +351,6 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
         if schema and container.CONTAINER_TYPE != self._CONTAINER_TYPE_EVENT_DATA:
             super()._WriteNewAttributeContainer(container)
         else:
-            next_sequence_number = self._GetAttributeContainerNextSequenceNumber(
-                container.CONTAINER_TYPE
-            )
-            if next_sequence_number == 1 and not self._HasTable(
-                container.CONTAINER_TYPE
-            ):
-                self._CreateAttributeContainerTable(container.CONTAINER_TYPE)
-
-            identifier = containers_interface.AttributeContainerIdentifier(
-                name=container.CONTAINER_TYPE, sequence_number=next_sequence_number
-            )
-            container.SetIdentifier(identifier)
-
             serialized_data = self._SerializeAttributeContainer(container)
 
             if self.compression_format == definitions.COMPRESSION_FORMAT_ZLIB:
@@ -316,13 +369,77 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
                     len(compressed_data),
                 )
 
-            column_names = ["_data"]
-            values = [column_value]
+            self._WriteNewSerializedAttributeContainer(container, column_value)
 
-            self._CacheAttributeContainerForWrite(
-                container.CONTAINER_TYPE, column_names, values
-            )
-            self._CacheAttributeContainerByIndex(container, next_sequence_number - 1)
+    def _WriteNewSerializedAttributeContainer(self, container, column_value):
+        """Writes a new serialized attribute container to the store.
+
+        The table for the container type is created if it does not exist.
+
+        Args:
+          container (AttributeContainer): attribute container.
+          column_value (bytes|str): serialized, and optionally compressed, data of
+              the attribute container, as stored in the _data column.
+
+        Raises:
+          OSError: when there is an error querying the storage file.
+        """
+        next_sequence_number = self._GetAttributeContainerNextSequenceNumber(
+            container.CONTAINER_TYPE
+        )
+        if next_sequence_number == 1 and not self._HasTable(container.CONTAINER_TYPE):
+            self._CreateAttributeContainerTable(container.CONTAINER_TYPE)
+
+        identifier = containers_interface.AttributeContainerIdentifier(
+            name=container.CONTAINER_TYPE, sequence_number=next_sequence_number
+        )
+        container.SetIdentifier(identifier)
+
+        column_names = self._GetSerializedDataColumnNames(container.CONTAINER_TYPE)
+        values = [column_value]
+
+        if len(column_names) > 1:
+            event_data_stream_identifier = container.GetEventDataStreamIdentifier()
+            if event_data_stream_identifier:
+                event_data_stream_identifier = (
+                    event_data_stream_identifier.CopyToString()
+                )
+
+            values.append(event_data_stream_identifier)
+
+        self._CacheAttributeContainerForWrite(
+            container.CONTAINER_TYPE, column_names, values
+        )
+        self._CacheAttributeContainerByIndex(container, next_sequence_number - 1)
+
+    def AddAttributeContainerWithStoredData(
+        self, container, stored_data, compression_format
+    ):
+        """Adds a new attribute container with the data as stored in another store.
+
+        The stored data is written as-is, without serializing and compressing the
+        attribute container again, if it is compatible with this store. Otherwise
+        the attribute container is serialized.
+
+        Args:
+          container (AttributeContainer): attribute container.
+          stored_data (object): data of the attribute container as returned by
+              GetAttributeContainersWithStoredData or None if not available.
+          compression_format (str): compression format of the stored data.
+
+        Raises:
+          OSError: if the store cannot be written to.
+        """
+        if (
+            stored_data is None
+            or container.CONTAINER_TYPE != self._CONTAINER_TYPE_EVENT_DATA
+            or compression_format != self.compression_format
+            or not self._has_event_data_stream_identifier_column
+        ):
+            self.AddAttributeContainer(container)
+        else:
+            self._RaiseIfNotWritable()
+            self._WriteNewSerializedAttributeContainer(container, stored_data)
 
     def GetAttributeContainerByIndex(self, container_type, index):
         """Retrieves a specific attribute container.
@@ -351,7 +468,7 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
         if not self._attribute_container_sequence_numbers[container_type]:
             return None
 
-        column_names = ["_data"]
+        column_names = self._GetSerializedDataColumnNames(container_type)
 
         row_number = index + 1
         column_names = ", ".join(column_names)
@@ -415,9 +532,66 @@ class SQLiteStorageFile(sqlite_store.SQLiteAttributeContainerStore):
 
             yield from self._GetAttributeContainersWithFilter(
                 container_type,
-                column_names=["_data"],
+                column_names=self._GetSerializedDataColumnNames(container_type),
                 filter_expression=sql_filter_expression,
             )
+
+    def GetAttributeContainersWithStoredData(self, container_type):
+        """Retrieves a specific type of attribute containers and their stored data.
+
+        The stored data is the serialized, and optionally compressed, data of
+        the attribute container as stored in the _data column. It is only
+        available for event data, if the event data stream identifier is stored
+        in a separate column, since then the stored data contains no references
+        to other attribute containers and can be copied as-is.
+
+        Args:
+          container_type (str): attribute container type.
+
+        Yields:
+          tuple[AttributeContainer, bytes|str]: attribute container and its stored
+              data or None if not available.
+
+        Raises:
+          OSError: when there is an error querying the storage file.
+        """
+        if (
+            container_type != self._CONTAINER_TYPE_EVENT_DATA
+            or not self._has_event_data_stream_identifier_column
+        ):
+            for container in self.GetAttributeContainers(container_type):
+                yield container, None
+
+            return
+
+        self._CommitWriteCache(container_type)
+
+        if not self._attribute_container_sequence_numbers[container_type]:
+            return
+
+        column_names = self._GetSerializedDataColumnNames(container_type)
+        column_names_string = ", ".join(column_names)
+
+        query = f"SELECT _identifier, {column_names_string:s} FROM {container_type:s}"
+
+        # Use a local cursor to prevent another query interrupting the generator.
+        cursor = self._connection.cursor()
+
+        try:
+            cursor.execute(query)
+        except (sqlite3.InterfaceError, sqlite3.OperationalError) as exception:
+            raise OSError(f"Unable to query storage file with error: {exception!s}")
+
+        for row in cursor:
+            container = self._CreateAttributeContainerFromRow(
+                container_type, column_names, row, 1
+            )
+            identifier = containers_interface.AttributeContainerIdentifier(
+                name=container_type, sequence_number=row[0]
+            )
+            container.SetIdentifier(identifier)
+
+            yield container, row[1]
 
     def GetSortedEvents(self, time_range=None):
         """Retrieves the events in increasing chronological order.
