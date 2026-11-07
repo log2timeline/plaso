@@ -170,6 +170,12 @@ class TLNOutputModuleTest(test_lib.OutputModuleTestCase):
 
         self.assertEqual(field_values, expected_field_values)
 
+        # A double quote is not escaped in TLN output.
+        sanitized_field = output_module._event_formatting_helper._SanitizeField(
+            'say "hello"'
+        )
+        self.assertEqual(sanitized_field, 'say "hello"')
+
     def testWriteHeader(self):
         """Tests the WriteHeader function."""
         test_file_object = io.StringIO()

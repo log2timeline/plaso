@@ -142,7 +142,15 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
             ),
             "timestamp": "2012-06-27 18:17:01",
             "timestamp_desc": definitions.TIME_DESCRIPTION_METADATA_MODIFICATION,
-        }
+        },
+        {
+            "data_type": "test:event",
+            "filename": "log/syslog.1",
+            "hostname": "ubuntu",
+            "text": '"quoted", value',
+            "timestamp": "2012-06-27 18:17:01",
+            "timestamp_desc": definitions.TIME_DESCRIPTION_METADATA_MODIFICATION,
+        },
     ]
 
     def testGetFieldValues(self):
@@ -212,6 +220,19 @@ class DynamicOutputModuleTest(test_lib.OutputModuleTestCase):
         )
 
         self.assertEqual(field_values, expected_field_values)
+
+        # Test with a message that contains double quotes.
+        output_module.SetFields(["message"])
+
+        event, event_data, event_data_stream = (
+            containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[1])
+        )
+
+        field_values = output_module.GetFieldValues(
+            output_mediator, event, event_data, event_data_stream, None
+        )
+
+        self.assertEqual(field_values, {"message": '"""quoted""  value"'})
 
     def testWriteFieldValues(self):
         """Tests the WriteFieldValues function."""
