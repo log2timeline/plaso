@@ -309,8 +309,8 @@ class EventDataExtractor:
             )
 
         if self._force_parser and self._usnjrnl_parser:
-            # TODO: the usnjrnl needs to be adjusted to be used on an export of
-            # $UsnJrnl:$J
+            # The usnjrnl parser is not used on regular files unless forced, for
+            # example to parse an exported $UsnJrnl:$J data stream.
             self._ParseFileEntryWithParser(
                 parser_mediator,
                 self._usnjrnl_parser,
