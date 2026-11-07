@@ -475,8 +475,12 @@ class InSet(GenericBinaryOperator):
         Returns:
           bool: True if the event value is part of the second, False otherwise.
         """
-        if event_value in filter_value:
-            return True
+        try:
+            if event_value in filter_value:
+                return True
+        except TypeError:
+            # For example a list event value and a string filter value.
+            pass
 
         # event_value might be an iterable
         # first we need to skip strings or we'll do silly things
