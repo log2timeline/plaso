@@ -114,13 +114,19 @@ class BaseFirefoxCacheParser(interface.FileObjectParser):
 
         header_parts = http_headers.split("\x00")
 
-        # TODO: check len(header_parts).
+        if len(header_parts) < 2:
+            if parser_mediator:
+                parser_mediator.ProduceWarning(
+                    "unable to parse HTTP headers: missing request method value."
+                )
+            return None, None, True
+
         request_method = header_parts[1]
 
         if request_method not in self._REQUEST_METHODS:
             logger.debug(
                 f"[{self.NAME:s}] {display_name:s}:{offset:d}: Unknown HTTP method "
-                f'"{request_method,:s}". Response headers: "{header_string:s}"'
+                f'"{request_method:s}". Response headers: "{header_string:s}"'
             )
 
         try:
@@ -134,15 +140,26 @@ class BaseFirefoxCacheParser(interface.FileObjectParser):
 
         response_head_parts = response_head.split("\x00")
 
+        if len(response_head_parts) < 2:
+            if parser_mediator:
+                parser_mediator.ProduceWarning(
+                    "unable to parse HTTP headers: missing response head value."
+                )
+            return request_method, None, True
+
         # Response code, followed by other response header key-value pairs,
         # separated by newline.
-        # TODO: check len(response_head_parts).
         response_head_text = response_head_parts[1]
         response_head_text_parts = response_head_text.split("\r\n")
 
         # The first line contains response code.
-        # TODO: check len(response_head_text_parts).
         response_code = response_head_text_parts[0]
+        if not response_code:
+            if parser_mediator:
+                parser_mediator.ProduceWarning(
+                    "unable to parse HTTP headers: missing response code."
+                )
+            return request_method, None, True
 
         if not response_code.startswith("HTTP"):
             logger.debug(
