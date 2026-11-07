@@ -1,0 +1,5 @@
+Mar 31 06:30:02 hostname newsyslog[10904]: logfile turned over due to size>25000K
+[2023-03-31T06:29:57.423Z] I santad: action=EXIT|pid=10897|pidversion=2243287|ppid=1|uid=262|gid=262
+[2023-03-31T06:30:01.120Z] I santad: action=EXEC|decision=ALLOW|reason=BINARY|sha256=0000000000000000000000000000000000000000000000000000000000000001|pid=10898|pidversion=2243288|ppid=1|uid=0|user=root|gid=0|group=wheel|mode=M|path=/usr/bin/true|args=/usr/bin/true
+[2023-04-01T06:30:01.588Z] I santad: action=EXIT|pid=10898|pidversion=2243288|ppid=1|uid=0|gid=0
+Apr  1 06:30:02 host-1.example.com newsyslog[58079]: logfile turned over

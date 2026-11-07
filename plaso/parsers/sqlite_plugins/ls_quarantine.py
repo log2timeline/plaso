@@ -34,8 +34,9 @@ class MacOSLSQuarantinePlugin(interface.SQLitePlugin):
     """SQLite parser plugin for MacOS LS quarantine events database files.
 
     The MacOS launch services (LS) quarantine database file is typically stored
-    in: /Users/<username>/Library/Preferences/
-        QuarantineEvents.com.apple.LaunchServices
+    in::
+
+      /Users/<username>/Library/Preferences/QuarantineEvents.com.apple.LaunchServices
     """
 
     NAME = "ls_quarantine"

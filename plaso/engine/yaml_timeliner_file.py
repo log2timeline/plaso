@@ -33,15 +33,16 @@ class YAMLTimelinerConfigurationFile:
     """YAML-based timeliner configuration file.
 
     A YAML-based timeliner configuration file contains one or more timeliner
-    definitions. A timeliner definitions consists of:
+    definitions. A timeliner definitions consists of::
 
-    data_type: 'fs:stat'
-    attribute_mappings:
-    - name: 'access_time'
-      description: 'Last Access Time'
-    place_holder_event: true
+      data_type: 'fs:stat'
+      attribute_mappings:
+      - name: 'access_time'
+        description: 'Last Access Time'
+      place_holder_event: true
 
     Where:
+
     * data_type, defines the corresponding event data type;
     * attribute_mappings, defines attribute mappings;
     * place_holder_event, defines if the timeliner should generate a placeholder

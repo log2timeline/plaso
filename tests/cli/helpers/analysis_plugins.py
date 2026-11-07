@@ -56,8 +56,38 @@ Test argument parser.
                 options, test_tool
             )
 
-        # TODO: add test for '--analysis list'
-        # TODO: improve test coverage.
+        options.analysis_plugins = "tagging,bogus"
+
+        with self.assertRaises(errors.BadConfigOption):
+            analysis_plugins.AnalysisPluginsArgumentsHelper.ParseOptions(
+                options, test_tool
+            )
+
+        options.analysis_plugins = "tagging, sessionize"
+
+        analysis_plugins.AnalysisPluginsArgumentsHelper.ParseOptions(options, test_tool)
+
+        self.assertEqual(test_tool._analysis_plugins, ["tagging", "sessionize"])
+
+        # The "list" value is passed through as a string so that the tool can
+        # list the available plugins.
+        options.analysis_plugins = "list"
+
+        analysis_plugins.AnalysisPluginsArgumentsHelper.ParseOptions(options, test_tool)
+
+        self.assertEqual(test_tool._analysis_plugins, "list")
+
+        options.analysis_plugins = "LIST"
+
+        analysis_plugins.AnalysisPluginsArgumentsHelper.ParseOptions(options, test_tool)
+
+        self.assertEqual(test_tool._analysis_plugins, "LIST")
+
+        options = cli_test_lib.TestOptions()
+
+        analysis_plugins.AnalysisPluginsArgumentsHelper.ParseOptions(options, test_tool)
+
+        self.assertIsNone(test_tool._analysis_plugins)
 
 
 if __name__ == "__main__":

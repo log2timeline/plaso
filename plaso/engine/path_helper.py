@@ -238,10 +238,10 @@ class PathHelper:
         directories and subdirectories.
 
         By default the maximum recursion depth is 10 subdirectories, a numeric
-        value after the globstar, such as "**5", can be used to define the maximum
-        recursion depth. The recursion depth is an upper limit, the path is expanded
-        for 1 up to and including that number of directories, hence "**1" is the
-        same as "*".
+        value after the globstar, such as ``**5``, can be used to define the
+        maximum recursion depth. The recursion depth is an upper limit, the path
+        is expanded for 1 up to and including that number of directories, hence
+        ``**1`` is the same as ``*``.
 
         Args:
           path (str): path to be expanded.

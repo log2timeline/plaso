@@ -112,6 +112,61 @@ sources:
 labels: [System]
 supported_os: [Windows]
 ---
+name: TestMultipleSources
+doc: Test multiple sources where the first sources do not apply.
+sources:
+- type: COMMAND
+  attributes:
+    args: []
+    cmd: /usr/bin/true
+- type: REGISTRY_KEY
+  attributes:
+    keys: ['HKEY_CLASSES_ROOT\*']
+- type: FILE
+  attributes:
+    paths: ['%%users.homedir%%\a_directory\a_file']
+    separator: '\'
+- type: FILE
+  attributes:
+    paths: ['\a_directory\another_file']
+    separator: '\'
+supported_os: [Windows]
+---
+name: TestAliasedFiles
+aliases: [TestFilesAlias]
+doc: Test artifact definition with an alias.
+sources:
+- type: FILE
+  attributes:
+    paths: ['\passwords.txt']
+    separator: '\'
+supported_os: [Windows]
+---
+name: TestNestedGroup
+doc: Test group with a nested group.
+sources:
+- type: ARTIFACT_GROUP
+  attributes:
+    names: ['TestNestedGroupMember']
+supported_os: [Windows]
+---
+name: TestNestedGroupMember
+doc: Test group that is a member of another group.
+sources:
+- type: ARTIFACT_GROUP
+  attributes:
+    names: ['TestAliasedFiles']
+supported_os: [Windows]
+---
+name: TestUsersFiles
+doc: Test artifact definition with only users variables.
+sources:
+- type: FILE
+  attributes:
+    paths: ['%%users.homedir%%\a_file']
+    separator: '\'
+supported_os: [Windows]
+---
 name: WindowsSystemRegistryFiles
 doc: Windows system Registry files.
 sources:

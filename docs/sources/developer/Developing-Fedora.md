@@ -13,8 +13,8 @@ git clone https://github.com/log2timeline/plaso.git
 ## Dependencies
 
 Install the dependencies, using either:
-* A [virtualenv](Developing-Virtualenv.html#Fedora)
-* The [prepackaged dependencies](Development-Dependencies.html#Fedora).
+* A [virtualenv](Developing-Virtualenv.html#fedora)
+* The [prepackaged dependencies](Development-Dependencies.html#fedora).
 
 Check if you have all the dependencies installed and have the right minimum
 versions:
@@ -30,4 +30,7 @@ dependencies regularly.**
 If you intend to do development on Plaso you'll also need to install some
 development tools:
 
-* PyLint 3.2.x
+* PyLint 4.0.x
+* black
+* docformatter
+* yamllint

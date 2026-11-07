@@ -9,6 +9,7 @@ class MacOSLoginWindowEventData(events.EventData):
     """Mac OS login window event data.
 
     Also see:
+
     * https://developer.apple.com/documentation/devicemanagement/loginwindow
     * https://developer.apple.com/documentation/devicemanagement/
       loginwindowscripts
@@ -31,6 +32,7 @@ class MacOSLoginWindowManagedLoginItemEventData(events.EventData):
     """Mac OS login window managed login item event data.
 
     Also see:
+
     * https://developer.apple.com/documentation/devicemanagement/
       loginitemsmanageditems/loginitem
 

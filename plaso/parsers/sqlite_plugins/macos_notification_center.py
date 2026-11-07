@@ -44,7 +44,8 @@ class MacOSNotificationCenterPlugin(interface.SQLitePlugin):
     /private/var/folders/<W><d>/../0/com.apple.notificationcenter/db2/db
 
     At the moment it takes into consideration only the main table, 'record'.
-    Currently supported tables and related content:
+    Currently supported tables and related content::
+
       Record: contains historical records
       Requests: contain pending requests
       Delivered: delivered requests

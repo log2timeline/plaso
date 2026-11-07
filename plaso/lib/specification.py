@@ -12,6 +12,7 @@ class Signature:
         """Initializes a format specification signature.
 
         The signatures can be defined in 3 different "modes":
+
         * where offset >= 0, which represents that the signature is bound to the
           start of the data and only the relevant part is scanned;
         * where offset < 0, which represents that the signature is bound to the

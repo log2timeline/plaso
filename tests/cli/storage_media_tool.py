@@ -242,8 +242,6 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
 
         self.assertEqual(output_data.split(b"\n"), expected_output_data)
 
-    # TODO: add tests for _ReadSelectedVolumes
-
     def testParseVolumeIdentifiersString(self):
         """Tests the ParseVolumeIdentifiersString function."""
         test_mediator = storage_media_tool.StorageMediaToolMediator()
@@ -554,9 +552,46 @@ class StorageMediaToolMediatorTest(test_lib.CLIToolTestCase):
         )
         self.assertEqual(volume_identifiers, ["p1", "p5"])
 
-        # TODO: test selection of no partitions.
+        # Test selection of no partitions.
+        input_file_object = io.BytesIO(b"\n")
+        test_input_reader = tools.FileObjectInputReader(input_file_object)
 
-    # TODO: add test for PromptUserForVSSCurrentVolume.
+        output_file_object = io.BytesIO()
+        test_output_writer = tools.FileObjectOutputWriter(output_file_object)
+
+        test_mediator = storage_media_tool.StorageMediaToolMediator(
+            input_reader=test_input_reader, output_writer=test_output_writer
+        )
+        volume_identifiers = test_mediator.GetPartitionIdentifiers(
+            volume_system, ["p1", "p5"]
+        )
+        self.assertEqual(volume_identifiers, [])
+
+    def testPromptUserForVSSCurrentVolume(self):
+        """Tests the PromptUserForVSSCurrentVolume function."""
+        for input_data, expected_result in (
+            (b"yes\n", True),
+            (b"NO\n", False),
+            (b"\n", True),
+            (b"bogus\nno\n", False),
+        ):
+            input_file_object = io.BytesIO(input_data)
+            test_input_reader = tools.FileObjectInputReader(input_file_object)
+
+            output_file_object = io.BytesIO()
+            test_output_writer = tools.FileObjectOutputWriter(output_file_object)
+
+            test_mediator = storage_media_tool.StorageMediaToolMediator(
+                input_reader=test_input_reader, output_writer=test_output_writer
+            )
+            result = test_mediator.PromptUserForVSSCurrentVolume()
+            self.assertEqual(result, expected_result)
+
+            output_data = output_file_object.getvalue()
+            self.assertTrue(output_data.startswith(b"Volume Shadow Snapshots (VSS)"))
+
+            number_of_retries = output_data.count(b"Unsupported option")
+            self.assertEqual(number_of_retries, input_data.count(b"bogus"))
 
     def testGetVSSStoreIdentifiers(self):
         """Tests the GetVSSStoreIdentifiers function."""
@@ -1336,6 +1371,21 @@ Test argument parser.
         options = test_lib.TestOptions()
 
         test_tool._ParseCredentialOptions(options)
+        self.assertEqual(test_tool._credentials, [])
+
+        options.credentials = ["password:bde-TEST", "recovery_password:1234"]
+
+        test_tool._ParseCredentialOptions(options)
+        self.assertEqual(
+            test_tool._credentials,
+            [("password", "bde-TEST"), ("recovery_password", "1234")],
+        )
+
+        for credentials in ("password:test", ["password"], ["bogus:test"]):
+            options.credentials = credentials
+
+            with self.assertRaises(errors.BadConfigOption):
+                test_tool._ParseCredentialOptions(options)
 
         # TODO: improve test coverage.
 
@@ -1376,8 +1426,26 @@ Test argument parser.
         options.partitions = "all"
 
         test_tool._ParseStorageMediaImageOptions(options)
+        self.assertEqual(test_tool._partitions, ["all"])
+        self.assertIsNone(test_tool._volumes)
 
-        # TODO: improve test coverage.
+        options.partitions = "1,3"
+        options.volumes = "2..3"
+
+        test_tool._ParseStorageMediaImageOptions(options)
+        self.assertEqual(test_tool._partitions, ["p1", "p3"])
+        self.assertEqual(test_tool._volumes, [2, 3])
+
+        options.partitions = "bogus"
+
+        with self.assertRaises(errors.BadConfigOption):
+            test_tool._ParseStorageMediaImageOptions(options)
+
+        options.partitions = None
+        options.volumes = "bogus"
+
+        with self.assertRaises(errors.BadConfigOption):
+            test_tool._ParseStorageMediaImageOptions(options)
 
     def testParseVSSProcessingOptions(self):
         """Tests the _ParseVSSProcessingOptions function."""
@@ -1386,8 +1454,20 @@ Test argument parser.
         options = test_lib.TestOptions()
 
         test_tool._ParseVSSProcessingOptions(options)
+        self.assertFalse(test_tool._vss_only)
+        self.assertIsNone(test_tool._vss_stores)
 
-        # TODO: improve test coverage.
+        options.vss_only = True
+        options.vss_stores = "1..2"
+
+        test_tool._ParseVSSProcessingOptions(options)
+        self.assertTrue(test_tool._vss_only)
+        self.assertEqual(test_tool._vss_stores, ["vss1", "vss2"])
+
+        options.vss_stores = "bogus"
+
+        with self.assertRaises(errors.BadConfigOption):
+            test_tool._ParseVSSProcessingOptions(options)
 
     def testAddCredentialOptions(self):
         """Tests the AddCredentialOptions function."""
