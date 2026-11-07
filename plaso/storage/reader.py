@@ -77,7 +77,8 @@ class StorageReader:
         """Retrieves the data types counter.
 
         Returns:
-          collections.Counter: Data types counter.
+          collections.Counter: data types counter, that maps the name of a data
+              type to its data type count (DataTypeCount) attribute container.
         """
         if not self.HasAttributeContainers("data_type_count"):
             data_type_dict = {}
@@ -93,7 +94,8 @@ class StorageReader:
         """Retrieves the event labels counter.
 
         Returns:
-          collections.Counter: Data types counter.
+          collections.Counter: event labels counter, that maps an event label to
+              its event label count (EventLabelCount) attribute container.
         """
         if not self.HasAttributeContainers("event_label_count"):
             event_labels_dict = {}
@@ -156,7 +158,8 @@ class StorageReader:
         """Retrieves the parsers counter.
 
         Returns:
-          collections.Counter: Parsers counter.
+          collections.Counter: parsers counter, that maps the name of a parser to
+              its parser count (ParserCount) attribute container.
         """
         if not self.HasAttributeContainers("parser_count"):
             parser_dict = {}
@@ -186,9 +189,6 @@ class StorageReader:
 
     def GetSortedEvents(self, time_range=None):
         """Retrieves the events in increasing chronological order.
-
-        This includes all events written to the storage including those pending
-        being flushed (written) to the storage.
 
         Args:
           time_range (Optional[TimeRange]): time range used to filter events

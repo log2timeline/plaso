@@ -25,8 +25,8 @@ class StorageFactory:
           storage_format (str): storage format.
 
         Returns:
-          StorageFile: a storage file or None if the storage file cannot be
-              opened or the storage format is not supported.
+          StorageFile: a storage file or None if the storage format is not
+              supported.
         """
         if storage_format == definitions.STORAGE_FORMAT_SQLITE:
             return sqlite_file.SQLiteStorageFile()
@@ -41,8 +41,12 @@ class StorageFactory:
           path (str): path to the storage file.
 
         Returns:
-          StorageReader: a storage reader or None if the storage file cannot be
-              opened or the storage format is not supported.
+          StorageReader: a storage reader or None if the storage file does not
+              exist or the storage format is not supported.
+
+        Raises:
+          OSError: if the storage file cannot be read or its format version is
+              not supported.
         """
         if sqlite_file.SQLiteStorageFile.CheckSupportedFormat(path):
             return sqlite_reader.SQLiteStorageReader(path)
@@ -57,8 +61,8 @@ class StorageFactory:
           storage_format (str): storage format.
 
         Returns:
-          StorageWriter: a storage writer or None if the storage file cannot be
-              opened or the storage format is not supported.
+          StorageWriter: a storage writer or None if the storage format is not
+              supported.
         """
         if storage_format == definitions.STORAGE_FORMAT_SQLITE:
             return sqlite_writer.SQLiteStorageWriter()
@@ -76,8 +80,8 @@ class StorageFactory:
           path (str): path to the storage file.
 
         Returns:
-          StorageWriter: a storage writer or None if the storage file cannot be
-              opened or the storage format is not supported.
+          StorageWriter: a storage writer or None if the storage file does not
+              exist or the storage format is not supported.
         """
         if sqlite_file.SQLiteStorageFile.CheckSupportedFormat(path):
             return sqlite_writer.SQLiteStorageWriter()
@@ -94,8 +98,12 @@ class StorageFactory:
           path (str): path to the storage file.
 
         Returns:
-          StorageReader: a storage reader or None if the storage file cannot be
-              opened or the storage format is not supported.
+          StorageReader: a storage reader or None if the storage format is not
+              supported.
+
+        Raises:
+          OSError: if the storage file cannot be read or its format version is
+              not supported.
         """
         if storage_format == definitions.STORAGE_FORMAT_SQLITE:
             return sqlite_reader.SQLiteStorageReader(path)
@@ -115,8 +123,8 @@ class StorageFactory:
           storage_format (str): storage format.
 
         Returns:
-          StorageWriter: a storage writer or None if the storage file cannot be
-              opened or the storage format is not supported.
+          StorageWriter: a storage writer or None if the storage format is not
+              supported.
         """
         if storage_format == definitions.STORAGE_FORMAT_SQLITE:
             return sqlite_writer.SQLiteStorageWriter(

@@ -679,11 +679,12 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
           path (str): path of the storage file.
 
         Returns:
-          StorageReader: storage reader or None if the storage file format
-              is not supported.
+          StorageReader: storage reader.
 
         Raises:
           BadConfigOption: if the storage file format is not supported.
+          OSError: if the storage file cannot be read or its format version is
+              not supported.
         """
         storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(path)
         if not storage_reader:
