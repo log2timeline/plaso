@@ -59,12 +59,22 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
             ["application_execution"],
         )
 
-        # Test: data_type is 'windows:evtx:record' AND
-        #       source_name is 'Microsoft-Windows-Security-Auditing' AND
-        #       event_identifier is 4688
+        # Test: data_type is 'windows:evtx:record' AND (provider_identifier is
+        #       '{54849625-5478-4994-a5ba-3e3b0328c30d}' OR source_name is
+        #       'Microsoft-Windows-Security-Auditing') AND event_identifier is 4688
         attribute_values_per_name = {
             "event_identifier": [4688],
             "source_name": ["Microsoft-Windows-Security-Auditing"],
+        }
+        self._CheckTaggingRule(
+            winevtx.WinEvtxRecordEventData,
+            attribute_values_per_name,
+            ["application_execution"],
+        )
+
+        attribute_values_per_name = {
+            "event_identifier": [4688],
+            "provider_identifier": ["{54849625-5478-4994-a5ba-3e3b0328c30d}"],
         }
         self._CheckTaggingRule(
             winevtx.WinEvtxRecordEventData,
@@ -187,9 +197,10 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
 
     def testApplicationInstall(self):
         """Tests the application_install tagging rule."""
-        # Test: data_type is 'windows:evtx:record' AND
-        #       source_name is 'Microsoft-Windows-Application-Experience' AND
-        #       (event_identifier is 903 OR event_identifier is 904)
+        # Test: data_type is 'windows:evtx:record' AND (provider_identifier is
+        #       '{eef54e71-0661-422d-9a98-82fd4940b820}' OR source_name is
+        #       'Microsoft-Windows-Application-Experience') AND (event_identifier is 903
+        #       OR event_identifier is 904)
         attribute_values_per_name = {
             "event_identifier": [903, 904],
             "source_name": ["Microsoft-Windows-Application-Experience"],
@@ -200,11 +211,21 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
             ["application_install"],
         )
 
+        attribute_values_per_name = {
+            "event_identifier": [903, 904],
+            "provider_identifier": ["{eef54e71-0661-422d-9a98-82fd4940b820}"],
+        }
+        self._CheckTaggingRule(
+            winevtx.WinEvtxRecordEventData,
+            attribute_values_per_name,
+            ["application_install"],
+        )
+
     def testApplicationUpdate(self):
         """Tests the application_update tagging rule."""
-        # Test: data_type is 'windows:evtx:record' AND
-        #       source_name is 'Microsoft-Windows-Application-Experience' AND
-        #       event_identifier is 905
+        # Test: data_type is 'windows:evtx:record' AND (provider_identifier is
+        #       '{eef54e71-0661-422d-9a98-82fd4940b820}' OR source_name is
+        #       'Microsoft-Windows-Application-Experience') AND event_identifier is 905
         attribute_values_per_name = {
             "event_identifier": [905],
             "source_name": ["Microsoft-Windows-Application-Experience"],
@@ -215,14 +236,35 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
             ["application_update"],
         )
 
+        attribute_values_per_name = {
+            "event_identifier": [905],
+            "provider_identifier": ["{eef54e71-0661-422d-9a98-82fd4940b820}"],
+        }
+        self._CheckTaggingRule(
+            winevtx.WinEvtxRecordEventData,
+            attribute_values_per_name,
+            ["application_update"],
+        )
+
     def testApplicationRemoval(self):
         """Tests the application_removal tagging rule."""
-        # Test: data_type is 'windows:evtx:record' AND
-        #       source_name is 'Microsoft-Windows-Application-Experience' AND
-        #       (event_identifier is 907 OR event_identifier is 908)
+        # Test: data_type is 'windows:evtx:record' AND (provider_identifier is
+        #       '{eef54e71-0661-422d-9a98-82fd4940b820}' OR source_name is
+        #       'Microsoft-Windows-Application-Experience') AND (event_identifier is 907
+        #       OR event_identifier is 908)
         attribute_values_per_name = {
             "event_identifier": [907, 908],
             "source_name": ["Microsoft-Windows-Application-Experience"],
+        }
+        self._CheckTaggingRule(
+            winevtx.WinEvtxRecordEventData,
+            attribute_values_per_name,
+            ["application_removal"],
+        )
+
+        attribute_values_per_name = {
+            "event_identifier": [907, 908],
+            "provider_identifier": ["{eef54e71-0661-422d-9a98-82fd4940b820}"],
         }
         self._CheckTaggingRule(
             winevtx.WinEvtxRecordEventData,
@@ -298,12 +340,20 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
 
     def testLoginFailed(self):
         """Tests the login_failed tagging rule."""
-        # Test: data_type is 'windows:evtx:record' AND
-        #       source_name is 'Microsoft-Windows-Security-Auditing' AND
-        #       event_identifier is 4625
+        # Test: data_type is 'windows:evtx:record' AND (provider_identifier is
+        #       '{54849625-5478-4994-a5ba-3e3b0328c30d}' OR source_name is
+        #       'Microsoft-Windows-Security-Auditing') AND event_identifier is 4625
         attribute_values_per_name = {
             "event_identifier": [4625],
             "source_name": ["Microsoft-Windows-Security-Auditing"],
+        }
+        self._CheckTaggingRule(
+            winevtx.WinEvtxRecordEventData, attribute_values_per_name, ["login_failed"]
+        )
+
+        attribute_values_per_name = {
+            "event_identifier": [4625],
+            "provider_identifier": ["{54849625-5478-4994-a5ba-3e3b0328c30d}"],
         }
         self._CheckTaggingRule(
             winevtx.WinEvtxRecordEventData, attribute_values_per_name, ["login_failed"]
@@ -321,9 +371,9 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
             winevt.WinEvtRecordEventData, attribute_values_per_name, ["login_attempt"]
         )
 
-        # Test: data_type is 'windows:evtx:record' AND
-        #       source_name is 'Microsoft-Windows-Security-Auditing' AND
-        #       event_identifier is 4624
+        # Test: data_type is 'windows:evtx:record' AND (provider_identifier is
+        #       '{54849625-5478-4994-a5ba-3e3b0328c30d}' OR source_name is
+        #       'Microsoft-Windows-Security-Auditing') AND event_identifier is 4624
         attribute_values_per_name = {
             "event_identifier": [4624],
             "source_name": ["Microsoft-Windows-Security-Auditing"],
@@ -332,47 +382,96 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
             winevtx.WinEvtxRecordEventData, attribute_values_per_name, ["login_attempt"]
         )
 
-        # Test: data_type is 'windows:evtx:record' AND source_name is
-        #       'Microsoft-Windows-TerminalServices-LocalSessionManager' AND
-        #       (event_identifier is 21 OR event_identifier is 1101)
         attribute_values_per_name = {
-            "event_identifier": [21, 1101],
-            "source_name": ["Microsoft-Windows-TerminalServices-LocalSessionManager"],
+            "event_identifier": [4624],
+            "provider_identifier": ["{54849625-5478-4994-a5ba-3e3b0328c30d}"],
         }
         self._CheckTaggingRule(
             winevtx.WinEvtxRecordEventData, attribute_values_per_name, ["login_attempt"]
         )
 
-        # Test: data_type is 'windows:evtx:record' AND source_name is
-        #       'Microsoft-Windows-TerminalServices-RemoteConnectionManager'
-        #       AND (event_identifier is 1147 OR event_identifier is 1149)
+        # Test: data_type is 'windows:evtx:record' AND (provider_identifier is
+        #       '{5d896912-022d-40aa-a3a8-4fa5515c76d7}' OR source_name is
+        #       'Microsoft-Windows-TerminalServices-LocalSessionManager' OR source_name
+        #       is 'LSM') AND (event_identifier is 21 OR event_identifier is 1101)
         attribute_values_per_name = {
-            "event_identifier": [1147, 1149],
+            "event_identifier": [21, 1101],
             "source_name": [
-                "Microsoft-Windows-TerminalServices-RemoteConnectionManager"
+                "Microsoft-Windows-TerminalServices-LocalSessionManager",
+                "LSM",
             ],
         }
         self._CheckTaggingRule(
             winevtx.WinEvtxRecordEventData, attribute_values_per_name, ["login_attempt"]
         )
 
-        # Test: data_type is 'windows:evtx:record' AND
-        #       source_name is 'Microsoft-Windows-User Profiles Service' AND
-        #       event_identifier is 2
         attribute_values_per_name = {
-            "event_identifier": [2],
-            "source_name": ["Microsoft-Windows-User Profiles Service"],
+            "event_identifier": [21, 1101],
+            "provider_identifier": ["{5d896912-022d-40aa-a3a8-4fa5515c76d7}"],
         }
         self._CheckTaggingRule(
             winevtx.WinEvtxRecordEventData, attribute_values_per_name, ["login_attempt"]
         )
 
-        # Test: data_type is 'windows:evtx:record' AND
-        #       source_name is 'Microsoft-Windows-Winlogon' AND
-        #       event_identifier is 7001
+        # Test: data_type is 'windows:evtx:record' AND (provider_identifier is
+        #       '{c76baa63-ae81-421c-b425-340b4b24157f}' OR source_name is
+        #       'Microsoft-Windows-TerminalServices-RemoteConnectionManager' OR
+        #       source_name is 'TermService') AND (event_identifier is 1147 OR
+        #       event_identifier is 1149)
+        attribute_values_per_name = {
+            "event_identifier": [1147, 1149],
+            "source_name": [
+                "Microsoft-Windows-TerminalServices-RemoteConnectionManager",
+                "TermService",
+            ],
+        }
+        self._CheckTaggingRule(
+            winevtx.WinEvtxRecordEventData, attribute_values_per_name, ["login_attempt"]
+        )
+
+        attribute_values_per_name = {
+            "event_identifier": [1147, 1149],
+            "provider_identifier": ["{c76baa63-ae81-421c-b425-340b4b24157f}"],
+        }
+        self._CheckTaggingRule(
+            winevtx.WinEvtxRecordEventData, attribute_values_per_name, ["login_attempt"]
+        )
+
+        # Test: data_type is 'windows:evtx:record' AND (provider_identifier is
+        #       '{89b1e9f0-5aff-44a6-9b44-0a07a7ce5845}' OR source_name is
+        #       'Microsoft-Windows-User Profiles Service' OR source_name is 'Profsvc')
+        #       AND event_identifier is 2
+        attribute_values_per_name = {
+            "event_identifier": [2],
+            "source_name": ["Microsoft-Windows-User Profiles Service", "Profsvc"],
+        }
+        self._CheckTaggingRule(
+            winevtx.WinEvtxRecordEventData, attribute_values_per_name, ["login_attempt"]
+        )
+
+        attribute_values_per_name = {
+            "event_identifier": [2],
+            "provider_identifier": ["{89b1e9f0-5aff-44a6-9b44-0a07a7ce5845}"],
+        }
+        self._CheckTaggingRule(
+            winevtx.WinEvtxRecordEventData, attribute_values_per_name, ["login_attempt"]
+        )
+
+        # Test: data_type is 'windows:evtx:record' AND (provider_identifier is
+        #       '{dbe9b383-7cf3-4331-91cc-a3cb16a3b538}' OR source_name is
+        #       'Microsoft-Windows-Winlogon' OR source_name is 'Winlogon' OR source_name
+        #       is 'Wlclntfy') AND event_identifier is 7001
         attribute_values_per_name = {
             "event_identifier": [7001],
-            "source_name": ["Microsoft-Windows-Winlogon"],
+            "source_name": ["Microsoft-Windows-Winlogon", "Winlogon", "Wlclntfy"],
+        }
+        self._CheckTaggingRule(
+            winevtx.WinEvtxRecordEventData, attribute_values_per_name, ["login_attempt"]
+        )
+
+        attribute_values_per_name = {
+            "event_identifier": [7001],
+            "provider_identifier": ["{dbe9b383-7cf3-4331-91cc-a3cb16a3b538}"],
         }
         self._CheckTaggingRule(
             winevtx.WinEvtxRecordEventData, attribute_values_per_name, ["login_attempt"]
@@ -390,9 +489,9 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
             winevt.WinEvtRecordEventData, attribute_values_per_name, ["logoff"]
         )
 
-        # Test: data_type is 'windows:evtx:record' AND
-        #       source_name is 'Microsoft-Windows-Security-Auditing' AND
-        #       event_identifier is 4634
+        # Test: data_type is 'windows:evtx:record' AND (provider_identifier is
+        #       '{54849625-5478-4994-a5ba-3e3b0328c30d}' OR source_name is
+        #       'Microsoft-Windows-Security-Auditing') AND event_identifier is 4634
         attribute_values_per_name = {
             "event_identifier": [4634],
             "source_name": ["Microsoft-Windows-Security-Auditing"],
@@ -401,34 +500,72 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
             winevtx.WinEvtxRecordEventData, attribute_values_per_name, ["logoff"]
         )
 
-        # Test: data_type is 'windows:evtx:record' AND source_name is
-        #       'Microsoft-Windows-TerminalServices-LocalSessionManager' AND
-        #       (event_identifier is 23 OR event_identifier is 1103)
+        attribute_values_per_name = {
+            "event_identifier": [4634],
+            "provider_identifier": ["{54849625-5478-4994-a5ba-3e3b0328c30d}"],
+        }
+        self._CheckTaggingRule(
+            winevtx.WinEvtxRecordEventData, attribute_values_per_name, ["logoff"]
+        )
+
+        # Test: data_type is 'windows:evtx:record' AND (provider_identifier is
+        #       '{5d896912-022d-40aa-a3a8-4fa5515c76d7}' OR source_name is
+        #       'Microsoft-Windows-TerminalServices-LocalSessionManager' OR source_name
+        #       is 'LSM') AND (event_identifier is 23 OR event_identifier is 1103)
         attribute_values_per_name = {
             "event_identifier": [23, 1103],
-            "source_name": ["Microsoft-Windows-TerminalServices-LocalSessionManager"],
+            "source_name": [
+                "Microsoft-Windows-TerminalServices-LocalSessionManager",
+                "LSM",
+            ],
         }
         self._CheckTaggingRule(
             winevtx.WinEvtxRecordEventData, attribute_values_per_name, ["logoff"]
         )
 
-        # Test: data_type is 'windows:evtx:record' AND
-        #       source_name is 'Microsoft-Windows-User Profiles Service' AND
-        #       event_identifier is 4
+        attribute_values_per_name = {
+            "event_identifier": [23, 1103],
+            "provider_identifier": ["{5d896912-022d-40aa-a3a8-4fa5515c76d7}"],
+        }
+        self._CheckTaggingRule(
+            winevtx.WinEvtxRecordEventData, attribute_values_per_name, ["logoff"]
+        )
+
+        # Test: data_type is 'windows:evtx:record' AND (provider_identifier is
+        #       '{89b1e9f0-5aff-44a6-9b44-0a07a7ce5845}' OR source_name is
+        #       'Microsoft-Windows-User Profiles Service' OR source_name is 'Profsvc')
+        #       AND event_identifier is 4
         attribute_values_per_name = {
             "event_identifier": [4],
-            "source_name": ["Microsoft-Windows-User Profiles Service"],
+            "source_name": ["Microsoft-Windows-User Profiles Service", "Profsvc"],
         }
         self._CheckTaggingRule(
             winevtx.WinEvtxRecordEventData, attribute_values_per_name, ["logoff"]
         )
 
-        # Test: data_type is 'windows:evtx:record' AND
-        #       source_name is 'Microsoft-Windows-Winlogon' AND
-        #       event_identifier is 7002
+        attribute_values_per_name = {
+            "event_identifier": [4],
+            "provider_identifier": ["{89b1e9f0-5aff-44a6-9b44-0a07a7ce5845}"],
+        }
+        self._CheckTaggingRule(
+            winevtx.WinEvtxRecordEventData, attribute_values_per_name, ["logoff"]
+        )
+
+        # Test: data_type is 'windows:evtx:record' AND (provider_identifier is
+        #       '{dbe9b383-7cf3-4331-91cc-a3cb16a3b538}' OR source_name is
+        #       'Microsoft-Windows-Winlogon' OR source_name is 'Winlogon' OR source_name
+        #       is 'Wlclntfy') AND event_identifier is 7002
         attribute_values_per_name = {
             "event_identifier": [7002],
-            "source_name": ["Microsoft-Windows-Winlogon"],
+            "source_name": ["Microsoft-Windows-Winlogon", "Winlogon", "Wlclntfy"],
+        }
+        self._CheckTaggingRule(
+            winevtx.WinEvtxRecordEventData, attribute_values_per_name, ["logoff"]
+        )
+
+        attribute_values_per_name = {
+            "event_identifier": [7002],
+            "provider_identifier": ["{dbe9b383-7cf3-4331-91cc-a3cb16a3b538}"],
         }
         self._CheckTaggingRule(
             winevtx.WinEvtxRecordEventData, attribute_values_per_name, ["logoff"]
@@ -436,12 +573,26 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
 
     def testSessionDisconnection(self):
         """Tests the session_disconnection tagging rule."""
-        # Test: data_type is 'windows:evtx:record' AND source_name is
-        #       'Microsoft-Windows-TerminalServices-LocalSessionManager' AND
-        #       event_identifier is 24
+        # Test: data_type is 'windows:evtx:record' AND (provider_identifier is
+        #       '{5d896912-022d-40aa-a3a8-4fa5515c76d7}' OR source_name is
+        #       'Microsoft-Windows-TerminalServices-LocalSessionManager' OR source_name
+        #       is 'LSM') AND event_identifier is 24
         attribute_values_per_name = {
             "event_identifier": [24],
-            "source_name": ["Microsoft-Windows-TerminalServices-LocalSessionManager"],
+            "source_name": [
+                "Microsoft-Windows-TerminalServices-LocalSessionManager",
+                "LSM",
+            ],
+        }
+        self._CheckTaggingRule(
+            winevtx.WinEvtxRecordEventData,
+            attribute_values_per_name,
+            ["session_disconnection"],
+        )
+
+        attribute_values_per_name = {
+            "event_identifier": [24],
+            "provider_identifier": ["{5d896912-022d-40aa-a3a8-4fa5515c76d7}"],
         }
         self._CheckTaggingRule(
             winevtx.WinEvtxRecordEventData,
@@ -451,12 +602,26 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
 
     def testSessionReconnection(self):
         """Tests the session_reconnection tagging rule."""
-        # Test: data_type is 'windows:evtx:record' AND source_name is
-        #       'Microsoft-Windows-TerminalServices-LocalSessionManager' AND
-        #       (event_identifier is 25 OR event_identifier is 1105)
+        # Test: data_type is 'windows:evtx:record' AND (provider_identifier is
+        #       '{5d896912-022d-40aa-a3a8-4fa5515c76d7}' OR source_name is
+        #       'Microsoft-Windows-TerminalServices-LocalSessionManager' OR source_name
+        #       is 'LSM') AND (event_identifier is 25 OR event_identifier is 1105)
         attribute_values_per_name = {
             "event_identifier": [25, 1105],
-            "source_name": ["Microsoft-Windows-TerminalServices-LocalSessionManager"],
+            "source_name": [
+                "Microsoft-Windows-TerminalServices-LocalSessionManager",
+                "LSM",
+            ],
+        }
+        self._CheckTaggingRule(
+            winevtx.WinEvtxRecordEventData,
+            attribute_values_per_name,
+            ["session_reconnection"],
+        )
+
+        attribute_values_per_name = {
+            "event_identifier": [25, 1105],
+            "provider_identifier": ["{5d896912-022d-40aa-a3a8-4fa5515c76d7}"],
         }
         self._CheckTaggingRule(
             winevtx.WinEvtxRecordEventData,
@@ -466,12 +631,24 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
 
     def testShellStart(self):
         """Tests the shell_start tagging rule."""
-        # Test: data_type is 'windows:evtx:record' AND source_name is
-        #       'Microsoft-Windows-TerminalServices-LocalSessionManager' AND
-        #       (event_identifier is 22 OR event_identifier is 1102)
+        # Test: data_type is 'windows:evtx:record' AND (provider_identifier is
+        #       '{5d896912-022d-40aa-a3a8-4fa5515c76d7}' OR source_name is
+        #       'Microsoft-Windows-TerminalServices-LocalSessionManager' OR source_name
+        #       is 'LSM') AND (event_identifier is 22 OR event_identifier is 1102)
         attribute_values_per_name = {
             "event_identifier": [22, 1102],
-            "source_name": ["Microsoft-Windows-TerminalServices-LocalSessionManager"],
+            "source_name": [
+                "Microsoft-Windows-TerminalServices-LocalSessionManager",
+                "LSM",
+            ],
+        }
+        self._CheckTaggingRule(
+            winevtx.WinEvtxRecordEventData, attribute_values_per_name, ["shell_start"]
+        )
+
+        attribute_values_per_name = {
+            "event_identifier": [22, 1102],
+            "provider_identifier": ["{5d896912-022d-40aa-a3a8-4fa5515c76d7}"],
         }
         self._CheckTaggingRule(
             winevtx.WinEvtxRecordEventData, attribute_values_per_name, ["shell_start"]
@@ -490,9 +667,9 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
             winevt.WinEvtRecordEventData, attribute_values_per_name, ["task_schedule"]
         )
 
-        # Test: data_type is 'windows:evtx:record' AND
-        #       source_name is 'Microsoft-Windows-Security-Auditing' AND
-        #       event_identifier is 4698
+        # Test: data_type is 'windows:evtx:record' AND (provider_identifier is
+        #       '{54849625-5478-4994-a5ba-3e3b0328c30d}' OR source_name is
+        #       'Microsoft-Windows-Security-Auditing') AND event_identifier is 4698
         attribute_values_per_name = {
             "event_identifier": [4698],
             "source_name": ["Microsoft-Windows-Security-Auditing"],
@@ -501,11 +678,19 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
             winevtx.WinEvtxRecordEventData, attribute_values_per_name, ["task_schedule"]
         )
 
+        attribute_values_per_name = {
+            "event_identifier": [4698],
+            "provider_identifier": ["{54849625-5478-4994-a5ba-3e3b0328c30d}"],
+        }
+        self._CheckTaggingRule(
+            winevtx.WinEvtxRecordEventData, attribute_values_per_name, ["task_schedule"]
+        )
+
     def testJobSuccess(self):
         """Tests the job_success tagging rule."""
-        # Test: data_type is 'windows:evtx:record' AND
-        #       source_name is 'Microsoft-Windows-TaskScheduler' AND
-        #       event_identifier is 102
+        # Test: data_type is 'windows:evtx:record' AND (provider_identifier is
+        #       '{de7b24ea-73c8-4a09-985d-5bdadcfa9017}' OR source_name is
+        #       'Microsoft-Windows-TaskScheduler') AND event_identifier is 102
         attribute_values_per_name = {
             "event_identifier": [102],
             "source_name": ["Microsoft-Windows-TaskScheduler"],
@@ -514,11 +699,19 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
             winevtx.WinEvtxRecordEventData, attribute_values_per_name, ["job_success"]
         )
 
+        attribute_values_per_name = {
+            "event_identifier": [102],
+            "provider_identifier": ["{de7b24ea-73c8-4a09-985d-5bdadcfa9017}"],
+        }
+        self._CheckTaggingRule(
+            winevtx.WinEvtxRecordEventData, attribute_values_per_name, ["job_success"]
+        )
+
     def testActionSuccess(self):
         """Tests the action_success tagging rule."""
-        # Test: data_type is 'windows:evtx:record' AND
-        #       source_name is 'Microsoft-Windows-TaskScheduler' AND
-        #       event_identifier is 201
+        # Test: data_type is 'windows:evtx:record' AND (provider_identifier is
+        #       '{de7b24ea-73c8-4a09-985d-5bdadcfa9017}' OR source_name is
+        #       'Microsoft-Windows-TaskScheduler') AND event_identifier is 201
         attribute_values_per_name = {
             "event_identifier": [201],
             "source_name": ["Microsoft-Windows-TaskScheduler"],
@@ -529,11 +722,21 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
             ["action_success"],
         )
 
+        attribute_values_per_name = {
+            "event_identifier": [201],
+            "provider_identifier": ["{de7b24ea-73c8-4a09-985d-5bdadcfa9017}"],
+        }
+        self._CheckTaggingRule(
+            winevtx.WinEvtxRecordEventData,
+            attribute_values_per_name,
+            ["action_success"],
+        )
+
     def testNameResolutionTimeout(self):
         """Tests the name_resolution_timeout tagging rule."""
-        # Test: data_type is 'windows:evtx:record' AND
-        #       source_name is 'Microsoft-Windows-DNS-Client' AND
-        #       event_identifier is 1014
+        # Test: data_type is 'windows:evtx:record' AND (provider_identifier is
+        #       '{1c95126e-7eea-49a9-a3fe-a378b03ddb4d}' OR source_name is
+        #       'Microsoft-Windows-DNS-Client') AND event_identifier is 1014
         attribute_values_per_name = {
             "event_identifier": [1014],
             "source_name": ["Microsoft-Windows-DNS-Client"],
@@ -544,11 +747,21 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
             ["name_resolution_timeout"],
         )
 
+        attribute_values_per_name = {
+            "event_identifier": [1014],
+            "provider_identifier": ["{1c95126e-7eea-49a9-a3fe-a378b03ddb4d}"],
+        }
+        self._CheckTaggingRule(
+            winevtx.WinEvtxRecordEventData,
+            attribute_values_per_name,
+            ["name_resolution_timeout"],
+        )
+
     def testTimeChange(self):
         """Tests the time_change tagging rule."""
-        # Test: data_type is 'windows:evtx:record' AND
-        #       source_name is 'Microsoft-Windows-Kernel-General' AND
-        #       event_identifier is 1
+        # Test: data_type is 'windows:evtx:record' AND (provider_identifier is
+        #       '{a68ca8b7-004f-d7b6-a698-07e2de0f1f5d}' OR source_name is
+        #       'Microsoft-Windows-Kernel-General') AND event_identifier is 1
         attribute_values_per_name = {
             "event_identifier": [1],
             "source_name": ["Microsoft-Windows-Kernel-General"],
@@ -557,11 +770,19 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
             winevtx.WinEvtxRecordEventData, attribute_values_per_name, ["time_change"]
         )
 
+        attribute_values_per_name = {
+            "event_identifier": [1],
+            "provider_identifier": ["{a68ca8b7-004f-d7b6-a698-07e2de0f1f5d}"],
+        }
+        self._CheckTaggingRule(
+            winevtx.WinEvtxRecordEventData, attribute_values_per_name, ["time_change"]
+        )
+
     def testShutdown(self):
         """Tests the shutdown tagging rule."""
-        # Test: data_type is 'windows:evtx:record' AND
-        #       source_name is 'Microsoft-Windows-Kernel-General' AND
-        #       event_identifier is 13
+        # Test: data_type is 'windows:evtx:record' AND (provider_identifier is
+        #       '{a68ca8b7-004f-d7b6-a698-07e2de0f1f5d}' OR source_name is
+        #       'Microsoft-Windows-Kernel-General') AND event_identifier is 13
         attribute_values_per_name = {
             "event_identifier": [13],
             "source_name": ["Microsoft-Windows-Kernel-General"],
@@ -570,11 +791,19 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
             winevtx.WinEvtxRecordEventData, attribute_values_per_name, ["shutdown"]
         )
 
+        attribute_values_per_name = {
+            "event_identifier": [13],
+            "provider_identifier": ["{a68ca8b7-004f-d7b6-a698-07e2de0f1f5d}"],
+        }
+        self._CheckTaggingRule(
+            winevtx.WinEvtxRecordEventData, attribute_values_per_name, ["shutdown"]
+        )
+
     def testSystemStart(self):
         """Tests the system_start tagging rule."""
-        # Test: data_type is 'windows:evtx:record' AND
-        #       source_name is 'Microsoft-Windows-Kernel-General' AND
-        #       event_identifier is 12
+        # Test: data_type is 'windows:evtx:record' AND (provider_identifier is
+        #       '{a68ca8b7-004f-d7b6-a698-07e2de0f1f5d}' OR source_name is
+        #       'Microsoft-Windows-Kernel-General') AND event_identifier is 12
         attribute_values_per_name = {
             "event_identifier": [12],
             "source_name": ["Microsoft-Windows-Kernel-General"],
@@ -583,14 +812,30 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
             winevtx.WinEvtxRecordEventData, attribute_values_per_name, ["system_start"]
         )
 
+        attribute_values_per_name = {
+            "event_identifier": [12],
+            "provider_identifier": ["{a68ca8b7-004f-d7b6-a698-07e2de0f1f5d}"],
+        }
+        self._CheckTaggingRule(
+            winevtx.WinEvtxRecordEventData, attribute_values_per_name, ["system_start"]
+        )
+
     def testSystemSleep(self):
         """Tests the system_sleep tagging rule."""
-        # Test: data_type is 'windows:evtx:record' AND
-        #       source_name is 'Microsoft-Windows-Kernel-Power' AND
-        #       event_identifier is 12
+        # Test: data_type is 'windows:evtx:record' AND (provider_identifier is
+        #       '{331c3b3a-2005-44c2-ac5e-77220c37d6b4}' OR source_name is
+        #       'Microsoft-Windows-Kernel-Power') AND event_identifier is 42
         attribute_values_per_name = {
             "event_identifier": [42],
             "source_name": ["Microsoft-Windows-Kernel-Power"],
+        }
+        self._CheckTaggingRule(
+            winevtx.WinEvtxRecordEventData, attribute_values_per_name, ["system_sleep"]
+        )
+
+        attribute_values_per_name = {
+            "event_identifier": [42],
+            "provider_identifier": ["{331c3b3a-2005-44c2-ac5e-77220c37d6b4}"],
         }
         self._CheckTaggingRule(
             winevtx.WinEvtxRecordEventData, attribute_values_per_name, ["system_sleep"]
@@ -690,11 +935,11 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
 
     def testFirewallChange(self):
         """Tests the firewall_change tagging rule."""
-        # Test: data_type is 'windows:evtx:record' AND
-        #       source_name is 'Microsoft-Windows-Windows Firewall With Advanced
-        #           Security' AND
+        # Test: data_type is 'windows:evtx:record' AND (provider_identifier is
+        #       '{d1bc9aff-2abf-4d71-9146-ecb2a986eb85}' OR source_name is
+        #       'Microsoft-Windows-Windows Firewall With Advanced Security') AND
         #       (event_identifier is 2003 OR event_identifier is 2004 OR
-        #        event_identifier is 2005 OR event_identifier is 2006)
+        #       event_identifier is 2005 OR event_identifier is 2006)
         attribute_values_per_name = {
             "event_identifier": [2003, 2004, 2005, 2006],
             "source_name": [
@@ -707,11 +952,21 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
             ["firewall_change"],
         )
 
+        attribute_values_per_name = {
+            "event_identifier": [2003, 2004, 2005, 2006],
+            "provider_identifier": ["{d1bc9aff-2abf-4d71-9146-ecb2a986eb85}"],
+        }
+        self._CheckTaggingRule(
+            winevtx.WinEvtxRecordEventData,
+            attribute_values_per_name,
+            ["firewall_change"],
+        )
+
     def testRegistryModified(self):
         """Tests the registry_modified tagging rule."""
-        # Test: data_type is 'windows:evtx:record' AND
-        #       source_name is 'Microsoft-Windows-Security-Auditing'
-        #       event_identifier is 4657
+        # Test: data_type is 'windows:evtx:record' AND (provider_identifier is
+        #       '{54849625-5478-4994-a5ba-3e3b0328c30d}' OR source_name is
+        #       'Microsoft-Windows-Security-Auditing') AND event_identifier is 4657
         attribute_values_per_name = {
             "event_identifier": [4657],
             "source_name": ["Microsoft-Windows-Security-Auditing"],
@@ -722,14 +977,32 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
             ["registry_modified"],
         )
 
+        attribute_values_per_name = {
+            "event_identifier": [4657],
+            "provider_identifier": ["{54849625-5478-4994-a5ba-3e3b0328c30d}"],
+        }
+        self._CheckTaggingRule(
+            winevtx.WinEvtxRecordEventData,
+            attribute_values_per_name,
+            ["registry_modified"],
+        )
+
     def testServiceNew(self):
         """Tests the service_new tagging rule."""
-        # Test: data_type is 'windows:evtx:record' AND
-        #       source_name is 'Service Control Manager' AND
-        #       event_identifier is 7045
+        # Test: data_type is 'windows:evtx:record' AND (provider_identifier is
+        #       '{555908d1-a6d7-4695-8e1e-26931d2012f4}' OR source_name is 'Service
+        #       Control Manager') AND event_identifier is 7045
         attribute_values_per_name = {
             "event_identifier": [7045],
             "source_name": ["Service Control Manager"],
+        }
+        self._CheckTaggingRule(
+            winevtx.WinEvtxRecordEventData, attribute_values_per_name, ["service_new"]
+        )
+
+        attribute_values_per_name = {
+            "event_identifier": [7045],
+            "provider_identifier": ["{555908d1-a6d7-4695-8e1e-26931d2012f4}"],
         }
         self._CheckTaggingRule(
             winevtx.WinEvtxRecordEventData, attribute_values_per_name, ["service_new"]
@@ -749,12 +1022,23 @@ class WindowsTaggingFileTest(test_lib.TaggingFileTestCase):
             attribute_values_per_name,
             ["eventlog_cleared"],
         )
-        # Test: data_type is 'windows:evtx:record' AND
-        #       source_name is 'Microsoft-Windows-Eventlog' AND
-        #       (event_identifier is 104 OR event_identifier is 1102)
+        # Test: data_type is 'windows:evtx:record' AND (provider_identifier is
+        #       '{fc65ddd8-d6ef-4962-83d5-6e5cfe9ce148}' OR source_name is
+        #       'Microsoft-Windows-Eventlog') AND (event_identifier is 104 OR
+        #       event_identifier is 1102)
         attribute_values_per_name = {
             "event_identifier": [104, 1102],
             "source_name": ["Microsoft-Windows-Eventlog"],
+        }
+        self._CheckTaggingRule(
+            winevtx.WinEvtxRecordEventData,
+            attribute_values_per_name,
+            ["eventlog_cleared"],
+        )
+
+        attribute_values_per_name = {
+            "event_identifier": [104, 1102],
+            "provider_identifier": ["{fc65ddd8-d6ef-4962-83d5-6e5cfe9ce148}"],
         }
         self._CheckTaggingRule(
             winevtx.WinEvtxRecordEventData,
