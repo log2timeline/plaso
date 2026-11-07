@@ -40,7 +40,7 @@ class MacOSWiFiLogEventData(events.EventData):
 
 
 class MacOSWiFiLogTextPlugin(
-    interface.TextPlugin, dateless_helper.DateLessLogFormatHelper
+    interface.TextPluginWithLineContinuation, dateless_helper.DateLessLogFormatHelper
 ):
     """Text parser plugin MacOS Wi-Fi log (wifi.log) files."""
 
@@ -166,6 +166,12 @@ class MacOSWiFiLogTextPlugin(
         ^ _TURNED_OVER_HEADER_LOG_LINE
     )
 
+    def __init__(self):
+        """Initializes a text parser plugin."""
+        super().__init__()
+        self._event_data = None
+        self._text_lines = None
+
     def _GetAction(self, action, text):
         """Parse the well known actions for easy reading.
 
@@ -210,12 +216,19 @@ class MacOSWiFiLogTextPlugin(
 
         return text
 
-    def _ParseRecord(self, parser_mediator, key, structure):
-        """Parses a pyparsing structure.
+    def _ParseFinalize(self, parser_mediator):
+        """Finalizes parsing.
 
         Args:
           parser_mediator (ParserMediator): mediates interactions between parsers
               and other components, such as storage and dfVFS.
+        """
+        self._ProduceEventData(parser_mediator)
+
+    def _ParseLogLine(self, key, structure):
+        """Parses a log line.
+
+        Args:
           key (str): name of the parsed structure.
           structure (pyparsing.ParseResults): tokens from a parsed log line.
 
@@ -233,7 +246,35 @@ class MacOSWiFiLogTextPlugin(
         if key == "known_function_log_line":
             event_data.action = self._GetAction(event_data.function, event_data.text)
 
-        parser_mediator.ProduceEventData(event_data)
+        self._event_data = event_data
+        self._text_lines = [event_data.text]
+
+    def _ParseRecord(self, parser_mediator, key, structure):
+        """Parses a pyparsing structure.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          key (str): name of the parsed structure.
+          structure (pyparsing.ParseResults): tokens from a parsed log line.
+
+        Raises:
+          ParseError: if the structure cannot be parsed.
+        """
+        if key == "_line_continuation":
+            if not self._event_data:
+                raise errors.ParseError(
+                    "Unable to parse continuation line without preceding log line."
+                )
+
+            for line in structure.split("\n"):
+                line = line.strip()
+                if line:
+                    self._text_lines.append(line)
+
+        else:
+            self._ProduceEventData(parser_mediator)
+            self._ParseLogLine(key, structure)
 
     def _ParseTimeElements(self, time_elements_structure):
         """Parses date and time elements of a log line.
@@ -303,6 +344,25 @@ class MacOSWiFiLogTextPlugin(
                 f"Unable to parse time elements with error: {exception!s}"
             )
 
+    def _ProduceEventData(self, parser_mediator):
+        """Produces the event data of the last parsed log line.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+        """
+        if self._event_data:
+            self._event_data.text = " ".join(self._text_lines)
+
+            parser_mediator.ProduceEventData(self._event_data)
+
+        self._ResetState()
+
+    def _ResetState(self):
+        """Resets stored values."""
+        self._event_data = None
+        self._text_lines = None
+
     def CheckRequiredFormat(self, parser_mediator, text_reader):
         """Check if the log record has the minimal structure required by the plugin.
 
@@ -327,6 +387,8 @@ class MacOSWiFiLogTextPlugin(
             self._ParseTimeElements(time_elements_structure)
         except errors.ParseError:
             return False
+
+        self._ResetState()
 
         return True
 
