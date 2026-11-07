@@ -53,25 +53,39 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
 
     # TODO: use groups to build a single RE.
 
-    # Here we define filters and callback methods for all hits on each filter.
+    # Here we define filters, callback methods and callback method arguments
+    # for all hits on each filter.
     _URL_FILTERS = frozenset(
         [
-            ("Bing", re.compile(r"bing\.com/search"), "_ExtractSearchQueryFromURL"),
+            (
+                "Bing",
+                re.compile(r"bing\.com/search"),
+                "_ExtractSearchQueryStringValue",
+                ("q",),
+            ),
             (
                 "DuckDuckGo",
                 re.compile(r"duckduckgo\.com"),
-                "_ExtractDuckDuckGoSearchQuery",
+                "_ExtractQueryStringValue",
+                ("q",),
             ),
-            ("GMail", re.compile(r"mail\.google\.com"), "_ExtractGMailSearchQuery"),
+            (
+                "GMail",
+                re.compile(r"mail\.google\.com"),
+                "_ExtractGMailSearchQuery",
+                (),
+            ),
             (
                 "Google Docs",
                 re.compile(r"docs\.google\.com"),
-                "_ExtractGoogleDocsSearchQuery",
+                "_ExtractQueryStringValue",
+                ("q",),
             ),
             (
                 "Google Drive",
                 re.compile(r"drive\.google\.com/drive/search"),
-                "_ExtractGoogleSearchQuery",
+                "_ExtractSearchQueryStringValue",
+                ("q",),
             ),
             (
                 "Google Search",
@@ -82,34 +96,35 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
                 # token, making the examine time grow with the square of the
                 # URL length on long values.
                 re.compile(r"(www\.|encrypted\.|/)google\.[^/]{0,256}/search"),
-                "_ExtractGoogleSearchQuery",
+                "_ExtractSearchQueryStringValue",
+                ("q",),
             ),
             (
                 "Google Sites",
                 re.compile(r"sites\.google\.com/site"),
-                "_ExtractGoogleSearchQuery",
+                "_ExtractSearchQueryStringValue",
+                ("q",),
             ),
-            ("Yahoo", re.compile(r"yahoo\.com/search"), "_ExtractYahooSearchQuery"),
-            ("Yandex", re.compile(r"yandex\.com/search"), "_ExtractYandexSearchQuery"),
-            ("Youtube", re.compile(r"youtube\.com"), "_ExtractYouTubeSearchQuery"),
+            (
+                "Yahoo",
+                re.compile(r"yahoo\.com/search"),
+                "_ExtractKeyValue",
+                ("p",),
+            ),
+            (
+                "Yandex",
+                re.compile(r"yandex\.com/search"),
+                "_ExtractKeyValue",
+                ("text",),
+            ),
+            (
+                "Youtube",
+                re.compile(r"youtube\.com"),
+                "_ExtractSearchQueryStringValue",
+                ("q",),
+            ),
         ]
     )
-
-    def _ExtractDuckDuckGoSearchQuery(self, url):
-        """Extracts a search query from a DuckDuckGo search URL.
-
-        DuckDuckGo: https://duckduckgo.com/?q=query
-
-        Args:
-          url (str): URL.
-
-        Returns:
-          str: search query or None if no query was found.
-        """
-        if "q=" not in url:
-            return None
-
-        return self._GetBetweenQEqualsAndAmpersand(url).replace("+", " ")
 
     def _ExtractGMailSearchQuery(self, url):
         """Extracts a search query from a GMail search URL.
@@ -131,148 +146,80 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
 
         return line.replace("+", " ")
 
-    def _ExtractGoogleDocsSearchQuery(self, url):
-        """Extracts a search query from a Google docs URL.
+    def _ExtractKeyValue(self, url, key):
+        """Extracts a search query from the first key value pair in a URL.
 
-        Google Docs: https://docs.google.com/.*/u/0/?q=query
+        Unlike _ExtractQueryStringValue the key is searched for in the entire
+        URL and only the value up to the first whitespace is used.
 
-        Args:
-          url (str): URL.
-
-        Returns:
-          str: search query  or None if no query was found.
-        """
-        if "q=" not in url:
-            return None
-
-        line = self._GetBetweenQEqualsAndAmpersand(url)
-        if not line:
-            return None
-
-        return line.replace("+", " ")
-
-    def _ExtractGoogleSearchQuery(self, url):
-        """Extracts a search query from a Google URL.
-
-        Google Drive: https://drive.google.com/drive/search?q=query
-        Google Search: https://www.google.com/search?q=query
-        Google Sites: https://sites.google.com/site/.*/system/app/pages/
-                      search?q=query
-
-        Args:
-          url (str): URL.
-
-        Returns:
-          str: search query or None if no query was found.
-        """
-        if "search" not in url or "q=" not in url:
-            return None
-
-        line = self._GetBetweenQEqualsAndAmpersand(url)
-        if not line:
-            return None
-
-        return line.replace("+", " ")
-
-    def _ExtractYahooSearchQuery(self, url):
-        """Extracts a search query from a Yahoo search URL.
-
-        Examples:
-          https://search.yahoo.com/search?p=query
-          https://search.yahoo.com/search;?p=query
-
-        Args:
-          url (str): URL.
-
-        Returns:
-          str: search query or None if no query was found.
-        """
-        if "p=" not in url:
-            return None
-
-        _, _, line = url.partition("p=")
-        before_and, _, _ = line.partition("&")
-        if not before_and:
-            return None
-
-        yahoo_search_url = before_and.split()[0]
-
-        return yahoo_search_url.replace("+", " ")
-
-    def _ExtractYandexSearchQuery(self, url):
-        """Extracts a search query from a Yandex search URL.
-
+        Yahoo: https://search.yahoo.com/search?p=query
+        Yahoo: https://search.yahoo.com/search;?p=query
         Yandex: https://www.yandex.com/search/?text=query
 
         Args:
           url (str): URL.
+          key (str): key of the key value pair, such as "p".
 
         Returns:
           str: search query or None if no query was found.
         """
-        if "text=" not in url:
+        _, _, value = url.partition(f"{key:s}=")
+        value, _, _ = value.partition("&")
+        if not value:
             return None
 
-        _, _, line = url.partition("text=")
-        before_and, _, _ = line.partition("&")
-        if not before_and:
-            return None
+        value = value.split()[0]
 
-        yandex_search_url = before_and.split()[0]
+        return value.replace("+", " ")
 
-        return yandex_search_url.replace("+", " ")
+    def _ExtractQueryStringValue(self, url, key):
+        """Extracts a search query from the query string of a URL.
 
-    def _ExtractYouTubeSearchQuery(self, url):
-        """Extracts a search query from a YouTube search URL.
+        The value is that of the first occurrence of "key=" after the first "?"
+        and runs up to the next "&".
 
-        YouTube: https://www.youtube.com/results?search_query=query
+        DuckDuckGo: https://duckduckgo.com/?q=query
+        Google Docs: https://docs.google.com/.*/u/0/?q=query
 
         Args:
           url (str): URL.
+          key (str): key of the key value pair, such as "q".
 
         Returns:
-          str: search query.
+          str: search query or None if no query was found.
         """
-        return self._ExtractSearchQueryFromURL(url)
+        _, _, query_string = url.partition("?")
+        _, _, value = query_string.partition(f"{key:s}=")
+        value, _, _ = value.partition("&")
+        if not value:
+            return None
 
-    def _ExtractSearchQueryFromURL(self, url):
-        """Extracts a search query from the URL.
+        return value.replace("+", " ")
+
+    def _ExtractSearchQueryStringValue(self, url, key):
+        """Extracts a search query from the query string of a search URL.
+
+        This is the same as _ExtractQueryStringValue for URLs that contain
+        "search".
 
         Bing: https://www.bing.com/search?q=query
-        GitHub: https://github.com/search?q=query
+        Google Drive: https://drive.google.com/drive/search?q=query
+        Google Search: https://www.google.com/search?q=query
+        Google Sites: https://sites.google.com/site/.*/system/app/pages/
+                      search?q=query
+        YouTube: https://www.youtube.com/search?q=query
 
         Args:
           url (str): URL.
+          key (str): key of the key value pair, such as "q".
 
         Returns:
-          str: search query, the value between 'q=' and '&' or None if no
-              query was found.
+          str: search query or None if no query was found.
         """
-        if "search" not in url or "q=" not in url:
+        if "search" not in url:
             return None
 
-        return self._GetBetweenQEqualsAndAmpersand(url).replace("+", " ")
-
-    def _GetBetweenQEqualsAndAmpersand(self, url):
-        """Retrieves the substring between the substrings 'q=' and '&'.
-
-        Args:
-          url (str): URL.
-
-        Returns:
-          str: search query, the value between 'q=' and '&'  or None if no query
-          was found.
-        """
-        # Make sure we're analyzing the query part of the URL.
-        _, _, url = url.partition("?")
-        # Look for a key value pair named 'q'.
-        _, _, url = url.partition("q=")
-        if not url:
-            return ""
-
-        # Strip additional key value pairs.
-        url, _, _ = url.partition("&")
-        return url
+        return self._ExtractQueryStringValue(url, key)
 
     def CompileReport(self, analysis_mediator):
         """Compiles an analysis report.
@@ -313,7 +260,7 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
         if not url:
             return
 
-        for engine, url_expression, method_name in self._URL_FILTERS:
+        for engine, url_expression, method_name, arguments in self._URL_FILTERS:
             callback_method = getattr(self, method_name, None)
             if not callback_method:
                 logger.warning(
@@ -325,7 +272,7 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
             if not match:
                 continue
 
-            search_query = callback_method(url)
+            search_query = callback_method(url, *arguments)
             if not search_query:
                 message = (
                     f"Unable to determine search query: {method_name:s} in URL: {url:s}"
