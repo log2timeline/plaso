@@ -43,6 +43,7 @@ class SingleProcessEngine(engine.BaseEngine):
         self._event_labels_counter = None
         self._extraction_worker = None
         self._file_system_cache = []
+        self._mount_point_path_spec = None
         self._number_of_consumed_event_data = 0
         self._number_of_consumed_sources = 0
         self._number_of_produced_events = 0
@@ -92,8 +93,15 @@ class SingleProcessEngine(engine.BaseEngine):
           bool: True if the path specification should be excluded from extraction.
         """
         for find_spec in self._excluded_file_system_find_specs or []:
-            if find_spec.ComparePathSpecLocation(path_spec, file_system):
-                return True
+            try:
+                if find_spec.ComparePathSpecLocation(
+                    path_spec, file_system, mount_point=self._mount_point_path_spec
+                ):
+                    return True
+
+            except ValueError:
+                # The path specification location is outside the mount point.
+                pass
 
         return False
 
@@ -321,6 +329,16 @@ class SingleProcessEngine(engine.BaseEngine):
           file_system_path_specs (list[dfvfs.PathSpec]): path specifications of
               the source file systems to process.
         """
+        # Exclusion filters on an OS source, such as a directory, are relative to
+        # the source in the same way as the inclusion filters.
+        self._mount_point_path_spec = None
+        for file_system_path_spec in file_system_path_specs:
+            if (
+                file_system_path_spec.type_indicator
+                == dfvfs_definitions.TYPE_INDICATOR_OS
+            ):
+                self._mount_point_path_spec = file_system_path_spec
+
         self._current_display_name = ""
         self._number_of_consumed_sources = 0
 
