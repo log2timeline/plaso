@@ -852,6 +852,22 @@ short_source: 'LOG'
 source: 'PowerShell Transcript Event'
 ---
 type: 'conditional'
+data_type: 'samba:log:entry'
+message:
+- 'Level: {debug_level}'
+- 'Class: {debug_class}'
+- 'PID: {process_identifier}'
+- 'Source file: {source_file}'
+- 'Source line: {source_line}'
+- 'Function: {function_name}'
+- 'Message: {message_body}'
+short_message:
+- 'Function: {function_name}'
+- 'Message: {message_body}'
+short_source: 'LOG'
+source: 'Samba Log'
+---
+type: 'conditional'
 data_type: 'santa:diskmount'
 message:
 - 'Santa {action}'

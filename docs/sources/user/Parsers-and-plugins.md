@@ -228,6 +228,7 @@ macos_launchd_log | Parser for Mac OS launchd log files.
 popularity_contest | Parser for Popularity Contest log files.
 postgresql | Parser for PostgreSQL application log files.
 powershell_transcript | Parser for PowerShell transcript event.
+samba | Parser for Samba log files.
 santa | Parser for Santa log (santa.log) files.
 sccm | Parser for System Center Configuration Manager (SCCM) client log files.
 selinux | Parser for SELinux audit log (audit.log) files.
