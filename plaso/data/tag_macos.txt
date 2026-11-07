@@ -5,7 +5,7 @@ application_execution
 
 # Tags MacOS application installation events.
 application_install
-  data_type is 'plist:key' AND plugin is 'plist_install_history'
+  data_type is 'macos:install_history:entry'
 
 # Tags creation events of HFS/HFS+ files with a filename that contains LaunchAgents as a path segment and plist as extension.
 autorun
@@ -20,7 +20,7 @@ file_download
 # Tags device connection events.
 device_connection
   data_type is 'ipod:device:entry'
-  data_type is 'plist:key' AND plugin is 'plist_airport'
+  data_type is 'macos:airport:entry'
 
 # Tags OLE compound document print events.
 document_print
