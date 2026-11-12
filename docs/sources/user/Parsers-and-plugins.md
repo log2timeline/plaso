@@ -28,6 +28,7 @@ locate_database | Parser for Locate database file (updatedb).
 mac_keychain | Parser for MacOS keychain database files.
 mcafee_protection | Parser for McAfee Anti-Virus access protection log files.
 mft | Parser for NTFS $MFT metadata files.
+mpenginedb | Parser for Microsoft Defender MpEngineDb (mpenginedb.db) files.
 msiecf | Parser for Microsoft Internet Explorer (MSIE) 4 - 9 cache (index.dat) files.
 networkminer_fileinfo | Parser for NetworkMiner .fileinfos files.
 olecf | Parser for OLE Compound File (OLECF) format.

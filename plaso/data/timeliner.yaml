@@ -1688,6 +1688,42 @@ attribute_mappings:
   description: 'Content Deletion Time'
 place_holder_event: true
 ---
+data_type: 'windows:defender:mpenginedb:attribute_persist_context'
+attribute_mappings:
+- name: 'expiration_time'
+  description: 'Expiration Time'
+- name: 'insertion_time'
+  description: 'Insertion Time'
+place_holder_event: true
+---
+data_type: 'windows:defender:mpenginedb:backup_process_info'
+attribute_mappings:
+- name: 'instance_time'
+  description: 'Recorded Time'
+place_holder_event: true
+---
+data_type: 'windows:defender:mpenginedb:file_hash'
+attribute_mappings:
+- name: 'instance_time'
+  description: 'Recorded Time'
+place_holder_event: true
+---
+data_type: 'windows:defender:mpenginedb:low_fidelity'
+attribute_mappings:
+- name: 'instance_time'
+  description: 'Recorded Time'
+place_holder_event: true
+---
+data_type: 'windows:defender:mpenginedb:rolling_queue'
+attribute_mappings:
+- name: 'expiration_time'
+  description: 'Expiration Time'
+- name: 'insertion_time'
+  description: 'Insertion Time'
+- name: 'process_start_time'
+  description: 'Process Start Time'
+place_holder_event: true
+---
 data_type: 'windows:onedrive:log'
 attribute_mappings:
 - name: 'recorded_time'
