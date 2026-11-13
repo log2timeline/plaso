@@ -412,6 +412,14 @@ plaso.parsers.sqlite\_plugins.windows\_push\_notification module
    :show-inheritance:
    :undoc-members:
 
+plaso.parsers.sqlite\_plugins.windows\_search module
+----------------------------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_plugins.windows_search
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 plaso.parsers.sqlite\_plugins.windows\_timeline module
 ------------------------------------------------------
 

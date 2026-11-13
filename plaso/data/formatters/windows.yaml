@@ -366,6 +366,20 @@ short_source: 'Windows Push Notification Database'
 source: 'Windows Push Notification Database'
 ---
 type: 'conditional'
+data_type: 'windows:search:db_item'
+message:
+- 'Path: {path}'
+- 'Size: {size}'
+- 'Owner: {owner}'
+- 'Title: {title}'
+- 'Content type: {content_type}'
+- 'Summary: {summary}'
+short_message:
+- 'Path: {path}'
+short_source: 'LOG'
+source: 'Windows Search index'
+---
+type: 'conditional'
 data_type: 'windows:registry:amcache'
 message:
 - 'path: {full_path}'
