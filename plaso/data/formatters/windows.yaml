@@ -666,6 +666,22 @@ short_source: 'REG'
 source: 'Microsoft Outlook MRU Registry Key'
 ---
 type: 'conditional'
+data_type: 'windows:registry:putty:session'
+message:
+- '[{key_path}]'
+- 'Session: {session_name}'
+- 'Protocol: {protocol}'
+- 'Remote hostname: {remote_hostname}'
+- 'Port: {port_number}'
+- 'Username: {username}'
+- 'Public key file: {public_key_file}'
+short_message:
+- 'Session: {session_name}'
+- 'Remote hostname: {remote_hostname}'
+short_source: 'REG'
+source: 'PuTTY Session Registry Key'
+---
+type: 'conditional'
 data_type: 'windows:registry:run'
 message:
 - '[{key_path}]'
