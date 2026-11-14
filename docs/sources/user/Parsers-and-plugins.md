@@ -236,6 +236,7 @@ skydrive_log_v1 | Parser for OneDrive (or SkyDrive) version 1 log files.
 skydrive_log_v2 | Parser for OneDrive (or SkyDrive) version 2 log files.
 snort_fastlog | Parser for Snort3/Suricata fast-log alert log (fast.log) files.
 sophos_av | Parser for Sophos anti-virus log file (SAV.txt) files.
+squid_access | Parser for Squid access log (access.log) files.
 syslog | Parser for System log (syslog) files.
 syslog_traditional | Parser for Traditional system log (syslog) files.
 teamviewer_application_log | Parser for TeamViewer application log file parser.

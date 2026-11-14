@@ -1480,6 +1480,12 @@ attribute_mappings:
   description: 'Creation Time'
 place_holder_event: true
 ---
+data_type: 'squid:access_log:entry'
+attribute_mappings:
+- name: 'recorded_time'
+  description: 'Recorded Time'
+place_holder_event: true
+---
 data_type: 'syslog:anacron:job_end'
 attribute_mappings:
 - name: 'last_written_time'
