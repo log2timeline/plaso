@@ -60,7 +60,7 @@ class PstealTool(
                 "",
                 "More information can be gathered from here:",
                 "    https://plaso.readthedocs.io/en/latest/sources/user/"
-                "Using-log2timeline.html",
+                "Using-psteal.html",
                 "",
             ]
         )
