@@ -211,6 +211,7 @@ File System Format support is provided by [dfVFS](https://dfvfs.readthedocs.io/e
 * Confluence access log (access.log) file
 * Container Runtime Interface log file
 * Debian package manager log (dpkg.log) file
+* FreeDesktop.org Trash info (.trashinfo) file
 * Google Drive Sync log file
 * Google-formatted log file
 * iOS lockdown daemon log
