@@ -179,21 +179,6 @@ class CLITool:
                 "debug output."
             )
 
-    def _ParseLogFileOptions(self, options):
-        """Parses the log file options.
-
-        Args:
-          options (argparse.Namespace): command line arguments.
-        """
-        self._log_file = self.ParseStringOption(options, "log_file")
-        if not self._log_file:
-            local_date_time = datetime.datetime.now()
-            self._log_file = (
-                f"{self.NAME:s}-{local_date_time.year:04d}{local_date_time.month:02d}"
-                f"{local_date_time.day:02d}T{local_date_time.hour:02d}"
-                f"{local_date_time.minute:02d}{local_date_time.second:02d}.log.gz"
-            )
-
     def _PrintUserWarning(self, warning_text):
         """Prints a warning to the user.
 
@@ -285,28 +270,6 @@ class CLITool:
             help=(
                 "Enable unattended mode and do not ask the user for additional "
                 "input when needed, but terminate with an error instead."
-            ),
-        )
-
-    def AddLogFileOptions(self, argument_group):
-        """Adds the log file option to the argument group.
-
-        Args:
-          argument_group (argparse._ArgumentGroup): argparse argument group.
-        """
-        argument_group.add_argument(
-            "--logfile",
-            "--log_file",
-            "--log-file",
-            action="store",
-            metavar="FILENAME",
-            dest="log_file",
-            type=str,
-            default="",
-            help=(
-                f"Path of the file in which to store log messages, by default this "
-                f'file will be named: "{self.NAME:s}-YYYYMMDDThhmmss.log.gz". Note '
-                f'that the file will be gzip compressed if the extension is ".gz".'
             ),
         )
 

@@ -1843,7 +1843,9 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
         )
         self.AddBasicOptions(argument_parser)
         self.AddStorageOptions(argument_parser)
-        self.AddLogFileOptions(argument_parser)
+        helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+            argument_parser, names=["log_file"]
+        )
 
         if self._CanEnforceProcessMemoryLimit():
             helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
@@ -1963,7 +1965,9 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
         """
         self._ParseInformationalOptions(options)
 
-        self._ParseLogFileOptions(options)
+        helpers_manager.ArgumentHelperManager.ParseOptions(
+            options, self, names=["log_file"]
+        )
 
         self._verbose = getattr(options, "verbose", False)
 

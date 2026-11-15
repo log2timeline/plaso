@@ -327,7 +327,9 @@ class PsortTool(analysis_tool.AnalysisTool, tool_options.OutputModuleOptions):
 
         info_group = argument_parser.add_argument_group("Informational Arguments")
 
-        self.AddLogFileOptions(info_group)
+        helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+            info_group, names=["log_file"]
+        )
         self.AddInformationalOptions(info_group)
 
         info_group.add_argument(
@@ -466,9 +468,8 @@ class PsortTool(analysis_tool.AnalysisTool, tool_options.OutputModuleOptions):
         self._ParseInformationalOptions(options)
 
         helpers_manager.ArgumentHelperManager.ParseOptions(
-            options, self, names=["data_location"]
+            options, self, names=["data_location", "log_file"]
         )
-        self._ParseLogFileOptions(options)
 
         self._ParseProcessingOptions(options)
 

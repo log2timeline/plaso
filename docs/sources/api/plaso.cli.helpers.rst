@@ -124,6 +124,14 @@ plaso.cli.helpers.language module
    :show-inheritance:
    :undoc-members:
 
+plaso.cli.helpers.log\_file module
+----------------------------------
+
+.. automodule:: plaso.cli.helpers.log_file
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 plaso.cli.helpers.manager module
 --------------------------------
 
