@@ -60,6 +60,14 @@ plaso.parsers.winreg\_plugins.diagnosed\_applications module
    :show-inheritance:
    :undoc-members:
 
+plaso.parsers.winreg\_plugins.featureusage module
+-------------------------------------------------
+
+.. automodule:: plaso.parsers.winreg_plugins.featureusage
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 plaso.parsers.winreg\_plugins.interface module
 ----------------------------------------------
 
