@@ -94,6 +94,14 @@ class TestOutputModule(output_interface.OutputModule):
         return
 
 
+class TestOutputEngine(output_engine.OutputAndFormattingMultiProcessEngine):
+    """Output engine for testing with a small event data prefetch size."""
+
+    # pylint: disable=abstract-method
+
+    _EVENT_DATA_PREFETCH_SIZE = 4
+
+
 class PsortEventHeapTest(test_lib.MultiProcessingTestCase):
     """Tests for the psort events heap."""
 
@@ -344,6 +352,39 @@ class OutputAndFormattingMultiProcessEngineTest(test_lib.MultiProcessingTestCase
         self.assertIsNone(event_tags[0])
         self.assertEqual(event_tags[1].labels, ["test_label"])
         self.assertEqual(event_tags.count(None), len(event_tags) - 1)
+
+    def testGetSortedEvents(self):
+        """Tests the _GetSortedEvents function."""
+        test_engine = TestOutputEngine()
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            temp_file = os.path.join(temp_directory, "storage.plaso")
+            self._CreateTestStorageFile(temp_file)
+
+            storage_reader = storage_factory.StorageFactory.CreateStorageReaderForFile(
+                temp_file
+            )
+
+            try:
+                expected_identifiers = [
+                    event.GetIdentifier().CopyToString()
+                    for event in storage_reader.GetSortedEvents()
+                ]
+                identifiers = [
+                    event.GetIdentifier().CopyToString()
+                    for event in test_engine._GetSortedEvents(storage_reader)
+                ]
+
+                cached_event_data = storage_reader._store._GetCachedAttributeContainer(
+                    events.EventData.CONTAINER_TYPE, 0
+                )
+                self.assertIsNotNone(cached_event_data)
+
+            finally:
+                storage_reader.Close()
+
+        self.assertEqual(len(identifiers), 17)
+        self.assertEqual(identifiers, expected_identifiers)
 
     def testInternalExportEvents(self):
         """Tests the _ExportEvents function."""
