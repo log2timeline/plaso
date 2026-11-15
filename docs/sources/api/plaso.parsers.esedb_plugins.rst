@@ -44,6 +44,14 @@ plaso.parsers.esedb\_plugins.user\_access\_logging module
    :show-inheritance:
    :undoc-members:
 
+plaso.parsers.esedb\_plugins.windows\_update\_datastore module
+--------------------------------------------------------------
+
+.. automodule:: plaso.parsers.esedb_plugins.windows_update_datastore
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 Module contents
 ---------------
 
