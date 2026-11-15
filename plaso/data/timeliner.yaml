@@ -1748,6 +1748,54 @@ attribute_mappings:
   description: 'Installation Time'
 place_holder_event: false
 ---
+data_type: 'windows:registry:amcache:application'
+attribute_mappings:
+- name: 'installation_time'
+  description: 'Installation Time'
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+- name: 'msi_installation_time'
+  description: 'Installation Time'
+place_holder_event: false
+---
+data_type: 'windows:registry:amcache:application_shortcut'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+place_holder_event: false
+---
+data_type: 'windows:registry:amcache:device_container'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+place_holder_event: false
+---
+data_type: 'windows:registry:amcache:device_pnp'
+attribute_mappings:
+- name: 'first_installation_time'
+  description: 'Installation Time'
+- name: 'installation_time'
+  description: 'Installation Time'
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+place_holder_event: false
+---
+data_type: 'windows:registry:amcache:driver_binary'
+attribute_mappings:
+- name: 'file_modification_time'
+  description: 'File Last Modification Time'
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+- name: 'link_time'
+  description: 'Link Time'
+place_holder_event: false
+---
+data_type: 'windows:registry:amcache:driver_package'
+attribute_mappings:
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+place_holder_event: false
+---
 data_type: 'windows:registry:amcache:programs'
 attribute_mappings:
 - name: 'installation_time'
