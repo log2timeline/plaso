@@ -153,6 +153,42 @@ class ZeroMQQueuesTest(shared_test_lib.BaseTestCase):
         push_queue.Close()
         pull_queue.Close()
 
+    def testPushPullQueuesSerializedItem(self):
+        """Tests that a serialized item can be pushed on multiple queues."""
+        item = {"name": "serialized item", "values": [1, 2, 3]}
+        serialized_item = zeromq_queue.ZeroMQSerializedItem(item)
+
+        self.assertEqual(serialized_item.data, pickle.dumps(item))
+
+        push_queues = []
+        pull_queues = []
+        try:
+            for index in range(2):
+                push_queue = zeromq_queue.ZeroMQPushBindQueue(
+                    name=f"serialized_pushbind{index:d}",
+                    delay_open=False,
+                    linger_seconds=1,
+                )
+                push_queues.append(push_queue)
+
+                pull_queue = zeromq_queue.ZeroMQPullConnectQueue(
+                    name=f"serialized_pullconnect{index:d}",
+                    delay_open=False,
+                    port=push_queue.port,
+                    linger_seconds=1,
+                )
+                pull_queues.append(pull_queue)
+
+            for push_queue in push_queues:
+                push_queue.PushItem(serialized_item)
+
+            for pull_queue in pull_queues:
+                self.assertEqual(pull_queue.PopItem(), item)
+
+        finally:
+            for test_queue in push_queues + pull_queues:
+                test_queue.Close()
+
     def testQueueStart(self):
         """Tests that delayed creation of ZeroMQ sockets occurs correctly."""
         for queue_class in self._QUEUE_CLASSES:
