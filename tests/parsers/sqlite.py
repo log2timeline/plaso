@@ -8,6 +8,7 @@ import stat
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 from plaso.parsers import sqlite
 
@@ -277,6 +278,28 @@ class SQLiteParserTest(test_lib.ParserTestCase):
         """Tests ParseFileEntry on a database with a dot in a table name."""
         parser = sqlite.SQLiteParser()
         storage_writer = self._ParseFile(["data.db"], parser)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 0)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "recovery_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+    def testParseFileEntrySkipsUnmatchedDatabase(self):
+        """Tests ParseFileEntry skips opening unmatched databases via pre-filter."""
+        parser = sqlite.SQLiteParser()
+        with mock.patch.object(sqlite.SQLiteDatabase, "Open") as open_mock:
+            storage_writer = self._ParseFile(["data.db"], parser)
+            open_mock.assert_not_called()
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
