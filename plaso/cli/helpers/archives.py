@@ -12,7 +12,7 @@ class ArchivesArgumentsHelper(interface.ArgumentsHelper):
     NAME = "archives"
     DESCRIPTION = "Archive command line arguments."
 
-    _SUPPORTED_ARCHIVE_TYPES = sorted(["iso9660", "modi", "tar", "vhdi", "zip"])
+    _SUPPORTED_ARCHIVE_TYPES = sorted(["ewf", "iso9660", "modi", "tar", "vhdi", "zip"])
 
     @classmethod
     def AddArguments(cls, argument_group):
