@@ -501,9 +501,11 @@ class PsortTool(analysis_tool.AnalysisTool, tool_options.OutputModuleOptions):
         """Processes a Plaso storage file.
 
         Raises:
-          BadConfigOption: when a configuration parameter fails validation or the
-              storage file cannot be opened with read access.
-          RuntimeError: if a non-recoverable situation is encountered.
+          BadConfigOption: when a configuration parameter fails validation.
+          OSError: if the storage file cannot be read or its format version is
+              not supported.
+          RuntimeError: if the storage reader cannot be created, such as when
+              the storage file format is not supported.
         """
         self._status_view.SetMode(self._status_view_mode)
         self._status_view.SetStatusFile(self._status_view_file)
