@@ -13,18 +13,27 @@ class DSVEventFormattingHelper(formatting_helper.EventFormattingHelper):
       field_delimiter (str): field delimiter.
     """
 
-    def __init__(self, field_formatting_helper, field_names, field_delimiter=","):
+    def __init__(
+        self,
+        field_formatting_helper,
+        field_names,
+        field_delimiter=",",
+        quote_fields=True,
+    ):
         """Initializes a delimiter separated values event formatting helper.
 
         Args:
           field_formatting_helper (FieldFormattingHelper): field formatting helper.
           field_names (list[str]): names of the fields to output.
           field_delimiter (Optional[str]): field delimiter.
+          quote_fields (Optional[bool]): True if a field that contains a double
+              quote should be enclosed in double quotes, as defined by RFC 4180.
         """
         super().__init__()
         self._custom_fields = {}
         self._field_names = field_names
         self._field_formatting_helper = field_formatting_helper
+        self._quote_fields = quote_fields
 
         self.field_delimiter = field_delimiter
 
@@ -32,8 +41,9 @@ class DSVEventFormattingHelper(formatting_helper.EventFormattingHelper):
         """Sanitizes a field for output.
 
         This method replaces any field delimiters, carriage returns and newlines
-        with a space, and neutralizes a value that a spreadsheet application would
-        otherwise read as a formula.
+        with a space, neutralizes a value that a spreadsheet application would
+        otherwise read as a formula and, if enabled, encloses a value that contains
+        a double quote in double quotes, as defined by RFC 4180.
 
         Args:
           field (str): value of the field to sanitize.
@@ -57,6 +67,12 @@ class DSVEventFormattingHelper(formatting_helper.EventFormattingHelper):
         # that the "-" placeholder for an empty field is preserved.
         if len(field) > 1 and field[0] in ("=", "+", "-", "@"):
             field = "".join(["'", field])
+
+        # A double quote in a value is escaped by preceding it with another double
+        # quote and the value is enclosed in double quotes.
+        if self._quote_fields and '"' in field:
+            field = field.replace('"', '""')
+            field = "".join(['"', field, '"'])
 
         return field
 
@@ -144,7 +160,14 @@ class DSVEventFormattingHelper(formatting_helper.EventFormattingHelper):
 class DSVOutputModule(text_file.SortedTextFileOutputModule):
     """Shared functionality for delimiter separated values output modules."""
 
-    def __init__(self, field_formatting_helper, names, delimiter=",", header=None):
+    def __init__(
+        self,
+        field_formatting_helper,
+        names,
+        delimiter=",",
+        header=None,
+        quote_fields=True,
+    ):
         """Initializes a delimiter separated values output module.
 
         Args:
@@ -153,9 +176,14 @@ class DSVOutputModule(text_file.SortedTextFileOutputModule):
           delimiter (Optional[str]): field delimiter.
           header (Optional[str]): header, where None will have WriteHeader
               generate a header from the field names.
+          quote_fields (Optional[bool]): True if a field that contains a double
+              quote should be enclosed in double quotes, as defined by RFC 4180.
         """
         event_formatting_helper = DSVEventFormattingHelper(
-            field_formatting_helper, names, field_delimiter=delimiter
+            field_formatting_helper,
+            names,
+            field_delimiter=delimiter,
+            quote_fields=quote_fields,
         )
         super().__init__(event_formatting_helper)
         self._header = header
