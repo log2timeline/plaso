@@ -244,6 +244,10 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
                     )
                     break
 
+                if task is None:
+                    logger.debug("ConsumeItems exiting, task queue was aborted.")
+                    break
+
                 if isinstance(task, plaso_queue.QueueAbort):
                     logger.debug("ConsumeItems exiting, dequeued QueueAbort object.")
                     break
@@ -401,8 +405,22 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
 
     def SignalAbort(self):
         """Signals the process to abort."""
+        # Only abort the task queue while the main loop is monitoring it, since
+        # _Main closes the task queue itself after the main loop.
+        abort_task_queue = (
+            not self._abort and self._status == definitions.STATUS_INDICATOR_RUNNING
+        )
         self._abort = True
         if self._extraction_worker:
             self._extraction_worker.SignalAbort()
         if self._parser_mediator:
             self._parser_mediator.SignalAbort()
+
+        # Aborting the task queue stops a pop that is waiting for a reply, for
+        # example when the QueueAbort was not received.
+        if abort_task_queue and self._task_queue:
+            try:
+                self._task_queue.Close(abort=True)
+            except RuntimeError:
+                # The task queue was not opened yet.
+                pass
