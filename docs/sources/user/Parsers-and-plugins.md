@@ -294,6 +294,7 @@ windows_version | Parser for Windows version (product) Registry data.
 winlogon | Parser for Windows log-on Registry data.
 winrar_mru | Parser for WinRAR History Registry data.
 winreg_default | Parser for Windows Registry data.
+winscp_sessions | Parser for WinSCP sessions Registry data.
 
 ### Parser presets (plaso/data/presets.yaml)
 
