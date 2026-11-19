@@ -100,8 +100,6 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
 
         return identifiers
 
-    # TODO: add tests for CreateSignatureScanner.
-
     def testCreateSignatureScanner(self):
         """Tests the CreateSignatureScanner function."""
         specification_store = specification.FormatSpecificationStore()
@@ -131,6 +129,29 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
         test_data = b"".join([b"\x00", b"STRT", b"\x00" * 32, b"TEND", b"\x00"])
         identifiers = self._ScanData(scanner_object, specification_store, test_data)
         self.assertEqual(identifiers, set())
+
+    def testCreateSignatureScannerWithoutOffset(self):
+        """Tests the CreateSignatureScanner function with an unbound signature."""
+        specification_store = specification.FormatSpecificationStore()
+
+        format_specification = specification.FormatSpecification("no_offset")
+        format_specification.AddNewSignature(b"ANYW")
+        specification_store.AddSpecification(format_specification)
+
+        scanner_object = manager.ParsersManager.CreateSignatureScanner(
+            specification_store
+        )
+        self.assertIsNotNone(scanner_object)
+
+        # A signature without an offset matches anywhere in the data.
+        scan_state = pysigscan.scan_state()
+        scanner_object.scan_file_object(scan_state, io.BytesIO(b"0123456789ANYW"))
+        scan_results = [result.identifier for result in iter(scan_state.scan_results)]
+        self.assertEqual(scan_results, ["no_offset:0"])
+
+        scan_state = pysigscan.scan_state()
+        scanner_object.scan_file_object(scan_state, io.BytesIO(b"0123456789ANYX"))
+        self.assertEqual(scan_state.number_of_scan_results, 0)
 
     def testParserRegistration(self):
         """Tests the RegisterParser and DeregisterParser functions."""
