@@ -276,6 +276,14 @@ class NamesFileEntryFilterTest(shared_test_lib.BaseTestCase):
         file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
         self.assertTrue(test_filter.Matches(file_entry))
 
+        # Test a filter on a file entry without a name.
+        tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_TSK, inode=15, parent=os_path_spec
+        )
+
+        file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
+        self.assertIsNone(test_filter.Matches(file_entry))
+
         # Test a filter without names.
         test_filter = file_entry_filters.NamesFileEntryFilter([])
         self.assertFalse(test_filter.Matches(file_entry))
