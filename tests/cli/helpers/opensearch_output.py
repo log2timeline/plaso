@@ -28,7 +28,7 @@ usage: cli_helper.py [--index_name NAME] [--flush_interval INTERVAL]
                      [--opensearch-password PASSWORD]
                      [--opensearch-mappings PATH]
                      [--opensearch-url-prefix URL_PREFIX] [--use_ssl]
-                     [--ca_certificates_file_path PATH]
+                     [--no_ssl] [--ca_certificates_file_path PATH]
 
 Test argument parser.
 
@@ -40,6 +40,7 @@ Test argument parser.
                         Events to queue up before bulk insert to OpenSearch.
   --index_name, --index-name NAME
                         Name of the index in OpenSearch.
+  --no_ssl, --no-ssl    Disables use of SSL/TLS.
   --opensearch-mappings, --opensearch_mappings PATH
                         Path to a file containing mappings for OpenSearch
                         indexing.
@@ -57,7 +58,7 @@ Test argument parser.
                         URL prefix for OpenSearch.
   --opensearch-user, --opensearch_user USERNAME
                         Username to use for OpenSearch authentication.
-  --use_ssl, --use-ssl  Enforces use of SSL/TLS.
+  --use_ssl, --use-ssl  Enforces use of SSL/TLS, which is the default.
 """
 
     else:
@@ -68,7 +69,7 @@ usage: cli_helper.py [--index_name NAME] [--flush_interval INTERVAL]
                      [--opensearch-password PASSWORD]
                      [--opensearch-mappings PATH]
                      [--opensearch-url-prefix URL_PREFIX] [--use_ssl]
-                     [--ca_certificates_file_path PATH]
+                     [--no_ssl] [--ca_certificates_file_path PATH]
 
 Test argument parser.
 
@@ -80,6 +81,7 @@ Test argument parser.
                         Events to queue up before bulk insert to OpenSearch.
   --index_name NAME, --index-name NAME
                         Name of the index in OpenSearch.
+  --no_ssl, --no-ssl    Disables use of SSL/TLS.
   --opensearch-mappings PATH, --opensearch_mappings PATH
                         Path to a file containing mappings for OpenSearch
                         indexing.
@@ -97,7 +99,7 @@ Test argument parser.
                         URL prefix for OpenSearch.
   --opensearch-user USERNAME, --opensearch_user USERNAME
                         Username to use for OpenSearch authentication.
-  --use_ssl, --use-ssl  Enforces use of SSL/TLS.
+  --use_ssl, --use-ssl  Enforces use of SSL/TLS, which is the default.
 """
 
     def testAddArguments(self):
@@ -118,6 +120,17 @@ Test argument parser.
         opensearch_output.OpenSearchOutputArgumentsHelper.ParseOptions(
             options, output_module
         )
+
+        self.assertTrue(output_module._use_ssl)
+
+        options.use_ssl = False
+
+        output_module = opensearch.OpenSearchOutputModule()
+        opensearch_output.OpenSearchOutputArgumentsHelper.ParseOptions(
+            options, output_module
+        )
+
+        self.assertFalse(output_module._use_ssl)
 
         with self.assertRaises(errors.BadConfigObject):
             opensearch_output.OpenSearchOutputArgumentsHelper.ParseOptions(

@@ -278,6 +278,16 @@ class SharedOpenSearchOutputModuleTest(test_lib.OutputModuleTestCase):
 
         self.assertEqual(output_module._username, "test_username")
 
+    def testSetUseSSL(self):
+        """Tests the SetUseSSL function."""
+        output_module = TestOpenSearchOutputModule()
+
+        self.assertTrue(output_module._use_ssl)
+
+        output_module.SetUseSSL(False)
+
+        self.assertFalse(output_module._use_ssl)
+
 
 if __name__ == "__main__":
     unittest.main()
