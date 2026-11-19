@@ -158,6 +158,52 @@ class SantaTextPluginTest(test_lib.TextPluginTestCase):
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 27)
         self.CheckEventData(event_data, expected_event_values)
 
+    def testProcessWithExecutionWithoutArguments(self):
+        """Tests the Process function with an execution without arguments."""
+        plugin = santa.SantaTextPlugin()
+        storage_writer = self._ParseTextFileWithPlugin(
+            ["santa_exec_without_args.log"], plugin
+        )
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 3)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "recovery_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        # Execution event log without arguments followed by another line.
+        expected_event_values = {
+            "action": "EXEC",
+            "data_type": "santa:execution",
+            "last_run_time": "2023-04-02T10:15:20.100+00:00",
+            "pid": "4242",
+            "process_arguments": None,
+            "process_path": "/usr/local/bin/example",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # Execution event log with arguments.
+        expected_event_values = {
+            "action": "EXEC",
+            "data_type": "santa:execution",
+            "last_run_time": "2023-04-02T10:15:21.200+00:00",
+            "pid": "4243",
+            "process_arguments": "example --verbose",
+            "process_path": "/usr/local/bin/example",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
+        self.CheckEventData(event_data, expected_event_values)
+
     def testProcessWithCurrentFormat(self):
         """Tests the Process function with the current Santa log format."""
         plugin = santa.SantaTextPlugin()
