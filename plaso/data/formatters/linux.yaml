@@ -24,6 +24,18 @@ short_source: 'LOG'
 source: 'dpkg log file'
 ---
 type: 'conditional'
+data_type: 'linux:group:entry'
+message:
+- 'Group: {group_name}'
+- 'GID: {group_identifier}'
+- 'Members: {members}'
+short_message:
+- 'Group: {group_name}'
+- 'GID: {group_identifier}'
+short_source: 'LOG'
+source: 'Group database'
+---
+type: 'conditional'
 data_type: 'linux:locate_database:entry'
 message:
 - 'Folder Path: {path}'

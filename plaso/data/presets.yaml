@@ -52,6 +52,7 @@ parsers:
 - jsonl/docker_container_log
 - jsonl/docker_layer_config
 - filestat
+- linux_group
 - olecf
 - pls_recall
 - sqlite/google_drive

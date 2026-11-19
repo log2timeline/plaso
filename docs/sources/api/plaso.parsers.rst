@@ -190,6 +190,14 @@ plaso.parsers.jsonl\_parser module
    :show-inheritance:
    :undoc-members:
 
+plaso.parsers.linux\_group module
+---------------------------------
+
+.. automodule:: plaso.parsers.linux_group
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 plaso.parsers.locate module
 ---------------------------
 
