@@ -1,0 +1,33 @@
+{
+  "browser": {},
+  "extensions": {
+    "install_signature": {
+      "timestamp": "notatimestamp"
+    },
+    "settings": {
+      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa": {
+        "install_time": "13060312609843400",
+        "lastpingday": "notatimestamp",
+        "manifest": {
+          "name": "Invalid last ping day"
+        },
+        "path": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\1.0_0"
+      },
+      "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb": {
+        "install_time": "13060312609843400",
+        "manifest": {
+          "name": "Missing last ping day"
+        },
+        "path": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\\1.0_0"
+      },
+      "cccccccccccccccccccccccccccccccc": {
+        "install_time": "13060312609843400",
+        "lastpingday": 13060281601289400,
+        "manifest": {
+          "name": "Integer last ping day"
+        },
+        "path": "cccccccccccccccccccccccccccccccc\\1.0_0"
+      }
+    }
+  }
+}
