@@ -2,6 +2,7 @@
 
 import binascii
 import plistlib
+import re
 
 from xml.parsers import expat
 
@@ -26,6 +27,10 @@ class PlistParser(interface.FileObjectParser):
     _UTF32BE_BYTE_ORDER_MARK = b"\x00\x00\xfe\xff"
     _UTF32LE_BYTE_ORDER_MARK = b"\xff\xfe\x00\x00"
     _UTF8_BYTE_ORDER_MARK = b"\xef\xbb\xbf"
+
+    _XML_DECLARATION_ENCODING_RE = re.compile(
+        r"\A(<\?xml[^>]*?\sencoding\s*=\s*)([\"'])[^\"']*\2"
+    )
 
     _plugin_classes = {}
 
@@ -58,6 +63,39 @@ class PlistParser(interface.FileObjectParser):
 
         return 0, "ascii"
 
+    def _ReadPlist(self, plist_data, byte_order_mark_size, encoding):
+        """Reads a plist.
+
+        Args:
+          plist_data (bytes): plist data.
+          byte_order_mark_size (int): size of the byte-order-mark or 0 if no
+              byte-order-mark was detected.
+          encoding (str): encoding indicated by the byte-order-mark.
+
+        Returns:
+          object: top level object of the plist.
+
+        Raises:
+          LookupError: if the plist is an XML file that contains an unsupported
+              encoding and has no byte-order-mark.
+        """
+        try:
+            return plistlib.loads(plist_data)
+
+        except LookupError:
+            # LookupError will be raised in cases where the plist is an XML file
+            # that contains an unsupported encoding, such as "unicode" or "UCS-2".
+            # If the XML file has a byte-order-mark it is used to re-encode the XML
+            # file as UTF-8.
+            if not byte_order_mark_size:
+                raise
+
+        xml_string = plist_data[byte_order_mark_size:].decode(encoding)
+        xml_string = self._XML_DECLARATION_ENCODING_RE.sub(
+            r'\g<1>"UTF-8"', xml_string, count=1
+        )
+        return plistlib.loads(xml_string.encode("utf-8"))
+
     @classmethod
     def GetFormatSpecification(cls):
         """Retrieves the format specification.
@@ -87,6 +125,9 @@ class PlistParser(interface.FileObjectParser):
 
         has_leading_whitespace = False
 
+        byte_order_mark_size = 0
+        encoding = None
+
         is_binary_plist = plist_data.startswith(b"bplist0")
         if not is_binary_plist:
             byte_order_mark_size, encoding = self._CheckByteOrderMark(plist_data)
@@ -115,7 +156,9 @@ class PlistParser(interface.FileObjectParser):
                     )
 
         try:
-            top_level_object = plistlib.loads(plist_data)
+            top_level_object = self._ReadPlist(
+                plist_data, byte_order_mark_size, encoding
+            )
 
         except (
             AttributeError,
@@ -127,7 +170,7 @@ class PlistParser(interface.FileObjectParser):
 
         except (LookupError, ValueError) as exception:
             # LookupError will be raised in cases where the plist is an XML file
-            # that contains an unsupported encoding.
+            # that contains an unsupported encoding and has no byte-order-mark.
             # ValueError will be raised in cases where the plist is an XML file
             # that contains an unsupported date and time value.
             parser_mediator.ProduceWarning(
