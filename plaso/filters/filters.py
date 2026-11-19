@@ -52,6 +52,15 @@ class Filter:
             return codecs.decode(value, "utf8", "ignore")
         return value
 
+    def GetTimestampBounds(self):
+        """Retrieves the bounds of the timestamps of the events that can match.
+
+        Returns:
+          tuple[int, int]: inclusive lower and upper bound of the timestamps of
+              the events that can match the filter, where None represents no bound.
+        """
+        return None, None
+
     @abc.abstractmethod
     def Matches(self, event, event_data, event_data_stream, event_tag):
         """Determines if the event, data and tag match the filter.
@@ -72,6 +81,27 @@ class AndFilter(Filter):
 
     Note that if no conditions are passed, all objects will pass.
     """
+
+    def GetTimestampBounds(self):
+        """Retrieves the bounds of the timestamps of the events that can match.
+
+        Returns:
+          tuple[int, int]: inclusive lower and upper bound of the timestamps of
+              the events that can match the filter, where None represents no bound.
+        """
+        lower_bound = None
+        upper_bound = None
+        for sub_filter in self.args:
+            sub_lower_bound, sub_upper_bound = sub_filter.GetTimestampBounds()
+            if sub_lower_bound is not None:
+                if lower_bound is None or sub_lower_bound > lower_bound:
+                    lower_bound = sub_lower_bound
+
+            if sub_upper_bound is not None:
+                if upper_bound is None or sub_upper_bound < upper_bound:
+                    upper_bound = sub_upper_bound
+
+        return lower_bound, upper_bound
 
     def Matches(self, event, event_data, event_data_stream, event_tag):
         """Determines if the event, data and tag match the filter.
@@ -207,6 +237,11 @@ class GenericBinaryOperator(BinaryOperator):
     # Attributes that are stored in the event attribute container.
     _EVENT_ATTRIBUTE_NAMES = frozenset(["timestamp", "timestamp_desc"])
 
+    # Whether the operator bounds the timestamp of matching events from below
+    # or above, when used to compare the timestamp attribute.
+    _BOUNDS_TIMESTAMP_FROM_BELOW = False
+    _BOUNDS_TIMESTAMP_FROM_ABOVE = False
+
     _UNSUPPORTED_ATTRIBUTE_NAMES = frozenset(
         ["message", "parser", "source", "source_long", "source_short", "sourcetype"]
     )
@@ -306,6 +341,40 @@ class GenericBinaryOperator(BinaryOperator):
 
         return attribute_value
 
+    def GetTimestampBounds(self):
+        """Retrieves the bounds of the timestamps of the events that can match.
+
+        Returns:
+          tuple[int, int]: inclusive lower and upper bound of the timestamps of
+              the events that can match the filter, where None represents no bound.
+        """
+        if (
+            self.left_operand != "timestamp"
+            or not self._bool_value
+            or not isinstance(self.right_operand, dfdatetime_interface.DateTimeValues)
+        ):
+            return None, None
+
+        try:
+            timestamp = self.right_operand.GetPlasoTimestamp()
+        except ValueError:
+            timestamp = None
+
+        if timestamp is None:
+            return None, None
+
+        # The comparison of date and time values is not limited to microsecond
+        # precision, hence the bounds are widened by 1 microsecond.
+        lower_bound = None
+        if self._BOUNDS_TIMESTAMP_FROM_BELOW:
+            lower_bound = timestamp - 1
+
+        upper_bound = None
+        if self._BOUNDS_TIMESTAMP_FROM_ABOVE:
+            upper_bound = timestamp + 1
+
+        return lower_bound, upper_bound
+
     def FlipBool(self):
         """Negates the internal boolean value attribute."""
         logger.debug("Negative matching.")
@@ -334,6 +403,9 @@ class GenericBinaryOperator(BinaryOperator):
 
 class EqualsOperator(GenericBinaryOperator):
     """Equals (==) operator."""
+
+    _BOUNDS_TIMESTAMP_FROM_BELOW = True
+    _BOUNDS_TIMESTAMP_FROM_ABOVE = True
 
     def _CompareValue(self, event_value, filter_value):
         """Compares if two values are equal.
@@ -367,6 +439,8 @@ class NotEqualsOperator(GenericBinaryOperator):
 class LessThanOperator(GenericBinaryOperator):
     """Less than (<) operator."""
 
+    _BOUNDS_TIMESTAMP_FROM_ABOVE = True
+
     def _CompareValue(self, event_value, filter_value):
         """Compares if the event value is less than the second.
 
@@ -382,6 +456,8 @@ class LessThanOperator(GenericBinaryOperator):
 
 class LessEqualOperator(GenericBinaryOperator):
     """Less than or equals (<=) operator."""
+
+    _BOUNDS_TIMESTAMP_FROM_ABOVE = True
 
     def _CompareValue(self, event_value, filter_value):
         """Compares if the event value is less than or equals the second.
@@ -400,6 +476,8 @@ class LessEqualOperator(GenericBinaryOperator):
 class GreaterThanOperator(GenericBinaryOperator):
     """Greater than (>) operator."""
 
+    _BOUNDS_TIMESTAMP_FROM_BELOW = True
+
     def _CompareValue(self, event_value, filter_value):
         """Compares if the event value is greater than the second.
 
@@ -415,6 +493,8 @@ class GreaterThanOperator(GenericBinaryOperator):
 
 class GreaterEqualOperator(GenericBinaryOperator):
     """Greater than or equals (>=) operator."""
+
+    _BOUNDS_TIMESTAMP_FROM_BELOW = True
 
     def _CompareValue(self, event_value, filter_value):
         """Compares if the event value is greater than or equals the second.
