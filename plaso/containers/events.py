@@ -68,15 +68,19 @@ def CalculateEventValuesHash(
     """
     attributes = [f"data_type: {event_data.data_type:s}"]
 
+    ignored_attributes = EventData.EVENT_VALUES_HASH_IGNORED_ATTRIBUTES
+    scalar_types = EventData.EVENT_VALUES_HASH_SCALAR_TYPES
+
     for attribute_name, attribute_value in sorted(event_data.GetAttributes()):
-        if attribute_value is None or attribute_name in (
-            "_corrupted",
-            "_event_data_stream_identifier",
-            "_event_values_hash",
-            "_parser_chain",
-            "_recovered",
-            "data_type",
-        ):
+        if attribute_name in ignored_attributes:
+            continue
+
+        # Values of scalar types, other than subclasses, are added directly.
+        if type(attribute_value) in scalar_types:
+            attributes.append(f"{attribute_name:s}: {attribute_value!s}")
+            continue
+
+        if attribute_value is None:
             continue
 
         # Ignore date and time values.
@@ -246,6 +250,21 @@ class EventData(interface.AttributeContainer):
         "_parser_chain",
         "_recovered",
     ]
+
+    # Names of the attributes that are not part of the event values hash.
+    EVENT_VALUES_HASH_IGNORED_ATTRIBUTES = frozenset(
+        [
+            "_corrupted",
+            "_event_data_stream_identifier",
+            "_event_values_hash",
+            "_parser_chain",
+            "_recovered",
+            "data_type",
+        ]
+    )
+
+    # Types of attribute values that are always part of the event values hash.
+    EVENT_VALUES_HASH_SCALAR_TYPES = frozenset([bool, float, int, str])
 
     def __init__(self, data_type=None):
         """Initializes an event data attribute container.
