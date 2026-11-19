@@ -436,7 +436,9 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
             ]
         )
 
-    def _MergeAttributeContainer(self, storage_writer, merge_helper, container):
+    def _MergeAttributeContainer(
+        self, storage_writer, merge_helper, container, stored_data=None
+    ):
         """Merges an attribute container from a task store into the storage writer.
 
         Args:
@@ -444,6 +446,9 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           merge_helper (ExtractionTaskMergeHelper): helper to merge attribute
               containers.
           container (AttributeContainer): attribute container.
+          stored_data (Optional[object]): data of the attribute container as stored
+              in the task store, which can be added to the storage writer as-is,
+              or None if not available.
         """
         self._status = definitions.STATUS_INDICATOR_MERGING
 
@@ -519,7 +524,12 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
             identifier = container.GetIdentifier()
             lookup_key = identifier.CopyToString()
 
-        storage_writer.AddAttributeContainer(container)
+        if stored_data is None:
+            storage_writer.AddAttributeContainer(container)
+        else:
+            storage_writer.AddAttributeContainerWithStoredData(
+                container, stored_data, merge_helper.compression_format
+            )
 
         if lookup_key:
             identifier = container.GetIdentifier()
@@ -572,17 +582,19 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         """
         number_of_containers = 0
 
-        container = merge_helper.GetAttributeContainer()
+        container, stored_data = merge_helper.GetAttributeContainerWithStoredData()
 
         while container:
             number_of_containers += 1
 
-            self._MergeAttributeContainer(storage_writer, merge_helper, container)
+            self._MergeAttributeContainer(
+                storage_writer, merge_helper, container, stored_data=stored_data
+            )
 
             if 0 < maximum_number_of_containers <= number_of_containers:
                 break
 
-            container = merge_helper.GetAttributeContainer()
+            container, stored_data = merge_helper.GetAttributeContainerWithStoredData()
 
         return number_of_containers
 
