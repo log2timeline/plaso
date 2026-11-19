@@ -846,7 +846,9 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
             argument_parser, names=argument_helper_names
         )
-        self.AddLogFileOptions(argument_parser)
+        helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+            argument_parser, names=["log_file"]
+        )
 
         self.AddStorageMediaImageOptions(argument_parser)
         self.AddVSSProcessingOptions(argument_parser)
@@ -961,7 +963,9 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
             return
 
         self._ParseInformationalOptions(options)
-        self._ParseLogFileOptions(options)
+        helpers_manager.ArgumentHelperManager.ParseOptions(
+            options, self, names=["log_file"]
+        )
 
         self._ParseStorageMediaOptions(options)
 
