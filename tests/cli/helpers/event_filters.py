@@ -29,10 +29,10 @@ Test argument parser.
 
 positional arguments:
   FILTER                A filter that can be used to filter the dataset before
-                        it is written into storage. More information about the
-                        filters and how to use them can be found here: https:/
-                        /plaso.readthedocs.io/en/latest/sources/user/Event-
-                        filters.html
+                        it is written to the output. More information about
+                        the filters and how to use them can be found here: htt
+                        ps://plaso.readthedocs.io/en/latest/sources/user/Event
+                        -filters.html
 
 {cli_test_lib.ARGPARSE_OPTIONS:s}:
   --slice DATE_TIME     Date and time to create a time slice around. This
@@ -40,8 +40,9 @@ positional arguments:
                         happened X minutes before and after the defined date,
                         where X is controlled by the --slice_size option,
                         which is 5 minutes by default. The date and time must
-                        be specified in ISO 8601 format including time zone
-                        offset, for example: 20200619T20:09:23+02:00.
+                        be specified in ISO 8601 format, for example:
+                        2020-06-19T20:09:23+02:00. The time zone offset is
+                        optional and defaults to UTC.
   --slice_size, --slice-size SLICE_SIZE
                         Defines the slice size. In the case of a regular time
                         slice it defines the number of minutes the slice size
@@ -65,10 +66,10 @@ Test argument parser.
 
 positional arguments:
   FILTER                A filter that can be used to filter the dataset before
-                        it is written into storage. More information about the
-                        filters and how to use them can be found here: https:/
-                        /plaso.readthedocs.io/en/latest/sources/user/Event-
-                        filters.html
+                        it is written to the output. More information about
+                        the filters and how to use them can be found here: htt
+                        ps://plaso.readthedocs.io/en/latest/sources/user/Event
+                        -filters.html
 
 {cli_test_lib.ARGPARSE_OPTIONS:s}:
   --slice DATE_TIME     Date and time to create a time slice around. This
@@ -76,8 +77,9 @@ positional arguments:
                         happened X minutes before and after the defined date,
                         where X is controlled by the --slice_size option,
                         which is 5 minutes by default. The date and time must
-                        be specified in ISO 8601 format including time zone
-                        offset, for example: 20200619T20:09:23+02:00.
+                        be specified in ISO 8601 format, for example:
+                        2020-06-19T20:09:23+02:00. The time zone offset is
+                        optional and defaults to UTC.
   --slice_size SLICE_SIZE, --slice-size SLICE_SIZE
                         Defines the slice size. In the case of a regular time
                         slice it defines the number of minutes the slice size
