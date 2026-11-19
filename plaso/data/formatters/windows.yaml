@@ -300,6 +300,70 @@ short_source: 'RECBIN'
 source: 'Recycle Bin'
 ---
 type: 'conditional'
+data_type: 'windows:defender:mpenginedb:attribute_persist_context'
+message:
+- 'Context: {context}'
+- 'Path: {path}'
+short_message:
+- 'Context: {context}'
+- 'Path: {path}'
+short_source: 'AV'
+source: 'Windows Defender MpEngineDb'
+---
+type: 'conditional'
+data_type: 'windows:defender:mpenginedb:backup_process_info'
+message:
+- 'Path: {path}'
+- 'Next USN: {next_usn}'
+- 'Impacted name spaces: {impacted_namespaces}'
+short_message:
+- 'Path: {path}'
+short_source: 'AV'
+source: 'Windows Defender MpEngineDb'
+---
+type: 'conditional'
+data_type: 'windows:defender:mpenginedb:file_hash'
+message:
+- 'MD5: {md5_hash}'
+- 'SHA-1: {sha1_hash}'
+- 'SHA-256: {sha256_hash}'
+- 'ssdeep: {ssdeep_hash}'
+- 'MFT entry: {mft_entry}'
+- 'MFT sequence number: {mft_sequence_number}'
+- 'USN: {usn}'
+- 'Volume serial number: 0x{volume_serial_number:08x}'
+short_message:
+- 'SHA-256: {sha256_hash}'
+short_source: 'AV'
+source: 'Windows Defender MpEngineDb'
+---
+type: 'conditional'
+data_type: 'windows:defender:mpenginedb:low_fidelity'
+message:
+- 'Path: {path}'
+- 'Signature SHA-1: {signature_sha1}'
+- 'Signature sequence: {signature_sequence}'
+- 'Is synchronous: {is_synchronous}'
+short_message:
+- 'Path: {path}'
+short_source: 'AV'
+source: 'Windows Defender MpEngineDb'
+---
+type: 'conditional'
+data_type: 'windows:defender:mpenginedb:rolling_queue'
+message:
+- 'Queue: {queue_name}'
+- 'Key: {entry_key}'
+- 'Process image: {process_image}'
+- 'PID: {process_identifier}'
+- 'Value: {entry_value}'
+short_message:
+- 'Queue: {queue_name}'
+- 'Key: {entry_key}'
+short_source: 'AV'
+source: 'Windows Defender MpEngineDb'
+---
+type: 'conditional'
 data_type: 'windows:onedrive:log'
 message:
 - 'Code filename: {code_filename}'
