@@ -261,6 +261,7 @@ bagmru | Parser for BagMRU (or ShellBags) Registry data.
 bam | Parser for Background Activity Moderator (BAM) Registry data.
 ccleaner | Parser for CCleaner Registry data.
 diagnosed_applications | Parser for Diagnosed Applications Registry data.
+explorer_feature_usage | Parser for Windows Explorer feature usage Registry data.
 explorer_mountpoints2 | Parser for Windows Explorer mount points Registry data.
 explorer_programscache | Parser for Windows Explorer Programs Cache Registry data.
 microsoft_office_mru | Parser for Microsoft Office MRU Registry data.
