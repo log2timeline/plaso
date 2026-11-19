@@ -67,6 +67,7 @@ parsers:
 - text/selinux
 - text/syslog
 - text/syslog_traditional
+- text/trash_info
 - text/vsftpd
 - text/xchatlog
 - text/xchatscrollback
