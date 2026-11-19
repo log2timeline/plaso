@@ -9,6 +9,11 @@ import sys
 import tempfile
 import unittest
 
+from dfvfs.lib import definitions as dfvfs_definitions
+from dfvfs.path import factory as path_spec_factory
+from dfvfs.resolver import resolver as path_spec_resolver
+
+from plaso.containers import events
 from plaso.parsers import sqlite
 
 # Register all plugins.
@@ -89,6 +94,45 @@ class SQLiteDatabaseTest(test_lib.ParserTestCase):
             self.assertEqual(database.columns_per_table['events"log'], ["field1"])
         finally:
             database.Close()
+
+    def testOpenWithInvalidDatabaseRemovesTemporaryFiles(self):
+        """Tests that Open removes the temporary files of an invalid database."""
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            database = sqlite.SQLiteDatabase(
+                "invalid.db", temporary_directory=temporary_directory
+            )
+
+            file_object = io.BytesIO(b"This is not a SQLite database." * 100)
+
+            with self.assertRaises(sqlite3.DatabaseError):
+                database.Open(file_object)
+
+            self.assertEqual(os.listdir(temporary_directory), [])
+
+            # Closing a database that failed to open should not raise.
+            database.Close()
+
+    def testCloseWithUnremovableTemporaryFile(self):
+        """Tests that Close warns about a temporary file it cannot remove."""
+        database_file_path = self._GetTestFilePath(["android", "contacts2.db"])
+        self._SkipIfPathNotExists(database_file_path)
+
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            database = sqlite.SQLiteDatabase(
+                "contacts2.db", temporary_directory=temporary_directory
+            )
+            with open(database_file_path, "rb") as database_file_object:
+                database.Open(database_file_object)
+
+            # A directory cannot be removed with os.remove.
+            temporary_file_name = os.listdir(temporary_directory)[0]
+            os.mkdir(os.path.join(temporary_directory, f"{temporary_file_name}-shm"))
+
+            with self.assertLogs("parsers", level="WARNING") as log_context:
+                database.Close()
+
+            self.assertEqual(len(log_context.records), 1)
+            self.assertIn("Unable to remove temporary file", log_context.output[0])
 
     def testQueryOnDatabaseWithWAL(self):
         """Tests the Query function on a database with a WAL file."""
@@ -292,6 +336,33 @@ class SQLiteParserTest(test_lib.ParserTestCase):
             "recovery_warning"
         )
         self.assertEqual(number_of_warnings, 0)
+
+    def testParseFileEntryRemovesTemporaryFiles(self):
+        """Tests that ParseFileEntry removes its temporary files."""
+        test_file_path = self._GetTestFilePath(["wal_database.db"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
+        )
+        file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+
+        storage_writer = self._CreateStorageWriter()
+        parser_mediator = self._CreateParserMediator(
+            storage_writer, file_entry=file_entry
+        )
+
+        event_data_stream = events.EventDataStream()
+        event_data_stream.path_spec = file_entry.path_spec
+        parser_mediator.ProduceEventDataStream(event_data_stream)
+
+        parser = sqlite.SQLiteParser()
+
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            parser_mediator.SetTemporaryDirectory(temporary_directory)
+            parser.Parse(parser_mediator)
+
+            self.assertEqual(os.listdir(temporary_directory), [])
 
 
 if __name__ == "__main__":
