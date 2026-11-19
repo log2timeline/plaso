@@ -1832,6 +1832,16 @@ attribute_mappings:
   description: 'Content Modification Time'
 place_holder_event: true
 ---
+data_type: 'windows:registry:landesk:software_monitoring'
+attribute_mappings:
+- name: 'first_execution_time'
+  description: 'First Time Executed'
+- name: 'last_execution_time'
+  description: 'Last Time Executed'
+- name: 'last_written_time'
+  description: 'Content Modification Time'
+place_holder_event: true
+---
 data_type: 'windows:registry:motherboard_info'
 attribute_mappings:
 - name: 'last_written_time'
