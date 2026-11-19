@@ -83,6 +83,7 @@ file_history | Parser for Windows 8 File History ESE database files.
 msie_webcache | Parser for Internet Explorer WebCache ESE database (WebCacheV01.dat, WebCacheV24.dat) files.
 srum | Parser for System Resource Usage Monitor (SRUM) ESE database files.
 user_access_logging | Parser for Windows User Access Logging ESE database files.
+windows_search | Parser for Windows 7 Search ESE database (Windows.edb) files.
 
 ### Parser plugins: jsonl
 
