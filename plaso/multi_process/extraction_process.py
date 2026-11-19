@@ -4,6 +4,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import context
 from dfvfs.resolver import resolver as path_spec_resolver
 
+from plaso.containers import event_sources
 from plaso.engine import worker
 from plaso.lib import definitions
 from plaso.lib import errors
@@ -19,6 +20,10 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
     # Maximum number of dfVFS file system objects to cache in the worker process.
     _FILE_SYSTEM_CACHE_SIZE = 3
 
+    # Maximum number of sub directories that are processed as part of a task,
+    # instead of being produced as event sources that each require a task.
+    _MAXIMUM_NUMBER_OF_LOCAL_DIRECTORIES = 128
+
     def __init__(
         self,
         task_queue,
@@ -26,6 +31,7 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
         system_configurations,
         windows_event_log_providers,
         registry_find_specs,
+        excluded_find_specs=None,
         **kwargs,
     ):
         """Initializes an extraction worker process.
@@ -42,12 +48,16 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
               EventLog providers.
           registry_find_specs (list[dfwinreg.FindSpec]): Windows Registry find
               specifications.
+          excluded_find_specs (Optional[list[dfvfs.FindSpec]]): find
+              specifications of file system paths that are excluded from
+              extraction.
           kwargs: keyword arguments to pass to multiprocessing.Process.
         """
         super().__init__(processing_configuration, **kwargs)
         self._abort = False
         self._buffer_size = 0
         self._current_display_name = ""
+        self._excluded_find_specs = excluded_find_specs
         self._extraction_worker = None
         self._file_system_cache = []
         self._number_of_consumed_sources = 0
@@ -213,6 +223,9 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
         self._extraction_worker.SetExtractionConfiguration(
             self._processing_configuration.extraction
         )
+        self._extraction_worker.SetLocalDirectoryProcessing(
+            True, excluded_find_specs=self._excluded_find_specs
+        )
         self._parser_mediator.StartProfiling(
             self._processing_configuration.profiling,
             self._name,
@@ -376,6 +389,44 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
                 self._extraction_worker, self._parser_mediator, task.path_spec
             )
             self._number_of_consumed_sources += 1
+
+            # Sub directories are processed as part of the task, instead of each
+            # requiring a separate task.
+            number_of_local_directories = 0
+            while (
+                not self._abort
+                and number_of_local_directories
+                < self._MAXIMUM_NUMBER_OF_LOCAL_DIRECTORIES
+            ):
+                path_spec = self._extraction_worker.PopLocalDirectoryPathSpec()
+                if not path_spec:
+                    break
+
+                file_entry = path_spec_resolver.Resolver.OpenFileEntry(
+                    path_spec, resolver_context=self._parser_mediator.resolver_context
+                )
+                if file_entry is None:
+                    # A sub directory that cannot be opened is produced as an
+                    # event source, so that the foreman produces the same
+                    # extraction warning as for other event sources.
+                    event_source = event_sources.EventSource(
+                        file_entry_type=dfvfs_definitions.FILE_ENTRY_TYPE_DIRECTORY,
+                        path_spec=path_spec,
+                    )
+                    self._parser_mediator.ProduceEventSource(event_source)
+                    continue
+
+                self._ProcessPathSpec(
+                    self._extraction_worker, self._parser_mediator, path_spec
+                )
+                self._number_of_consumed_sources += 1
+                number_of_local_directories += 1
+
+            # Sub directories that were not processed are produced as event
+            # sources, so that they are processed by other tasks.
+            self._extraction_worker.ProduceLocalDirectoryEventSources(
+                self._parser_mediator
+            )
 
         finally:
             task.aborted = self._abort
