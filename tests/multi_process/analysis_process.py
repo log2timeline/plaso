@@ -2,6 +2,7 @@
 """Tests for the multi-processing analysis process."""
 
 import os
+import threading
 import time
 import unittest
 
@@ -9,6 +10,7 @@ from plaso.analysis import interface as analysis_interface
 from plaso.analysis import mediator as analysis_mediator
 from plaso.containers import events
 from plaso.engine import configurations
+from plaso.lib import definitions
 from plaso.multi_process import analysis_process
 from plaso.multi_process import plaso_queue
 from plaso.multi_process import zeromq_queue
@@ -169,6 +171,46 @@ class AnalysisProcessTest(test_lib.MultiProcessingTestCase):
             # Sleep for 1 second to allow the analysis process to terminate.
             # Before the temporary directory is removed.
             time.sleep(1)
+
+    def testMainInProcess(self):
+        """Tests the _Main function run in the current process."""
+        output_event_queue = zeromq_queue.ZeroMQPushBindQueue(
+            name="test output event queue", timeout_seconds=self._QUEUE_TIMEOUT
+        )
+        output_event_queue.Open()
+
+        input_event_queue = zeromq_queue.ZeroMQPullConnectQueue(
+            name="test input event queue",
+            delay_open=True,
+            port=output_event_queue.port,
+            timeout_seconds=self._QUEUE_TIMEOUT,
+        )
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            os.mkdir(os.path.join(temp_directory, "processed"))
+
+            configuration = configurations.ProcessingConfiguration()
+            configuration.task_storage_path = temp_directory
+
+            test_process = analysis_process.AnalysisProcess(
+                input_event_queue,
+                TestAnalysisPlugin(),
+                configuration,
+                [],
+                name="TestAnalysis",
+            )
+            test_process._FOREMAN_STATUS_WAIT = 0
+            test_process._pid = os.getpid()
+
+            pusher = threading.Thread(
+                target=output_event_queue.PushItem, args=(plaso_queue.QueueAbort(),)
+            )
+            pusher.start()
+            test_process._Main()
+            pusher.join()
+            output_event_queue.Close(abort=True)
+
+        self.assertEqual(test_process._status, definitions.STATUS_INDICATOR_COMPLETED)
 
     def testProcessEventTriple(self):
         """Tests the _ProcessEventTriple function."""

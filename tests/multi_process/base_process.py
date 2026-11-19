@@ -73,12 +73,22 @@ class MultiProcessBaseProcessTest(shared_test_lib.BaseTestCase):
         test_process = TestProcess(configuration, name="TestBase")
         self.assertIsNotNone(test_process)
 
+        configuration.log_filename = os.path.join("logs", "plaso.log")
+
+        test_process = TestProcess(configuration, name="TestBase")
+        self.assertEqual(
+            test_process._log_filename, os.path.join("logs", "TestBase_plaso.log")
+        )
+
     def testName(self):
-        """Tests the name property."""
+        """Tests the name attribute provided by multiprocessing.Process."""
         configuration = configurations.ProcessingConfiguration()
 
         test_process = TestProcess(configuration, name="TestBase")
         self.assertEqual(test_process.name, "TestBase")
+
+        test_process.name = "TestRenamed"
+        self.assertEqual(test_process.name, "TestRenamed")
 
     def testOnCriticalError(self):
         """Tests the _OnCriticalError function."""
@@ -148,7 +158,61 @@ class MultiProcessBaseProcessTest(shared_test_lib.BaseTestCase):
 
         self.assertEqual(process_status, {})
 
-    # TODO: add test for _StopProcessStatusRPCServer.
+    def testStartAndStopProfiling(self):
+        """Tests the _StartProfiling and _StopProfiling functions."""
+        with shared_test_lib.TempDirectory() as temp_directory:
+            configuration = configurations.ProcessingConfiguration()
+            configuration.profiling.directory = temp_directory
+            configuration.profiling.profilers = set(
+                [
+                    "analyzers",
+                    "memory",
+                    "processing",
+                    "serializers",
+                    "storage",
+                    "tasks",
+                ]
+            )
+
+            test_process = TestProcess(configuration, name="TestBase")
+
+            test_process._StartProfiling(None)
+            self.assertIsNone(test_process._memory_profiler)
+
+            test_process._StartProfiling(configuration.profiling)
+            self.assertIsNotNone(test_process._analyzers_profiler)
+            self.assertIsNotNone(test_process._memory_profiler)
+            self.assertIsNotNone(test_process._processing_profiler)
+            self.assertIsNotNone(test_process._serializers_profiler)
+            self.assertIsNotNone(test_process._storage_profiler)
+            self.assertIsNotNone(test_process._tasks_profiler)
+
+            test_process._StopProfiling()
+            self.assertIsNone(test_process._analyzers_profiler)
+            self.assertIsNone(test_process._memory_profiler)
+            self.assertIsNone(test_process._processing_profiler)
+            self.assertIsNone(test_process._serializers_profiler)
+            self.assertIsNone(test_process._storage_profiler)
+            self.assertIsNone(test_process._tasks_profiler)
+
+    def testStopProcessStatusRPCServer(self):
+        """Tests the _StopProcessStatusRPCServer function."""
+        configuration = configurations.ProcessingConfiguration()
+
+        test_process = TestProcess(configuration, name="TestBase")
+        test_process._pid = os.getpid()
+
+        # Test without a running RPC server.
+        test_process._StopProcessStatusRPCServer()
+        self.assertIsNone(test_process._rpc_server)
+
+        test_process._StartProcessStatusRPCServer()
+        self.assertIsNotNone(test_process._rpc_server)
+
+        test_process._StopProcessStatusRPCServer()
+        self.assertIsNone(test_process._rpc_server)
+        self.assertEqual(test_process.rpc_port.value, 0)
+
     # TODO: add test for _WaitForStatusNotRunning.
     # TODO: add test for run.
 

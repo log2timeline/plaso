@@ -68,16 +68,11 @@ class MultiProcessBaseProcess(multiprocessing.Process):
                     self._processing_configuration.log_filename
                 )
                 self._log_filename = os.path.join(
-                    log_path, f"{self._name:s}_{log_filename:s}"
+                    log_path, f"{self.name:s}_{log_filename:s}"
                 )
 
         # We need to share the RPC port number with the engine process.
         self.rpc_port = multiprocessing.Value("I", 0)
-
-    @property
-    def name(self):
-        """str: process name."""
-        return self._name
 
     # pylint: disable=redundant-returns-doc
     @abc.abstractmethod
@@ -163,7 +158,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
         if not port:
             logger.error(
                 (
-                    f"Unable to start a process status RPC server for {self._name:s} "
+                    f"Unable to start a process status RPC server for {self.name:s} "
                     f"(PID: {self._pid:d})"
                 )
             )
@@ -172,7 +167,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
 
         self.rpc_port.value = port
 
-        logger.debug(f"Process: {self._name:s} process status RPC server started.")
+        logger.debug(f"Process: {self.name:s} process status RPC server started.")
 
     def _StartProfiling(self, configuration):
         """Starts profiling.
@@ -184,38 +179,36 @@ class MultiProcessBaseProcess(multiprocessing.Process):
             return
 
         if configuration.HaveProfileMemory():
-            self._memory_profiler = profilers.MemoryProfiler(self._name, configuration)
+            self._memory_profiler = profilers.MemoryProfiler(self.name, configuration)
             self._memory_profiler.Start()
 
         if configuration.HaveProfileAnalyzers():
-            identifier = f"{self._name:s}-analyzers"
+            identifier = f"{self.name:s}-analyzers"
             self._analyzers_profiler = profilers.AnalyzersProfiler(
                 identifier, configuration
             )
             self._analyzers_profiler.Start()
 
         if configuration.HaveProfileProcessing():
-            identifier = f"{self._name:s}-processing"
+            identifier = f"{self.name:s}-processing"
             self._processing_profiler = profilers.ProcessingProfiler(
                 identifier, configuration
             )
             self._processing_profiler.Start()
 
         if configuration.HaveProfileSerializers():
-            identifier = f"{self._name:s}-serializers"
+            identifier = f"{self.name:s}-serializers"
             self._serializers_profiler = profilers.SerializersProfiler(
                 identifier, configuration
             )
             self._serializers_profiler.Start()
 
         if configuration.HaveProfileStorage():
-            self._storage_profiler = profilers.StorageProfiler(
-                self._name, configuration
-            )
+            self._storage_profiler = profilers.StorageProfiler(self.name, configuration)
             self._storage_profiler.Start()
 
         if configuration.HaveProfileTasks():
-            self._tasks_profiler = profilers.TasksProfiler(self._name, configuration)
+            self._tasks_profiler = profilers.TasksProfiler(self.name, configuration)
             self._tasks_profiler.Start()
 
     def _StopProcessStatusRPCServer(self):
@@ -231,7 +224,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
         self._rpc_server = None
         self.rpc_port.value = 0
 
-        logger.debug(f"Process: {self._name:s} process status RPC server stopped.")
+        logger.debug(f"Process: {self.name:s} process status RPC server stopped.")
 
     def _StopProfiling(self):
         """Stops profiling."""
@@ -284,7 +277,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
             profile.enable()
             profile.runcall(self._RunProcess)
             profile.disable()
-            profile.dump_stats(f"{self._name:s}-profile.output")
+            profile.dump_stats(f"{self.name:s}-profile.output")
         else:
             self._RunProcess()
 
@@ -322,19 +315,19 @@ class MultiProcessBaseProcess(multiprocessing.Process):
             quiet_mode=self._quiet_mode,
         )
 
-        logger.debug(f"Process: {self._name:s} (PID: {self._pid:d}) started.")
+        logger.debug(f"Process: {self.name:s} (PID: {self._pid:d}) started.")
 
         self._StartProcessStatusRPCServer()
 
-        logger.debug(f"Process: {self._name:s} (PID: {self._pid:d}) enter main.")
+        logger.debug(f"Process: {self.name:s} (PID: {self._pid:d}) enter main.")
 
         self._Main()
 
-        logger.debug(f"Process: {self._name:s} (PID: {self._pid:d}) exit main.")
+        logger.debug(f"Process: {self.name:s} (PID: {self._pid:d}) exit main.")
 
         self._StopProcessStatusRPCServer()
 
-        logger.debug(f"Process: {self._name:s} (PID: {self._pid:d}) stopped.")
+        logger.debug(f"Process: {self.name:s} (PID: {self._pid:d}) stopped.")
 
         # Make sure log files are cleanly closed.
         logging.shutdown()
