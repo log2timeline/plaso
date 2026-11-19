@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """Tests for the YAML-based formatters file."""
 
+import glob
 import io
+import os
 import unittest
 
+from plaso.formatters import interface
 from plaso.formatters import yaml_formatters_file
 from plaso.lib import errors
 
@@ -101,6 +104,31 @@ class YAMLFormattersFileTest(shared_test_lib.BaseTestCase):
 
         self.assertEqual(formatters[0].data_type, "test:event")
         self.assertEqual(formatters[1].data_type, "test:fs:stat")
+
+    def testReadFromFileWithDataFormatters(self):
+        """Tests the ReadFromFile function with the formatters data files."""
+        formatters_directory_path = self._GetDataFilePath(["formatters"])
+        test_file_paths = sorted(
+            glob.glob(os.path.join(formatters_directory_path, "*.yaml"))
+        )
+        self.assertNotEqual(test_file_paths, [])
+
+        test_formatters_file = yaml_formatters_file.YAMLFormattersFile()
+
+        for test_file_path in test_file_paths:
+            for formatter in test_formatters_file.ReadFromFile(test_file_path):
+                if not isinstance(formatter, interface.ConditionalEventFormatter):
+                    continue
+
+                with self.subTest(
+                    path=os.path.basename(test_file_path),
+                    data_type=formatter.data_type,
+                ):
+                    # The conditional format string pieces are validated when the
+                    # message is first determined.
+                    with self.assertNoLogs("formatters", level="ERROR"):
+                        formatter.GetMessage({})
+                        formatter.GetMessageShort({})
 
 
 if __name__ == "__main__":
