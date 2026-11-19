@@ -1,6 +1,7 @@
 """This file contains the Task Scheduler Registry keys plugins."""
 
 import os
+import re
 
 from dfdatetime import filetime as dfdatetime_filetime
 
@@ -58,6 +59,16 @@ class TaskCacheWindowsRegistryPlugin(
 
     _DEFINITION_FILE = os.path.join(os.path.dirname(__file__), "task_scheduler.yaml")
 
+    # The task identifier is a GUID in the form: {%GUID%}
+    _GUID_STRING_RE = re.compile(
+        r"\{[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}\}",
+        re.I,
+    )
+
+    # The task identifier is stored as an UTF-16 little-endian string with
+    # end-of-string character and is expected to be 78 bytes in size.
+    _ID_VALUE_DATA_SIZE = 78
+
     def _GetIdValue(self, registry_key):
         """Retrieves the Id value from Task Cache Tree key.
 
@@ -100,17 +111,27 @@ class TaskCacheWindowsRegistryPlugin(
         task_guids = {}
         for sub_key in tree_key.GetSubkeys():
             for value_key, id_value in self._GetIdValue(sub_key):
-                # TODO: improve this check to a regex.
-                # The GUID is in the form {%GUID%} and stored an UTF-16 little-endian
-                # string and should be 78 bytes in size.
-                id_value_data_size = len(id_value.data)
-                if id_value_data_size != 78:
+                if not id_value.DataIsString():
                     parser_mediator.ProduceWarning(
-                        f'unsupported "Id" value data size: {id_value_data_size:d}.'
+                        f'unsupported "Id" value data type: '
+                        f"{id_value.data_type_string:s} in key: {value_key.path:s}."
                     )
                     continue
 
+                id_value_data_size = len(id_value.data)
+                if id_value_data_size != self._ID_VALUE_DATA_SIZE:
+                    parser_mediator.ProduceWarning(
+                        f'unexpected "Id" value data size: {id_value_data_size:d} '
+                        f"in key: {value_key.path:s}."
+                    )
+
                 guid_string = id_value.GetDataAsObject()
+                if not guid_string or not self._GUID_STRING_RE.fullmatch(guid_string):
+                    parser_mediator.ProduceWarning(
+                        f'unsupported "Id" value data in key: {value_key.path:s}.'
+                    )
+                    continue
+
                 task_guids[guid_string] = value_key.name
 
         dynamic_info_map = self._GetDataTypeMap("dynamic_info_record")
