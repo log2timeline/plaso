@@ -2276,7 +2276,9 @@ class DSCFile(BaseUnifiedLoggingFile):
           is_dynamic (bool): dynamic flag.
 
         Returns:
-          ImageValues: image value or None if not available.
+          ImageValues: image values, where only the string is set if the string
+              reference is not within the ranges of the shared-cache strings
+              (DSC) file.
 
         Raises:
           ParseError: if the image values cannot be read.
@@ -2307,10 +2309,7 @@ class DSCFile(BaseUnifiedLoggingFile):
                     text_offset=dsc_range.text_offset,
                 )
 
-        # TODO: if string_reference is invalid use:
-        # "<Invalid shared cache format string offset>"
-
-        return None
+        return ImageValues(string="<Invalid shared cache format string offset>")
 
     def ReadFileObject(self, file_object):
         """Reads a shared-cache strings (dsc) file-like object.
@@ -2933,10 +2932,11 @@ class TraceV3File(BaseUnifiedLoggingFile):
                     image_values = dsc_file.GetImageValues(string_reference, is_dynamic)
 
                 if not image_values:
-                    image_values = ImageValues(
-                        identifier=strings_file_identifier,
-                        text_offset=image_text_offset,
-                    )
+                    image_values = ImageValues()
+
+                if image_values.identifier is None:
+                    image_values.identifier = strings_file_identifier
+                    image_values.text_offset = image_text_offset
 
                 large_shared_cache_data = getattr(
                     tracepoint_data_object, "large_shared_cache_data", None
