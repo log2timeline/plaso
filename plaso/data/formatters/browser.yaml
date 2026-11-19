@@ -369,6 +369,28 @@ short_source: 'WEBHIST'
 source: 'Firefox History'
 ---
 type: 'conditional'
+data_type: 'firefox:mork:history_entry'
+boolean_helpers:
+- input_attribute: 'hidden'
+  output_attribute: 'url_hidden_string'
+  value_if_true: '(URL hidden)'
+- input_attribute: 'typed'
+  output_attribute: 'url_typed_string'
+  value_if_true: '(URL typed)'
+message:
+- '{url}'
+- '({title})'
+- '[count: {visit_count}]'
+- 'Hostname: {hostname}'
+- 'Referrer: {referrer}'
+- '{url_hidden_string}'
+- '{url_typed_string}'
+short_message:
+- 'URL: {url}'
+short_source: 'WEBHIST'
+source: 'Firefox History'
+---
+type: 'conditional'
 data_type: 'firefox:places:bookmark'
 enumeration_helpers:
 - input_attribute: 'bookmark_type'
