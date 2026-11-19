@@ -63,6 +63,43 @@ class OtherTestTextPlugin(TestTextPlugin):
     NAME = "other_test_text_plugin"
 
 
+class FailingTestTextPlugin(TestTextPlugin):
+    """Text plugin that matches the text and fails during processing."""
+
+    NAME = "failing_test_text_plugin"
+
+    processed = False
+
+    # pylint: disable=arguments-differ
+    def CheckRequiredFormat(self, parser_mediator, text_reader):
+        """Check if the log record has the minimal structure required by the plugin.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          text_reader (EncodedTextReader): text reader.
+
+        Returns:
+          bool: True if this is the correct plugin, False otherwise.
+        """
+        return True
+
+    # pylint: disable=arguments-differ
+    def Process(self, parser_mediator, file_object=None, **kwargs):
+        """Extracts events from a text log file.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          file_object (Optional[dfvfs.FileIO]): a file-like object.
+
+        Raises:
+          RuntimeError: always.
+        """
+        FailingTestTextPlugin.processed = True
+        raise RuntimeError("Unable to process file.")
+
+
 class EncodedTextReaderTest(test_lib.ParserTestCase):
     """Tests for encoded text reader."""
 
@@ -317,6 +354,37 @@ class TextLogParserTest(test_lib.ParserTestCase):
         finally:
             text_parser.TextLogParser.DeregisterPlugin(OtherTestTextPlugin)
             text_parser.TextLogParser.DeregisterPlugin(TestTextPlugin)
+
+    def testParseFileObjectWithFailingPlugin(self):
+        """Tests the ParseFileObject function with a plugin that fails."""
+        text_parser.TextLogParser.RegisterPlugins(
+            [FailingTestTextPlugin, OtherTestTextPlugin]
+        )
+
+        try:
+            parser = text_parser.TextLogParser()
+            parser.EnablePlugins([FailingTestTextPlugin.NAME, OtherTestTextPlugin.NAME])
+
+            storage_writer = self._CreateStorageWriter()
+            parser_mediator = self._CreateParserMediator(storage_writer)
+
+            TestTextPlugin.checked_lines = []
+            FailingTestTextPlugin.processed = False
+            file_object = self._CreateFileObject("text.log", b"Text log line\n")
+
+            parser.ParseFileObject(parser_mediator, file_object)
+
+            self.assertTrue(FailingTestTextPlugin.processed)
+            self.assertEqual(TestTextPlugin.checked_lines, [])
+
+            number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+                "extraction_warning"
+            )
+            self.assertEqual(number_of_warnings, 1)
+
+        finally:
+            text_parser.TextLogParser.DeregisterPlugin(OtherTestTextPlugin)
+            text_parser.TextLogParser.DeregisterPlugin(FailingTestTextPlugin)
 
 
 if __name__ == "__main__":
