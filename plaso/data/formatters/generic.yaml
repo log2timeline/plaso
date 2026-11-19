@@ -32,6 +32,22 @@ short_source: 'LOG'
 source: 'Apache Error Log'
 ---
 type: 'conditional'
+data_type: 'apple:wallet:pass'
+message:
+- 'Description: {description}'
+- 'Organization: {organization_name}'
+- 'Logo text: {logo_text}'
+- 'Pass type identifier: {pass_type_identifier}'
+- 'Serial number: {serial_number}'
+- 'Team identifier: {team_identifier}'
+- 'Voided: {voided}'
+short_message:
+- 'Description: {description}'
+- 'Organization: {organization_name}'
+short_source: 'FILE'
+source: 'Apple Wallet pass'
+---
+type: 'conditional'
 data_type: 'atlassian:bitbucket:access'
 message:
 - '{http_request_method}'
