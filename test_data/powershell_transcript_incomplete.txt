@@ -1,0 +1,25 @@
+**********************
+Windows PowerShell transcript start
+Start time: 20230402101500
+Username: HOST\user
+RunAs User: HOST\user
+Configuration Name:
+Machine: HOST (Microsoft Windows NT 10.0.19045.0)
+Host Application: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+Process ID: 1234
+PSVersion: 5.1.19041.1
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.19041.1
+BuildVersion: 10.0.19041.1
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+PS C:\Users\user> (Get-Host).Name
+Windows PowerShell ISE Host
+**********************
+Command start time: 20230402101530
+**********************
+PS C:\Users\user> whoami
+host\user
