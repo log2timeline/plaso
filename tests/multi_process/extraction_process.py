@@ -41,6 +41,8 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
 
     # pylint: disable=protected-access
 
+    _PROCESS_JOIN_TIMEOUT = 60
+
     _QUEUE_TIMEOUT = 5
 
     def testInitialization(self):
@@ -105,9 +107,22 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
                 input_task_queue, configuration, [], [], None, name="TestWorker"
             )
             test_process.start()
+            try:
+                output_task_queue.PushItem(plaso_queue.QueueAbort(), block=False)
 
-            output_task_queue.PushItem(plaso_queue.QueueAbort(), block=False)
-            output_task_queue.Close(abort=True)
+                # Wait for the process to dequeue the abort and exit, before the
+                # task queue is closed, otherwise the abort can be lost and the
+                # process keeps waiting for a task.
+                test_process.join(timeout=self._PROCESS_JOIN_TIMEOUT)
+                self.assertFalse(test_process.is_alive())
+                self.assertEqual(test_process.exitcode, 0)
+
+            finally:
+                if test_process.is_alive():
+                    test_process.kill()
+                    test_process.join()
+
+                output_task_queue.Close(abort=True)
 
     def testProcessPathSpec(self):
         """Tests the _ProcessPathSpec function."""
