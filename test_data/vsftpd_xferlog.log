@@ -1,0 +1,6 @@
+Mon Jun  6 18:43:59 2016 1 192.168.1.9 1884648 /home/jean/trains/Caitlinpromo2.png b _ i r jean ftp 0 * c
+Mon Jun  6 18:44:25 2016 0 192.168.1.9 40120 /home/jean/my trains/a b.jpg b _ o r jean ftp 0 * c
+Fri Jun 10 14:28:50 2016 3 192.168.1.5 1024 /photos/cat.txt a _ i a n ftp 0 * i
+Fri Jun 10 14:29:00 2016 3 192.168.1.5 1024 /photos/cat.txt x _ i a n ftp 0 * i
+Fri Jun 10 14:29:01 2016 3 192.168.1.5 1024 /photos/cat.txt b _ i r jean ftp 0 * c extra
+Fri Jun 10 14:29:02 2016 [pid x] CONNECT: Client "192.168.1.5"
