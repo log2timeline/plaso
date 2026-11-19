@@ -222,7 +222,7 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
         self._client = None
         self._custom_fields = {}
         self._event_documents = []
-        self._field_names = self._DEFAULT_FIELD_NAMES
+        self._field_names = list(self._DEFAULT_FIELD_NAMES)
         self._field_formatting_helper = SharedOpenSearchFieldFormattingHelper()
         self._flush_interval = self._DEFAULT_FLUSH_INTERVAL
         self._host = None
