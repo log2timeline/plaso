@@ -415,10 +415,14 @@ short_message:
 short_source: 'REG'
 source: 'AppCompatCache Registry Key'
 ---
-type: 'basic'
+type: 'conditional'
 data_type: 'windows:registry:bagmru'
-message: '[{key_path}] {entries}'
-short_message: '[{key_path}] {entries}'
+message:
+- '[{key_path}]'
+- '{entries}'
+short_message:
+- '[{key_path}]'
+- '{entries}'
 short_source: 'REG'
 source: 'BagMRU Registry Key'
 ---
@@ -466,9 +470,9 @@ type: 'conditional'
 data_type: 'windows:registry:diagnosed_applications'
 message:
 - 'Process Name: {process_name}'
-- 'Last Detection Time: {last_detection_time}'
 - 'Origin: {key_path}'
-short_message: 'Process Name: {process_name}'
+short_message:
+- 'Process Name: {process_name}'
 short_source: 'REG'
 source: 'Registry Key'
 ---
