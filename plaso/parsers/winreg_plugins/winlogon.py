@@ -91,7 +91,12 @@ class WinlogonPlugin(interface.WindowsRegistryPlugin):
                     # TODO: generate extraction warning.
                     continue
 
-                # TODO: check data type handler.
+                if not handler_value.DataIsString():
+                    parser_mediator.ProduceWarning(
+                        f"unsupported {value_name:s} value data type: "
+                        f"{handler_value.data_type_string:s} in key: {subkey.path:s}"
+                    )
+                    continue
 
                 event_data = WinlogonEventData()
                 event_data.application = subkey.name
