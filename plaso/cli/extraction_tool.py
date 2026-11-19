@@ -447,6 +447,50 @@ class ExtractionTool(
                 dfvfs_definitions.TYPE_INDICATOR_GPT
             )
 
+    def _PrintProcessingSettings(self):
+        """Prints a summary of the processing settings."""
+        if (
+            self._single_process_mode
+            or self._source_type == dfvfs_definitions.SOURCE_TYPE_FILE
+        ):
+            processing_mode = "single process"
+        elif self._number_of_extraction_workers:
+            processing_mode = (
+                f"multi process ({self._number_of_extraction_workers:d} workers)"
+            )
+        else:
+            processing_mode = "multi process"
+
+        settings = [
+            ("Storage file", self._storage_file_path),
+            ("Storage format", self._storage_format),
+            ("Processing mode", processing_mode),
+            ("Parser filter expression", self._parser_filter_expression or "N/A"),
+            ("Hashers", self._hasher_names_string or "none"),
+        ]
+
+        if self._archive_types_string and self._archive_types_string != "none":
+            settings.append(("Archive types", self._archive_types_string))
+        if self._yara_rules_string:
+            settings.append(("YARA rules", "enabled"))
+        if self._preferred_time_zone:
+            settings.append(("Time zone", self._preferred_time_zone))
+        if self._preferred_codepage:
+            settings.append(("Codepage", self._preferred_codepage))
+        if self._preferred_language:
+            settings.append(("Language", self._preferred_language))
+        if self._preferred_year:
+            settings.append(("Year", self._preferred_year))
+
+        table_view = views.ViewsFactory.GetTableView(
+            self._views_format_type, title="Processing settings"
+        )
+        for name, value in settings:
+            table_view.AddRow([name, value])
+        table_view.Write(self._output_writer)
+
+        self._output_writer.Write("\n")
+
     def _ProcessSource(self, session, storage_writer):
         """Processes the source and extract events.
 
@@ -833,6 +877,10 @@ class ExtractionTool(
 
         self._output_writer.Write("\n")
         self._status_view.PrintExtractionStatusHeader(None)
+
+        if not self._quiet_mode:
+            self._PrintProcessingSettings()
+
         self._output_writer.Write("Processing started.\n")
 
         # TODO: attach processing configuration to session?
