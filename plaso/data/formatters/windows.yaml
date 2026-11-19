@@ -959,6 +959,19 @@ short_source: 'LOG'
 source: 'System Resource Usage Monitor'
 ---
 type: 'conditional'
+data_type: 'windows:srum:push_notification'
+message:
+- 'Application: {application}'
+- 'Network type: {network_type}'
+- 'Notification type: {notification_type}'
+- 'Payload size: {payload_size}'
+- 'User identifier: {user_identifier}'
+short_message:
+- '{application}'
+short_source: 'LOG'
+source: 'System Resource Usage Monitor'
+---
+type: 'conditional'
 data_type: 'windows:tasks:job'
 message:
 - 'Application: {application}'
