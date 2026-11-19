@@ -4,6 +4,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import context
 from dfvfs.resolver import resolver as path_spec_resolver
 
+from plaso.engine import engine
 from plaso.engine import worker
 from plaso.lib import definitions
 from plaso.lib import errors
@@ -188,6 +189,12 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
         # We need a resolver context per process to prevent multi processing issues with
         # file objects stored in images.
         self._resolver_context = context.Context()
+
+        # The preferred dfVFS back-ends are not inherited by worker processes that
+        # are not forked, such as with the spawn and forkserver start methods.
+        engine.BaseEngine.SetPreferredVFSBackEnd(
+            self._processing_configuration.vfs_back_end
+        )
 
         for credential_configuration in self._processing_configuration.credentials:
             path_spec_resolver.Resolver.key_chain.SetCredential(
