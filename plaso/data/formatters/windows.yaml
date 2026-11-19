@@ -666,6 +666,27 @@ short_source: 'REG'
 source: 'Microsoft Outlook MRU Registry Key'
 ---
 type: 'conditional'
+data_type: 'windows:registry:putty:session'
+message:
+- '[{key_path}]'
+- 'Host name: {hostname}'
+- 'Port number: {port_number}'
+- 'Protocol: {protocol}'
+- 'Username: {username}'
+short_message:
+- '[{key_path}]'
+- '{hostname}'
+short_source: 'REG'
+source: 'PuTTY Sessions Registry Key'
+---
+type: 'basic'
+data_type: 'windows:registry:putty:ssh_host_keys'
+message: '[{key_path}] {entries}'
+short_message: '[{key_path}] {entries}'
+short_source: 'REG'
+source: 'PuTTY SSH Host Keys Registry Key'
+---
+type: 'conditional'
 data_type: 'windows:registry:run'
 message:
 - '[{key_path}]'

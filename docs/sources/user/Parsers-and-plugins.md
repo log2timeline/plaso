@@ -277,6 +277,8 @@ mstsc_rdp | Parser for Terminal Server Client Connection Registry data.
 mstsc_rdp_mru | Parser for Terminal Server Client Most Recently Used (MRU) Registry data.
 network_drives | Parser for Windows network drives Registry data.
 networks | Parser for Windows networks (NetworkList) Registry data.
+putty_sessions | Parser for PuTTY sessions Registry data.
+putty_ssh_host_keys | Parser for PuTTY SSH host keys Registry data.
 userassist | Parser for User Assist Registry data.
 windows_boot_execute | Parser for Boot Execution Registry data.
 windows_boot_verify | Parser for Windows boot verification Registry data.
