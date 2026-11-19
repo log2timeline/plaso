@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xbel version="1.0"
+      xmlns:bookmark="http://www.freedesktop.org/standards/desktop-bookmarks"
+      xmlns:mime="http://www.freedesktop.org/standards/shared-mime-info"
+>
+  <bookmark href="file:///home/labadmin/meeting%20notes.txt" added="2026-11-14T11:31:42Z" modified="2026-11-14T11:32:32Z" visited="2026-11-14T11:33:22Z">
+    <title>meeting notes.txt</title>
+    <info>
+      <metadata owner="http://freedesktop.org">
+        <mime:mime-type type="text/plain"/>
+        <bookmark:groups>
+          <bookmark:group>Lab</bookmark:group>
+        </bookmark:groups>
+        <bookmark:applications>
+          <bookmark:application name="gedit" exec="&apos;gedit %u&apos;" modified="2026-11-14T11:33:22.800508Z" count="1"/>
+        </bookmark:applications>
+      </metadata>
+    </info>
+  </bookmark>
+  <bookmark href="file:///home/labadmin/report.pdf" added="2026-11-14T10:31:42Z" modified="2026-11-14T10:32:32Z" visited="2026-11-14T10:33:22Z">
+    <title>report.pdf</title>
+    <info>
+      <metadata owner="http://freedesktop.org">
+        <mime:mime-type type="application/pdf"/>
+        <bookmark:groups>
+          <bookmark:group>Lab</bookmark:group>
+        </bookmark:groups>
+        <bookmark:applications>
+          <bookmark:application name="evince" exec="&apos;evince %u&apos;" modified="2026-11-14T11:33:22.801203Z" count="1"/>
+        </bookmark:applications>
+      </metadata>
+    </info>
+  </bookmark>
+  <bookmark href="file:///home/labadmin/pic%20%C3%BCn%C3%AF.png" added="2026-11-14T09:31:42Z" modified="2026-11-14T09:32:32Z" visited="2026-11-14T09:33:22Z">
+    <title>pic ünï.png</title>
+    <info>
+      <metadata owner="http://freedesktop.org">
+        <mime:mime-type type="image/png"/>
+        <bookmark:groups>
+          <bookmark:group>Lab</bookmark:group>
+        </bookmark:groups>
+        <bookmark:applications>
+          <bookmark:application name="eog" exec="&apos;eog %u&apos;" modified="2026-11-14T11:33:22.801265Z" count="1"/>
+        </bookmark:applications>
+      </metadata>
+    </info>
+  </bookmark>
+</xbel>

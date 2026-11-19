@@ -54,6 +54,7 @@ parsers:
 - filestat
 - olecf
 - pls_recall
+- recently_used_xbel
 - sqlite/google_drive
 - sqlite/skype
 - sqlite/zeitgeist
