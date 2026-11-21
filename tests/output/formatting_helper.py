@@ -53,6 +53,8 @@ class CountingFieldFormattingHelper(formatting_helper.FieldFormattingHelper):
 
     _FIELD_FORMAT_CALLBACKS = {
         "display_name": "_FormatDisplayName",
+        "message": "_FormatMessage",
+        "message_short": "_FormatMessageShort",
         "zone": "_FormatTimeZone",
     }
 
@@ -468,9 +470,7 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
         )
         self.assertEqual(message_string, expected_message_string)
         self.assertEqual(message_short_string, expected_message_string)
-        # TODO: fix cache criteria https://github.com/log2timeline/plaso/issues/5541
-        # self.assertEqual(counting_helper.number_of_calls, 1)
-        self.assertEqual(counting_helper.number_of_calls, 2)
+        self.assertEqual(counting_helper.number_of_calls, 1)
 
         event, event_data, event_data_stream = (
             containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[1])
@@ -481,9 +481,7 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
         test_helper._FormatMessageShort(
             output_mediator, event, event_data, event_data_stream
         )
-        # TODO: fix cache criteria https://github.com/log2timeline/plaso/issues/5541
-        # self.assertEqual(counting_helper.number_of_calls, 2)
-        self.assertEqual(counting_helper.number_of_calls, 4)
+        self.assertEqual(counting_helper.number_of_calls, 2)
 
     def testFormatSource(self):
         """Tests the _FormatSource function."""
@@ -782,6 +780,265 @@ class FieldFormattingHelperTest(test_lib.OutputModuleTestCase):
             self.assertEqual(display_name_string, "FAKE:log/syslog.1")
 
         self.assertEqual(test_helper.number_of_formatted_display_names, 4)
+
+    def testGetFormattedFieldWithCachedFieldValuesAndMessages(self):
+        """Tests that field-value and event-value caches do not interfere."""
+        formatters_directory_path = self._GetTestFilePath(["formatters"])
+
+        output_mediator1 = self._CreateOutputMediator()
+        output_mediator1.ReadMessageFormattersFromDirectory(formatters_directory_path)
+        counting_helper1 = CountingEventFormatterHelper()
+        output_mediator1.GetMessageFormatter("test:event").AddHelper(counting_helper1)
+
+        test_helper = CountingFieldFormattingHelper()
+
+        event1, event_data1, event_data_stream1 = (
+            containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0])
+        )
+        event_data1.SetIdentifier(
+            containers_interface.AttributeContainerIdentifier(
+                name="event_data", sequence_number=1
+            )
+        )
+
+        test_event_values2 = dict(self._TEST_EVENTS[1])
+        test_event_values2["path_spec"] = fake_path_spec.FakePathSpec(
+            location="log/syslog.2"
+        )
+        test_event_values2["text"] = "Second test event message"
+        event2, event_data2, event_data_stream2 = (
+            containers_test_lib.CreateEventFromValues(test_event_values2)
+        )
+        event_data2.SetIdentifier(
+            containers_interface.AttributeContainerIdentifier(
+                name="event_data", sequence_number=2
+            )
+        )
+
+        # Formatting another cached field before message must not cause a false
+        # cache hit in _GetFormattedEventValues.
+        display_name = test_helper.GetFormattedField(
+            output_mediator1,
+            "display_name",
+            event1,
+            event_data1,
+            event_data_stream1,
+            None,
+        )
+        self.assertEqual(display_name, "FAKE:log/syslog.1")
+
+        expected_message1 = (
+            "Reporter <CRON> PID: 8442 (pam_unix(cron:session): session closed "
+            "for user root)"
+        )
+        message1 = test_helper.GetFormattedField(
+            output_mediator1, "message", event1, event_data1, event_data_stream1, None
+        )
+        message_short1 = test_helper.GetFormattedField(
+            output_mediator1,
+            "message_short",
+            event1,
+            event_data1,
+            event_data_stream1,
+            None,
+        )
+        self.assertEqual(message1, expected_message1)
+        self.assertEqual(message_short1, expected_message1)
+        self.assertEqual(counting_helper1.number_of_calls, 1)
+
+        # Formatting a second event must not reuse stale formatted event values.
+        display_name2 = test_helper.GetFormattedField(
+            output_mediator1,
+            "display_name",
+            event2,
+            event_data2,
+            event_data_stream2,
+            None,
+        )
+        message2 = test_helper.GetFormattedField(
+            output_mediator1, "message", event2, event_data2, event_data_stream2, None
+        )
+        message_short2 = test_helper.GetFormattedField(
+            output_mediator1,
+            "message_short",
+            event2,
+            event_data2,
+            event_data_stream2,
+            None,
+        )
+        self.assertEqual(display_name2, "FAKE:log/syslog.2")
+        self.assertEqual(message2, "Second test event message")
+        self.assertEqual(message_short2, "Second test event message")
+        self.assertEqual(counting_helper1.number_of_calls, 2)
+
+        # Calling _FormatMessage directly must not pollute the field-values cache.
+        direct_message1 = test_helper._FormatMessage(
+            output_mediator1, event1, event_data1, event_data_stream1
+        )
+        self.assertEqual(direct_message1, expected_message1)
+
+        cached_display_name2 = test_helper.GetFormattedField(
+            output_mediator1,
+            "display_name",
+            event2,
+            event_data2,
+            event_data_stream2,
+            None,
+        )
+        self.assertEqual(cached_display_name2, "FAKE:log/syslog.2")
+        self.assertEqual(test_helper.number_of_formatted_display_names, 2)
+
+        # Unstored event data still shares formatted event values across message
+        # and message_short without failing after another cached field.
+        test_event_values3 = dict(self._TEST_EVENTS[0])
+        test_event_values3["text"] = "Third unstored event message"
+        event3, event_data3, event_data_stream3 = (
+            containers_test_lib.CreateEventFromValues(test_event_values3)
+        )
+        test_helper.GetFormattedField(
+            output_mediator1,
+            "display_name",
+            event3,
+            event_data3,
+            event_data_stream3,
+            None,
+        )
+        message3 = test_helper.GetFormattedField(
+            output_mediator1, "message", event3, event_data3, event_data_stream3, None
+        )
+        message_short3 = test_helper.GetFormattedField(
+            output_mediator1,
+            "message_short",
+            event3,
+            event_data3,
+            event_data_stream3,
+            None,
+        )
+        self.assertEqual(message3, "Third unstored event message")
+        self.assertEqual(message_short3, "Third unstored event message")
+        self.assertEqual(counting_helper1.number_of_calls, 4)
+
+        # Switching output_mediator invalidates both caches.
+        output_mediator2 = self._CreateOutputMediator()
+        output_mediator2.ReadMessageFormattersFromDirectory(formatters_directory_path)
+        counting_helper2 = CountingEventFormatterHelper()
+        output_mediator2.GetMessageFormatter("test:event").AddHelper(counting_helper2)
+
+        display_name1_new = test_helper.GetFormattedField(
+            output_mediator2,
+            "display_name",
+            event1,
+            event_data1,
+            event_data_stream1,
+            None,
+        )
+        message1_new = test_helper.GetFormattedField(
+            output_mediator2, "message", event1, event_data1, event_data_stream1, None
+        )
+        self.assertEqual(display_name1_new, "FAKE:log/syslog.1")
+        self.assertEqual(message1_new, expected_message1)
+        self.assertEqual(test_helper.number_of_formatted_display_names, 4)
+        self.assertEqual(counting_helper2.number_of_calls, 1)
+
+
+class FormattedEventValuesCacheTest(test_lib.OutputModuleTestCase):
+    """Tests for the formatted event values cache."""
+
+    # pylint: disable=protected-access
+
+    def testGetAndSet(self):
+        """Tests the Get and Set functions."""
+        cache = formatting_helper._FormattedEventValuesCache()
+        output_mediator1 = self._CreateOutputMediator()
+        output_mediator2 = self._CreateOutputMediator()
+
+        event_data1 = events.EventData()
+        event_data2 = events.EventData()
+
+        self.assertEqual(cache.Get(output_mediator1, event_data1), (None, None))
+        self.assertEqual(cache.Get(None, None), (None, None))
+
+        formatter = formatting_helper.FieldFormattingHelper._DEFAULT_MESSAGE_FORMATTER
+        event_values = {"text": "test"}
+        cache.Set(output_mediator1, event_data1, formatter, event_values)
+
+        self.assertEqual(
+            cache.Get(output_mediator1, event_data1), (formatter, event_values)
+        )
+        self.assertEqual(cache.Get(output_mediator1, event_data2), (None, None))
+        self.assertEqual(cache.Get(output_mediator2, event_data1), (None, None))
+
+
+class FormattedFieldValuesCacheTest(test_lib.OutputModuleTestCase):
+    """Tests for the formatted field values cache."""
+
+    # pylint: disable=protected-access
+
+    def testGetFieldValues(self):
+        """Tests the GetFieldValues function."""
+        cache = formatting_helper._FormattedFieldValuesCache(
+            maximum_number_of_entries=2
+        )
+        output_mediator1 = self._CreateOutputMediator()
+        output_mediator2 = self._CreateOutputMediator()
+
+        # None and unstored event data are not cached.
+        self.assertIsNone(cache.GetFieldValues(output_mediator1, None))
+
+        unstored_event_data = events.EventData()
+        self.assertIsNone(cache.GetFieldValues(output_mediator1, unstored_event_data))
+
+        # Incomplete identifiers (CopyToString() is None) are not cached.
+        incomplete_event_data = events.EventData()
+        incomplete_event_data.SetIdentifier(
+            containers_interface.AttributeContainerIdentifier(
+                name="event_data", sequence_number=None
+            )
+        )
+        self.assertIsNone(cache.GetFieldValues(output_mediator1, incomplete_event_data))
+
+        # Stored event data is cached by identifier and evicted past the limit.
+        event_data1 = events.EventData()
+        event_data1.SetIdentifier(
+            containers_interface.AttributeContainerIdentifier(
+                name="event_data", sequence_number=1
+            )
+        )
+        event_data2 = events.EventData()
+        event_data2.SetIdentifier(
+            containers_interface.AttributeContainerIdentifier(
+                name="event_data", sequence_number=2
+            )
+        )
+        event_data3 = events.EventData()
+        event_data3.SetIdentifier(
+            containers_interface.AttributeContainerIdentifier(
+                name="event_data", sequence_number=3
+            )
+        )
+
+        field_values1 = cache.GetFieldValues(output_mediator1, event_data1)
+        self.assertIsNotNone(field_values1)
+        field_values1["display_name"] = "one"
+
+        self.assertIs(
+            cache.GetFieldValues(output_mediator1, event_data1), field_values1
+        )
+
+        field_values2 = cache.GetFieldValues(output_mediator1, event_data2)
+        self.assertIsNotNone(field_values2)
+        self.assertIs(
+            cache.GetFieldValues(output_mediator1, event_data1), field_values1
+        )
+
+        # Adding a third entry clears the cache when limit is 2.
+        field_values3 = cache.GetFieldValues(output_mediator1, event_data3)
+        self.assertIsNotNone(field_values3)
+        self.assertNotIn("event_data.1", cache._field_values_per_event_data)
+
+        # Switching output_mediator clears cached entries and handles None safely.
+        self.assertIsNone(cache.GetFieldValues(output_mediator2, None))
+        self.assertEqual(cache._field_values_per_event_data, {})
 
 
 if __name__ == "__main__":
