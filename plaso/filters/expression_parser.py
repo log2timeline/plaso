@@ -124,7 +124,7 @@ class EventFilterExpressionParser:
         ),
         Token(
             _STATE_ARGUMENT,
-            r"(0x\d+)",
+            r"(0x[0-9A-Fa-f]+)",
             "_AddArgumentHexadecimalInteger",
             _STATE_ARGUMENT,
         ),
