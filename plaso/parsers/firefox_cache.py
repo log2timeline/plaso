@@ -422,7 +422,9 @@ class FirefoxCache2Parser(BaseFirefoxCacheParser, dtfabric_helper.DtFabricHelper
     # Cache version 2 filenames are SHA-1 hex digests.
     _CACHE_FILENAME_REGEX = re.compile(r"^[0-9A-Fa-f]{40}$")
 
-    _CHUNK_SIZE = 512 * 1024
+    _CHUNK_SIZE = 256 * 1024
+
+    _ENCRYPTED_METADATA_FLAG = 0x80000000
 
     _MAXIMUM_FILE_SIZE = 16 * 1024 * 1024
 
@@ -430,6 +432,27 @@ class FirefoxCache2Parser(BaseFirefoxCacheParser, dtfabric_helper.DtFabricHelper
     # a cache2 file metadata header and a 4-byte offset that points to its
     # location in the file.
     _MINIMUM_FILE_SIZE = 36
+
+    _SUPPORTED_FORMAT_VERSIONS = (1, 2, 3, 4)
+
+    def _CalculateMetadataHeaderOffset(self, metadata_size):
+        """Calculates the offset of the cache file metadata header.
+
+        Args:
+          metadata_size (int): byte size of the cached content.
+
+        Returns:
+          int: offset of the file cache metadata header relative to the start
+              of the file.
+        """
+        # Firefox splits the content into 256 KiB chunks.
+        number_of_chunks, remainder = divmod(metadata_size, self._CHUNK_SIZE)
+        if remainder != 0:
+            number_of_chunks += 1
+
+        # Each chunk in the cached record has a 2-byte hash in the metadata block.
+        # Skip the first 4 bytes which contain a hash value of the metadata.
+        return metadata_size + (number_of_chunks * 2) + 4
 
     def _GetCacheFileMetadataHeaderOffset(self, file_object):
         """Determines the offset of the cache file metadata header.
@@ -448,28 +471,54 @@ class FirefoxCache2Parser(BaseFirefoxCacheParser, dtfabric_helper.DtFabricHelper
           WrongParser: if the size of the cache file metadata cannot be
               determined.
         """
-        file_object.seek(-4, os.SEEK_END)
-        file_offset = file_object.tell()
+        metadata_size, _ = self._ReadMetadataTrailer(file_object)
+        return self._CalculateMetadataHeaderOffset(metadata_size)
 
-        metadata_size_map = self._GetDataTypeMap("uint32be")
+    def _ReadMetadataTrailer(self, file_object):
+        """Reads the trailing metadata offset record from a cache2 file.
+
+        Format versions 1 through 3 end with a single 32-bit big-endian logical
+        data size value. Format version 4 ends with a two-word trailer
+        containing the format version followed by the logical data size with an
+        encryption flag in the most significant bit.
+
+        Args:
+          file_object (dfvfs.FileIO): a file-like object.
+
+        Returns:
+          tuple: containing:
+
+            int: byte size of the cached content (logical data size).
+            int: byte size of the trailing metadata offset record.
+
+        Raises:
+          WrongParser: if the metadata trailer cannot be parsed or indicates an
+              encrypted cache record.
+        """
+        file_size = file_object.get_size()
+        if file_size < self._MINIMUM_FILE_SIZE:
+            raise errors.WrongParser(f"Unsupported file size: {file_size:d}.")
+
+        data_type_map = self._GetDataTypeMap("uint32be")
 
         try:
+            trailer_version, _ = self._ReadStructureFromFileObject(
+                file_object, file_size - 8, data_type_map
+            )
             metadata_size, _ = self._ReadStructureFromFileObject(
-                file_object, file_offset, metadata_size_map
+                file_object, file_size - 4, data_type_map
             )
         except (ValueError, errors.ParseError) as exception:
             raise errors.WrongParser(
                 f"Unable to parse cache file metadata size with error: {exception!s}"
             )
 
-        # Firefox splits the content into chunks.
-        number_of_chunks, remainder = divmod(metadata_size, self._CHUNK_SIZE)
-        if remainder != 0:
-            number_of_chunks += 1
+        if trailer_version >= 4 and trailer_version in self._SUPPORTED_FORMAT_VERSIONS:
+            if metadata_size & self._ENCRYPTED_METADATA_FLAG:
+                raise errors.WrongParser("Unsupported encrypted Firefox cache2 record.")
+            return metadata_size, 8
 
-        # Each chunk in the cached record is padded with two bytes.
-        # Skip the first 4 bytes which contains a hash value of the cached content.
-        return metadata_size + (number_of_chunks * 2) + 4
+        return metadata_size, 4
 
     def _ValidateCacheFileMetadataHeader(self, cache_file_metadata_header):
         """Determines whether the cache file metadata header is valid.
@@ -484,7 +533,8 @@ class FirefoxCache2Parser(BaseFirefoxCacheParser, dtfabric_helper.DtFabricHelper
         return (
             cache_file_metadata_header.key_size > 0
             and cache_file_metadata_header.key_size < self._MAXIMUM_URL_LENGTH
-            and cache_file_metadata_header.format_version in (1, 2, 3)
+            and cache_file_metadata_header.format_version
+            in self._SUPPORTED_FORMAT_VERSIONS
             and cache_file_metadata_header.last_fetched_time > 0
             and cache_file_metadata_header.fetch_count > 0
         )
@@ -504,7 +554,8 @@ class FirefoxCache2Parser(BaseFirefoxCacheParser, dtfabric_helper.DtFabricHelper
         if not self._CACHE_FILENAME_REGEX.match(filename):
             raise errors.WrongParser("Not a Firefox cache2 file.")
 
-        file_offset = self._GetCacheFileMetadataHeaderOffset(file_object)
+        metadata_size, trailer_size = self._ReadMetadataTrailer(file_object)
+        file_offset = self._CalculateMetadataHeaderOffset(metadata_size)
         file_metadata_header_map = self._GetDataTypeMap(
             "firefox_cache2_file_metadata_header"
         )
@@ -531,7 +582,10 @@ class FirefoxCache2Parser(BaseFirefoxCacheParser, dtfabric_helper.DtFabricHelper
 
         display_name = parser_mediator.GetDisplayName()
         request_method, response_code, corrupted = self._ParseHTTPHeaders(
-            parser_mediator, http_headers_data[:-4], file_offset, display_name
+            parser_mediator,
+            http_headers_data[:-trailer_size],
+            file_offset,
+            display_name,
         )
         try:
             url = url.decode("ascii")
