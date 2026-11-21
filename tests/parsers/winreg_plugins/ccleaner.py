@@ -36,6 +36,7 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
             )
             date_time = plugin._ParseUpdateKeyValue(parser_mediator, registry_value)
             self.assertIsNotNone(date_time)
+            self.assertTrue(date_time.is_local_time)
             self.assertEqual(
                 date_time.CopyToDateTimeString(), expected_date_time_string
             )
@@ -61,37 +62,6 @@ class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
                 "extraction_warning"
             )
             self.assertEqual(number_of_warnings, 1)
-
-    # pylint: disable=protected-access
-
-    def testParseUpdateKeyValue(self):
-        """Tests the _ParseUpdateKeyValue function."""
-        storage_writer = self._CreateStorageWriter()
-        parser_mediator = self._CreateParserMediator(storage_writer)
-
-        plugin = ccleaner.CCleanerPlugin()
-
-        test_cases = [
-            ("07/13/2013 10:03:14 AM", "2013-07-13 10:03:14"),
-            ("07/13/2013 01:03:14 PM", "2013-07-13 13:03:14"),
-        ]
-        for value_string, expected_date_time_string in test_cases:
-            registry_value = dfwinreg_fake.FakeWinRegistryValue(
-                "UpdateKey",
-                data=value_string.encode("utf_16_le"),
-                data_type=dfwinreg_definitions.REG_SZ,
-            )
-            date_time = plugin._ParseUpdateKeyValue(parser_mediator, registry_value)
-            self.assertIsNotNone(date_time)
-            self.assertTrue(date_time.is_local_time)
-            self.assertEqual(
-                date_time.CopyToDateTimeString(), expected_date_time_string
-            )
-
-        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-            "extraction_warning"
-        )
-        self.assertEqual(number_of_warnings, 0)
 
         test_cases = [
             (
