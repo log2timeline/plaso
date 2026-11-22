@@ -114,7 +114,9 @@ class AnalysisMediator:
         """
         analysis_report = plugin.CompileReport(self)
         if not analysis_report:
-            # TODO: produce AnalysisWarning that no report can be generated.
+            self.ProduceAnalysisWarning(
+                "Unable to generate analysis report.", plugin.plugin_name
+            )
             return
 
         analysis_report.event_filter = self._event_filter_expression

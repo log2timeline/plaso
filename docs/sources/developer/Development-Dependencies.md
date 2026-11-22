@@ -7,7 +7,6 @@ There are multiple ways to install the dependencies:
 
 * [Using prepackaged dependencies](Development-Dependencies.md#prepackaged-dependencies)
 * [Batch build](Development-Dependencies.md#batch-build)
-* [Manual build](Development-Dependencies.md#manual-build)
 
 ## Prepackaged dependencies
 

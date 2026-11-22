@@ -27,11 +27,11 @@ Test argument parser.
 
 {cli_test_lib.ARGPARSE_OPTIONS:s}:
   -f, --filter-file, --filter_file, --file-filter, --file_filter FILE_FILTER
-                        List of files to include for targeted collection of
-                        files to parse, one line per file path, setup is
-                        /path|file - where each element can contain either a
-                        variable set in the preprocessing stage or a regular
-                        expression.
+                        Path to a YAML-based collection filter file that
+                        defines the paths of files and directories to include
+                        in or exclude from processing, where each path is
+                        defined as a regular expression. See the Collection
+                        Filters documentation for the file format.
 """
 
     else:
@@ -42,11 +42,11 @@ Test argument parser.
 
 {cli_test_lib.ARGPARSE_OPTIONS:s}:
   -f FILE_FILTER, --filter-file FILE_FILTER, --filter_file FILE_FILTER, --file-filter FILE_FILTER, --file_filter FILE_FILTER
-                        List of files to include for targeted collection of
-                        files to parse, one line per file path, setup is
-                        /path|file - where each element can contain either a
-                        variable set in the preprocessing stage or a regular
-                        expression.
+                        Path to a YAML-based collection filter file that
+                        defines the paths of files and directories to include
+                        in or exclude from processing, where each path is
+                        defined as a regular expression. See the Collection
+                        Filters documentation for the file format.
 """
 
     def testAddArguments(self):

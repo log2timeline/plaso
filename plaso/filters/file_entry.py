@@ -257,12 +257,17 @@ class NamesFileEntryFilter(FileEntryFilter):
           file_entry (dfvfs.FileEntry): file entry to compare.
 
         Returns:
-          bool: True if the file entry matches the filter.
+          bool: True if the file entry matches the filter, False if not or
+              None if the filter does not apply.
         """
         if not self._names or not file_entry.IsFile():
             return False
 
-        return file_entry.name.lower() in self._names
+        name = file_entry.name
+        if name is None:
+            return None
+
+        return name.lower() in self._names
 
     def Print(self, output_writer):
         """Prints a human readable version of the filter.
@@ -315,6 +320,7 @@ class SignaturesFileEntryFilter(FileEntryFilter):
             for signature in format_specification.signatures:
                 pattern_offset = signature.offset
                 if pattern_offset is None:
+                    pattern_offset = 0
                     signature_flags = pysigscan.signature_flags.NO_OFFSET
                 elif pattern_offset < 0:
                     pattern_offset *= -1

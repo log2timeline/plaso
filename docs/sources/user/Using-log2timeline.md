@@ -16,6 +16,17 @@ To get a complete list of all switches and parameters of log2timeline.py, use
 This guide will cover the most basic options and then discuss some of the
 perhaps less used ones.
 
+## Common options
+
+* **-z TIME_ZONE**, **--timezone TIME_ZONE**: time zone of date and time values in the source data that are stored without a time zone indicator, such as "UTC" or "Europe/Amsterdam". By default the time zone is determined from the source data where possible, otherwise UTC is used. Use `-z list` to list the supported time zones.
+* **--archives TYPES**: comma separated list of archive and storage media image types, such as `tar,zip`, for which to process embedded file entries. Use `--archives list` to list the supported types. Note that this can make processing significantly slower.
+* **--hashers HASHER_LIST**: comma separated list of hashers to use, such as `md5,sha256`. Use `--hashers list` to list the supported hashers.
+* **--yara_rules PATH**: path to a file containing Yara rules definitions to match against the content of files.
+* **--workers WORKERS**: number of worker processes. The default is the number of available system CPUs minus one, for the main (foreman) process.
+* **--temporary_directory DIRECTORY**: directory to store temporary files created during processing.
+* **--status_view TYPE**: processing status view mode: "file", "linear", "none" or "window".
+* **--unattended**: log2timeline.py will error instead of prompting the user.
+
 ## Basic usage
 
 The simplest way, and perhaps the most common way to run log2timeline.py without
@@ -112,8 +123,11 @@ Note that there are various options that can be used to prevent
 log2timeline.py from prompting the user to select VSS stores or
 partitions.
 
-* **--partitions PARTITION_NUMBERS**: Preselects the partition number to use, eg: `---partitions 2` will pick the second partition on the disk.
-* **--vss_stores**: Selects the VSS stores to include, eg: `---vss_stores all` will select all available VSS stores, or `--vss_stores 1,4,5` (only first, fourth and fifth), or `--vss_stores 1..3` (first three stores) or `--vss_stores=none` will ignore available VSS stores.
+* **--partitions PARTITION_NUMBERS**: Preselects the partition number to use, eg: `--partitions 2` will pick the second partition on the disk.
+* **--volumes VOLUMES**: Preselects the volumes to process, such as the volumes in an APFS container or LVM volume group, eg: `--volumes 1,3` or `--volumes all`.
+* **--vss_stores**: Selects the VSS stores to include, eg: `--vss_stores all` will select all available VSS stores, or `--vss_stores 1,4,5` (only first, fourth and fifth), or `--vss_stores 1..3` (first three stores) or `--vss_stores=none` will ignore available VSS stores.
+* **--vss_only**: Do not process the current volume if VSS stores have been selected.
+* **--credential TYPE:DATA**: Defines a credential to unlock an encrypted volume, such as BitLocker, eg: `--credential password:BDE-test`. Supported credential types are: key_data, password, recovery_password and startup_key. Binary key data is expected in hexadecimal (BASE-16) encoding. Note that credentials passed on the command line can end up in logs, such as the shell history.
 * **--unattended**: log2timeline.py will error instead of prompting the user.
 
 After finding a partition to process log2timeline.py will start the
@@ -132,9 +146,11 @@ Note that the pre-processing will also determine the most appropriate
 The parser preset defines which parser are enabled. The auto-detection can be
 overwritten with the `--parsers` option, see [parsers and presets](#parsers-and-presets).
 
-After that the tool spins up several workers (the actual number differs depends
-on number of CPU's on the system running the tool), a collector and a storage
-process.
+After that the tool spins up several worker processes (the actual number
+depends on the number of CPUs on the system running the tool, see `--workers`).
+The workers are coordinated by the main (foreman) process, which also writes
+the results to the storage file. The status view shows the main process as
+"Main" and the workers as "Worker_00", "Worker_01", etc.
 
 ## Parsers and presets
 
@@ -219,25 +235,35 @@ deprecated | Optional, `true` if the preset is deprecated. Using a deprecated pr
 
 ## The info option
 
-The first option is the `--info` which prints out information about all
-supported plugins, parsers, output modules, etc.
+The first option is the `--info` which prints out information about the
+versions and all supported hashers, parsers, parser plugins and parser presets.
 
 ```bash
 $ log2timeline.py --info
 ======================== log2timeline/plaso information ========================
 
-******************************** Parser Presets ********************************
-                  android : android_app_usage, android_calls, android_sms
-                    linux : bencode, filestat, google_drive, java_idx, olecf,
-                            openxml, pls_recall, popularity_contest, selinux,
-                            skype, syslog, utmp, webhist, xchatlog,
-                            xchatscrollback, zeitgeist
-                   macosx : appusage, asl_log, bencode, bsm_log, cups_ipp,
-                            filestat, google_drive, java_idx, ls_quarantine,
-                            mac_appfirewall_log, mac_document_versions,
-                            mac_keychain, mac_securityd, mackeeper_cache,
-                            macwifi, olecf, openxml, plist, skype, utmpx,
-                            webhist
+*********************************** Versions ***********************************
+        Name : Description
+--------------------------------------------------------------------------------
+plaso engine : 20261025
+      python : 3.14.5 (main, May 10 2026, 19:28:16) [Clang 22.1.3 ]
+--------------------------------------------------------------------------------
+
+*********************************** Hashers ************************************
+   Name : Description
+--------------------------------------------------------------------------------
+entropy : Calculates the byte entropy of input data.
+    md5 : Calculates an MD5 digest hash over input data.
+   sha1 : Calculates a SHA-1 digest hash over input data.
+ sha256 : Calculates a SHA-256 digest hash over input data.
+--------------------------------------------------------------------------------
+
+*********************************** Parsers ************************************
+                 Name : Description
+--------------------------------------------------------------------------------
+    android_app_usage : Parser for Android usage history (usage-history.xml)
+                        files.
+              asl_log : Parser for Apple System Log (ASL) files.
 ...
 ```
 
@@ -252,20 +278,21 @@ $ log2timeline.py --logfile test.log --storage-file timeline.plaso test.vhd
 ```
 
 Note that the foreman (main process) and each worker will have a separate log
-file. If th .log.gz extension is used log2timeline.py will create a compressed
+file. If the .log.gz extension is used log2timeline.py will create a compressed
 log file.
 
 ## Using filter files for triage
 
 Sometimes you may not want to do a complete timeline that extracts events from
-every discovered file. To do more targeted extraction a filter file can be used.
+every discovered file. To do more targeted extraction a YAML-based filter file
+can be used with the `--file-filter` (or `-f`) option.
 
 ```bash
-$ log2timeline.py -f filter --storage-file timeline.plaso test.vhd
-
-Source path     : /PATH/test.vhd
-Source type     : storage media image
-Filter file     : filter
+$ log2timeline.py --file-filter filter.yaml --storage-file timeline.plaso test.vhd
+Source path             : /PATH/test.vhd
+Source type             : storage media image
+Filter file             : filter.yaml
+Processing time         : 00:00:00
 
 Processing started.
 ...
@@ -276,10 +303,11 @@ Instead of processing all the files only the file paths included in the filter
 file will be used. Here the content is:
 
 ```bash
-$ cat filter
-{sysregistry}/.+
-/Users/.+/NTUSER.DAT
-/Documents And Settings/.+/NTUSER.DAT
+$ cat filter.yaml
+description: Files in a_directory.
+type: include
+paths:
+- '/a_directory/.+'
 ```
 
 This can be verified against the event sources:
@@ -288,4 +316,8 @@ This can be verified against the event sources:
 $ pinfo.py --sections sources timeline.plaso
 ```
 
-More information about the collection filters can be found [here](Collection-Filters.md).
+Plaso also provides example filter files, such as [filter_windows.yaml](https://github.com/log2timeline/plaso/blob/main/plaso/data/filter_windows.yaml)
+for the triage of Windows systems.
+
+More information about the collection filters and the format of filter files
+can be found [here](Collection-Filters.md).

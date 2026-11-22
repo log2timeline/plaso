@@ -228,10 +228,11 @@ Analysis Arguments:
                         plugins.
   --virustotal-api-key VIRUSTOTAL-API-KEY
                         Specify the API key for use with VirusTotal.
-  --virustotal-free-rate-limit VIRUSTOTAL-RATE-LIMIT
-                        Limit Virustotal requests to the default free API key
-                        rate of 4 requests per minute. Set this to false if
-                        you have an key for the private API.
+  --virustotal-free-rate-limit
+                        Disable the limit of VirusTotal requests to the free
+                        API key rate of 4 requests per minute, which is
+                        enabled by default. Use this option if you have a key
+                        for the private API.
   --windows-services-output {text,yaml}
                         Specify how the results should be displayed. Options
                         are text and yaml.

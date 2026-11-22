@@ -97,7 +97,7 @@ File System Format support is provided by [dfVFS](https://dfvfs.readthedocs.io/e
 ### JSON-L log file formats
 
 * [AWS CloudTrail Log](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-log-file-examples.html)
-* [Azure Activity Log](https://learn.microsoft.com/en-us/azure/azure-monitor/platform/activity-log)
+* [Azure Activity Log](https://learn.microsoft.com/en-us/azure/azure-monitor/fundamentals/activity-log)
 * Azure Application Gateway access log
 * Docker container configuration file
 * Docker container log file
@@ -201,6 +201,7 @@ File System Format support is provided by [dfVFS](https://dfvfs.readthedocs.io/e
 * Advanced Packaging Tool (APT) History log file
 * Android logcat file
 * Apache access log (access.log) file
+* Apache error log (error.log) file
 * Atlassian Bitbucket access log (atlassian-bitbucket-access.log) file
 * Atlassian Bitbucket audit log (atlassian-bitbucket-audit.log) file
 * Atlassian Bitbucket log file

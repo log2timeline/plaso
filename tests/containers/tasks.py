@@ -30,7 +30,7 @@ class TaskTest(shared_test_lib.BaseTestCase):
             "last_processing_time",
             "merge_priority",
             "number_of_retries",
-            "path_spec",
+            "path_specs",
             "session_identifier",
             "start_time",
             "storage_file_size",
@@ -45,12 +45,42 @@ class TaskTest(shared_test_lib.BaseTestCase):
         """Tests the CreateRetryTask function."""
         session_identifier = f"{uuid.uuid4().hex:s}"
         task = tasks.Task(session_identifier=session_identifier)
-        task.path_spec = "test_path_spec"
+        task.path_specs = ["test_path_spec", "test_path_spec2"]
 
         retry_task = task.CreateRetryTask()
         self.assertNotEqual(retry_task.identifier, task.identifier)
         self.assertEqual(retry_task.number_of_retries, task.number_of_retries + 1)
-        self.assertEqual(retry_task.path_spec, task.path_spec)
+        self.assertEqual(retry_task.path_specs, task.path_specs)
+        self.assertIsNot(retry_task.path_specs, task.path_specs)
+
+    def testCreateRetryTasks(self):
+        """Tests the CreateRetryTasks function."""
+        session_identifier = f"{uuid.uuid4().hex:s}"
+        task = tasks.Task(session_identifier=session_identifier)
+
+        retry_tasks = task.CreateRetryTasks()
+        self.assertEqual(len(retry_tasks), 1)
+        self.assertEqual(retry_tasks[0].path_specs, [])
+
+        task.path_specs = ["test_path_spec"]
+
+        retry_tasks = task.CreateRetryTasks()
+        self.assertEqual(len(retry_tasks), 1)
+        self.assertEqual(retry_tasks[0].path_specs, ["test_path_spec"])
+
+        task.path_specs = ["test_path_spec", "test_path_spec2"]
+
+        retry_tasks = task.CreateRetryTasks()
+        self.assertEqual(len(retry_tasks), 2)
+
+        retry_task_identifiers = set()
+        for retry_task, path_spec in zip(retry_tasks, task.path_specs):
+            self.assertNotEqual(retry_task.identifier, task.identifier)
+            self.assertEqual(retry_task.number_of_retries, task.number_of_retries + 1)
+            self.assertEqual(retry_task.path_specs, [path_spec])
+            retry_task_identifiers.add(retry_task.identifier)
+
+        self.assertEqual(len(retry_task_identifiers), 2)
 
     def testUpdateProcessingTime(self):
         """Tests the UpdateProcessingTime function."""

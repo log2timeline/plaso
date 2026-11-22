@@ -4,7 +4,6 @@ import time
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
-from plaso.analysis import manager as analysis_manager
 from plaso.cli import tool_options
 from plaso.cli import tools
 from plaso.cli import views
@@ -38,7 +37,6 @@ class AnalysisTool(
               indicates that the stdout output writer should be used.
         """
         super().__init__(input_reader=input_reader, output_writer=output_writer)
-        self._analysis_manager = analysis_manager.AnalysisPluginManager
         self._analysis_plugins = None
         self._analysis_plugins_output_format = None
         self._command_line_arguments = None
