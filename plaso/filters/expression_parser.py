@@ -126,7 +126,7 @@ class EventFilterExpressionParser:
         ),
         Token(
             _STATE_ARGUMENT,
-            r"(0x\d+)",
+            r"(0x[0-9A-Fa-f]+)",
             "_AddArgumentHexadecimalInteger",
             _STATE_ARGUMENT,
         ),
@@ -765,8 +765,8 @@ class EventFilterExpressionParser:
             hex_string = binascii.unhexlify(hex_string)
             hex_string = hex_string.decode("utf-8")
             self._string += hex_string
-        except (TypeError, binascii.Error):
-            raise errors.ParseError(f"Invalid hex escape {hex_string!s}.")
+        except (TypeError, ValueError):
+            raise errors.ParseError(f"Invalid hex escape {match.group(1):s}.")
 
         return None
 

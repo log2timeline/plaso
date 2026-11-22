@@ -211,6 +211,20 @@ class StorageReader:
         """
         return self._store.HasAttributeContainers(container_type)
 
+    # pylint: disable=unused-argument
+    def PrefetchAttributeContainers(self, container_type, identifiers):
+        """Reads specific attribute containers into the read cache.
+
+        Prefetching is an optimization, storage readers that do not support it
+        ignore the request.
+
+        Args:
+          container_type (str): attribute container type.
+          identifiers (list[AttributeContainerIdentifier]): attribute container
+              identifiers.
+        """
+        return
+
     def SetSerializersProfiler(self, serializers_profiler):
         """Sets the serializers profiler.
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Tests for the filter file CLI arguments helper."""
 
+import os
 import sys
 import unittest
 
@@ -26,11 +27,11 @@ Test argument parser.
 
 {cli_test_lib.ARGPARSE_OPTIONS:s}:
   -f, --filter-file, --filter_file, --file-filter, --file_filter FILE_FILTER
-                        List of files to include for targeted collection of
-                        files to parse, one line per file path, setup is
-                        /path|file - where each element can contain either a
-                        variable set in the preprocessing stage or a regular
-                        expression.
+                        Path to a YAML-based collection filter file that
+                        defines the paths of files and directories to include
+                        in or exclude from processing, where each path is
+                        defined as a regular expression. See the Collection
+                        Filters documentation for the file format.
 """
 
     else:
@@ -41,11 +42,11 @@ Test argument parser.
 
 {cli_test_lib.ARGPARSE_OPTIONS:s}:
   -f FILE_FILTER, --filter-file FILE_FILTER, --filter_file FILE_FILTER, --file-filter FILE_FILTER, --file_filter FILE_FILTER
-                        List of files to include for targeted collection of
-                        files to parse, one line per file path, setup is
-                        /path|file - where each element can contain either a
-                        variable set in the preprocessing stage or a regular
-                        expression.
+                        Path to a YAML-based collection filter file that
+                        defines the paths of files and directories to include
+                        in or exclude from processing, where each path is
+                        defined as a regular expression. See the Collection
+                        Filters documentation for the file format.
 """
 
     def testAddArguments(self):
@@ -70,7 +71,28 @@ Test argument parser.
         with self.assertRaises(errors.BadConfigObject):
             filter_file.FilterFileArgumentsHelper.ParseOptions(options, None)
 
-        # TODO: improve test coverage.
+        # A filter file that does not exist is looked up in the data location.
+        options.file_filter = os.path.join("bogus", "filter2.txt")
+
+        with self.assertRaises(errors.BadConfigOption):
+            filter_file.FilterFileArgumentsHelper.ParseOptions(options, test_tool)
+
+        test_tool._data_location = self._GetTestFilePath(["testdir"])
+        filter_file.FilterFileArgumentsHelper.ParseOptions(options, test_tool)
+
+        expected_filter_file = self._GetTestFilePath(["testdir", "filter2.txt"])
+        self.assertEqual(test_tool._filter_file, expected_filter_file)
+
+        options.file_filter = os.path.join("bogus", "bogus.txt")
+
+        with self.assertRaises(errors.BadConfigOption):
+            filter_file.FilterFileArgumentsHelper.ParseOptions(options, test_tool)
+
+        options = cli_test_lib.TestOptions()
+
+        filter_file.FilterFileArgumentsHelper.ParseOptions(options, test_tool)
+
+        self.assertIsNone(test_tool._filter_file)
 
 
 if __name__ == "__main__":

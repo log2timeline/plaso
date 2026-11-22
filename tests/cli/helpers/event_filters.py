@@ -4,6 +4,8 @@
 import sys
 import unittest
 
+from dfdatetime import time_elements as dfdatetime_time_elements
+
 from plaso.cli import tools
 from plaso.cli.helpers import event_filters
 from plaso.lib import errors
@@ -138,7 +140,45 @@ positional arguments:
         with self.assertRaises(errors.BadConfigOption):
             event_filters.EventFiltersArgumentsHelper.ParseOptions(options, test_tool)
 
-        # TODO: improve test coverage.
+        # Time slice with a custom duration.
+        options = cli_test_lib.TestOptions()
+        options.slice = "2020-06-13T06:33:10"
+        options.slice_size = 10
+
+        test_tool = tools.CLITool()
+        event_filters.EventFiltersArgumentsHelper.ParseOptions(options, test_tool)
+
+        date_time = dfdatetime_time_elements.TimeElements()
+        date_time.CopyFromStringISO8601("2020-06-13T06:33:10")
+        expected_timestamp = date_time.GetPlasoTimestamp()
+
+        self.assertIsNone(test_tool._event_filter_expression)
+        self.assertFalse(hasattr(test_tool, "_event_filter"))
+        self.assertFalse(test_tool._use_time_slicer)
+        self.assertEqual(test_tool._time_slice.event_timestamp, expected_timestamp)
+        self.assertEqual(test_tool._time_slice.duration, 10)
+
+        # Time slicer without a time slice.
+        options = cli_test_lib.TestOptions()
+        options.slicer = True
+
+        test_tool = tools.CLITool()
+        event_filters.EventFiltersArgumentsHelper.ParseOptions(options, test_tool)
+
+        self.assertTrue(test_tool._use_time_slicer)
+        self.assertIsNone(test_tool._time_slice.event_timestamp)
+        self.assertEqual(test_tool._time_slice.duration, 5)
+
+        # No filter, time slice or time slicer.
+        options = cli_test_lib.TestOptions()
+
+        test_tool = tools.CLITool()
+        event_filters.EventFiltersArgumentsHelper.ParseOptions(options, test_tool)
+
+        self.assertIsNone(test_tool._event_filter_expression)
+        self.assertFalse(hasattr(test_tool, "_event_filter"))
+        self.assertFalse(test_tool._use_time_slicer)
+        self.assertFalse(hasattr(test_tool, "_time_slice"))
 
 
 if __name__ == "__main__":

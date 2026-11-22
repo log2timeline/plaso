@@ -17,6 +17,21 @@ short_source: 'LOG'
 source: 'Apache Access Log'
 ---
 type: 'conditional'
+data_type: 'apache:error_log:entry'
+message:
+- 'Module: {module}'
+- 'Level: {level}'
+- 'PID: {process_identifier}'
+- 'TID: {thread_identifier}'
+- 'Client: {client_address}'
+- 'Message: {message_body}'
+short_message:
+- 'Level: {level}'
+- 'Message: {message_body}'
+short_source: 'LOG'
+source: 'Apache Error Log'
+---
+type: 'conditional'
 data_type: 'atlassian:bitbucket:access'
 message:
 - '{http_request_method}'

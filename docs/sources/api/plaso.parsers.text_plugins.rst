@@ -20,6 +20,14 @@ plaso.parsers.text\_plugins.apache\_access module
    :show-inheritance:
    :undoc-members:
 
+plaso.parsers.text\_plugins.apache\_error module
+------------------------------------------------
+
+.. automodule:: plaso.parsers.text_plugins.apache_error
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 plaso.parsers.text\_plugins.apt\_history module
 -----------------------------------------------
 

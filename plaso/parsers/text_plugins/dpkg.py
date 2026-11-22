@@ -4,21 +4,21 @@ An example:
 
 2016-08-03 15:25:53 install base-passwd:amd64 <none> 3.5.33
 
-Log messages are of the form:
+Log messages are of the form::
 
-YYYY-MM-DD HH:MM:SS startup type command
-Where type is:
-    archives (with a command of unpack or install)
-    packages (with a command of configure, triggers-only, remove or purge)
+  YYYY-MM-DD HH:MM:SS startup type command
+  Where type is:
+      archives (with a command of unpack or install)
+      packages (with a command of configure, triggers-only, remove or purge)
 
-YYYY-MM-DD HH:MM:SS status state pkg installed-version
+  YYYY-MM-DD HH:MM:SS status state pkg installed-version
 
-YYYY-MM-DD HH:MM:SS action pkg installed-version available-version
-Where action is:
-    install, upgrade, configure, trigproc, disappear, remove or purge.
+  YYYY-MM-DD HH:MM:SS action pkg installed-version available-version
+  Where action is:
+      install, upgrade, configure, trigproc, disappear, remove or purge.
 
-YYYY-MM-DD HH:MM:SS conffile filename decision
-Where decision is install or keep.
+  YYYY-MM-DD HH:MM:SS conffile filename decision
+  Where decision is install or keep.
 """
 
 import pyparsing

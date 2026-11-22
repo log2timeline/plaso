@@ -36,10 +36,10 @@ class FilterFileArgumentsHelper(interface.ArgumentsHelper):
             type=str,
             default=None,
             help=(
-                "List of files to include for targeted collection of files to "
-                "parse, one line per file path, setup is /path|file - where each "
-                "element can contain either a variable set in the preprocessing "
-                "stage or a regular expression."
+                "Path to a YAML-based collection filter file that defines the "
+                "paths of files and directories to include in or exclude from "
+                "processing, where each path is defined as a regular expression. "
+                "See the Collection Filters documentation for the file format."
             ),
         )
 
