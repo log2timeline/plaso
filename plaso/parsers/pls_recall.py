@@ -78,6 +78,11 @@ class PlsRecallParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper
         ]
     )
 
+    # Maximum number of characters, including the end-of-string character, of
+    # the Username and Database fields.
+    _MAXIMUM_USERNAME_SIZE = 31
+    _MAXIMUM_DATABASE_NAME_SIZE = 81
+
     def __init__(self):
         """Initializes a PL/SQL Recall file parser."""
         super().__init__()
@@ -119,6 +124,15 @@ class PlsRecallParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper
         Returns:
           bool: True if this is a valid PLS Recall record, False otherwise.
         """
+        # The Username and Database fields are expected to contain an end-of-string
+        # character. A string that fills the entire field indicates the data, such
+        # as text, is not a PLS Recall record.
+        if (
+            len(pls_record.username) >= self._MAXIMUM_USERNAME_SIZE
+            or len(pls_record.database_name) >= self._MAXIMUM_DATABASE_NAME_SIZE
+        ):
+            return False
+
         try:
             date_time = self._ParseTDateTimeValue(pls_record.last_written_time)
         except errors.ParseError:
