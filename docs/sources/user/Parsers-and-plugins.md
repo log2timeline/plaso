@@ -203,6 +203,7 @@ Name | Description
 --- | ---
 android_logcat | Parser for Android logcat files.
 apache_access | Parser for Apache access log (access.log) files.
+apache_error | Parser for Apache error log (error.log) files.
 apt_history | Parser for Advanced Packaging Tool (APT) History log files.
 atlassian_bitbucket | Parser for Atlassian Bitbucket log files.
 atlassian_confluence | Parser for Atlassian Confluence log files.

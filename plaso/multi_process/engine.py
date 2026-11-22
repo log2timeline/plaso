@@ -105,11 +105,8 @@ class MultiProcessEngine(engine.BaseEngine):
 
         process = self._processes_per_pid[pid]
 
+        process_is_alive = process.is_alive()
         process_status = self._QueryProcessStatus(process)
-        if process_status is None:
-            process_is_alive = False
-        else:
-            process_is_alive = True
 
         process_information = self._process_information_per_pid[pid]
         used_memory = process_information.GetUsedMemory() or 0

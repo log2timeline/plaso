@@ -317,8 +317,8 @@ class OutputMediator:
           data_type (str): data type.
 
         Returns:
-          EventFormatter: corresponding message formatter or the default message
-              formatter if not available.
+          EventFormatter: corresponding message formatter or None if not
+              available.
         """
         data_type = data_type.lower()
         return self._message_formatters.get(data_type)

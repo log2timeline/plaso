@@ -6,12 +6,15 @@ import unittest
 
 from unittest import mock
 
+import requests
+
 from dfvfs.path import fake_path_spec
 
 from plaso.analysis import virustotal
 from plaso.containers import events
 from plaso.containers import reports
 from plaso.lib import definitions
+from plaso.parsers import pe
 
 from tests.analysis import test_lib
 
@@ -41,10 +44,12 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
 
     _FAKE_API_KEY = "4"
 
+    _EVENT_2_HASH = "91"
+
     _TEST_EVENTS = [
         {
             "_parser_chain": "pe",
-            "data_type": "pe:compilation:compilation_time",
+            "data_type": "pe_coff:file",
             "path_spec": fake_path_spec.FakePathSpec(
                 location="C:\\WINDOWS\\system32\\evil.exe"
             ),
@@ -52,7 +57,17 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
             "sha256_hash": _EVENT_1_HASH,
             "timestamp": "2015-01-01 17:00:00",
             "timestamp_desc": definitions.TIME_DESCRIPTION_UNKNOWN,
-        }
+        },
+        {
+            "_parser_chain": "filestat",
+            "data_type": "fs:stat",
+            "path_spec": fake_path_spec.FakePathSpec(
+                location="C:\\WINDOWS\\system32\\evil.txt"
+            ),
+            "sha256_hash": _EVENT_2_HASH,
+            "timestamp": "2015-01-01 17:00:00",
+            "timestamp_desc": definitions.TIME_DESCRIPTION_MODIFICATION,
+        },
     ]
 
     # pylint: disable=unused-argument
@@ -92,6 +107,19 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
         """Cleans up after running an individual test."""
         self.requests_patcher.stop()
 
+    def testDataTypes(self):
+        """Tests that the data types are those produced by the PE parser."""
+        expected_data_types = frozenset(
+            [
+                pe.PEDLLImportEventData.DATA_TYPE,
+                pe.PEFileEventData.DATA_TYPE,
+                pe.PEResourceEventData.DATA_TYPE,
+            ]
+        )
+        self.assertEqual(
+            virustotal.VirusTotalAnalysisPlugin.DATA_TYPES, expected_data_types
+        )
+
     def testExamineEventAndCompileReport(self):
         """Tests the ExamineEvent and CompileReport functions."""
         plugin = virustotal.VirusTotalAnalysisPlugin()
@@ -128,6 +156,35 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
 
         expected_labels = ["virustotal_detections_10"]
         self.assertEqual(labels, expected_labels)
+
+    def testQueryHashesRedactsAPIKeyFromError(self):
+        """Tests that the API key is partially redacted from request errors."""
+        api_key = "4a1bSECRETAPIKEYVALUE9f2e"
+
+        plugin = virustotal.VirusTotalAnalysisPlugin()
+        plugin.SetAPIKey(api_key)
+
+        # pylint: disable=unused-argument
+        def _MockGetRaises(url, params=None, timeout=None):
+            """Mock that simulates a failed request whose error contains the URL."""
+            raise requests.ConnectionError(
+                "HTTPSConnectionPool(host='www.virustotal.com', port=443): "
+                "Max retries exceeded with url: "
+                f"/vtapi/v2/file/report?apikey={api_key:s}"
+                f"&resource={self._EVENT_1_HASH:s} "
+                "(Caused by NewConnectionError('Failed to establish a connection'))"
+            )
+
+        with mock.patch("requests.get", _MockGetRaises):
+            with self.assertLogs("analysis", level="ERROR") as logs:
+                json_response = plugin._QueryHashes([self._EVENT_1_HASH])
+
+        self.assertIsNone(json_response)
+
+        logged_text = "\n".join(logs.output)
+        self.assertIn("apikey=4a1b...9f2e&", logged_text)
+        self.assertNotIn(api_key, logged_text)
+        self.assertNotIn("SECRETAPIKEYVALUE", logged_text)
 
 
 if __name__ == "__main__":

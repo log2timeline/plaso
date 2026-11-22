@@ -111,15 +111,18 @@ class PstealToolTest(test_lib.CLIToolTestCase):
 
     def testParseArguments(self):
         """Tests the ParseArguments function."""
+        # Disable terminal colors otherwise the test fails due argparse using colors.
+        os.environ["NO_COLOR"] = "1"
+
         output_writer = test_lib.TestOutputWriter(encoding="utf-8")
         test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
-        # Test ParseArguments with no output file nor source.
+        # Test ParseArguments with no output file and no source.
         result = test_tool.ParseArguments([])
         self.assertFalse(result)
+
         output = output_writer.ReadOutput()
-        expected_error = "ERROR: Missing source path."
-        self.assertIn(expected_error, output)
+        self.assertIn("ERROR: Missing source path.", output)
 
     def testExtractEventsFromSourceDirectory(self):
         """Tests the ExtractEventsFromSources function on a directory."""

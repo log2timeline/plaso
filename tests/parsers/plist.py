@@ -222,37 +222,15 @@ class PlistParserTest(test_lib.ParserTestCase):
         with self.assertRaises(errors.WrongParser):
             self._ParseFile(["SAFStore.xml"], parser)
 
-    def testParseWithXMLPlistFileEncodingUnicode(self):
-        """Tests the Parse function on an XML plist file with encoding Unicode."""
+    def testParseWithXMLPlistFileTrailingData(self):
+        """Tests the Parse function on an XML plist file with trailing data."""
         parser = plist.PlistParser()
-
-        # UTF-16 little-endian encoded XML plist file with byte-order-mark.
-        storage_writer = self._ParseFile(["plist", "encoding_unicode.plist"], parser)
+        storage_writer = self._ParseFile(["plist", "signed.plist"], parser)
 
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
         self.assertEqual(number_of_event_data, 1)
-
-        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-            "extraction_warning"
-        )
-        self.assertEqual(number_of_warnings, 0)
-
-        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
-            "recovery_warning"
-        )
-        self.assertEqual(number_of_warnings, 0)
-
-        # UTF-8 encoded XML plist file without byte-order-mark.
-        storage_writer = self._ParseFile(
-            ["plist", "encoding_unicode_no_bom.plist"], parser
-        )
-
-        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
-            "event_data"
-        )
-        self.assertEqual(number_of_event_data, 0)
 
         number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
             "extraction_warning"
@@ -263,6 +241,14 @@ class PlistParserTest(test_lib.ParserTestCase):
             "recovery_warning"
         )
         self.assertEqual(number_of_warnings, 0)
+
+        # Trailing data without plist XML root element end tag.
+        with self.assertRaises(errors.WrongParser):
+            self._ParseFile(["plist", "signed_truncated.plist"], parser)
+
+        # XML file with a plist XML element that is not the root element.
+        with self.assertRaises(errors.WrongParser):
+            self._ParseFile(["plist", "embedded_plist.xml"], parser)
 
     def testParseWithEmptyBinaryPlistFile(self):
         """Tests the Parse function on an empty binary plist file."""
@@ -319,6 +305,48 @@ class PlistParserTest(test_lib.ParserTestCase):
             "extraction_warning"
         )
         self.assertEqual(number_of_warnings, 0)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "recovery_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+    def testParseWithXMLPlistFileEncodingUnicode(self):
+        """Tests the Parse function on an XML plist file with encoding Unicode."""
+        parser = plist.PlistParser()
+
+        # UTF-16 little-endian encoded XML plist file with byte-order-mark.
+        storage_writer = self._ParseFile(["plist", "encoding_unicode.plist"], parser)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 1)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "recovery_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        # UTF-8 encoded XML plist file without byte-order-mark.
+        storage_writer = self._ParseFile(
+            ["plist", "encoding_unicode_no_bom.plist"], parser
+        )
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 0)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 1)
 
         number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
             "recovery_warning"

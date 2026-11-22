@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "plaso"
-version = "20261029"
+version = "20261121"
 description = "Plaso (log2timeline) - Super timeline all the things"
 maintainers = [
     { name = "Log2Timeline maintainers", email = "log2timeline-maintainers@googlegroups.com" },
@@ -45,7 +45,7 @@ dependencies = [
     "libfsntfs-python >= 20211229",
     "libfsxfs-python >= 20220829",
     "libfvde-python >= 20220121",
-    "libfwnt-python >= 20210717",
+    "libfwnt-python >= 20220922",
     "libfwsi-python >= 20240225",
     "liblnk-python >= 20230716",
     "libluksde-python >= 20220121",

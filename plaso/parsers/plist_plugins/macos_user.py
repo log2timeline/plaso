@@ -1,6 +1,7 @@
 """Plist parser plugin for MacOS user plist files.
 
-Fields within the plist key:
+Fields within the plist key::
+
   name: username.
   uid: user identifier (UID).
   passwordpolicyoptions: XML Plist structures with the timestamp.

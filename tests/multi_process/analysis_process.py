@@ -6,6 +6,8 @@ import time
 import unittest
 
 from plaso.analysis import interface as analysis_interface
+from plaso.analysis import mediator as analysis_mediator
+from plaso.containers import events
 from plaso.engine import configurations
 from plaso.multi_process import analysis_process
 from plaso.multi_process import plaso_queue
@@ -16,9 +18,19 @@ from tests.multi_process import test_lib
 
 
 class TestAnalysisPlugin(analysis_interface.AnalysisPlugin):
-    """Analysis plugin for testing."""
+    """Analysis plugin for testing.
+
+    Attributes:
+      examined_events (list[tuple[EventObject, EventData, EventDataStream]]):
+          events examined by the plugin.
+    """
 
     NAME = "test_plugin"
+
+    def __init__(self):
+        """Initializes an analysis plugin for testing."""
+        super().__init__()
+        self.examined_events = []
 
     # pylint: disable=arguments-renamed
     # pylint: disable=unused-argument
@@ -45,7 +57,28 @@ class TestAnalysisPlugin(analysis_interface.AnalysisPlugin):
           event_data (EventData): event data.
           event_data_stream (EventDataStream): event data stream.
         """
-        return
+        self.examined_events.append((event, event_data, event_data_stream))
+
+
+class TestFailingAnalysisPlugin(TestAnalysisPlugin):
+    """Analysis plugin that fails to examine events for testing."""
+
+    NAME = "test_failing_plugin"
+
+    def ExamineEvent(self, mediator, event, event_data, event_data_stream):
+        """Analyzes an event.
+
+        Args:
+          mediator (AnalysisMediator): mediates interactions between analysis
+              plugins and other components, such as storage and dfVFS.
+          event (EventObject): event.
+          event_data (EventData): event data.
+          event_data_stream (EventDataStream): event data stream.
+
+        Raises:
+          RuntimeError: always.
+        """
+        raise RuntimeError("Unable to examine event.")
 
 
 class AnalysisProcessTest(test_lib.MultiProcessingTestCase):
@@ -81,7 +114,18 @@ class AnalysisProcessTest(test_lib.MultiProcessingTestCase):
             self.assertEqual(status_attributes["identifier"], "TestAnalysis")
             self.assertIsNone(status_attributes["number_of_produced_reports"])
 
-            # TODO: add test with analysis mediator.
+            # Test with an analysis mediator.
+            test_mediator = analysis_mediator.AnalysisMediator()
+            test_mediator.number_of_produced_analysis_reports = 1
+            test_mediator.number_of_produced_event_tags = 5
+
+            test_process._analysis_mediator = test_mediator
+
+            status_attributes = test_process._GetStatus()
+
+            self.assertIsNotNone(status_attributes)
+            self.assertEqual(status_attributes["number_of_produced_event_tags"], 5)
+            self.assertEqual(status_attributes["number_of_produced_reports"], 1)
 
     def testMain(self):
         """Tests the _Main function."""
@@ -126,7 +170,49 @@ class AnalysisProcessTest(test_lib.MultiProcessingTestCase):
             # Before the temporary directory is removed.
             time.sleep(1)
 
-    # TODO: add test for _ProcessEvent.
+    def testProcessEventTriple(self):
+        """Tests the _ProcessEventTriple function."""
+        event_triple = events.EventTriple()
+        event_triple.event = events.EventObject()
+        event_triple.event_data = events.EventData()
+        event_triple.event_data_stream = events.EventDataStream()
+
+        test_mediator = analysis_mediator.AnalysisMediator()
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            configuration = configurations.ProcessingConfiguration()
+            configuration.task_storage_path = temp_directory
+
+            analysis_plugin = TestAnalysisPlugin()
+            test_process = analysis_process.AnalysisProcess(
+                None, analysis_plugin, configuration, [], name="TestAnalysis"
+            )
+            test_process._ProcessEventTriple(test_mediator, event_triple)
+
+            self.assertEqual(
+                analysis_plugin.examined_events,
+                [
+                    (
+                        event_triple.event,
+                        event_triple.event_data,
+                        event_triple.event_data_stream,
+                    )
+                ],
+            )
+
+            # Test with an analysis plugin that raises an exception.
+            analysis_plugin = TestFailingAnalysisPlugin()
+            test_process = analysis_process.AnalysisProcess(
+                None, analysis_plugin, configuration, [], name="TestAnalysis"
+            )
+
+            with self.assertLogs("multi_process", level="WARNING") as log_context:
+                test_process._ProcessEventTriple(test_mediator, event_triple)
+
+            self.assertIn(
+                "Unhandled exception while processing event object.",
+                log_context.output[0],
+            )
 
     def testSignalAbort(self):
         """Tests the SignalAbort function."""

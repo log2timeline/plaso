@@ -279,7 +279,48 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
         # Ensure that the only commas returned are the 16 delimiters.
         self.assertEqual(event_body.count(","), 16)
 
-    # TODO: add coverage for WriteEventMACBGroup
+    def testWriteFieldValuesOfMACBGroup(self):
+        """Tests the WriteFieldValuesOfMACBGroup function."""
+        test_file_object = io.StringIO()
+
+        output_mediator = self._CreateOutputMediator()
+
+        formatters_directory_path = self._GetTestFilePath(["formatters"])
+        output_mediator.ReadMessageFormattersFromDirectory(formatters_directory_path)
+
+        output_module = l2t_csv.L2TCSVOutputModule()
+        output_module._file_object = test_file_object
+
+        event_tag = events.EventTag()
+        event_tag.AddLabels(["Malware", "Printed"])
+
+        macb_group = []
+        for timestamp_description in (
+            definitions.TIME_DESCRIPTION_WRITTEN,
+            definitions.TIME_DESCRIPTION_CREATION,
+        ):
+            event_values = dict(self._TEST_EVENTS[0])
+            event_values["timestamp_desc"] = timestamp_description
+
+            event, event_data, event_data_stream = (
+                containers_test_lib.CreateEventFromValues(event_values)
+            )
+            macb_group.append((event, event_data, event_data_stream, event_tag))
+
+        output_module.WriteFieldValuesOfMACBGroup(output_mediator, macb_group)
+
+        output_module._FlushSortedStringsHeap()
+
+        expected_event_body = (
+            "06/27/2012,18:17:01,UTC,M..B,FILE,Test log file,Content Modification "
+            "Time; Creation Time,-,ubuntu,Reporter <CRON> PID: 8442 "
+            "(pam_unix(cron:session): session closed for user root),Reporter "
+            "<CRON> PID: 8442 (pam_unix(cron:session): session closed for user "
+            "root),2,FAKE:log/syslog.1,-,Malware Printed,test_parser,my_number: "
+            "123; some_additional_foo: True\n"
+        )
+        event_body = test_file_object.getvalue()
+        self.assertEqual(event_body, expected_event_body)
 
     def testWriteHeader(self):
         """Tests the WriteHeader function."""
