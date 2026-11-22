@@ -46,11 +46,6 @@ class FirefoxDownloadEventData(events.EventData):
       url (str): source URL of the download.
     """
 
-    # TODO: consider a separate data type, such as firefox:places:download, for
-    # downloads stored in places.sqlite. This would give each format an exact
-    # schema, consistent with the other places.sqlite data types, but it changes
-    # the data type of existing event data, which affects event filters and the
-    # analysis plugins that use firefox:downloads:download.
     DATA_TYPE = "firefox:downloads:download"
 
     def __init__(self):
