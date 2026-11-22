@@ -137,7 +137,30 @@ class PathArtifactTest(shared_test_lib.BaseTestCase):
 
         self.assertFalse(attribute_container == "/etc/issue")
 
-    # TODO: add tests for _SplitPath.
+    def testSplitPath(self):
+        """Tests the _SplitPath function."""
+        attribute_container = artifacts.PathArtifact()
+
+        # pylint: disable=protected-access
+        path_segments = attribute_container._SplitPath("etc/issue", "/")
+        self.assertEqual(path_segments, ["etc", "issue"])
+
+        # An absolute path keeps an empty leading segment.
+        path_segments = attribute_container._SplitPath("/etc/issue", "/")
+        self.assertEqual(path_segments, ["", "etc", "issue"])
+
+        # Empty segments after the first one are removed.
+        path_segments = attribute_container._SplitPath("/etc//issue/", "/")
+        self.assertEqual(path_segments, ["", "etc", "issue"])
+
+        path_segments = attribute_container._SplitPath("C:\\Windows\\System32", "\\")
+        self.assertEqual(path_segments, ["C:", "Windows", "System32"])
+
+        path_segments = attribute_container._SplitPath("", "/")
+        self.assertEqual(path_segments, [""])
+
+        path_segments = attribute_container._SplitPath(None, "/")
+        self.assertEqual(path_segments, [""])
 
     def testContainedIn(self):
         """Tests the ContainedIn function."""

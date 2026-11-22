@@ -12,9 +12,11 @@ import unittest
 from plaso.analysis import tagging
 from plaso.containers import sessions
 from plaso.engine import configurations
+from plaso.engine import process_info
 from plaso.lib import definitions
 from plaso.lib import loggers
 from plaso.multi_process import analysis_engine
+from plaso.multi_process import plaso_xmlrpc
 from plaso.storage import factory as storage_factory
 
 from tests import test_lib as shared_test_lib
@@ -26,6 +28,29 @@ class AnalysisEngineMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
     """Tests for the task-based multi-process processing analysis engine."""
 
     # pylint: disable=protected-access
+
+    def _CreateTestEngine(self):
+        """Creates an engine with a registered and monitored analysis process.
+
+        The RPC client of the analysis process connects to a port without a RPC
+        server, therefore querying the process status via RPC fails.
+
+        Returns:
+          tuple[AnalysisMultiProcessEngine, TestProcess]: engine and analysis
+              process.
+        """
+        pid = os.getpid()
+        process = test_lib.TestProcess("tagging", pid)
+
+        rpc_client = plaso_xmlrpc.XMLProcessStatusRPCClient()
+        rpc_client.Open("localhost", process.rpc_port.value)
+
+        test_engine = analysis_engine.AnalysisMultiProcessEngine(worker_memory_limit=0)
+        test_engine._processes_per_pid[pid] = process
+        test_engine._process_information_per_pid[pid] = process_info.ProcessInfo(pid)
+        test_engine._rpc_clients_per_pid[pid] = rpc_client
+
+        return test_engine, process
 
     def testInternalAnalyzeEvents(self):
         """Tests the _AnalyzeEvents function."""
@@ -75,11 +100,80 @@ class AnalysisEngineMultiProcessEngineTest(test_lib.MultiProcessingTestCase):
         self.assertEqual(events_counter["Events filtered"], 0)
         self.assertEqual(events_counter["Events processed"], 38)
 
-    # TODO: add test for _CheckStatusAnalysisProcess.
+    def testInternalCheckStatusAnalysisProcessWithRPCError(self):
+        """Tests the _CheckStatusAnalysisProcess function with a RPC error."""
+        test_engine, process = self._CreateTestEngine()
+
+        test_engine._CheckStatusAnalysisProcess(process.pid)
+
+        worker_status = test_engine._processing_status.workers_status[0]
+        self.assertEqual(worker_status.status, "RPC error")
+        self.assertEqual(test_engine._rpc_errors_per_pid[process.pid], 1)
+        self.assertFalse(process.terminated)
+
+    def testInternalCheckStatusAnalysisProcessWithMaximumRPCErrors(self):
+        """Tests the _CheckStatusAnalysisProcess function with too many RPC errors."""
+        test_engine, process = self._CreateTestEngine()
+        test_engine._rpc_errors_per_pid[process.pid] = test_engine._MAXIMUM_RPC_ERRORS
+
+        test_engine._CheckStatusAnalysisProcess(process.pid)
+
+        worker_status = test_engine._processing_status.workers_status[0]
+        self.assertEqual(worker_status.status, definitions.STATUS_INDICATOR_KILLED)
+        self.assertTrue(process.terminated)
+
+    def testInternalCheckStatusAnalysisProcessCompleted(self):
+        """Tests the _CheckStatusAnalysisProcess function on a completed process."""
+        test_engine = analysis_engine.AnalysisMultiProcessEngine()
+
+        with self.assertRaises(KeyError):
+            test_engine._CheckStatusAnalysisProcess(1)
+
+        process = multiprocessing.Process(name="Worker_00")
+        test_engine._processes_per_pid[1] = process
+        test_engine._process_information_per_pid[1] = None
+        test_engine._completed_analysis_processes.add(1)
+
+        test_engine._CheckStatusAnalysisProcess(1)
+
+        worker_status = test_engine._processing_status.workers_status[0]
+        self.assertEqual(worker_status.identifier, "Worker_00")
+        self.assertEqual(worker_status.pid, 1)
+        self.assertEqual(worker_status.status, definitions.STATUS_INDICATOR_COMPLETED)
+        self.assertEqual(worker_status.used_memory, 0)
+
+        self.assertIn(1, test_engine._process_information_per_pid)
+
     # TODO: add test for _StartAnalysisProcesses.
-    # TODO: add test for _StatusUpdateThreadMain.
+
+    def testInternalStatusUpdateThreadMain(self):
+        """Tests the _StatusUpdateThreadMain function."""
+        processing_status_updates = []
+
+        def _StatusUpdateCallback(processing_status):
+            """Records the processing status and stops the status updates.
+
+            Args:
+              processing_status (ProcessingStatus): processing status.
+            """
+            processing_status_updates.append(processing_status)
+            test_engine._status_update_active = False
+
+        test_engine = analysis_engine.AnalysisMultiProcessEngine()
+        test_engine._status_update_active = True
+        test_engine._status_update_callback = _StatusUpdateCallback
+        test_engine._status_update_interval = 0.01
+
+        test_engine._StatusUpdateThreadMain()
+
+        self.assertEqual(len(processing_status_updates), 1)
+
+        foreman_status = processing_status_updates[0].foreman_status
+        self.assertIsNotNone(foreman_status)
+        self.assertEqual(foreman_status.identifier, "Main")
+        self.assertEqual(foreman_status.status, definitions.STATUS_INDICATOR_IDLE)
+
     # TODO: add test for _StopAnalysisProcesses.
-    # TODO: add test for _UpdateProcessingStatus.
 
     def testAnalyzeEvents(self):
         """Tests the AnalyzeEvents function."""

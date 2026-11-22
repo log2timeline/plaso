@@ -19,6 +19,7 @@ from plaso.containers import events
 from plaso.containers import reports
 from plaso.containers import sessions
 from plaso.containers import tasks
+from plaso.containers import warnings
 from plaso.lib import definitions
 from plaso.serializer import json_serializer
 
@@ -176,7 +177,36 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         self.assertIsNotNone(analysis_report)
         self.assertIsInstance(analysis_report, reports.AnalysisReport)
 
-    # TODO: add ExtractionWarning tests.
+    def testReadAndWriteSerializedExtractionWarning(self):
+        """Test ReadSerialized and WriteSerialized of ExtractionWarning."""
+        test_path_spec = fake_path_spec.FakePathSpec(location="/opt/plaso.txt")
+
+        expected_extraction_warning = warnings.ExtractionWarning(
+            message="unable to parse file",
+            parser_chain="text/syslog",
+            path_spec=test_path_spec,
+        )
+
+        json_string = json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
+            expected_extraction_warning
+        )
+        self.assertIsNotNone(json_string)
+
+        extraction_warning = (
+            json_serializer.JSONAttributeContainerSerializer.ReadSerialized(json_string)
+        )
+        self.assertIsNotNone(extraction_warning)
+        self.assertIsInstance(extraction_warning, warnings.ExtractionWarning)
+
+        expected_extraction_warning_dict = {
+            "message": "unable to parse file",
+            "parser_chain": "text/syslog",
+            "path_spec": test_path_spec,
+        }
+
+        extraction_warning_dict = extraction_warning.CopyToDict()
+
+        self.assertEqual(extraction_warning_dict, expected_extraction_warning_dict)
 
     def testReadAndWriteSerializedEventData(self):
         """Test ReadSerialized and WriteSerialized of EventData."""
@@ -431,11 +461,56 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
             "has_retry": False,
             "identifier": task.identifier,
             "number_of_retries": 0,
+            "path_specs": [],
             "session_identifier": session_identifier,
             "start_time": task.start_time,
         }
         task_dict = task.CopyToDict()
         self.assertEqual(sorted(task_dict.items()), sorted(expected_task_dict.items()))
+
+    def testReadAndWriteSerializedTaskWithPathSpecs(self):
+        """Test ReadSerialized and WriteSerialized of Task with path specifications."""
+        session_identifier = f"{uuid.uuid4().hex:s}"
+
+        os_path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_OS, location="/tmp/test.qcow2"
+        )
+        qcow_path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_QCOW, parent=os_path_spec
+        )
+        path_specs = [
+            path_spec_factory.Factory.NewPathSpec(
+                dfvfs_definitions.TYPE_INDICATOR_TSK,
+                inode=15,
+                location="/file1.txt",
+                parent=qcow_path_spec,
+            ),
+            path_spec_factory.Factory.NewPathSpec(
+                dfvfs_definitions.TYPE_INDICATOR_TSK,
+                inode=16,
+                location="/file2.txt",
+                parent=qcow_path_spec,
+            ),
+        ]
+
+        expected_task = tasks.Task(session_identifier=session_identifier)
+        expected_task.path_specs = path_specs
+
+        json_string = json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
+            expected_task
+        )
+        self.assertIsNotNone(json_string)
+
+        task = json_serializer.JSONAttributeContainerSerializer.ReadSerialized(
+            json_string
+        )
+        self.assertIsNotNone(task)
+        self.assertIsInstance(task, tasks.Task)
+
+        self.assertEqual(
+            [path_spec.comparable for path_spec in task.path_specs],
+            [path_spec.comparable for path_spec in path_specs],
+        )
 
 
 if __name__ == "__main__":

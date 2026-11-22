@@ -49,8 +49,18 @@ class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
         )
         self.assertEqual(number_of_warnings, 0)
 
-        # TODO: Test that the UTF-8 byte order mark gets removed from
-        # the first line.
+        # The first line starts with a UTF-8 byte order mark, which must be
+        # removed for the date of the first row to be parsed.
+        expected_event_values = {
+            "data_type": "av:mcafee:accessprotectionlog",
+            "offset": 0,
+            "status": "Blocked by Access Protection rule",
+            "username": "SOMEDOMAIN\\someUser",
+            "written_time": "2013-09-27T14:42:26",
+        }
+
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
 
         # Test this entry:
         # 9/27/2013 2:42:26 PM  Blocked by Access Protection rule

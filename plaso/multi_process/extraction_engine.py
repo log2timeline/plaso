@@ -43,6 +43,14 @@ class _EventSourceHeap:
         self._heap = []
         self._maximum_number_of_items = maximum_number_of_items
 
+    def __len__(self):
+        """Determines the number of event sources in the heap.
+
+        Returns:
+          int: number of event sources in the heap.
+        """
+        return len(self._heap)
+
     def IsFull(self):
         """Determines if the heap is full.
 
@@ -50,6 +58,20 @@ class _EventSourceHeap:
           bool: True if the heap is full, False otherwise.
         """
         return len(self._heap) >= self._maximum_number_of_items
+
+    def PeekEventSource(self):
+        """Retrieves the first event source from the heap without removing it.
+
+        Returns:
+          EventSource: an event source or None on if no event source is available.
+        """
+        try:
+            _, _, event_source = self._heap[0]
+
+        except IndexError:
+            return None
+
+        return event_source
 
     def PopEventSource(self):
         """Pops an event source from the heap.
@@ -98,8 +120,21 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
     # Maximum number of dfVFS file system objects to cache in the foreman process.
     _FILE_SYSTEM_CACHE_SIZE = 3
 
+    # Minimum and maximum number of seconds the task scheduler loop sleeps when
+    # an iteration did not produce any work.
+    _IDLE_SLEEP_MINIMUM_SECONDS = 0.001
+    _IDLE_SLEEP_MAXIMUM_SECONDS = 0.05
+
     # Maximum number of concurrent tasks.
     _MAXIMUM_NUMBER_OF_TASKS = 10000
+
+    # Maximum number of path specifications of regular files that are processed
+    # by a single task, to reduce the per-task overhead for many small files.
+    _MAXIMUM_NUMBER_OF_PATH_SPECS_PER_TASK = 32
+
+    # Size in bytes of the data of regular files that, when reached, stops more
+    # path specifications being added to a task.
+    _MAXIMUM_TASK_DATA_SIZE = 1024 * 1024
 
     _TASK_QUEUE_TIMEOUT_SECONDS = 2
 
@@ -306,7 +341,48 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
                     file_system_path_spec,
                 )
 
-    def _CreateTask(self, storage_writer, session_identifier, event_source):
+    def _AddEventSourcesToTask(self, storage_writer, event_source_heap, task, size):
+        """Adds regular file event sources from the event source heap to a task.
+
+        Regular file event sources are added while they are the first in the heap,
+        up to a maximum number of path specifications and size of data per task,
+        so that many small files do not each require a separate task.
+
+        Args:
+          storage_writer (StorageWriter): storage writer for a session storage.
+          event_source_heap (_EventSourceHeap): event source heap.
+          task (Task): task of a regular file event source.
+          size (int): size of the data of the regular file of the task.
+        """
+        # Leave event sources in the heap for the other worker processes.
+        maximum_number_of_path_specs = min(
+            self._MAXIMUM_NUMBER_OF_PATH_SPECS_PER_TASK,
+            1 + len(event_source_heap) // max(1, self._number_of_worker_processes),
+        )
+
+        while (
+            len(task.path_specs) < maximum_number_of_path_specs
+            and size < self._MAXIMUM_TASK_DATA_SIZE
+        ):
+            event_source = event_source_heap.PeekEventSource()
+            if (
+                not event_source
+                or event_source.file_entry_type
+                != dfvfs_definitions.FILE_ENTRY_TYPE_FILE
+            ):
+                break
+
+            event_source_heap.PopEventSource()
+            self._number_of_consumed_sources += 1
+
+            file_entry = self._OpenFileEntryToProcess(storage_writer, event_source)
+            if file_entry:
+                task.path_specs.append(event_source.path_spec)
+                size += file_entry.size or 0
+
+    def _CreateTask(
+        self, storage_writer, session_identifier, event_source, event_source_heap=None
+    ):
         """Creates a task to processes an event source.
 
         Args:
@@ -314,36 +390,30 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           session_identifier (str): the identifier of the session the tasks are
               part of.
           event_source (EventSource): event source.
+          event_source_heap (Optional[_EventSourceHeap]): event source heap to
+              take additional regular file event sources from, where None
+              represents that the task only processes the event source.
 
         Returns:
           Task: task or None if no task could be created.
         """
-        file_entry = path_spec_resolver.Resolver.OpenFileEntry(
-            event_source.path_spec, resolver_context=self._resolver_context
-        )
-        if file_entry is None:
-            self._ProduceExtractionWarning(
-                storage_writer, "Unable to open file entry", event_source.path_spec
-            )
-            return None
-
-        file_system = file_entry.GetFileSystem()
-
-        if not event_source.path_spec.IsSystemLevel():
-            self._CacheFileSystem(file_system)
-
-        if self._CheckExcludedPathSpec(file_system, event_source.path_spec):
-            display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
-                event_source.path_spec
-            )
-            logger.debug(f"Excluded from extraction: {display_name:s}.")
+        file_entry = self._OpenFileEntryToProcess(storage_writer, event_source)
+        if not file_entry:
             return None
 
         task = self._task_manager.CreateTask(
             session_identifier, storage_format=self._task_storage_format
         )
         task.file_entry_type = event_source.file_entry_type
-        task.path_spec = event_source.path_spec
+        task.path_specs = [event_source.path_spec]
+
+        if (
+            event_source_heap is not None
+            and event_source.file_entry_type == dfvfs_definitions.FILE_ENTRY_TYPE_FILE
+        ):
+            self._AddEventSourcesToTask(
+                storage_writer, event_source_heap, task, file_entry.size or 0
+            )
 
         return task
 
@@ -357,9 +427,14 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
           event_source_heap (_EventSourceHeap): event source heap.
           start_with_first (Optional[bool]): True if the function should start
               with the first written event source.
+
+        Returns:
+          bool: True if event sources were added to the heap.
         """
         if self._processing_profiler:
             self._processing_profiler.StartTiming("fill_event_source_heap")
+
+        has_added_event_sources = False
 
         if self._processing_profiler:
             self._processing_profiler.StartTiming("get_event_source")
@@ -374,6 +449,7 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
         while event_source:
             event_source_heap.PushEventSource(event_source)
+            has_added_event_sources = True
             if event_source_heap.IsFull():
                 logger.debug("Event source heap is full.")
                 break
@@ -388,6 +464,26 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
         if self._processing_profiler:
             self._processing_profiler.StopTiming("fill_event_source_heap")
+
+        return has_added_event_sources
+
+    def _GetIdleSleepTime(self, idle_sleep_time):
+        """Determines the next idle sleep time of the task scheduler loop.
+
+        The sleep time is doubled on every consecutive idle iteration, starting
+        with the minimum and up to the maximum idle sleep time.
+
+        Args:
+          idle_sleep_time (float): current idle sleep time in seconds or 0.0 if
+              the previous iteration produced work.
+
+        Returns:
+          float: next idle sleep time in seconds.
+        """
+        if idle_sleep_time <= 0.0:
+            return self._IDLE_SLEEP_MINIMUM_SECONDS
+
+        return min(idle_sleep_time * 2.0, self._IDLE_SLEEP_MAXIMUM_SECONDS)
 
     def _GetPathSpecificationString(self, path_spec):
         """Retrieves a printable string representation of the path specification.
@@ -567,6 +663,9 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
               to merge task storage.
           session_identifier (str): the identifier of the session the tasks are
               part of.
+
+        Returns:
+          bool: True if task storage was processed or merged.
         """
         if self._processing_profiler:
             self._processing_profiler.StartTiming("merge_check")
@@ -604,6 +703,8 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
         task = None
         if not self._task_merge_helper_on_hold:
             task = self._task_manager.GetTaskPendingMerge(self._merge_task)
+
+        has_merged = bool(task_identifiers or task or self._task_merge_helper)
 
         if task or self._task_merge_helper:
             if self._processing_profiler:
@@ -701,6 +802,42 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
                         self._merge_task, "merge_resumed"
                     )
 
+        return has_merged
+
+    def _OpenFileEntryToProcess(self, storage_writer, event_source):
+        """Opens the file entry of an event source that is to be processed.
+
+        Args:
+          storage_writer (StorageWriter): storage writer for a session storage.
+          event_source (EventSource): event source.
+
+        Returns:
+          dfvfs.FileEntry: file entry or None if the file entry could not be opened
+              or is excluded from extraction.
+        """
+        file_entry = path_spec_resolver.Resolver.OpenFileEntry(
+            event_source.path_spec, resolver_context=self._resolver_context
+        )
+        if file_entry is None:
+            self._ProduceExtractionWarning(
+                storage_writer, "Unable to open file entry", event_source.path_spec
+            )
+            return None
+
+        file_system = file_entry.GetFileSystem()
+
+        if not event_source.path_spec.IsSystemLevel():
+            self._CacheFileSystem(file_system)
+
+        if self._CheckExcludedPathSpec(file_system, event_source.path_spec):
+            display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
+                event_source.path_spec
+            )
+            logger.debug(f"Excluded from extraction: {display_name:s}.")
+            return None
+
+        return file_entry
+
     def _ProduceExtractionWarning(self, storage_writer, message, path_spec):
         """Produces an extraction warning.
 
@@ -744,18 +881,24 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
         task = None
         has_pending_tasks = True
+        idle_sleep_time = 0.0
 
         while event_source or has_pending_tasks:
             if self._abort:
                 break
 
             try:
+                has_activity = False
+
                 if not task:
                     task = self._task_manager.CreateRetryTask()
 
                 if not task and event_source:
                     task = self._CreateTask(
-                        storage_writer, session_identifier, event_source
+                        storage_writer,
+                        session_identifier,
+                        event_source,
+                        event_source_heap=event_source_heap,
                     )
                     event_source = None
 
@@ -766,28 +909,42 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
                         self._task_manager.SampleTaskStatus(task, "schedule_attempted")
 
                     else:
-                        path_spec_string = self._GetPathSpecificationString(
-                            task.path_spec
-                        )
-                        logger.debug(
-                            f"Scheduled task: {task.identifier:s} for path "
-                            f"specification: {path_spec_string:s}"
-                        )
+                        for path_spec in task.path_specs:
+                            path_spec_string = self._GetPathSpecificationString(
+                                path_spec
+                            )
+                            logger.debug(
+                                f"Scheduled task: {task.identifier:s} for path "
+                                f"specification: {path_spec_string:s}"
+                            )
                         self._task_manager.SampleTaskStatus(task, "scheduled")
 
                         task = None
+                        has_activity = True
 
-                self._MergeTaskStorage(storage_writer, session_identifier)
+                if self._MergeTaskStorage(storage_writer, session_identifier):
+                    has_activity = True
 
                 if event_source_heap.IsFull():
                     logger.debug("Event source heap is full.")
-                else:
-                    self._FillEventSourceHeap(storage_writer, event_source_heap)
+                elif self._FillEventSourceHeap(storage_writer, event_source_heap):
+                    has_activity = True
 
                 if not task and not event_source:
                     event_source = event_source_heap.PopEventSource()
 
+                if event_source:
+                    has_activity = True
+
                 has_pending_tasks = self._task_manager.HasPendingTasks()
+
+                # Back off when there is no work to prevent the task scheduler loop
+                # from busy waiting for workers to finish their tasks.
+                if has_activity:
+                    idle_sleep_time = 0.0
+                elif has_pending_tasks:
+                    idle_sleep_time = self._GetIdleSleepTime(idle_sleep_time)
+                    time.sleep(idle_sleep_time)
 
             except KeyboardInterrupt:
                 if self._debug_output:
@@ -813,11 +970,12 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
                 event_source = None
 
         for task in self._task_manager.GetFailedTasks():
-            self._ProduceExtractionWarning(
-                storage_writer,
-                "Worker failed to process path specification",
-                task.path_spec,
-            )
+            for path_spec in task.path_specs:
+                self._ProduceExtractionWarning(
+                    storage_writer,
+                    "Worker failed to process path specification",
+                    path_spec,
+                )
 
         self._status = definitions.STATUS_INDICATOR_IDLE
 

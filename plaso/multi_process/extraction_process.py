@@ -385,10 +385,14 @@ class ExtractionWorkerProcess(task_process.MultiProcessTaskProcess):
             task_storage_writer.AddAttributeContainer(task)
 
             # TODO: add support for more task types.
-            self._ProcessPathSpec(
-                self._extraction_worker, self._parser_mediator, task.path_spec
-            )
-            self._number_of_consumed_sources += 1
+            for path_spec in task.path_specs:
+                self._ProcessPathSpec(
+                    self._extraction_worker, self._parser_mediator, path_spec
+                )
+                self._number_of_consumed_sources += 1
+
+                if self._abort:
+                    break
 
             # Sub directories are processed as part of the task, instead of each
             # requiring a separate task.

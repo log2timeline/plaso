@@ -1,5 +1,12 @@
 # Troubleshooting installation issues
 
+General advice:
+
+* search the contents of this page and troubleshooting pages referenced
+* search the issue tracker including closed issues, maybe someone else encountered the same issue before you
+* search the discuss mailing list, maybe someone else encountered the same issue before you
+* file an issue or ask on the discuss mailing list, **make sure to add as much relevant details as possible**
+
 ## Ubuntu
 
 Installing the plaso on Ubuntu should be a breeze if you follow the
@@ -11,26 +18,35 @@ some point and those dependencies are out of date.
 
 If you are having trouble getting plaso to run on your computer after following
 the installation instructions one of the best first steps is to check if all
-dependencies are met. One way of doing that is to download the check dependency
-script and run it.
+dependencies are met. One way of doing that is to run the dependency check of
+the installed Plaso package:
 
 ```bash
-$ wget https://raw.githubusercontent.com/log2timeline/plaso/main/utils/check_dependencies.py
-$ python check_dependencies.py
+$ python3 -c 'from plaso import dependencies; dependencies.CheckDependencies()'
+```
+
+Or, from the root of a Plaso source checkout, run the check dependency script:
+
+```bash
+$ python3 utils/check_dependencies.py
 ```
 
 The output should be something on these lines:
 
 ```
-Checking availability and versions of plaso dependencies.
-[OK]		Crypto version: 2.6.1
-[OK]		artifacts version: 20180827
+Checking availability and versions of dependencies.
+[OK]		acstore version: 20260411
+[OK]		artifacts version: 20260421
 [OK]		bencode
 ...
 ```
 
-An `[ERROR]` status indicates that the version of the dependency is not
-supported.
+A `[FAILURE]` status indicates that the dependency is missing or that its
+version is not supported, for example:
+
+```
+[FAILURE]	missing: pyewf.
+```
 
 First make sure all currently installed packages are up-to-date by running:
 
@@ -54,10 +70,10 @@ Type "copyright", "credits" or "license" for more information.
 In [1]: import pyewf
 
 In [2]: pyewf.get_version()
-Out[2]: u'20140608'
+Out[2]: '20140608'
 
 In [3]: pyewf.__file__
-Out[3]: '/usr/lib/python3.7/dist-packages/pyewf.so'
+Out[3]: '/usr/lib/python3/dist-packages/pyewf.so'
 ```
 
 Import the Python module of the dependency that was showing an error status.
@@ -78,8 +94,8 @@ possible.
 To find out which package a Python module belongs to run:
 
 ```bash
-$ dpkg -S /usr/lib/python3.7/dist-packages/pyewf.so
-libewf-python: /usr/lib/python3.7/dist-packages/pyewf.so
+$ dpkg -S /usr/lib/python3/dist-packages/pyewf.so
+libewf-python3: /usr/lib/python3/dist-packages/pyewf.so
 ```
 
 Another example here is *pyparsing*:
@@ -88,106 +104,42 @@ Another example here is *pyparsing*:
 In [1]: import pyparsing
 
 In [2]: pyparsing.__version__
-Out[2]: '2.0.3'
+Out[2]: '3.2.0'
 
 In [3]: pyparsing.__file__
-Out[3]: '/usr/lib/python3.7/dist-packages/pyparsing.pyc'
+Out[3]: '/usr/lib/python3/dist-packages/pyparsing/__init__.py'
 
 ```
 
-In this case the Python module is the ".pyc" file, which is not included in the
-dpkg package:
+In this case the Python module is a package directory, to find out which
+package it belongs to run:
 
 ```bash
-$ dpkg -S /usr/lib/python3.7/dist-packages/pyparsing.pyc
-dpkg-query: no path found matching pattern /usr/lib/python3.7/dist-packages/pyparsing.pyc
-```
-
-".pyc" is a "compiled" version of the Python code ".py", these are typically
-not distributed by packages but generated on your system at installation or
-first execution time. Therefore in order to find out which package this Python
-module belongs to remove the final "c" so it becomes ".py" instead of ".pyc",
-e.g.:
-
-```bash
-$ dpkg -S /usr/lib/python3.7/dist-packages/pyparsing.py
-python-pyparsing: /usr/lib/python3.7/dist-packages/pyparsing.py
+$ dpkg -S /usr/lib/python3/dist-packages/pyparsing/__init__.py
+python3-pyparsing: /usr/lib/python3/dist-packages/pyparsing/__init__.py
 ```
 
 Once the package has been identified that contains the out-of-date dependency
 the next step is to see if it is truly at the latest version.
 
 ```
-$ apt-cache policy python-pyparsing
-python-pyparsing:
-  Installed: 2.0.2-1
-  Candidate: 2.0.2-1
+$ apt-cache policy python3-pyparsing
+python3-pyparsing:
+  Installed: 3.2.0-1
+  Candidate: 3.2.0-1
   Version table:
-     2.0.3-1 0
+     3.3.0-1 500
         500 REPO
- *** 2.0.2-1 0
+ *** 3.2.0-1 600
         600 REPO
         100 /var/lib/dpkg/status
 ```
 
-Here you can see an example of *python-pyparsing* that has version **2.0.2-1**
-installed instead of version **2.0.3-1**, which is required by Plaso. To
-correct this you may have to specifically indicate the version you want to
-install.
+Here you can see an example of *python3-pyparsing* that has version **3.2.0-1**
+installed instead of version **3.3.0-1**, while Plaso requires version 3.3.0 or
+later. To correct this you may have to specifically indicate the version you
+want to install.
 
 ```bash
-$ sudo apt install python-pyparsing=2.0.3-1
+$ sudo apt install python3-pyparsing=3.3.0-1
 ```
-
-### Common package conflicts
-
-#### PyParsing
-
-The following traceback:
-
-```
-=======================
-Traceback (most recent call last):
-File "/usr/bin/log2timeline.py", line 28, in <module>
-from plaso.frontend import frontend
-File "/usr/lib/python3.7/dist-packages/plaso/frontend/frontend.py", line 36, in <module>
-...
-pyparsing.lineEnd())
-TypeError: __call__() takes exactly 2 arguments (1 given)
-========================
-```
-
-This is indicative that you are running an old version of pyparsing. Please
-make sure you are using the latest version, see what is available using:
-
-```bash
-$ apt-cache policy python-pyparsing
-```
-
-And install the latest version.
-
-#### libewf
-
-There are some packages that declare **libewf2** as one of their dependencies.
-This is an out dated version of the [libewf](https://github.com/libyal/libewf)
-library provided by your distribution.
-
-See for instance [this issue](https://github.com/log2timeline/plaso/issues/301).
-
-The solution here is to remove the **libewf2** package from the system and
-replace it with the **libewf**  package from the GIFT PPA.
-
-```bash
-$ sudo apt remove libewf2
-```
-
-Note that this may remove other packages as well that depend on **libewf2**,
-which are likely to be out dated as well.
-
-```bash
-$ sudo apt install libewf libewf2=20140608-1
-```
-
-Installing **libewf2** from the GIFT PPA prevents your package manager
-installing its own version of the libewf2 package when it does not need to,
-since the necessary files are already provided by the **libewf** package.

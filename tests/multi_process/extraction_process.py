@@ -38,6 +38,34 @@ class TestEventExtractionWorker(worker.EventExtractionWorker):
         return
 
 
+class TestFileEntryRecordingExtractionWorker(worker.EventExtractionWorker):
+    """Event extraction worker that records the file entries it processes."""
+
+    def __init__(self, process_to_abort=None):
+        """Initializes an event extraction worker.
+
+        Args:
+          process_to_abort (Optional[ExtractionWorkerProcess]): worker process to
+              signal to abort when a file entry is processed.
+        """
+        super().__init__()
+        self._process_to_abort = process_to_abort
+        self.processed_locations = []
+
+    # pylint: disable=unused-argument
+    def ProcessFileEntry(self, parser_mediator, file_entry):
+        """Processes a file entry.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers
+              and other components, such as storage and dfVFS.
+          file_entry (dfvfs.FileEntry): file entry.
+        """
+        self.processed_locations.append(file_entry.path_spec.location)
+        if self._process_to_abort:
+            self._process_to_abort.SignalAbort()
+
+
 class TestEventExtractionWorkerWithMissingDirectory(worker.EventExtractionWorker):
     """Event extraction worker for testing with a missing local directory."""
 
@@ -221,7 +249,7 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
                 task_storage_writer
             )
             task = tasks.Task(session_identifier=session.identifier)
-            task.path_spec = path_spec
+            task.path_specs = [path_spec]
             test_process._ProcessTask(task)
 
             self.assertEqual(test_process._number_of_consumed_sources, 2)
@@ -291,7 +319,7 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
                 task_storage_writer
             )
             task = tasks.Task(session_identifier=session.identifier)
-            task.path_spec = path_spec
+            task.path_specs = [path_spec]
             test_process._ProcessTask(task)
 
             storage_file_path = test_process._GetProcessedStorageFilePath(
@@ -313,6 +341,64 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
         # A local directory that cannot be opened is produced as an event source,
         # so that the foreman produces an extraction warning for it.
         self.assertEqual(event_source_locations, [missing_path])
+
+    def testProcessTaskWithMultiplePathSpecs(self):
+        """Tests the _ProcessTask function with multiple path specifications."""
+        test_file_paths = [
+            self._GetTestFilePath(["testdir", "filter_1.txt"]),
+            self._GetTestFilePath(["testdir", "filter2.txt"]),
+        ]
+        for test_file_path in test_file_paths:
+            self._SkipIfPathNotExists(test_file_path)
+
+        path_specs = [
+            path_spec_factory.Factory.NewPathSpec(
+                dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
+            )
+            for test_file_path in test_file_paths
+        ]
+
+        session = sessions.Session()
+        with shared_test_lib.TempDirectory() as temp_directory:
+            configuration = configurations.ProcessingConfiguration()
+            configuration.task_storage_path = temp_directory
+            configuration.task_storage_format = definitions.STORAGE_FORMAT_SQLITE
+
+            test_process = extraction_process.ExtractionWorkerProcess(
+                None, configuration, [], [], None, name="TestWorker"
+            )
+            extraction_worker = TestFileEntryRecordingExtractionWorker()
+            test_process._extraction_worker = extraction_worker
+
+            task_storage_writer = self._CreateStorageWriter()
+            test_process._parser_mediator = self._CreateParserMediator(
+                task_storage_writer
+            )
+            task = tasks.Task(session_identifier=session.identifier)
+            task.path_specs = path_specs
+            test_process._ProcessTask(task)
+
+            self.assertEqual(extraction_worker.processed_locations, test_file_paths)
+            self.assertEqual(test_process._number_of_consumed_sources, 2)
+
+            # The remaining path specifications are not processed on abort.
+            test_process = extraction_process.ExtractionWorkerProcess(
+                None, configuration, [], [], None, name="TestWorker"
+            )
+            extraction_worker = TestFileEntryRecordingExtractionWorker(
+                process_to_abort=test_process
+            )
+            test_process._extraction_worker = extraction_worker
+            test_process._parser_mediator = self._CreateParserMediator(
+                task_storage_writer
+            )
+            task = tasks.Task(session_identifier=session.identifier)
+            task.path_specs = path_specs
+            test_process._ProcessTask(task)
+
+            self.assertTrue(task.aborted)
+            self.assertEqual(extraction_worker.processed_locations, test_file_paths[:1])
+            self.assertEqual(test_process._number_of_consumed_sources, 1)
 
     def testStartAndStopProfiling(self):
         """Tests the _StartProfiling and _StopProfiling functions."""
