@@ -10,7 +10,7 @@ class DateTimeValueType(dfdatetime_posix_time.PosixTimeInMicroseconds):
         """Initializes a date and time value type.
 
         Args:
-          value (int:str): a POSIX timestamp in microseconds or an ISO 8601 date
+          value (int|str): a POSIX timestamp in microseconds or an ISO 8601 date
               and time string.
 
         Raises:

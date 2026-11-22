@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 """This file contains tests for the task manager."""
 
+import gzip
+import os
 import time
 import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
 
 from plaso.containers import tasks
+from plaso.engine import configurations
 from plaso.lib import definitions
 from plaso.multi_process import task_manager
 
@@ -342,7 +345,7 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
         manager = task_manager.TaskManager()
 
         task = manager.CreateTask(self._TEST_SESSION_IDENTIFIER)
-        task.path_spec = "test_path_spec"
+        task.path_specs = ["test_path_spec"]
 
         # Simulate the original task's worker terminating.
         manager._AbandonQueuedTasks()
@@ -367,7 +370,54 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
 
         failed_tasks = manager.GetFailedTasks()
         self.assertEqual(len(failed_tasks), 1)
-        self.assertEqual(failed_tasks[0].path_spec, "test_path_spec")
+        self.assertEqual(failed_tasks[0].path_specs, ["test_path_spec"])
+
+    def testCreateRetryTaskWithMultiplePathSpecs(self):
+        """Tests the CreateRetryTask function with multiple path specifications."""
+        manager = task_manager.TaskManager()
+
+        task = manager.CreateTask(self._TEST_SESSION_IDENTIFIER)
+        task.path_specs = ["test_path_spec1", "test_path_spec2", "test_path_spec3"]
+
+        manager._AbandonQueuedTasks()
+
+        self.assertTrue(manager.HasPendingTasks())
+
+        # The abandoned task is retried as one retry task per path specification.
+        retry_tasks = []
+        retry_task = manager.CreateRetryTask()
+        while retry_task:
+            retry_tasks.append(retry_task)
+            retry_task = manager.CreateRetryTask()
+
+        self.assertEqual(
+            [retry_task.path_specs for retry_task in retry_tasks],
+            [["test_path_spec1"], ["test_path_spec2"], ["test_path_spec3"]],
+        )
+        for retry_task in retry_tasks:
+            self.assertEqual(retry_task.number_of_retries, 1)
+
+        self.assertEqual(len(manager._tasks_queued), 3)
+        self.assertEqual(manager._total_number_of_tasks, 4)
+
+        result = manager.CheckTaskToMerge(task)
+        self.assertFalse(result)
+
+        # Only the path specification that keeps failing is reported as failed.
+        retry_tasks[0].storage_file_size = 10
+        manager.UpdateTaskAsPendingMerge(retry_tasks[0])
+
+        retry_tasks[2].storage_file_size = 10
+        manager.UpdateTaskAsPendingMerge(retry_tasks[2])
+
+        retry_task = retry_tasks[1]
+        while retry_task:
+            manager._AbandonQueuedTasks()
+            retry_task = manager.CreateRetryTask()
+
+        failed_tasks = manager.GetFailedTasks()
+        self.assertEqual(len(failed_tasks), 1)
+        self.assertEqual(failed_tasks[0].path_specs, ["test_path_spec2"])
 
     def testCreateTask(self):
         """Tests the CreateTask function."""
@@ -822,9 +872,95 @@ class TaskManagerTest(shared_test_lib.BaseTestCase):
         self.assertEqual(len(manager._tasks_pending_merge), 0)
         self.assertEqual(len(manager._tasks_abandoned), 0)
 
-    # TODO: add tests for SampleTaskStatus
-    # TODO: add tests for StartProfiling
-    # TODO: add tests for StopProfiling
+    def testSampleTaskStatus(self):
+        """Tests the SampleTaskStatus function."""
+        manager = task_manager.TaskManager()
+
+        task = tasks.Task(session_identifier=self._TEST_SESSION_IDENTIFIER)
+
+        # Test without profiling.
+        manager.SampleTaskStatus(task, "created")
+        self.assertIsNone(manager._tasks_profiler)
+
+        profiling_configuration = configurations.ProfilingConfiguration()
+        profiling_configuration.profilers = {"tasks"}
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            profiling_configuration.directory = temp_directory
+
+            manager.StartProfiling(profiling_configuration, "test")
+            manager.SampleTaskStatus(task, "created")
+            manager.SampleTaskStatus(task, "completed")
+            manager.StopProfiling()
+
+            sample_file_path = os.path.join(temp_directory, "tasks-test.csv.gz")
+            with gzip.open(sample_file_path, "rt", encoding="utf-8") as file_object:
+                lines = file_object.read().splitlines()
+
+        self.assertEqual(len(lines), 3)
+        self.assertEqual(lines[0], "Time\tIdentifier\tStatus")
+
+        sample_values = [line.split("\t")[1:] for line in lines[1:]]
+        self.assertEqual(
+            sample_values,
+            [[task.identifier, "created"], [task.identifier, "completed"]],
+        )
+
+    def testStartProfiling(self):
+        """Tests the StartProfiling function."""
+        manager = task_manager.TaskManager()
+
+        manager.StartProfiling(None, "test")
+        self.assertIsNone(manager._tasks_profiler)
+
+        profiling_configuration = configurations.ProfilingConfiguration()
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            profiling_configuration.directory = temp_directory
+
+            # Test with a configuration without tasks profiling.
+            profiling_configuration.profilers = {"memory"}
+
+            manager.StartProfiling(profiling_configuration, "test")
+            self.assertIsNone(manager._tasks_profiler)
+
+            profiling_configuration.profilers = {"tasks"}
+
+            manager.StartProfiling(profiling_configuration, "test")
+            try:
+                self.assertIsNotNone(manager._tasks_profiler)
+
+                sample_file_path = os.path.join(temp_directory, "tasks-test.csv.gz")
+                self.assertTrue(os.path.exists(sample_file_path))
+
+            finally:
+                manager.StopProfiling()
+
+    def testStopProfiling(self):
+        """Tests the StopProfiling function."""
+        manager = task_manager.TaskManager()
+
+        # Test without profiling.
+        manager.StopProfiling()
+        self.assertIsNone(manager._tasks_profiler)
+
+        profiling_configuration = configurations.ProfilingConfiguration()
+        profiling_configuration.profilers = {"tasks"}
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            profiling_configuration.directory = temp_directory
+
+            manager.StartProfiling(profiling_configuration, "test")
+            manager.StopProfiling()
+
+            self.assertIsNone(manager._tasks_profiler)
+
+            # The sample file is closed and can be read.
+            sample_file_path = os.path.join(temp_directory, "tasks-test.csv.gz")
+            with gzip.open(sample_file_path, "rt", encoding="utf-8") as file_object:
+                lines = file_object.read().splitlines()
+
+        self.assertEqual(lines, ["Time\tIdentifier\tStatus"])
 
     def testUpdateTaskAsPendingMerge(self):
         """Tests the UpdateTaskAsPendingMerge function."""

@@ -1,0 +1,7 @@
+[Mon Oct 06 09:15:02.104311 2025] [mpm_event:notice] [pid 1021:tid 1021] AH00489: Apache/2.4.62 (Debian) configured -- resuming normal operations
+[Mon Oct 06 09:15:02.104359 2025] [core:notice] [pid 1021:tid 1021] AH00094: Command line: '/usr/sbin/apache2'
+[Mon Oct 06 09:17:44.551208 2025] [core:error] [pid 1188:tid 1204] [client 192.0.2.17:50432] AH00126: Invalid URI in request GET /..%2f..%2fetc/passwd HTTP/1.1
+[Mon Oct 06 09:18:10.000412 2025] [authz_core:error] [pid 1188:tid 1206] [client 198.51.100.4:61022] AH01630: client denied by server configuration: /var/www/html/admin
+[Mon Oct 06 09:20:31.774900 2025] [:error] [pid 1190] [client 203.0.113.80:44310] PHP Warning:  Undefined variable $user in /var/www/html/index.php on line 12, referer: http://www.example.com/
+[Mon Oct 06 09:22:05.312004 2025] [ssl:warn] [pid 1021:tid 1021] AH01909: www.example.com:443:0 server certificate does NOT include an ID which matches the server name
+[Mon Oct 06 09:25:58.902117 2025] [mpm_event:notice] [pid 1021:tid 1021] AH00491: caught SIGTERM, shutting down
