@@ -263,7 +263,7 @@ class EventFormatter:
             attribute_values = []
             for attribute, value in event_values.items():
                 # Ignore attribute container identifier and date and time values
-                # since their string representation is not reproducible.
+                # since their string representation is runtime dependent.
                 if isinstance(
                     value,
                     (
