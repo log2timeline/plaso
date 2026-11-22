@@ -67,6 +67,7 @@ class ParsersManager:
                 pattern_offset = signature.offset
 
                 if pattern_offset is None:
+                    pattern_offset = 0
                     signature_flags = pysigscan.signature_flags.NO_OFFSET
                 elif pattern_offset < 0:
                     pattern_offset *= -1
