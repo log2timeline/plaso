@@ -151,6 +151,12 @@ attribute_mappings:
   description: 'Recorded Time'
 place_holder_event: true
 ---
+data_type: 'apache:error_log:entry'
+attribute_mappings:
+- name: 'recorded_time'
+  description: 'Recorded Time'
+place_holder_event: true
+---
 data_type: 'atlassian:bitbucket:access'
 attribute_mappings:
 - name: 'recorded_time'
@@ -183,8 +189,14 @@ place_holder_event: true
 ---
 data_type: 'av:defender:detection_history'
 attribute_mappings:
+- name: 'initial_detection_time'
+  description: 'Initial Detection Time'
+- name: 'last_threat_status_change_time'
+  description: 'Last Threat Status Change Time'
 - name: 'recorded_time'
   description: 'Recorded Time'
+- name: 'remediation_time'
+  description: 'Remediation Time'
 place_holder_event: true
 ---
 data_type: 'av:mcafee:accessprotectionlog'

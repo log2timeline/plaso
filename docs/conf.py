@@ -3,6 +3,8 @@
 import os
 import sys
 
+from urllib import parse as urlparse
+
 from sphinx.ext import apidoc
 
 from docutils import nodes
@@ -134,14 +136,19 @@ class MarkdownLinkFixer(transforms.Transform):
     ]
 
     def _FixLinks(self, node):
-        """Corrects links to .md files not part of the documentation.
+        """Corrects links to .md files.
+
+        Links to .md files not part of the documentation are corrected to
+        include the .md extension. Relative links to .md files with a fragment,
+        such as "Page.md#section", are not rewritten by recommonmark and are
+        changed to "Page.html#section".
 
         Args:
           node (docutils.nodes.Node): docutils node.
 
         Returns:
-          docutils.nodes.Node: docutils node, with correct URIs outside
-              of Markdown pages outside the documentation.
+          docutils.nodes.Node: docutils node, with correct URIs of Markdown
+              pages.
         """
         if isinstance(node, nodes.reference) and "refuri" in node:
             reference_uri = node["refuri"]
@@ -151,6 +158,16 @@ class MarkdownLinkFixer(transforms.Transform):
                 ):
                     node["refuri"] = reference_uri + ".md"
                     break
+
+            parsed_uri = urlparse.urlsplit(reference_uri)
+            if (
+                not parsed_uri.scheme
+                and not parsed_uri.netloc
+                and parsed_uri.path.endswith(".md")
+                and parsed_uri.fragment
+            ):
+                path = parsed_uri.path[:-3]
+                node["refuri"] = f"{path:s}.html#{parsed_uri.fragment:s}"
 
         return node
 
@@ -171,7 +188,7 @@ class MarkdownLinkFixer(transforms.Transform):
         self._Traverse(self.document)
 
 
-# pylint: invalid-name
+# pylint: disable=invalid-name
 def setup(app):
     """Called at Sphinx initialization.
 

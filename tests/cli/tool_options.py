@@ -350,8 +350,6 @@ class TestToolWithStorageFileOptions(tools.CLITool, tool_options.StorageFileOpti
 class StorageFileOptionsTest(test_lib.CLIToolTestCase):
     """Tests for the storage file options."""
 
-    # TODO: add test for _CheckStorageFile
-
 
 if __name__ == "__main__":
     unittest.main()

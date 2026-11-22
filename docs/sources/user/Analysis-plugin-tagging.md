@@ -38,6 +38,22 @@ psort.py --analysis tagging --tagging-file tagging-file.txt -o null timeline.pla
 
 This will tag events based on the tagging rules.
 
+Plaso provides the following tagging files, which are described in
+[Tagging rules](Tagging-Rules.md):
+
+* tag_linux.txt
+* tag_macos.txt
+* tag_windows.txt
+
+If the tagging file does not exist at the given path, psort looks for it in
+the data location, which is detected automatically or can be set with
+`--data`. So a bundled tagging file
+can be specified by its name, for example:
+
+```bash
+psort.py --analysis tagging --tagging-file tag_windows.txt -o null timeline.plaso
+```
+
 The last step would be to export a timeline with the tags:
 
 ```bash

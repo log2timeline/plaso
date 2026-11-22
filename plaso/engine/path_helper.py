@@ -238,7 +238,7 @@ class PathHelper:
         directories and subdirectories.
 
         By default the maximum recursion depth is 10 subdirectories, a numeric
-        values after the globstar, such as "**5", can be used to define the maximum
+        values after the globstar, such as ``**5``, can be used to define the maximum
         recursion depth.
 
         Args:

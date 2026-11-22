@@ -817,10 +817,16 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
         )
         for key, numbers_of_events in sorted(differences.items()):
             value_string = f"{numbers_of_events[0]:d} ({numbers_of_events[1]:d})"
-            if reverse:
-                table_view.AddRow([value_string, key])
-            else:
-                table_view.AddRow([key, value_string])
+
+            # A key, such as a path specification, can consist of multiple lines.
+            lines = [line for line in key.split("\n") if line] or [key]
+            for line in lines:
+                if reverse:
+                    table_view.AddRow([value_string, line])
+                else:
+                    table_view.AddRow([line, value_string])
+
+                value_string = ""
 
         table_view.Write(self._output_writer)
         self._output_writer.Write("\n")
@@ -1079,16 +1085,17 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
 
             table_view.Write(self._output_writer)
 
-    def _PrintSessionDetailsAsJSON(self, session):
+    def _PrintSessionDetailsAsJSON(self, session, session_identifier):
         """Prints the details of a session as JSON.
 
         Args:
           session (Session): session.
+          session_identifier (str): session identifier, formatted as a UUID.
         """
         json_string = json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
             session
         )
-        self._output_writer.Write(f'"session": {json_string:s}')
+        self._output_writer.Write(f'"{session_identifier:s}": {json_string:s}')
 
     def _PrintSessionDetailsAsTable(self, session, session_identifier):
         """Prints the details of a session as a table.
@@ -1160,7 +1167,7 @@ class PinfoTool(tools.CLITool, tool_options.StorageFileOptions):
                 if session_index != 0:
                     self._output_writer.Write(", ")
 
-                self._PrintSessionDetailsAsJSON(session)
+                self._PrintSessionDetailsAsJSON(session, session_identifier)
 
             elif self._output_format in ("markdown", "text"):
                 self._PrintSessionDetailsAsTable(session, session_identifier)

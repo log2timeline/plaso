@@ -45,9 +45,9 @@ class VirusTotalAnalysisArgumentsHelper(interface.ArgumentsHelper):
             action="store_false",
             default=cls._DEFAULT_RATE_LIMIT,
             help=(
-                "Limit Virustotal requests to the default free API key rate of "
-                "4 requests per minute. Set this to false if you have an key "
-                "for the private API."
+                "Disable the limit of VirusTotal requests to the free API key "
+                "rate of 4 requests per minute, which is enabled by default. "
+                "Use this option if you have a key for the private API."
             ),
         )
 

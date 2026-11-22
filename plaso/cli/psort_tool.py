@@ -139,62 +139,6 @@ class PsortTool(analysis_tool.AnalysisTool, tool_options.OutputModuleOptions):
 
         return configuration
 
-    def _GetAnalysisPlugins(self, analysis_plugins_string):
-        """Retrieves analysis plugins.
-
-        Args:
-          analysis_plugins_string (str): comma separated names of analysis plugins to
-              enable.
-
-        Returns:
-          list[AnalysisPlugin]: analysis plugins.
-        """
-        if not analysis_plugins_string:
-            return []
-
-        analysis_plugins_list = [
-            name.strip() for name in analysis_plugins_string.split(",")
-        ]
-        analysis_plugins = self._analysis_manager.GetPluginObjects(
-            analysis_plugins_list
-        )
-        return analysis_plugins.values()
-
-    def _ParseAnalysisPluginOptions(self, options):
-        """Parses the analysis plugin options.
-
-        Args:
-          options (argparse.Namespace): command line arguments.
-
-        Raises:
-          BadConfigOption: if the options are invalid.
-        """
-        # Get a list of all available plugins.
-        analysis_plugin_info = self._analysis_manager.GetAllPluginInformation()
-        # Use set-comprehension to create a set of the analysis plugin names.
-        analysis_plugin_names = {name.lower() for name, _, _ in analysis_plugin_info}
-
-        analysis_plugins = self.ParseStringOption(options, "analysis_plugins")
-        if not analysis_plugins:
-            return
-
-        # Use set-comprehension to create a set of the requested plugin names.
-        requested_plugin_names = {
-            name.strip().lower() for name in analysis_plugins.split(",")
-        }
-        # Check to see if we are trying to load plugins that do not exist.
-        difference = requested_plugin_names.difference(analysis_plugin_names)
-        if difference:
-            difference_string = " ".join(difference)
-            raise errors.BadConfigOption(
-                f"Non-existent analysis plugins specified: {difference_string:s}"
-            )
-
-        self._analysis_plugins = self._GetAnalysisPlugins(analysis_plugins)
-
-        for analysis_plugin in self._analysis_plugins:
-            helpers_manager.ArgumentHelperManager.ParseOptions(options, analysis_plugin)
-
     def _ParseInformationalOptions(self, options):
         """Parses the informational options.
 

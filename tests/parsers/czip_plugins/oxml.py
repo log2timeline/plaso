@@ -69,7 +69,27 @@ class OXMLTest(test_lib.CompoundZIPPluginTestCase):
         ]
     )
 
-    # TODO: add tests for _FormatPropertyName.
+    def testFormatPropertyName(self):
+        """Tests the _FormatPropertyName function."""
+        plugin = oxml.OpenXMLPlugin()
+
+        property_name = plugin._FormatPropertyName("revision")
+        self.assertEqual(property_name, "revision")
+
+        property_name = plugin._FormatPropertyName("lastModifiedBy")
+        self.assertEqual(property_name, "last_modified_by")
+
+        property_name = plugin._FormatPropertyName("TotalTime")
+        self.assertEqual(property_name, "total_time")
+
+        property_name = plugin._FormatPropertyName("HTTPServer")
+        self.assertEqual(property_name, "http_server")
+
+        property_name = plugin._FormatPropertyName("dcterms2Created")
+        self.assertEqual(property_name, "dcterms2_created")
+
+        property_name = plugin._FormatPropertyName("already_snake_case")
+        self.assertEqual(property_name, "already_snake_case")
 
     def testParsePropertiesXMLFile(self):
         """Tests the _ParsePropertiesXMLFile function."""

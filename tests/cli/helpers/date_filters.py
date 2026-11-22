@@ -31,20 +31,21 @@ Test argument parser.
                         parameter is formatted as
                         "TIME_VALUE,START_DATE_TIME,END_DATE_TIME" where
                         TIME_VALUE defines which file entry timestamp the
-                        filter applies to e.g. atime, ctime, crtime, bkup,
-                        etc. START_DATE_TIME and END_DATE_TIME define
+                        filter applies to: atime, bkup, ctime, crtime, dtime
+                        or mtime. START_DATE_TIME and END_DATE_TIME define
                         respectively the start and end of the date time range.
-                        A date time range requires at minimum start or end to
-                        time of the boundary and END defines the end time.
-                        Both timestamps be set. The date time values are
-                        formatted as: YYYY-MM-DD hh:mm:ss.######[+-]##:##
-                        Where # are numeric digits ranging from 0 to 9 and the
-                        seconds fraction can be either 3 or 6 digits. The time
-                        of day, seconds fraction and time zone offset are
-                        optional. The default time zone is UTC. E.g. "atime,
-                        2013-01-01 23:12:14, 2013-02-23". This parameter can
-                        be repeated as needed to add additional date
-                        boundaries, e.g. once for atime, once for crtime, etc.
+                        A date time range requires at minimum a start or an
+                        end, the other can be left empty. A file entry without
+                        the timestamp is not excluded by the filter. The date
+                        and time values are formatted as: YYYY-MM-DD
+                        hh:mm:ss.######[+-]##:## Where # are numeric digits
+                        ranging from 0 to 9 and the seconds fraction can be
+                        either 3 or 6 digits. The time of day, seconds
+                        fraction and time zone offset are optional. The
+                        default time zone is UTC. E.g. "atime, 2013-01-01
+                        23:12:14, 2013-02-23". This parameter can be repeated
+                        as needed to add additional date boundaries, e.g. once
+                        for atime, once for crtime, etc.
 """
 
     else:
@@ -59,20 +60,21 @@ Test argument parser.
                         parameter is formatted as
                         "TIME_VALUE,START_DATE_TIME,END_DATE_TIME" where
                         TIME_VALUE defines which file entry timestamp the
-                        filter applies to e.g. atime, ctime, crtime, bkup,
-                        etc. START_DATE_TIME and END_DATE_TIME define
+                        filter applies to: atime, bkup, ctime, crtime, dtime
+                        or mtime. START_DATE_TIME and END_DATE_TIME define
                         respectively the start and end of the date time range.
-                        A date time range requires at minimum start or end to
-                        time of the boundary and END defines the end time.
-                        Both timestamps be set. The date time values are
-                        formatted as: YYYY-MM-DD hh:mm:ss.######[+-]##:##
-                        Where # are numeric digits ranging from 0 to 9 and the
-                        seconds fraction can be either 3 or 6 digits. The time
-                        of day, seconds fraction and time zone offset are
-                        optional. The default time zone is UTC. E.g. "atime,
-                        2013-01-01 23:12:14, 2013-02-23". This parameter can
-                        be repeated as needed to add additional date
-                        boundaries, e.g. once for atime, once for crtime, etc.
+                        A date time range requires at minimum a start or an
+                        end, the other can be left empty. A file entry without
+                        the timestamp is not excluded by the filter. The date
+                        and time values are formatted as: YYYY-MM-DD
+                        hh:mm:ss.######[+-]##:## Where # are numeric digits
+                        ranging from 0 to 9 and the seconds fraction can be
+                        either 3 or 6 digits. The time of day, seconds
+                        fraction and time zone offset are optional. The
+                        default time zone is UTC. E.g. "atime, 2013-01-01
+                        23:12:14, 2013-02-23". This parameter can be repeated
+                        as needed to add additional date boundaries, e.g. once
+                        for atime, once for crtime, etc.
 """
 
     def testAddArguments(self):
