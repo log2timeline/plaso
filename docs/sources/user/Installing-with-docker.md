@@ -2,7 +2,7 @@
 
 ## Install Docker
 
-To install Docker see: [Get Docker](https://docs.docker.com/get-started/get-docker/)
+To install Docker see: [Get Docker](https://docs.docker.com/get-docker/)
 
 ## Obtaining a Plaso Docker image
 

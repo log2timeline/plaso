@@ -86,6 +86,7 @@ class PlistParser(interface.FileObjectParser):
         plist_data = file_object.read()
 
         has_leading_whitespace = False
+        has_trailing_data = False
 
         is_binary_plist = plist_data.startswith(b"bplist0")
         if not is_binary_plist:
@@ -109,10 +110,17 @@ class PlistParser(interface.FileObjectParser):
                 plist_data = plist_data.rstrip()
 
                 if not plist_data.endswith(plist_footer):
-                    raise errors.WrongParser(
-                        "Unable to parse XML plist with error: missing plist XML root "
-                        "element."
-                    )
+                    # An XML plist can be followed by trailing data, such as a
+                    # signature.
+                    footer_offset = plist_data.find(plist_footer)
+                    if footer_offset == -1:
+                        raise errors.WrongParser(
+                            "Unable to parse XML plist with error: missing plist XML "
+                            "root element."
+                        )
+
+                    plist_data = plist_data[: footer_offset + len(plist_footer)]
+                    has_trailing_data = True
 
         try:
             top_level_object = plistlib.loads(plist_data)
@@ -147,6 +155,9 @@ class PlistParser(interface.FileObjectParser):
 
         if has_leading_whitespace:
             parser_mediator.ProduceWarning("XML plist file with leading whitespace")
+
+        if has_trailing_data:
+            parser_mediator.ProduceWarning("XML plist file with trailing data")
 
         display_name = parser_mediator.GetDisplayName()
         filename_lower_case = filename.lower()
