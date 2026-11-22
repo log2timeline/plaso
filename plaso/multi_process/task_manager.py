@@ -172,6 +172,11 @@ class TaskManager:
 
         self._tasks_profiler = None
 
+        # This deque contains retry tasks that were created for an abandoned task
+        # that processes multiple path specifications, and that still need to be
+        # returned by CreateRetryTask.
+        self._retry_tasks_pending = collections.deque()
+
         # This set contains the identifiers of abandoned tasks for which a retry
         # task was created.
         self._tasks_retried = set()
@@ -259,7 +264,7 @@ class TaskManager:
         Returns:
           bool: True if there are abandoned tasks that need to be retried.
         """
-        return bool(self._GetTaskPendingRetry())
+        return bool(self._retry_tasks_pending) or bool(self._GetTaskPendingRetry())
 
     def _UpdateLatestProcessingTime(self, task):
         """Updates the latest processing time of the task manager from the task.
@@ -319,24 +324,34 @@ class TaskManager:
     def CreateRetryTask(self):
         """Creates a task that to retry a previously abandoned task.
 
+        An abandoned task that processes multiple path specifications is retried
+        as one retry task per path specification, which are returned by
+        consecutive calls.
+
         Returns:
           Task: a task that was abandoned but should be retried or None if there are
               no abandoned tasks that should be retried.
         """
         with self._lock:
-            abandoned_task = self._GetTaskPendingRetry()
-            if not abandoned_task:
-                return None
+            if not self._retry_tasks_pending:
+                abandoned_task = self._GetTaskPendingRetry()
+                if not abandoned_task:
+                    return None
 
-            # The abandoned task is kept in _tasks_abandoned so it can be still
-            # identified in CheckTaskToMerge and UpdateTaskAsPendingMerge.
+                # The abandoned task is kept in _tasks_abandoned so it can be still
+                # identified in CheckTaskToMerge and UpdateTaskAsPendingMerge.
 
-            retry_task = abandoned_task.CreateRetryTask()
-            self._tasks_retried.add(abandoned_task.identifier)
-            logger.debug(
-                f"Retrying task {abandoned_task.identifier:s} as "
-                f"{retry_task.identifier:s}."
-            )
+                self._tasks_retried.add(abandoned_task.identifier)
+
+                for retry_task in abandoned_task.CreateRetryTasks():
+                    logger.debug(
+                        f"Retrying task {abandoned_task.identifier:s} as "
+                        f"{retry_task.identifier:s}."
+                    )
+                    self._retry_tasks_pending.append(retry_task)
+
+            retry_task = self._retry_tasks_pending.popleft()
+
             self._UpdateLatestProcessingTimeIfIdle()
 
             self._tasks_queued[retry_task.identifier] = retry_task

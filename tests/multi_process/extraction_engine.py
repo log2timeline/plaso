@@ -7,6 +7,7 @@ import os
 import time
 import unittest
 
+from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
@@ -18,9 +19,46 @@ from plaso.engine import configurations
 from plaso.multi_process import extraction_engine
 from plaso.multi_process import zeromq_queue
 from plaso.storage import factory as storage_factory
+from plaso.storage.fake import writer as fake_writer
 from plaso.storage.sqlite import writer as sqlite_writer
 
 from tests import test_lib as shared_test_lib
+
+
+class TestExtractionMultiProcessEngineWithPathSpecsLimit(
+    extraction_engine.ExtractionMultiProcessEngine
+):
+    """Multi-process extraction engine with a small path specifications limit."""
+
+    _MAXIMUM_NUMBER_OF_PATH_SPECS_PER_TASK = 2
+
+
+class TestExtractionMultiProcessEngineWithDataSizeLimit(
+    extraction_engine.ExtractionMultiProcessEngine
+):
+    """Multi-process extraction engine with a small task data size limit."""
+
+    _MAXIMUM_TASK_DATA_SIZE = 1
+
+
+class EventSourceHeapTest(shared_test_lib.BaseTestCase):
+    """Tests for the event source heap."""
+
+    # pylint: disable=protected-access
+
+    def testPeekEventSource(self):
+        """Tests the PeekEventSource function."""
+        event_source_heap = extraction_engine._EventSourceHeap()
+
+        self.assertEqual(len(event_source_heap), 0)
+        self.assertIsNone(event_source_heap.PeekEventSource())
+
+        event_source = event_sources.EventSource()
+        event_source_heap.PushEventSource(event_source)
+
+        self.assertEqual(len(event_source_heap), 1)
+        self.assertEqual(event_source_heap.PeekEventSource(), event_source)
+        self.assertEqual(len(event_source_heap), 1)
 
 
 class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
@@ -153,6 +191,207 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
         self.assertEqual(idle_sleep_time, maximum_sleep_time)
 
+    def _CreateEventSourceHeap(self):
+        """Creates an event source heap with a directory and 3 regular files.
+
+        Returns:
+          _EventSourceHeap: event source heap.
+        """
+        # pylint: disable=protected-access
+        event_source_heap = extraction_engine._EventSourceHeap()
+
+        test_directory_path = self._GetTestFilePath(["testdir"])
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_OS, location=test_directory_path
+        )
+        event_source = event_sources.EventSource(
+            file_entry_type=dfvfs_definitions.FILE_ENTRY_TYPE_DIRECTORY,
+            path_spec=path_spec,
+        )
+        event_source_heap.PushEventSource(event_source)
+
+        for filename in ("filter_1.txt", "filter2.txt", "filter_3.txt"):
+            test_file_path = self._GetTestFilePath(["testdir", filename])
+            path_spec = path_spec_factory.Factory.NewPathSpec(
+                dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
+            )
+            event_source = event_sources.EventSource(
+                file_entry_type=dfvfs_definitions.FILE_ENTRY_TYPE_FILE,
+                path_spec=path_spec,
+            )
+            event_source_heap.PushEventSource(event_source)
+
+        return event_source_heap
+
+    def testInternalCreateTask(self):
+        """Tests the _CreateTask function."""
+        # pylint: disable=protected-access
+        test_directory_path = self._GetTestFilePath(["testdir"])
+        self._SkipIfPathNotExists(test_directory_path)
+
+        session = sessions.Session()
+        storage_writer = fake_writer.FakeStorageWriter()
+        storage_writer.Open()
+
+        test_engine = extraction_engine.ExtractionMultiProcessEngine(
+            number_of_worker_processes=1
+        )
+
+        # A directory event source is not combined with other event sources.
+        event_source_heap = self._CreateEventSourceHeap()
+        event_source = event_source_heap.PopEventSource()
+        task = test_engine._CreateTask(
+            storage_writer,
+            session.identifier,
+            event_source,
+            event_source_heap=event_source_heap,
+        )
+        self.assertIsNotNone(task)
+        self.assertEqual(task.path_specs, [event_source.path_spec])
+        self.assertEqual(len(event_source_heap), 3)
+
+        # Regular file event sources are combined into a single task.
+        event_source = event_source_heap.PopEventSource()
+        task = test_engine._CreateTask(
+            storage_writer,
+            session.identifier,
+            event_source,
+            event_source_heap=event_source_heap,
+        )
+        self.assertIsNotNone(task)
+        self.assertEqual(task.path_specs[0], event_source.path_spec)
+        self.assertEqual(len(task.path_specs), 3)
+        self.assertEqual(len(event_source_heap), 0)
+
+        # Without an event source heap a task contains a single event source.
+        event_source_heap = self._CreateEventSourceHeap()
+        event_source_heap.PopEventSource()
+        event_source = event_source_heap.PopEventSource()
+        task = test_engine._CreateTask(storage_writer, session.identifier, event_source)
+        self.assertIsNotNone(task)
+        self.assertEqual(task.path_specs, [event_source.path_spec])
+        self.assertEqual(len(event_source_heap), 2)
+
+        # The number of path specifications per task is limited.
+        test_engine = TestExtractionMultiProcessEngineWithPathSpecsLimit(
+            number_of_worker_processes=1
+        )
+
+        event_source_heap = self._CreateEventSourceHeap()
+        event_source_heap.PopEventSource()
+        event_source = event_source_heap.PopEventSource()
+        task = test_engine._CreateTask(
+            storage_writer,
+            session.identifier,
+            event_source,
+            event_source_heap=event_source_heap,
+        )
+        self.assertIsNotNone(task)
+        self.assertEqual(len(task.path_specs), 2)
+        self.assertEqual(len(event_source_heap), 1)
+
+        # The size of the data of the regular files per task is limited.
+        test_engine = TestExtractionMultiProcessEngineWithDataSizeLimit(
+            number_of_worker_processes=1
+        )
+
+        event_source_heap = self._CreateEventSourceHeap()
+        event_source_heap.PopEventSource()
+        event_source = event_source_heap.PopEventSource()
+        task = test_engine._CreateTask(
+            storage_writer,
+            session.identifier,
+            event_source,
+            event_source_heap=event_source_heap,
+        )
+        self.assertIsNotNone(task)
+        self.assertEqual(task.path_specs, [event_source.path_spec])
+        self.assertEqual(len(event_source_heap), 2)
+
+        # Event sources are left in the heap for the other worker processes.
+        test_engine = extraction_engine.ExtractionMultiProcessEngine(
+            number_of_worker_processes=4
+        )
+
+        event_source_heap = self._CreateEventSourceHeap()
+        event_source_heap.PopEventSource()
+        event_source = event_source_heap.PopEventSource()
+        task = test_engine._CreateTask(
+            storage_writer,
+            session.identifier,
+            event_source,
+            event_source_heap=event_source_heap,
+        )
+        self.assertIsNotNone(task)
+        self.assertEqual(task.path_specs, [event_source.path_spec])
+        self.assertEqual(len(event_source_heap), 2)
+
+        # No task is created for an event source that is excluded from extraction.
+        test_engine._excluded_file_system_find_specs = [
+            file_system_searcher.FindSpec(
+                case_sensitive=False,
+                location=event_source.path_spec.location,
+                location_separator=os.path.sep,
+            )
+        ]
+
+        task = test_engine._CreateTask(storage_writer, session.identifier, event_source)
+        self.assertIsNone(task)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        # No task is created for an event source that cannot be opened.
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_OS,
+            location=os.path.join(test_directory_path, "bogus.txt"),
+        )
+        event_source = event_sources.EventSource(
+            file_entry_type=dfvfs_definitions.FILE_ENTRY_TYPE_FILE,
+            path_spec=path_spec,
+        )
+
+        task = test_engine._CreateTask(storage_writer, session.identifier, event_source)
+        self.assertIsNone(task)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 1)
+
+        # An event source that cannot be opened is not added to a task.
+        test_engine = extraction_engine.ExtractionMultiProcessEngine(
+            number_of_worker_processes=1
+        )
+
+        bogus_event_source = event_source
+
+        event_source_heap = self._CreateEventSourceHeap()
+        event_source_heap.PopEventSource()
+        event_source = event_source_heap.PopEventSource()
+
+        event_source_heap = extraction_engine._EventSourceHeap()
+        event_source_heap.PushEventSource(bogus_event_source)
+
+        task = test_engine._CreateTask(
+            storage_writer,
+            session.identifier,
+            event_source,
+            event_source_heap=event_source_heap,
+        )
+        self.assertIsNotNone(task)
+        self.assertEqual(task.path_specs, [event_source.path_spec])
+        self.assertEqual(len(event_source_heap), 0)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 2)
+
+        storage_writer.Close()
+
     def testInternalCheckStatusWorkerProcessWithKilledWorker(self):
         """Tests the _CheckStatusWorkerProcess function with a killed worker."""
         # pylint: disable=protected-access
@@ -276,7 +515,7 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
             completed_task = test_task_manager.CreateTask(
                 session.identifier, storage_format=definitions.STORAGE_FORMAT_SQLITE
             )
-            completed_task.path_spec = completed_path_spec
+            completed_task.path_specs = [completed_path_spec]
             test_task_manager.UpdateTaskAsProcessingByIdentifier(
                 completed_task.identifier
             )
@@ -305,7 +544,7 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
             failed_task = test_task_manager.CreateTask(
                 session.identifier, storage_format=definitions.STORAGE_FORMAT_SQLITE
             )
-            failed_task.path_spec = failed_path_spec
+            failed_task.path_specs = [failed_path_spec]
             test_task_manager.UpdateTaskAsProcessingByIdentifier(failed_task.identifier)
             failed_task.last_processing_time -= (
                 2
