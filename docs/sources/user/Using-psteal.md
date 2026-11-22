@@ -10,7 +10,7 @@ subset of options the above tools provide.
 
 ## Usage
 
-To see a list of all available parameters you can pass to psort use ``-h`` or
+To see a list of all available parameters you can pass to psteal use ``-h`` or
 ``--help``.
 
 Psteal requires at least a source evidence, specified with ``--source`` and a
@@ -30,7 +30,7 @@ Psteal purposefully supports only a limited subset of options from both
 [log2timeline](Using-log2timeline.md) and [psort](Using-psort.md) tools.
 
 Please refer to their respective documentations for more information, for
-example for help regarding the [output formats](Using-psort.md#Output).
+example for help regarding the [output formats](Using-psort.md#output-format).
 
 If your use case requires specific options to either log2timeline or psort,
 please use both command line tools separately.

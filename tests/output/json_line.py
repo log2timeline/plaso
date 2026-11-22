@@ -10,6 +10,7 @@ import unittest
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
+from plaso.containers import events
 from plaso.lib import definitions
 from plaso.output import json_line
 
@@ -66,9 +67,11 @@ class JSONLinesOutputTest(test_lib.OutputModuleTestCase):
             containers_test_lib.CreateEventFromValues(self._TEST_EVENTS[0])
         )
 
-        # TODO: add test for event_tag.
+        event_tag = events.EventTag()
+        event_tag.AddLabels(["Malware", "Printed"])
+
         field_values = output_module.GetFieldValues(
-            output_mediator, event, event_data, event_data_stream, None
+            output_mediator, event, event_data, event_data_stream, event_tag
         )
 
         output_module.WriteFieldValues(output_mediator, field_values)
@@ -109,6 +112,11 @@ class JSONLinesOutputTest(test_lib.OutputModuleTestCase):
                     "type_indicator": "OS",
                     "location": expected_os_location,
                 },
+            },
+            "tag": {
+                "__container_type__": "event_tag",
+                "__type__": "AttributeContainer",
+                "labels": ["Malware", "Printed"],
             },
             "text": (
                 "Reporter <CRON> PID: |8442| (pam_unix(cron:session): "
