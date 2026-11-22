@@ -34,6 +34,117 @@ class EventFormattingHelper:
         """
 
 
+class _FormattedEventValuesCache:
+    """Cache for the message formatter and formatted event values."""
+
+    def __init__(self):
+        """Initializes a formatted event values cache."""
+        super().__init__()
+        self._event_data = None
+        self._event_values = None
+        self._message_formatter = None
+        self._output_mediator = None
+
+    def Get(self, output_mediator, event_data):
+        """Retrieves the cached message formatter and formatted event values.
+
+        Args:
+          output_mediator (OutputMediator): mediates interactions between output
+              modules and other components, such as storage and dfVFS.
+          event_data (EventData): event data.
+
+        Returns:
+          tuple[EventFormatter, dict[str, object]]: message formatter and
+              formatted event values, or (None, None) if not cached.
+        """
+        if event_data is self._event_data and output_mediator is self._output_mediator:
+            return self._message_formatter, self._event_values
+
+        return None, None
+
+    def Set(self, output_mediator, event_data, message_formatter, event_values):
+        """Caches the message formatter and formatted event values.
+
+        Args:
+          output_mediator (OutputMediator): mediates interactions between output
+              modules and other components, such as storage and dfVFS.
+          event_data (EventData): event data.
+          message_formatter (EventFormatter): message formatter.
+          event_values (dict[str, object]): formatted event values.
+        """
+        self._event_data = event_data
+        self._event_values = event_values
+        self._message_formatter = message_formatter
+        self._output_mediator = output_mediator
+
+
+class _FormattedFieldValuesCache:
+    """Cache for formatted field values per stored event data."""
+
+    def __init__(self, maximum_number_of_entries=16384):
+        """Initializes a formatted field values cache.
+
+        Args:
+          maximum_number_of_entries (Optional[int]): maximum number of event
+              data entries to cache.
+        """
+        super().__init__()
+        self._event_data = None
+        self._field_values = None
+        self._field_values_per_event_data = {}
+        self._maximum_number_of_entries = maximum_number_of_entries
+        self._output_mediator = None
+
+    def GetFieldValues(self, output_mediator, event_data):
+        """Retrieves the cached field values mapping for an event data.
+
+        Field values are only cached for event data read from storage. The
+        identifier of event data that was not stored is based on id(), which
+        can be reused after the event data has been freed.
+
+        Args:
+          output_mediator (OutputMediator): mediates interactions between output
+              modules and other components, such as storage and dfVFS.
+          event_data (EventData): event data.
+
+        Returns:
+          dict[str, str]: cached field values mapping for the event data, or
+              None if the event data cannot be cached.
+        """
+        if output_mediator is not self._output_mediator:
+            self._event_data = None
+            self._field_values = None
+            self._field_values_per_event_data = {}
+            self._output_mediator = output_mediator
+
+        if event_data is not self._event_data:
+            self._event_data = event_data
+            self._field_values = None
+
+            event_data_identifier = (
+                event_data.GetIdentifier() if event_data is not None else None
+            )
+            if event_data_identifier and event_data_identifier.sequence_number != id(
+                event_data
+            ):
+                lookup_key = event_data_identifier.CopyToString()
+                if lookup_key:
+                    field_values = self._field_values_per_event_data.get(lookup_key)
+                    if field_values is None:
+                        if (
+                            len(self._field_values_per_event_data)
+                            >= self._maximum_number_of_entries
+                        ):
+                            self._field_values_per_event_data = {}
+
+                        field_values = {}
+                        self._field_values_per_event_data[lookup_key] = field_values
+
+                    self._field_values = field_values
+
+        return self._field_values
+
+
 class FieldFormattingHelper:
     """Output module field formatting helper."""
 
@@ -68,12 +179,17 @@ class FieldFormattingHelper:
 
         super().__init__()
         self._callback_functions = {}
-        self._cached_event_data = None
-        self._cached_event_values = None
-        self._cached_message_formatter = None
-        self._cached_output_mediator = None
+        self._event_data_field_names = {
+            field_name
+            for field_name, callback_name in self._FIELD_FORMAT_CALLBACKS.items()
+            if callback_name in self._EVENT_DATA_FIELD_FORMAT_CALLBACKS
+        }
         self._event_data_stream_field_names = event_data_stream.GetAttributeNames()
         self._event_tag_field_names = []
+        self._formatted_event_values_cache = _FormattedEventValuesCache()
+        self._formatted_field_values_cache = _FormattedFieldValuesCache(
+            maximum_number_of_entries=self._MAXIMUM_NUMBER_OF_CACHED_EVENT_DATA
+        )
 
         for field_name, callback_name in self._FIELD_FORMAT_CALLBACKS.items():
             if callback_name == "_FormatTag":
@@ -82,16 +198,6 @@ class FieldFormattingHelper:
                 self._callback_functions[field_name] = getattr(
                     self, callback_name, None
                 )
-
-        self._cached_event_data = None
-        self._cached_field_values = None
-        self._cached_field_values_per_event_data = {}
-        self._cached_output_mediator = None
-        self._event_data_field_names = {
-            field_name
-            for field_name, callback_name in self._FIELD_FORMAT_CALLBACKS.items()
-            if callback_name in self._EVENT_DATA_FIELD_FORMAT_CALLBACKS
-        }
 
     # The field format callback methods require specific arguments hence
     # the check for unused arguments is disabled here.
@@ -595,28 +701,28 @@ class FieldFormattingHelper:
           tuple[EventFormatter, dict[str, object]]: message formatter and
               formatted event values.
         """
-        # TODO: fix cache criteria https://github.com/log2timeline/plaso/issues/5541
-        # if (
-        #     event_data is not self._cached_event_data
-        #     or output_mediator is not self._cached_output_mediator
-        # ):
-        message_formatter = output_mediator.GetMessageFormatter(event_data.data_type)
-        if not message_formatter:
-            logger.warning(
-                f"Using default message formatter for data type: "
-                f"{event_data.data_type:s}"
+        message_formatter, event_values = self._formatted_event_values_cache.Get(
+            output_mediator, event_data
+        )
+        if message_formatter is None:
+            message_formatter = output_mediator.GetMessageFormatter(
+                event_data.data_type
             )
-            message_formatter = self._DEFAULT_MESSAGE_FORMATTER
+            if not message_formatter:
+                logger.warning(
+                    f"Using default message formatter for data type: "
+                    f"{event_data.data_type:s}"
+                )
+                message_formatter = self._DEFAULT_MESSAGE_FORMATTER
 
-        event_values = event_data.CopyToDict()
-        message_formatter.FormatEventValues(output_mediator, event_values)
+            event_values = event_data.CopyToDict()
+            message_formatter.FormatEventValues(output_mediator, event_values)
 
-        self._cached_event_data = event_data
-        self._cached_event_values = event_values
-        self._cached_message_formatter = message_formatter
-        self._cached_output_mediator = output_mediator
+            self._formatted_event_values_cache.Set(
+                output_mediator, event_data, message_formatter, event_values
+            )
 
-        return self._cached_message_formatter, self._cached_event_values
+        return message_formatter, event_values
 
     def _ReportEventError(self, event, event_data, error_message):
         """Reports an event related error.
@@ -666,40 +772,9 @@ class FieldFormattingHelper:
 
         field_values = None
         if field_name in self._event_data_field_names:
-            if output_mediator is not self._cached_output_mediator:
-                self._cached_event_data = None
-                self._cached_field_values_per_event_data = {}
-                self._cached_output_mediator = output_mediator
-
-            # Field values are only cached for event data read from storage. The
-            # identifier of event data that was not stored is based on id(), which
-            # can be reused after the event data has been freed.
-            if event_data is not self._cached_event_data:
-                self._cached_event_data = event_data
-                self._cached_field_values = None
-
-                event_data_identifier = event_data.GetIdentifier()
-                if (
-                    event_data_identifier
-                    and event_data_identifier.sequence_number != id(event_data)
-                ):
-                    lookup_key = event_data_identifier.CopyToString()
-                    self._cached_field_values = (
-                        self._cached_field_values_per_event_data.get(lookup_key)
-                    )
-                    if self._cached_field_values is None:
-                        if (
-                            len(self._cached_field_values_per_event_data)
-                            >= self._MAXIMUM_NUMBER_OF_CACHED_EVENT_DATA
-                        ):
-                            self._cached_field_values_per_event_data = {}
-
-                        self._cached_field_values = {}
-                        self._cached_field_values_per_event_data[lookup_key] = (
-                            self._cached_field_values
-                        )
-
-            field_values = self._cached_field_values
+            field_values = self._formatted_field_values_cache.GetFieldValues(
+                output_mediator, event_data
+            )
             if field_values is not None and field_name in field_values:
                 return field_values[field_name]
 

@@ -8,10 +8,11 @@ Plaso follows the [log2timeline style guide](https://github.com/log2timeline/l2t
 
 Python code formatting is enforced by tools rather than applied by hand:
 
-* [black](https://black.readthedocs.io) formats the code, with a line length
-of 88 characters, as configured in `[tool.black]` in `pyproject.toml`;
-* [docformatter](https://docformatter.readthedocs.io) formats the docstrings,
-as configured in `[tool.docformatter]` in `pyproject.toml`.
+* [black](https://black.readthedocs.io/en/stable/) formats the code, with a
+line length of 88 characters, as configured in `[tool.black]` in
+`pyproject.toml`;
+* [docformatter](https://docformatter.readthedocs.io/en/latest/) formats the
+docstrings, as configured in `[tool.docformatter]` in `pyproject.toml`.
 
 Run `tox -e black` and `tox -e docformatter` to reformat the code, and
 `tox -e pylint` to check it against `.pylintrc`. The lint workflow in

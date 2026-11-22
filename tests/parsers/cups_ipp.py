@@ -3,9 +3,6 @@
 
 import unittest
 
-from dfvfs.helpers import fake_file_system_builder
-from dfvfs.path import fake_path_spec
-
 from plaso.lib import errors
 from plaso.parsers import cups_ipp
 
@@ -220,29 +217,20 @@ class CupsIppParserTest(test_lib.ParserTestCase):
 
     def testParseHeader(self):
         """Tests the _ParseHeader function."""
-        file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
-        file_system_builder.AddFile("/cups_ipp", b"")
-
-        test_path_spec = fake_path_spec.FakePathSpec(location="/cups_ipp")
-        test_file_entry = file_system_builder.file_system.GetFileEntryByPathSpec(
-            test_path_spec
-        )
-        storage_writer = self._CreateStorageWriter()
-        parser_mediator = self._CreateParserMediator(
-            storage_writer, file_entry=test_file_entry
-        )
         parser = cups_ipp.CupsIppParser()
 
         header_data = self._CreateHeaderData(parser)
         file_object = self._CreateFileObject("cups_ipp", header_data)
 
-        parser._ParseHeader(parser_mediator, file_object)
+        header = parser._ParseHeader(file_object)
+        self.assertIsNotNone(header)
+        self.assertEqual(header.operation_identifier, 5)
 
         # Test with header data too small.
         file_object = self._CreateFileObject("cups_ipp", header_data[:-1])
 
         with self.assertRaises(errors.WrongParser):
-            parser._ParseHeader(parser_mediator, file_object)
+            parser._ParseHeader(file_object)
 
         # Test with unsupported format version.
         header_map = parser._GetDataTypeMap("cups_ipp_header")
@@ -257,7 +245,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
         file_object = self._CreateFileObject("cups_ipp", header_data)
 
         with self.assertRaises(errors.WrongParser):
-            parser._ParseHeader(parser_mediator, file_object)
+            parser._ParseHeader(file_object)
 
         # Test with unsupported operation identifier.
         header = header_map.CreateStructureValues(
@@ -269,7 +257,9 @@ class CupsIppParserTest(test_lib.ParserTestCase):
         header_data = header_map.FoldByteStream(header)
         file_object = self._CreateFileObject("cups_ipp", header_data)
 
-        parser._ParseHeader(parser_mediator, file_object)
+        header = parser._ParseHeader(file_object)
+        self.assertIsNotNone(header)
+        self.assertEqual(header.operation_identifier, 99)
 
     def testParseFileObject(self):
         """Tests the ParseFileObject function."""
@@ -349,6 +339,79 @@ class CupsIppParserTest(test_lib.ParserTestCase):
 
         number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
             "recovery_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        # Test with non-standard operation identifier.
+        header_map = parser._GetDataTypeMap("cups_ipp_header")
+
+        header = header_map.CreateStructureValues(
+            major_version=1,
+            minor_version=1,
+            operation_identifier=99,
+            request_identifier=0,
+        )
+        non_standard_header_data = header_map.FoldByteStream(header)
+
+        storage_writer = self._CreateStorageWriter()
+        parser_mediator = self._CreateParserMediator(storage_writer)
+
+        file_object = self._CreateFileObject(
+            "cups_ipp",
+            b"".join([non_standard_header_data, self._ATTRIBUTES_GROUP_DATA]),
+        )
+        parser.ParseFileObject(parser_mediator, file_object)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 1)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 1)
+
+        warning = storage_writer.GetAttributeContainerByIndex("extraction_warning", 0)
+        self.assertEqual(
+            warning.message,
+            "non-standard operation identifier: 0x00000063 in file header",
+        )
+
+        # Test with non-standard operation identifier and attribute group data
+        # too small.
+        storage_writer = self._CreateStorageWriter()
+        parser_mediator = self._CreateParserMediator(storage_writer)
+
+        file_object = self._CreateFileObject(
+            "cups_ipp",
+            b"".join([non_standard_header_data, self._ATTRIBUTES_GROUP_DATA[:-1]]),
+        )
+        parser.ParseFileObject(parser_mediator, file_object)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 0)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 2)
+
+        # Test with non-standard operation identifier and data that is not
+        # an attribute group, which should not produce a warning.
+        storage_writer = self._CreateStorageWriter()
+        parser_mediator = self._CreateParserMediator(storage_writer)
+
+        file_object = self._CreateFileObject(
+            "cups_ipp", b"".join([non_standard_header_data, b"\xff"])
+        )
+        with self.assertRaises(errors.WrongParser):
+            parser.ParseFileObject(parser_mediator, file_object)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
         )
         self.assertEqual(number_of_warnings, 0)
 
