@@ -9,15 +9,17 @@ from dfdatetime import filetime as dfdatetime_filetime
 
 from plaso.output import mediator
 from plaso.parsers.plist_plugins import launchd
+from plaso.parsers.plist_plugins import macos_background_items
+from plaso.parsers.plist_plugins import macos_login_items
 from plaso.parsers.plist_plugins import spotlight_searched_terms
 from plaso.parsers.winreg_plugins import bagmru
 from plaso.parsers.winreg_plugins import diagnosed_applications
 from plaso.storage.fake import writer as fake_writer
 
-from tests import test_lib as shared_test_lib
+from tests.parsers.plist_plugins import test_lib as plist_plugins_test_lib
 
 
-class MessageFormattersDataTest(shared_test_lib.BaseTestCase):
+class MessageFormattersDataTest(plist_plugins_test_lib.PlistPluginTestCase):
     """Tests the message formatters configuration files."""
 
     def _GetMessages(self, formatters_file_name, event_data):
@@ -115,6 +117,31 @@ class MessageFormattersDataTest(shared_test_lib.BaseTestCase):
         self.assertEqual(message, expected_message)
         self.assertEqual(message_short, "Process Name: TrustedInstaller.exe")
 
+    def testMacOSBackgroundItemsMessage(self):
+        """Tests the macos:background_items:entry message."""
+        plist_name = "backgrounditems.btm"
+
+        plugin = macos_background_items.MacOSBackgroundItemsPlistPlugin()
+        storage_writer = self._ParsePlistFileWithPlugin(
+            plugin, [plist_name], plist_name
+        )
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+
+        expected_message = (
+            "Login item: iTunesHelper "
+            "Points to: /Applications/iTunes.app/Contents/MacOS/iTunesHelper.app "
+            "Volume name: Macintosh HD "
+            "Volume mount point: / "
+            "Volume flags: IsLocal, IsInternal, SupportsPersistentIDs"
+        )
+        expected_short_message = (
+            "Login item iTunesHelper "
+            "points to /Applications/iTunes.app/Contents/MacOS/iTunesHelper.app"
+        )
+        message, message_short = self._GetMessages("macos.yaml", event_data)
+        self.assertEqual(message, expected_message)
+        self.assertEqual(message_short, f"{expected_short_message[:77]:s}...")
+
     def testMacOSLaunchdMessage(self):
         """Tests the macos:launchd:entry message."""
         event_data = launchd.MacOSLaunchdEventData()
@@ -141,6 +168,31 @@ class MessageFormattersDataTest(shared_test_lib.BaseTestCase):
         message, message_short = self._GetMessages("macos.yaml", event_data)
         self.assertEqual(message, expected_message)
         self.assertEqual(message_short, expected_message)
+
+    def testMacOSLoginItemsMessage(self):
+        """Tests the macos:login_items:entry message."""
+        plist_name = "com.apple.loginitems.plist"
+
+        plugin = macos_login_items.MacOSLoginItemsPlistPlugin()
+        storage_writer = self._ParsePlistFileWithPlugin(
+            plugin, ["plist", plist_name], plist_name
+        )
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+
+        expected_message = (
+            "Login item: iTunesHelper "
+            "Points to: /Applications/iTunes.app/Contents/MacOS/iTunesHelper.app "
+            "Volume name: Macintosh HD "
+            "Volume mount point: / "
+            "Volume flags: IsBootVolume, HasPersistentFileIds"
+        )
+        expected_short_message = (
+            "Login item iTunesHelper "
+            "points to /Applications/iTunes.app/Contents/MacOS/iTunesHelper.app"
+        )
+        message, message_short = self._GetMessages("macos.yaml", event_data)
+        self.assertEqual(message, expected_message)
+        self.assertEqual(message_short, f"{expected_short_message[:77]:s}...")
 
     def testSpotlightSearchedTermsMessage(self):
         """Tests the spotlight_searched_terms:entry message."""
