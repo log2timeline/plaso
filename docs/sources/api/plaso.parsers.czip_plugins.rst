@@ -20,6 +20,14 @@ plaso.parsers.czip\_plugins.oxml module
    :show-inheritance:
    :undoc-members:
 
+plaso.parsers.czip\_plugins.pkpass module
+-----------------------------------------
+
+.. automodule:: plaso.parsers.czip_plugins.pkpass
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 Module contents
 ---------------
 

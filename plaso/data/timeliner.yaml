@@ -157,6 +157,14 @@ attribute_mappings:
   description: 'Recorded Time'
 place_holder_event: true
 ---
+data_type: 'apple:wallet:pass'
+attribute_mappings:
+- name: 'expiration_time'
+  description: 'Expiration Time'
+- name: 'relevant_time'
+  description: 'Relevant Time'
+place_holder_event: true
+---
 data_type: 'atlassian:bitbucket:access'
 attribute_mappings:
 - name: 'recorded_time'

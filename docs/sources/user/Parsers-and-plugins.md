@@ -74,6 +74,7 @@ bencode_utorrent | Parser for uTorrent active torrent files.
 Name | Description
 --- | ---
 oxml | Parser for OpenXML (OXML) files.
+pkpass | Parser for Apple Wallet pass (pkpass) files.
 
 ### Parser plugins: esedb
 
