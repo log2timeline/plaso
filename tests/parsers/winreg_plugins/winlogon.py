@@ -348,6 +348,80 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 3)
         self.CheckEventData(event_data, expected_event_values)
 
+    def testProcessWithUnsupportedHandlerDataType(self):
+        """Tests the Process function with an unsupported handler data type."""
+        filetime = dfdatetime_filetime.Filetime()
+        filetime.CopyFromDateTimeString("2013-01-30 10:47:57")
+        registry_key = dfwinreg_fake.FakeWinRegistryKey(
+            "Winlogon",
+            key_path_prefix="HKEY_LOCAL_MACHINE\\Software",
+            last_written_time=filetime.timestamp,
+            offset=153,
+            relative_key_path="Microsoft\\Windows NT\\CurrentVersion",
+        )
+
+        notify_key_name = "Notify"
+        notify_key = dfwinreg_fake.FakeWinRegistryKey(notify_key_name)
+        registry_key.AddSubkey(notify_key_name, notify_key)
+
+        test_key_name = "TestLogon"
+        test_key = dfwinreg_fake.FakeWinRegistryKey(
+            test_key_name, last_written_time=filetime.timestamp
+        )
+        notify_key.AddSubkey(test_key_name, test_key)
+
+        value_data = "TestLogon.dll".encode("utf_16_le")
+        registry_value = dfwinreg_fake.FakeWinRegistryValue(
+            "DllName", data=value_data, data_type=dfwinreg_definitions.REG_SZ
+        )
+        test_key.AddValue(registry_value)
+
+        value_data = "%SystemRoot%\\TestLockEvent".encode("utf_16_le")
+        registry_value = dfwinreg_fake.FakeWinRegistryValue(
+            "Lock", data=value_data, data_type=dfwinreg_definitions.REG_EXPAND_SZ
+        )
+        test_key.AddValue(registry_value)
+
+        value_data = b"\x01\x00\x00\x00"
+        registry_value = dfwinreg_fake.FakeWinRegistryValue(
+            "Logoff", data=value_data, data_type=dfwinreg_definitions.REG_DWORD
+        )
+        test_key.AddValue(registry_value)
+
+        value_data = "TestLogonEvent".encode("utf_16_le")
+        registry_value = dfwinreg_fake.FakeWinRegistryValue(
+            "Logon", data=value_data, data_type=dfwinreg_definitions.REG_BINARY
+        )
+        test_key.AddValue(registry_value)
+
+        plugin = winlogon.WinlogonPlugin()
+        storage_writer = self._ParseKeyWithPlugin(registry_key, plugin)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 1)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 2)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "recovery_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        expected_event_values = {
+            "application": "TestLogon",
+            "command": "TestLogon.dll",
+            "data_type": "windows:registry:winlogon",
+            "handler": "%SystemRoot%\\TestLockEvent",
+            "trigger": "Lock",
+        }
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+        self.CheckEventData(event_data, expected_event_values)
+
 
 if __name__ == "__main__":
     unittest.main()
