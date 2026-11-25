@@ -217,6 +217,7 @@ class ExtractionTool(
         configuration.profiling.profilers = self._profilers
         configuration.task_storage_format = self._task_storage_format
         configuration.temporary_directory = self._temporary_directory
+        configuration.vfs_back_end = self._vfs_back_end
 
         return configuration
 
@@ -405,47 +406,7 @@ class ExtractionTool(
             options, self, names=argument_helper_names
         )
 
-        if self._vfs_back_end == "fsext":
-            dfvfs_definitions.PREFERRED_EXT_BACK_END = (
-                dfvfs_definitions.TYPE_INDICATOR_EXT
-            )
-
-        elif self._vfs_back_end == "fsfat":
-            dfvfs_definitions.PREFERRED_FAT_BACK_END = (
-                dfvfs_definitions.TYPE_INDICATOR_FAT
-            )
-
-        elif self._vfs_back_end == "fshfs":
-            dfvfs_definitions.PREFERRED_HFS_BACK_END = (
-                dfvfs_definitions.TYPE_INDICATOR_HFS
-            )
-
-        elif self._vfs_back_end == "fsntfs":
-            dfvfs_definitions.PREFERRED_NTFS_BACK_END = (
-                dfvfs_definitions.TYPE_INDICATOR_NTFS
-            )
-
-        elif self._vfs_back_end == "tsk":
-            dfvfs_definitions.PREFERRED_EXT_BACK_END = (
-                dfvfs_definitions.TYPE_INDICATOR_TSK
-            )
-            dfvfs_definitions.PREFERRED_FAT_BACK_END = (
-                dfvfs_definitions.TYPE_INDICATOR_TSK
-            )
-            dfvfs_definitions.PREFERRED_GPT_BACK_END = (
-                dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION
-            )
-            dfvfs_definitions.PREFERRED_HFS_BACK_END = (
-                dfvfs_definitions.TYPE_INDICATOR_TSK
-            )
-            dfvfs_definitions.PREFERRED_NTFS_BACK_END = (
-                dfvfs_definitions.TYPE_INDICATOR_TSK
-            )
-
-        elif self._vfs_back_end == "vsgpt":
-            dfvfs_definitions.PREFERRED_GPT_BACK_END = (
-                dfvfs_definitions.TYPE_INDICATOR_GPT
-            )
+        engine.BaseEngine.SetPreferredVFSBackEnd(self._vfs_back_end)
 
     def _ProcessSource(self, session, storage_writer):
         """Processes the source and extract events.
