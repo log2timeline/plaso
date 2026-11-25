@@ -956,6 +956,7 @@ manager.AttributeContainersManager.RegisterAttributeContainers(
         UserAccountArtifact,
         WindowsEventLogMessageFileArtifact,
         WindowsEventLogMessageStringArtifact,
+        WindowsEventLogMessageTableArtifact,
         WindowsEventLogProviderArtifact,
         WindowsMountedDeviceArtifact,
         WindowsServiceConfigurationArtifact,

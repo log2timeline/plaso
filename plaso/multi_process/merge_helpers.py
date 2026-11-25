@@ -122,6 +122,7 @@ class ExtractionTaskMergeHelper(BaseTaskMergeHelper):
         warnings.ExtractionWarning.CONTAINER_TYPE,
         warnings.RecoveryWarning.CONTAINER_TYPE,
         artifacts.WindowsEventLogMessageFileArtifact.CONTAINER_TYPE,
+        artifacts.WindowsEventLogMessageTableArtifact.CONTAINER_TYPE,
         artifacts.WindowsEventLogMessageStringArtifact.CONTAINER_TYPE,
         artifacts.WindowsWevtTemplateEvent.CONTAINER_TYPE,
     )
