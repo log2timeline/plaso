@@ -115,8 +115,9 @@ class WinSCPSessionsPluginTest(test_lib.RegistryPluginTestCase):
     def testProcessWithRegistryFile(self):
         """Tests the Process function on a Windows Registry file.
 
-        WinSCP 6.7.1 (portable) was run on a Windows Server 2025 VM; the session subkeys were written with the
-        values WinSCP saves (the saved sessions were not created through the WinSCP user interface).
+        WinSCP 6.7.1 (portable) was run on a Windows Server 2025 VM; the session
+        subkeys were written with the values WinSCP saves (the saved sessions were
+        not created through the WinSCP user interface).
         """
         test_file_entry = self._GetTestFileEntry(["NTUSER-WINSCP.DAT"])
         key_path = "HKEY_CURRENT_USER\\Software\\Martin Prikryl\\WinSCP 2\\Sessions"
