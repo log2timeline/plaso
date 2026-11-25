@@ -126,6 +126,35 @@ class ZeroMQQueuesTest(shared_test_lib.BaseTestCase):
             zmq_context.term()
             test_queue.Close(abort=True)
 
+    def testCloseWithoutOpen(self):
+        """Tests closing delayed open queues that were never opened."""
+        test_queue = zeromq_queue.ZeroMQRequestConnectQueue(
+            name="closewithoutopen_requestconnect",
+            delay_open=True,
+            port=1024,
+            linger_seconds=0,
+        )
+        test_queue.Close(abort=True)
+        self.assertIsNone(test_queue._zmq_socket)
+
+        test_queue = zeromq_queue.ZeroMQBufferedReplyBindQueue(
+            name="closewithoutopen_bufferedreplybind",
+            delay_open=True,
+            linger_seconds=0,
+        )
+        test_queue.Close(abort=True)
+        self.assertIsNone(test_queue._zmq_socket)
+
+        test_queue = zeromq_queue.ZeroMQPullConnectQueue(
+            name="closewithoutopen_pullconnect",
+            delay_open=True,
+            port=1024,
+            linger_seconds=0,
+        )
+        test_queue.Close()
+        with self.assertRaises(errors.QueueAlreadyClosed):
+            test_queue.Close()
+
     def testPushPullQueues(self):
         """Tests than an item can be transferred between push and pull queues."""
         push_queue = zeromq_queue.ZeroMQPushBindQueue(
