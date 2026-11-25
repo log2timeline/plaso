@@ -1,6 +1,7 @@
 """Parser for Linux utmp files."""
 
 import os
+import re
 
 from dfdatetime import posix_time as dfdatetime_posix_time
 
@@ -75,6 +76,9 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
     # The largest ut_type value used when validating a record. ACCOUNTING (9) is
     # defined but not written in practice.
     _MAXIMUM_VALIDATION_TYPE = 8
+
+    # Control characters that are not expected in the terminal and username strings.
+    _CONTROL_CHARACTERS_RE = re.compile(b"[\x01-\x1f\x7f]")
 
     def _ReadEntry(self, parser_mediator, file_object, file_offset, entry_map):
         """Reads an utmp entry.
@@ -193,6 +197,13 @@ class UtmpParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
             and not entry.terminal.split(b"\x00")[0]
         ):
             return False
+
+        # The terminal and username strings are not expected to contain control
+        # characters. Files that are not utmp files, such as Windows shim database
+        # (SDB) files, typically contain binary data in these strings.
+        for byte_string in (entry.terminal, entry.username):
+            if self._CONTROL_CHARACTERS_RE.search(byte_string.split(b"\x00")[0]):
+                return False
 
         return True
 
