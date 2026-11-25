@@ -358,6 +358,14 @@ plaso.parsers.sqlite module
    :show-inheritance:
    :undoc-members:
 
+plaso.parsers.sqlite\_structure module
+--------------------------------------
+
+.. automodule:: plaso.parsers.sqlite_structure
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 plaso.parsers.symantec module
 -----------------------------
 

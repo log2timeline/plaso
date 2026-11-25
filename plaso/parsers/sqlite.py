@@ -12,6 +12,7 @@ from plaso.parsers import interface
 from plaso.parsers import logger
 from plaso.parsers import manager
 from plaso.parsers import plugins
+from plaso.parsers import sqlite_structure
 
 
 class SQLiteCache(plugins.BasePluginCache):
@@ -312,6 +313,44 @@ class SQLiteParser(interface.FileEntryParser):
 
     _plugin_classes = {}
 
+    def __init__(self):
+        """Initializes a SQLite parser."""
+        self._structure_matcher = sqlite_structure.SQLitePluginStructureMatcher(())
+        super().__init__()
+
+    def EnablePlugins(self, plugin_includes):
+        """Enables parser plugins and builds the REQUIRED_STRUCTURE pre-filter index.
+
+        Args:
+          plugin_includes (set[str]): names of the plugins to enable, where
+              set(['*']) represents all plugins.
+        """
+        super().EnablePlugins(plugin_includes)
+        self._structure_matcher = sqlite_structure.SQLitePluginStructureMatcher(
+            self._plugins_per_name.values()
+        )
+
+    def _GetWALFileEntry(self, database_file_entry):
+        """Retrieves the accompanying Write-Ahead Log (WAL) file entry if present.
+
+        Args:
+          database_file_entry (dfvfs.FileEntry): file entry of the database.
+
+        Returns:
+          dfvfs.FileEntry: file entry object of the WAL file or None if not found.
+        """
+        path_spec = database_file_entry.path_spec
+        location = getattr(path_spec, "location", None)
+        if not path_spec or not location:
+            return None
+
+        location_wal = f"{location}-wal"
+        file_system = database_file_entry.GetFileSystem()
+        wal_path_spec = path_spec_factory.Factory.NewPathSpec(
+            file_system.type_indicator, parent=path_spec.parent, location=location_wal
+        )
+        return file_system.GetFileEntryByPathSpec(wal_path_spec)
+
     def _OpenDatabaseWithWAL(
         self, parser_mediator, database_file_entry, database_file_object, filename
     ):
@@ -329,17 +368,7 @@ class SQLiteParser(interface.FileEntryParser):
             SQLiteDatabase: a database object with WAL file committed or None
             dfvfs.FileEntry: a file entry object of WAL file or None
         """
-        path_spec = database_file_entry.path_spec
-        location = getattr(path_spec, "location", None)
-        if not path_spec or not location:
-            return None, None
-
-        location_wal = f"{location}-wal"
-        file_system = database_file_entry.GetFileSystem()
-        wal_path_spec = path_spec_factory.Factory.NewPathSpec(
-            file_system.type_indicator, parent=path_spec.parent, location=location_wal
-        )
-        wal_file_entry = file_system.GetFileEntryByPathSpec(wal_path_spec)
+        wal_file_entry = self._GetWALFileEntry(database_file_entry)
         if not wal_file_entry:
             return None, None
 
@@ -420,7 +449,7 @@ class SQLiteParser(interface.FileEntryParser):
           FormatSpecification: a format specification or None if not available.
         """
         format_specification = specification.FormatSpecification(cls.NAME)
-        format_specification.AddNewSignature(b"SQLite format 3", offset=0)
+        format_specification.AddNewSignature(b"SQLite format 3\x00", offset=0)
         return format_specification
 
     def ParseFileEntry(self, parser_mediator, file_entry):
@@ -430,38 +459,112 @@ class SQLiteParser(interface.FileEntryParser):
           parser_mediator (ParserMediator): parser mediator.
           file_entry (dfvfs.FileEntry): file entry to be parsed.
         """
+        if not self._plugins_per_name:
+            return
+
         filename = parser_mediator.GetFilename()
-        database = SQLiteDatabase(
-            filename, temporary_directory=parser_mediator.temporary_directory
-        )
-
         file_object = file_entry.GetFileObject()
-        try:
-            database.Open(file_object)
+        if not file_object:
+            parser_mediator.ProduceWarning(
+                "unable to open SQLite database with error: Missing file object."
+            )
+            return
 
-        except (OSError, ValueError, sqlite3.DatabaseError) as exception:
+        # Pre-filter enabled plugins directly from sqlite_master before copying
+        # the full database to a temporary file or invoking sqlite3.
+        try:
+            main_match = self._structure_matcher.MatchFileObject(file_object)
+        except OSError as exception:
             parser_mediator.ProduceWarning(
                 f"unable to open SQLite database with error: {exception!s}"
             )
             return
 
-        # Create a cache in which the resulting tables are cached.
-        cache = SQLiteCache()
+        if main_match.status == sqlite_structure.StructureMatchStatus.INVALID_HEADER:
+            parser_mediator.ProduceWarning(
+                "unable to open SQLite database with error: file is not a database"
+            )
+            return
 
-        display_name = parser_mediator.GetDisplayName(file_entry=file_entry)
+        if main_match.status == sqlite_structure.StructureMatchStatus.MATCH:
+            main_plugins = main_match.matched_plugins
+        elif main_match.status == sqlite_structure.StructureMatchStatus.FALLBACK:
+            main_plugins = list(self._plugins_per_name.values())
+        else:
+            main_plugins = []
+
+        if main_plugins:
+            database = SQLiteDatabase(
+                filename, temporary_directory=parser_mediator.temporary_directory
+            )
+            try:
+                database.Open(file_object)
+
+            except (OSError, ValueError, sqlite3.DatabaseError) as exception:
+                parser_mediator.ProduceWarning(
+                    f"unable to open SQLite database with error: {exception!s}"
+                )
+                return
+
+            # Create a cache in which the resulting tables are cached.
+            cache = SQLiteCache()
+
+            display_name = parser_mediator.GetDisplayName(file_entry=file_entry)
+
+            try:
+                for plugin in main_plugins:
+                    self._ParseFileEntryWithPlugin(
+                        parser_mediator, plugin, database, display_name, cache
+                    )
+            finally:
+                database.Close()
+
+        wal_file_entry = self._GetWALFileEntry(file_entry)
+        if not wal_file_entry:
+            return
+
+        wal_file_object = wal_file_entry.GetFileObject()
+        if not wal_file_object:
+            return
 
         try:
-            for plugin in self._plugins_per_name.values():
-                self._ParseFileEntryWithPlugin(
-                    parser_mediator, plugin, database, display_name, cache
-                )
-        finally:
-            database.Close()
+            wal_match = self._structure_matcher.MatchFileObjectWithWAL(
+                file_object, wal_file_object, main_match
+            )
+        except OSError as exception:
+            parser_mediator.ProduceWarning(
+                f"unable to open SQLite database and WAL with error: {exception!s}"
+            )
+            return
 
-        database_wal, wal_file_entry = self._OpenDatabaseWithWAL(
-            parser_mediator, file_entry, file_object, filename
+        if (
+            wal_match.status == sqlite_structure.StructureMatchStatus.NO_MATCH
+            and main_match.status == sqlite_structure.StructureMatchStatus.NO_MATCH
+        ):
+            return
+
+        if sqlite_structure.StructureMatchStatus.FALLBACK in (
+            wal_match.status,
+            main_match.status,
+        ):
+            wal_plugins = list(self._plugins_per_name.values())
+        else:
+            wal_plugins = list(wal_match.matched_plugins)
+            seen_plugin_names = {plugin.NAME for plugin in wal_plugins}
+            for plugin in main_match.matched_plugins:
+                if plugin.NAME not in seen_plugin_names:
+                    wal_plugins.append(plugin)
+                    seen_plugin_names.add(plugin.NAME)
+
+        database_wal = SQLiteDatabase(
+            filename, temporary_directory=parser_mediator.temporary_directory
         )
-        if not database_wal:
+        try:
+            database_wal.Open(file_object, wal_file_object=wal_file_object)
+        except (OSError, ValueError, sqlite3.DatabaseError) as exception:
+            parser_mediator.ProduceWarning(
+                f"unable to open SQLite database and WAL with error: {exception!s}"
+            )
             return
 
         # Note that SetFileEntry will reset the current event data stream in
@@ -479,7 +582,7 @@ class SQLiteParser(interface.FileEntryParser):
         display_name = parser_mediator.GetDisplayName(file_entry=wal_file_entry)
 
         try:
-            for plugin in self._plugins_per_name.values():
+            for plugin in wal_plugins:
                 self._ParseFileEntryWithPlugin(
                     parser_mediator, plugin, database_wal, display_name, cache
                 )
