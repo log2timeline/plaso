@@ -153,14 +153,17 @@ class AnalysisMultiProcessEngine(task_engine.TaskMultiProcessEngine):
                 number_of_filtered_events += 1
                 continue
 
+            event_triple = events.EventTriple()
+            event_triple.event = event
+            event_triple.event_data = event_data
+            event_triple.event_data_stream = event_data_stream
+
+            # Serialize the event triple once for all analysis plugin queues.
+            serialized_event_triple = zeromq_queue.ZeroMQSerializedItem(event_triple)
+
             for event_queue in self._event_queues.values():
                 # TODO: Check for premature exit of analysis plugins.
-                event_triple = events.EventTriple()
-                event_triple.event = event
-                event_triple.event_data = event_data
-                event_triple.event_data_stream = event_data_stream
-
-                event_queue.PushItem(event_triple)
+                event_queue.PushItem(serialized_event_triple)
 
             self._number_of_consumed_events += 1
 
