@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Tests for the multi-processing worker process."""
 
+import os
 import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -136,6 +137,39 @@ class WorkerProcessTest(test_lib.MultiProcessingTestCase):
 
             output_task_queue.PushItem(plaso_queue.QueueAbort(), block=False)
             output_task_queue.Close(abort=True)
+
+    def testMainInProcess(self):
+        """Tests the _Main function run in the current process."""
+        output_task_queue = zeromq_queue.ZeroMQBufferedReplyBindQueue(
+            delay_open=True,
+            linger_seconds=0,
+            maximum_items=1,
+            name="test output task queue",
+            timeout_seconds=self._QUEUE_TIMEOUT,
+        )
+        output_task_queue.Open()
+
+        input_task_queue = zeromq_queue.ZeroMQRequestConnectQueue(
+            delay_open=True,
+            linger_seconds=0,
+            name="test input task queue",
+            port=output_task_queue.port,
+            timeout_seconds=self._QUEUE_TIMEOUT,
+        )
+        with shared_test_lib.TempDirectory() as temp_directory:
+            configuration = configurations.ProcessingConfiguration()
+            configuration.task_storage_path = temp_directory
+
+            test_process = extraction_process.ExtractionWorkerProcess(
+                input_task_queue, configuration, [], [], None, name="TestWorker"
+            )
+            test_process._pid = os.getpid()
+
+            output_task_queue.PushItem(plaso_queue.QueueAbort(), block=False)
+            test_process._Main()
+            output_task_queue.Close(abort=True)
+
+        self.assertEqual(test_process._status, definitions.STATUS_INDICATOR_COMPLETED)
 
     def testProcessPathSpec(self):
         """Tests the _ProcessPathSpec function."""
