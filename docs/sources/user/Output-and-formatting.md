@@ -121,6 +121,16 @@ timestamp | The timestamp of the event in number of microseconds since January 1
 timestamp_desc | Indication of what the event time represents such as Creation Time or Program Execution Duration
 yara_match | Names of the Yara rules that matched the data stream content.
 
+### OpenSearch connection
+
+The opensearch and opensearch_ts output modules connect to the OpenSearch
+server using SSL/TLS by default. Use `--ca_certificates_file_path` to specify
+a file containing the root certificates to trust, for example when the server
+uses a certificate signed by a private certificate authority.
+
+To connect without SSL/TLS, for example to a test server that only supports
+HTTP, use `--no_ssl`.
+
 ## Message formatting
 
 In log2timeline.pl the l2tcsv format introduced the `desc` and `short` fields

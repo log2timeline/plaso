@@ -144,7 +144,16 @@ class OpenSearchOutputArgumentsHelper(interface.ArgumentsHelper):
             "--use-ssl",
             dest="use_ssl",
             action="store_true",
-            help="Enforces use of SSL/TLS.",
+            default=True,
+            help="Enforces use of SSL/TLS, which is the default.",
+        )
+
+        argument_group.add_argument(
+            "--no_ssl",
+            "--no-ssl",
+            dest="use_ssl",
+            action="store_false",
+            help="Disables use of SSL/TLS.",
         )
 
         argument_group.add_argument(
@@ -187,7 +196,7 @@ class OpenSearchOutputArgumentsHelper(interface.ArgumentsHelper):
         mappings_file_path = cls._ParseStringOption(options, "opensearch_mappings")
         opensearch_user = cls._ParseStringOption(options, "opensearch_user")
         opensearch_password = cls._ParseStringOption(options, "opensearch_password")
-        use_ssl = getattr(options, "use_ssl", False)
+        use_ssl = getattr(options, "use_ssl", True)
 
         ca_certificates_path = cls._ParseStringOption(
             options, "ca_certificates_file_path"

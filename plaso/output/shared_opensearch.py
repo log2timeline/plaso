@@ -232,7 +232,7 @@ class SharedOpenSearchOutputModule(interface.OutputModule):
         self._password = None
         self._port = None
         self._username = None
-        self._use_ssl = None
+        self._use_ssl = True
         self._ca_certs = None
         self._url_prefix = None
 
