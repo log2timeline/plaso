@@ -1,6 +1,7 @@
 """The path helper."""
 
 import os
+import re
 
 from dfvfs.lib import definitions as dfvfs_definitions
 
@@ -27,6 +28,8 @@ class PathHelper:
         ],
         "%%users.temp%%": [["%%users.localappdata%%", "Temp"]],
     }
+
+    _USERS_USERNAME_VARIABLE_RE = re.compile("%%users\\.username%%", re.IGNORECASE)
 
     # Characters that have a special meaning in a regular expression, outside
     # and inside a character class.
@@ -131,10 +134,46 @@ class PathHelper:
 
                 user_path_segments.extend(path_segments[1:])
 
+                user_path_segments = cls._ExpandUsersUsernamePathSegments(
+                    user_path_segments, user_account
+                )
+                if user_path_segments is None:
+                    continue
+
                 user_path = path_separator.join(user_path_segments)
                 user_paths.append(user_path)
 
         return user_paths
+
+    @classmethod
+    def _ExpandUsersUsernamePathSegments(cls, path_segments, user_account):
+        """Expands path segments with the username of a user account.
+
+        Expands the artifacts path variable "%%users.username%%", which can be
+        part of a path segment, such as "L.%%users.username%%".
+
+        Args:
+          path_segments (list[str]): path segments.
+          user_account (UserAccountArtifact): user account.
+
+        Returns:
+          list[str]: path segments for which the username variable has been
+              expanded or None if the path segments contain the username
+              variable and the user account has no username.
+        """
+        expanded_path_segments = []
+        for path_segment in path_segments:
+            if cls._USERS_USERNAME_VARIABLE_RE.search(path_segment):
+                if not user_account.username:
+                    return None
+
+                path_segment = cls._USERS_USERNAME_VARIABLE_RE.sub(
+                    lambda match: user_account.username, path_segment
+                )
+
+            expanded_path_segments.append(path_segment)
+
+        return expanded_path_segments
 
     @classmethod
     def _ExpandUsersVariablePathSegments(
@@ -181,9 +220,20 @@ class PathHelper:
         if cls._IsWindowsDrivePathSegment(path_segments[0]):
             path_segments[0] = ""
 
-        # TODO: add support for %%users.username%%
         path = path_separator.join(path_segments)
-        return [path]
+        if not cls._USERS_USERNAME_VARIABLE_RE.search(path):
+            return [path]
+
+        expanded_paths = []
+        for user_account in user_accounts or []:
+            expanded_path_segments = cls._ExpandUsersUsernamePathSegments(
+                path_segments, user_account
+            )
+            if expanded_path_segments is not None:
+                expanded_path = path_separator.join(expanded_path_segments)
+                expanded_paths.append(expanded_path)
+
+        return expanded_paths
 
     @classmethod
     def _EscapeRegularExpression(cls, string):
