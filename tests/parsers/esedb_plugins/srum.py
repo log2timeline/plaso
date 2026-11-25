@@ -19,7 +19,7 @@ class SystemResourceUsageMonitorESEDBPluginTest(test_lib.ESEDBPluginTestCase):
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
-        self.assertEqual(number_of_event_data, 18283)
+        self.assertEqual(number_of_event_data, 18318)
 
         number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
             "extraction_warning"
@@ -39,7 +39,7 @@ class SystemResourceUsageMonitorESEDBPluginTest(test_lib.ESEDBPluginTestCase):
             "recorded_time": "2017-11-05T11:32:00.000000+00:00",
         }
 
-        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1878)
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1913)
         self.CheckEventData(event_data, expected_event_values)
 
         # Test an entry with data type windows:srum:network_connectivity
@@ -51,7 +51,24 @@ class SystemResourceUsageMonitorESEDBPluginTest(test_lib.ESEDBPluginTestCase):
             "recorded_time": "2017-11-05T13:33:00.000000+00:00",
         }
 
-        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 18027)
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 18062)
+        self.CheckEventData(event_data, expected_event_values)
+
+        # Test an entry with data type windows:srum:push_notification
+        expected_event_values = {
+            "application": (
+                "Microsoft.Office.OneNote_17.7668.58071.0_x64__8wekyb3d8bbwe"
+            ),
+            "data_type": "windows:srum:push_notification",
+            "identifier": 1,
+            "network_type": 0,
+            "notification_type": 1,
+            "payload_size": 2196,
+            "recorded_time": "2017-07-30T10:46:00.000000+00:00",
+            "user_identifier": "S-1-5-21-1670443002-3598886608-1280426916-1001",
+        }
+
+        event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1840)
         self.CheckEventData(event_data, expected_event_values)
 
         # Test an entry with data type windows:srum:network_usage

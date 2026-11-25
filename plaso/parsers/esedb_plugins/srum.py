@@ -133,6 +133,36 @@ class SRUMNetworkDataUsageEventData(events.EventData):
         self.user_identifier = None
 
 
+class SRUMPushNotificationEventData(events.EventData):
+    """SRUM push notification event data.
+
+    Note that the interpretation of some of these values is undocumented as far as
+    currently known.
+
+    Attributes:
+      application (str): application.
+      identifier (int): record identifier.
+      network_type (int): network type.
+      notification_type (int): notification type.
+      payload_size (int): size of the notification payload.
+      recorded_time (dfdatetime.DateTimeValues): date and time the sample was recorded.
+      user_identifier (str): user identifier, which is a Windows NT security identifier.
+    """
+
+    DATA_TYPE = "windows:srum:push_notification"
+
+    def __init__(self):
+        """Initializes event data."""
+        super().__init__(data_type=self.DATA_TYPE)
+        self.application = None
+        self.identifier = None
+        self.network_type = None
+        self.notification_type = None
+        self.payload_size = None
+        self.recorded_time = None
+        self.user_identifier = None
+
+
 class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
     """Parses a System Resource Usage Monitor (SRUM) ESE database file."""
 
@@ -143,7 +173,6 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
     # {5C8CF1C7-7257-4F13-B223-970EF5939312}
     # {97C2CE28-A37B-4920-B1E9-8B76CD341EC5}
     # {B6D82AF1-F780-4E17-8077-6CB9AD8A6FC4}
-    # {D10CA2FE-6FCF-4F6D-848E-B2E99266FA86}
     # {DA73FB89-2BEA-4DDC-86B8-6E048C6DA477}
     # {FEE4E14F-02A9-4550-B5CE-5FA2DA202E37}
 
@@ -152,6 +181,7 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
 
     OPTIONAL_TABLES = {
         "{973F5D5C-1D90-4944-BE8E-24B94231A174}": "ParseNetworkDataUsage",
+        "{D10CA2FE-6FCF-4F6D-848E-B2E99266FA86}": "ParsePushNotifications",
         "{D10CA2FE-6FCF-4F6D-848E-B2E99266FA89}": "ParseApplicationResourceUsage",
         "{DD6636C4-8929-4683-974E-22C046A43763}": "ParseNetworkConnectivityUsage",
     }
@@ -201,6 +231,15 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
         "interface_luid": "InterfaceLuid",
         "l2_profile_flags": "L2ProfileFlags",
         "l2_profile_identifier": "L2ProfileId",
+        "user_identifier": "UserId",
+    }
+
+    _PUSH_NOTIFICATIONS_VALUES_MAP = {
+        "application": "AppId",
+        "identifier": "AutoIncId",
+        "network_type": "NetworkType",
+        "notification_type": "NotificationType",
+        "payload_size": "PayloadSize",
         "user_identifier": "UserId",
     }
 
@@ -531,6 +570,28 @@ class SystemResourceUsageMonitorESEDBPlugin(interface.ESEDBPlugin):
             table,
             self._NETWORK_CONNECTIVITY_USAGE_VALUES_MAP,
             SRUMNetworkConnectivityUsageEventData,
+        )
+
+    def ParsePushNotifications(
+        self, parser_mediator, cache=None, database=None, table=None, **unused_kwargs
+    ):
+        """Parses the push notifications table.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
+          cache (Optional[ESEDBCache]): cache, which contains information about
+              the identifiers stored in the SruDbIdMapTable table.
+          database (Optional[ESEDatabase]): ESE database.
+          table (Optional[pyesedb.table]): table.
+        """
+        self._ParseGUIDTable(
+            parser_mediator,
+            cache,
+            database,
+            table,
+            self._PUSH_NOTIFICATIONS_VALUES_MAP,
+            SRUMPushNotificationEventData,
         )
 
 

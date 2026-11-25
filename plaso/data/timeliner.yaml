@@ -2040,6 +2040,12 @@ attribute_mappings:
   description: 'Recorded Time'
 place_holder_event: true
 ---
+data_type: 'windows:srum:push_notification'
+attribute_mappings:
+- name: 'recorded_time'
+  description: 'Recorded Time'
+place_holder_event: true
+---
 data_type: 'windows:tasks:job'
 attribute_mappings:
 - name: 'last_run_time'
