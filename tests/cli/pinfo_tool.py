@@ -5,6 +5,7 @@ import collections
 import json
 import os
 import unittest
+import uuid
 
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
@@ -13,6 +14,7 @@ from plaso.cli import pinfo_tool
 from plaso.containers import artifacts
 from plaso.containers import counts
 from plaso.containers import events
+from plaso.containers import sessions
 from plaso.engine import path_helper
 from plaso.lib import definitions
 from plaso.lib import errors
@@ -981,14 +983,64 @@ Storage files are different.
         output = output_writer.ReadOutput()
 
         json_dict = json.loads(f"{{{output:s}}}")
-        sessions = json_dict["sessions"]
-        self.assertEqual(len(sessions), 4)
+        json_sessions = json_dict["sessions"]
+        self.assertEqual(len(json_sessions), 4)
 
-        for session in sessions.values():
+        for session in json_sessions.values():
             self.assertEqual(session["__container_type__"], "session")
 
     # TODO: add test for _PrintSessionsOverview.
     # TODO: add test for _PrintTasksInformation.
+
+    def testPrintSessionsDetailsAsJSONWithSystemConfiguration(self):
+        """Tests the _PrintSessionsDetails function with a system configuration."""
+        output_writer = test_lib.TestOutputWriter(encoding="utf-8")
+        test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
+        test_tool._output_format = "json"
+        test_tool._verbose = True
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            temp_file = os.path.join(temp_directory, "storage.plaso")
+
+            storage_writer = storage_factory.StorageFactory.CreateStorageWriter(
+                definitions.DEFAULT_STORAGE_FORMAT
+            )
+            storage_writer.Open(path=temp_file)
+            try:
+                session = sessions.Session()
+                storage_writer.AddAttributeContainer(session)
+
+                system_configuration = artifacts.SystemConfigurationArtifact(
+                    code_page="cp1252"
+                )
+                system_configuration.hostname = artifacts.HostnameArtifact(
+                    name="WKS-TEST"
+                )
+                storage_writer.AddAttributeContainer(system_configuration)
+
+            finally:
+                storage_writer.Close()
+
+            storage_reader = test_tool._GetStorageReader(temp_file)
+            try:
+                test_tool._PrintSessionsDetails(storage_reader)
+
+            finally:
+                storage_reader.Close()
+
+        output = output_writer.ReadOutput()
+
+        json_dict = json.loads(f"{{{output:s}}}")
+        session_identifier = str(uuid.UUID(hex=session.identifier))
+        self.assertEqual(
+            json_dict["sessions"][session_identifier]["identifier"], session.identifier
+        )
+
+        system_configuration_dict = json_dict["sessions"]["system_configurations"][
+            "system_configuration"
+        ]
+        self.assertEqual(system_configuration_dict["code_page"], "cp1252")
+        self.assertEqual(system_configuration_dict["hostname"]["name"], "WKS-TEST")
 
     def testPrintWarningCountersJSON(self):
         """Tests the _PrintWarningCountersJSON function."""
