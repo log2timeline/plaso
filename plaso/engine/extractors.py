@@ -44,6 +44,7 @@ class EventDataExtractor:
         self._mft_parser = None
         self._non_sigscan_parser_names = None
         self._parsers = None
+        self._reported_definition_errors = set()
         self._usnjrnl_parser = None
 
         self._InitializeParserObjects(parser_filter_expression=parser_filter_expression)
@@ -202,6 +203,16 @@ class EventDataExtractor:
                 f"{parser.NAME:s} unable to parse file: {display_name:s} with error: "
                 f"{exception!s}"
             )
+            result = self._PARSE_RESULT_FAILURE
+
+        except errors.MalformedDefinitionFileError as exception:
+            # The parser cannot be used until its definition file is fixed, so the
+            # warning is produced once per extractor instead of for every file.
+            message = f"{parser.NAME:s} skipped, {exception!s}"
+            if message not in self._reported_definition_errors:
+                self._reported_definition_errors.add(message)
+                logger.error(message)
+                parser_mediator.ProduceWarning(message, path_spec=file_entry.path_spec)
             result = self._PARSE_RESULT_FAILURE
 
         except errors.WrongParser as exception:

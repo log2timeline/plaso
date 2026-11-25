@@ -249,6 +249,48 @@ class EventDataExtractorTest(test_lib.EngineTestCase):
         with self.assertRaises(TypeError):
             test_extractor._ParseFileEntryWithParser(parser_mediator, None, file_entry)
 
+    def testParseFileEntryWithParserAndMalformedDefinitionFile(self):
+        """Tests _ParseFileEntryWithParser with a malformed definition file."""
+        test_extractor = extractors.EventDataExtractor(
+            parser_filter_expression="recycle_bin_info2"
+        )
+
+        file_entry = self._GetTestOSFileEntry(["recycler", "INFO2"])
+
+        storage_writer = self._CreateStorageWriter()
+        parser_mediator = self._CreateParserMediator(
+            storage_writer, file_entry=file_entry
+        )
+
+        parser = test_extractor._parsers["recycle_bin_info2"]
+        parser._definition = (
+            b"name: malformed\n"
+            b"type: structure\n"
+            b"attributes:\n"
+            b"  byte_order: little-endian\n"
+            b"members:\n"
+            b"- name: x\n"
+            b"  data_type: undefined\n"
+        )
+
+        # The parser is skipped and the file is reported once, since every other
+        # file would fail in the same way.
+        for _ in range(2):
+            result = test_extractor._ParseFileEntryWithParser(
+                parser_mediator,
+                parser,
+                file_entry,
+                file_object=file_entry.GetFileObject(),
+            )
+            self.assertEqual(result, test_extractor._PARSE_RESULT_FAILURE)
+
+        self.assertEqual(storage_writer.GetNumberOfAttributeContainers("event_data"), 0)
+
+        warnings = list(storage_writer.GetAttributeContainers("extraction_warning"))
+        self.assertEqual(len(warnings), 1)
+        self.assertTrue(warnings[0].message.startswith("recycle_bin_info2 skipped, "))
+        self.assertIn("recycler.yaml", warnings[0].message)
+
     def testParseFileEntryWithParsers(self):
         """Tests the _ParseFileEntryWithParsers function."""
         test_extractor = extractors.EventDataExtractor(
