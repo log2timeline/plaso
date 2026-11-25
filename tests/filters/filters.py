@@ -401,6 +401,47 @@ class GreaterEqualOperatorTest(shared_test_lib.BaseTestCase):
         self.assertTrue(result)
 
 
+class InSetTest(shared_test_lib.BaseTestCase):
+    """Tests the in set operator."""
+
+    # pylint: disable=protected-access
+
+    def testCompareValue(self):
+        """Tests the _CompareValue function."""
+        filter_object = filters.InSet(arguments=["first", "second"])
+
+        result = filter_object._CompareValue("b", ["a", "b"])
+        self.assertTrue(result)
+
+        result = filter_object._CompareValue("c", ["a", "b"])
+        self.assertFalse(result)
+
+        result = filter_object._CompareValue(["a", "b"], ["a", "b", "c"])
+        self.assertTrue(result)
+
+        result = filter_object._CompareValue(["a", "d"], ["a", "b", "c"])
+        self.assertFalse(result)
+
+        # Test a list event value with a string filter value.
+        result = filter_object._CompareValue(["a", "b"], "abc")
+        self.assertTrue(result)
+
+        result = filter_object._CompareValue(["a", "d"], "abc")
+        self.assertFalse(result)
+
+        # Test non-string event values with a string filter value.
+        result = filter_object._CompareValue([1, 2], "abc")
+        self.assertFalse(result)
+
+        result = filter_object._CompareValue(1, "abc")
+        self.assertFalse(result)
+
+
+# TODO: add tests for Contains
+# TODO: add tests for Regexp
+# TODO: add tests for RegexpInsensitive
+
+
 class ContainsOperatorTest(shared_test_lib.BaseTestCase):
     """Tests the contains operator."""
 
