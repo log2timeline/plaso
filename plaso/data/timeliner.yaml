@@ -2002,6 +2002,18 @@ attribute_mappings:
   description: 'Creation Time'
 place_holder_event: true
 ---
+data_type: 'windows:search:item'
+attribute_mappings:
+- name: 'access_time'
+  description: 'Last Access Time'
+- name: 'creation_time'
+  description: 'Creation Time'
+- name: 'gather_time'
+  description: 'Last Indexed Time'
+- name: 'modification_time'
+  description: 'Content Modification Time'
+place_holder_event: true
+---
 data_type: 'windows:setupapi:log:line'
 attribute_mappings:
 - name: 'end_time'

@@ -44,7 +44,7 @@ class ESEDBParserTest(test_lib.ParserTestCase):
         number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
             "event_data"
         )
-        self.assertEqual(number_of_event_data, 0)
+        self.assertEqual(number_of_event_data, 322)
 
         number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
             "extraction_warning"
