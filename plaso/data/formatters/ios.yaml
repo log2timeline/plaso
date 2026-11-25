@@ -81,7 +81,8 @@ data_type: 'ios:health:achievement'
 message:
 - 'Template Name: {template_unique_name}'
 - 'Earned Date: {earned_date}'
-- 'Value: {value_in_canonical_unit} {value_canonical_unit}'
+- 'Value: {value_in_canonical_unit}'
+- '{value_canonical_unit}'
 - 'Creator Device ID: {creator_device}'
 - 'Synchronization Provenance: {synchronization_provenance}'
 short_message:
@@ -112,10 +113,13 @@ message:
 - 'Sound Level: {decibels} dB'
 - 'Duration: {total_time_duration}'
 - 'Bundle identifier: {bundle_identifier}'
-- 'Device: {device_name} ({device_model})'
+- 'Device: {device_name}'
+- '({device_model})'
 - 'Manufacturer: {device_manufacturer}'
 short_message:
-- '{decibels} dB via {device_name} for {total_time_duration}'
+- '{decibels} dB'
+- 'via {device_name}'
+- 'for {total_time_duration}'
 short_source: 'SQLITE'
 source: 'iOS Health database'
 ---
@@ -138,11 +142,14 @@ enumeration_helpers:
 message:
 - 'Heart Rate: {bpm} BPM'
 - 'Context: {context_string}'
-- 'Device: {device_name} ({hardware})'
-- 'Source: {source_name} (v{software_version})'
+- 'Device: {device_name}'
+- '({hardware})'
+- 'Source: {source_name}'
+- '(v{software_version})'
 - 'Time Zone: {time_zone}'
 short_message:
-- '{bpm} BPM ({context})'
+- '{bpm} BPM'
+- '({context})'
 short_source: 'SQLITE'
 source: 'iOS Health database'
 ---
@@ -173,11 +180,13 @@ message:
 - 'Manufacturer: {manufacturer}'
 - 'Model: {model}'
 - 'Hardware Version: {hardware}'
-- 'Software/Firmware: {software} / {firmware}'
+- 'Software: {software}'
+- 'Firmware: {firmware}'
 - 'Local Identifier: {local_identifier}'
 - 'Synchronization Provenance: {synchronization_provenance}'
 short_message:
-- 'Source Device: {device_name} ({model})'
+- 'Source Device: {device_name}'
+- '({model})'
 short_source: 'SQLITE'
 source: 'iOS Health database'
 ---
@@ -188,7 +197,8 @@ message:
 - 'Device: {device}'
 - 'Duration: {duration} seconds'
 short_message:
-- '{number_of_steps} steps via {device}'
+- '{number_of_steps} steps'
+- 'via {device}'
 short_source: 'SQLITE'
 source: 'iOS Health database'
 ---
@@ -298,12 +308,16 @@ message:
 - 'Activity: {activity_label}'
 - 'Duration: {duration}'
 - 'Distance: {total_distance} km'
-- 'Energy: {total_energy_burned} kcal Active / {total_basal_energy_burned} kcal Basal'
+- 'Active Energy: {total_energy_burned} kcal'
+- 'Basal Energy: {total_basal_energy_burned} kcal'
 - 'Steps: {total_weekly_steps}'
 - 'Flights Climbed: {total_flights_climbed}'
-- 'Goal: {goal_label} ({goal})'
+- 'Goal: {goal_label}'
+- '({goal})'
 short_message:
-- '{activity_label}: {total_distance} km in {duration}'
+- '{activity_label}:'
+- '{total_distance} km'
+- 'in {duration}'
 short_source: 'SQLITE'
 source: 'iOS Health database'
 ---
@@ -312,12 +326,15 @@ data_type: 'ios:health:wrist_temperature'
 message:
 - 'Wrist temperature: {wrist_temperature} °C'
 - 'Surface temperature: {surface_temperature} °C'
-- 'Device: {device_name} ({device_model})'
-- 'Hardware/Software: {device_hardware} / {software_version}'
+- 'Device: {device_name}'
+- '({device_model})'
+- 'Hardware: {device_hardware}'
+- 'Software: {software_version}'
 - 'Algorithm Version: {algorithm_version}'
 - 'Source: {source_name}'
 short_message:
-- 'Wrist temperature: {wrist_temperature} °C via {device_model}'
+- 'Wrist temperature: {wrist_temperature} °C'
+- 'via {device_model}'
 short_source: 'SQLITE'
 source: 'iOS Health database'
 ---
