@@ -13,6 +13,7 @@ from plaso.parsers import czip
 from plaso.parsers import esedb
 from plaso.parsers import filestat
 from plaso.parsers import firefox_cache
+from plaso.parsers import firefox_mork_history
 from plaso.parsers import fish_history
 from plaso.parsers import fseventsd
 from plaso.parsers import ios_discord

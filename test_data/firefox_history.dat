@@ -1,0 +1,25 @@
+// <!-- <mdb:mork:z v="1.4"/> -->
+< <(a=c)> // (f=iso-8859-1)
+  (B8=Typed)(B9=LastPageVisited)(B7=ByteOrder)(80=ns:history:db:row:scope:history:all)
+  (81=ns:history:db:table:kind:history)(82=URL)(83=Referrer)(84=LastVisitDate)
+  (85=FirstVisitDate)(86=VisitCount)(87=Name)(88=Hostname)(89=Hidden)>
+
+<(80=LE)(8A=1)(8B=www.example.com)(8C=https://www.example.com/)>
+
+{1:^80 {(k^81:c)(s=9)[1(^B7^80)]}
+  [1(^82^8C)(^84=1197562315123456)(^85=1197562200000000)(^88^8B)(^86=2)
+    (^87=E$00x$00a$00m$00p$00l$00e$00 $00D$00o$00m$00a$00i$00n$00)(^B8^8A)]
+  [2(^82=https://plaso.example.org/docs/\
+index.html)(^83^8C)
+    (^84=1197562400000000)(^85=1197562400000000)(^88=plaso.example.org)
+    (^86=1)(^87=P$00l$00a$00s$00o$00 $00\)$00)(^89^8A)]
+  [4(^82=https://www.example.jp/)(^84=1197562500000000)(^87=$E5$65$2C$67)]
+  [3(^82=https://broken.example.net/)(^84=not-a-date)(^88=broken.example.net)]}
+
+@$${2{@
+[1(^84=1197648000000000)(^86=3)]
+@$$}2}@
+
+@$${3{@
+[2(^84=1300000000000000)(^86=9)]
+@$$}~~}@
