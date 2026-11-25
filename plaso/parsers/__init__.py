@@ -19,6 +19,7 @@ from plaso.parsers import ios_discord
 from plaso.parsers import ivanti_vc0
 from plaso.parsers import java_idx
 from plaso.parsers import jsonl_parser
+from plaso.parsers import linux_group
 from plaso.parsers import locate
 from plaso.parsers import macos_keychain
 from plaso.parsers import mcafeeav
