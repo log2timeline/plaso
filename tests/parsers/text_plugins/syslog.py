@@ -831,6 +831,22 @@ class TraditionalSyslogTextPluginTest(test_lib.TextPluginTestCase):
         result = plugin.CheckRequiredFormat(parser_mediator, text_reader)
         self.assertFalse(result)
 
+        # Check traditional syslog format with an invalid date.
+        file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+        data = b"Feb 30 07:52:33 myhostname.myhost.com client[30840]: INFO\n"
+        file_system_builder.AddFile("/file.txt", data)
+
+        file_entry = file_system_builder.file_system.GetFileEntryByPath("/file.txt")
+
+        parser_mediator = self._CreateParserMediator(None, file_entry=file_entry)
+
+        file_object = file_entry.GetFileObject()
+        text_reader = text_parser.EncodedTextReader(file_object)
+        text_reader.ReadLines()
+
+        result = plugin.CheckRequiredFormat(parser_mediator, text_reader)
+        self.assertFalse(result)
+
     def testProcess(self):
         """Tests the Process function."""
         plugin = syslog.TraditionalSyslogTextPlugin()
@@ -1556,6 +1572,74 @@ class TraditionalSyslogTextPluginTest(test_lib.TextPluginTestCase):
         }
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 1)
         self.CheckEventData(event_data, expected_event_values)
+
+    def testProcessLogLine(self):
+        """Tests the Process function with variations of the log line."""
+        plugin = syslog.TraditionalSyslogTextPlugin()
+
+        # The first 3 and the last log line are parsed with the log line regular
+        # expression, the other log lines with the log line grammar.
+        data = (
+            b"Jan 22 07:52:33 myhostname.myhost.com client[30840]: INFO No new "
+            b"content in \xc3\xadmynd.dd.\n"
+            b"Jan 23 00:00:00.123456 myhostname client[1234]<auth>: with facility\n"
+            b"Jan 24 01:02:03 myhostname client:first line  \nsecond line\n"
+            b"Jan 25 01:02:03 kernel: [  123.456789] without hostname\n"
+            b"Jan 26\t01:02:03 myhostname client: tab separator\n"
+            b"Jan 27 01:02:03 myhostname client[123456]: PID out of bounds\n"
+            b"Jan 28 01:02:03 myhostname client [123]: space before the PID\n"
+            b"Jan 29 01:02:03 myhostname client :space before the colon\n"
+            b"Feb 1 01:02:03 myhostname client: single space\n"
+            b"Feb  2 01:02:03 myhostname client: without end of line"
+        )
+
+        storage_writer = self._ProcessByteStream(plugin, data)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 10)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        expected_event_values = [
+            ("0000-01-22T07:52:33", 30840, "INFO No new content in \u00edmynd.dd."),
+            ("0000-01-23T00:00:00", 1234, "with facility"),
+            ("0000-01-24T01:02:03", None, "first line  \nsecond line"),
+            ("0000-01-25T01:02:03", None, "[  123.456789] without hostname"),
+            ("0000-01-26T01:02:03", None, "tab separator"),
+            ("0000-01-27T01:02:03", None, "[123456]: PID out of bounds"),
+            ("0000-01-28T01:02:03", 123, "space before the PID"),
+            ("0000-01-29T01:02:03", None, "space before the colon"),
+            ("0000-02-01T01:02:03", None, "single space"),
+            ("0000-02-02T01:02:03", None, "without end of line"),
+        ]
+        for index, (last_written_time, pid, message_body) in enumerate(
+            expected_event_values
+        ):
+            expected_hostname = "myhostname"
+            expected_reporter = "client"
+            if index == 0:
+                expected_hostname = "myhostname.myhost.com"
+            elif index == 3:
+                expected_hostname = None
+                expected_reporter = "kernel"
+
+            expected_values = {
+                "data_type": "syslog:line",
+                "hostname": expected_hostname,
+                "last_written_time": last_written_time,
+                "message_body": message_body,
+                "pid": pid,
+                "reporter": expected_reporter,
+            }
+            event_data = storage_writer.GetAttributeContainerByIndex(
+                "event_data", index
+            )
+            self.CheckEventData(event_data, expected_values)
 
     def testProcessLongComment(self):
         """Tests the Process function with a long syslog comment line.
