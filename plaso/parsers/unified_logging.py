@@ -2688,6 +2688,38 @@ class TraceV3File(BaseUnifiedLoggingFile):
 
         return string_reference, is_dynamic
 
+    def _CalculatePrivateDataRangeOffset(
+        self, private_data_virtual_offset, private_data_range
+    ):
+        """Calculates the offset of the private data range.
+
+        Args:
+          private_data_virtual_offset (int): virtual offset of the private data.
+          private_data_range (tracev3_firehose_tracepoint_data_range): private
+              data range or None if not available.
+
+        Returns:
+          int: offset of the private data range relative to the start of the
+              private data.
+
+        Raises:
+          ParseError: if the private data range offset is before the private
+              data virtual offset.
+        """
+        if private_data_range is None:
+            return 0
+
+        if private_data_virtual_offset > private_data_range.offset:
+            raise errors.ParseError(
+                (
+                    f"Private data range offset: 0x{private_data_range.offset:04x} "
+                    f"is before private data virtual offset: "
+                    f"0x{private_data_virtual_offset:04x}."
+                )
+            )
+
+        return private_data_range.offset - private_data_virtual_offset
+
     def _CalculateProgramCounter(self, tracepoint_data_object, image_text_offset):
         """Calculates the program counter.
 
@@ -3724,14 +3756,9 @@ class TraceV3File(BaseUnifiedLoggingFile):
                         private_data_range = getattr(
                             tracepoint_data_object, "private_data_range", None
                         )
-                        if private_data_range is None:
-                            private_data_offset = 0
-                        else:
-                            # TODO: error if private_data_virtual_offset >
-                            # private_data_range.offset
-                            private_data_offset = (
-                                private_data_range.offset - private_data_virtual_offset
-                            )
+                        private_data_offset = self._CalculatePrivateDataRangeOffset(
+                            private_data_virtual_offset, private_data_range
+                        )
 
                         # TODO: calculate item data offset for debugging purposes.
                         values = self._ReadDataItems(
