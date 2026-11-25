@@ -1,0 +1,5 @@
+1759742102.104    187 192.0.2.17 TCP_MISS/200 10341 GET http://www.example.com/index.html - HIER_DIRECT/198.51.100.10 text/html
+1759742164.551  60125 192.0.2.17 TCP_TUNNEL/200 5822 CONNECT www.example.org:443 - HIER_DIRECT/198.51.100.11 -
+1759742290.000      0 192.0.2.23 TCP_DENIED/403 3896 GET http://forbidden.example.net/ - HIER_NONE/- text/html
+1759742431.774     12 192.0.2.23 TCP_MEM_HIT/200 1544 GET http://www.example.com/logo.png alice HIER_NONE/- image/png
+1759742525.312    942 2001:db8::25 TCP_MISS/304 412 GET http://www.example.com/style.css bob HIER_DIRECT/2001:db8::80 text/css
