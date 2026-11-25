@@ -112,12 +112,21 @@ Test argument parser.
     def testParseOptions(self):
         """Tests the ParseOptions function."""
         options = cli_test_lib.TestOptions()
-        options._data_location = shared_test_lib.DATA_PATH
+        options.data_location = shared_test_lib.DATA_PATH
 
         output_module = opensearch.OpenSearchOutputModule()
         opensearch_output.OpenSearchOutputArgumentsHelper.ParseOptions(
             options, output_module
         )
+
+        options.data_location = shared_test_lib.TEST_DATA_PATH
+
+        with self.assertRaises(errors.BadConfigOption):
+            opensearch_output.OpenSearchOutputArgumentsHelper.ParseOptions(
+                options, output_module
+            )
+
+        options.data_location = shared_test_lib.DATA_PATH
 
         with self.assertRaises(errors.BadConfigObject):
             opensearch_output.OpenSearchOutputArgumentsHelper.ParseOptions(
