@@ -156,6 +156,17 @@ By default image_export.py will not extract duplicate files, however paths to al
 
 If you do not want the ``hashes.json`` file to be generated add ``--no_hashes`` flag.
 
+### File system metadata files
+By default image_export.py will not extract file system metadata files, such
+as the NTFS ``$MFT``, ``$Bitmap`` and ``$UsnJrnl`` files, also not when they
+match a filter, for example ``--names '$MFT'``. If you'd like to extract file
+system metadata files add the ``--include_metadata_files`` flag:
+
+```
+image_export.py --include_metadata_files [IMAGE]
+```
+
+
 ## Partitions, volumes, VSS and encrypted volumes
 
 Like log2timeline.py, image_export.py scans the source and asks the user which partitions, volumes and Volume Shadow Snapshots (VSS) to process, and for credentials to unlock encrypted volumes. To prevent these prompts use:

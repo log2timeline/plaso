@@ -87,6 +87,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
         self._enable_artifacts_map = False
         self._filter_collection = file_entry_filters.FileEntryFilterCollection()
         self._filter_file = None
+        self._include_metadata_files = False
         self._no_hashes = False
         self._path_spec_extractor = extractors.PathSpecExtractor()
         self._process_memory_limit = None
@@ -518,6 +519,16 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
                     )
                     continue
 
+                if (
+                    not self._include_metadata_files
+                    and path_helper.PathHelper.IsMetadataFile(file_entry.path_spec)
+                ):
+                    logger.info(
+                        f"Skipped: {file_entry.path_spec.location:s} because it is "
+                        f"a file system metadata file."
+                    )
+                    continue
+
                 self._ExtractFileEntry(
                     file_entry, destination_path, skip_duplicates=skip_duplicates
                 )
@@ -891,6 +902,19 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
             ),
         )
         argument_parser.add_argument(
+            "--include_metadata_files",
+            "--include-metadata-files",
+            dest="include_metadata_files",
+            action="store_true",
+            default=False,
+            help=(
+                "By default file system metadata files, such as the NTFS $MFT "
+                "and $UsnJrnl files, are not exported, also not when they match "
+                "a filter. Use this option to include file system metadata files "
+                "in the export."
+            ),
+        )
+        argument_parser.add_argument(
             "--no_hashes",
             "--no-hashes",
             dest="no_hashes",
@@ -1025,6 +1049,8 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
         include_duplicates = getattr(options, "include_duplicates", False)
         self._skip_duplicates = not include_duplicates
+
+        self._include_metadata_files = getattr(options, "include_metadata_files", False)
 
         self._no_hashes = getattr(options, "no_hashes", False)
 
