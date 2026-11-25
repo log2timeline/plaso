@@ -17,6 +17,18 @@ such as a local user on the analysis host or the person running the tools, are n
 vulnerabilities. Such issues, and other undesirable behavior such as parsing edge cases, can be
 reported as regular issues or addressed with a pull request.
 
+### Third-party reporting policy
+
+This project does not recognize Mitre, NIST, or any third-party CVE Numbering Authority (CNA) as
+authoritative sources for vulnerability reports due to ongoing deficiencies in quality assurance,
+transparency, and accountability within the CVE program.
+
+Consequently, the project actively disputes any vulnerability claim or CVE assignment that has not
+been explicitly verified and confirmed directly with the project’s maintainers. Until the broader
+CVE ecosystem addresses these systemic shortcomings, the project will rely solely on its own
+internal verification and advisory process, to evaluate and validate potential security weaknesses
+and inform its users.
+
 ## Reporting an actual vulnerability
 
 **Please do not open public GitHub issues for security vulnerabilities.**
