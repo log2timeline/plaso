@@ -113,8 +113,9 @@ class PuTTYSessionsPluginTest(test_lib.RegistryPluginTestCase):
     def testProcessWithRegistryFile(self):
         """Tests the Process function on a Windows Registry file.
 
-        PuTTY 0.83 was installed on a Windows Server 2025 VM; the session subkeys were written with the values
-        PuTTY saves (the saved sessions were not created through the PuTTY user interface).
+        PuTTY 0.83 was installed on a Windows Server 2025 VM; the session subkeys
+        were written with the values PuTTY saves (the saved sessions were not
+        created through the PuTTY user interface).
         """
         test_file_entry = self._GetTestFileEntry(["NTUSER-PUTTY.DAT"])
         key_path = "HKEY_CURRENT_USER\\Software\\SimonTatham\\PuTTY\\Sessions"
