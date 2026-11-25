@@ -103,6 +103,7 @@ class ExtractionTool(
         self._process_compressed_streams = True
         self._process_memory_limit = None
         self._queue_size = self._DEFAULT_QUEUE_SIZE
+        self._replace_worker_processes = True
         self._resolver_context = dfvfs_context.Context()
         self._single_process_mode = False
         self._status_view = status_view.StatusView(self._output_writer, self.NAME)
@@ -172,6 +173,7 @@ class ExtractionTool(
         else:
             extraction_engine = multi_extraction_engine.ExtractionMultiProcessEngine(
                 number_of_worker_processes=self._number_of_extraction_workers,
+                replace_worker_processes=self._replace_worker_processes,
                 status_update_callback=status_update_callback,
                 worker_memory_limit=self._worker_memory_limit,
                 worker_timeout=self._worker_timeout,

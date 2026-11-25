@@ -24,6 +24,19 @@ class WorkersArgumentsHelper(interface.ArgumentsHelper):
               argparse group.
         """
         argument_group.add_argument(
+            "--no_worker_replacement",
+            "--no-worker-replacement",
+            dest="no_worker_replacement",
+            action="store_true",
+            default=False,
+            help=(
+                "Do not replace a worker process that is killed or not "
+                "functioning correctly, for example when debugging a worker "
+                "process."
+            ),
+        )
+
+        argument_group.add_argument(
             "--worker_memory_limit",
             "--worker-memory-limit",
             dest="worker_memory_limit",
@@ -111,6 +124,11 @@ class WorkersArgumentsHelper(interface.ArgumentsHelper):
             configuration_object,
             "_number_of_extraction_workers",
             number_of_extraction_workers,
+        )
+        replace_worker_processes = not getattr(options, "no_worker_replacement", False)
+
+        setattr(
+            configuration_object, "_replace_worker_processes", replace_worker_processes
         )
         setattr(configuration_object, "_worker_memory_limit", worker_memory_limit)
         setattr(configuration_object, "_worker_timeout", worker_timeout)
