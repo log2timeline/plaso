@@ -108,6 +108,89 @@ class BrowserSearchAnalysisTest(test_lib.AnalysisPluginTestCase):
         self.assertEqual(analysis_result.search_term, search_term)
         self.assertEqual(analysis_result.number_of_queries, 1)
 
+    def testExamineEventWithSearchEngines(self):
+        """Tests the ExamineEvent function with URLs of each search engine."""
+        plugin = browser_search.BrowserSearchPlugin()
+
+        test_values = [
+            ("Bing", "https://www.bing.com/search?q=funny+cats&form=QBLH"),
+            ("DuckDuckGo", "https://duckduckgo.com/?q=funny+cats&t=h_"),
+            ("GMail", "https://mail.google.com/mail/u/0/#search/funny+cats"),
+            ("Google Docs", "https://docs.google.com/document/u/0/?q=funny+cats"),
+            ("Google Drive", "https://drive.google.com/drive/search?q=funny+cats"),
+            ("Google Search", "https://www.google.com/search?q=funny%20cats&ie=UTF-8"),
+            (
+                "Google Sites",
+                (
+                    "https://sites.google.com/site/test/system/app/pages/"
+                    "search?q=funny+cats"
+                ),
+            ),
+            ("Yahoo", "https://search.yahoo.com/search?p=funny+cats&fr=yfp"),
+            ("Yandex", "https://www.yandex.com/search/?text=funny+cats&lr=1"),
+            ("Youtube", "https://www.youtube.com/search?q=funny+cats"),
+        ]
+
+        event_values_list = [
+            {
+                "data_type": "chrome:history:page_visited",
+                "timestamp": "2020-01-01 12:00:00",
+                "timestamp_desc": definitions.TIME_DESCRIPTION_LAST_VISITED,
+                "url": url,
+            }
+            for _, url in test_values
+        ]
+
+        storage_writer = self._AnalyzeEvents(event_values_list, plugin)
+
+        analysis_results = list(
+            storage_writer.GetAttributeContainers("browser_search_analysis_result")
+        )
+        search_queries = sorted(
+            (
+                analysis_result.search_engine,
+                analysis_result.search_term,
+                analysis_result.number_of_queries,
+            )
+            for analysis_result in analysis_results
+        )
+        expected_search_queries = sorted(
+            (engine, "funny cats", 1) for engine, _ in test_values
+        )
+        self.assertEqual(search_queries, expected_search_queries)
+
+    def testExamineEventWithoutSearchQuery(self):
+        """Tests the ExamineEvent function with URLs without a search query."""
+        plugin = browser_search.BrowserSearchPlugin()
+
+        urls = [
+            "https://www.bing.com/maps?q=funny+cats",
+            "https://duckduckgo.com/about",
+            "https://mail.google.com/mail/u/0/#inbox",
+            "https://docs.google.com/document/u/0/",
+            "https://sites.google.com/site/test/?q=funny+cats",
+            "https://search.yahoo.com/search?fr=yfp",
+            "https://www.yandex.com/search/?lr=1",
+            "https://www.youtube.com/watch?v=funny_cats",
+        ]
+
+        event_values_list = [
+            {
+                "data_type": "chrome:history:page_visited",
+                "timestamp": "2020-01-01 12:00:00",
+                "timestamp_desc": definitions.TIME_DESCRIPTION_LAST_VISITED,
+                "url": url,
+            }
+            for url in urls
+        ]
+
+        storage_writer = self._AnalyzeEvents(event_values_list, plugin)
+
+        number_of_results = storage_writer.GetNumberOfAttributeContainers(
+            "browser_search_analysis_result"
+        )
+        self.assertEqual(number_of_results, 0)
+
 
 if __name__ == "__main__":
     unittest.main()
