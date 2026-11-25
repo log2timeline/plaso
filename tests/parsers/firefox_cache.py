@@ -329,26 +329,60 @@ class FirefoxCache2ParserTest(test_lib.ParserTestCase):
 
     _TEST_FILENAME = "0123456789ABCDEF0123456789ABCDEF01234567"
 
-    def _ParseCache2Data(self, http_headers_data):
+    def _ParseCache2Data(
+        self, http_headers_data, data_size=0, encrypted=False, format_version=1
+    ):
         """Parses a synthetic Firefox cache2 file with specific HTTP headers data.
 
         Args:
           http_headers_data (bytes): HTTP headers data.
+          data_size (Optional[int]): logical byte size of cached content.
+          encrypted (Optional[bool]): True if the version 4 metadata trailer has
+              the encryption flag set.
+          format_version (Optional[int]): cache2 metadata header format version.
 
         Returns:
           FakeStorageWriter: storage writer.
         """
         url = b":https://example.com/"
 
-        # Cache2 file without content: hash, version 1 metadata header, key,
-        # elements and metadata offset.
+        number_of_chunks, remainder = divmod(data_size, 256 * 1024)
+        if remainder != 0:
+            number_of_chunks += 1
+
+        if format_version == 1:
+            metadata_header = struct.pack(
+                ">7I", format_version, 1, 1430580931, 1430580931, 0, 0, len(url)
+            )
+        else:
+            flags = 2 if encrypted else 0
+            metadata_header = struct.pack(
+                ">8I",
+                format_version,
+                1,
+                1430580931,
+                1430580931,
+                0,
+                0,
+                len(url),
+                flags,
+            )
+
+        if format_version >= 4:
+            offset_word = data_size | (0x80000000 if encrypted else 0)
+            trailer = struct.pack(">2I", format_version, offset_word)
+        else:
+            trailer = struct.pack(">I", data_size)
+
         file_data = b"".join(
             [
+                b"\x00" * data_size,
                 b"\x00\x00\x00\x00",
-                struct.pack(">7I", 1, 1, 1430580931, 1430580931, 0, 0, len(url)),
+                b"\x00\x00" * number_of_chunks,
+                metadata_header,
                 url,
                 http_headers_data,
-                b"\x00\x00\x00\x00",
+                trailer,
             ]
         )
 
@@ -592,6 +626,85 @@ class FirefoxCache2ParserTest(test_lib.ParserTestCase):
 
         event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
         self.CheckEventData(event_data, expected_event_values)
+
+    def testParseMultiChunkEntry(self):
+        """Tests parsing multi-chunk Firefox cache2 entries."""
+        http_headers_data = (
+            b"\x00request-method\x00GET\x00response-head\x00HTTP/1.1 200 OK\r\n\x00"
+        )
+        for data_size in (300 * 1024, 600 * 1024):
+            storage_writer = self._ParseCache2Data(
+                http_headers_data,
+                data_size=data_size,
+                format_version=3,
+            )
+
+            number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+                "event_data"
+            )
+            self.assertEqual(number_of_event_data, 1)
+
+            number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+                "extraction_warning"
+            )
+            self.assertEqual(number_of_warnings, 0)
+
+            expected_event_values = {
+                "data_type": "firefox:cache:record",
+                "fetch_count": 1,
+                "last_fetched_time": "2015-05-02T15:35:31+00:00",
+                "last_modified_time": "2015-05-02T15:35:31+00:00",
+                "request_method": "GET",
+                "response_code": "HTTP/1.1 200 OK",
+                "url": ":https://example.com/",
+                "version": "2",
+            }
+
+            event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+            self.CheckEventData(event_data, expected_event_values)
+
+    def testParseVersion4Entry(self):
+        """Tests parsing Firefox version 4 cache2 entries with two-word trailers."""
+        for data_size in (0, 300 * 1024):
+            storage_writer = self._ParseCache2Data(
+                b"\x00request-method\x00GET\x00response-head\x00HTTP/2 200\r\n\x00",
+                data_size=data_size,
+                format_version=4,
+            )
+
+            number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+                "event_data"
+            )
+            self.assertEqual(number_of_event_data, 1)
+
+            number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+                "extraction_warning"
+            )
+            self.assertEqual(number_of_warnings, 0)
+
+            expected_event_values = {
+                "data_type": "firefox:cache:record",
+                "fetch_count": 1,
+                "last_fetched_time": "2015-05-02T15:35:31+00:00",
+                "last_modified_time": "2015-05-02T15:35:31+00:00",
+                "request_method": "GET",
+                "response_code": "HTTP/2 200",
+                "url": ":https://example.com/",
+                "version": "2",
+            }
+
+            event_data = storage_writer.GetAttributeContainerByIndex("event_data", 0)
+            self.CheckEventData(event_data, expected_event_values)
+
+    def testParseEncryptedVersion4Entry(self):
+        """Tests that encrypted version 4 cache2 entries raise WrongParser."""
+        with self.assertRaises(errors.WrongParser):
+            self._ParseCache2Data(
+                b"\x00request-method\x00GET\x00",
+                data_size=1024,
+                encrypted=True,
+                format_version=4,
+            )
 
 
 if __name__ == "__main__":
