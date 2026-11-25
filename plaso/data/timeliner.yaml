@@ -2066,6 +2066,21 @@ attribute_mappings:
   description: 'Start Time'
 place_holder_event: true
 ---
+data_type: 'windows:update_datastore:file'
+attribute_mappings:
+- name: 'modification_time'
+  description: 'Content Modification Time'
+place_holder_event: true
+---
+data_type: 'windows:update_datastore:history'
+attribute_mappings:
+- name: 'recorded_time'
+  description: 'Recorded Time'
+place_holder_event: true
+---
+data_type: 'windows:update_datastore:update'
+place_holder_event: true
+---
 data_type: 'windows:user_access_logging:clients'
 attribute_mappings:
 - name: 'access_time'
