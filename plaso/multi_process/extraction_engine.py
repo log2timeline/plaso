@@ -534,13 +534,13 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
                 identifier = container.GetIdentifier()
                 identifier_string = identifier.CopyToString()
 
-                # TODO: store this as a merge warning so this is preserved in the
-                # storage file.
-                logger.error(
+                message = (
                     f"Unable to merge {container.CONTAINER_TYPE:s} attribute "
                     f"container: {identifier_string:s} since corresponding event data "
                     f"stream: {event_data_stream_lookup_key:s} could not be found."
                 )
+                logger.error(message)
+                self._ProduceMergeWarning(storage_writer, message)
                 return
 
         elif container.CONTAINER_TYPE in (
@@ -559,18 +559,18 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
                 identifier = container.GetIdentifier()
                 identifier_string = identifier.CopyToString()
 
-                # TODO: store this as a merge warning so this is preserved
-                # in the storage file.
                 if container.CONTAINER_TYPE == "windows_eventlog_message_string":
                     description = "Windows EventLog message string"
                 else:
                     description = "WEVT_TEMPLATE event definition"
 
-                logger.error(
+                message = (
                     f"Unable to merge {description:s} attribute container: "
                     f"{identifier_string:s} since corresponding Windows EventLog "
                     f"message file: {message_file_lookup_key:s} could not be found."
                 )
+                logger.error(message)
+                self._ProduceMergeWarning(storage_writer, message)
                 return
 
         lookup_key = None
@@ -854,6 +854,21 @@ class ExtractionMultiProcessEngine(task_engine.TaskMultiProcessEngine):
 
         if path_spec:
             self._processing_status.error_path_specs.append(path_spec)
+
+    def _ProduceMergeWarning(self, storage_writer, message):
+        """Produces an extraction warning for an attribute container merge failure.
+
+        Args:
+          storage_writer (StorageWriter): storage writer for a session storage.
+          message (str): message of the warning.
+        """
+        # A task can contain multiple path specifications, in which case it is
+        # not known which one the attribute container originates from.
+        path_specs = getattr(self._merge_task, "path_specs", None) or []
+        path_spec = path_specs[0] if len(path_specs) == 1 else None
+
+        warning = warnings.ExtractionWarning(message=message, path_spec=path_spec)
+        storage_writer.AddAttributeContainer(warning)
 
     def _ProcessEventSources(self, storage_writer, session_identifier):
         """Processes event sources.
