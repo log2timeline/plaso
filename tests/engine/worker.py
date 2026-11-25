@@ -5,6 +5,7 @@ import collections
 import os
 import unittest
 
+from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import context
 from dfvfs.resolver import resolver as path_spec_resolver
@@ -74,6 +75,62 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         return storage_writer.GetAttributeContainerByIdentifier(
             events.EventDataStream.CONTAINER_TYPE, event_data_stream_identifier
         )
+
+    def _GetEventSourceLocations(self, storage_writer):
+        """Retrieves the locations of the event sources.
+
+        Args:
+          storage_writer (FakeStorageWriter): storage writer.
+
+        Returns:
+          list[str]: sorted locations of the path specifications of the event
+              sources.
+        """
+        return sorted(
+            event_source.path_spec.location
+            for event_source in storage_writer.GetAttributeContainers("event_source")
+        )
+
+    def _ProcessDirectoryTree(self, extraction_worker, path_spec):
+        """Processes a directory tree with an extraction worker.
+
+        Args:
+          extraction_worker (EventExtractionWorker): extraction worker.
+          path_spec (dfvfs.PathSpec): path specification of the root directory.
+
+        Returns:
+          collections.Counter: number of event data per data type.
+        """
+        resolver_context = context.Context()
+        parser_mediator = parsers_mediator.ParserMediator(
+            resolver_context=resolver_context
+        )
+        storage_writer = fake_writer.FakeStorageWriter()
+        storage_writer.Open()
+        parser_mediator.SetStorageWriter(storage_writer)
+
+        extraction_worker.ProcessPathSpec(parser_mediator, path_spec)
+
+        local_directory_path_spec = extraction_worker.PopLocalDirectoryPathSpec()
+        while local_directory_path_spec:
+            extraction_worker.ProcessPathSpec(
+                parser_mediator, local_directory_path_spec
+            )
+            local_directory_path_spec = extraction_worker.PopLocalDirectoryPathSpec()
+
+        event_source = storage_writer.GetFirstWrittenEventSource()
+        while event_source:
+            extraction_worker.ProcessPathSpec(parser_mediator, event_source.path_spec)
+            event_source = storage_writer.GetNextWrittenEventSource()
+
+        event_data_counts = collections.Counter(
+            event_data.data_type
+            for event_data in storage_writer.GetAttributeContainers("event_data")
+        )
+
+        storage_writer.Close()
+
+        return event_data_counts
 
     def _GetTestFilePathSpec(self, path_segments):
         """Retrieves a path specification of a test file in the test data directory.
@@ -960,6 +1017,141 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
             expected_event_data_counts,
             archive_types_string="tar,zip",
         )
+
+    def testProcessPathSpecWithLocalDirectoryProcessing(self):
+        """Tests the ProcessPathSpec function with local directory processing."""
+        test_file_path = self._GetTestFilePath(["ext4.raw"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        os_path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
+        )
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_EXT, location="/", parent=os_path_spec
+        )
+
+        resolver_context = context.Context()
+        parser_mediator = parsers_mediator.ParserMediator(
+            resolver_context=resolver_context
+        )
+
+        # Sub directories are produced as event sources by default.
+        storage_writer = fake_writer.FakeStorageWriter()
+        storage_writer.Open()
+        parser_mediator.SetStorageWriter(storage_writer)
+
+        extraction_worker = worker.EventExtractionWorker()
+        extraction_worker.ProcessPathSpec(parser_mediator, path_spec)
+
+        self.assertEqual(
+            self._GetEventSourceLocations(storage_writer),
+            ["/a_directory", "/a_link", "/lost+found", "/passwords.txt"],
+        )
+        self.assertIsNone(extraction_worker.PopLocalDirectoryPathSpec())
+
+        storage_writer.Close()
+
+        # Sub directories are processed locally.
+        storage_writer = fake_writer.FakeStorageWriter()
+        storage_writer.Open()
+        parser_mediator.SetStorageWriter(storage_writer)
+
+        extraction_worker = worker.EventExtractionWorker()
+        extraction_worker.SetLocalDirectoryProcessing(True)
+        extraction_worker.ProcessPathSpec(parser_mediator, path_spec)
+
+        self.assertEqual(
+            self._GetEventSourceLocations(storage_writer),
+            ["/a_link", "/passwords.txt"],
+        )
+
+        local_directory_locations = []
+        local_directory_path_spec = extraction_worker.PopLocalDirectoryPathSpec()
+        while local_directory_path_spec:
+            local_directory_locations.append(local_directory_path_spec.location)
+            extraction_worker.ProcessPathSpec(
+                parser_mediator, local_directory_path_spec
+            )
+            local_directory_path_spec = extraction_worker.PopLocalDirectoryPathSpec()
+
+        self.assertEqual(
+            sorted(local_directory_locations), ["/a_directory", "/lost+found"]
+        )
+        self.assertEqual(
+            self._GetEventSourceLocations(storage_writer),
+            [
+                "/a_directory/a_file",
+                "/a_directory/another_file",
+                "/a_link",
+                "/passwords.txt",
+            ],
+        )
+
+        storage_writer.Close()
+
+        # Excluded sub directories are produced as event sources.
+        storage_writer = fake_writer.FakeStorageWriter()
+        storage_writer.Open()
+        parser_mediator.SetStorageWriter(storage_writer)
+
+        find_spec = file_system_searcher.FindSpec(
+            case_sensitive=False, location="/a_directory", location_separator="/"
+        )
+        extraction_worker = worker.EventExtractionWorker()
+        extraction_worker.SetLocalDirectoryProcessing(
+            True, excluded_find_specs=[find_spec]
+        )
+        extraction_worker.ProcessPathSpec(parser_mediator, path_spec)
+
+        self.assertEqual(
+            self._GetEventSourceLocations(storage_writer),
+            ["/a_directory", "/a_link", "/passwords.txt"],
+        )
+
+        local_directory_path_spec = extraction_worker.PopLocalDirectoryPathSpec()
+        self.assertEqual(local_directory_path_spec.location, "/lost+found")
+        self.assertIsNone(extraction_worker.PopLocalDirectoryPathSpec())
+
+        storage_writer.Close()
+
+        # Sub directories that were not processed are produced as event sources.
+        storage_writer = fake_writer.FakeStorageWriter()
+        storage_writer.Open()
+        parser_mediator.SetStorageWriter(storage_writer)
+
+        extraction_worker = worker.EventExtractionWorker()
+        extraction_worker.SetLocalDirectoryProcessing(True)
+        extraction_worker.ProcessPathSpec(parser_mediator, path_spec)
+        extraction_worker.ProduceLocalDirectoryEventSources(parser_mediator)
+
+        self.assertEqual(
+            self._GetEventSourceLocations(storage_writer),
+            ["/a_directory", "/a_link", "/lost+found", "/passwords.txt"],
+        )
+        for event_source in storage_writer.GetAttributeContainers("event_source"):
+            if event_source.path_spec.location in ("/a_directory", "/lost+found"):
+                self.assertEqual(
+                    event_source.file_entry_type,
+                    dfvfs_definitions.FILE_ENTRY_TYPE_DIRECTORY,
+                )
+
+        self.assertIsNone(extraction_worker.PopLocalDirectoryPathSpec())
+
+        storage_writer.Close()
+
+        # The same event data is extracted with and without local directory
+        # processing.
+        extraction_worker = worker.EventExtractionWorker()
+        expected_event_data_counts = self._ProcessDirectoryTree(
+            extraction_worker, path_spec
+        )
+        self.assertEqual(expected_event_data_counts["fs:stat"], 6)
+
+        extraction_worker = worker.EventExtractionWorker()
+        extraction_worker.SetLocalDirectoryProcessing(True)
+        event_data_counts = self._ProcessDirectoryTree(extraction_worker, path_spec)
+
+        self.assertEqual(event_data_counts, expected_event_data_counts)
 
     def testProcessPathSpecDMG(self):
         """Tests the ProcessPathSpec function on a DMG image."""
