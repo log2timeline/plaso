@@ -20,6 +20,29 @@ class SQLiteStorageWriter(writer.StorageWriter):
         self._written_event_data_index = 0
         self._written_event_source_index = 0
 
+    def AddAttributeContainerWithStoredData(
+        self, container, stored_data, compression_format
+    ):
+        """Adds an attribute container with the data as stored in another store.
+
+        Args:
+          container (AttributeContainer): attribute container.
+          stored_data (object): data of the attribute container as stored in
+              another store, see StorageReader.GetAttributeContainersWithStoredData(),
+              or None if not available.
+          compression_format (str): compression format of the stored data.
+
+        Raises:
+          OSError: when the storage writer is closed.
+        """
+        self._RaiseIfNotWritable()
+
+        self._store.AddAttributeContainerWithStoredData(
+            container, stored_data, compression_format
+        )
+
+        self._attribute_containers_counter[container.CONTAINER_TYPE] += 1
+
     def GetFirstWrittenEventData(self):
         """Retrieves the first event data that was written after open.
 
