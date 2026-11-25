@@ -222,6 +222,106 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
             output = output_writer.ReadOutput()
             self._CheckOutput(output, expected_output)
 
+    def testExtractEventsFromSourcesWithProcessingSettings(self):
+        """Tests the ExtractEventsFromSources function prints processing settings."""
+        test_file_path = self._GetTestFilePath(["testdir"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        options = self._CreateExtractionOptions(test_file_path)
+        options.quiet = False
+
+        output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
+        test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            options.storage_file = os.path.join(temp_directory, "storage.plaso")
+            options.storage_format = definitions.STORAGE_FORMAT_SQLITE
+            options.task_storage_format = definitions.STORAGE_FORMAT_SQLITE
+
+            test_tool.ParseOptions(options)
+
+            test_tool.ExtractEventsFromSources()
+
+            expected_output = [
+                "",
+                f"Source path\t\t: {options.source:s}",
+                "Source type\t\t: directory",
+                "Processing time\t\t: 00:00:00",
+                "",
+                "",
+                (
+                    "***************************** Processing settings "
+                    "******************************"
+                ),
+                f"            Storage file : {options.storage_file:s}",
+                "          Storage format : sqlite",
+                "         Processing mode : single process",
+                "Parser filter expression : N/A",
+                "                 Hashers : sha256",
+                "-" * 80,
+                "",
+                "Processing started.",
+                "Processing completed.",
+                "",
+                "",
+            ]
+
+            output = output_writer.ReadOutput()
+
+            # The table view puts a storage file path that does not fit on the
+            # line on a line of its own, which depends on the temporary directory.
+            wrapped_line = (
+                f"            Storage file : \n{' ' * 27:s}{options.storage_file:s}"
+            )
+            output = output.replace(
+                wrapped_line, f"            Storage file : {options.storage_file:s}"
+            )
+
+            self._CheckOutput(output, expected_output)
+
+    def testInternalPrintProcessingSettings(self):
+        """Tests the _PrintProcessingSettings function."""
+        output_writer = test_lib.TestOutputWriter(encoding=self._OUTPUT_ENCODING)
+        test_tool = log2timeline_tool.Log2TimelineTool(output_writer=output_writer)
+
+        test_tool._archive_types_string = "zip"
+        test_tool._hasher_names_string = "sha256"
+        test_tool._number_of_extraction_workers = 2
+        test_tool._preferred_codepage = "cp1252"
+        test_tool._preferred_language = "en-US"
+        test_tool._preferred_time_zone = "UTC"
+        test_tool._preferred_year = 2025
+        test_tool._storage_file_path = "storage.plaso"
+        test_tool._storage_format = definitions.STORAGE_FORMAT_SQLITE
+        test_tool._yara_rules_string = "rule test { condition: true }"
+
+        test_tool._PrintProcessingSettings()
+
+        output = output_writer.ReadOutput()
+        expected_lines = [
+            "Storage file : storage.plaso",
+            "Storage format : sqlite",
+            "Processing mode : multi process (2 workers)",
+            "Hashers : sha256",
+            "Archive types : zip",
+            "YARA rules : enabled",
+            "Time zone : UTC",
+            "Codepage : cp1252",
+            "Language : en-US",
+            "Year : 2025",
+        ]
+        output_lines = [" ".join(line.split()) for line in output.split("\n")]
+        for expected_line in expected_lines:
+            self.assertIn(expected_line, output_lines)
+
+        test_tool._number_of_extraction_workers = 0
+
+        test_tool._PrintProcessingSettings()
+
+        output = output_writer.ReadOutput()
+        output_lines = [" ".join(line.split()) for line in output.split("\n")]
+        self.assertIn("Processing mode : multi process", output_lines)
+
     def testExtractEventsFromSourcesOnAPFSImage(self):
         """Tests the ExtractEventsFromSources function on APFS image."""
         test_file_path = self._GetTestFilePath(["apfs.dmg"])
