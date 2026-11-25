@@ -41,6 +41,52 @@ class EventObjectFilterTest(test_lib.FilterTestCase):
         with self.assertRaises(errors.ParseError):
             test_filter.CompileFilter('some_stuff is "random" and other_stuff ')
 
+    def testGetTimestampRange(self):
+        """Tests the GetTimestampRange function."""
+        test_filter = event_filter.EventObjectFilter()
+
+        time_range = test_filter.GetTimestampRange()
+        self.assertIsNone(time_range)
+
+        test_filter.CompileFilter('date > DATETIME("2020-12-23T15:00:00")')
+        time_range = test_filter.GetTimestampRange()
+        self.assertEqual(time_range.start_timestamp, 1608735600000000 - 1)
+        self.assertEqual(time_range.end_timestamp, (1 << 63) - 1)
+
+        test_filter.CompileFilter(
+            'date >= DATETIME("2020-12-23T15:00:00") and '
+            'date < DATETIME("2020-12-24T15:00:00") and '
+            'filename contains "issue"'
+        )
+        time_range = test_filter.GetTimestampRange()
+        self.assertEqual(time_range.start_timestamp, 1608735600000000 - 1)
+        self.assertEqual(time_range.end_timestamp, 1608822000000000 + 1)
+
+        test_filter.CompileFilter('timestamp is DATETIME("2020-12-23T15:00:00")')
+        time_range = test_filter.GetTimestampRange()
+        self.assertEqual(time_range.start_timestamp, 1608735600000000 - 1)
+        self.assertEqual(time_range.end_timestamp, 1608735600000000 + 1)
+
+        # Contradicting bounds.
+        test_filter.CompileFilter(
+            'date < DATETIME("2020-12-23T15:00:00") and '
+            'date > DATETIME("2020-12-24T15:00:00")'
+        )
+        time_range = test_filter.GetTimestampRange()
+        self.assertEqual(time_range.start_timestamp, 1608822000000000 - 1)
+        self.assertEqual(time_range.end_timestamp, 1608822000000000 - 1)
+
+        # Filters that do not limit the timestamps.
+        for filter_expression in (
+            'filename contains "issue"',
+            'timestamp is not DATETIME("2020-12-23T15:00:00")',
+            'timestamp != DATETIME("2020-12-23T15:00:00")',
+            'date > DATETIME("2020-12-23T15:00:00") or filename contains "issue"',
+        ):
+            test_filter.CompileFilter(filter_expression)
+            time_range = test_filter.GetTimestampRange()
+            self.assertIsNone(time_range, filter_expression)
+
     def testMatch(self):
         """Tests the Match function."""
         test_filter = event_filter.EventObjectFilter()
