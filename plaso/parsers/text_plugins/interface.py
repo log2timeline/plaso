@@ -30,8 +30,13 @@ class TextPlugin(plugins.BasePlugin):
     VERIFICATION_LITERALS = None
 
     # The maximum number of consecutive lines that do not match the grammar before
-    # aborting parsing.
+    # aborting parsing, or if lines were parsed before, skipping lines until
+    # a line matches the grammar.
     _MAXIMUM_CONSECUTIVE_LINE_FAILURES = 20
+
+    # The maximum number of times per file that lines are skipped until a line
+    # matches the grammar, before aborting parsing.
+    _MAXIMUM_NUMBER_OF_RESYNCS = 3
 
     # Message of the exception that stops the scan for a match that starts on
     # the first line.
@@ -163,6 +168,10 @@ class TextPlugin(plugins.BasePlugin):
           text_reader (EncodedTextReader): text reader.
         """
         consecutive_line_failures = 0
+        first_failed_line_number = 0
+        # Whether a line was parsed since the start of the file or the last resync.
+        has_parsed_lines = False
+        number_of_resyncs = 0
 
         try:
             text_reader.ReadLines()
@@ -179,11 +188,56 @@ class TextPlugin(plugins.BasePlugin):
                 break
 
             if consecutive_line_failures > self._MAXIMUM_CONSECUTIVE_LINE_FAILURES:
+                # Abort if no line was parsed since the start of the file or since
+                # the previous resync, or if the maximum number of resyncs is reached.
+                if not has_parsed_lines and not number_of_resyncs:
+                    parser_mediator.ProduceWarning(
+                        f"more than {self._MAXIMUM_CONSECUTIVE_LINE_FAILURES:d} "
+                        f"consecutive failures to parse lines."
+                    )
+                    break
+
+                if not has_parsed_lines:
+                    parser_mediator.ProduceWarning(
+                        f"more than {self._MAXIMUM_CONSECUTIVE_LINE_FAILURES:d} "
+                        f"consecutive failures to parse lines, no lines parsed "
+                        f"since the previous resync."
+                    )
+                    break
+
+                if number_of_resyncs >= self._MAXIMUM_NUMBER_OF_RESYNCS:
+                    parser_mediator.ProduceWarning(
+                        f"more than {self._MAXIMUM_CONSECUTIVE_LINE_FAILURES:d} "
+                        f"consecutive failures to parse lines, maximum number of "
+                        f"resyncs: {self._MAXIMUM_NUMBER_OF_RESYNCS:d} reached."
+                    )
+                    break
+
+                # Since the plugin parsed lines of this file before, skip lines
+                # until a line matches the grammar, instead of aborting.
+                number_of_resyncs += 1
+                has_parsed_lines = False
+
+                decode_error = None
+                try:
+                    self._SkipLinesUntilMatch(parser_mediator, text_reader)
+                except UnicodeDecodeError as exception:
+                    decode_error = exception
+
                 parser_mediator.ProduceWarning(
                     f"more than {self._MAXIMUM_CONSECUTIVE_LINE_FAILURES:d} "
-                    f"consecutive failures to parse lines."
+                    f"consecutive failures to parse lines, unable to parse lines: "
+                    f"{first_failed_line_number:d} to {text_reader.line_number:d}."
                 )
-                break
+                if decode_error:
+                    parser_mediator.ProduceWarning(
+                        f"unable to read and decode log line at offset: "
+                        f"{self._current_offset:d} with error: {decode_error!s}"
+                    )
+                    break
+
+                consecutive_line_failures = 0
+                continue
 
             try:
                 key, structure, _, end = self._ParseString(text_reader.lines)
@@ -205,11 +259,15 @@ class TextPlugin(plugins.BasePlugin):
                     f"unable to parse log line: {text_reader.line_number:d} "
                     f'"{line:s}"'
                 )
+                if not consecutive_line_failures:
+                    first_failed_line_number = text_reader.line_number
+
                 consecutive_line_failures += 1
 
                 continue
 
             consecutive_line_failures = 0
+            has_parsed_lines = True
 
             try:
                 # TODO: use a callback per key.
@@ -387,6 +445,43 @@ class TextPlugin(plugins.BasePlugin):
             first_line_condition + self._pyparsing_grammar
         )
         self._pyparsing_first_line_grammar.parse_with_tabs()
+
+    def _SkipLinesUntilMatch(self, parser_mediator, text_reader):
+        """Skips lines until a line starts with a match of the grammar.
+
+        Only the start of the line itself is matched against the grammar, so that
+        the cost of skipping a line is bound by the length of the line.
+
+        Args:
+          parser_mediator (ParserMediator): mediates interactions between parsers and
+              other components, such as storage and dfVFS.
+          text_reader (EncodedTextReader): text reader.
+
+        Raises:
+          UnicodeDecodeError: if the text cannot be decoded.
+        """
+        while not parser_mediator.abort:
+            text_reader.ReadLines()
+            self._current_offset = text_reader.get_offset()
+
+            if not text_reader.lines:
+                break
+
+            line_end = text_reader.lines.find("\n")
+            if line_end < 0:
+                line = text_reader.lines
+            else:
+                line = text_reader.lines[: line_end + 1]
+
+            if line.strip():
+                try:
+                    self._pyparsing_grammar.parse_string(line)
+                    break
+
+                except pyparsing.ParseBaseException:
+                    pass
+
+            text_reader.ReadLine()
 
     def _VerifyString(self, string):
         """Checks a string for known grammar.
