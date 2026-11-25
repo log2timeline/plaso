@@ -107,6 +107,15 @@ class PendingMergeTaskHeapTest(shared_test_lib.BaseTestCase):
         self.assertEqual(heap._heap[0][0], -1)
 
         task = tasks.Task()
+        task.file_entry_type = dfvfs_definitions.FILE_ENTRY_TYPE_FILE
+        task.storage_file_size = 0
+
+        heap.PushTask(task)
+        self.assertEqual(len(heap), 4)
+        self.assertIsNotNone(heap._heap[0])
+        self.assertEqual(heap._heap[0][0], -1)
+
+        task = tasks.Task()
         with self.assertRaises(ValueError):
             heap.PushTask(task)
 
