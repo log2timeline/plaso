@@ -189,6 +189,42 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
         )
         self.assertEqual(sorted(paths), expected_paths)
 
+        # Test globstar with the minimum recursion depth of 1.
+        paths = path_helper.PathHelper.ExpandGlobStars("/etc/sysconfig/**1", "/")
+        self.assertEqual(paths, ["/etc/sysconfig/*"])
+
+        # Test globstar with the maximum recursion depth of 10.
+        paths = path_helper.PathHelper.ExpandGlobStars("/etc/sysconfig/**10", "/")
+        self.assertEqual(len(paths), 10)
+        self.assertEqual(paths[-1], "/etc/sysconfig/*/*/*/*/*/*/*/*/*/*")
+
+        # Test globstar with unsupported recursion depths of 0 and 11, which are
+        # limited to the maximum recursion depth.
+        paths = path_helper.PathHelper.ExpandGlobStars("/etc/sysconfig/**0", "/")
+        self.assertEqual(len(paths), 10)
+
+        paths = path_helper.PathHelper.ExpandGlobStars("/etc/sysconfig/**11", "/")
+        self.assertEqual(len(paths), 10)
+        self.assertEqual(paths[-1], "/etc/sysconfig/*/*/*/*/*/*/*/*/*/*")
+
+        # Test globstar in a directory path segment.
+        paths = path_helper.PathHelper.ExpandGlobStars(
+            "\\Program Files\\**3\\*.dll", "\\"
+        )
+        expected_paths = [
+            "\\Program Files\\*\\*.dll",
+            "\\Program Files\\*\\*\\*.dll",
+            "\\Program Files\\*\\*\\*\\*.dll",
+        ]
+        self.assertEqual(paths, expected_paths)
+
+        # Test globstar with an unsupported suffix.
+        paths = path_helper.PathHelper.ExpandGlobStars("/etc/sysconfig/**{3}", "/")
+        self.assertEqual(paths, ["/etc/sysconfig/**{3}"])
+
+        paths = path_helper.PathHelper.ExpandGlobStars("/etc/**bar/file.txt", "/")
+        self.assertEqual(paths, ["/etc/**bar/file.txt"])
+
         # Test globstar with prefix.
         paths = path_helper.PathHelper.ExpandGlobStars("/etc/sysconfig/my**", "/")
 

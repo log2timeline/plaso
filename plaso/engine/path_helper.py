@@ -234,12 +234,14 @@ class PathHelper:
     def ExpandGlobStars(cls, path, path_separator):
         """Expands globstars "**" in a path.
 
-        A globstar "**" will recursively match all files and zero or more
+        A globstar "**" will recursively match all files and one or more
         directories and subdirectories.
 
         By default the maximum recursion depth is 10 subdirectories, a numeric
-        values after the globstar, such as ``**5``, can be used to define the maximum
-        recursion depth.
+        value after the globstar, such as ``**5``, can be used to define the
+        maximum recursion depth. The recursion depth is an upper limit, the path
+        is expanded for 1 up to and including that number of directories, hence
+        ``**1`` is the same as ``*``.
 
         Args:
           path (str): path to be expanded.
@@ -273,7 +275,7 @@ class PathHelper:
                 )
 
             if recursion_depth is not None:
-                if recursion_depth <= 1 or recursion_depth > cls._RECURSIVE_GLOB_LIMIT:
+                if recursion_depth < 1 or recursion_depth > cls._RECURSIVE_GLOB_LIMIT:
                     logger.warning(
                         f'Globstar "{path_segment:s}" in path "{path:s}" exceed '
                         f"recursion maximum recursion depth, limiting to: "
