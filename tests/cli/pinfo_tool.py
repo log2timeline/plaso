@@ -983,10 +983,10 @@ Storage files are different.
         output = output_writer.ReadOutput()
 
         json_dict = json.loads(f"{{{output:s}}}")
-        sessions = json_dict["sessions"]
-        self.assertEqual(len(sessions), 4)
+        json_sessions = json_dict["sessions"]
+        self.assertEqual(len(json_sessions), 4)
 
-        for session in sessions.values():
+        for session in json_sessions.values():
             self.assertEqual(session["__container_type__"], "session")
 
     # TODO: add test for _PrintSessionsOverview.
