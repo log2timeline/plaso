@@ -194,6 +194,7 @@ twitter_android | Parser for Twitter on Android SQLite database files.
 twitter_ios | Parser for Twitter on iOS 8 and later SQLite database (twitter.db) files.
 windows_eventtranscript | Parser for Windows diagnosis EventTranscript SQLite database (EventTranscript.db) files.
 windows_push_notification | Parser for Windows 10 push notification SQLite database (wpndatabase.db) files.
+windows_search | Parser for Windows Search index SQLite database (Windows.db) files.
 windows_timeline | Parser for Windows 10 timeline SQLite database (ActivitiesCache.db) files.
 zeitgeist | Parser for Zeitgeist activity SQLite database files.
 
