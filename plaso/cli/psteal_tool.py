@@ -365,8 +365,9 @@ class PstealTool(
 
         Raises:
           BadConfigOption: when a configuration parameter fails validation or the
-              storage file cannot be opened with read access.
-          RuntimeError: if a non-recoverable situation is encountered.
+              storage file format is not supported.
+          OSError: if the storage file cannot be read or its format version is
+              not supported.
         """
         session = engine.BaseEngine.CreateSession(
             command_line_arguments=self._command_line_arguments,
