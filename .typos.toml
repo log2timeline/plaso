@@ -48,10 +48,12 @@ extend-ignore-re = [
 ]
 extend-words = {
     "certifi" = "certifi",
+    "CNA" = "CNA",
     "conectix" = "conectix",
     "exportfs" = "exportfs",
     "flor" = "flor",
     "IST" = "IST",
+    "Mitre" = "Mitre",
     "packageid" = "packageid",
     "ZUSER" = "ZUSER",
 }
