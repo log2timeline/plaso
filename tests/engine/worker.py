@@ -1012,6 +1012,87 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
             archive_types_string="modi,tar",
         )
 
+    def testProcessPathSpecEWF(self):
+        """Tests the ProcessPathSpec function on an EWF image file."""
+        test_file_path = self._GetTestFilePath(["image.E01"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
+        )
+        storage_writer = fake_writer.FakeStorageWriter()
+
+        expected_event_data_counts = {"fs:stat": 1}
+
+        self._TestProcessPathSpec(storage_writer, path_spec, expected_event_data_counts)
+
+        storage_writer = fake_writer.FakeStorageWriter()
+
+        expected_event_data_counts = {"fs:stat": 6}
+
+        self._TestProcessPathSpec(
+            storage_writer,
+            path_spec,
+            expected_event_data_counts,
+            archive_types_string="ewf",
+        )
+
+    def testProcessPathSpecEWFSegments(self):
+        """Tests the ProcessPathSpec function on EWF segment files."""
+        test_file_path = self._GetTestFilePath(["image-split.E01"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
+        )
+        storage_writer = fake_writer.FakeStorageWriter()
+
+        expected_event_data_counts = {"fs:stat": 2}
+
+        self._TestProcessPathSpec(
+            storage_writer,
+            path_spec,
+            expected_event_data_counts,
+            archive_types_string="ewf",
+        )
+
+        # Only the first segment file should be processed as an EWF image.
+        test_file_path = self._GetTestFilePath(["image-split.E02"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
+        )
+        storage_writer = fake_writer.FakeStorageWriter()
+
+        expected_event_data_counts = {"fs:stat": 1}
+
+        self._TestProcessPathSpec(
+            storage_writer,
+            path_spec,
+            expected_event_data_counts,
+            archive_types_string="ewf",
+        )
+
+    def testProcessPathSpecEWFNonEWF(self):
+        """Tests the ProcessPathSpec function on a non-EWF image file."""
+        test_file_path = self._GetTestFilePath(["image.qcow2"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_OS, location=test_file_path
+        )
+        storage_writer = fake_writer.FakeStorageWriter()
+
+        expected_event_data_counts = {"fs:stat": 1}
+
+        self._TestProcessPathSpec(
+            storage_writer,
+            path_spec,
+            expected_event_data_counts,
+            archive_types_string="ewf",
+        )
+
     def testProcessPathSpecISO(self):
         """Tests the ProcessPathSpec function on an ISO image."""
         test_file_path = self._GetTestFilePath(["iso9660.raw"])
