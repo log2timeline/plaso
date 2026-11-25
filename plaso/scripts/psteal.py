@@ -100,7 +100,7 @@ def Main():
         logging.warning("Aborted by user.")
         return 1
 
-    except errors.SourceScannerError as exception:
+    except (errors.BadConfigOption, errors.SourceScannerError) as exception:
         logging.warning(exception)
         return 1
 
