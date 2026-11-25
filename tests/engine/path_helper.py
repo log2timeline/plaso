@@ -9,6 +9,7 @@ from dfvfs.path import factory as path_spec_factory
 
 from plaso.containers import artifacts
 from plaso.engine import path_helper
+from plaso.serializer import json_serializer
 
 from tests import test_lib as shared_test_lib
 
@@ -228,6 +229,51 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
             "\\Users\\Test2\\Application Data\\Microsoft\\Windows\\Recent",
         ]
         self.assertEqual(sorted(expanded_paths), expected_expanded_paths)
+
+        # Test user accounts read back from storage, which do not preserve the
+        # path segment separator.
+        serializer = json_serializer.JSONAttributeContainerSerializer
+        user_accounts = [
+            serializer.ReadSerializedDict(serializer.WriteSerializedDict(user_account))
+            for user_account in user_accounts
+        ]
+
+        path = "%%users.localappdata%%\\Microsoft\\Windows\\WebCache\\WebCacheV*.dat"
+        expanded_paths = path_helper.PathHelper.ExpandUsersVariablePath(
+            path, "\\", user_accounts
+        )
+
+        expected_expanded_paths = [
+            (
+                "\\Users\\Test1\\AppData\\Local\\Microsoft\\Windows\\WebCache\\"
+                "WebCacheV*.dat"
+            ),
+            (
+                "\\Users\\Test1\\Local Settings\\Application Data\\Microsoft\\"
+                "Windows\\WebCache\\WebCacheV*.dat"
+            ),
+            (
+                "\\Users\\Test2\\AppData\\Local\\Microsoft\\Windows\\WebCache\\"
+                "WebCacheV*.dat"
+            ),
+            (
+                "\\Users\\Test2\\Local Settings\\Application Data\\Microsoft\\"
+                "Windows\\WebCache\\WebCacheV*.dat"
+            ),
+        ]
+        self.assertEqual(sorted(expanded_paths), expected_expanded_paths)
+
+        # Test a POSIX user account read back from storage.
+        user_account_artifact = artifacts.UserAccountArtifact(
+            user_directory="/home/test3", username="test3"
+        )
+        user_account_artifact = serializer.ReadSerializedDict(
+            serializer.WriteSerializedDict(user_account_artifact)
+        )
+        expanded_paths = path_helper.PathHelper.ExpandUsersVariablePath(
+            "%%users.homedir%%/.bashrc", "/", [user_account_artifact]
+        )
+        self.assertEqual(expanded_paths, ["/home/test3/.bashrc"])
 
     def testExpandWindowsPath(self):
         """Tests the ExpandWindowsPath function."""
