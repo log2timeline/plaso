@@ -10,6 +10,8 @@ import unittest
 from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
+from dfvfs.resolver import context
+from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.containers import event_sources
 from plaso.containers import sessions
@@ -133,6 +135,53 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
         expected_parsers_counter = collections.Counter({"filestat": 15, "total": 15})
         self.assertEqual(parsers_counter, expected_parsers_counter)
+
+    def testInternalCheckExcludedPathSpec(self):
+        """Tests the _CheckExcludedPathSpec function."""
+        # pylint: disable=protected-access
+
+        test_engine = extraction_engine.ExtractionMultiProcessEngine()
+        resolver_context = context.Context()
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            source_path = os.path.join(temp_directory, "source")
+            os.makedirs(source_path)
+
+            for name in ("a_file", "another_file"):
+                with open(
+                    os.path.join(source_path, name), "w", encoding="utf-8"
+                ) as file_object:
+                    file_object.write("test")
+
+            filter_file_path = os.path.join(temp_directory, "filter_file.yaml")
+            with open(filter_file_path, "w", encoding="utf-8") as file_object:
+                file_object.write(
+                    "description: Exclude\ntype: exclude\npaths:\n- '/a_file'\n"
+                )
+
+            test_engine.BuildCollectionFilters(
+                [], [], filter_file_path=filter_file_path
+            )
+
+            source_path_spec = path_spec_factory.Factory.NewPathSpec(
+                dfvfs_definitions.TYPE_INDICATOR_OS, location=source_path
+            )
+            test_engine._mount_point_path_spec = source_path_spec
+
+            file_system = path_spec_resolver.Resolver.OpenFileSystem(
+                source_path_spec, resolver_context=resolver_context
+            )
+
+            for path, expected_result in (
+                (os.path.join(source_path, "a_file"), True),
+                (os.path.join(source_path, "another_file"), False),
+                (os.path.join(temp_directory, "a_file"), False),
+            ):
+                path_spec = path_spec_factory.Factory.NewPathSpec(
+                    dfvfs_definitions.TYPE_INDICATOR_OS, location=path
+                )
+                result = test_engine._CheckExcludedPathSpec(file_system, path_spec)
+                self.assertEqual(result, expected_result)
 
     def testInternalFillEventSourceHeap(self):
         """Tests the _FillEventSourceHeap function."""
@@ -656,6 +705,90 @@ class ExtractionMultiProcessEngineTest(shared_test_lib.BaseTestCase):
             dfvfs_definitions.TYPE_INDICATOR_EXT, location="/", parent=os_path_spec
         )
         self._ProcessSource(source_path_spec)
+
+    def testProcessSourceDirectoryWithExcludeFilterFile(self):
+        """Tests the ProcessSource function on a directory with an exclude filter."""
+        test_artifacts_path = shared_test_lib.GetTestFilePath(["artifacts"])
+        self._SkipIfPathNotExists(test_artifacts_path)
+
+        test_engine = extraction_engine.ExtractionMultiProcessEngine(
+            maximum_number_of_tasks=100
+        )
+        test_engine.BuildArtifactsRegistry(test_artifacts_path, None)
+
+        session = sessions.Session()
+
+        processing_configuration = configurations.ProcessingConfiguration()
+        processing_configuration.data_location = shared_test_lib.DATA_PATH
+        processing_configuration.parser_filter_expression = "filestat"
+        processing_configuration.task_storage_format = definitions.STORAGE_FORMAT_SQLITE
+
+        with shared_test_lib.TempDirectory() as temp_directory:
+            source_path = os.path.join(temp_directory, "source")
+            os.makedirs(os.path.join(source_path, "a_directory"))
+            os.makedirs(os.path.join(source_path, "another_directory"))
+
+            for path_segments in (
+                ("a_directory", "a_file"),
+                ("a_directory", "another_file"),
+                ("another_directory", "a_file"),
+            ):
+                path = os.path.join(source_path, *path_segments)
+                with open(path, "w", encoding="utf-8") as file_object:
+                    file_object.write("test")
+
+            filter_file_path = os.path.join(temp_directory, "filter_file.yaml")
+            with open(filter_file_path, "w", encoding="utf-8") as file_object:
+                file_object.write(
+                    "description: Exclude\n"
+                    "type: exclude\n"
+                    "paths:\n"
+                    "- '/a_directory/a_file'\n"
+                    "- '/another_directory'\n"
+                )
+
+            test_engine.BuildCollectionFilters(
+                [], [], filter_file_path=filter_file_path
+            )
+
+            source_path_spec = path_spec_factory.Factory.NewPathSpec(
+                dfvfs_definitions.TYPE_INDICATOR_OS, location=source_path
+            )
+
+            storage_file_path = os.path.join(temp_directory, "storage.plaso")
+            storage_writer = sqlite_writer.SQLiteStorageWriter()
+            storage_writer.Open(path=storage_file_path)
+
+            try:
+                system_configurations = test_engine.PreprocessSource(
+                    [source_path_spec], storage_writer
+                )
+                processing_status = test_engine.ProcessSourceMulti(
+                    storage_writer,
+                    session.identifier,
+                    processing_configuration,
+                    system_configurations,
+                    [source_path_spec],
+                    storage_file_path=temp_directory,
+                )
+
+                locations = set()
+                for event_data_stream in storage_writer.GetAttributeContainers(
+                    "event_data_stream"
+                ):
+                    location = event_data_stream.path_spec.location
+                    location = location[len(source_path) :]
+                    locations.add(location.replace(os.path.sep, "/"))
+
+            finally:
+                storage_writer.Close()
+
+        self.assertFalse(processing_status.aborted)
+
+        self.assertIn("/a_directory/another_file", locations)
+        self.assertNotIn("/a_directory/a_file", locations)
+        self.assertNotIn("/another_directory", locations)
+        self.assertNotIn("/another_directory/a_file", locations)
 
     def testProcessSourceWithTsk(self):
         """Tests the PreprocessSource and ProcessSource functions."""
