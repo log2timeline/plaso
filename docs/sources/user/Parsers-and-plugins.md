@@ -263,6 +263,7 @@ ccleaner | Parser for CCleaner Registry data.
 diagnosed_applications | Parser for Diagnosed Applications Registry data.
 explorer_mountpoints2 | Parser for Windows Explorer mount points Registry data.
 explorer_programscache | Parser for Windows Explorer Programs Cache Registry data.
+landesk_software_monitoring | Parser for LANDesk software monitoring Registry data.
 microsoft_office_mru | Parser for Microsoft Office MRU Registry data.
 microsoft_outlook_mru | Parser for Microsoft Outlook search MRU Registry data.
 motherboard_info | Parser for Motherboard Info Registry data.
