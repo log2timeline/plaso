@@ -262,6 +262,8 @@ File System Format support is provided by [dfVFS](https://dfvfs.readthedocs.io/e
 * Microsoft Outlook search MRU Registry data
 * Most Recently Used (MRU) Registry data
 * Motherboard Info Registry data
+* PuTTY sessions Registry data
+* PuTTY SSH host keys Registry data
 * Run and run once Registry data
 * Security Accounts Manager (SAM) users Registry data
 * Terminal Server Client Connection Registry data
