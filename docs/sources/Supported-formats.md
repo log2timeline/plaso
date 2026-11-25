@@ -105,6 +105,7 @@ File System Format support is provided by [dfVFS](https://dfvfs.readthedocs.io/e
 * Google Cloud (GCP) log
 * iOS Application Privacy report
 * Microsoft (Office) 365 audit log
+* MongoDB log file
 
 ### OLE Compound File formats
 
