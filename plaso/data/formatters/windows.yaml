@@ -476,6 +476,13 @@ short_message:
 short_source: 'REG'
 source: 'Registry Key'
 ---
+type: 'basic'
+data_type: 'windows:registry:explorer:feature_usage'
+message: '[{key_path}] {entries}'
+short_message: '[{key_path}] {entries}'
+short_source: 'REG'
+source: 'Windows Explorer Feature Usage Registry Key'
+---
 type: 'conditional'
 data_type: 'windows:registry:explorer:programcache'
 message:

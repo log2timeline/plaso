@@ -269,6 +269,7 @@ File System Format support is provided by [dfVFS](https://dfvfs.readthedocs.io/e
 * User Assist Registry data
 * Windows boot verification Registry data
 * Windows drivers and services Registry data
+* Windows Explorer feature usage Registry data
 * Windows Explorer mount points Registry data
 * [Windows Explorer Programs Cache Registry data](https://winreg-kb.readthedocs.io/en/latest/sources/explorer-keys/Program-cache.html)
 * Windows Explorer typed paths and URLs Registry data
