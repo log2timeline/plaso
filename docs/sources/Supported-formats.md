@@ -27,6 +27,7 @@ File System Format support is provided by [dfVFS](https://dfvfs.readthedocs.io/e
 * Compound ZIP file
 * CUPS IPP
 * [Extensible Storage Engine (ESE) Database File (EDB) format](https://forensics.wiki/extensible_storage_engine_(ese)_database_file_(edb)_format) using [libesedb](https://github.com/libyal/libesedb)
+* FileZilla site manager (sitemanager.xml) file
 * Firefox Cache
 * Fish history file
 * iOS discord message

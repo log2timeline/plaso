@@ -16,6 +16,7 @@ czip | Parser for Compound ZIP files.
 discord_ios | Parser for iOS discord message.
 esedb | Parser for Extensible Storage Engine (ESE) Database File (EDB) format.
 filestat | Parser for file system stat information.
+filezilla_sitemanager | Parser for FileZilla site manager (sitemanager.xml) files.
 firefox_cache | Parser for Mozilla Firefox Cache version 1 file (version 31 or earlier).
 firefox_cache2 | Parser for Mozilla Firefox Cache version 2 file (version 32 or later).
 fish_history | Parser for Fish history files.
@@ -302,13 +303,13 @@ Name | Parsers and plugins
 android | android_app_usage, chrome_cache, filestat, sqlite/android_app_usage, sqlite/android_calls, sqlite/android_sms, sqlite/android_turbo, sqlite/android_webview, sqlite/android_webviewcache, sqlite/chrome_8_history, sqlite/chrome_17_cookies, sqlite/chrome_27_history, sqlite/chrome_66_cookies, sqlite/skype
 atlassian | text/atlassian_confluence, text/atlassian_jira, text/confluence_access, text/jira_access
 ios | jsonl/ios_application_privacy, plist/ios_identityservices, sqlite/imessage, sqlite/ios_netusage, sqlite/ios_powerlog, sqlite/ios_screentime, sqlite/kik_ios, sqlite/twitter_ios, text/ios_lockdownd, text/ios_logd, text/ios_sysdiag_log
-linux | bencode, czip/oxml, jsonl/docker_container_config, jsonl/docker_container_log, jsonl/docker_layer_config, filestat, olecf, pls_recall, sqlite/google_drive, sqlite/skype, sqlite/zeitgeist, systemd_journal, text/apt_history, text/bash_history, text/dpkg, text/gdrive_synclog, text/googlelog, text/popularity_contest, text/selinux, text/syslog, text/syslog_traditional, text/vsftpd, text/xchatlog, text/xchatscrollback, text/zsh_extended_history, utmp, webhist
+linux | bencode, czip/oxml, jsonl/docker_container_config, jsonl/docker_container_log, jsonl/docker_layer_config, filestat, filezilla_sitemanager, olecf, pls_recall, sqlite/google_drive, sqlite/skype, sqlite/zeitgeist, systemd_journal, text/apt_history, text/bash_history, text/dpkg, text/gdrive_synclog, text/googlelog, text/popularity_contest, text/selinux, text/syslog, text/syslog_traditional, text/vsftpd, text/xchatlog, text/xchatscrollback, text/zsh_extended_history, utmp, webhist
 macos | asl_log, bencode, bsm_log, cups_ipp, czip/oxml, filestat, fseventsd, mac_keychain, olecf, plist, spotlight_storedb, sqlite/appusage, sqlite/google_drive, sqlite/imessage, sqlite/ls_quarantine, sqlite/mac_document_versions, sqlite/mac_notes, sqlite/mackeeper_cache, sqlite/mac_knowledgec, sqlite/skype, text/bash_history, text/gdrive_synclog, text/mac_appfirewall_log, text/mac_securityd, text/mac_wifi, text/macos_launchd_log, text/syslog, text/syslog_traditional, text/zsh_extended_history, utmpx, webhist
 mactime | bodyfile
 webhist | binary_cookies, chrome_cache, chrome_preferences, esedb/msie_webcache, firefox_cache, java_idx, msiecf, opera_global, opera_typed_history, plist/safari_history, sqlite/chrome_8_history, sqlite/chrome_17_cookies, sqlite/chrome_27_history, sqlite/chrome_66_cookies, sqlite/chrome_autofill, sqlite/chrome_extension_activity, sqlite/firefox_2_cookies, sqlite/firefox_10_cookies, sqlite/firefox_downloads, sqlite/firefox_history, sqlite/safari_historydb
 win7 | custom_destinations, esedb/file_history, esedb/user_access_logging, olecf/olecf_automatic_destinations, recycle_bin, text/powershell_transcript, winevtx, win_gen, winpca_db0, winpca_dic
 win7_slow | esedb, mft, win7
-win_gen | bencode, czip/oxml, filestat, lnk, mcafee_protection, olecf, pe, prefetch, sqlite/google_drive, sqlite/skype, symantec_scanlog, text/gdrive_synclog, text/sccm, text/setupapi, text/skydrive_log_v1, text/skydrive_log_v2, text/teamviewer_application_log, text/teamviewer_connections_incoming, text/teamviewer_connections_outgoing, text/winfirewall, usnjrnl, webhist, winjob, winreg
+win_gen | bencode, czip/oxml, filestat, filezilla_sitemanager, lnk, mcafee_protection, olecf, pe, prefetch, sqlite/google_drive, sqlite/skype, symantec_scanlog, text/gdrive_synclog, text/sccm, text/setupapi, text/skydrive_log_v1, text/skydrive_log_v2, text/teamviewer_application_log, text/teamviewer_connections_incoming, text/teamviewer_connections_outgoing, text/winfirewall, usnjrnl, webhist, winjob, winreg
 winxp | recycle_bin_info2, rplog, win_gen, winevt
 winxp_slow | esedb, mft, winxp
 

@@ -12,6 +12,7 @@ from plaso.parsers import custom_destinations
 from plaso.parsers import czip
 from plaso.parsers import esedb
 from plaso.parsers import filestat
+from plaso.parsers import filezilla
 from plaso.parsers import firefox_cache
 from plaso.parsers import fish_history
 from plaso.parsers import fseventsd

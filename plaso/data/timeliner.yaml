@@ -409,6 +409,10 @@ attribute_mappings:
   description: 'Last Updated Time'
 place_holder_event: true
 ---
+data_type: 'filezilla:site_manager:site'
+# Note that the FileZilla site manager site has no date and time values.
+place_holder_event: true
+---
 data_type: 'firefox:cache:record'
 attribute_mappings:
 - name: 'expiration_time'

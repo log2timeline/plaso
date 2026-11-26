@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FileZilla3 version="3.72.1" platform="windows">
+	<RecentServers>
+		<Server>
+			<Host>192.0.2.50</Host>
+			<Port>21</Port>
+			<Protocol>0</Protocol>
+			<Type>1</Type>
+			<Logontype>0</Logontype>
+			<EncodingType>UTF-8</EncodingType>
+			<BypassProxy>0</BypassProxy>
+		</Server>
+	</RecentServers>
+</FileZilla3>
