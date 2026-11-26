@@ -64,7 +64,7 @@ OK
 If an error occurs when processing a storage media image try to run with the
 storage image media file and/or the file system directly mounted. Mounting the
 storage image media file will bypass libraries (modules) supporting the storage
-image media format. Running [source_analyzer](https://dfimagetools.readthedocs.io/en/latest/sources/user/Using-the-tools.html#source-analyzer),
+image media format. Running source_analyzer,
 which is part of [dfImageTools](https://dfimagetools.readthedocs.io/en/latest)
 and not of Plaso, can help pinpointing the issue. See the dfImageTools
 [installation instructions](https://dfimagetools.readthedocs.io/en/latest/sources/user/Installation-instructions.html)
