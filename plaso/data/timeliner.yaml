@@ -1486,6 +1486,10 @@ attribute_mappings:
   description: 'Creation Time'
 place_holder_event: true
 ---
+data_type: 'superputty:session'
+# Note that the SuperPuTTY session has no date and time values.
+place_holder_event: true
+---
 data_type: 'syslog:anacron:job_end'
 attribute_mappings:
 - name: 'last_written_time'
