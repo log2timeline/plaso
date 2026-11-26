@@ -165,6 +165,7 @@ firefox_118_downloads | Parser for Mozilla Firefox 118 downloads SQLite database
 firefox_2_cookies | Parser for Mozilla Firefox cookies SQLite database file version 2.
 firefox_downloads | Parser for Mozilla Firefox downloads SQLite database (downloads.sqlite) files.
 firefox_history | Parser for Mozilla Firefox history SQLite database (places.sqlite) files.
+firefox_indexeddb | Parser for Mozilla Firefox IndexedDB SQLite database (idb/*.sqlite) files.
 google_drive | Parser for Google Drive snapshot SQLite database (snapshot.db) files.
 hangouts_messages | Parser for Google Hangouts conversations SQLite database (babel.db) files.
 imessage | Parser for MacOS and iOS iMessage database (chat.db, sms.db) files.

@@ -21,6 +21,7 @@ PYTHON_DEPENDENCIES = {
     "dateutil": ("__version__", "1.5", None, True),
     "defusedxml": ("__version__", "0.5.0", None, True),
     "dfdatetime": ("__version__", "20260730", None, True),
+    "dfindexeddb.version": ("__version__", "20260210", None, False),
     "dfvfs": ("__version__", "20260731", None, True),
     "dfwinreg": ("__version__", "20240229", None, True),
     "dtfabric": ("__version__", "20230518", None, True),
