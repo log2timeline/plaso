@@ -118,6 +118,9 @@ class TextLogParser(interface.FileObjectParser):
     NAME = "text"
     DATA_FORMAT = "text-based log file"
 
+    # Note that "\x1d" (group separator) is not considered a non-text
+    # character since the ENRICHED auditd log format uses it to separate
+    # the interpreted values from the raw record.
     _NON_TEXT_CHARACTERS = frozenset(
         [
             "\x00",
@@ -142,7 +145,6 @@ class TextLogParser(interface.FileObjectParser):
             "\x19",
             "\x1a",
             "\x1c",
-            "\x1d",
             "\x1e",
             "\x1f",
             "\x7f",

@@ -204,6 +204,9 @@ class TextLogParserTest(test_lib.ParserTestCase):
         result = parser._ContainsBinary("\x01\x00binary\x02\x00")
         self.assertTrue(result)
 
+        result = parser._ContainsBinary('res=success\x1dUID="root"\n')
+        self.assertFalse(result)
+
     def testEnablePlugins(self):
         """Tests the EnablePlugins function."""
         parser = text_parser.TextLogParser()
@@ -278,6 +281,52 @@ class TextLogParserTest(test_lib.ParserTestCase):
             "event_data"
         )
         self.assertEqual(number_of_event_data, 2)
+
+    def testParseFileObjectWithEnrichedAuditLog(self):
+        """Tests the ParseFileObject function with an ENRICHED audit log."""
+        parser = text_parser.TextLogParser()
+        parser.EnablePlugins(["selinux"])
+
+        storage_writer = self._ParseFile(["audit_enriched.log"], parser)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 34)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        test_record = (
+            "type=ADD_USER msg=audit(1783414573.160:408): pid=2062 uid=0 auid=0 "
+            'ses=6 msg=\'op=add-user acct="specimenuser" exe="/usr/sbin/useradd" '
+            "hostname=? addr=? terminal=? res=success'"
+        )
+        test_enrichment = 'UID="root" AUID="root"\n'
+
+        storage_writer = self._CreateStorageWriter()
+        parser_mediator = self._CreateParserMediator(storage_writer)
+
+        file_object = self._CreateFileObject(
+            "audit.log", "".join([test_record, "\x1d", test_enrichment]).encode("utf-8")
+        )
+        parser.ParseFileObject(parser_mediator, file_object)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 1)
+
+        # Test with other control characters that are still considered binary.
+        for separator in ("\x00", "\x1c", "\x1e"):
+            file_object = self._CreateFileObject(
+                "audit.log",
+                "".join([test_record, separator, test_enrichment]).encode("utf-8"),
+            )
+            with self.assertRaises(errors.WrongParser):
+                parser.ParseFileObject(parser_mediator, file_object)
 
     def testParseFileObjectWithUndecodableData(self):
         """Tests the ParseFileObject function with data that cannot be decoded."""
