@@ -212,6 +212,7 @@ aws_elb_access | Parser for AWS ELB Access log files.
 bash_history | Parser for Bash history files.
 bitbucket_access | Parser for Atlassian Bitbucket access log (atlassian-bitbucket-access.log) files.
 bitbucket_audit | Parser for Atlassian Bitbucket audit log (atlassian-bitbucket-audit.log) files.
+cisco_asa | Parser for Cisco Adaptive Security Appliance (ASA) log files.
 confluence_access | Parser for Confluence access log (access.log) files.
 cri_log | Parser for Container Runtime Interface log files.
 dpkg | Parser for Debian package manager log (dpkg.log) files.

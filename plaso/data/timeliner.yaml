@@ -323,6 +323,12 @@ attribute_mappings:
   description: 'Recorded Time'
 place_holder_event: true
 ---
+data_type: 'cisco:asa:log:entry'
+attribute_mappings:
+- name: 'recorded_time'
+  description: 'Recorded Time'
+place_holder_event: true
+---
 data_type: 'confluence:access'
 attribute_mappings:
 - name: 'recorded_time'

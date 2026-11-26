@@ -218,6 +218,19 @@ short_source: 'LOG'
 source: 'Bash History'
 ---
 type: 'conditional'
+data_type: 'cisco:asa:log:entry'
+message:
+- 'Hostname: {hostname}'
+- 'Severity: {severity}'
+- 'Message identifier: {message_identifier}'
+- 'Message: {message_body}'
+short_message:
+- 'Message identifier: {message_identifier}'
+- 'Message: {message_body}'
+short_source: 'LOG'
+source: 'Cisco ASA Log'
+---
+type: 'conditional'
 data_type: 'confluence:access'
 message:
 - 'http_request: {http_request_method} '

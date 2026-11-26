@@ -128,6 +128,10 @@ Test data:
 * the contents of the *.exe and *.exe.mui files on bdetogo.raw has been
   filled with 0-byte values.
 
+Provided by Moneysac90 as an attachment to [plaso issue #4654](https://github.com/log2timeline/plaso/issues/4654),
+with the IP addresses replaced by documentation addresses (RFC 5737):
+* cisco_asa.log
+
 Copied with permission from [the GRR project](https://github.com/google/grr):
 * History
 * places.sqlite
