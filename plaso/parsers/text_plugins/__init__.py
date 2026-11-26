@@ -44,4 +44,5 @@ from plaso.parsers.text_plugins import winfirewall
 from plaso.parsers.text_plugins import winhttp_api_error
 from plaso.parsers.text_plugins import xchatlog
 from plaso.parsers.text_plugins import xchatscrollback
+from plaso.parsers.text_plugins import yarn_rm_audit
 from plaso.parsers.text_plugins import zsh_extended_history
