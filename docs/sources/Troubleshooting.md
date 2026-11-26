@@ -64,13 +64,14 @@ OK
 If an error occurs when processing a storage media image try to run with the
 storage image media file and/or the file system directly mounted. Mounting the
 storage image media file will bypass libraries (modules) supporting the storage
-image media format. Running [source_analyzer.py](https://github.com/log2timeline/dfimagetools/blob/main/dfimagetools/scripts/source_analyzer.py),
-which is part of [dfImageTools](https://github.com/log2timeline/dfimagetools)
-and not of Plaso, can help pinpointing the issue. From a checkout of
-dfImageTools run, e.g.
+image media format. Running [source_analyzer](https://dfimagetools.readthedocs.io/en/latest/sources/user/Using-the-tools.html#source-analyzer),
+which is part of [dfImageTools](https://dfimagetools.readthedocs.io/en/latest)
+and not of Plaso, can help pinpointing the issue. See the dfImageTools
+[installation instructions](https://dfimagetools.readthedocs.io/en/latest/sources/user/Installation-instructions.html)
+on how to install dfImageTools and run:
 
 ```bash
-PYTHONPATH=. python dfimagetools/scripts/source_analyzer.py --no-auto-recurse image.raw
+source_analyzer --no-auto-recurse image.raw
 ```
 
 Where image.raw is the source, such as a storage media image, a device or a
