@@ -5,13 +5,13 @@ Plaso storage file.
 
 The Plaso storage file contains information about:
 
- + When and how the tool was run (sessions)
- + The sources that were processed
- + How many events were extracted, per data type and per parser (plugin)
- + Which event tags were applied and how many per label
- + Which warnings were generated during extraction, preprocessing, recovery
++ When and how the tool was run (sessions)
++ The sources that were processed
++ How many events were extracted, per data type and per parser (plugin)
++ Which event tags were applied and how many per label
++ Which warnings were generated during extraction, preprocessing, recovery
    and timelining
- + Which analysis plugins were run and the results of their reports
++ Which analysis plugins were run and the results of their reports
 
 ## Usage
 

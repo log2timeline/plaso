@@ -1,11 +1,13 @@
 # Developing on Fedora
 
 To download the latest version of Plaso you'll need to install the git tools:
+
 ```bash
 sudo dnf install git
 ```
 
 Checkout the plaso source from the git repo:
+
 ```bash
 git clone https://github.com/log2timeline/plaso.git
 ```
@@ -13,11 +15,13 @@ git clone https://github.com/log2timeline/plaso.git
 ## Dependencies
 
 Install the dependencies, using either:
+
 * A [virtualenv](Developing-Virtualenv.html#fedora)
 * The [prepackaged dependencies](Development-Dependencies.html#fedora).
 
 Check if you have all the dependencies installed and have the right minimum
 versions:
+
 ```
 python utils/check_dependencies.py
 ```
@@ -27,6 +31,7 @@ frequently updated, therefore we recommend checking the status of the
 dependencies regularly.**
 
 ## Development tools
+
 If you intend to do development on Plaso you'll also need to install some
 development tools:
 

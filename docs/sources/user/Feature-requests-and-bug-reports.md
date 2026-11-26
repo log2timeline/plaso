@@ -35,4 +35,3 @@ priority to work on and marked by a corresponding milestone.
 Note that this is no guarantee that the feature will actually be implemented in
 the next release. This is depend on other factors e.g. available time, show
 stopper bugs, etc.
-

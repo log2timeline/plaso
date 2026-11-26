@@ -28,14 +28,16 @@ Where ``hashes.json`` contains:
 ```
 
 There are several ways to define how you want to limit the amount of files to extract:
- + Based on path, filename or extension name
- + Based on time range
- + Based on format signature
- + Based on Forensic Artifacts definitions or a filter file
+
+* Based on path, filename or extension name
+* Based on time range
+* Based on format signature
+* Based on Forensic Artifacts definitions or a filter file
 
 The ``--names``, ``--extensions``, ``--signatures`` and ``--date-filter`` filters are combined: a file is exported when it matches any one of them. For example ``--names passwords.txt --extensions docx`` exports both files named ``passwords.txt`` and files with the ``docx`` extension. Forensic Artifacts definitions and filter files limit which paths are considered in the first place.
 
 ### Format signatures
+
 In order to extract files based on their signature, use flag ``--signatures``. To list all available file signatures run:
 
 ```
@@ -51,6 +53,7 @@ image_export.py --signatures exe_mz [IMAGE]
 The signatures are read from ``signatures.conf`` in the data location. If the data location cannot be determined automatically, specify it with ``--data PATH``.
 
 ### Filename
+
 You can filter the extracted files based on their filename. If you want extract all files with filename ``.bash_history`` use the command below:
 
 ```
@@ -60,8 +63,8 @@ image_export.py --names .bash_history [IMAGE]
 Flag ``--names`` accept comma separated strings. File names are compared case insensitive.
 
 ### Extension
-You can extract files based on their extension. To extract all docx files run the command below:
 
+You can extract files based on their extension. To extract all docx files run the command below:
 
 ```
 image_export.py --extensions docx [IMAGE]
@@ -70,6 +73,7 @@ image_export.py --extensions docx [IMAGE]
 Flag ``--extensions`` accept comma separated strings.
 
 ### Time range
+
 You can extract files, which timestamp falls into date time range provided in the command line parameters:
 
 ```
@@ -104,6 +108,7 @@ image_export.py --date-filter "mtime,1990-01-01,1990-12-31" test_data/image.qcow
 For more details on date time filtering run ``image_export.py -h``.
 
 ### Forensic Artifacts definitions
+
 You can extract the files described by [Forensic Artifacts](https://github.com/ForensicArtifacts/artifacts) definitions, by name:
 
 ```
@@ -117,6 +122,7 @@ Add ``--enable_artifacts_map`` to write an ``artifacts_map.json`` file to the ex
 More details: [collection filters](Collection-Filters.md)
 
 ### Filter files
+
 You can also extract files based on a YAML-based filter file, with the ``-f`` or ``--file-filter`` flag:
 
 ```
@@ -143,6 +149,7 @@ exports the following files from ``test_data/image.qcow2``:
 More details on the filter file format: [collection filters](Collection-Filters.md)
 
 ### Output folder
+
 In order to specify custom output folder, where all the files will be extracted, provide ``-w`` flag:
 
 ```
@@ -152,6 +159,7 @@ image_export.py -w ~/image_export_output [IMAGE]
 The output folder must not be a symbolic link.
 
 ### Duplicate handling
+
 By default image_export.py will not extract duplicate files, however paths to all duplicate files will be stored in hashes.json file. If you'd like to extract duplicate files add ``--include_duplicates`` flag.
 
 If you do not want the ``hashes.json`` file to be generated add ``--no_hashes`` flag.

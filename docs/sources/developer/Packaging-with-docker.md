@@ -13,4 +13,3 @@ Build Plaso Docker image:
 ```
 
 This will create a local Docker image: log2timeline/plaso:latest
-

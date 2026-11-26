@@ -311,4 +311,3 @@ win7_slow | esedb, mft, win7
 win_gen | bencode, czip/oxml, filestat, lnk, mcafee_protection, olecf, pe, prefetch, sqlite/google_drive, sqlite/skype, symantec_scanlog, text/gdrive_synclog, text/sccm, text/setupapi, text/skydrive_log_v1, text/skydrive_log_v2, text/teamviewer_application_log, text/teamviewer_connections_incoming, text/teamviewer_connections_outgoing, text/winfirewall, usnjrnl, webhist, winjob, winreg
 winxp | recycle_bin_info2, rplog, win_gen, winevt
 winxp_slow | esedb, mft, winxp
-

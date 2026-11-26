@@ -123,4 +123,3 @@ paths:
 
 * [Forensic artifacts](https://github.com/ForensicArtifacts/artifacts)
 * [Targeted Timeline Collection](http://blog.kiddaland.net/2013/02/targeted-timelines-part-i.html)
-

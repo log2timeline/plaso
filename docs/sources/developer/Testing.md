@@ -127,4 +127,3 @@ To run end-to-end tests with Docker you'll need:
 ```
 ./config/end_to_end/run_tests_with_docker.sh /greendale/configs /greendale/sources /greendale/results
 ```
-
