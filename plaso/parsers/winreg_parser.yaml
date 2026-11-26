@@ -1,0 +1,51 @@
+# dtFabric format specification.
+---
+name: regf
+type: format
+description: Windows NT Registry (REGF) file format
+urls: ["https://github.com/libyal/libregf/blob/main/documentation/Windows%20NT%20Registry%20File%20(REGF)%20format.asciidoc"]
+---
+name: byte
+type: integer
+attributes:
+  format: unsigned
+  size: 1
+  units: bytes
+---
+name: uint32
+type: integer
+attributes:
+  format: unsigned
+  size: 4
+  units: bytes
+---
+name: uint64
+type: integer
+attributes:
+  format: unsigned
+  size: 8
+  units: bytes
+---
+name: regf_file_header
+type: structure
+description: Windows NT Registry (REGF) file header
+attributes:
+  byte_order: little-endian
+members:
+- name: signature
+  type: stream
+  element_data_type: byte
+  elements_data_size: 4
+  value: "regf"
+- name: primary_sequence_number
+  data_type: uint32
+- name: secondary_sequence_number
+  data_type: uint32
+- name: modification_time
+  data_type: uint64
+- name: major_format_version
+  data_type: uint32
+- name: minor_format_version
+  data_type: uint32
+- name: file_type
+  data_type: uint32
