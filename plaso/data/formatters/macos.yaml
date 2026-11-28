@@ -344,13 +344,13 @@ data_type: 'macos:launchd:entry'
 message:
 - 'Launchd service config {name}'
 - 'points to {program}'
-- 'with user:{username}'
-- 'group:{group_name}'
+- 'with user: {username}'
+- 'group: {group_name}'
 short_message:
 - 'Launchd service config {name}'
 - 'points to {program}'
-- 'with user:{username}'
-- 'group:{group_name}'
+- 'with user: {username}'
+- 'group: {group_name}'
 short_source: 'PLIST'
 source: 'MacOS launchd plist'
 ---
@@ -427,10 +427,10 @@ source: 'MacOS LS Quarantine Database'
 type: 'conditional'
 data_type: 'macos:notes:entry'
 message:
-- 'title:{title}'
-- 'note_text:{text}'
+- 'title: {title}'
+- 'note_text: {text}'
 short_message:
-- 'title:{title}'
+- 'title: {title}'
 short_source: 'Mac Notes'
 source: 'MacOS Notes'
 ---

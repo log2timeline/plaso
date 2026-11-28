@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 """Tests for the message formatters configuration files."""
 
+import glob
+import os
+import re
 import unittest
+
+import yaml
 
 from acstore.containers import interface as containers_interface
 
@@ -117,6 +122,39 @@ class MessageFormattersDataTest(plist_plugins_test_lib.PlistPluginTestCase):
         self.assertEqual(message, expected_message)
         self.assertEqual(message_short, "Process Name: TrustedInstaller.exe")
 
+    def testFormatStrings(self):
+        """Tests that labels in the format strings are followed by ": "."""
+        # A label is a word directly followed by a colon. A colon that is not
+        # preceded by a word character, such as in "{host}:{port}" or
+        # ":{port}", or that is followed by a path separator, such as in
+        # "http://", is not considered a label separator.
+        attribute_name_regex = re.compile(r"{[^}]*}")
+        label_separator_regex = re.compile(r"[A-Za-z0-9_]:(?![ /\\]|$)")
+
+        formatters_path = self._GetDataFilePath(["formatters"])
+        for path in sorted(glob.glob(os.path.join(formatters_path, "*.yaml"))):
+            with open(path, encoding="utf-8") as file_object:
+                formatter_definitions = list(yaml.safe_load_all(file_object))
+
+            for formatter_definition in formatter_definitions:
+                for key in ("message", "short_message"):
+                    format_string_pieces = formatter_definition.get(key) or []
+                    if isinstance(format_string_pieces, str):
+                        format_string_pieces = [format_string_pieces]
+
+                    for format_string_piece in format_string_pieces:
+                        format_string_piece = attribute_name_regex.sub(
+                            "{}", format_string_piece
+                        )
+                        self.assertIsNone(
+                            label_separator_regex.search(format_string_piece),
+                            msg=(
+                                f"{os.path.basename(path):s} "
+                                f"{formatter_definition['data_type']:s} {key:s}: "
+                                f"{format_string_piece:s}"
+                            ),
+                        )
+
     def testMacOSBackgroundItemsMessage(self):
         """Tests the macos:background_items:entry message."""
         plist_name = "backgrounditems.btm"
@@ -152,7 +190,7 @@ class MessageFormattersDataTest(plist_plugins_test_lib.PlistPluginTestCase):
 
         expected_message = (
             "Launchd service config com.foobar.test points to /Test --flag 1 "
-            "with user:root group:wheel"
+            "with user: root group: wheel"
         )
         message, message_short = self._GetMessages("macos.yaml", event_data)
         self.assertEqual(message, expected_message)
