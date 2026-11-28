@@ -249,6 +249,7 @@ winhttp_api_error | Parser for Microsoft HTTP Server API (HTTP.sys) error log fi
 winiis | Parser for Microsoft IIS log files.
 xchatlog | Parser for XChat log files.
 xchatscrollback | Parser for XChat scrollback log files.
+yarn_rm_audit | Parser for Apache Hadoop YARN ResourceManager audit log (rm-audit.log) files.
 zsh_extended_history | Parser for ZSH extended history files.
 
 ### Parser plugins: winreg

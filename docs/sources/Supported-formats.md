@@ -202,6 +202,7 @@ File System Format support is provided by [dfVFS](https://dfvfs.readthedocs.io/e
 * Android logcat file
 * Apache access log (access.log) file
 * Apache error log (error.log) file
+* Apache Hadoop YARN ResourceManager audit log (rm-audit.log) file
 * Atlassian Bitbucket access log (atlassian-bitbucket-access.log) file
 * Atlassian Bitbucket audit log (atlassian-bitbucket-audit.log) file
 * Atlassian Bitbucket log file
