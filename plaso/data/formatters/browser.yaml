@@ -369,6 +369,22 @@ short_source: 'WEBHIST'
 source: 'Firefox History'
 ---
 type: 'conditional'
+data_type: 'firefox:indexeddb:record'
+message:
+- 'Origin: {origin}'
+- 'Database: {database_name}'
+- 'Object store: {object_store_name}'
+- 'Key: {key}'
+- 'Value: {value}'
+short_message:
+- '{origin}'
+- '{database_name}'
+- '{object_store_name}'
+- 'Key: {key}'
+short_source: 'WEBHIST'
+source: 'Firefox IndexedDB'
+---
+type: 'conditional'
 data_type: 'firefox:places:bookmark'
 enumeration_helpers:
 - input_attribute: 'bookmark_type'

@@ -24,6 +24,7 @@ from plaso.parsers.sqlite_plugins import files_by_google
 from plaso.parsers.sqlite_plugins import firefox_cookies
 from plaso.parsers.sqlite_plugins import firefox_downloads
 from plaso.parsers.sqlite_plugins import firefox_history
+from plaso.parsers.sqlite_plugins import firefox_indexeddb
 from plaso.parsers.sqlite_plugins import gdrive
 from plaso.parsers.sqlite_plugins import imessage
 from plaso.parsers.sqlite_plugins import ios_accounts

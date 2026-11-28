@@ -437,6 +437,12 @@ attribute_mappings:
   description: 'Start Time'
 place_holder_event: true
 ---
+data_type: 'firefox:indexeddb:record'
+attribute_mappings:
+- name: 'javascript_dates'
+  description: 'JavaScript Date'
+place_holder_event: true
+---
 data_type: 'firefox:places:bookmark'
 attribute_mappings:
 - name: 'added_time'
