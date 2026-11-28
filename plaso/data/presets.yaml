@@ -52,6 +52,7 @@ parsers:
 - jsonl/docker_container_log
 - jsonl/docker_layer_config
 - filestat
+- filezilla_sitemanager
 - olecf
 - pls_recall
 - sqlite/google_drive
@@ -148,6 +149,7 @@ parsers:
 - bencode
 - czip/oxml
 - filestat
+- filezilla_sitemanager
 - lnk
 - mcafee_protection
 - olecf

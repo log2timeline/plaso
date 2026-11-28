@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FileZilla3 version="3.72.1" platform="windows">
+	<Servers>
+		<Folder expanded="1">Customers<Server>
+				<Host>sftp.example.org</Host>
+				<Port>22</Port>
+				<Protocol>1</Protocol>
+				<User>alice</User>
+				<Pass encoding="base64">RHVtbXlQYXNzMQ==</Pass>
+				<Logontype>1</Logontype>
+				<EncodingType>UTF-8</EncodingType>
+				<BypassProxy>0</BypassProxy>
+				<Name>Customer staging</Name>
+				<Comments>Staging server of the customer</Comments>
+				<SyncBrowsing>0</SyncBrowsing>
+				<DirectoryComparison>0</DirectoryComparison>
+			</Server>
+			<Folder expanded="1">Production<Server>
+					<Host>192.0.2.10</Host>
+					<Port>21</Port>
+					<Protocol>4</Protocol>
+					<Type>1</Type>
+					<User>deploy</User>
+					<Logontype>2</Logontype>
+					<EncodingType>UTF-8</EncodingType>
+					<BypassProxy>0</BypassProxy>
+					<Name>Customer production</Name>
+					<SyncBrowsing>0</SyncBrowsing>
+					<DirectoryComparison>0</DirectoryComparison>
+				</Server>
+			</Folder>
+		</Folder>
+		<Server>
+			<Host>198.51.100.20</Host>
+			<Port>22</Port>
+			<Protocol>1</Protocol>
+			<User>bob</User>
+			<Keyfile>C:\Users\labadmin\.ssh\lab_dummy_rsa.ppk</Keyfile>
+			<Logontype>5</Logontype>
+			<EncodingType>UTF-8</EncodingType>
+			<BypassProxy>0</BypassProxy>
+			<Name>Key site</Name>
+			<SyncBrowsing>0</SyncBrowsing>
+			<DirectoryComparison>0</DirectoryComparison>
+		</Server>
+		<Server>
+			<Host>ftp.example.com</Host>
+			<Port>21</Port>
+			<Protocol>6</Protocol>
+			<Type>1</Type>
+			<Logontype>0</Logontype>
+			<EncodingType>UTF-8</EncodingType>
+			<BypassProxy>0</BypassProxy>
+			<Name>Public mirror</Name>
+			<SyncBrowsing>0</SyncBrowsing>
+			<DirectoryComparison>0</DirectoryComparison>
+		</Server>
+	</Servers>
+</FileZilla3>
