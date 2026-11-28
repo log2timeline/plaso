@@ -1015,6 +1015,24 @@ short_source: 'LOG'
 source: 'Snort3/Suricata fast-log alert log'
 ---
 type: 'conditional'
+data_type: 'superputty:session'
+message:
+- 'Session: {session_identifier}'
+- 'Host name: {hostname}'
+- 'Port number: {port_number}'
+- 'Protocol: {protocol}'
+- 'Username: {username}'
+- 'PuTTY session: {putty_session}'
+- 'Extra arguments: {extra_arguments}'
+- 'Remote path: {remote_path}'
+- 'Local path: {local_path}'
+short_message:
+- '{session_identifier}'
+- '{hostname}'
+short_source: 'LOG'
+source: 'SuperPuTTY Sessions'
+---
+type: 'conditional'
 data_type: 'syslog:anacron:job_end'
 message:
 - 'Anacron job: {job_identifier} terminated'

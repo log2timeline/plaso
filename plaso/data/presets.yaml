@@ -155,6 +155,7 @@ parsers:
 - prefetch
 - sqlite/google_drive
 - sqlite/skype
+- superputty_sessions
 - symantec_scanlog
 - text/gdrive_synclog
 - text/sccm

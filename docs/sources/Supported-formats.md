@@ -53,6 +53,7 @@ File System Format support is provided by [dfVFS](https://dfvfs.readthedocs.io/e
 * SIMATIC S7 Log file
 * [SleuthKit version 3 bodyfile (mactime)](https://forensics.wiki/mactime)
 * [SQLite database format](https://forensics.wiki/sqlite_database_format) using [sqlite](https://forensics.wiki/sqlite)
+* SuperPuTTY sessions (Sessions.XML) file
 * Symantec AV Corporate Edition and Endpoint Protection log
 * Systemd journal file
 * text-based log file

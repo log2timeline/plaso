@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ArrayOfSessionData xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SessionData SessionId="Lab/Servers/web01" SessionName="web01" ImageKey="computer" Host="192.0.2.10" Port="22" Proto="SSH" PuttySession="Default Settings" Username="admin" ExtraArgs="" SPSLFileName="" CollectionID="" CollectionLocation="" RemotePath="/var/www" LocalPath="C:\Users\labadmin\Documents" />
+  <SessionData SessionId="Lab/Servers/web02" SessionName="web02" ImageKey="computer" Host="web02.example.com" Port="2222" Proto="SSH" PuttySession="Default Settings" Username="root" ExtraArgs="-pw NotARealPassword" SPSLFileName="" CollectionID="" CollectionLocation="" RemotePath="" LocalPath="" />
+  <SessionData SessionId="Lab/switch01" SessionName="switch01" ImageKey="computer" Host="192.0.2.20" Port="23" Proto="SSH" PuttySession="Default Settings" Username="" ExtraArgs="" SPSLFileName="" CollectionID="" CollectionLocation="" RemotePath="" LocalPath="" />
+  <SessionData SessionId="router01" SessionName="router01" ImageKey="computer" Host="198.51.100.1" Port="22" Proto="SSH" PuttySession="Default Settings" Username="operator" ExtraArgs="-pw NotARealPassword -C" SPSLFileName="" CollectionID="" CollectionLocation="" RemotePath="" LocalPath="" />
+</ArrayOfSessionData>
