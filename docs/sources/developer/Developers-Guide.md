@@ -85,6 +85,7 @@ successfully complete in your development environment
  and test correctly.
 1. Make sure your email address and name are correctly set in git. You can use
 the following commands:
+
 ```
 git config --global user.name "Full Name"
 git config --global user.email name@example.com

@@ -1,6 +1,7 @@
 # How to write an analysis plugin
 
 ## Create file and class
+
 * Plugin file in `plaso/analysis/`
   * Create an empty subclass of [AnalysisPlugin](../api/plaso.analysis.html#plaso.analysis.interface.AnalysisPlugin)
   * Register it with the analysis plugin by calling
@@ -9,11 +10,13 @@
   * Create an empty subclass of `tests.analysis.test_lib.AnalysisPluginTestCase`
 
 ## Write minimal tests
+
 * Write a test that loads your plugin
 * It will fail initially, but running the test while you're developing your
 plugin gives you a quick way to see if your code is doing what you expect.
 
 ## Develop plugin
+
 * Implement your subclass of [AnalysisPlugin](../api/plaso.analysis.html#plaso.analysis.interface.AnalysisPlugin)
 * You'll need to define/override:
   * NAME, a short and unique name of the plugin, which is used to select the
@@ -67,6 +70,7 @@ If your plugin needs command line options, add an arguments helper for it in
 `plaso/cli/helpers/`, for example `plaso/cli/helpers/tagging_analysis.py`.
 
 ## Expand tests
+
 * Add additional tests that test your plugin
 
 `AnalysisPluginTestCase._AnalyzeEvents()` runs a plugin on events that are
@@ -86,6 +90,7 @@ the analysis report, for example:
 ```
 
 ## Register classes
+
 * Edit `plaso/analysis/__init__.py` to import your plugin in the correct
  alphabetical order.
 

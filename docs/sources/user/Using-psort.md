@@ -434,4 +434,3 @@ which can be used to debug the problem and fix the issue.
 ```bash
 psort.py -w timeline.log timeline.plaso "tag contains 'browser_search'"
 ```
-

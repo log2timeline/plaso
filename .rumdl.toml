@@ -1,0 +1,46 @@
+# Configuration file for the rumdl Markdown linter, see: https://rumdl.dev
+[global]
+# Only check a selected set of rules that do not change how the documentation
+# renders. Rules such as line length (MD013), fenced code language (MD040),
+# bare URLs (MD034), inline HTML (MD033), heading levels (MD001, MD025, MD041)
+# and link validation (MD051, MD057) are not checked.
+enable = [
+    "MD003",
+    "MD004",
+    "MD005",
+    "MD007",
+    "MD009",
+    "MD010",
+    "MD011",
+    "MD012",
+    "MD018",
+    "MD019",
+    "MD020",
+    "MD021",
+    "MD022",
+    "MD023",
+    "MD026",
+    "MD027",
+    "MD030",
+    "MD031",
+    "MD032",
+    "MD039",
+    "MD042",
+    "MD045",
+    "MD046",
+    "MD047",
+    "MD056",
+    "MD058",
+    "MD092",
+]
+exclude = [
+    ".github",
+    "docs/_build",
+    "test_data",
+]
+cache = false
+
+[MD031]
+# Blank lines around fenced code blocks in list items change the rendering
+# of the list.
+list-items = false

@@ -11,8 +11,8 @@ average computer.
 
 ### A longer version
 
-The initial purpose of Plaso was to collect all timestamped events of interest 
-on a computer system and have them aggregated in a single place for computer 
+The initial purpose of Plaso was to collect all timestamped events of interest
+on a computer system and have them aggregated in a single place for computer
 forensic analysis (aka Super Timeline).
 
 However Plaso has become a framework that supports:

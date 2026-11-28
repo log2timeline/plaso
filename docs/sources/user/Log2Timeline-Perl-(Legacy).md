@@ -71,6 +71,7 @@ l2t_process.py -b myhost.csv 10-10-2012..10-11-2012 | grep ",1[8-9]:[0-5][0-9]:[
 ```
 
 And filtering based on content was constrained to few options:
+
 * Use a keyword file that contained case-insensitive regular expressions to include or exclude events.
 * Use a YARA rule that matched against the description_long field.
 * Use grep/sed/awk.
@@ -220,6 +221,7 @@ common fields, like source/source_short, date/timestamp, source_long, message,
 filename, timestamp_desc, parser, etc.
 
 For now, the new version does not have some of the capabilities that the older version had, that is to say the:
+
 * Yara rules to filter out content.
 * Inclusion/exclusion regular expressions.
 

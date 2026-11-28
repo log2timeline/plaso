@@ -14,6 +14,7 @@ Plaso requires Python 3.10 or later.
 
 The venv module is included with the Python 3 package on Fedora (or
 equivalent):
+
 ```
 sudo dnf install python3
 ```
@@ -27,6 +28,7 @@ sudo dnf install python3
 ### Installing venv
 
 To install venv on Ubuntu (or equivalent) run:
+
 ```
 sudo apt install python3-venv
 ```
@@ -34,6 +36,7 @@ sudo apt install python3-venv
 ### Installing build dependencies
 
 **TODO add more text**
+
 ```
 sudo apt install libyaml-dev liblzma-dev
 ```
