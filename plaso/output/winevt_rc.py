@@ -333,11 +333,12 @@ class WinevtResourcesHelper:
         "%SystemRoot%\\System32\\kernel32.dll",
     )
 
-    # The maximum number of cached message strings
-    _MAXIMUM_CACHED_MESSAGE_STRINGS = 64 * 1024
+    # The maximum number of cached message strings, including lookups without
+    # a message string.
+    _MAXIMUM_CACHED_MESSAGE_STRINGS = 128 * 1024
 
-    # The maximum number of cached lookups without a message string
-    _MAXIMUM_CACHED_MISSING_MESSAGE_STRINGS = 64 * 1024
+    # Value of a cached lookup without a message string.
+    _MISSING_MESSAGE_STRING = object()
 
     _WINEVT_RC_DATABASE = "winevt-rc.db"
 
@@ -358,7 +359,6 @@ class WinevtResourcesHelper:
         self._language_tag = language_tag.lower()
         self._lcid = lcid or self.DEFAULT_LCID
         self._message_string_cache = collections.OrderedDict()
-        self._missing_message_strings_cache = set()
         self._resource_file_helper = resource_files.WindowsResourceFileHelper
         self._storage_reader = None
         self._windows_eventlog_message_files = None
@@ -372,85 +372,101 @@ class WinevtResourcesHelper:
 
     def _CacheMessageString(
         self,
+        lookup_type,
         provider_identifier,
         log_source,
         message_identifier,
         event_version,
         message_string,
     ):
-        """Caches a specific message string.
+        """Caches a specific message string or a lookup without a message string.
+
+        A message string is cached for both the provider identifier and the log
+        source. A lookup without a message string is cached for the combination
+        of the provider identifier and log source, since the message string
+        could be available for another combination. An empty message string is
+        not cached.
 
         Args:
+          lookup_type (str): lookup type, either "message" or "parameter".
           provider_identifier (str): EventLog provider identifier.
           log_source (str): EventLog source, such as "Application Error".
           message_identifier (int): message identifier.
           event_version (int): event version or None if not set.
-          message_string (str): message string.
+          message_string (str): message string or None if not available.
         """
-        if len(self._message_string_cache) >= self._MAXIMUM_CACHED_MESSAGE_STRINGS:
+        if message_string is None:
+            lookup_keys = [
+                (
+                    lookup_type,
+                    provider_identifier,
+                    log_source,
+                    message_identifier,
+                    event_version,
+                )
+            ]
+            message_string = self._MISSING_MESSAGE_STRING
+
+        elif message_string:
+            lookup_keys = [
+                (identifier, message_identifier, event_version)
+                for identifier in (provider_identifier, log_source)
+                if identifier
+            ]
+
+        else:
+            return
+
+        for lookup_key in lookup_keys:
+            self._message_string_cache[lookup_key] = message_string
+            self._message_string_cache.move_to_end(lookup_key, last=False)
+
+        while len(self._message_string_cache) > self._MAXIMUM_CACHED_MESSAGE_STRINGS:
             self._message_string_cache.popitem(last=True)
 
-        if provider_identifier:
-            lookup_key = f"{provider_identifier:s}:0x{message_identifier:08x}"
-            if event_version is not None:
-                lookup_key = f"{lookup_key:s}:{event_version:d}"
-            self._message_string_cache[lookup_key] = message_string
-            self._message_string_cache.move_to_end(lookup_key, last=False)
-
-        if log_source:
-            lookup_key = f"{log_source:s}:0x{message_identifier:08x}"
-            if event_version is not None:
-                lookup_key = f"{lookup_key:s}:{event_version:d}"
-            self._message_string_cache[lookup_key] = message_string
-            self._message_string_cache.move_to_end(lookup_key, last=False)
-
-    def _CacheMissingMessageString(self, lookup_key):
-        """Caches a lookup for which no message string is available.
-
-        Args:
-          lookup_key (tuple): lookup key of the missing message string.
-        """
-        if (
-            len(self._missing_message_strings_cache)
-            >= self._MAXIMUM_CACHED_MISSING_MESSAGE_STRINGS
-        ):
-            self._missing_message_strings_cache.clear()
-
-        self._missing_message_strings_cache.add(lookup_key)
-
     def _GetCachedMessageString(
-        self, provider_identifier, log_source, message_identifier, event_version
+        self,
+        lookup_type,
+        provider_identifier,
+        log_source,
+        message_identifier,
+        event_version,
     ):
         """Retrieves a specific cached message string.
 
         Args:
+          lookup_type (str): lookup type, either "message" or "parameter".
           provider_identifier (str): EventLog provider identifier.
           log_source (str): EventLog source, such as "Application Error".
           message_identifier (int): message identifier.
           event_version (int): event version or None if not set.
 
         Returns:
-          str: message string or None if not available.
+          tuple[bool, str]: True if the lookup is cached and the message string
+              or None if not available.
         """
-        lookup_key = None
-        message_string = None
-
-        if provider_identifier:
-            lookup_key = f"{provider_identifier:s}:0x{message_identifier:08x}"
-            if event_version is not None:
-                lookup_key = f"{lookup_key:s}:{event_version:d}"
+        lookup_keys = (
+            (provider_identifier, message_identifier, event_version),
+            (log_source, message_identifier, event_version),
+            (
+                lookup_type,
+                provider_identifier,
+                log_source,
+                message_identifier,
+                event_version,
+            ),
+        )
+        for lookup_key in lookup_keys:
             message_string = self._message_string_cache.get(lookup_key)
+            if message_string is not None:
+                self._message_string_cache.move_to_end(lookup_key, last=False)
 
-        if not message_string and log_source:
-            lookup_key = f"{log_source:s}:0x{message_identifier:08x}"
-            if event_version is not None:
-                lookup_key = f"{lookup_key:s}:{event_version:d}"
-            message_string = self._message_string_cache.get(lookup_key)
+                if message_string is self._MISSING_MESSAGE_STRING:
+                    return True, None
 
-        if message_string:
-            self._message_string_cache.move_to_end(lookup_key, last=False)
+                return True, message_string
 
-        return message_string
+        return False, None
 
     def _GetEventMessageFileIdentifiers(self, message_files):
         """Retrieves event message file identifiers.
@@ -996,23 +1012,17 @@ class WinevtResourcesHelper:
         Returns:
           str: message string or None if not available.
         """
-        message_string = self._GetCachedMessageString(
-            provider_identifier, log_source, message_identifier, event_version
-        )
-        if message_string:
-            return message_string
-
         # The message string lookup is expensive and the result for the same
         # lookup key does not change, hence lookups without a result are cached.
-        lookup_key = (
+        is_cached, message_string = self._GetCachedMessageString(
             "message",
             provider_identifier,
             log_source,
             message_identifier,
             event_version,
         )
-        if lookup_key in self._missing_message_strings_cache:
-            return None
+        if is_cached:
+            return message_string
 
         if self._storage_reader:
             message_string = self._ReadEventMessageString(
@@ -1027,16 +1037,14 @@ class WinevtResourcesHelper:
                 provider_identifier, log_source, message_identifier, event_version
             )
 
-        if message_string:
-            self._CacheMessageString(
-                provider_identifier,
-                log_source,
-                message_identifier,
-                event_version,
-                message_string,
-            )
-        elif message_string is None:
-            self._CacheMissingMessageString(lookup_key)
+        self._CacheMessageString(
+            "message",
+            provider_identifier,
+            log_source,
+            message_identifier,
+            event_version,
+            message_string,
+        )
 
         return message_string
 
@@ -1051,15 +1059,11 @@ class WinevtResourcesHelper:
         Returns:
           str: parameter string or None if not available.
         """
-        message_string = self._GetCachedMessageString(
-            provider_identifier, log_source, message_identifier, None
+        is_cached, message_string = self._GetCachedMessageString(
+            "parameter", provider_identifier, log_source, message_identifier, None
         )
-        if message_string:
+        if is_cached:
             return message_string
-
-        lookup_key = ("parameter", provider_identifier, log_source, message_identifier)
-        if lookup_key in self._missing_message_strings_cache:
-            return None
 
         if self._storage_reader:
             message_string = self._ReadParameterMessageString(
@@ -1075,15 +1079,13 @@ class WinevtResourcesHelper:
                 message_identifier,
             )
 
-        if message_string:
-            self._CacheMessageString(
-                provider_identifier,
-                log_source,
-                message_identifier,
-                None,
-                message_string,
-            )
-        elif message_string is None:
-            self._CacheMissingMessageString(lookup_key)
+        self._CacheMessageString(
+            "parameter",
+            provider_identifier,
+            log_source,
+            message_identifier,
+            None,
+            message_string,
+        )
 
         return message_string
