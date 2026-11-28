@@ -1,0 +1,10 @@
+2022-01-01T00:01:27+01:00 asa5540-2 : %ASA-5-722037: Group <DfltGrpPolicy> User <testuser0> IP <192.0.2.10> SVC closing connection: DPD failure.
+2022-01-01T00:02:43+01:00 asa5540-2 : %ASA-4-113019: Group = DefaultWEBVPNGroup, Username = admin, IP = 192.0.2.20, Session disconnected. Session Type: SSL, Duration: 2h:10m:54s, Bytes xmt: 24693444, Bytes rcv: 6056715, Reason: Idle Timeout
+2022-01-01T00:03:46+01:00 asa5540-2 : %ASA-4-722051: Group <DfltGrpPolicy> User <abc> IP <198.51.100.30> IPv4 Address <203.0.113.109> IPv6 address <::> assigned to session
+2022-01-01T00:03:46+01:00 asa5540-2 : %ASA-5-722034: Group <DfltGrpPolicy> User <abc> IP <198.51.100.30> New TCP SVC connection, no existing connection.
+2022-01-01T00:03:46+01:00 asa5540-2 : %ASA-5-722037: Group <DfltGrpPolicy> User <abc> IP <198.51.100.30> SVC closing connection: Transport closing.
+2022-01-01T00:03:51+01:00 asa5540-1 : %ASA-5-722033: Group <DfltGrpPolicy> User <testuser> IP <198.51.100.40> First UDP SVC connection established for SVC session.
+2022-01-01T00:03:52+01:00 asa5540-1 : %ASA-4-722051: Group <DfltGrpPolicy> User <testuser> IP <198.51.100.40> IPv4 Address <203.0.113.139> IPv6 address <::> assigned to session
+2022-01-01T00:03:52+01:00 asa5540-1 : %ASA-5-722034: Group <DfltGrpPolicy> User <testuser> IP <198.51.100.40> New TCP SVC connection, no existing connection.
+2022-01-01T00:04:01+01:00 asa5540-2 : %ASA-5-722028: Group <DfltGrpPolicy> User <testuser2> IP <192.0.2.50> Stale SVC connection closed.
+2022-01-01T00:04:01+01:00 asa5540-2 : %ASA-5-722032: Group <DfltGrpPolicy> User <testuser2> IP <192.0.2.50> New UDP SVC connection replacing old connection.

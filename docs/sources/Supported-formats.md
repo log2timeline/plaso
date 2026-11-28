@@ -209,6 +209,7 @@ File System Format support is provided by [dfVFS](https://dfvfs.readthedocs.io/e
 * Atlassian Jira log file
 * [AWS ELB Access log file](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-access-logs.html#access-log-file-format)
 * Bash history file
+* Cisco Adaptive Security Appliance (ASA) log file
 * Confluence access log (access.log) file
 * Container Runtime Interface log file
 * Debian package manager log (dpkg.log) file

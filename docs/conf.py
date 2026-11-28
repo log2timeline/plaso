@@ -97,6 +97,8 @@ linkcheck_ignore = [
     "(|[.][.]/)user/[^#]*#",
     # The docs.github.com are known to be flaky.
     "https://docs.github.com/.*",
+    # The www.cisco.com documentation returns 403 to the link checker.
+    "https://www.cisco.com/.*",
     "https://github.com/libyal/libsigscan/wiki/Internals#",
     "https://github.com/log2timeline/dfvfs/wiki#",
     "https://groups.google.com/forum/#",
