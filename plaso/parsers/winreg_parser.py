@@ -1,11 +1,17 @@
 """Parser for Windows NT Registry (REGF) files."""
 
+import os
+
+from dfvfs.path import factory as path_spec_factory
+
 from dfwinreg import errors as dfwinreg_errors
 from dfwinreg import regf as dfwinreg_regf
 from dfwinreg import registry as dfwinreg_registry
 from dfwinreg import registry_searcher as dfwinreg_registry_searcher
 
 from plaso.engine import artifact_filters
+from plaso.lib import dtfabric_helper
+from plaso.lib import errors
 from plaso.lib import specification
 from plaso.filters import path_filter
 from plaso.parsers import interface
@@ -13,13 +19,19 @@ from plaso.parsers import logger
 from plaso.parsers import manager
 
 
-class WinRegistryParser(interface.FileObjectParser):
+class WinRegistryParser(interface.FileObjectParser, dtfabric_helper.DtFabricHelper):
     """Parses Windows NT Registry (REGF) files."""
 
     NAME = "winreg"
     DATA_FORMAT = "Windows NT Registry (REGF) file"
 
     _plugin_classes = {}
+
+    _DEFINITION_FILE = os.path.join(os.path.dirname(__file__), "winreg_parser.yaml")
+
+    _FILE_TYPE_PRIMARY = 0
+
+    _TRANSACTION_LOG_FILE_SUFFIXES = (".LOG1", ".LOG2")
 
     _ARTIFACTS_FILTER_HELPER = artifact_filters.ArtifactDefinitionsFiltersHelper
 
@@ -151,6 +163,40 @@ class WinRegistryParser(interface.FileObjectParser):
                 f"in key: {registry_key.path:s} error: {exception!s}"
             )
 
+    def _GetTransactionLogFileNames(self, parser_mediator):
+        """Retrieves the names of the transaction log files of the Registry file.
+
+        Args:
+          parser_mediator (ParserMediator): parser mediator.
+
+        Returns:
+          list[str]: names of the transaction log files that exist next to the
+              Windows Registry file.
+        """
+        transaction_log_file_names = []
+
+        file_entry = parser_mediator.GetFileEntry()
+        if not file_entry:
+            return transaction_log_file_names
+
+        path_spec = file_entry.path_spec
+        location = getattr(path_spec, "location", None)
+        if not path_spec or not location:
+            return transaction_log_file_names
+
+        file_system = file_entry.GetFileSystem()
+
+        for suffix in self._TRANSACTION_LOG_FILE_SUFFIXES:
+            transaction_log_path_spec = path_spec_factory.Factory.NewPathSpec(
+                file_system.type_indicator,
+                location=f"{location:s}{suffix:s}",
+                parent=path_spec.parent,
+            )
+            if file_system.FileEntryExistsByPathSpec(transaction_log_path_spec):
+                transaction_log_file_names.append(f"{file_entry.name:s}{suffix:s}")
+
+        return transaction_log_file_names
+
     def _NormalizeKeyPath(self, key_path):
         """Normalizes a Windows Registry key path.
 
@@ -252,6 +298,39 @@ class WinRegistryParser(interface.FileObjectParser):
             registry_key = searcher.GetKeyByPath(registry_key_path)
             self._ParseKey(parser_mediator, win_registry, registry_key)
 
+    def _ProduceDirtyFileWarning(self, parser_mediator, file_header):
+        """Produces a warning if the Windows Registry file is dirty.
+
+        A primary Windows Registry file is dirty when its primary and secondary
+        sequence numbers differ, which means that changes stored in transaction
+        log files have not been applied to the file.
+
+        Args:
+          parser_mediator (ParserMediator): parser mediator.
+          file_header (regf_file_header): file header.
+        """
+        if file_header.file_type != self._FILE_TYPE_PRIMARY:
+            return
+
+        primary_sequence_number = file_header.primary_sequence_number
+        secondary_sequence_number = file_header.secondary_sequence_number
+        if primary_sequence_number == secondary_sequence_number:
+            return
+
+        message = (
+            f"Windows Registry file is dirty (primary sequence number: "
+            f"{primary_sequence_number:d}, secondary sequence number: "
+            f"{secondary_sequence_number:d}), transaction logs were not applied "
+            f"and recent changes may be missing"
+        )
+
+        transaction_log_file_names = self._GetTransactionLogFileNames(parser_mediator)
+        if transaction_log_file_names:
+            file_names = ", ".join(transaction_log_file_names)
+            message = f"{message:s}, transaction log files: {file_names:s}"
+
+        parser_mediator.ProduceWarning(message)
+
     def ParseFileObject(self, parser_mediator, file_object):
         """Parses a Windows Registry file-like object.
 
@@ -259,6 +338,16 @@ class WinRegistryParser(interface.FileObjectParser):
           parser_mediator (ParserMediator): parser mediator.
           file_object (dfvfs.FileIO): a file-like object.
         """
+        file_header_map = self._GetDataTypeMap("regf_file_header")
+
+        try:
+            file_header, _ = self._ReadStructureFromFileObject(
+                file_object, 0, file_header_map
+            )
+        except (ValueError, errors.ParseError) as exception:
+            logger.debug(f"Unable to parse file header with error: {exception!s}")
+            file_header = None
+
         code_page = parser_mediator.GetCodePage()
 
         registry_file = dfwinreg_regf.REGFWinRegistryFile(ascii_codepage=code_page)
@@ -270,6 +359,9 @@ class WinRegistryParser(interface.FileObjectParser):
                 f"unable to open Windows Registry file with error: {exception!s}"
             )
             return
+
+        if file_header:
+            self._ProduceDirtyFileWarning(parser_mediator, file_header)
 
         try:
             win_registry = dfwinreg_registry.WinRegistry()

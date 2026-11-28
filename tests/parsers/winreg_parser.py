@@ -6,6 +6,7 @@ import unittest
 from artifacts import reader as artifacts_reader
 from artifacts import registry as artifacts_registry
 
+from dfvfs.helpers import fake_file_system_builder
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
@@ -91,6 +92,84 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
             "recovery_warning"
         )
         self.assertEqual(number_of_warnings, 0)
+
+    def testParseDirty(self):
+        """Tests the Parse function on a dirty Windows NT Registry file."""
+        parser = winreg_parser.WinRegistryParser()
+        storage_writer = self._ParseFile(["regf", "dirty.hiv"], parser)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 12)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 1)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "recovery_warning"
+        )
+        self.assertEqual(number_of_warnings, 0)
+
+        extraction_warning = storage_writer.GetAttributeContainerByIndex(
+            "extraction_warning", 0
+        )
+        self.assertEqual(
+            extraction_warning.message,
+            (
+                "Windows Registry file is dirty (primary sequence number: 2, "
+                "secondary sequence number: 1), transaction logs were not "
+                "applied and recent changes may be missing"
+            ),
+        )
+
+    def testParseDirtyWithTransactionLogFile(self):
+        """Tests the Parse function on a dirty file with a transaction log file."""
+        test_file_path = self._GetTestFilePath(["regf", "dirty.hiv"])
+        self._SkipIfPathNotExists(test_file_path)
+
+        with open(test_file_path, "rb") as file_object:
+            file_data = file_object.read()
+
+        file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+        file_system_builder.AddFile("/dirty.hiv", file_data)
+        file_system_builder.AddFile("/dirty.hiv.LOG1", b"")
+
+        file_entry = file_system_builder.file_system.GetFileEntryByPath("/dirty.hiv")
+
+        storage_writer = self._CreateStorageWriter()
+        parser_mediator = self._CreateParserMediator(
+            storage_writer, file_entry=file_entry
+        )
+
+        parser = winreg_parser.WinRegistryParser()
+        file_object = file_entry.GetFileObject()
+        parser.Parse(parser_mediator, file_object)
+
+        number_of_event_data = storage_writer.GetNumberOfAttributeContainers(
+            "event_data"
+        )
+        self.assertEqual(number_of_event_data, 12)
+
+        number_of_warnings = storage_writer.GetNumberOfAttributeContainers(
+            "extraction_warning"
+        )
+        self.assertEqual(number_of_warnings, 1)
+
+        extraction_warning = storage_writer.GetAttributeContainerByIndex(
+            "extraction_warning", 0
+        )
+        self.assertEqual(
+            extraction_warning.message,
+            (
+                "Windows Registry file is dirty (primary sequence number: 2, "
+                "secondary sequence number: 1), transaction logs were not "
+                "applied and recent changes may be missing, transaction log "
+                "files: dirty.hiv.LOG1"
+            ),
+        )
 
     def testParseNTUserDat(self):
         """Tests the Parse function on a NTUSER.DAT file."""
